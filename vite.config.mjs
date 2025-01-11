@@ -19,7 +19,15 @@ export default defineConfig(({ mode }) => {
       global: 'globalThis',
     },
     plugins: [
-      react(),
+      react({
+        jsxImportSource: '@emotion/react',
+        babel: {
+          plugins: [
+            '@emotion/babel-plugin',
+            'babel-plugin-macros'
+          ],
+        },
+      }),
       nodePolyfills({
         globals: {
           Buffer: true,
@@ -74,6 +82,8 @@ export default defineConfig(({ mode }) => {
         '@wagmi/core',
         'ethers',
         'web3',
+        '@emotion/react',
+        '@emotion/styled',
       ],
     },
     build: {
@@ -81,7 +91,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['react', 'react-dom'],
+            vendor: ['react', 'react-dom', '@emotion/react', '@emotion/styled'],
             web3: ['ethers', 'web3', '@wagmi/core'],
           },
         },
