@@ -22,12 +22,12 @@ contract BaseERC20 is ERC20, ERC20Burnable, ERC20Pausable, ERC20Permit, Ownable 
         uint8 decimalsValue,
         uint256 initialSupply,
         uint256 initialMaxSupply,
-        bool mintable,
+        bool initialMintable,
         address owner
     ) ERC20(name, symbol) ERC20Permit(name) Ownable(owner) {
         _decimals = decimalsValue;
         _maxSupply = initialMaxSupply;
-        _mintable = mintable;
+        _mintable = initialMintable;
         _mint(owner, initialSupply);
     }
 

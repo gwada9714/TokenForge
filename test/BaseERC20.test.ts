@@ -32,7 +32,7 @@ describe("BaseERC20", function () {
       const decimals = 18;
       const initialSupply = parseEther("1000");
       const maxSupply = parseEther("10000");
-      const mintable = true;
+      const initialMintable = true;
       const salt = randomBytes(32);
 
       // Create token
@@ -42,7 +42,7 @@ describe("BaseERC20", function () {
         decimals,
         initialSupply,
         maxSupply,
-        mintable,
+        initialMintable,
         salt
       );
 
@@ -88,7 +88,7 @@ describe("BaseERC20", function () {
       expect(Number(actualDecimals)).to.equal(decimals);
       expect(actualTotalSupply).to.equal(initialSupply);
       expect(actualMaxSupply).to.equal(maxSupply);
-      expect(actualMintable).to.equal(mintable);
+      expect(actualMintable).to.equal(initialMintable);
     });
 
     it("Should not allow minting when disabled", async function () {
@@ -96,7 +96,7 @@ describe("BaseERC20", function () {
       
       const initialSupply = parseEther("1000");
       const maxSupply = parseEther("2000");
-      const mintable = false;
+      const initialMintable = false;
       const salt = randomBytes(32);
 
       const tx = await tokenFactory.createERC20(
@@ -105,7 +105,7 @@ describe("BaseERC20", function () {
         18,
         initialSupply,
         maxSupply,
-        mintable,
+        initialMintable,
         salt
       );
 
@@ -134,7 +134,7 @@ describe("BaseERC20", function () {
       
       const initialSupply = parseEther("1000");
       const maxSupply = parseEther("2000");
-      const mintable = true;
+      const initialMintable = true;
       const salt = randomBytes(32);
 
       const tx = await tokenFactory.createERC20(
@@ -143,7 +143,7 @@ describe("BaseERC20", function () {
         18,
         initialSupply,
         maxSupply,
-        mintable,
+        initialMintable,
         salt
       );
 
@@ -173,7 +173,7 @@ describe("BaseERC20", function () {
       
       const initialSupply = parseEther("1000");
       const maxSupply = 0; // No max supply
-      const mintable = true;
+      const initialMintable = true;
       const salt = randomBytes(32);
 
       const tx = await tokenFactory.createERC20(
@@ -182,7 +182,7 @@ describe("BaseERC20", function () {
         18,
         initialSupply,
         maxSupply,
-        mintable,
+        initialMintable,
         salt
       );
 
