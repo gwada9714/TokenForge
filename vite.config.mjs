@@ -84,20 +84,21 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: false,
       open: true,
-      headers: isDev ? {} : {
-        "Content-Security-Policy": [
-          "default-src 'self' 'unsafe-inline' 'unsafe-eval';",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: blob: data:;",
-          "script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:;",
-          "style-src 'self' 'unsafe-inline' https: data: blob:;",
-          "font-src 'self' data: https:;",
-          "connect-src 'self' https: wss: ws: data: blob:;",
-          "img-src 'self' data: https: blob:;",
-          "media-src 'self' https: data: blob:;",
-          "object-src 'none';",
-          "worker-src 'self' blob:;",
-          "frame-src 'self' https:;"
-        ].join(' ')
+      headers: {
+        "Content-Security-Policy": isDev ? 
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src 'self' https: wss: ws:; font-src 'self' https:; object-src 'none'; media-src 'self' https:; worker-src 'self' blob:; frame-src 'self' https:;" 
+          : [
+            "default-src 'self';",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:;",
+            "style-src 'self' 'unsafe-inline' https:;",
+            "img-src 'self' data: https:;",
+            "connect-src 'self' https: wss: ws:;",
+            "font-src 'self' https:;",
+            "object-src 'none';",
+            "media-src 'self' https:;",
+            "worker-src 'self' blob:;",
+            "frame-src 'self' https:;"
+          ].join(' ')
       },
       hmr: {
         overlay: true,
