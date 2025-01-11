@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 
 // TODO: Move these to environment variables or config file
 const CONTRACT_ADDRESS = "YOUR_CONTRACT_ADDRESS";
-const CONTRACT_ABI = []; // Your contract ABI here
+const CONTRACT_ABI: ethers.InterfaceAbi = []; // Your contract ABI here
 
 export const web3Service = {
   getContract: (provider: ethers.Provider | ethers.Signer) => {
@@ -53,3 +53,5 @@ export const web3Service = {
     }
   },
 };
+
+export {};
