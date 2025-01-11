@@ -3,7 +3,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import hre from "hardhat";
 import "@nomicfoundation/hardhat-ethers";
-import { parseEther, Interface, randomBytes, Contract } from "ethers";
+import { parseEther, Interface, randomBytes, Contract, Log } from "ethers";
 
 describe("BaseERC20", function () {
   // Fixture that deploys TokenFactory
@@ -49,14 +49,12 @@ describe("BaseERC20", function () {
       const receipt = await tx.wait();
       if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
-      const iface = new Interface([
-        "event TokenCreated(address indexed tokenAddress, string name, string symbol, string tokenType, address indexed owner)"
-      ]);
-      const log = receipt.logs[0];
-      const parsedLog = iface.parseLog(log);
-      if (!parsedLog) throw new Error("Could not parse log");
+      const tokenCreatedLog = receipt.logs[2];
+      if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
 
-      const tokenAddress = parsedLog.args[0];
+      const tokenAddress = tokenCreatedLog.topics[1];
+      if (!tokenAddress) throw new Error("Token address not found in event");
+
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
@@ -89,14 +87,12 @@ describe("BaseERC20", function () {
       const receipt = await tx.wait();
       if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
-      const iface = new Interface([
-        "event TokenCreated(address indexed tokenAddress, string name, string symbol, string tokenType, address indexed owner)"
-      ]);
-      const log = receipt.logs[0];
-      const parsedLog = iface.parseLog(log);
-      if (!parsedLog) throw new Error("Could not parse log");
-      
-      const tokenAddress = parsedLog.args[0];
+      const tokenCreatedLog = receipt.logs[2];
+      if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
+
+      const tokenAddress = tokenCreatedLog.topics[1];
+      if (!tokenAddress) throw new Error("Token address not found in event");
+
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
@@ -126,14 +122,12 @@ describe("BaseERC20", function () {
       const receipt = await tx.wait();
       if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
-      const iface = new Interface([
-        "event TokenCreated(address indexed tokenAddress, string name, string symbol, string tokenType, address indexed owner)"
-      ]);
-      const log = receipt.logs[0];
-      const parsedLog = iface.parseLog(log);
-      if (!parsedLog) throw new Error("Could not parse log");
-      
-      const tokenAddress = parsedLog.args[0];
+      const tokenCreatedLog = receipt.logs[2];
+      if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
+
+      const tokenAddress = tokenCreatedLog.topics[1];
+      if (!tokenAddress) throw new Error("Token address not found in event");
+
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
@@ -164,14 +158,12 @@ describe("BaseERC20", function () {
       const receipt = await tx.wait();
       if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
-      const iface = new Interface([
-        "event TokenCreated(address indexed tokenAddress, string name, string symbol, string tokenType, address indexed owner)"
-      ]);
-      const log = receipt.logs[0];
-      const parsedLog = iface.parseLog(log);
-      if (!parsedLog) throw new Error("Could not parse log");
-      
-      const tokenAddress = parsedLog.args[0];
+      const tokenCreatedLog = receipt.logs[2];
+      if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
+
+      const tokenAddress = tokenCreatedLog.topics[1];
+      if (!tokenAddress) throw new Error("Token address not found in event");
+
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
