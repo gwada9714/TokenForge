@@ -70,7 +70,7 @@ const prepareDeploymentArgs = (
     uups: advancedConfig.uups,
     permit: advancedConfig.permit,
     votes: advancedConfig.votes,
-    accessControl: advancedConfig.accessControl ? '1' : '0',
+    accessControl: advancedConfig.accessControl ? '0x1' : '0x0',
     baseURI: advancedConfig.baseURI || '',
     asset: advancedConfig.asset || ZERO_ADDRESS,
     maxSupply: advancedConfig.maxSupply ? parseEther(advancedConfig.maxSupply) : BigInt(0),
