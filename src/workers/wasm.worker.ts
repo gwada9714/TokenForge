@@ -9,20 +9,29 @@ const SOLC_CDN = `https://binaries.soliditylang.org/bin/soljson-v${SOLC_VERSION}
 
 let solcInstance: any = null;
 
-async function loadScript(url: string): Promise<void> {
-  const response = await fetch(url);
-  const code = await response.text();
+/**
+ * Remplacer l'utilisation de new Function par une approche plus sécurisée
+ */
+const executeWasmCode = (code: string) => {
+  // Utiliser un module ES dynamique au lieu de new Function
+  const blob = new Blob([code], { type: 'application/javascript' });
+  const url = URL.createObjectURL(blob);
   
-  // Create a function from the downloaded code and execute it in worker scope
-  const wrapper = new Function('self', code);
-  wrapper(self);
-}
+  return import(/* @vite-ignore */ url).then(module => {
+    URL.revokeObjectURL(url);
+    return module.default;
+  });
+};
 
 async function loadSolc() {
   if (solcInstance) return solcInstance;
 
   try {
-    await loadScript(SOLC_CDN);
+    const response = await fetch(SOLC_CDN);
+    const code = await response.text();
+    
+    // Execute the downloaded code in worker scope
+    const module = await executeWasmCode(code);
     
     // @ts-ignore
     if (typeof self.Module === 'undefined') {

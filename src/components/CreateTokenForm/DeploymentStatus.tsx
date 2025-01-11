@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Box, Typography, CircularProgress, Link } from '@mui/material';
 import { PublicClient } from 'viem';
 import { getDeploymentStatus } from '../../services/contractDeployment';
@@ -15,20 +15,39 @@ const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
 }) => {
   const [status, setStatus] = useState<TokenDeploymentStatus>(initialStatus);
 
-  useEffect(() => {
+  const checkStatus = useCallback(async () => {
     if (!status.txHash || status.status === 'success' || status.status === 'error' || status.status === 'failed') return;
 
-    const interval = setInterval(async () => {
-      try {
-        const updatedStatus = await getDeploymentStatus(status.txHash!, publicClient);
-        setStatus(updatedStatus);
-      } catch (error) {
-        console.error('Failed to get deployment status:', error);
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
+    try {
+      const updatedStatus = await getDeploymentStatus(status.txHash!, publicClient);
+      setStatus(updatedStatus);
+    } catch (error) {
+      console.error('Failed to get deployment status:', error);
+    }
   }, [status.txHash, status.status, publicClient]);
+
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const checkStatusPeriodically = async () => {
+      if (!isSubscribed || status.status !== 'pending') return;
+
+      try {
+        await checkStatus();
+        if (isSubscribed && status.status === 'pending') {
+          requestAnimationFrame(checkStatusPeriodically);
+        }
+      } catch (error) {
+        console.error('Error checking deployment status:', error);
+      }
+    };
+
+    checkStatusPeriodically();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [status.status, checkStatus]);
 
   const renderStatus = () => {
     switch (status.status) {
