@@ -1,4 +1,4 @@
-import { type WalletClient, type PublicClient } from 'wagmi';
+import { type Client, type Account } from 'viem';
 import { getTokenFactoryContract } from './contracts';
 import { TokenBaseConfig, TokenAdvancedConfig, TokenDeploymentStatus } from '../types/tokens';
 import { parseUnits } from 'viem';
@@ -6,11 +6,16 @@ import { parseUnits } from 'viem';
 export async function deployToken(
   baseConfig: TokenBaseConfig,
   advancedConfig: TokenAdvancedConfig,
-  walletClient: WalletClient,
-  publicClient: PublicClient
+  walletClient: Client,
+  publicClient: Client
 ): Promise<TokenDeploymentStatus> {
   try {
-    const contract = getTokenFactoryContract(process.env.VITE_TOKEN_FACTORY_ADDRESS as `0x${string}`);
+    const factoryAddress = process.env.VITE_TOKEN_FACTORY_ADDRESS;
+    if (!factoryAddress || !factoryAddress.startsWith('0x')) {
+      throw new Error('Invalid token factory address');
+    }
+
+    const contract = getTokenFactoryContract(factoryAddress as `0x${string}`);
     
     const initialSupply = parseUnits(
       baseConfig.initialSupply.toString(),
@@ -37,7 +42,7 @@ export async function deployToken(
     if (receipt.status === 'success') {
       return {
         status: 'success',
-        contractAddress: receipt.contractAddress as string,
+        contractAddress: receipt.contractAddress as `0x${string}`,
         txHash: hash,
       };
     } else {

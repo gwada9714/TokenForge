@@ -70,12 +70,21 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
       setLoading(true);
       setError(null);
 
-      const contract = getTokenContract(token.address);
+      if (!token.address.startsWith('0x')) {
+        throw new Error('Invalid token address');
+      }
+
+      const contract = getTokenContract(token.address as `0x${string}`);
       
       const { request } = await publicClient.simulateContract({
         ...contract,
         functionName: operation,
-        args: params.map(p => typeof p === 'string' && p.startsWith('0x') ? p as `0x${string}` : p),
+        args: params.map(p => {
+          if (typeof p === 'string' && p.startsWith('0x')) {
+            return p as `0x${string}`;
+          }
+          return p;
+        }),
       });
 
       const hash = await walletClient.writeContract(request);
