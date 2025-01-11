@@ -16,6 +16,7 @@ describe("BaseERC20", function () {
     const [owner, addr1, addr2] = await hre.ethers.getSigners();
     const TokenFactoryFactory = await hre.ethers.getContractFactory("TokenFactory");
     const tokenFactory = await TokenFactoryFactory.deploy(owner.address);
+    await tokenFactory.waitForDeployment();
     const deployedAddress = await tokenFactory.getAddress();
     const deployedFactory = TokenFactoryFactory.attach(deployedAddress);
 
@@ -35,7 +36,7 @@ describe("BaseERC20", function () {
       const salt = randomBytes(32);
 
       // Create token
-      const tx = await tokenFactory.createToken(
+      const tx = await tokenFactory.createERC20(
         name,
         symbol,
         decimals,
@@ -49,7 +50,7 @@ describe("BaseERC20", function () {
       if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
       const iface = new Interface([
-        "event TokenCreated(address indexed tokenAddress)"
+        "event TokenCreated(address indexed tokenAddress, string name, string symbol, string tokenType, address indexed owner)"
       ]);
       const log = receipt.logs[0];
       const parsedLog = iface.parseLog(log);
@@ -75,7 +76,7 @@ describe("BaseERC20", function () {
       const mintable = false;
       const salt = randomBytes(32);
 
-      const tx = await tokenFactory.createToken(
+      const tx = await tokenFactory.createERC20(
         "Test",
         "TEST",
         18,
@@ -89,7 +90,7 @@ describe("BaseERC20", function () {
       if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
       const iface = new Interface([
-        "event TokenCreated(address indexed tokenAddress)"
+        "event TokenCreated(address indexed tokenAddress, string name, string symbol, string tokenType, address indexed owner)"
       ]);
       const log = receipt.logs[0];
       const parsedLog = iface.parseLog(log);
@@ -112,7 +113,7 @@ describe("BaseERC20", function () {
       const mintable = true;
       const salt = randomBytes(32);
 
-      const tx = await tokenFactory.createToken(
+      const tx = await tokenFactory.createERC20(
         "Test",
         "TEST",
         18,
@@ -126,7 +127,7 @@ describe("BaseERC20", function () {
       if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
       const iface = new Interface([
-        "event TokenCreated(address indexed tokenAddress)"
+        "event TokenCreated(address indexed tokenAddress, string name, string symbol, string tokenType, address indexed owner)"
       ]);
       const log = receipt.logs[0];
       const parsedLog = iface.parseLog(log);
@@ -150,7 +151,7 @@ describe("BaseERC20", function () {
       const mintable = true;
       const salt = randomBytes(32);
 
-      const tx = await tokenFactory.createToken(
+      const tx = await tokenFactory.createERC20(
         "Test",
         "TEST",
         18,
@@ -164,7 +165,7 @@ describe("BaseERC20", function () {
       if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
       const iface = new Interface([
-        "event TokenCreated(address indexed tokenAddress)"
+        "event TokenCreated(address indexed tokenAddress, string name, string symbol, string tokenType, address indexed owner)"
       ]);
       const log = receipt.logs[0];
       const parsedLog = iface.parseLog(log);
