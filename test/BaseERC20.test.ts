@@ -1,9 +1,12 @@
-import { expect } from "chai";
+import { expect, use } from "chai";
+import chaiAsPromised from "chai-as-promised";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import hre from "hardhat";
 import "@nomicfoundation/hardhat-ethers";
 import { parseEther, Interface, randomBytes, Contract, Log } from "ethers";
+
+use(chaiAsPromised);
 
 describe("BaseERC20", function () {
   // Fixture that deploys TokenFactory
@@ -52,7 +55,7 @@ describe("BaseERC20", function () {
       const tokenCreatedLog = receipt.logs[2];
       if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
 
-      const tokenAddress = tokenCreatedLog.topics[1];
+      const tokenAddress = `0x${tokenCreatedLog.topics[1].slice(26)}`;
       if (!tokenAddress) throw new Error("Token address not found in event");
 
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
@@ -90,7 +93,7 @@ describe("BaseERC20", function () {
       const tokenCreatedLog = receipt.logs[2];
       if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
 
-      const tokenAddress = tokenCreatedLog.topics[1];
+      const tokenAddress = `0x${tokenCreatedLog.topics[1].slice(26)}`;
       if (!tokenAddress) throw new Error("Token address not found in event");
 
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
@@ -125,7 +128,7 @@ describe("BaseERC20", function () {
       const tokenCreatedLog = receipt.logs[2];
       if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
 
-      const tokenAddress = tokenCreatedLog.topics[1];
+      const tokenAddress = `0x${tokenCreatedLog.topics[1].slice(26)}`;
       if (!tokenAddress) throw new Error("Token address not found in event");
 
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
@@ -161,7 +164,7 @@ describe("BaseERC20", function () {
       const tokenCreatedLog = receipt.logs[2];
       if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
 
-      const tokenAddress = tokenCreatedLog.topics[1];
+      const tokenAddress = `0x${tokenCreatedLog.topics[1].slice(26)}`;
       if (!tokenAddress) throw new Error("Token address not found in event");
 
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
