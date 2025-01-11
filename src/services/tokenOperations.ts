@@ -161,7 +161,8 @@ const calculateTokenStatistics = async (
 
   const totalSupply = BigInt(token.totalSupply);
   
-  for (const [address, balance] of holders.entries()) {
+  // Utiliser Array.from pour itérer sur les entrées de la Map
+  Array.from(holders.entries()).forEach(([address, balance]) => {
     if (balance > parseUnits(largestHolder.balance, token.decimals)) {
       largestHolder = {
         address,
@@ -169,7 +170,7 @@ const calculateTokenStatistics = async (
         percentage: Number((balance * BigInt(100)) / totalSupply),
       };
     }
-  }
+  });
 
   return {
     totalTransfers: operations.filter(op => op.type === 'transfer').length,
