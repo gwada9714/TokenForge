@@ -90,7 +90,7 @@
     "zod": "^3.24.1"
   },
   "scripts": {
-    "prestart": "taskkill /F /IM node.exe /T || true",
+    "prestart": "powershell -ExecutionPolicy Bypass -File ./scripts/cleanup.ps1",
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
