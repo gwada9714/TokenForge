@@ -9,12 +9,16 @@ import {
   Alert,
   Box,
   CircularProgress,
+  Snackbar,
 } from '@mui/material';
+import { usePublicClient, useWalletClient } from 'wagmi';
 import { TokenInfo } from '../../types/tokens';
 import { isValidAddress } from '../../utils/address';
+import { executeTokenOperation } from '../../services/tokenOperations';
 
 interface TokenOperationsProps {
   token: TokenInfo;
+  onOperationComplete?: () => void;
 }
 
 interface OperationCardProps {
@@ -43,7 +47,7 @@ const OperationCard: React.FC<OperationCardProps> = ({
   </Grid>
 );
 
-export const TokenOperations: React.FC<TokenOperationsProps> = ({ token }) => {
+export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOperationComplete }) => {
   const [mintAmount, setMintAmount] = useState('');
   const [burnAmount, setBurnAmount] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
@@ -52,156 +56,167 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token }) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const handleMint = async () => {
-    if (!token.mintable) {
-      setError('Ce token ne peut pas être minté');
-      return;
-    }
-    
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
+
+  const handleOperation = async (operation: 'mint' | 'burn' | 'transfer') => {
     try {
       setLoading(true);
       setError(null);
-      // TODO: Implémenter la logique de mint
-      setSuccess('Tokens mintés avec succès');
+
+      const amount = operation === 'mint' 
+        ? mintAmount 
+        : operation === 'burn' 
+          ? burnAmount 
+          : transferAmount;
+
+      await executeTokenOperation(
+        token,
+        operation,
+        amount,
+        operation === 'transfer' ? transferAddress as `0x${string}` : undefined,
+        publicClient,
+        walletClient
+      );
+
+      setSuccess(`${operation.charAt(0).toUpperCase() + operation.slice(1)} operation successful!`);
+      
+      // Reset form
+      if (operation === 'mint') setMintAmount('');
+      if (operation === 'burn') setBurnAmount('');
+      if (operation === 'transfer') {
+        setTransferAmount('');
+        setTransferAddress('');
+      }
+
+      if (onOperationComplete) {
+        onOperationComplete();
+      }
     } catch (err) {
-      setError('Erreur lors du mint');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBurn = async () => {
-    if (!token.burnable) {
-      setError('Ce token ne peut pas être brûlé');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      // TODO: Implémenter la logique de burn
-      setSuccess('Tokens brûlés avec succès');
-    } catch (err) {
-      setError('Erreur lors du burn');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTransfer = async () => {
-    if (!isValidAddress(transferAddress)) {
-      setError('Adresse de destination invalide');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      // TODO: Implémenter la logique de transfer
-      setSuccess('Tokens transférés avec succès');
-    } catch (err) {
-      setError('Erreur lors du transfert');
-      console.error(err);
+      setError(err instanceof Error ? err.message : 'Operation failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
-
-      <Grid container spacing={2}>
+    <>
+      <Grid container spacing={3}>
         {token.mintable && (
           <OperationCard
-            title="Minter des Tokens"
-            description="Créer de nouveaux tokens et les ajouter à une adresse"
+            title="Mint Tokens"
+            description="Create new tokens and add them to your balance."
           >
-            <TextField
-              fullWidth
-              label="Montant"
-              value={mintAmount}
-              onChange={(e) => setMintAmount(e.target.value)}
-              type="number"
-              sx={{ mb: 2 }}
-            />
-            <Button
-              variant="contained"
-              onClick={handleMint}
-              disabled={loading || !mintAmount}
-              fullWidth
-            >
-              {loading ? <CircularProgress size={24} /> : 'Minter'}
-            </Button>
+            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('mint'); }}>
+              <TextField
+                fullWidth
+                label="Amount"
+                value={mintAmount}
+                onChange={(e) => setMintAmount(e.target.value)}
+                type="number"
+                margin="normal"
+                disabled={loading}
+              />
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                onClick={() => handleOperation('mint')}
+                disabled={!mintAmount || loading}
+                sx={{ mt: 2 }}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Mint'}
+              </Button>
+            </Box>
           </OperationCard>
         )}
 
         {token.burnable && (
           <OperationCard
-            title="Brûler des Tokens"
-            description="Détruire définitivement des tokens"
+            title="Burn Tokens"
+            description="Permanently destroy tokens from your balance."
           >
-            <TextField
-              fullWidth
-              label="Montant"
-              value={burnAmount}
-              onChange={(e) => setBurnAmount(e.target.value)}
-              type="number"
-              sx={{ mb: 2 }}
-            />
-            <Button
-              variant="contained"
-              color="error"
-              onClick={handleBurn}
-              disabled={loading || !burnAmount}
-              fullWidth
-            >
-              {loading ? <CircularProgress size={24} /> : 'Brûler'}
-            </Button>
+            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('burn'); }}>
+              <TextField
+                fullWidth
+                label="Amount"
+                value={burnAmount}
+                onChange={(e) => setBurnAmount(e.target.value)}
+                type="number"
+                margin="normal"
+                disabled={loading}
+              />
+              <Button
+                fullWidth
+                variant="contained"
+                color="error"
+                onClick={() => handleOperation('burn')}
+                disabled={!burnAmount || loading}
+                sx={{ mt: 2 }}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Burn'}
+              </Button>
+            </Box>
           </OperationCard>
         )}
 
         <OperationCard
-          title="Transférer des Tokens"
-          description="Envoyer des tokens à une autre adresse"
+          title="Transfer Tokens"
+          description="Send tokens to another address."
         >
-          <TextField
-            fullWidth
-            label="Adresse de destination"
-            value={transferAddress}
-            onChange={(e) => setTransferAddress(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Montant"
-            value={transferAmount}
-            onChange={(e) => setTransferAmount(e.target.value)}
-            type="number"
-            sx={{ mb: 2 }}
-          />
-          <Button
-            variant="contained"
-            onClick={handleTransfer}
-            disabled={loading || !transferAmount || !transferAddress}
-            fullWidth
-          >
-            {loading ? <CircularProgress size={24} /> : 'Transférer'}
-          </Button>
+          <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('transfer'); }}>
+            <TextField
+              fullWidth
+              label="Recipient Address"
+              value={transferAddress}
+              onChange={(e) => setTransferAddress(e.target.value)}
+              margin="normal"
+              error={!!transferAddress && !isValidAddress(transferAddress)}
+              helperText={transferAddress && !isValidAddress(transferAddress) ? 'Invalid address' : ''}
+              disabled={loading}
+            />
+            <TextField
+              fullWidth
+              label="Amount"
+              value={transferAmount}
+              onChange={(e) => setTransferAmount(e.target.value)}
+              type="number"
+              margin="normal"
+              disabled={loading}
+            />
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={() => handleOperation('transfer')}
+              disabled={!transferAmount || !isValidAddress(transferAddress) || loading}
+              sx={{ mt: 2 }}
+            >
+              {loading ? <CircularProgress size={24} /> : 'Transfer'}
+            </Button>
+          </Box>
         </OperationCard>
       </Grid>
-    </Box>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={6000}
+        onClose={() => setSuccess(null)}
+      >
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
