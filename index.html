@@ -5,13 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self';
-      script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net;
+      default-src 'none';
+      script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'strict-dynamic' https: 'nonce-${nonce}';
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: https:;
-      connect-src 'self' https://*.infura.io https://*.alchemyapi.io https://api.etherscan.io;
-      frame-src 'self' https://*.moonpay.com;
+      img-src 'self' data: https: blob:;
+      connect-src 'self' https://*.infura.io https://*.alchemyapi.io https://api.etherscan.io wss://*.infura.io wss://*.alchemyapi.io https://*.walletconnect.org https://api.coingecko.com;
+      frame-src 'self' https://*.moonpay.com https://*.walletconnect.org;
+      worker-src 'self' blob:;
+      manifest-src 'self';
+      base-uri 'self';
+      form-action 'self';
+      object-src 'none';
+      upgrade-insecure-requests;
+      block-all-mixed-content;
     ">
     <title>TokenForge</title>
   </head>

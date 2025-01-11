@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
+import { cspPlugin } from './vite-plugin-csp';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -65,6 +66,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
       }),
+      cspPlugin(),
     ],
     resolve: {
       alias: [
@@ -98,7 +100,9 @@ export default defineConfig(({ mode }) => {
             "media-src 'self' https:;",
             "worker-src 'self' blob:;",
             "frame-src 'self' https:;"
-          ].join(' ')
+          ].join(' '),
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+        'Cross-Origin-Opener-Policy': 'same-origin',
       },
       hmr: {
         overlay: true,
