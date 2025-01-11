@@ -1,4 +1,4 @@
-import { Address, Chain, encodeDeployData, PublicClient, WalletClient, Account, estimateContractDeploymentGas } from 'viem';
+import { Address, Chain, encodeDeployData, PublicClient, WalletClient, Account } from 'viem';
 import { TokenBaseConfig, TokenAdvancedConfig, TokenDeploymentStatus } from '../types/tokens';
 import { parseUnits } from 'viem';
 import { mainnet } from 'viem/chains';
@@ -99,8 +99,8 @@ export const estimateGas = async (
       advancedConfig.votes,
     ] as const;
 
-    // Estimer le gas en utilisant estimateContractDeploymentGas
-    const estimate = await estimateContractDeploymentGas(walletClient, {
+    // Estimer le gas en utilisant deployContract
+    const estimate = await walletClient.estimateContractGas({
       account,
       abi: customERC20ABI,
       bytecode: CONTRACT_BYTECODE,
