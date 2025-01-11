@@ -9,115 +9,112 @@ interface DeploymentStatusProps {
   publicClient: PublicClient;
 }
 
-const REQUIRED_CONFIRMATIONS = 1; // Add this line
-
-export const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
+const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
   status: initialStatus,
   publicClient
 }) => {
   const [status, setStatus] = useState<TokenDeploymentStatus>(initialStatus);
 
   useEffect(() => {
-    if (!status.txHash || status.status === 'success' || status.status === 'failed') return;
+    if (!status.txHash || status.status === 'success' || status.status === 'error' || status.status === 'failed') return;
 
-    const checkStatus = async () => {
+    const interval = setInterval(async () => {
       try {
-        const result = await getDeploymentStatus(status.txHash!, publicClient);
-        setStatus(result);
-      } catch (err) {
-        setStatus({
-          status: 'failed',
-          confirmations: status.confirmations,
-          error: err instanceof Error ? err.message : 'Unknown error occurred'
-        });
+        const updatedStatus = await getDeploymentStatus(status.txHash!, publicClient);
+        setStatus(updatedStatus);
+      } catch (error) {
+        console.error('Failed to get deployment status:', error);
       }
-    };
-
-    const interval = setInterval(checkStatus, 5000);
-    checkStatus();
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [status.txHash, status.status, publicClient]);
 
-  useEffect(() => {
-    if (status.confirmations >= REQUIRED_CONFIRMATIONS) {
-      setStatus(prev => ({ ...prev, confirmed: true }));
-    }
-  }, [status.confirmations, REQUIRED_CONFIRMATIONS]);
+  const renderStatus = () => {
+    switch (status.status) {
+      case 'pending':
+        return (
+          <>
+            <Box display="flex" alignItems="center" gap={1}>
+              <CircularProgress size={20} />
+              <Typography>
+                Deploying your token... {status.confirmations ? `(${status.confirmations} confirmations)` : ''}
+              </Typography>
+            </Box>
+            {status.txHash && (
+              <Link
+                href={`https://etherscan.io/tx/${status.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on Etherscan
+              </Link>
+            )}
+          </>
+        );
 
-  const getEtherscanBaseUrl = () => {
-    const chainId = publicClient.chain?.id;
-    switch (chainId) {
-      case 1:
-        return 'https://etherscan.io';
-      case 11155111:
-        return 'https://sepolia.etherscan.io';
-      default:
-        return 'https://etherscan.io';
+      case 'success':
+        return (
+          <>
+            <Typography color="success.main">
+              Token deployed successfully!
+            </Typography>
+            {status.txHash && (
+              <Link
+                href={`https://etherscan.io/tx/${status.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View transaction
+              </Link>
+            )}
+            {status.tokenAddress && (
+              <Link
+                href={`https://etherscan.io/token/${status.tokenAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View token
+              </Link>
+            )}
+            {status.proxyAddress && (
+              <Link
+                href={`https://etherscan.io/address/${status.proxyAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View proxy
+              </Link>
+            )}
+          </>
+        );
+
+      case 'failed':
+      case 'error':
+        return (
+          <>
+            <Typography color="error.main">
+              {status.error || 'Failed to deploy token'}
+            </Typography>
+            {status.txHash && (
+              <Link
+                href={`https://etherscan.io/tx/${status.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View transaction
+              </Link>
+            )}
+          </>
+        );
     }
   };
 
-  const etherscanBaseUrl = getEtherscanBaseUrl();
-
   return (
-    <Box sx={{ mt: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Deployment Status
-      </Typography>
-
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-        {status.status === 'pending' && <CircularProgress size={20} />}
-        <Typography>
-          {status.status === 'pending' && `Confirming transaction (${status.confirmations} confirmations)`}
-          {status.status === 'success' && 'Transaction confirmed'}
-          {status.status === 'failed' && 'Transaction failed'}
-        </Typography>
-      </Box>
-
-      {status.error && (
-        <Typography color="error" sx={{ mb: 1 }}>
-          Error: {status.error}
-        </Typography>
-      )}
-
-      {status.txHash && (
-        <Typography sx={{ mb: 1 }}>
-          Transaction Hash:{' '}
-          <Link
-            href={`${etherscanBaseUrl}/tx/${status.txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {status.txHash}
-          </Link>
-        </Typography>
-      )}
-
-      {status.tokenAddress && (
-        <Typography sx={{ mb: 1 }}>
-          Token Address:{' '}
-          <Link
-            href={`${etherscanBaseUrl}/token/${status.tokenAddress}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {status.tokenAddress}
-          </Link>
-        </Typography>
-      )}
-
-      {status.proxyAddress && (
-        <Typography>
-          Proxy Address:{' '}
-          <Link
-            href={`${etherscanBaseUrl}/address/${status.proxyAddress}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {status.proxyAddress}
-          </Link>
-        </Typography>
-      )}
+    <Box display="flex" flexDirection="column" gap={1}>
+      {renderStatus()}
     </Box>
   );
 };
+
+export default DeploymentStatus;
