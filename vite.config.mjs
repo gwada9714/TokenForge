@@ -5,6 +5,45 @@ import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+
+  const cspDirectives = {
+    'default-src': ["'self'"],
+    'script-src': [
+      "'self'",
+      "'unsafe-eval'",
+      "'unsafe-inline'",
+      "'wasm-unsafe-eval'",
+      'https://fonts.googleapis.com',
+      'https://binaries.soliditylang.org',
+      'https://*.walletconnect.com',
+      'https://*.walletconnect.org',
+    ],
+    'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    'font-src': ["'self'", 'https://fonts.gstatic.com'],
+    'connect-src': [
+      "'self'",
+      'https://*.walletconnect.com',
+      'wss://*.walletconnect.com',
+      'https://*.walletconnect.org',
+      'wss://*.walletconnect.org',
+      'https://*.infura.io',
+      'wss://*.infura.io',
+      'https://*.alchemy.com',
+      'wss://*.alchemy.com',
+      'wss://*.walletlink.org',
+      'https://ethereum-api.xyz',
+      'https://*.ethereum-api.xyz',
+    ],
+    'img-src': ["'self'", 'data:', 'https:'],
+    'media-src': ["'self'"],
+    'object-src': ["'none'"],
+    'frame-src': ["'self'", 'https://*.walletconnect.com'],
+  };
+
+  const cspString = Object.entries(cspDirectives)
+    .map(([key, values]) => `${key} ${values.join(' ')}`)
+    .join('; ');
+
   return {
     define: {
       'process.env.VITE_WALLET_CONNECT_PROJECT_ID': JSON.stringify(env.VITE_WALLET_CONNECT_PROJECT_ID),
@@ -44,7 +83,7 @@ export default defineConfig(({ mode }) => {
       strictPort: false,
       open: true,
       headers: {
-        'Content-Security-Policy': "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' https://fonts.googleapis.com https://binaries.soliditylang.org https://*.walletconnect.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org https://*.infura.io wss://*.infura.io https://*.alchemy.com wss://*.alchemy.com"
+        'Content-Security-Policy': cspString,
       }
     },
     optimizeDeps: {
