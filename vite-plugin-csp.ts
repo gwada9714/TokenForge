@@ -25,19 +25,118 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
       server.middlewares.use((req, res, next) => {
         const nonce = generateNonce();
         nonces.add(nonce);
-        
-        if (isDev) {
-          // En développement, on utilise une CSP plus permissive
-          res.setHeader(
-            'Content-Security-Policy',
-            generateCSPHeader(nonce, true)
-          );
-        } else {
-          res.setHeader(
-            'Content-Security-Policy',
-            generateCSPHeader(nonce, false)
-          );
-        }
+
+        // En développement, on utilise une CSP plus permissive
+        const cspHeader = isDev ? {
+          'default-src': ["'self'"],
+          'script-src': [
+            "'self'",
+            "'unsafe-eval'",
+            "'unsafe-inline'",
+            "http://localhost:*",
+            "ws://localhost:*",
+            "https://*.moonpay.com",
+          ],
+          'style-src': [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+          ],
+          'font-src': [
+            "'self'",
+            "https://fonts.gstatic.com",
+            "data:",
+          ],
+          'img-src': [
+            "'self'",
+            "data:",
+            "https:",
+            "blob:",
+          ],
+          'connect-src': [
+            "'self'",
+            "ws://localhost:*",
+            "http://localhost:*",
+            "https://*.infura.io",
+            "https://*.alchemyapi.io",
+            "https://api.etherscan.io",
+            "wss://*.infura.io",
+            "wss://*.alchemyapi.io",
+            "https://*.walletconnect.org",
+            "https://api.coingecko.com",
+            "https://eth-sepolia.g.alchemy.com",
+            "https://mainnet.infura.io",
+            "https://*.moonpay.com",
+            "chrome-extension://*",
+          ],
+          'frame-src': [
+            "'self'",
+            "http://localhost:*",
+            "https://*.moonpay.com",
+            "https://*.walletconnect.org",
+          ],
+          'worker-src': [
+            "'self'",
+            "blob:",
+            "'unsafe-eval'",
+          ],
+        } : {
+          'default-src': ["'self'"],
+          'script-src': [
+            "'self'",
+            "'strict-dynamic'",
+            `'nonce-${nonce}'`,
+          ],
+          'style-src': [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+          ],
+          'font-src': [
+            "'self'",
+            "https://fonts.gstatic.com",
+            "data:",
+          ],
+          'img-src': [
+            "'self'",
+            "data:",
+            "https:",
+            "blob:",
+          ],
+          'connect-src': [
+            "'self'",
+            "https://*.infura.io",
+            "https://*.alchemyapi.io",
+            "https://api.etherscan.io",
+            "wss://*.infura.io",
+            "wss://*.alchemyapi.io",
+            "https://*.walletconnect.org",
+            "https://api.coingecko.com",
+            "https://eth-sepolia.g.alchemy.com",
+            "https://mainnet.infura.io",
+            "https://*.moonpay.com",
+          ],
+          'frame-src': [
+            "'self'",
+            "https://*.moonpay.com",
+            "https://*.walletconnect.org",
+          ],
+          'worker-src': ["'self'", "blob:"],
+          'base-uri': ["'self'"],
+          'form-action': ["'self'"],
+          'frame-ancestors': ["'self'"],
+          'object-src': ["'none'"],
+          'upgrade-insecure-requests': [],
+        };
+
+        const cspString = Object.entries(cspHeader)
+          .map(([key, values]) => {
+            if (values.length === 0) return key;
+            return `${key} ${values.join(' ')}`;
+          })
+          .join('; ');
+
+        res.setHeader('Content-Security-Policy', cspString);
 
         // Set other security headers
         res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -56,6 +155,10 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
     transformIndexHtml(html) {
       const nonce = generateNonce();
       nonces.add(nonce);
+
+      if (isDev) {
+        return html;  // Skip CSP meta tag in development
+      }
 
       // Collect all inline scripts and styles
       const inlineScripts = new Set<string>();
@@ -83,118 +186,7 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
         }
       );
 
-      // Add CSP meta tag with collected hashes
-      if (isDev) {
-        return html;  // Skip CSP meta tag in development
-      }
-
-      const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${generateCSPHeader(nonce, false, {
-        inlineScripts: Array.from(inlineScripts),
-        inlineStyles: Array.from(inlineStyles),
-      })}">`;
-      
-      return html.replace('</head>', `${cspMeta}\n</head>`);
+      return html;
     },
   };
-}
-
-interface CSPHashesOptions {
-  inlineScripts?: string[];
-  inlineStyles?: string[];
-}
-
-function generateCSPHeader(nonce: string, isDev: boolean, hashes: CSPHashesOptions = {}): string {
-  const policies = {
-    'default-src': ["'self'"],
-    'script-src': [
-      "'self'",
-      `'nonce-${nonce}'`,
-      ...(hashes.inlineScripts || []),
-      // Development-specific sources
-      ...(isDev ? [
-        "'unsafe-eval'",
-        "'unsafe-inline'",
-        'http://localhost:*',
-        'ws://localhost:*',
-        'https://*.moonpay.com',
-      ] : [
-        "'strict-dynamic'"
-      ]),
-    ],
-    'script-src-elem': [
-      "'self'",
-      `'nonce-${nonce}'`,
-      ...(hashes.inlineScripts || []),
-      'https://*.moonpay.com',
-      ...(isDev ? [
-        "'unsafe-inline'",
-        'http://localhost:*',
-        'ws://localhost:*'
-      ] : []),
-    ],
-    'style-src': [
-      "'self'",
-      "'unsafe-inline'",
-      `'nonce-${nonce}'`,
-      ...(hashes.inlineStyles || []),
-      'https://fonts.googleapis.com',
-    ],
-    'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
-    'img-src': ["'self'", 'data:', 'https:', 'blob:'],
-    'connect-src': [
-      "'self'",
-      'https://*.infura.io',
-      'https://*.alchemyapi.io',
-      'https://api.etherscan.io',
-      'wss://*.infura.io',
-      'wss://*.alchemyapi.io',
-      'https://*.walletconnect.org',
-      'https://api.coingecko.com',
-      'https://eth-sepolia.g.alchemy.com',
-      'https://mainnet.infura.io',
-      'https://*.moonpay.com',
-      ...(isDev ? [
-        'ws://localhost:*',
-        'http://localhost:*',
-        'chrome-extension://*'
-      ] : []),
-    ],
-    'frame-src': [
-      "'self'",
-      'https://*.moonpay.com',
-      'https://*.walletconnect.org',
-      ...(isDev ? ['http://localhost:*'] : []),
-    ],
-    'worker-src': [
-      "'self'",
-      'blob:',
-      ...(isDev ? ["'unsafe-eval'"] : []),
-    ],
-    'manifest-src': ["'self'"],
-    'base-uri': ["'self'"],
-    'form-action': ["'self'"],
-    'object-src': ["'none'"],
-    'upgrade-insecure-requests': [],
-  };
-
-  // En développement, on ne met pas la directive sandbox
-  if (!isDev) {
-    policies['sandbox'] = [
-      'allow-scripts',
-      'allow-same-origin',
-      'allow-forms',
-      'allow-popups',
-      'allow-popups-to-escape-sandbox',
-      'allow-presentation',
-      'allow-downloads',
-    ];
-  }
-
-  return Object.entries(policies)
-    .map(([key, values]) => {
-      if (values.length === 0) return key;
-      if (key === 'sandbox') return `${key} ${values.join(' ')}`;
-      return `${key} ${values.join(' ')}`;
-    })
-    .join('; ');
 }
