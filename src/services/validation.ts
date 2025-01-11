@@ -41,7 +41,7 @@ export const validateBaseConfig = (config: TokenBaseConfig): ValidationError[] =
     });
   }
 
-  if (!config.initialSupply || parseFloat(config.initialSupply) <= 0) {
+  if (!config.initialSupply || config.initialSupply <= 0) {
     errors.push({
       field: 'initialSupply',
       message: 'Initial supply must be greater than 0'

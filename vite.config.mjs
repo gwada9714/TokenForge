@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['buffer', 'process'],
+      include: ['buffer', 'process', 'stream', 'path', 'http', 'https', 'fs'],
       globals: {
         Buffer: true,
         global: true,
@@ -16,6 +17,14 @@ export default defineConfig({
   ],
   define: {
     'process.env': {},
+  },
+  resolve: {
+    alias: {
+      stream: 'stream-browserify',
+      http: 'stream-http',
+      https: 'https-browserify',
+      path: 'path-browserify',
+    },
   },
   build: {
     rollupOptions: {
