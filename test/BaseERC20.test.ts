@@ -1,12 +1,9 @@
-import { expect, use } from "chai";
-import chaiAsPromised from "chai-as-promised";
+import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import hre from "hardhat";
 import "@nomicfoundation/hardhat-ethers";
 import { parseEther, Interface, randomBytes, Contract, Log } from "ethers";
-
-use(chaiAsPromised);
 
 describe("BaseERC20", function () {
   // Fixture that deploys TokenFactory
@@ -99,9 +96,12 @@ describe("BaseERC20", function () {
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
-      await expect(
-        token.mint((await hre.ethers.getSigners())[1].address, parseEther("1"))
-      ).to.be.rejectedWith("MintingDisabled");
+      try {
+        await token.mint((await hre.ethers.getSigners())[1].address, parseEther("1"));
+        expect.fail("Should have thrown MintingDisabled error");
+      } catch (error: any) {
+        expect(error.message).to.include("MintingDisabled");
+      }
     });
 
     it("Should enforce max supply limit", async function () {
@@ -135,9 +135,12 @@ describe("BaseERC20", function () {
       const token = await BaseERC20Factory.attach(tokenAddress);
 
       // Try to mint beyond max supply
-      await expect(
-        token.mint((await hre.ethers.getSigners())[1].address, parseEther("1001"))
-      ).to.be.rejectedWith("MaxSupplyExceeded");
+      try {
+        await token.mint((await hre.ethers.getSigners())[1].address, parseEther("1001"));
+        expect.fail("Should have thrown MaxSupplyExceeded error");
+      } catch (error: any) {
+        expect(error.message).to.include("MaxSupplyExceeded");
+      }
     });
 
     it("Should allow unlimited minting when max supply is 0", async function () {
