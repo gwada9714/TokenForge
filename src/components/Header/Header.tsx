@@ -3,7 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 
-const Header = () => {
+export const Header = () => {
   const { address, isConnected } = useAccount();
   const { connectAsync } = useConnect();
   const { disconnectAsync } = useDisconnect();
@@ -53,5 +53,3 @@ const Header = () => {
     </AppBar>
   );
 };
-
-export default Header;
