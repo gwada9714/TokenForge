@@ -38,10 +38,6 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
     navigator.clipboard.writeText(text);
   };
 
-  const openEtherscan = () => {
-    window.open(`https://etherscan.io/token/${token.address}`, "_blank");
-  };
-
   return (
     <Grid container spacing={2}>
       <DetailItem
@@ -58,30 +54,24 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
               </IconButton>
             </Tooltip>
             <Tooltip title="Voir sur Etherscan">
-              <IconButton size="small" onClick={openEtherscan}>
+              <IconButton size="small" onClick={() => window.open(`https://etherscan.io/token/${token.address}`, "_blank")}>
                 <OpenInNewIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Box>
         }
       />
-
       <DetailItem label="Nom" value={token.name} />
-
       <DetailItem label="Symbole" value={token.symbol} />
-
       <DetailItem label="Décimales" value={token.decimals} />
-
       <DetailItem
         label="Supply Maximum"
         value={token.maxSupply ? token.maxSupply.toString() : "Illimité"}
       />
-
       <DetailItem
         label="Supply Total"
         value={token.totalSupply ? token.totalSupply.toString() : "N/A"}
       />
-
       <DetailItem
         label="Fonctionnalités"
         value={
@@ -105,7 +95,6 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
           </Box>
         }
       />
-
       <DetailItem
         label="Propriétaire"
         value={
