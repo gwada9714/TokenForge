@@ -23,6 +23,11 @@ export default defineConfig({
   define: {
     'process.env': {},
   },
+  server: {
+    headers: {
+      'Content-Security-Policy': "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+    }
+  },
   resolve: {
     alias: {
       stream: 'stream-browserify',
