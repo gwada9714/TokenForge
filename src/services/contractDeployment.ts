@@ -12,7 +12,7 @@ import {
   Abi,
 } from 'viem';
 import { TokenFactoryABI } from '../contracts/abi/TokenFactory';
-import { TEST_WALLET_ADDRESS, TX_POLLING_INTERVAL, REQUIRED_CONFIRMATIONS } from '../config/constants';
+import { TEST_WALLET_ADDRESS, TX_POLLING_INTERVAL, REQUIRED_CONFIRMATIONS, ZERO_ADDRESS } from '../config/constants';
 import { getNetwork } from '../config/networks';
 
 interface TokenDeploymentArgs {
@@ -61,7 +61,7 @@ const prepareDeploymentArgs = (
     name: baseConfig.name,
     symbol: baseConfig.symbol,
     decimals: baseConfig.decimals,
-    initialSupply: parseEther(baseConfig.initialSupply || '0'),
+    initialSupply: parseEther(baseConfig.initialSupply.toString()),
     burnable: advancedConfig.burnable,
     mintable: advancedConfig.mintable,
     pausable: advancedConfig.pausable,
@@ -70,11 +70,11 @@ const prepareDeploymentArgs = (
     uups: advancedConfig.uups,
     permit: advancedConfig.permit,
     votes: advancedConfig.votes,
-    accessControl: advancedConfig.accessControl,
+    accessControl: advancedConfig.accessControl ? '1' : '0',
     baseURI: advancedConfig.baseURI || '',
-    asset: (advancedConfig.asset || '0x0000000000000000000000000000000000000000') as Address,
-    maxSupply: parseEther(advancedConfig.maxSupply || '0'),
-    depositLimit: parseEther(advancedConfig.depositLimit || '0')
+    asset: advancedConfig.asset || (ZERO_ADDRESS as Address),
+    maxSupply: advancedConfig.maxSupply ? parseEther(advancedConfig.maxSupply) : 0n,
+    depositLimit: advancedConfig.depositLimit ? parseEther(advancedConfig.depositLimit) : 0n,
   };
 };
 
@@ -176,73 +176,54 @@ export const getDeploymentStatus = async (
     const tx = await publicClient.getTransaction({ hash: txHash });
     if (!tx) {
       return {
-        status: 'pending',
-        confirmations: 0
+        status: 'error',
+        error: 'Transaction not found',
+        txHash
       };
     }
 
     const receipt = await publicClient.getTransactionReceipt({ hash: txHash });
-    const latestBlock = await publicClient.getBlockNumber();
-    const confirmations = receipt ? Number(latestBlock - receipt.blockNumber) : 0;
-    const requiredConfirmations = REQUIRED_CONFIRMATIONS[publicClient.chain?.id as keyof typeof REQUIRED_CONFIRMATIONS] || 1;
-
     if (!receipt) {
       return {
         status: 'pending',
-        confirmations
+        txHash
       };
     }
 
     if (receipt.status === 'reverted') {
       return {
         status: 'failed',
-        confirmations,
+        txHash,
         error: 'Transaction reverted'
       };
     }
 
-    const eventFragment = TokenFactoryABI.find(x => x.type === 'event' && x.name === 'TokenCreated');
-    if (!eventFragment) {
-      return {
-        status: 'failed',
-        confirmations,
-        error: 'Event signature not found'
-      };
-    }
-
-    const logs = receipt.logs.filter(log => {
-      return log.topics[0] === getEventSelector(eventFragment);
-    });
-
-    if (logs.length === 0) {
-      return {
-        status: 'failed',
-        confirmations,
-        error: 'No TokenCreated event found'
-      };
-    }
-
-    const decodedLog = decodeLog(logs[0], publicClient);
+    const logs = receipt.logs;
+    const decodedLog = decodeLog(logs[logs.length - 1], publicClient);
     if (!decodedLog) {
       return {
         status: 'failed',
-        confirmations,
-        error: 'Failed to decode event log'
+        txHash,
+        error: 'Failed to decode deployment logs'
       };
     }
 
+    const latestBlock = await publicClient.getBlockNumber();
+    const confirmations = Number(latestBlock - receipt.blockNumber);
+
     return {
-      status: confirmations >= requiredConfirmations ? 'success' : 'pending',
-      confirmations,
+      status: 'success',
       txHash,
       tokenAddress: decodedLog.args.tokenAddress,
-      proxyAddress: decodedLog.args.proxyAddress
+      proxyAddress: decodedLog.args.proxyAddress,
+      blockNumber: receipt.blockNumber,
+      confirmations
     };
   } catch (error) {
     return {
-      status: 'failed',
-      confirmations: 0,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
+      status: 'error',
+      txHash,
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };

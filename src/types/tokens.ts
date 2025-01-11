@@ -96,9 +96,12 @@ export interface TokenMetadata {
 }
 
 export interface TokenDeploymentStatus {
-  status: 'success' | 'error';
+  status: 'pending' | 'success' | 'failed' | 'error';
+  txHash?: Hash;
   contractAddress?: Address;
-  transactionHash?: Hash;
+  tokenAddress?: Address;
+  proxyAddress?: Address;
   blockNumber?: bigint;
   error?: string;
+  confirmations?: number;
 }
