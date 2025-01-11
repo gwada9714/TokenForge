@@ -1,19 +1,25 @@
-const { expect } = require("chai");
-const { HardhatEthersSigner } = require("@nomicfoundation/hardhat-ethers/signers");
-const { BaseERC20, TokenFactory } = require("../typechain-types");
-const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ContractTransactionReceipt, Interface, Log } = require("ethers");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
+import "@nomicfoundation/hardhat-ethers";
+import { parseEther, Interface, randomBytes, Contract } from "ethers";
 
 describe("BaseERC20", function () {
   // Fixture that deploys TokenFactory
-  async function deployTokenFactoryFixture() {
-    const [owner, addr1, addr2] = await ethers.getSigners();
-    const TokenFactoryFactory = await ethers.getContractFactory("TokenFactory");
+  async function deployTokenFactoryFixture(): Promise<{
+    tokenFactory: Contract;
+    owner: HardhatEthersSigner;
+    addr1: HardhatEthersSigner;
+    addr2: HardhatEthersSigner;
+  }> {
+    const [owner, addr1, addr2] = await hre.ethers.getSigners();
+    const TokenFactoryFactory = await hre.ethers.getContractFactory("TokenFactory");
     const tokenFactory = await TokenFactoryFactory.deploy(owner.address);
-    await tokenFactory.waitForDeployment();
+    const deployedAddress = await tokenFactory.getAddress();
+    const deployedFactory = TokenFactoryFactory.attach(deployedAddress);
 
-    return { tokenFactory, owner, addr1, addr2 };
+    return { tokenFactory: deployedFactory, owner, addr1, addr2 };
   }
 
   describe("Token Creation", function () {
@@ -23,12 +29,13 @@ describe("BaseERC20", function () {
       const name = "Test Token";
       const symbol = "TEST";
       const decimals = 18;
-      const initialSupply = ethers.parseEther("1000");
-      const maxSupply = ethers.parseEther("10000");
+      const initialSupply = parseEther("1000");
+      const maxSupply = parseEther("10000");
       const mintable = true;
-      const salt = ethers.randomBytes(32);
+      const salt = randomBytes(32);
 
-      const tx = await tokenFactory.createERC20(
+      // Create token
+      const tx = await tokenFactory.createToken(
         name,
         symbol,
         decimals,
@@ -38,19 +45,18 @@ describe("BaseERC20", function () {
         salt
       );
 
-      const receipt = await tx.wait() as ContractTransactionReceipt;
-      if (!receipt) throw new Error("No receipt");
+      const receipt = await tx.wait();
+      if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
       const iface = new Interface([
-        "event ERC20Created(address indexed tokenAddress)"
+        "event TokenCreated(address indexed tokenAddress)"
       ]);
-
-      const log = receipt.logs[0] as Log;
+      const log = receipt.logs[0];
       const parsedLog = iface.parseLog(log);
-      if (!parsedLog) throw new Error("Failed to parse log");
+      if (!parsedLog) throw new Error("Could not parse log");
 
       const tokenAddress = parsedLog.args[0];
-      const BaseERC20Factory = await ethers.getContractFactory("BaseERC20");
+      const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
       expect(await token.name()).to.equal(name);
@@ -58,17 +64,18 @@ describe("BaseERC20", function () {
       expect(await token.decimals()).to.equal(decimals);
       expect(await token.totalSupply()).to.equal(initialSupply);
       expect(await token.maxSupply()).to.equal(maxSupply);
+      expect(await token.mintable()).to.equal(mintable);
     });
 
     it("Should not allow minting when disabled", async function () {
       const { tokenFactory } = await loadFixture(deployTokenFactoryFixture);
       
-      const initialSupply = ethers.parseEther("1000");
-      const maxSupply = ethers.parseEther("2000");
+      const initialSupply = parseEther("1000");
+      const maxSupply = parseEther("2000");
       const mintable = false;
-      const salt = ethers.randomBytes(32);
+      const salt = randomBytes(32);
 
-      const tx = await tokenFactory.createERC20(
+      const tx = await tokenFactory.createToken(
         "Test",
         "TEST",
         18,
@@ -78,35 +85,34 @@ describe("BaseERC20", function () {
         salt
       );
 
-      const receipt = await tx.wait() as ContractTransactionReceipt;
-      if (!receipt) throw new Error("No receipt");
+      const receipt = await tx.wait();
+      if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
       const iface = new Interface([
-        "event ERC20Created(address indexed tokenAddress)"
+        "event TokenCreated(address indexed tokenAddress)"
       ]);
-
-      const log = receipt.logs[0] as Log;
+      const log = receipt.logs[0];
       const parsedLog = iface.parseLog(log);
-      if (!parsedLog) throw new Error("Failed to parse log");
+      if (!parsedLog) throw new Error("Could not parse log");
       
       const tokenAddress = parsedLog.args[0];
-      const BaseERC20Factory = await ethers.getContractFactory("BaseERC20");
+      const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
       await expect(
-        token.mint((await ethers.getSigners())[1].address, ethers.parseEther("1"))
+        token.mint((await hre.ethers.getSigners())[1].address, parseEther("1"))
       ).to.be.rejectedWith("MintingDisabled");
     });
 
-    it("Should not allow minting beyond max supply", async function () {
+    it("Should enforce max supply limit", async function () {
       const { tokenFactory } = await loadFixture(deployTokenFactoryFixture);
       
-      const initialSupply = ethers.parseEther("1000");
-      const maxSupply = ethers.parseEther("2000");
+      const initialSupply = parseEther("1000");
+      const maxSupply = parseEther("2000");
       const mintable = true;
-      const salt = ethers.randomBytes(32);
+      const salt = randomBytes(32);
 
-      const tx = await tokenFactory.createERC20(
+      const tx = await tokenFactory.createToken(
         "Test",
         "TEST",
         18,
@@ -116,36 +122,35 @@ describe("BaseERC20", function () {
         salt
       );
 
-      const receipt = await tx.wait() as ContractTransactionReceipt;
-      if (!receipt) throw new Error("No receipt");
+      const receipt = await tx.wait();
+      if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
       const iface = new Interface([
-        "event ERC20Created(address indexed tokenAddress)"
+        "event TokenCreated(address indexed tokenAddress)"
       ]);
-
-      const log = receipt.logs[0] as Log;
+      const log = receipt.logs[0];
       const parsedLog = iface.parseLog(log);
-      if (!parsedLog) throw new Error("Failed to parse log");
+      if (!parsedLog) throw new Error("Could not parse log");
       
       const tokenAddress = parsedLog.args[0];
-      const BaseERC20Factory = await ethers.getContractFactory("BaseERC20");
+      const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
       // Try to mint beyond max supply
       await expect(
-        token.mint((await ethers.getSigners())[1].address, ethers.parseEther("1001"))
+        token.mint((await hre.ethers.getSigners())[1].address, parseEther("1001"))
       ).to.be.rejectedWith("MaxSupplyExceeded");
     });
 
     it("Should allow unlimited minting when max supply is 0", async function () {
       const { tokenFactory } = await loadFixture(deployTokenFactoryFixture);
       
-      const initialSupply = ethers.parseEther("1000");
+      const initialSupply = parseEther("1000");
       const maxSupply = 0; // No max supply
       const mintable = true;
-      const salt = ethers.randomBytes(32);
+      const salt = randomBytes(32);
 
-      const tx = await tokenFactory.createERC20(
+      const tx = await tokenFactory.createToken(
         "Test",
         "TEST",
         18,
@@ -155,24 +160,23 @@ describe("BaseERC20", function () {
         salt
       );
 
-      const receipt = await tx.wait() as ContractTransactionReceipt;
-      if (!receipt) throw new Error("No receipt");
+      const receipt = await tx.wait();
+      if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
 
       const iface = new Interface([
-        "event ERC20Created(address indexed tokenAddress)"
+        "event TokenCreated(address indexed tokenAddress)"
       ]);
-
-      const log = receipt.logs[0] as Log;
+      const log = receipt.logs[0];
       const parsedLog = iface.parseLog(log);
-      if (!parsedLog) throw new Error("Failed to parse log");
+      if (!parsedLog) throw new Error("Could not parse log");
       
       const tokenAddress = parsedLog.args[0];
-      const BaseERC20Factory = await ethers.getContractFactory("BaseERC20");
+      const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
       const token = await BaseERC20Factory.attach(tokenAddress);
 
       // Should be able to mint any amount
-      await token.mint((await ethers.getSigners())[1].address, ethers.parseEther("1000000"));
-      expect(await token.balanceOf((await ethers.getSigners())[1].address)).to.equal(ethers.parseEther("1000000"));
+      await token.mint((await hre.ethers.getSigners())[1].address, parseEther("1000000"));
+      expect(await token.balanceOf((await hre.ethers.getSigners())[1].address)).to.equal(parseEther("1000000"));
     });
   });
 });
