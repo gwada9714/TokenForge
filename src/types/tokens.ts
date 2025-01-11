@@ -1,4 +1,4 @@
-import { Address } from 'viem';
+import { Address, Hash } from 'viem';
 
 export interface TokenBaseConfig {
   name: string;
@@ -83,4 +83,12 @@ export interface TokenMetadata {
     discord?: string;
     github?: string;
   };
+}
+
+export interface TokenDeploymentStatus {
+  status: 'success' | 'error';
+  contractAddress?: Address;
+  transactionHash?: Hash;
+  blockNumber?: bigint;
+  error?: string;
 }
