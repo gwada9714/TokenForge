@@ -1,55 +1,53 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isDev = mode === 'development';
 
-  const cspDirectives = {
-    'default-src': ["'self'"],
-    'script-src': [
-      "'self'",
-      "'unsafe-eval'",
-      "'unsafe-inline'",
-      "'wasm-unsafe-eval'",
-      'https://fonts.googleapis.com',
-      'https://binaries.soliditylang.org',
-      'https://*.walletconnect.com',
-      'https://*.walletconnect.org',
-      ...(isDev ? ["'unsafe-eval'", 'chrome-extension://*'] : []),
-    ],
-    'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-    'font-src': ["'self'", 'https://fonts.gstatic.com'],
-    'connect-src': [
-      "'self'",
-      'https://*.walletconnect.com',
-      'wss://*.walletconnect.com',
-      'https://*.walletconnect.org',
-      'wss://*.walletconnect.org',
-      'https://*.infura.io',
-      'wss://*.infura.io',
-      'https://*.alchemy.com',
-      'wss://*.alchemy.com',
-      'wss://*.walletlink.org',
-      'https://ethereum-api.xyz',
-      'https://*.ethereum-api.xyz',
-      ...(isDev ? ['ws://localhost:*', 'chrome-extension://*'] : []),
-    ],
-    'img-src': ["'self'", 'data:', 'https:', 'chrome-extension://*'],
-    'media-src': ["'self'"],
-    'object-src': ["'none'"],
-    'frame-src': [
-      "'self'",
-      'https://*.walletconnect.com',
-      ...(isDev ? ['chrome-extension://*'] : []),
-    ],
-  };
-
-  const cspString = Object.entries(cspDirectives)
-    .map(([key, values]) => `${key} ${values.join(' ')}`)
-    .join('; ');
+  const cspDirectives = isDev
+    ? false // Désactive CSP en mode développement
+    : {
+        'default-src': ["'self'"],
+        'script-src': [
+          "'self'",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          "'wasm-unsafe-eval'",
+          "'strict-dynamic'",
+          'https:',
+          'blob:',
+          'data:',
+        ],
+        'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        'font-src': ["'self'", 'https://fonts.gstatic.com'],
+        'connect-src': [
+          "'self'",
+          'https://*.walletconnect.com',
+          'wss://*.walletconnect.com',
+          'https://*.walletconnect.org',
+          'wss://*.walletconnect.org',
+          'https://*.infura.io',
+          'wss://*.infura.io',
+          'https://*.alchemy.com',
+          'wss://*.alchemy.com',
+          'wss://*.walletlink.org',
+          'https://ethereum-api.xyz',
+          'https://*.ethereum-api.xyz',
+          'https://binaries.soliditylang.org',
+        ],
+        'img-src': ["'self'", 'data:', 'https:', 'chrome-extension://*'],
+        'media-src': ["'self'"],
+        'object-src': ["'none'"],
+        'worker-src': ["'self'", 'blob:'],
+        'frame-src': [
+          "'self'",
+          'https://*.walletconnect.com',
+        ],
+      };
 
   return {
     define: {
@@ -69,9 +67,6 @@ export default defineConfig(({ mode }) => {
             ['@babel/plugin-proposal-decorators', { version: '2023-05' }],
             '@babel/plugin-transform-class-properties',
           ],
-          parserOpts: {
-            plugins: ['decorators-legacy', 'classProperties'],
-          },
         },
       }),
       nodePolyfills({
@@ -82,6 +77,34 @@ export default defineConfig(({ mode }) => {
           process: true,
         },
         protocolImports: true,
+      }),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        manifest: {
+          name: 'TokenForge',
+          short_name: 'TokenForge',
+          description: 'Create your own token in seconds',
+          theme_color: '#ffffff',
+          icons: [
+            {
+              src: 'pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+            {
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+            },
+            {
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any maskable',
+            },
+          ],
+        },
       }),
     ],
     resolve: {
@@ -102,9 +125,13 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: false,
       open: true,
-      headers: {
-        'Content-Security-Policy': cspString,
-      },
+      headers: cspDirectives
+        ? {
+            'Content-Security-Policy': Object.entries(cspDirectives)
+              .map(([key, values]) => `${key} ${values.join(' ')}`)
+              .join('; '),
+          }
+        : {},
       hmr: {
         overlay: true,
       },
