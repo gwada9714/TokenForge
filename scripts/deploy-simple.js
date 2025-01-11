@@ -3,6 +3,18 @@ const { privateKeyToAccount } = require('viem/accounts');
 const { sepolia } = require('viem/chains');
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv');
+
+// Charger et vérifier le .env
+const envPath = path.resolve(__dirname, '../.env');
+console.log('Chemin du fichier .env:', envPath);
+console.log('Le fichier .env existe:', fs.existsSync(envPath));
+
+const result = dotenv.config({ path: envPath });
+if (result.error) {
+  console.error('Erreur lors du chargement du .env:', result.error);
+  process.exit(1);
+}
 
 // Charger le bytecode et l'ABI depuis le fichier compiled.json
 const compiledPath = path.join(__dirname, '../src/contracts/compiled.json');
@@ -10,9 +22,9 @@ const compiled = JSON.parse(fs.readFileSync(compiledPath, 'utf8'));
 const CONTRACT_BYTECODE = compiled.bytecode;
 const customERC20ABI = compiled.abi;
 
-require('dotenv').config();
-
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
+console.log('PRIVATE_KEY est défini:', !!PRIVATE_KEY);
+
 if (!PRIVATE_KEY) {
   throw new Error('Please set your PRIVATE_KEY in the .env file');
 }
@@ -21,16 +33,22 @@ async function main() {
   // Créer le compte à partir de la clé privée
   const account = privateKeyToAccount(`0x${PRIVATE_KEY}`);
 
-  // Créer les clients viem
+  // Créer les clients viem avec Alchemy
+  const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
+  if (!ALCHEMY_API_KEY) {
+    throw new Error('Please set your ALCHEMY_API_KEY in the .env file');
+  }
+  const transport = http(`https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`);
+
   const publicClient = createPublicClient({
     chain: sepolia,
-    transport: http(),
+    transport,
   });
 
   const walletClient = createWalletClient({
     account,
     chain: sepolia,
-    transport: http(),
+    transport,
   });
 
   // Configuration du token de test
