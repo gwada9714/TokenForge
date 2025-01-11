@@ -5,6 +5,7 @@ import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const isDev = mode === 'development';
 
   const cspDirectives = {
     'default-src': ["'self'"],
@@ -17,6 +18,7 @@ export default defineConfig(({ mode }) => {
       'https://binaries.soliditylang.org',
       'https://*.walletconnect.com',
       'https://*.walletconnect.org',
+      ...(isDev ? ["'unsafe-eval'", 'chrome-extension://*'] : []),
     ],
     'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
     'font-src': ["'self'", 'https://fonts.gstatic.com'],
@@ -33,11 +35,16 @@ export default defineConfig(({ mode }) => {
       'wss://*.walletlink.org',
       'https://ethereum-api.xyz',
       'https://*.ethereum-api.xyz',
+      ...(isDev ? ['ws://localhost:*', 'chrome-extension://*'] : []),
     ],
-    'img-src': ["'self'", 'data:', 'https:'],
+    'img-src': ["'self'", 'data:', 'https:', 'chrome-extension://*'],
     'media-src': ["'self'"],
     'object-src': ["'none'"],
-    'frame-src': ["'self'", 'https://*.walletconnect.com'],
+    'frame-src': [
+      "'self'",
+      'https://*.walletconnect.com',
+      ...(isDev ? ['chrome-extension://*'] : []),
+    ],
   };
 
   const cspString = Object.entries(cspDirectives)
@@ -50,10 +57,20 @@ export default defineConfig(({ mode }) => {
       'process.env.VITE_ALCHEMY_API_KEY': JSON.stringify(env.VITE_ALCHEMY_API_KEY),
       'process.env.VITE_TOKEN_FACTORY_SEPOLIA': JSON.stringify(env.VITE_TOKEN_FACTORY_SEPOLIA),
       'process.env.VITE_DEFAULT_NETWORK': JSON.stringify(env.VITE_DEFAULT_NETWORK),
+      'process.env.MODE': JSON.stringify(mode),
       global: 'globalThis',
     },
     plugins: [
-      react(),
+      react({
+        jsxRuntime: 'automatic',
+        fastRefresh: true,
+        babel: {
+          plugins: [
+            ['@babel/plugin-proposal-decorators', { legacy: true }],
+            ['@babel/plugin-proposal-class-properties', { loose: true }],
+          ],
+        },
+      }),
       nodePolyfills({
         include: ['buffer', 'process', 'util', 'stream', 'path', 'http', 'https', 'fs', 'crypto'],
         globals: {
@@ -84,7 +101,13 @@ export default defineConfig(({ mode }) => {
       open: true,
       headers: {
         'Content-Security-Policy': cspString,
-      }
+      },
+      hmr: {
+        overlay: true,
+      },
+      watch: {
+        usePolling: true,
+      },
     },
     optimizeDeps: {
       exclude: ['solc'],
@@ -102,6 +125,9 @@ export default defineConfig(({ mode }) => {
         },
         platform: 'browser',
         target: 'esnext',
+        supported: {
+          'top-level-await': true,
+        },
       }
     },
     build: {
@@ -120,6 +146,7 @@ export default defineConfig(({ mode }) => {
       },
       target: 'esnext',
       sourcemap: true,
+      minify: !isDev,
     },
   };
 });
