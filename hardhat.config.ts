@@ -30,11 +30,11 @@ const config = {
     tests: "./test",
     artifacts: "./artifacts",
     cache: "./cache",
-    sources: "./contracts"
+    sources: "./contracts",
   },
   mocha: {
-    timeout: 40000
-  }
+    timeout: 40000,
+  },
 };
 
 module.exports = config;

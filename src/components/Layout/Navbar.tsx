@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   AppBar,
   Toolbar,
@@ -13,15 +13,15 @@ import {
   ListItem,
   ListItemText,
   useMediaQuery,
-} from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
-import { Link as RouterLink } from 'react-router-dom';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+} from "@mui/material";
+import { Menu as MenuIcon } from "@mui/icons-material";
+import { Link as RouterLink } from "react-router-dom";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 
 export const Navbar = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { address, isConnected } = useAccount();
   const { connectAsync } = useConnect();
@@ -35,7 +35,7 @@ export const Navbar = () => {
     try {
       await connectAsync({ connector: injected() });
     } catch (error) {
-      console.error('Failed to connect:', error);
+      console.error("Failed to connect:", error);
     }
   };
 
@@ -43,23 +43,23 @@ export const Navbar = () => {
     try {
       await disconnectAsync();
     } catch (error) {
-      console.error('Failed to disconnect:', error);
+      console.error("Failed to disconnect:", error);
     }
   };
 
   const menuItems = [
-    { text: 'Create Token', path: '/create' },
-    { text: 'My Tokens', path: '/tokens' },
-    { text: 'Documentation', path: '/docs' },
+    { text: "Create Token", path: "/create" },
+    { text: "My Tokens", path: "/tokens" },
+    { text: "Documentation", path: "/docs" },
   ];
 
   const drawer = (
     <List>
       {menuItems.map((item) => (
-        <ListItem 
-          button 
-          key={item.text} 
-          component={RouterLink} 
+        <ListItem
+          button
+          key={item.text}
+          component={RouterLink}
           to={item.path}
           onClick={handleDrawerToggle}
         >
@@ -70,7 +70,11 @@ export const Navbar = () => {
   );
 
   return (
-    <AppBar position="fixed" elevation={0} sx={{ backgroundColor: 'background.paper' }}>
+    <AppBar
+      position="fixed"
+      elevation={0}
+      sx={{ backgroundColor: "background.paper" }}
+    >
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           {/* Logo */}
@@ -81,9 +85,9 @@ export const Navbar = () => {
             sx={{
               mr: 2,
               fontWeight: 700,
-              color: 'primary.main',
-              textDecoration: 'none',
-              flexGrow: { xs: 1, md: 0 }
+              color: "primary.main",
+              textDecoration: "none",
+              flexGrow: { xs: 1, md: 0 },
             }}
           >
             TokenForge
@@ -103,18 +107,18 @@ export const Navbar = () => {
 
           {/* Desktop Navigation */}
           {!isMobile && (
-            <Box sx={{ flexGrow: 1, display: 'flex', ml: 4 }}>
+            <Box sx={{ flexGrow: 1, display: "flex", ml: 4 }}>
               {menuItems.map((item) => (
                 <Button
                   key={item.text}
                   component={RouterLink}
                   to={item.path}
-                  sx={{ 
+                  sx={{
                     mx: 1,
-                    color: 'text.primary',
-                    '&:hover': {
-                      color: 'primary.main',
-                    }
+                    color: "text.primary",
+                    "&:hover": {
+                      color: "primary.main",
+                    },
                   }}
                 >
                   {item.text}
@@ -128,15 +132,14 @@ export const Navbar = () => {
             variant="contained"
             onClick={isConnected ? handleDisconnect : handleConnect}
             sx={{
-              borderRadius: '20px',
-              textTransform: 'none',
+              borderRadius: "20px",
+              textTransform: "none",
               px: 3,
             }}
           >
-            {isConnected 
+            {isConnected
               ? `${address?.slice(0, 6)}...${address?.slice(-4)}`
-              : 'Connect Wallet'
-            }
+              : "Connect Wallet"}
           </Button>
         </Toolbar>
       </Container>
@@ -151,8 +154,8 @@ export const Navbar = () => {
           keepMounted: true, // Better mobile performance
         }}
         sx={{
-          display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+          display: { xs: "block", md: "none" },
+          "& .MuiDrawer-paper": { boxSizing: "border-box", width: 240 },
         }}
       >
         {drawer}

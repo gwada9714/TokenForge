@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Box,
@@ -7,11 +7,11 @@ import {
   Typography,
   CircularProgress,
   Alert,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { TokenManager } from '../components/TokenManager/TokenManager';
-import { TokenInfo } from '../types/tokens';
-import { useAccount } from 'wagmi';
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { TokenManager } from "../components/TokenManager/TokenManager";
+import { TokenInfo } from "../types/tokens";
+import { useAccount } from "wagmi";
 
 export const TokenDetailsPage: React.FC = () => {
   const { tokenAddress } = useParams<{ tokenAddress: string }>();
@@ -31,18 +31,18 @@ export const TokenDetailsPage: React.FC = () => {
         // Using mock data for now
         const mockToken: TokenInfo = {
           address: tokenAddress,
-          name: 'Test Token',
-          symbol: 'TEST',
+          name: "Test Token",
+          symbol: "TEST",
           decimals: 18,
-          maxSupply: BigInt('1000000000000000000000000').toString(),
+          maxSupply: BigInt("1000000000000000000000000").toString(),
           burnable: true,
           mintable: true,
           owner: address,
-          totalSupply: BigInt('1000000000000000000000').toString(),
+          totalSupply: BigInt("1000000000000000000000").toString(),
         };
         setToken(mockToken);
       } catch (err) {
-        setError('Error loading token details');
+        setError("Error loading token details");
         console.error(err);
       } finally {
         setLoading(false);
@@ -55,7 +55,7 @@ export const TokenDetailsPage: React.FC = () => {
   if (!isConnected) {
     return (
       <Container>
-        <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Box sx={{ textAlign: "center", py: 8 }}>
           <Typography variant="h6" gutterBottom>
             Connect your wallet to view token details
           </Typography>
@@ -67,9 +67,9 @@ export const TokenDetailsPage: React.FC = () => {
   return (
     <Container>
       <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
           <IconButton
-            onClick={() => navigate('/my-tokens')}
+            onClick={() => navigate("/my-tokens")}
             sx={{ mr: 2 }}
             aria-label="back"
           >
@@ -87,15 +87,13 @@ export const TokenDetailsPage: React.FC = () => {
         )}
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
             <CircularProgress />
           </Box>
         ) : token ? (
           <TokenManager token={token} />
         ) : (
-          <Alert severity="error">
-            Token not found
-          </Alert>
+          <Alert severity="error">Token not found</Alert>
         )}
       </Box>
     </Container>

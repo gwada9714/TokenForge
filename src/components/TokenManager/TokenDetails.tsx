@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Grid,
   Paper,
@@ -7,11 +7,11 @@ import {
   Box,
   IconButton,
   Tooltip,
-} from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { TokenInfo } from '../../types/tokens';
-import { shortenAddress } from '../../utils/address';
+} from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { TokenInfo } from "../../types/tokens";
+import { shortenAddress } from "../../utils/address";
 
 interface TokenDetailsProps {
   token: TokenInfo;
@@ -24,7 +24,7 @@ interface DetailItemProps {
 
 const DetailItem: React.FC<DetailItemProps> = ({ label, value }) => (
   <Grid item xs={12} sm={6}>
-    <Paper sx={{ p: 2, height: '100%' }}>
+    <Paper sx={{ p: 2, height: "100%" }}>
       <Typography color="textSecondary" gutterBottom>
         {label}
       </Typography>
@@ -39,7 +39,7 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
   };
 
   const openEtherscan = () => {
-    window.open(`https://etherscan.io/token/${token.address}`, '_blank');
+    window.open(`https://etherscan.io/token/${token.address}`, "_blank");
   };
 
   return (
@@ -47,7 +47,7 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
       <DetailItem
         label="Adresse du Contrat"
         value={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {shortenAddress(token.address)}
             <Tooltip title="Copier l'adresse">
               <IconButton
@@ -66,35 +66,26 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
         }
       />
 
-      <DetailItem
-        label="Nom"
-        value={token.name}
-      />
+      <DetailItem label="Nom" value={token.name} />
 
-      <DetailItem
-        label="Symbole"
-        value={token.symbol}
-      />
+      <DetailItem label="Symbole" value={token.symbol} />
 
-      <DetailItem
-        label="Décimales"
-        value={token.decimals}
-      />
+      <DetailItem label="Décimales" value={token.decimals} />
 
       <DetailItem
         label="Supply Maximum"
-        value={token.maxSupply ? token.maxSupply.toString() : 'Illimité'}
+        value={token.maxSupply ? token.maxSupply.toString() : "Illimité"}
       />
 
       <DetailItem
         label="Supply Total"
-        value={token.totalSupply ? token.totalSupply.toString() : 'N/A'}
+        value={token.totalSupply ? token.totalSupply.toString() : "N/A"}
       />
 
       <DetailItem
         label="Fonctionnalités"
         value={
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
             {token.burnable && (
               <Chip
                 label="Burnable"
@@ -119,7 +110,7 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
         label="Propriétaire"
         value={
           token.owner ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {shortenAddress(token.owner)}
               <Tooltip title="Copier l'adresse">
                 <IconButton
@@ -131,7 +122,7 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
               </Tooltip>
             </Box>
           ) : (
-            'N/A'
+            "N/A"
           )
         }
       />

@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
-import { Container, Paper, Typography, Box, Button, Alert } from '@mui/material';
-import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
-import { TokenBaseConfig, TokenAdvancedConfig, TokenDeploymentStatus } from '../types/tokens';
-import { TokenPreview } from '../components/TokenPreview/TokenPreview';
-import { DeploymentCost } from '../components/DeploymentCost/DeploymentCost';
-import { BasicTokenForm } from '../components/TokenForm/BasicTokenForm';
-import { AdvancedTokenForm } from '../components/TokenForm/AdvancedTokenForm';
-import { deployToken } from '../services/tokenDeployment';
+import React, { useState } from "react";
+import {
+  Container,
+  Paper,
+  Typography,
+  Box,
+  Button,
+  Alert,
+} from "@mui/material";
+import { useAccount, useWalletClient, usePublicClient } from "wagmi";
+import {
+  TokenBaseConfig,
+  TokenAdvancedConfig,
+  TokenDeploymentStatus,
+} from "../types/tokens";
+import { TokenPreview } from "../components/TokenPreview/TokenPreview";
+import { DeploymentCost } from "../components/DeploymentCost/DeploymentCost";
+import { BasicTokenForm } from "../components/TokenForm/BasicTokenForm";
+import { AdvancedTokenForm } from "../components/TokenForm/AdvancedTokenForm";
+import { deployToken } from "../services/tokenDeployment";
 
 export const CreateToken: React.FC = () => {
   const { address } = useAccount();
@@ -14,8 +25,8 @@ export const CreateToken: React.FC = () => {
   const publicClient = usePublicClient();
 
   const [baseConfig, setBaseConfig] = useState<TokenBaseConfig>({
-    name: '',
-    symbol: '',
+    name: "",
+    symbol: "",
     decimals: 18,
     initialSupply: 0,
   });
@@ -29,21 +40,22 @@ export const CreateToken: React.FC = () => {
     upgradeable: false,
     transparent: false,
     uups: false,
-    accessControl: 'none',
-    baseURI: '',
-    asset: '',
-    maxSupply: '0',
-    depositLimit: '0'
+    accessControl: "none",
+    baseURI: "",
+    asset: "",
+    maxSupply: "0",
+    depositLimit: "0",
   });
 
-  const [deploymentStatus, setDeploymentStatus] = useState<TokenDeploymentStatus | null>(null);
+  const [deploymentStatus, setDeploymentStatus] =
+    useState<TokenDeploymentStatus | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
 
   const handleCreateToken = async () => {
     if (!walletClient || !address || !publicClient) {
       setDeploymentStatus({
-        status: 'error',
-        error: 'Please connect your wallet first',
+        status: "error",
+        error: "Please connect your wallet first",
       });
       return;
     }
@@ -54,13 +66,13 @@ export const CreateToken: React.FC = () => {
         baseConfig,
         advancedConfig,
         walletClient,
-        publicClient
+        publicClient,
       );
       setDeploymentStatus(status);
     } catch (error: any) {
       setDeploymentStatus({
-        status: 'error',
-        error: error.message || 'Failed to deploy token',
+        status: "error",
+        error: error.message || "Failed to deploy token",
       });
     } finally {
       setIsDeploying(false);
@@ -69,8 +81,8 @@ export const CreateToken: React.FC = () => {
 
   const isFormValid = () => {
     return (
-      baseConfig.name.trim() !== '' &&
-      baseConfig.symbol.trim() !== '' &&
+      baseConfig.name.trim() !== "" &&
+      baseConfig.symbol.trim() !== "" &&
       baseConfig.initialSupply > 0
     );
   };
@@ -84,7 +96,7 @@ export const CreateToken: React.FC = () => {
 
         {deploymentStatus && (
           <Box mb={3}>
-            {deploymentStatus.status === 'success' ? (
+            {deploymentStatus.status === "success" ? (
               <Alert severity="success">
                 Token deployed successfully!
                 {deploymentStatus.contractAddress && (
@@ -140,7 +152,7 @@ export const CreateToken: React.FC = () => {
               onClick={handleCreateToken}
               disabled={!isFormValid() || isDeploying || !address}
             >
-              {isDeploying ? 'Deploying...' : 'Create Token'}
+              {isDeploying ? "Deploying..." : "Create Token"}
             </Button>
           </Box>
         </Box>

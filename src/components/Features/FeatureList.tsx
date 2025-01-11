@@ -1,9 +1,9 @@
-import React from 'react';
-import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
-import SecurityIcon from '@mui/icons-material/Security';
-import SpeedIcon from '@mui/icons-material/Speed';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import SavingsIcon from '@mui/icons-material/Savings';
+import React from "react";
+import { Box, Card, CardContent, Grid, Typography } from "@mui/material";
+import SecurityIcon from "@mui/icons-material/Security";
+import SpeedIcon from "@mui/icons-material/Speed";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import SavingsIcon from "@mui/icons-material/Savings";
 
 interface FeatureCardProps {
   title: string;
@@ -11,12 +11,14 @@ interface FeatureCardProps {
   icon: React.ReactNode;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon }) => (
-  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+const FeatureCard: React.FC<FeatureCardProps> = ({
+  title,
+  description,
+  icon,
+}) => (
+  <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
     <CardContent sx={{ flexGrow: 1 }}>
-      <Box sx={{ mb: 2, color: 'primary.main' }}>
-        {icon}
-      </Box>
+      <Box sx={{ mb: 2, color: "primary.main" }}>{icon}</Box>
       <Typography variant="h6" component="h3" gutterBottom>
         {title}
       </Typography>
@@ -30,23 +32,24 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon }) =
 export const FeatureList: React.FC = () => {
   const features = [
     {
-      title: 'Sécurisé',
-      description: 'Smart contracts audités et testés pour une sécurité maximale',
+      title: "Sécurisé",
+      description:
+        "Smart contracts audités et testés pour une sécurité maximale",
       icon: <SecurityIcon sx={{ fontSize: 40 }} />,
     },
     {
-      title: 'Rapide',
-      description: 'Création de token en quelques minutes seulement',
+      title: "Rapide",
+      description: "Création de token en quelques minutes seulement",
       icon: <SpeedIcon sx={{ fontSize: 40 }} />,
     },
     {
-      title: 'Compatible ERC20',
-      description: 'Tokens 100% compatibles avec les standards ERC20',
+      title: "Compatible ERC20",
+      description: "Tokens 100% compatibles avec les standards ERC20",
       icon: <AccountBalanceIcon sx={{ fontSize: 40 }} />,
     },
     {
-      title: 'Économique',
-      description: 'Frais de déploiement optimisés et transparents',
+      title: "Économique",
+      description: "Frais de déploiement optimisés et transparents",
       icon: <SavingsIcon sx={{ fontSize: 40 }} />,
     },
   ];

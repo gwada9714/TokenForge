@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Typography, Container } from '@mui/material';
+import React from "react";
+import { Box, Typography, Container } from "@mui/material";
 
 export const Footer = () => {
   return (
@@ -8,9 +8,9 @@ export const Footer = () => {
       sx={{
         py: 3,
         px: 2,
-        mt: 'auto',
+        mt: "auto",
         backgroundColor: (theme) =>
-          theme.palette.mode === 'light'
+          theme.palette.mode === "light"
             ? theme.palette.grey[200]
             : theme.palette.grey[800],
       }}

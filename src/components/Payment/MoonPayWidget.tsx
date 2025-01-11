@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { moonpayService } from '../../services/moonpay';
-import { MoonPayQuote } from '../../types/moonpay';
-import { useAccount } from 'wagmi';
+import React, { useEffect, useState } from "react";
+import { Box, CircularProgress, Typography } from "@mui/material";
+import { moonpayService } from "../../services/moonpay";
+import { MoonPayQuote } from "../../types/moonpay";
+import { useAccount } from "wagmi";
 
 interface MoonPayWidgetProps {
   amount: number;
@@ -29,7 +29,8 @@ export const MoonPayWidget: React.FC<MoonPayWidgetProps> = ({
         const newQuote = await moonpayService.getQuote(amount);
         setQuote(newQuote);
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to get quote');
+        const error =
+          err instanceof Error ? err : new Error("Failed to get quote");
         setError(error.message);
         onError?.(error);
       } finally {
@@ -71,9 +72,7 @@ export const MoonPayWidget: React.FC<MoonPayWidgetProps> = ({
       <Typography variant="h6" gutterBottom>
         Payment Summary
       </Typography>
-      <Typography>
-        Amount: ${amount}
-      </Typography>
+      <Typography>Amount: ${amount}</Typography>
       <Typography>
         Estimated ETH: {quote.quoteCurrencyAmount.toFixed(6)} ETH
       </Typography>

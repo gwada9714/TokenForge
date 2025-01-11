@@ -1,21 +1,21 @@
-import type { Plugin } from 'vite';
-import { createHash } from 'crypto';
+import type { Plugin } from "vite";
+import { createHash } from "crypto";
 
 interface CSPPluginOptions {
   development?: boolean;
 }
 
 export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
-  const isDev = options.development ?? process.env.NODE_ENV === 'development';
+  const isDev = options.development ?? process.env.NODE_ENV === "development";
 
   return {
-    name: 'vite-plugin-csp',
+    name: "vite-plugin-csp",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (isDev) {
           // En développement, on utilise une CSP très permissive
           res.setHeader(
-            'Content-Security-Policy',
+            "Content-Security-Policy",
             [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* https://*.moonpay.com https://cdn.jsdelivr.net chrome-extension://*",
@@ -31,17 +31,17 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'none'"
-            ].join('; ')
+              "frame-ancestors 'none'",
+            ].join("; "),
           );
         } else {
           // En production, on garde une CSP stricte
-          const nonce = createHash('sha256')
+          const nonce = createHash("sha256")
             .update(Date.now().toString() + Math.random().toString())
-            .digest('base64');
+            .digest("base64");
 
           res.setHeader(
-            'Content-Security-Policy',
+            "Content-Security-Policy",
             [
               "default-src 'self'",
               `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://*.moonpay.com https://cdn.jsdelivr.net chrome-extension://*`,
@@ -59,20 +59,20 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
               "form-action 'self'",
               "frame-ancestors 'none'",
               "upgrade-insecure-requests",
-              "block-all-mixed-content"
-            ].join('; ')
+              "block-all-mixed-content",
+            ].join("; "),
           );
         }
 
         // Set other security headers
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-        res.setHeader('X-XSS-Protection', '1; mode=block');
-        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("X-Frame-Options", "SAMEORIGIN");
+        res.setHeader("X-XSS-Protection", "1; mode=block");
+        res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
 
         if (!isDev) {
-          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+          res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+          res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
         }
 
         next();
@@ -85,13 +85,13 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
       }
 
       // En production, on ajoute les nonces aux scripts
-      const nonce = createHash('sha256')
+      const nonce = createHash("sha256")
         .update(Date.now().toString() + Math.random().toString())
-        .digest('base64');
+        .digest("base64");
 
       return html.replace(
         /<script\b[^>]*>/g,
-        (match) => `${match.slice(0, -1)} nonce="${nonce}">`
+        (match) => `${match.slice(0, -1)} nonce="${nonce}">`,
       );
     },
   };

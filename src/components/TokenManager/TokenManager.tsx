@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Card,
@@ -8,11 +8,11 @@ import {
   Tab,
   Tabs,
   Divider,
-} from '@mui/material';
-import { TokenInfo } from '../../types/tokens';
-import { TokenDetails } from './TokenDetails';
-import { TokenOperations } from './TokenOperations';
-import { TokenHistory } from './TokenHistory';
+} from "@mui/material";
+import { TokenInfo } from "../../types/tokens";
+import { TokenDetails } from "./TokenDetails";
+import { TokenOperations } from "./TokenOperations";
+import { TokenHistory } from "./TokenHistory";
 
 interface TokenManagerProps {
   token: TokenInfo;
@@ -54,10 +54,10 @@ export const TokenManager: React.FC<TokenManagerProps> = ({ token }) => {
               {token.address}
             </Typography>
           </Grid>
-          
+
           <Grid item xs={12}>
             <Divider sx={{ my: 2 }} />
-            
+
             <Tabs
               value={tabValue}
               onChange={handleTabChange}

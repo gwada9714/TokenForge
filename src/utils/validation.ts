@@ -4,12 +4,12 @@
  * @returns true if the string represents a positive number
  */
 export const validatePositiveNumber = (amount: string): boolean => {
-  if (!amount || amount.trim() === '') {
+  if (!amount || amount.trim() === "") {
     return false;
   }
 
   // Remove any commas from the number
-  const cleanAmount = amount.replace(/,/g, '');
+  const cleanAmount = amount.replace(/,/g, "");
 
   // First try as integer
   try {
@@ -52,6 +52,10 @@ export const validateURI = (uri: string): boolean => {
  * @param max The maximum allowed value
  * @returns true if the value is within range
  */
-export const validateRange = (value: number, min: number, max: number): boolean => {
+export const validateRange = (
+  value: number,
+  min: number,
+  max: number,
+): boolean => {
   return value >= min && value <= max;
 };

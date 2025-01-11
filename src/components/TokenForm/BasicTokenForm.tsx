@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   TextField,
@@ -6,9 +6,9 @@ import {
   InputAdornment,
   Tooltip,
   IconButton,
-} from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { TokenBaseConfig } from '../../types/tokens';
+} from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { TokenBaseConfig } from "../../types/tokens";
 
 interface BasicTokenFormProps {
   config: TokenBaseConfig;
@@ -21,27 +21,27 @@ export const BasicTokenForm: React.FC<BasicTokenFormProps> = ({
   onConfigChange,
   disabled = false,
 }) => {
-  const handleChange = (field: keyof TokenBaseConfig) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = event.target.value;
-    let parsedValue: string | number = value;
+  const handleChange =
+    (field: keyof TokenBaseConfig) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      let parsedValue: string | number = value;
 
-    // Convertir les champs numériques
-    if (field === 'decimals' || field === 'initialSupply') {
-      parsedValue = value === '' ? 0 : Number(value);
-      
-      // Valider les décimales (0-18)
-      if (field === 'decimals' && typeof parsedValue === 'number') {
-        parsedValue = Math.max(0, Math.min(18, parsedValue));
+      // Convertir les champs numériques
+      if (field === "decimals" || field === "initialSupply") {
+        parsedValue = value === "" ? 0 : Number(value);
+
+        // Valider les décimales (0-18)
+        if (field === "decimals" && typeof parsedValue === "number") {
+          parsedValue = Math.max(0, Math.min(18, parsedValue));
+        }
       }
-    }
 
-    onConfigChange({
-      ...config,
-      [field]: parsedValue,
-    });
-  };
+      onConfigChange({
+        ...config,
+        [field]: parsedValue,
+      });
+    };
 
   return (
     <Box>
@@ -54,7 +54,7 @@ export const BasicTokenForm: React.FC<BasicTokenFormProps> = ({
           fullWidth
           label="Token Name"
           value={config.name}
-          onChange={handleChange('name')}
+          onChange={handleChange("name")}
           disabled={disabled}
           placeholder="e.g., My Token"
           helperText="The full name of your token"
@@ -75,7 +75,7 @@ export const BasicTokenForm: React.FC<BasicTokenFormProps> = ({
           fullWidth
           label="Token Symbol"
           value={config.symbol}
-          onChange={handleChange('symbol')}
+          onChange={handleChange("symbol")}
           disabled={disabled}
           placeholder="e.g., MTK"
           helperText="A short identifier for your token (2-5 characters recommended)"
@@ -97,7 +97,7 @@ export const BasicTokenForm: React.FC<BasicTokenFormProps> = ({
           type="number"
           label="Decimals"
           value={config.decimals}
-          onChange={handleChange('decimals')}
+          onChange={handleChange("decimals")}
           disabled={disabled}
           inputProps={{ min: 0, max: 18 }}
           helperText="Number of decimal places (0-18, 18 recommended for compatibility)"
@@ -119,7 +119,7 @@ export const BasicTokenForm: React.FC<BasicTokenFormProps> = ({
           type="number"
           label="Initial Supply"
           value={config.initialSupply}
-          onChange={handleChange('initialSupply')}
+          onChange={handleChange("initialSupply")}
           disabled={disabled}
           inputProps={{ min: 0 }}
           helperText="The initial amount of tokens to create"

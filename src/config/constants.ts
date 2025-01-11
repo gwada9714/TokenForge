@@ -1,18 +1,20 @@
-import { Address } from 'viem';
+import { Address } from "viem";
 
-export const TEST_WALLET_ADDRESS = '0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A' as const;
-export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+export const TEST_WALLET_ADDRESS =
+  "0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A" as const;
+export const ZERO_ADDRESS =
+  "0x0000000000000000000000000000000000000000" as `0x${string}`;
 
 export const DEFAULT_TOKEN_CONFIG = {
-  name: 'Test Token',
-  symbol: 'TEST',
+  name: "Test Token",
+  symbol: "TEST",
   decimals: 18,
-  initialSupply: '1000000',
+  initialSupply: "1000000",
 };
 
 export const CHAIN_EXPLORER_URLS = {
-  1: 'https://etherscan.io',
-  11155111: 'https://sepolia.etherscan.io',
+  1: "https://etherscan.io",
+  11155111: "https://sepolia.etherscan.io",
 } as const;
 
 // Temps d'attente entre les vérifications de statut de transaction (en ms)

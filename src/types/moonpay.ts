@@ -1,7 +1,7 @@
 export interface MoonPayConfig {
   apiKey: string;
   baseUrl: string;
-  environment: 'live' | 'sandbox';
+  environment: "live" | "sandbox";
 }
 
 export interface MoonPayTransaction {
@@ -16,10 +16,10 @@ export interface MoonPayTransaction {
 }
 
 export type MoonPayTransactionStatus =
-  | 'waiting'
-  | 'pending'
-  | 'failed'
-  | 'completed';
+  | "waiting"
+  | "pending"
+  | "failed"
+  | "completed";
 
 export interface MoonPayQuote {
   baseCurrencyAmount: number;

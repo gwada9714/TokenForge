@@ -1,8 +1,22 @@
-import { type PublicClient, type WalletClient, Address, parseUnits, ContractFunctionExecutionError, formatUnits } from 'viem';
-import { TokenInfo, TokenOperation, TokenHistory, TokenStatistics, TokenAllowance, TokenRole } from '../types/tokens';
-import { getTokenContract } from './contracts';
+import {
+  type PublicClient,
+  type WalletClient,
+  Address,
+  parseUnits,
+  ContractFunctionExecutionError,
+  formatUnits,
+} from "viem";
+import {
+  TokenInfo,
+  TokenOperation,
+  TokenHistory,
+  TokenStatistics,
+  TokenAllowance,
+  TokenRole,
+} from "../types/tokens";
+import { getTokenContract } from "./contracts";
 
-type TokenOperationFunction = 'mint' | 'burn' | 'transfer';
+type TokenOperationFunction = "mint" | "burn" | "transfer";
 
 export async function executeTokenOperation(
   token: TokenInfo,
@@ -10,36 +24,39 @@ export async function executeTokenOperation(
   amount: string,
   toAddress: Address | undefined,
   publicClient: PublicClient,
-  walletClient: WalletClient
+  walletClient: WalletClient,
 ): Promise<string> {
   if (!publicClient || !walletClient) {
-    throw new Error('Wallet not connected');
+    throw new Error("Wallet not connected");
   }
 
   const parsedAmount = parseUnits(amount, token.decimals);
-  
-  if (!token.address.startsWith('0x')) {
-    throw new Error('Invalid token address');
+
+  if (!token.address.startsWith("0x")) {
+    throw new Error("Invalid token address");
   }
 
   const contract = getTokenContract(token.address as `0x${string}`);
-  
+
   try {
     const { request } = await publicClient.simulateContract({
       ...contract,
       functionName: operation,
-      args: operation === 'transfer' 
-        ? [toAddress, parsedAmount]
-        : operation === 'mint'
-        ? [toAddress, parsedAmount]
-        : [parsedAmount],
-      account: await walletClient.getAddresses().then(addresses => addresses[0]),
+      args:
+        operation === "transfer"
+          ? [toAddress, parsedAmount]
+          : operation === "mint"
+            ? [toAddress, parsedAmount]
+            : [parsedAmount],
+      account: await walletClient
+        .getAddresses()
+        .then((addresses) => addresses[0]),
     });
 
     const hash = await walletClient.writeContract(request);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-    if (receipt.status === 'success') {
+    if (receipt.status === "success") {
       return hash;
     } else {
       throw new Error(`${operation} operation failed`);
@@ -62,24 +79,24 @@ interface Transfer {
 
 export async function getTokenHistory(
   token: TokenInfo,
-  publicClient: PublicClient
+  publicClient: PublicClient,
 ): Promise<TokenHistory> {
   const filter = await publicClient.createEventFilter({
     address: token.address as Address,
     event: {
-      type: 'event',
-      name: 'Transfer',
+      type: "event",
+      name: "Transfer",
       inputs: [
-        { type: 'address', name: 'from', indexed: true },
-        { type: 'address', name: 'to', indexed: true },
-        { type: 'uint256', name: 'value' },
+        { type: "address", name: "from", indexed: true },
+        { type: "address", name: "to", indexed: true },
+        { type: "uint256", name: "value" },
       ],
     },
   });
 
   const events = await publicClient.getFilterLogs({ filter });
 
-  const transfers = events.map(event => ({
+  const transfers = events.map((event) => ({
     from: event.args.from as Address,
     to: event.args.to as Address,
     value: formatUnits(event.args.value as bigint, token.decimals),
@@ -87,25 +104,27 @@ export async function getTokenHistory(
     transactionHash: event.transactionHash as `0x${string}`,
   }));
 
-  const operations = transfers.map(transfer => ({
-    type: 'transfer' as const,
+  const operations = transfers.map((transfer) => ({
+    type: "transfer" as const,
     amount: transfer.value,
     from: transfer.from,
     to: transfer.to,
     timestamp: transfer.timestamp,
     transactionHash: transfer.transactionHash,
-    status: 'confirmed' as const,
+    status: "confirmed" as const,
   }));
 
   // Calculer les statistiques
   const statistics: TokenStatistics = {
     totalTransfers: operations.length,
-    totalMinted: '0',
-    totalBurned: '0',
-    uniqueHolders: new Set(operations.map(op => op.to)).size,
+    totalMinted: "0",
+    totalBurned: "0",
+    uniqueHolders: new Set(operations.map((op) => op.to)).size,
     largestHolder: {
-      address: operations[0]?.to || '0x0000000000000000000000000000000000000000' as Address,
-      balance: '0',
+      address:
+        operations[0]?.to ||
+        ("0x0000000000000000000000000000000000000000" as Address),
+      balance: "0",
       percentage: 0,
     },
   };
@@ -123,11 +142,11 @@ export async function getTokenHistory(
 export async function getTokenBalance(
   token: TokenInfo,
   address: Address,
-  publicClient: PublicClient
+  publicClient: PublicClient,
 ): Promise<string> {
   const result = await publicClient.readContract({
     ...getTokenContract(token.address as `0x${string}`),
-    functionName: 'balanceOf',
+    functionName: "balanceOf",
     args: [address],
   });
 
@@ -136,23 +155,26 @@ export async function getTokenBalance(
 
 export async function getTokenRoles(
   token: TokenInfo,
-  publicClient: PublicClient
+  publicClient: PublicClient,
 ): Promise<TokenRole[]> {
   const roles: TokenRole[] = [];
 
   // Vérifier les rôles spécifiques (admin, minter, etc.)
   const contract = getTokenContract(token.address as `0x${string}`);
-  
+
   try {
     const isAdmin = await publicClient.readContract({
       ...contract,
-      functionName: 'hasRole',
-      args: ['0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`, token.address as Address],
+      functionName: "hasRole",
+      args: [
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+        token.address as Address,
+      ],
     });
 
     if (isAdmin) {
       roles.push({
-        role: 'owner',
+        role: "owner",
         address: token.address as Address,
         grantedAt: Math.floor(Date.now() / 1000),
         grantedBy: token.address as Address,
@@ -161,7 +183,7 @@ export async function getTokenRoles(
 
     // Ajouter d'autres vérifications de rôles si nécessaire
   } catch (error) {
-    console.error('Error checking roles:', error);
+    console.error("Error checking roles:", error);
   }
 
   return roles;

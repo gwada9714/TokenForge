@@ -1,6 +1,6 @@
-import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import React from "react";
+import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 export const Header = () => {
   return (
@@ -11,20 +11,15 @@ export const Header = () => {
           component={RouterLink}
           to="/"
           sx={{
-            textDecoration: 'none',
-            color: 'inherit',
+            textDecoration: "none",
+            color: "inherit",
             flexGrow: 1,
           }}
         >
           TokenForge
         </Typography>
         <Box>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/"
-            sx={{ ml: 2 }}
-          >
+          <Button color="inherit" component={RouterLink} to="/" sx={{ ml: 2 }}>
             Home
           </Button>
           <Button

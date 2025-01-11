@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -11,9 +11,9 @@ import {
   CircularProgress,
   Box,
   Chip,
-} from '@mui/material';
-import { TokenInfo } from '../../types/tokens';
-import { shortenAddress } from '../../utils/address';
+} from "@mui/material";
+import { TokenInfo } from "../../types/tokens";
+import { shortenAddress } from "../../utils/address";
 
 interface TokenHistoryProps {
   token: TokenInfo;
@@ -24,7 +24,7 @@ interface Transaction {
   from: string;
   to: string;
   amount: string;
-  type: 'transfer' | 'mint' | 'burn';
+  type: "transfer" | "mint" | "burn";
   timestamp: number;
 }
 
@@ -41,25 +41,25 @@ export const TokenHistory: React.FC<TokenHistoryProps> = ({ token }) => {
         // Using mock data for now
         const mockTransactions: Transaction[] = [
           {
-            hash: '0x1234...5678',
-            from: '0x0000000000000000000000000000000000000000',
+            hash: "0x1234...5678",
+            from: "0x0000000000000000000000000000000000000000",
             to: token.address,
-            amount: '1000',
-            type: 'mint',
+            amount: "1000",
+            type: "mint",
             timestamp: Date.now() - 3600000,
           },
           {
-            hash: '0x5678...9012',
+            hash: "0x5678...9012",
             from: token.address,
-            to: '0x1234567890123456789012345678901234567890',
-            amount: '500',
-            type: 'transfer',
+            to: "0x1234567890123456789012345678901234567890",
+            amount: "500",
+            type: "transfer",
             timestamp: Date.now() - 7200000,
           },
         ];
         setTransactions(mockTransactions);
       } catch (err) {
-        setError('Error loading transaction history');
+        setError("Error loading transaction history");
         console.error(err);
       } finally {
         setLoading(false);
@@ -69,20 +69,20 @@ export const TokenHistory: React.FC<TokenHistoryProps> = ({ token }) => {
     fetchTransactions();
   }, [token.address]);
 
-  const getTransactionTypeColor = (type: Transaction['type']) => {
+  const getTransactionTypeColor = (type: Transaction["type"]) => {
     switch (type) {
-      case 'mint':
-        return 'success';
-      case 'burn':
-        return 'error';
+      case "mint":
+        return "success";
+      case "burn":
+        return "error";
       default:
-        return 'primary';
+        return "primary";
     }
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
         <CircularProgress />
       </Box>
     );
@@ -129,9 +129,7 @@ export const TokenHistory: React.FC<TokenHistoryProps> = ({ token }) => {
               <TableCell>{shortenAddress(tx.from)}</TableCell>
               <TableCell>{shortenAddress(tx.to)}</TableCell>
               <TableCell align="right">{tx.amount}</TableCell>
-              <TableCell>
-                {new Date(tx.timestamp).toLocaleString()}
-              </TableCell>
+              <TableCell>{new Date(tx.timestamp).toLocaleString()}</TableCell>
             </TableRow>
           ))}
         </TableBody>

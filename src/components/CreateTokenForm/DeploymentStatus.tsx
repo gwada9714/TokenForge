@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Box, Typography, CircularProgress, Link } from '@mui/material';
-import { PublicClient } from 'viem';
-import { getDeploymentStatus } from '../../services/contractDeployment';
-import { TokenDeploymentStatus } from '../../types/tokens';
+import React, { useEffect, useState, useCallback } from "react";
+import { Box, Typography, CircularProgress, Link } from "@mui/material";
+import { PublicClient } from "viem";
+import { getDeploymentStatus } from "../../services/contractDeployment";
+import { TokenDeploymentStatus } from "../../types/tokens";
 
 interface DeploymentStatusProps {
   status: TokenDeploymentStatus;
@@ -11,18 +11,27 @@ interface DeploymentStatusProps {
 
 const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
   status: initialStatus,
-  publicClient
+  publicClient,
 }) => {
   const [status, setStatus] = useState<TokenDeploymentStatus>(initialStatus);
 
   const checkStatus = useCallback(async () => {
-    if (!status.txHash || status.status === 'success' || status.status === 'error' || status.status === 'failed') return;
+    if (
+      !status.txHash ||
+      status.status === "success" ||
+      status.status === "error" ||
+      status.status === "failed"
+    )
+      return;
 
     try {
-      const updatedStatus = await getDeploymentStatus(status.txHash!, publicClient);
+      const updatedStatus = await getDeploymentStatus(
+        status.txHash!,
+        publicClient,
+      );
       setStatus(updatedStatus);
     } catch (error) {
-      console.error('Failed to get deployment status:', error);
+      console.error("Failed to get deployment status:", error);
     }
   }, [status.txHash, status.status, publicClient]);
 
@@ -30,15 +39,15 @@ const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
     let isSubscribed = true;
 
     const checkStatusPeriodically = async () => {
-      if (!isSubscribed || status.status !== 'pending') return;
+      if (!isSubscribed || status.status !== "pending") return;
 
       try {
         await checkStatus();
-        if (isSubscribed && status.status === 'pending') {
+        if (isSubscribed && status.status === "pending") {
           requestAnimationFrame(checkStatusPeriodically);
         }
       } catch (error) {
-        console.error('Error checking deployment status:', error);
+        console.error("Error checking deployment status:", error);
       }
     };
 
@@ -51,13 +60,16 @@ const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
 
   const renderStatus = () => {
     switch (status.status) {
-      case 'pending':
+      case "pending":
         return (
           <>
             <Box display="flex" alignItems="center" gap={1}>
               <CircularProgress size={20} />
               <Typography>
-                Deploying your token... {status.confirmations ? `(${status.confirmations} confirmations)` : ''}
+                Deploying your token...{" "}
+                {status.confirmations
+                  ? `(${status.confirmations} confirmations)`
+                  : ""}
               </Typography>
             </Box>
             {status.txHash && (
@@ -72,7 +84,7 @@ const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
           </>
         );
 
-      case 'success':
+      case "success":
         return (
           <>
             <Typography color="success.main">
@@ -108,12 +120,12 @@ const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
           </>
         );
 
-      case 'failed':
-      case 'error':
+      case "failed":
+      case "error":
         return (
           <>
             <Typography color="error.main">
-              {status.error || 'Failed to deploy token'}
+              {status.error || "Failed to deploy token"}
             </Typography>
             {status.txHash && (
               <Link

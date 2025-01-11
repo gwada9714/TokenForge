@@ -1,7 +1,7 @@
-import React from 'react';
-import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import React from "react";
+import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
 
-export type TokenType = 'ERC20' | 'ERC721' | 'ERC1155';
+export type TokenType = "ERC20" | "ERC721" | "ERC1155";
 
 interface TokenTypeSelectorProps {
   selectedType: TokenType | null;
@@ -22,7 +22,7 @@ export const TokenTypeSelector: React.FC<TokenTypeSelectorProps> = ({
   };
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+    <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
       <ToggleButtonGroup
         value={selectedType}
         exclusive

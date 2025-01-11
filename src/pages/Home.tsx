@@ -1,8 +1,8 @@
-import React from 'react';
-import { Box, Button, Container, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { TokenStats } from '../components/Stats/TokenStats';
-import { FeatureList } from '../components/Features/FeatureList';
+import React from "react";
+import { Box, Button, Container, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { TokenStats } from "../components/Stats/TokenStats";
+import { FeatureList } from "../components/Features/FeatureList";
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export const Home: React.FC = () => {
         sx={{
           pt: 8,
           pb: 6,
-          textAlign: 'center',
+          textAlign: "center",
         }}
       >
         <Typography
@@ -22,19 +22,18 @@ export const Home: React.FC = () => {
           variant="h2"
           color="primary"
           gutterBottom
-          sx={{ fontWeight: 'bold' }}
+          sx={{ fontWeight: "bold" }}
         >
           TokenForge
         </Typography>
         <Typography variant="h5" color="text.secondary" paragraph>
-          Créez vos tokens ERC20 en quelques clics.
-          Simple, rapide et sécurisé.
+          Créez vos tokens ERC20 en quelques clics. Simple, rapide et sécurisé.
         </Typography>
         <Box sx={{ mt: 4 }}>
           <Button
             variant="contained"
             size="large"
-            onClick={() => navigate('/create')}
+            onClick={() => navigate("/create")}
             sx={{ mr: 2 }}
           >
             Créer un Token
@@ -42,7 +41,7 @@ export const Home: React.FC = () => {
           <Button
             variant="outlined"
             size="large"
-            onClick={() => navigate('/info')}
+            onClick={() => navigate("/info")}
           >
             En savoir plus
           </Button>

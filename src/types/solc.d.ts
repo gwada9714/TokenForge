@@ -1,6 +1,6 @@
-declare module 'solc' {
+declare module "solc" {
   interface CompilerInput {
-    language: 'Solidity';
+    language: "Solidity";
     sources: {
       [key: string]: {
         content: string;
@@ -34,7 +34,7 @@ declare module 'solc' {
     };
     errors?: Array<{
       message: string;
-      severity: 'error' | 'warning';
+      severity: "error" | "warning";
     }>;
   }
 
@@ -42,9 +42,9 @@ declare module 'solc' {
   export const version: string;
 }
 
-declare module 'solc/wrapper' {
-  import type { CompilerInput, CompilerOutput } from 'solc';
-  
+declare module "solc/wrapper" {
+  import type { CompilerInput, CompilerOutput } from "solc";
+
   export interface SolcWrapper {
     compile(input: string): string;
     version(): string;

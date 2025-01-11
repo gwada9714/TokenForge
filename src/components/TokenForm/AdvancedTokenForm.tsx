@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   FormControlLabel,
@@ -7,9 +7,9 @@ import {
   Tooltip,
   IconButton,
   Paper,
-} from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { TokenAdvancedConfig } from '../../types/tokens';
+} from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { TokenAdvancedConfig } from "../../types/tokens";
 
 interface AdvancedTokenFormProps {
   config: TokenAdvancedConfig;
@@ -26,34 +26,37 @@ interface FeatureOption {
 
 const features: FeatureOption[] = [
   {
-    key: 'mintable',
-    label: 'Mintable',
-    description: 'Allow creating new tokens after deployment',
-    tooltip: 'Enables the creation of new tokens by authorized addresses after the initial deployment.',
+    key: "mintable",
+    label: "Mintable",
+    description: "Allow creating new tokens after deployment",
+    tooltip:
+      "Enables the creation of new tokens by authorized addresses after the initial deployment.",
   },
   {
-    key: 'burnable',
-    label: 'Burnable',
-    description: 'Allow token holders to burn their tokens',
-    tooltip: 'Allows token holders to permanently destroy (burn) their own tokens, reducing the total supply.',
+    key: "burnable",
+    label: "Burnable",
+    description: "Allow token holders to burn their tokens",
+    tooltip:
+      "Allows token holders to permanently destroy (burn) their own tokens, reducing the total supply.",
   },
   {
-    key: 'pausable',
-    label: 'Pausable',
-    description: 'Allow pausing all token transfers',
-    tooltip: 'Enables authorized addresses to pause all token transfers in case of emergency.',
+    key: "pausable",
+    label: "Pausable",
+    description: "Allow pausing all token transfers",
+    tooltip:
+      "Enables authorized addresses to pause all token transfers in case of emergency.",
   },
   {
-    key: 'permit',
-    label: 'Permit',
-    description: 'Enable gasless approvals',
-    tooltip: 'Implements EIP-2612 for gasless approvals using signatures.',
+    key: "permit",
+    label: "Permit",
+    description: "Enable gasless approvals",
+    tooltip: "Implements EIP-2612 for gasless approvals using signatures.",
   },
   {
-    key: 'votes',
-    label: 'Votes',
-    description: 'Enable governance features',
-    tooltip: 'Adds voting capabilities for governance purposes.',
+    key: "votes",
+    label: "Votes",
+    description: "Enable governance features",
+    tooltip: "Adds voting capabilities for governance purposes.",
   },
 ];
 
@@ -62,14 +65,14 @@ export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({
   onConfigChange,
   disabled = false,
 }) => {
-  const handleChange = (key: keyof TokenAdvancedConfig) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    onConfigChange({
-      ...config,
-      [key]: event.target.checked,
-    });
-  };
+  const handleChange =
+    (key: keyof TokenAdvancedConfig) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      onConfigChange({
+        ...config,
+        [key]: event.target.checked,
+      });
+    };
 
   return (
     <Box>
@@ -83,9 +86,9 @@ export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({
             <Box
               key={key}
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
               <Box>
@@ -105,7 +108,9 @@ export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({
               <FormControlLabel
                 control={
                   <Switch
-                    checked={typeof config[key] === 'boolean' ? config[key] : false}
+                    checked={
+                      typeof config[key] === "boolean" ? config[key] : false
+                    }
                     onChange={handleChange(key)}
                     disabled={disabled}
                   />

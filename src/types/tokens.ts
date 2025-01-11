@@ -1,4 +1,4 @@
-import { Address, Hash } from 'viem';
+import { Address, Hash } from "viem";
 
 export interface TokenBaseConfig {
   name: string;
@@ -16,7 +16,7 @@ export interface TokenAdvancedConfig {
   upgradeable: boolean;
   transparent: boolean;
   uups: boolean;
-  accessControl: 'none' | 'ownable' | 'roles';
+  accessControl: "none" | "ownable" | "roles";
   baseURI: string;
   asset: string;
   maxSupply: string;
@@ -36,13 +36,13 @@ export interface TokenInfo {
 }
 
 export interface TokenOperation {
-  type: 'mint' | 'burn' | 'transfer' | 'approve';
+  type: "mint" | "burn" | "transfer" | "approve";
   amount: string;
   from: Address;
   to?: Address;
   timestamp: number;
   transactionHash: Hash;
-  status: 'pending' | 'confirmed' | 'failed';
+  status: "pending" | "confirmed" | "failed";
   blockNumber?: number;
 }
 
@@ -77,7 +77,7 @@ export interface TokenHistory {
 }
 
 export interface TokenRole {
-  role: 'owner' | 'minter' | 'pauser';
+  role: "owner" | "minter" | "pauser";
   address: Address;
   grantedAt: number;
   grantedBy: Address;
@@ -96,7 +96,7 @@ export interface TokenMetadata {
 }
 
 export interface TokenDeploymentStatus {
-  status: 'pending' | 'success' | 'failed' | 'error';
+  status: "pending" | "success" | "failed" | "error";
   txHash?: Hash;
   contractAddress?: Address;
   tokenAddress?: Address;

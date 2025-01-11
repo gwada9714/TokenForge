@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Grid,
   Card,
@@ -10,12 +10,12 @@ import {
   Box,
   CircularProgress,
   Snackbar,
-} from '@mui/material';
-import { usePublicClient, useWalletClient } from 'wagmi';
-import { TokenInfo } from '../../types/tokens';
-import { isValidAddress } from '../../utils/address';
-import { executeTokenOperation } from '../../services/tokenOperations';
-import { getTokenContract } from '../../services/contracts';
+} from "@mui/material";
+import { usePublicClient, useWalletClient } from "wagmi";
+import { TokenInfo } from "../../types/tokens";
+import { isValidAddress } from "../../utils/address";
+import { executeTokenOperation } from "../../services/tokenOperations";
+import { getTokenContract } from "../../services/contracts";
 
 interface TokenOperationsProps {
   token: TokenInfo;
@@ -34,7 +34,7 @@ const OperationCard: React.FC<OperationCardProps> = ({
   children,
 }) => (
   <Grid item xs={12} md={6}>
-    <Card sx={{ height: '100%' }}>
+    <Card sx={{ height: "100%" }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
           {title}
@@ -48,11 +48,14 @@ const OperationCard: React.FC<OperationCardProps> = ({
   </Grid>
 );
 
-export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOperationComplete }) => {
-  const [mintAmount, setMintAmount] = useState('');
-  const [burnAmount, setBurnAmount] = useState('');
-  const [transferAmount, setTransferAmount] = useState('');
-  const [transferAddress, setTransferAddress] = useState('');
+export const TokenOperations: React.FC<TokenOperationsProps> = ({
+  token,
+  onOperationComplete,
+}) => {
+  const [mintAmount, setMintAmount] = useState("");
+  const [burnAmount, setBurnAmount] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferAddress, setTransferAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -62,7 +65,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
 
   const handleOperation = async (operation: string, params: any[]) => {
     if (!walletClient || !publicClient) {
-      setError('Please connect your wallet first');
+      setError("Please connect your wallet first");
       return;
     }
 
@@ -70,17 +73,17 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
       setLoading(true);
       setError(null);
 
-      if (!token.address.startsWith('0x')) {
-        throw new Error('Invalid token address');
+      if (!token.address.startsWith("0x")) {
+        throw new Error("Invalid token address");
       }
 
       const contract = getTokenContract(token.address as `0x${string}`);
-      
+
       const { request } = await publicClient.simulateContract({
         ...contract,
         functionName: operation,
-        args: params.map(p => {
-          if (typeof p === 'string' && p.startsWith('0x')) {
+        args: params.map((p) => {
+          if (typeof p === "string" && p.startsWith("0x")) {
             return p as `0x${string}`;
           }
           return p;
@@ -88,18 +91,18 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
       });
 
       const hash = await walletClient.writeContract(request);
-      
+
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-      if (receipt.status === 'success') {
+      if (receipt.status === "success") {
         setSuccess(`${operation} operation successful!`);
-        
+
         // Reset form
-        if (operation === 'mint') setMintAmount('');
-        if (operation === 'burn') setBurnAmount('');
-        if (operation === 'transfer') {
-          setTransferAmount('');
-          setTransferAddress('');
+        if (operation === "mint") setMintAmount("");
+        if (operation === "burn") setBurnAmount("");
+        if (operation === "transfer") {
+          setTransferAmount("");
+          setTransferAddress("");
         }
 
         if (onOperationComplete) {
@@ -123,7 +126,13 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
             title="Mint Tokens"
             description="Create new tokens and add them to your balance."
           >
-            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('mint', [mintAmount]); }}>
+            <Box
+              component="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleOperation("mint", [mintAmount]);
+              }}
+            >
               <TextField
                 fullWidth
                 label="Amount"
@@ -137,11 +146,11 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
                 fullWidth
                 variant="contained"
                 color="primary"
-                onClick={() => handleOperation('mint', [mintAmount])}
+                onClick={() => handleOperation("mint", [mintAmount])}
                 disabled={!mintAmount || loading}
                 sx={{ mt: 2 }}
               >
-                {loading ? <CircularProgress size={24} /> : 'Mint'}
+                {loading ? <CircularProgress size={24} /> : "Mint"}
               </Button>
             </Box>
           </OperationCard>
@@ -152,7 +161,13 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
             title="Burn Tokens"
             description="Permanently destroy tokens from your balance."
           >
-            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('burn', [burnAmount]); }}>
+            <Box
+              component="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleOperation("burn", [burnAmount]);
+              }}
+            >
               <TextField
                 fullWidth
                 label="Amount"
@@ -166,11 +181,11 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
                 fullWidth
                 variant="contained"
                 color="error"
-                onClick={() => handleOperation('burn', [burnAmount])}
+                onClick={() => handleOperation("burn", [burnAmount])}
                 disabled={!burnAmount || loading}
                 sx={{ mt: 2 }}
               >
-                {loading ? <CircularProgress size={24} /> : 'Burn'}
+                {loading ? <CircularProgress size={24} /> : "Burn"}
               </Button>
             </Box>
           </OperationCard>
@@ -180,7 +195,13 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
           title="Transfer Tokens"
           description="Send tokens to another address."
         >
-          <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('transfer', [transferAmount, transferAddress]); }}>
+          <Box
+            component="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleOperation("transfer", [transferAmount, transferAddress]);
+            }}
+          >
             <TextField
               fullWidth
               label="Recipient Address"
@@ -188,7 +209,11 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
               onChange={(e) => setTransferAddress(e.target.value)}
               margin="normal"
               error={!!transferAddress && !isValidAddress(transferAddress)}
-              helperText={transferAddress && !isValidAddress(transferAddress) ? 'Invalid address' : ''}
+              helperText={
+                transferAddress && !isValidAddress(transferAddress)
+                  ? "Invalid address"
+                  : ""
+              }
               disabled={loading}
             />
             <TextField
@@ -204,11 +229,15 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
               fullWidth
               variant="contained"
               color="primary"
-              onClick={() => handleOperation('transfer', [transferAmount, transferAddress])}
-              disabled={!transferAmount || !isValidAddress(transferAddress) || loading}
+              onClick={() =>
+                handleOperation("transfer", [transferAmount, transferAddress])
+              }
+              disabled={
+                !transferAmount || !isValidAddress(transferAddress) || loading
+              }
               sx={{ mt: 2 }}
             >
-              {loading ? <CircularProgress size={24} /> : 'Transfer'}
+              {loading ? <CircularProgress size={24} /> : "Transfer"}
             </Button>
           </Box>
         </OperationCard>

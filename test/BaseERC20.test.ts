@@ -14,7 +14,8 @@ describe("BaseERC20", function () {
     addr2: HardhatEthersSigner;
   }> {
     const [owner, addr1, addr2] = await hre.ethers.getSigners();
-    const TokenFactoryFactory = await hre.ethers.getContractFactory("TokenFactory");
+    const TokenFactoryFactory =
+      await hre.ethers.getContractFactory("TokenFactory");
     const tokenFactory = await TokenFactoryFactory.deploy(owner.address);
     await tokenFactory.waitForDeployment();
     const deployedAddress = await tokenFactory.getAddress();
@@ -25,8 +26,10 @@ describe("BaseERC20", function () {
 
   describe("Token Creation", function () {
     it("Should create a token with correct parameters", async function () {
-      const { tokenFactory, owner } = await loadFixture(deployTokenFactoryFixture);
-      
+      const { tokenFactory, owner } = await loadFixture(
+        deployTokenFactoryFixture,
+      );
+
       const name = "Test Token";
       const symbol = "TEST";
       const decimals = 18;
@@ -43,11 +46,12 @@ describe("BaseERC20", function () {
         initialSupply,
         maxSupply,
         initialMintable,
-        salt
+        salt,
       );
 
       const receipt = await tx.wait();
-      if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
+      if (!receipt || !receipt.logs)
+        throw new Error("No receipt or logs found");
 
       const tokenCreatedLog = receipt.logs[2];
       if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
@@ -73,14 +77,14 @@ describe("BaseERC20", function () {
         actualDecimals,
         actualTotalSupply,
         actualMaxSupply,
-        actualMintable
+        actualMintable,
       ] = await Promise.all([
         token.name(),
         token.symbol(),
         token.decimals(),
         token.totalSupply(),
         token.maxSupply(),
-        token.mintable()
+        token.mintable(),
       ]);
 
       expect(actualName).to.equal(name);
@@ -93,7 +97,7 @@ describe("BaseERC20", function () {
 
     it("Should not allow minting when disabled", async function () {
       const { tokenFactory } = await loadFixture(deployTokenFactoryFixture);
-      
+
       const initialSupply = parseEther("1000");
       const maxSupply = parseEther("2000");
       const initialMintable = false;
@@ -106,11 +110,12 @@ describe("BaseERC20", function () {
         initialSupply,
         maxSupply,
         initialMintable,
-        salt
+        salt,
       );
 
       const receipt = await tx.wait();
-      if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
+      if (!receipt || !receipt.logs)
+        throw new Error("No receipt or logs found");
 
       const tokenCreatedLog = receipt.logs[2];
       if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
@@ -122,7 +127,10 @@ describe("BaseERC20", function () {
       const token = await BaseERC20Factory.attach(tokenAddress);
 
       try {
-        await token.mint((await hre.ethers.getSigners())[1].address, parseEther("1"));
+        await token.mint(
+          (await hre.ethers.getSigners())[1].address,
+          parseEther("1"),
+        );
         expect.fail("Should have thrown MintingDisabled error");
       } catch (error: any) {
         expect(error.message).to.include("MintingDisabled");
@@ -131,7 +139,7 @@ describe("BaseERC20", function () {
 
     it("Should enforce max supply limit", async function () {
       const { tokenFactory } = await loadFixture(deployTokenFactoryFixture);
-      
+
       const initialSupply = parseEther("1000");
       const maxSupply = parseEther("2000");
       const initialMintable = true;
@@ -144,11 +152,12 @@ describe("BaseERC20", function () {
         initialSupply,
         maxSupply,
         initialMintable,
-        salt
+        salt,
       );
 
       const receipt = await tx.wait();
-      if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
+      if (!receipt || !receipt.logs)
+        throw new Error("No receipt or logs found");
 
       const tokenCreatedLog = receipt.logs[2];
       if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
@@ -161,7 +170,10 @@ describe("BaseERC20", function () {
 
       // Try to mint beyond max supply
       try {
-        await token.mint((await hre.ethers.getSigners())[1].address, parseEther("1001"));
+        await token.mint(
+          (await hre.ethers.getSigners())[1].address,
+          parseEther("1001"),
+        );
         expect.fail("Should have thrown MaxSupplyExceeded error");
       } catch (error: any) {
         expect(error.message).to.include("MaxSupplyExceeded");
@@ -170,7 +182,7 @@ describe("BaseERC20", function () {
 
     it("Should allow unlimited minting when max supply is 0", async function () {
       const { tokenFactory } = await loadFixture(deployTokenFactoryFixture);
-      
+
       const initialSupply = parseEther("1000");
       const maxSupply = 0; // No max supply
       const initialMintable = true;
@@ -183,11 +195,12 @@ describe("BaseERC20", function () {
         initialSupply,
         maxSupply,
         initialMintable,
-        salt
+        salt,
       );
 
       const receipt = await tx.wait();
-      if (!receipt || !receipt.logs) throw new Error("No receipt or logs found");
+      if (!receipt || !receipt.logs)
+        throw new Error("No receipt or logs found");
 
       const tokenCreatedLog = receipt.logs[2];
       if (!tokenCreatedLog) throw new Error("TokenCreated event not found");
@@ -199,8 +212,15 @@ describe("BaseERC20", function () {
       const token = await BaseERC20Factory.attach(tokenAddress);
 
       // Should be able to mint any amount
-      await token.mint((await hre.ethers.getSigners())[1].address, parseEther("1000000"));
-      expect(Number(await token.balanceOf((await hre.ethers.getSigners())[1].address))).to.equal(Number(parseEther("1000000")));
+      await token.mint(
+        (await hre.ethers.getSigners())[1].address,
+        parseEther("1000000"),
+      );
+      expect(
+        Number(
+          await token.balanceOf((await hre.ethers.getSigners())[1].address),
+        ),
+      ).to.equal(Number(parseEther("1000000")));
     });
   });
 });

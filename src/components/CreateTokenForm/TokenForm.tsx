@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Stepper,
@@ -15,17 +15,17 @@ import {
   CircularProgress,
   Tooltip,
   IconButton,
-} from '@mui/material';
-import { HelpOutline } from '@mui/icons-material';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+} from "@mui/material";
+import { HelpOutline } from "@mui/icons-material";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 const tokenSchema = z.object({
-  name: z.string().min(1, 'Token name is required').max(50),
-  symbol: z.string().min(1, 'Token symbol is required').max(10),
+  name: z.string().min(1, "Token name is required").max(50),
+  symbol: z.string().min(1, "Token symbol is required").max(10),
   decimals: z.number().min(0).max(18),
-  totalSupply: z.string().min(1, 'Total supply is required'),
+  totalSupply: z.string().min(1, "Total supply is required"),
   burnable: z.boolean(),
   mintable: z.boolean(),
   taxFee: z.number().min(0).max(25),
@@ -42,14 +42,19 @@ interface FieldProps {
   };
 }
 
-const steps = ['Basic Info', 'Advanced Settings', 'Review'];
+const steps = ["Basic Info", "Advanced Settings", "Review"];
 
 export const TokenForm = () => {
   const [activeStep, setActiveStep] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const { control, handleSubmit, watch, formState: { errors } } = useForm<TokenFormData>({
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<TokenFormData>({
     resolver: zodResolver(tokenSchema),
     defaultValues: {
       decimals: 18,
@@ -73,9 +78,9 @@ export const TokenForm = () => {
       setIsSubmitting(true);
       setError(null);
       // TODO: Implement token creation logic
-      console.log('Form data:', data);
+      console.log("Form data:", data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -147,7 +152,7 @@ export const TokenForm = () => {
       case 1:
         return (
           <Box sx={{ mt: 4 }}>
-            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ mb: 3, display: "flex", alignItems: "center" }}>
               <Controller
                 name="burnable"
                 control={control}
@@ -164,8 +169,8 @@ export const TokenForm = () => {
                 </IconButton>
               </Tooltip>
             </Box>
-            
-            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+
+            <Box sx={{ mb: 3, display: "flex", alignItems: "center" }}>
               <Controller
                 name="mintable"
                 control={control}
@@ -236,11 +241,13 @@ export const TokenForm = () => {
                 <strong>Total Supply:</strong> {formData.totalSupply}
               </Typography>
               <Typography variant="body1" paragraph>
-                <strong>Features:</strong>{' '}
+                <strong>Features:</strong>{" "}
                 {[
-                  formData.burnable && 'Burnable',
-                  formData.mintable && 'Mintable',
-                ].filter(Boolean).join(', ') || 'None'}
+                  formData.burnable && "Burnable",
+                  formData.mintable && "Mintable",
+                ]
+                  .filter(Boolean)
+                  .join(", ") || "None"}
               </Typography>
               <Typography variant="body1" paragraph>
                 <strong>Tax Fee:</strong> {formData.taxFee}%
@@ -262,7 +269,7 @@ export const TokenForm = () => {
         <Typography variant="h4" align="center" gutterBottom>
           Create Your Token
         </Typography>
-        
+
         <Stepper activeStep={activeStep} sx={{ mt: 4 }}>
           {steps.map((label) => (
             <Step key={label}>
@@ -280,11 +287,8 @@ export const TokenForm = () => {
             </Alert>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-            >
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
+            <Button disabled={activeStep === 0} onClick={handleBack}>
               Back
             </Button>
             <Box>
@@ -295,13 +299,10 @@ export const TokenForm = () => {
                   disabled={isSubmitting}
                   startIcon={isSubmitting && <CircularProgress size={20} />}
                 >
-                  {isSubmitting ? 'Creating Token...' : 'Create Token'}
+                  {isSubmitting ? "Creating Token..." : "Create Token"}
                 </Button>
               ) : (
-                <Button
-                  variant="contained"
-                  onClick={handleNext}
-                >
+                <Button variant="contained" onClick={handleNext}>
                   Next
                 </Button>
               )}
