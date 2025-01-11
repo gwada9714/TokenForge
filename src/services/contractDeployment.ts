@@ -72,9 +72,9 @@ const prepareDeploymentArgs = (
     votes: advancedConfig.votes,
     accessControl: advancedConfig.accessControl ? '1' : '0',
     baseURI: advancedConfig.baseURI || '',
-    asset: advancedConfig.asset || (ZERO_ADDRESS as Address),
-    maxSupply: advancedConfig.maxSupply ? parseEther(advancedConfig.maxSupply) : 0n,
-    depositLimit: advancedConfig.depositLimit ? parseEther(advancedConfig.depositLimit) : 0n,
+    asset: advancedConfig.asset || ZERO_ADDRESS,
+    maxSupply: advancedConfig.maxSupply ? parseEther(advancedConfig.maxSupply) : BigInt(0),
+    depositLimit: advancedConfig.depositLimit ? parseEther(advancedConfig.depositLimit) : BigInt(0),
   };
 };
 
