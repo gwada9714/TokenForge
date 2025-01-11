@@ -52,4 +52,4 @@ coverage/
 
 # Temporary files
 .temp
-.tmp
+.tmppackage-lock.json
