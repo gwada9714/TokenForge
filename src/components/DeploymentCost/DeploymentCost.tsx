@@ -28,17 +28,18 @@ export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, adva
           const addresses = await walletClient.getAddresses();
           address = addresses[0];
         }
+
+        if (!address) {
+          throw new Error('No wallet connected');
+          return;
+        }
         
         // Create a contract deployment transaction
         const tx = {
-          account: address,
-          to: undefined,
+          account: address, // Now address is guaranteed to be defined
+          to: undefined as unknown as `0x${string}`, // Cast undefined to expected address type
           data: bytecode,
         };
-        
-        if (!address) {
-          throw new Error('No wallet connected');
-        }
         
         const gas = await publicClient.estimateGas(tx);
         const price = await publicClient.getGasPrice();
@@ -47,6 +48,8 @@ export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, adva
         setGasPrice(price);
       } catch (error) {
         console.error('Error estimating deployment cost:', error);
+        setEstimatedGas(null);
+        setGasPrice(null);
       } finally {
         setIsLoading(false);
       }
