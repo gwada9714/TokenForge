@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Paper, Typography, CircularProgress } from '@mui/material';
-import { usePublicClient } from 'wagmi';
+import { usePublicClient, useWalletClient } from 'wagmi';
 import { formatEther } from 'viem';
 import { TokenBaseConfig, TokenAdvancedConfig } from '../../types/tokens';
 import { generateContractBytecode } from '../../services/contractGenerator';
-import { useWalletClient } from '../../hooks/useWalletClient';
 
 interface DeploymentCostProps {
   baseConfig: TokenBaseConfig;
@@ -16,6 +15,7 @@ export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, adva
   const [gasPrice, setGasPrice] = useState<bigint | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
   useEffect(() => {
     const estimateCost = async () => {
@@ -23,15 +23,22 @@ export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, adva
         setIsLoading(true);
         const bytecode = await generateContractBytecode(baseConfig, advancedConfig);
         
-        const { data: signer } = useWalletClient();
-        const address = signer ? (await signer.getAddresses())[0] : undefined;
+        let address: `0x${string}` | undefined;
+        if (walletClient) {
+          const addresses = await walletClient.getAddresses();
+          address = addresses[0];
+        }
         
         // Create a contract deployment transaction
         const tx = {
-          account: address as `0x${string}`,
+          account: address,
           to: undefined,
           data: bytecode,
         };
+        
+        if (!address) {
+          throw new Error('No wallet connected');
+        }
         
         const gas = await publicClient.estimateGas(tx);
         const price = await publicClient.getGasPrice();
@@ -46,7 +53,7 @@ export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, adva
     };
 
     estimateCost();
-  }, [baseConfig, advancedConfig, publicClient]);
+  }, [baseConfig, advancedConfig, publicClient, walletClient]);
 
   const calculateTotalCost = () => {
     if (!estimatedGas || !gasPrice) return null;
