@@ -1,10 +1,9 @@
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-ethers";
-import * as dotenv from "dotenv";
+require("@nomicfoundation/hardhat-ethers");
+require("@nomicfoundation/hardhat-chai-matchers");
+require("@nomicfoundation/hardhat-toolbox");
+require("dotenv").config();
 
-dotenv.config();
-
-const config: HardhatUserConfig = {
+const config = {
   solidity: {
     version: "0.8.20",
     settings: {
@@ -27,6 +26,15 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
   },
+  paths: {
+    tests: "./test",
+    artifacts: "./artifacts",
+    cache: "./cache",
+    sources: "./contracts"
+  },
+  mocha: {
+    timeout: 40000
+  }
 };
 
-export default config;
+module.exports = config;
