@@ -1,5 +1,3 @@
-import { Address } from "viem";
-
 export const TEST_WALLET_ADDRESS =
   "0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A" as const;
 export const ZERO_ADDRESS =

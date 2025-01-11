@@ -14,7 +14,6 @@ import {
 import { usePublicClient, useWalletClient } from "wagmi";
 import { TokenInfo } from "../../types/tokens";
 import { isValidAddress } from "../../utils/address";
-import { executeTokenOperation } from "../../services/tokenOperations";
 import { getTokenContract } from "../../services/contracts";
 
 interface TokenOperationsProps {

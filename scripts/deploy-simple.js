@@ -1,23 +1,28 @@
-const {
+import {
   createPublicClient,
   createWalletClient,
   http,
   parseUnits,
-} = require("viem");
-const { privateKeyToAccount } = require("viem/accounts");
-const { sepolia } = require("viem/chains");
-const fs = require("fs");
-const path = require("path");
-const dotenv = require("dotenv");
+} from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { sepolia } from "viem/chains";
+import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Charger et vérifier le .env
 const envPath = path.resolve(__dirname, "../.env");
 console.log("Chemin du fichier .env:", envPath);
 console.log("Le fichier .env existe:", fs.existsSync(envPath));
 
-const result = dotenv.config({ path: envPath });
-if (result.error) {
-  console.error("Erreur lors du chargement du .env:", result.error);
+try {
+  dotenv.config({ path: envPath });
+} catch (error) {
+  console.error("Erreur lors du chargement du .env:", error);
   process.exit(1);
 }
 
@@ -27,16 +32,15 @@ const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
 const CONTRACT_BYTECODE = compiled.bytecode;
 const customERC20ABI = compiled.abi;
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-console.log("PRIVATE_KEY est défini:", !!PRIVATE_KEY);
+console.log("PRIVATE_KEY est défini:", !!process.env.PRIVATE_KEY);
 
-if (!PRIVATE_KEY) {
+if (!process.env.PRIVATE_KEY) {
   throw new Error("Please set your PRIVATE_KEY in the .env file");
 }
 
 async function main() {
   // Créer le compte à partir de la clé privée
-  const account = privateKeyToAccount(`0x${PRIVATE_KEY}`);
+  const account = privateKeyToAccount(process.env.PRIVATE_KEY);
 
   // Créer les clients viem avec Alchemy
   const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;

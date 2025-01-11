@@ -1,6 +1,6 @@
-import { http, createConfig } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
-import { defaultWagmiConfig } from "@web3modal/wagmi/react";
+import { http } from "wagmi";
+import { sepolia } from "wagmi/chains";
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 
 const projectId = process.env.VITE_WALLET_CONNECT_PROJECT_ID;
 const alchemyId = process.env.VITE_ALCHEMY_API_KEY;
@@ -20,17 +20,15 @@ const metadata = {
   icons: ["https://tokenforge.app/logo.png"],
 };
 
-export const chains = [mainnet, sepolia] as const;
+export const chains = [sepolia] as const;
 
-export const config = defaultWagmiConfig({
+export const config = getDefaultConfig({
+  appName: "TokenForge",
+  projectId: projectId as string,
   chains,
-  projectId,
-  metadata,
-  ssr: false,
   transports: {
-    [mainnet.id]: http(`https://eth-mainnet.g.alchemy.com/v2/${alchemyId}`),
     [sepolia.id]: http(`https://eth-sepolia.g.alchemy.com/v2/${alchemyId}`),
   },
 });
 
-export { mainnet, sepolia };
+export { sepolia };

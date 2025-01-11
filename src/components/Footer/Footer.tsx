@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Typography, Container } from "@mui/material";
 
 export const Footer = () => {
@@ -17,7 +16,11 @@ export const Footer = () => {
     >
       <Container maxWidth="sm">
         <Typography variant="body2" color="text.secondary" align="center">
-          © {new Date().getFullYear()} TokenForge. All rights reserved.
+          {"Copyright "}
+          <Typography variant="body2" color="text.secondary" align="center" component="span">
+            {new Date().getFullYear()}
+          </Typography>
+          {" TokenForge. All rights reserved."}
         </Typography>
       </Container>
     </Box>

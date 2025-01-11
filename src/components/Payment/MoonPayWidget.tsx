@@ -6,13 +6,11 @@ import { useAccount } from "wagmi";
 
 interface MoonPayWidgetProps {
   amount: number;
-  onSuccess?: () => void;
   onError?: (error: Error) => void;
 }
 
 export const MoonPayWidget: React.FC<MoonPayWidgetProps> = ({
   amount,
-  onSuccess,
   onError,
 }) => {
   const { address } = useAccount();

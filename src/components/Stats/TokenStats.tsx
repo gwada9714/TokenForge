@@ -8,10 +8,9 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  loading?: boolean;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, loading }) => (
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => (
   <Card sx={{ height: "100%" }}>
     <CardContent>
       <Grid container spacing={2} alignItems="center">
