@@ -16,7 +16,7 @@ export interface TokenAdvancedConfig {
   upgradeable: boolean;
   transparent: boolean;
   uups: boolean;
-  accessControl: boolean;
+  accessControl: 'none' | 'ownable' | 'roles';
   baseURI: string;
   asset: string;
   maxSupply: string;
@@ -41,7 +41,7 @@ export interface TokenOperation {
   from: Address;
   to?: Address;
   timestamp: number;
-  transactionHash: Address;
+  transactionHash: Hash;
   status: 'pending' | 'confirmed' | 'failed';
   blockNumber?: number;
 }

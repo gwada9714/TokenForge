@@ -105,7 +105,7 @@ export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({
               <FormControlLabel
                 control={
                   <Switch
-                    checked={config[key]}
+                    checked={typeof config[key] === 'boolean' ? config[key] : false}
                     onChange={handleChange(key)}
                     disabled={disabled}
                   />

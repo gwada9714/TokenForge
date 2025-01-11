@@ -10,13 +10,15 @@ import {
   parseEther,
   encodeFunctionData,
   Abi,
+  Hex,
+  toHex,
 } from 'viem';
 import { TokenFactoryABI } from '../contracts/abi/TokenFactory';
 import { TEST_WALLET_ADDRESS, TX_POLLING_INTERVAL, REQUIRED_CONFIRMATIONS, ZERO_ADDRESS } from '../config/constants';
 import { getNetwork } from '../config/networks';
 
 interface TokenDeploymentArgs {
-  tokenType: string;
+  tokenType: `0x${string}`;
   name: string;
   symbol: string;
   decimals: number;
@@ -29,9 +31,9 @@ interface TokenDeploymentArgs {
   uups: boolean;
   permit: boolean;
   votes: boolean;
-  accessControl: string;
-  baseURI: string;
-  asset: Address;
+  accessControl: `0x${string}`;
+  baseURI: `0x${string}`;
+  asset: `0x${string}`;
   maxSupply: bigint;
   depositLimit: bigint;
 }
@@ -50,14 +52,24 @@ const initializeAbi = [{
   outputs: []
 }] as const;
 
+const stringToHex = (str: string): `0x${string}` => {
+  if (!str) return ('0x' as const) as `0x${string}`;
+  const bytes = new TextEncoder().encode(str);
+  let hex = '0x';
+  for (let i = 0; i < bytes.length; i++) {
+    hex += bytes[i].toString(16).padStart(2, '0');
+  }
+  return hex as `0x${string}`;
+};
+
 const prepareDeploymentArgs = (
   tokenType: TokenType,
   baseConfig: TokenBaseConfig,
   advancedConfig: TokenAdvancedConfig,
-  owner: Address = TEST_WALLET_ADDRESS as Address
+  owner: Address = TEST_WALLET_ADDRESS as `0x${string}`
 ): TokenDeploymentArgs => {
   return {
-    tokenType,
+    tokenType: stringToHex(tokenType),
     name: baseConfig.name,
     symbol: baseConfig.symbol,
     decimals: baseConfig.decimals,
@@ -70,9 +82,9 @@ const prepareDeploymentArgs = (
     uups: advancedConfig.uups,
     permit: advancedConfig.permit,
     votes: advancedConfig.votes,
-    accessControl: advancedConfig.accessControl ? '0x1' : '0x0',
-    baseURI: advancedConfig.baseURI || '',
-    asset: advancedConfig.asset || ZERO_ADDRESS,
+    accessControl: advancedConfig.accessControl ? ('0x01' as `0x${string}`) : ('0x00' as `0x${string}`),
+    baseURI: stringToHex(advancedConfig.baseURI),
+    asset: (advancedConfig.asset || ZERO_ADDRESS) as `0x${string}`,
     maxSupply: advancedConfig.maxSupply ? parseEther(advancedConfig.maxSupply) : BigInt(0),
     depositLimit: advancedConfig.depositLimit ? parseEther(advancedConfig.depositLimit) : BigInt(0),
   };

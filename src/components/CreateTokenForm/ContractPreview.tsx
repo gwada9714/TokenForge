@@ -69,9 +69,9 @@ contract ${baseConfig.name}Token is ${parents.map(p => `${p}Upgradeable`).join('
         ${parents.slice(1).map(p => `__${p}_init();`).join('\n        ')}
         ${baseConfig.initialSupply && tokenType === 'ERC20' ? 
           `_mint(initialOwner, ${baseConfig.initialSupply});` : ''}
-        ${advancedConfig.accessControl === 'roles' ? 
+        ${typeof advancedConfig.accessControl === 'string' && advancedConfig.accessControl === 'roles' ? 
           '_grantRole(DEFAULT_ADMIN_ROLE, initialOwner);' : 
-          advancedConfig.accessControl === 'ownable' ?
+          typeof advancedConfig.accessControl === 'string' && advancedConfig.accessControl === 'ownable' ?
           '_transferOwnership(initialOwner);' : ''}
     }
 }`;
@@ -94,7 +94,7 @@ contract ${baseConfig.name}Token is ${parents.join(', ')} {
       }("${baseConfig.name}", "${baseConfig.symbol}") {
         ${baseConfig.initialSupply && tokenType === 'ERC20' ? 
           `_mint(msg.sender, ${baseConfig.initialSupply});` : ''}
-        ${advancedConfig.accessControl === 'roles' ? 
+        ${typeof advancedConfig.accessControl === 'string' && advancedConfig.accessControl === 'roles' ? 
           '_grantRole(DEFAULT_ADMIN_ROLE, msg.sender);' : ''}
     }
 }`;

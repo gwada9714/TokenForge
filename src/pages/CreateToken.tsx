@@ -26,6 +26,14 @@ export const CreateToken: React.FC = () => {
     pausable: false,
     permit: false,
     votes: false,
+    upgradeable: false,
+    transparent: false,
+    uups: false,
+    accessControl: 'none',
+    baseURI: '',
+    asset: '',
+    maxSupply: '0',
+    depositLimit: '0'
   });
 
   const [deploymentStatus, setDeploymentStatus] = useState<TokenDeploymentStatus | null>(null);

@@ -37,8 +37,8 @@ export const TokenHistory: React.FC<TokenHistoryProps> = ({ token }) => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        // TODO: Implémenter la récupération de l'historique depuis l'API Etherscan
-        // Pour l'instant, utilisons des données de test
+        // TODO: Implement history retrieval from Etherscan API
+        // Using mock data for now
         const mockTransactions: Transaction[] = [
           {
             hash: '0x1234...5678',
@@ -59,7 +59,7 @@ export const TokenHistory: React.FC<TokenHistoryProps> = ({ token }) => {
         ];
         setTransactions(mockTransactions);
       } catch (err) {
-        setError('Erreur lors du chargement de l\'historique');
+        setError('Error loading transaction history');
         console.error(err);
       } finally {
         setLoading(false);
@@ -99,7 +99,7 @@ export const TokenHistory: React.FC<TokenHistoryProps> = ({ token }) => {
   if (transactions.length === 0) {
     return (
       <Typography color="textSecondary" align="center">
-        Aucune transaction trouvée
+        No transactions found
       </Typography>
     );
   }
@@ -110,9 +110,9 @@ export const TokenHistory: React.FC<TokenHistoryProps> = ({ token }) => {
         <TableHead>
           <TableRow>
             <TableCell>Type</TableCell>
-            <TableCell>De</TableCell>
-            <TableCell>À</TableCell>
-            <TableCell align="right">Montant</TableCell>
+            <TableCell>From</TableCell>
+            <TableCell>To</TableCell>
+            <TableCell align="right">Amount</TableCell>
             <TableCell>Date</TableCell>
           </TableRow>
         </TableHead>

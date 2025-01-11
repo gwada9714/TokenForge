@@ -40,7 +40,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@typechain/ethers-v6": "^0.5.0",
     "@typechain/hardhat": "^9.0.0",
-    "@types/chai": "^5.0.1",
+    "@types/chai": "^4.2.0",
     "@types/jest": "^29.5.11",
     "@types/mocha": "^10.0.10",
     "@types/node": "^16.18.0",
@@ -48,7 +48,7 @@
     "@types/react-dom": "^18.2.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "babel-jest": "^29.7.0",
-    "chai": "^5.1.2",
+    "chai": "^4.2.0",
     "dotenv": "^16.4.7",
     "hardhat": "^2.19.0",
     "hardhat-gas-reporter": "^1.0.8",
@@ -117,6 +117,5 @@
         "statements": 80
       }
     }
-  },
-  "type": "module"
+  }
 }

@@ -8,9 +8,10 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon: React.ReactNode;
+  loading?: boolean;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => (
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, loading }) => (
   <Card sx={{ height: '100%' }}>
     <CardContent>
       <Grid container spacing={2} alignItems="center">
@@ -44,21 +45,21 @@ export const TokenStats: React.FC = () => {
     <Grid container spacing={3}>
       <Grid item xs={12} sm={4}>
         <StatCard
-          title="Tokens Créés"
+          title="Tokens Created"
           value={stats.totalTokens}
           icon={<TokenIcon sx={{ fontSize: 40 }} />}
         />
       </Grid>
       <Grid item xs={12} sm={4}>
         <StatCard
-          title="Portefeuilles Actifs"
+          title="Active Wallets"
           value={stats.activeWallets}
           icon={<AccountBalanceWalletIcon sx={{ fontSize: 40 }} />}
         />
       </Grid>
       <Grid item xs={12} sm={4}>
         <StatCard
-          title="Volume Hebdomadaire"
+          title="Weekly Volume"
           value={stats.weeklyVolume}
           icon={<ShowChartIcon sx={{ fontSize: 40 }} />}
         />

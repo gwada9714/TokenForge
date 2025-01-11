@@ -27,31 +27,35 @@ export const MyTokens: React.FC = () => {
 
       try {
         setLoading(true);
-        // TODO: Implémenter la récupération des tokens depuis le smart contract
-        // Pour l'instant, utilisons des données de test
+        // TODO: Implement token loading from blockchain
+        // Using mock data for now
         const mockTokens: TokenInfo[] = [
           {
             address: '0x1234567890123456789012345678901234567890',
             name: 'Test Token',
             symbol: 'TEST',
             decimals: 18,
-            maxSupply: BigInt('1000000000000000000000000'),
+            maxSupply: BigInt('1000000000000000000000000').toString(),
+            totalSupply: '0',
             burnable: true,
             mintable: true,
+            owner: '0x0000000000000000000000000000000000000000'
           },
           {
             address: '0x0987654321098765432109876543210987654321',
             name: 'Sample Token',
             symbol: 'SMPL',
             decimals: 18,
-            maxSupply: null,
+            maxSupply: '0',
+            totalSupply: '0',
             burnable: false,
             mintable: true,
+            owner: '0x0000000000000000000000000000000000000000'
           },
         ];
         setTokens(mockTokens);
       } catch (err) {
-        setError('Erreur lors du chargement des tokens');
+        setError('Error loading tokens');
         console.error(err);
       } finally {
         setLoading(false);
@@ -70,7 +74,7 @@ export const MyTokens: React.FC = () => {
       <Container>
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" gutterBottom>
-            Connectez votre portefeuille pour voir vos tokens
+            Connect your wallet to view your tokens
           </Typography>
         </Box>
       </Container>
@@ -82,14 +86,14 @@ export const MyTokens: React.FC = () => {
       <Box sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Typography variant="h4" component="h1">
-            Mes Tokens
+            My Tokens
           </Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/create')}
           >
-            Créer un Token
+            Create a Token
           </Button>
         </Box>
 
@@ -106,7 +110,7 @@ export const MyTokens: React.FC = () => {
         ) : tokens.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography color="textSecondary" gutterBottom>
-              Vous n'avez pas encore créé de tokens
+              You haven't created any tokens yet
             </Typography>
             <Button
               variant="outlined"
@@ -114,7 +118,7 @@ export const MyTokens: React.FC = () => {
               onClick={() => navigate('/create')}
               sx={{ mt: 2 }}
             >
-              Créer mon premier token
+              Create my first token
             </Button>
           </Box>
         ) : (

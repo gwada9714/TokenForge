@@ -4,7 +4,7 @@ import { parseUnits } from 'viem';
 import { mainnet } from 'viem/chains';
 import { CONTRACT_BYTECODE, customERC20ABI } from '../contracts/compiled';
 
-// ABI pour notre contrat ERC20 personnalisé
+// ABI for our custom ERC20 contract
 const localCustomERC20ABI = [
   ...customERC20ABI,
   {
@@ -35,12 +35,11 @@ export const deployToken = async (
       throw new Error('No account connected');
     }
 
-    // Préparer les arguments du constructeur
     const constructorArgs = [
       baseConfig.name,
       baseConfig.symbol,
       baseConfig.decimals,
-      parseUnits(String(baseConfig.initialSupply), baseConfig.decimals),
+      parseUnits(baseConfig.initialSupply.toString(), baseConfig.decimals),
       advancedConfig.mintable,
       advancedConfig.burnable,
       advancedConfig.pausable,
@@ -48,7 +47,7 @@ export const deployToken = async (
       advancedConfig.votes,
     ] as const;
 
-    // Déployer le contrat
+    // Deploy the contract
     const hash = await walletClient.deployContract({
       abi: customERC20ABI,
       bytecode: CONTRACT_BYTECODE,
@@ -57,17 +56,17 @@ export const deployToken = async (
       chain: walletClient.chain ?? mainnet,
     });
 
-    // Attendre la confirmation de la transaction
+    // Wait for deployment receipt
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
     if (!receipt.contractAddress) {
-      throw new Error('Contract address not found in receipt');
+      throw new Error('Contract deployment failed: no contract address in receipt');
     }
 
     return {
       status: 'success',
       contractAddress: receipt.contractAddress,
-      transactionHash: hash,
+      txHash: hash,
       blockNumber: receipt.blockNumber,
     };
   } catch (error) {
@@ -76,41 +75,5 @@ export const deployToken = async (
       status: 'error',
       error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
-  }
-};
-
-export const estimateGas = async (
-  baseConfig: TokenBaseConfig,
-  advancedConfig: TokenAdvancedConfig,
-  walletClient: WalletClient,
-  account: Address
-): Promise<bigint> => {
-  try {
-    // Préparer les arguments du constructeur
-    const constructorArgs = [
-      baseConfig.name,
-      baseConfig.symbol,
-      baseConfig.decimals,
-      parseUnits(String(baseConfig.initialSupply), baseConfig.decimals),
-      advancedConfig.mintable,
-      advancedConfig.burnable,
-      advancedConfig.pausable,
-      advancedConfig.permit,
-      advancedConfig.votes,
-    ] as const;
-
-    // Estimer le gas en utilisant simulateContract
-    const estimate = await walletClient.estimateGas({
-      account,
-      abi: customERC20ABI,
-      bytecode: CONTRACT_BYTECODE,
-      args: constructorArgs,
-      chain: walletClient.chain ?? mainnet,
-    });
-
-    return estimate;
-  } catch (error) {
-    console.error('Gas estimation failed:', error);
-    throw error;
   }
 };

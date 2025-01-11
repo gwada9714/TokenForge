@@ -13,12 +13,10 @@ import {
 import { TokenAdvancedConfig } from '../../types/tokens';
 import { validateAddress } from '../../services/validation';
 
-interface AdvancedTokenFormProps {
+export interface AdvancedTokenFormProps {
   config: TokenAdvancedConfig;
   onConfigChange: (config: TokenAdvancedConfig) => void;
 }
-
-type AccessControlType = 'none' | 'ownable' | 'roles';
 
 export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({
   config,
@@ -33,12 +31,12 @@ export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({
     });
   };
 
-  const handleSelectChange = (field: keyof TokenAdvancedConfig) => (
-    event: SelectChangeEvent<AccessControlType>
+  const handleSelectChange = (field: 'accessControl') => (
+    event: SelectChangeEvent<'none' | 'ownable' | 'roles'>
   ) => {
     onConfigChange({
       ...config,
-      [field]: event.target.value
+      [field]: event.target.value as 'none' | 'ownable' | 'roles'
     });
   };
 
@@ -146,8 +144,8 @@ export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({
 
       <FormControl fullWidth>
         <InputLabel>Access Control</InputLabel>
-        <Select<AccessControlType>
-          value={config.accessControl as AccessControlType}
+        <Select
+          value={config.accessControl || 'none'}
           onChange={handleSelectChange('accessControl')}
           label="Access Control"
         >

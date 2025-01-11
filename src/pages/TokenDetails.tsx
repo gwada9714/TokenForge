@@ -27,22 +27,22 @@ export const TokenDetailsPage: React.FC = () => {
 
       try {
         setLoading(true);
-        // TODO: Implémenter la récupération des détails du token depuis le smart contract
-        // Pour l'instant, utilisons des données de test
+        // TODO: Implement token details loading from smart contract
+        // Using mock data for now
         const mockToken: TokenInfo = {
           address: tokenAddress,
           name: 'Test Token',
           symbol: 'TEST',
           decimals: 18,
-          maxSupply: BigInt('1000000000000000000000000'),
+          maxSupply: BigInt('1000000000000000000000000').toString(),
           burnable: true,
           mintable: true,
           owner: address,
-          totalSupply: BigInt('1000000000000000000000'),
+          totalSupply: BigInt('1000000000000000000000').toString(),
         };
         setToken(mockToken);
       } catch (err) {
-        setError('Erreur lors du chargement des détails du token');
+        setError('Error loading token details');
         console.error(err);
       } finally {
         setLoading(false);
@@ -57,7 +57,7 @@ export const TokenDetailsPage: React.FC = () => {
       <Container>
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" gutterBottom>
-            Connectez votre portefeuille pour voir les détails du token
+            Connect your wallet to view token details
           </Typography>
         </Box>
       </Container>
@@ -71,12 +71,12 @@ export const TokenDetailsPage: React.FC = () => {
           <IconButton
             onClick={() => navigate('/my-tokens')}
             sx={{ mr: 2 }}
-            aria-label="retour"
+            aria-label="back"
           >
             <ArrowBackIcon />
           </IconButton>
           <Typography variant="h4" component="h1">
-            Détails du Token
+            Token Details
           </Typography>
         </Box>
 
@@ -94,7 +94,7 @@ export const TokenDetailsPage: React.FC = () => {
           <TokenManager token={token} />
         ) : (
           <Alert severity="error">
-            Token non trouvé
+            Token not found
           </Alert>
         )}
       </Box>

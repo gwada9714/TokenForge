@@ -64,9 +64,9 @@ export const TokenManager: React.FC<TokenManagerProps> = ({ token }) => {
               aria-label="token management tabs"
               variant="fullWidth"
             >
-              <Tab label="Détails" id="token-tab-0" />
-              <Tab label="Opérations" id="token-tab-1" />
-              <Tab label="Historique" id="token-tab-2" />
+              <Tab label="Details" id="token-tab-0" />
+              <Tab label="Operations" id="token-tab-1" />
+              <Tab label="History" id="token-tab-2" />
             </Tabs>
 
             <TabPanel value={tabValue} index={0}>
