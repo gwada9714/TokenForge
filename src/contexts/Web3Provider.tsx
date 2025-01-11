@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { WagmiConfig } from 'wagmi';
-import { config } from '../config/wagmi';
+import { WagmiProvider } from 'wagmi';
+import { config } from '../config/wagmi.v2';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 interface Web3ContextType {
   // Add any additional context values here if needed
@@ -16,16 +17,20 @@ export const useWeb3 = () => {
   return context;
 };
 
-interface Web3ProviderProps {
+interface Props {
   children: ReactNode;
 }
 
-export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
+const queryClient = new QueryClient();
+
+export function Web3Provider({ children }: Props) {
   return (
-    <WagmiConfig config={config}>
-      <Web3Context.Provider value={{}}>
-        {children}
-      </Web3Context.Provider>
-    </WagmiConfig>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <Web3Context.Provider value={{}}>
+          {children}
+        </Web3Context.Provider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 };

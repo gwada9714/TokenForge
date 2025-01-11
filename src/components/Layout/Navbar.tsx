@@ -17,20 +17,34 @@ import {
 import { Menu as MenuIcon } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { InjectedConnector } from 'wagmi/connectors/injected';
+import { injected } from 'wagmi/connectors';
 
 export const Navbar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect({
-    connector: new InjectedConnector(),
-  });
-  const { disconnect } = useDisconnect();
+  const { connectAsync } = useConnect();
+  const { disconnectAsync } = useDisconnect();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleConnect = async () => {
+    try {
+      await connectAsync({ connector: injected() });
+    } catch (error) {
+      console.error('Failed to connect:', error);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await disconnectAsync();
+    } catch (error) {
+      console.error('Failed to disconnect:', error);
+    }
   };
 
   const menuItems = [
@@ -112,7 +126,7 @@ export const Navbar = () => {
           {/* Wallet Connection Button */}
           <Button
             variant="contained"
-            onClick={() => isConnected ? disconnect() : connect()}
+            onClick={isConnected ? handleDisconnect : handleConnect}
             sx={{
               borderRadius: '20px',
               textTransform: 'none',

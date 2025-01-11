@@ -59,41 +59,47 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
-  const handleOperation = async (operation: 'mint' | 'burn' | 'transfer') => {
+  const handleOperation = async (operation: string, params: any[]) => {
+    if (!walletClient || !publicClient) {
+      setError('Please connect your wallet first');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      const amount = operation === 'mint' 
-        ? mintAmount 
-        : operation === 'burn' 
-          ? burnAmount 
-          : transferAmount;
-
-      await executeTokenOperation(
-        token,
-        operation,
-        amount,
-        operation === 'transfer' ? transferAddress as `0x${string}` : undefined,
-        publicClient,
-        walletClient
-      );
-
-      setSuccess(`${operation.charAt(0).toUpperCase() + operation.slice(1)} operation successful!`);
+      const contract = getTokenContract(token.address);
       
-      // Reset form
-      if (operation === 'mint') setMintAmount('');
-      if (operation === 'burn') setBurnAmount('');
-      if (operation === 'transfer') {
-        setTransferAmount('');
-        setTransferAddress('');
-      }
+      const { request } = await publicClient.simulateContract({
+        ...contract,
+        functionName: operation,
+        args: params,
+      });
 
-      if (onOperationComplete) {
-        onOperationComplete();
+      const hash = await walletClient.writeContract(request);
+      
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+      if (receipt.status === 'success') {
+        setSuccess(`${operation} operation successful!`);
+        
+        // Reset form
+        if (operation === 'mint') setMintAmount('');
+        if (operation === 'burn') setBurnAmount('');
+        if (operation === 'transfer') {
+          setTransferAmount('');
+          setTransferAddress('');
+        }
+
+        if (onOperationComplete) {
+          onOperationComplete();
+        }
+      } else {
+        setError(`${operation} operation failed`);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Operation failed');
+    } catch (error: any) {
+      setError(error.message || `${operation} operation failed`);
     } finally {
       setLoading(false);
     }
@@ -107,7 +113,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
             title="Mint Tokens"
             description="Create new tokens and add them to your balance."
           >
-            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('mint'); }}>
+            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('mint', [mintAmount]); }}>
               <TextField
                 fullWidth
                 label="Amount"
@@ -121,7 +127,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
                 fullWidth
                 variant="contained"
                 color="primary"
-                onClick={() => handleOperation('mint')}
+                onClick={() => handleOperation('mint', [mintAmount])}
                 disabled={!mintAmount || loading}
                 sx={{ mt: 2 }}
               >
@@ -136,7 +142,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
             title="Burn Tokens"
             description="Permanently destroy tokens from your balance."
           >
-            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('burn'); }}>
+            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('burn', [burnAmount]); }}>
               <TextField
                 fullWidth
                 label="Amount"
@@ -150,7 +156,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
                 fullWidth
                 variant="contained"
                 color="error"
-                onClick={() => handleOperation('burn')}
+                onClick={() => handleOperation('burn', [burnAmount])}
                 disabled={!burnAmount || loading}
                 sx={{ mt: 2 }}
               >
@@ -164,7 +170,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
           title="Transfer Tokens"
           description="Send tokens to another address."
         >
-          <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('transfer'); }}>
+          <Box component="form" onSubmit={(e) => { e.preventDefault(); handleOperation('transfer', [transferAmount, transferAddress]); }}>
             <TextField
               fullWidth
               label="Recipient Address"
@@ -188,7 +194,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
               fullWidth
               variant="contained"
               color="primary"
-              onClick={() => handleOperation('transfer')}
+              onClick={() => handleOperation('transfer', [transferAmount, transferAddress])}
               disabled={!transferAmount || !isValidAddress(transferAddress) || loading}
               sx={{ mt: 2 }}
             >
