@@ -1,3 +1,4 @@
+// src/components/TokenCard/TokenCard.tsx
 import React from "react";
 import {
   Card,
@@ -12,15 +13,15 @@ import {
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { TokenInfo } from "../../types/tokens";
+import { TokenInfo } from "../../services/tokenService";
 import { shortenAddress } from "../../utils/address";
 
 interface TokenCardProps {
   token: TokenInfo;
-  onManage?: (token: TokenInfo) => void;
+  onAction: (address: string) => void;
 }
 
-export const TokenCard: React.FC<TokenCardProps> = ({ token, onManage }) => {
+export const TokenCard: React.FC<TokenCardProps> = ({ token, onAction }) => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
@@ -72,10 +73,28 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onManage }) => {
 
         <Box sx={{ mb: 1 }}>
           <Typography color="textSecondary" gutterBottom>
+            Supply Total
+          </Typography>
+          <Typography variant="body2">
+            {token.totalSupply}
+          </Typography>
+        </Box>
+
+        <Box sx={{ mb: 1 }}>
+          <Typography color="textSecondary" gutterBottom>
             Supply Maximum
           </Typography>
           <Typography variant="body2">
-            {token.maxSupply?.toString() || "Illimité"}
+            {token.maxSupply || "Illimité"}
+          </Typography>
+        </Box>
+
+        <Box sx={{ mb: 1 }}>
+          <Typography color="textSecondary" gutterBottom>
+            Balance
+          </Typography>
+          <Typography variant="body2">
+            {token.balance}
           </Typography>
         </Box>
 
@@ -94,7 +113,7 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onManage }) => {
           size="small"
           variant="contained"
           fullWidth
-          onClick={() => onManage?.(token)}
+          onClick={() => onAction(token.address)}
         >
           Gérer
         </Button>

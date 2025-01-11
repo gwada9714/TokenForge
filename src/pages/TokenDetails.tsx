@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { TokenManager } from "../components/TokenManager/TokenManager";
-import { TokenInfo } from "../types/tokens";
+import { TokenInfo } from "../services/tokenService"; // Modifié ici
 import { useAccount } from "wagmi";
 
 export const TokenDetailsPage: React.FC = () => {
@@ -39,6 +39,7 @@ export const TokenDetailsPage: React.FC = () => {
           mintable: true,
           owner: address,
           totalSupply: BigInt("1000000000000000000000").toString(),
+          balance: "0", // Ajouté ici
         };
         setToken(mockToken);
       } catch (err) {

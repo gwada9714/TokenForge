@@ -1,3 +1,4 @@
+// src/components/TokenManager/TokenManager.tsx
 import React, { useState } from "react";
 import {
   Box,
@@ -9,7 +10,7 @@ import {
   Tabs,
   Divider,
 } from "@mui/material";
-import { TokenInfo } from "../../types/tokens";
+import { TokenInfo } from "../../services/tokenService"; // Changé l'import
 import { TokenDetails } from "./TokenDetails";
 import { TokenOperations } from "./TokenOperations";
 import { TokenHistory } from "./TokenHistory";
@@ -35,11 +36,21 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
   </div>
 );
 
+const a11yProps = (index: number) => ({
+  id: `token-tab-${index}`,
+  'aria-controls': `token-tabpanel-${index}`,
+});
+
 export const TokenManager: React.FC<TokenManagerProps> = ({ token }) => {
   const [tabValue, setTabValue] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const handleOperationComplete = () => {
+    // Rafraîchir les données du token si nécessaire
+    console.log("Operation completed");
   };
 
   return (
@@ -64,9 +75,9 @@ export const TokenManager: React.FC<TokenManagerProps> = ({ token }) => {
               aria-label="token management tabs"
               variant="fullWidth"
             >
-              <Tab label="Details" id="token-tab-0" />
-              <Tab label="Operations" id="token-tab-1" />
-              <Tab label="History" id="token-tab-2" />
+              <Tab label="Details" {...a11yProps(0)} />
+              <Tab label="Operations" {...a11yProps(1)} />
+              <Tab label="History" {...a11yProps(2)} />
             </Tabs>
 
             <TabPanel value={tabValue} index={0}>
@@ -74,7 +85,10 @@ export const TokenManager: React.FC<TokenManagerProps> = ({ token }) => {
             </TabPanel>
 
             <TabPanel value={tabValue} index={1}>
-              <TokenOperations token={token} />
+              <TokenOperations 
+                token={token} 
+                onOperationComplete={handleOperationComplete}
+              />
             </TabPanel>
 
             <TabPanel value={tabValue} index={2}>

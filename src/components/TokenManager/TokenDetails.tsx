@@ -54,7 +54,15 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
               </IconButton>
             </Tooltip>
             <Tooltip title="Voir sur Etherscan">
-              <IconButton size="small" onClick={() => window.open(`https://etherscan.io/token/${token.address}`, "_blank")}>
+              <IconButton
+                size="small"
+                onClick={() =>
+                  window.open(
+                    `https://etherscan.io/token/${token.address}`,
+                    "_blank",
+                  )
+                }
+              >
                 <OpenInNewIcon fontSize="small" />
               </IconButton>
             </Tooltip>
