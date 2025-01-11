@@ -26,8 +26,8 @@ contract CustomToken is ERC20, ERC20Burnable, ERC20Pausable, ERC20Permit, ERC20V
         bool mintable,
         bool burnable,
         bool pausable,
-        bool permit,
-        bool votes
+        bool /* permit */,
+        bool /* votes */
     ) ERC20(name, symbol) ERC20Permit(name) {
         _decimals = decimalsArg;
         _mintable = mintable;
