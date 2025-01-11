@@ -43,13 +43,12 @@ declare module 'solc' {
 }
 
 declare module 'solc/wrapper' {
-  import { CompilerInput, CompilerOutput } from 'solc';
+  import type { CompilerInput, CompilerOutput } from 'solc';
   
-  interface SolcInstance {
+  export interface SolcWrapper {
     compile(input: string): string;
     version(): string;
   }
 
-  function wrapper(Module: any): SolcInstance;
-  export default wrapper;
+  export default function wrapper(Module: any): SolcWrapper;
 }

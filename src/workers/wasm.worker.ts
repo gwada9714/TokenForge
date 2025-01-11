@@ -1,5 +1,5 @@
 import type { CompilerInput, CompilerOutput } from 'solc';
-import type { SolcInstance } from 'solc/wrapper';
+import type { SolcWrapper } from 'solc/wrapper';
 
 /**
  * Initializes the Solidity compiler with WASM support
@@ -8,9 +8,9 @@ import type { SolcInstance } from 'solc/wrapper';
 const SOLC_VERSION = '0.8.20';
 const SOLC_CDN = `https://binaries.soliditylang.org/bin/soljson-v${SOLC_VERSION}+commit.a1b79de6.js`;
 
-let solcInstance: SolcInstance | null = null;
+let solcInstance: SolcWrapper | null = null;
 
-async function loadSolc(): Promise<SolcInstance> {
+async function loadSolc(): Promise<SolcWrapper> {
   if (solcInstance) return solcInstance;
 
   try {
