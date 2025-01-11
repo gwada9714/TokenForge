@@ -18,13 +18,20 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
             'Content-Security-Policy',
             [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* https://*.moonpay.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* https://*.moonpay.com https://cdn.jsdelivr.net chrome-extension://*",
+              "script-src-elem 'self' 'unsafe-inline' http://localhost:* https://*.moonpay.com https://cdn.jsdelivr.net chrome-extension://*",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' ws://localhost:* http://localhost:* https://*.infura.io https://*.alchemyapi.io https://api.etherscan.io wss://*.infura.io wss://*.alchemyapi.io https://*.walletconnect.org https://api.coingecko.com https://eth-sepolia.g.alchemy.com https://mainnet.infura.io https://*.moonpay.com chrome-extension://*",
-              "frame-src 'self' http://localhost:* https://*.moonpay.com https://*.walletconnect.org",
+              "connect-src 'self' ws://localhost:* wss://localhost:* http://localhost:* https://*.infura.io https://*.alchemyapi.io https://api.etherscan.io wss://*.infura.io wss://*.alchemyapi.io https://*.walletconnect.org wss://*.walletconnect.org wss://*.walletconnect.com wss://www.walletlink.org https://api.coingecko.com https://eth-sepolia.g.alchemy.com https://mainnet.infura.io https://*.moonpay.com chrome-extension://*",
+              "frame-src 'self' http://localhost:* https://*.moonpay.com https://*.walletconnect.org chrome-extension://*",
               "worker-src 'self' blob: 'unsafe-eval'",
+              "manifest-src 'self'",
+              "media-src 'none'",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'"
             ].join('; ')
           );
         } else {
@@ -37,19 +44,22 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
             'Content-Security-Policy',
             [
               "default-src 'self'",
-              `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://*.moonpay.com`,
+              `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://*.moonpay.com https://cdn.jsdelivr.net chrome-extension://*`,
+              `script-src-elem 'self' 'nonce-${nonce}' https://*.moonpay.com https://cdn.jsdelivr.net chrome-extension://*`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.infura.io https://*.alchemyapi.io https://api.etherscan.io wss://*.infura.io wss://*.alchemyapi.io https://*.walletconnect.org https://api.coingecko.com https://eth-sepolia.g.alchemy.com https://mainnet.infura.io https://*.moonpay.com",
-              "frame-src 'self' https://*.moonpay.com https://*.walletconnect.org",
+              "connect-src 'self' https://*.infura.io https://*.alchemyapi.io https://api.etherscan.io wss://*.infura.io wss://*.alchemyapi.io https://*.walletconnect.org wss://*.walletconnect.org wss://*.walletconnect.com wss://www.walletlink.org https://api.coingecko.com https://eth-sepolia.g.alchemy.com https://mainnet.infura.io https://*.moonpay.com chrome-extension://*",
+              "frame-src 'self' https://*.moonpay.com https://*.walletconnect.org chrome-extension://*",
               "worker-src 'self' blob:",
+              "manifest-src 'self'",
+              "media-src 'none'",
+              "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'self'",
-              "object-src 'none'",
+              "frame-ancestors 'none'",
               "upgrade-insecure-requests",
-              "sandbox allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-downloads"
+              "block-all-mixed-content"
             ].join('; ')
           );
         }
