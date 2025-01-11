@@ -19,26 +19,7 @@ export default defineConfig(({ mode }) => {
       global: 'globalThis',
     },
     plugins: [
-      react({
-        babel: {
-          plugins: [
-            'babel-plugin-macros',
-            [
-              '@emotion/babel-plugin-jsx-pragmatic',
-              {
-                export: 'jsx',
-                import: '__cssprop',
-                module: '@emotion/react',
-              },
-            ],
-            [
-              '@babel/plugin-transform-react-jsx',
-              { pragma: '__cssprop' },
-              'twin.macro',
-            ],
-          ],
-        },
-      }),
+      react(),
       nodePolyfills({
         globals: {
           Buffer: true,
@@ -93,7 +74,6 @@ export default defineConfig(({ mode }) => {
         '@wagmi/core',
         'ethers',
         'web3',
-        'buffer',
       ],
     },
     build: {
