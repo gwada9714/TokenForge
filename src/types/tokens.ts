@@ -13,6 +13,14 @@ export interface TokenAdvancedConfig {
   pausable: boolean;
   permit: boolean;
   votes: boolean;
+  upgradeable: boolean;
+  transparent: boolean;
+  uups: boolean;
+  accessControl: boolean;
+  baseURI: string;
+  asset: string;
+  maxSupply: string;
+  depositLimit: string;
 }
 
 export interface TokenInfo {
@@ -23,6 +31,8 @@ export interface TokenInfo {
   totalSupply: string;
   mintable: boolean;
   burnable: boolean;
+  maxSupply: string;
+  owner: string;
 }
 
 export interface TokenOperation {

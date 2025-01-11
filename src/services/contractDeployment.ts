@@ -1,4 +1,4 @@
-import { TokenBaseConfig, TokenAdvancedConfig, DeploymentStatus } from '../types/tokens';
+import { TokenBaseConfig, TokenAdvancedConfig, TokenDeploymentStatus } from '../types/tokens';
 import { TokenType } from '../components/CreateTokenForm/TokenTypeSelector';
 import { 
   WalletClient, 
@@ -83,7 +83,8 @@ export const deployToken = async (
   baseConfig: TokenBaseConfig,
   advancedConfig: TokenAdvancedConfig,
   walletClient: WalletClient,
-  chainId: number
+  chainId: number,
+  publicClient: PublicClient
 ): Promise<Address> => {
   try {
     const network = getNetwork(chainId);
@@ -112,6 +113,15 @@ export const deployToken = async (
       initData = initializeData as Address;
     }
 
+    // Estimate gas using public client
+    const gasEstimate = await publicClient.estimateContractGas({
+      address: network.factoryAddress,
+      abi: TokenFactoryABI as Abi,
+      functionName: 'deployToken',
+      args: [args, initData],
+      account: owner,
+    });
+
     const hash = await walletClient.writeContract({
       chain: walletClient.chain,
       address: network.factoryAddress,
@@ -119,6 +129,7 @@ export const deployToken = async (
       functionName: 'deployToken',
       args: [args, initData],
       account: owner,
+      gas: gasEstimate,
     });
 
     return hash;
@@ -160,7 +171,7 @@ const decodeLog = (log: Log, publicClient: PublicClient): DecodedLog | null => {
 export const getDeploymentStatus = async (
   txHash: Address,
   publicClient: PublicClient
-): Promise<DeploymentStatus> => {
+): Promise<TokenDeploymentStatus> => {
   try {
     const tx = await publicClient.getTransaction({ hash: txHash });
     if (!tx) {

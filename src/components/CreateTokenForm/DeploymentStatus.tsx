@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress, Link } from '@mui/material';
 import { PublicClient } from 'viem';
 import { getDeploymentStatus } from '../../services/contractDeployment';
-import { DeploymentStatus as DeploymentStatusType } from '../../types/tokens';
+import { TokenDeploymentStatus } from '../../types/tokens';
 
 interface DeploymentStatusProps {
-  status: DeploymentStatusType;
+  status: TokenDeploymentStatus;
   publicClient: PublicClient;
 }
 
@@ -15,7 +15,7 @@ export const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
   status: initialStatus,
   publicClient
 }) => {
-  const [status, setStatus] = useState<DeploymentStatusType>(initialStatus);
+  const [status, setStatus] = useState<TokenDeploymentStatus>(initialStatus);
 
   useEffect(() => {
     if (!status.txHash || status.status === 'success' || status.status === 'failed') return;
