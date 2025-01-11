@@ -1,20 +1,22 @@
 import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { InjectedConnector } from "@wagmi/connectors/injected";
+import { injected } from "wagmi/connectors";
 
 const Header = () => {
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect({
-    connector: new InjectedConnector(),
-  });
-  const { disconnect } = useDisconnect();
+  const { connectAsync } = useConnect();
+  const { disconnectAsync } = useDisconnect();
 
   const handleConnect = async () => {
-    if (isConnected) {
-      disconnect();
-    } else {
-      await connect();
+    try {
+      if (isConnected) {
+        await disconnectAsync();
+      } else {
+        await connectAsync({ connector: injected() });
+      }
+    } catch (error) {
+      console.error("Connection error:", error);
     }
   };
 

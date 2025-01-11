@@ -6,7 +6,7 @@ import { Layout } from "./components/Layout";
 import { Home } from "./pages/Home";
 import { CreateToken } from "./pages/CreateToken";
 import { MyTokens } from "./pages/MyTokens";
-import { TokenDetails } from "./pages/TokenDetails";
+import { TokenDetailsPage } from "./pages/TokenDetails";
 import { Web3Provider } from "./contexts/Web3Provider";
 
 const App = () => {
@@ -18,7 +18,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/create" element={<CreateToken />} />
             <Route path="/tokens" element={<MyTokens />} />
-            <Route path="/tokens/:address" element={<TokenDetails />} />
+            <Route path="/tokens/:address" element={<TokenDetailsPage />} />
           </Routes>
         </Layout>
       </ThemeProvider>
