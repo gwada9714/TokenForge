@@ -1,8 +1,33 @@
+import { ethers } from "ethers";
+
+/**
+ * Valide une adresse Ethereum
+ */
+export const validateAddress = (address: string): boolean => {
+  try {
+    return ethers.isAddress(address);
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Raccourcit une adresse Ethereum pour l'affichage
+ */
 export const shortenAddress = (address: string): string => {
-  if (!address) return "";
+  if (!validateAddress(address)) {
+    throw new Error("Format d'adresse invalide");
+  }
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 };
 
-export const isValidAddress = (address: string): boolean => {
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
+/**
+ * Retourne l'adresse avec checksum
+ */
+export const checksumAddress = (address: string): string => {
+  try {
+    return ethers.getAddress(address);
+  } catch {
+    throw new Error("Adresse invalide pour checksum");
+  }
 };

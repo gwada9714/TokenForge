@@ -1,7 +1,6 @@
-import { getContractAddress } from "viem";
 import { customERC20ABI } from "../contracts/compiled";
 
-const ERC20_ABI = [
+export const CONTRACT_ABI = [
   {
     constant: true,
     inputs: [],
@@ -47,12 +46,41 @@ const ERC20_ABI = [
     outputs: [{ name: "", type: "bool" }],
     type: "function",
   },
+  // Ajout des fonctions ERC721 nécessaires
+  {
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    name: "tokenURI",
+    outputs: [{ name: "", type: "string" }],
+    type: "function",
+  },
+  {
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    name: "ownerOf",
+    outputs: [{ name: "", type: "address" }],
+    type: "function",
+  },
+  {
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "index", type: "uint256" },
+    ],
+    name: "tokenOfOwnerByIndex",
+    outputs: [{ name: "", type: "uint256" }],
+    type: "function",
+  },
+  {
+    inputs: [{ name: "tokenURI", type: "string" }],
+    name: "mintToken",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
 ] as const;
 
 export function getTokenContract(address: `0x${string}`) {
   return {
     address,
-    abi: [...ERC20_ABI, ...customERC20ABI],
+    abi: [...CONTRACT_ABI, ...customERC20ABI],
   };
 }
 

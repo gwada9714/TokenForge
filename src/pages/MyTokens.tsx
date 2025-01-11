@@ -1,3 +1,4 @@
+// src/pages/MyTokens.tsx
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -11,7 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { TokenCard } from "../components/TokenCard/TokenCard";
-import { TokenInfo } from "../types/tokens";
+import { TokenInfo } from "../services/tokenService"; // Changé l'import
 import AddIcon from "@mui/icons-material/Add";
 
 export const MyTokens: React.FC = () => {
@@ -35,8 +36,9 @@ export const MyTokens: React.FC = () => {
             name: "Test Token",
             symbol: "TEST",
             decimals: 18,
-            maxSupply: BigInt("1000000000000000000000000").toString(),
+            maxSupply: "1000000000000000000000000",
             totalSupply: "0",
+            balance: "0", // Ajouté le champ balance requis
             burnable: true,
             mintable: true,
             owner: "0x0000000000000000000000000000000000000000",
@@ -48,6 +50,7 @@ export const MyTokens: React.FC = () => {
             decimals: 18,
             maxSupply: "0",
             totalSupply: "0",
+            balance: "0", // Ajouté le champ balance requis
             burnable: false,
             mintable: true,
             owner: "0x0000000000000000000000000000000000000000",
@@ -65,8 +68,8 @@ export const MyTokens: React.FC = () => {
     loadTokens();
   }, [address, isConnected]);
 
-  const handleManageToken = (token: TokenInfo) => {
-    navigate(`/token/${token.address}`);
+  const handleTokenAction = (address: string) => { // Changé pour correspondre à la nouvelle prop
+    navigate(`/token/${address}`);
   };
 
   if (!isConnected) {
@@ -132,7 +135,10 @@ export const MyTokens: React.FC = () => {
           <Grid container spacing={3}>
             {tokens.map((token) => (
               <Grid item xs={12} sm={6} md={4} key={token.address}>
-                <TokenCard token={token} onManage={handleManageToken} />
+                <TokenCard 
+                  token={token} 
+                  onAction={handleTokenAction} // Changé onManage en onAction
+                />
               </Grid>
             ))}
           </Grid>

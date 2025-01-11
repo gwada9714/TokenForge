@@ -1,3 +1,4 @@
+// src/components/TokenManager/TokenOperations.tsx
 import React, { useState } from "react";
 import {
   Grid,
@@ -12,8 +13,8 @@ import {
   Snackbar,
 } from "@mui/material";
 import { usePublicClient, useWalletClient } from "wagmi";
-import { TokenInfo } from "../../types/tokens";
-import { isValidAddress } from "../../utils/address";
+import { TokenInfo } from "../../services/tokenService"; // Changé l'import
+import { validateAddress } from "../../utils/address";
 import { getTokenContract } from "../../services/contracts";
 
 interface TokenOperationsProps {
@@ -207,9 +208,9 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({
               value={transferAddress}
               onChange={(e) => setTransferAddress(e.target.value)}
               margin="normal"
-              error={!!transferAddress && !isValidAddress(transferAddress)}
+              error={!!transferAddress && !validateAddress(transferAddress)}
               helperText={
-                transferAddress && !isValidAddress(transferAddress)
+                transferAddress && !validateAddress(transferAddress)
                   ? "Invalid address"
                   : ""
               }
@@ -232,7 +233,9 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({
                 handleOperation("transfer", [transferAmount, transferAddress])
               }
               disabled={
-                !transferAmount || !isValidAddress(transferAddress) || loading
+                !transferAmount ||
+                !validateAddress(transferAddress) ||
+                loading
               }
               sx={{ mt: 2 }}
             >
