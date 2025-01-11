@@ -1,13 +1,12 @@
-import { type Client, type Account } from 'viem';
+import { type PublicClient, type WalletClient, parseUnits } from 'viem';
 import { getTokenFactoryContract } from './contracts';
 import { TokenBaseConfig, TokenAdvancedConfig, TokenDeploymentStatus } from '../types/tokens';
-import { parseUnits } from 'viem';
 
 export async function deployToken(
   baseConfig: TokenBaseConfig,
   advancedConfig: TokenAdvancedConfig,
-  walletClient: Client,
-  publicClient: Client
+  walletClient: WalletClient,
+  publicClient: PublicClient
 ): Promise<TokenDeploymentStatus> {
   try {
     const factoryAddress = process.env.VITE_TOKEN_FACTORY_ADDRESS;
@@ -22,6 +21,11 @@ export async function deployToken(
       baseConfig.decimals
     );
 
+    const account = await walletClient.getAddresses().then(addresses => addresses[0]);
+    if (!account) {
+      throw new Error('No account available');
+    }
+
     const { request } = await publicClient.simulateContract({
       ...contract,
       functionName: 'createToken',
@@ -34,6 +38,7 @@ export async function deployToken(
         advancedConfig.mintable,
         advancedConfig.pausable
       ],
+      account,
     });
 
     const hash = await walletClient.writeContract(request);

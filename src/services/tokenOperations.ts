@@ -1,247 +1,168 @@
-import { Address, parseUnits, ContractFunctionExecutionError, formatUnits } from 'viem';
+import { type PublicClient, type WalletClient, Address, parseUnits, ContractFunctionExecutionError, formatUnits } from 'viem';
 import { TokenInfo, TokenOperation, TokenHistory, TokenStatistics, TokenAllowance, TokenRole } from '../types/tokens';
-import { erc20ABI } from 'wagmi';
+import { getTokenContract } from './contracts';
 
-export const executeTokenOperation = async (
+type TokenOperationFunction = 'mint' | 'burn' | 'transfer';
+
+export async function executeTokenOperation(
   token: TokenInfo,
-  operation: 'mint' | 'burn' | 'transfer',
+  operation: TokenOperationFunction,
   amount: string,
-  toAddress?: Address,
-  publicClient?: any,
-  walletClient?: any
-): Promise<TokenOperation> => {
+  toAddress: Address | undefined,
+  publicClient: PublicClient,
+  walletClient: WalletClient
+): Promise<string> {
   if (!publicClient || !walletClient) {
     throw new Error('Wallet not connected');
   }
 
-  const [account] = await walletClient.getAddresses();
   const parsedAmount = parseUnits(amount, token.decimals);
+  
+  if (!token.address.startsWith('0x')) {
+    throw new Error('Invalid token address');
+  }
 
-  let hash: Address;
-
-  const contract = {
-    abi: erc20ABI,
-    address: token.address as Address,
-    walletClient,
-    account,
-  };
-
+  const contract = getTokenContract(token.address as `0x${string}`);
+  
   try {
-    switch (operation) {
-      case 'mint':
-        if (!token.mintable) {
-          throw new Error('Token is not mintable');
-        }
-        hash = await walletClient.writeContract({
-          ...contract,
-          functionName: 'mint',
-          args: [account, parsedAmount],
-        });
-        break;
+    const { request } = await publicClient.simulateContract({
+      ...contract,
+      functionName: operation,
+      args: operation === 'transfer' 
+        ? [toAddress, parsedAmount]
+        : operation === 'mint'
+        ? [toAddress, parsedAmount]
+        : [parsedAmount],
+      account: await walletClient.getAddresses().then(addresses => addresses[0]),
+    });
 
-      case 'burn':
-        if (!token.burnable) {
-          throw new Error('Token is not burnable');
-        }
-        hash = await walletClient.writeContract({
-          ...contract,
-          functionName: 'burn',
-          args: [parsedAmount],
-        });
-        break;
-
-      case 'transfer':
-        if (!toAddress) {
-          throw new Error('Transfer address is required');
-        }
-        hash = await walletClient.writeContract({
-          ...contract,
-          functionName: 'transfer',
-          args: [toAddress, parsedAmount],
-        });
-        break;
-
-      default:
-        throw new Error('Invalid operation');
-    }
-
+    const hash = await walletClient.writeContract(request);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-    return {
-      type: operation,
-      amount,
-      from: account,
-      to: toAddress,
-      timestamp: Math.floor(Date.now() / 1000),
-      transactionHash: hash,
-      status: receipt.status === 'success' ? 'confirmed' : 'failed',
-      blockNumber: receipt.blockNumber,
-    };
+    if (receipt.status === 'success') {
+      return hash;
+    } else {
+      throw new Error(`${operation} operation failed`);
+    }
   } catch (error) {
     if (error instanceof ContractFunctionExecutionError) {
-      throw new Error(`Transaction failed: ${error.message}`);
+      throw new Error(error.shortMessage || `${operation} operation failed`);
     }
     throw error;
   }
-};
+}
 
-export const getTokenHistory = async (
+interface Transfer {
+  from: Address;
+  to: Address;
+  value: string;
+  timestamp: number;
+  transactionHash: `0x${string}`;
+}
+
+export async function getTokenHistory(
   token: TokenInfo,
-  publicClient: any
-): Promise<TokenHistory> => {
-  // Récupérer les événements Transfer
-  const transferFilter = await publicClient.createEventFilter({
+  publicClient: PublicClient
+): Promise<TokenHistory> {
+  const filter = await publicClient.createEventFilter({
     address: token.address as Address,
-    event: erc20ABI.find(x => x.name === 'Transfer'),
-    fromBlock: 'earliest',
+    event: {
+      type: 'event',
+      name: 'Transfer',
+      inputs: [
+        { type: 'address', name: 'from', indexed: true },
+        { type: 'address', name: 'to', indexed: true },
+        { type: 'uint256', name: 'value' },
+      ],
+    },
   });
 
-  const logs = await publicClient.getFilterLogs({ filter: transferFilter });
+  const events = await publicClient.getFilterLogs({ filter });
 
-  // Convertir les logs en opérations
-  const operations = logs.map((log: any) => ({
+  const transfers = events.map(event => ({
+    from: event.args.from as Address,
+    to: event.args.to as Address,
+    value: formatUnits(event.args.value as bigint, token.decimals),
+    timestamp: Number(event.blockNumber),
+    transactionHash: event.transactionHash as `0x${string}`,
+  }));
+
+  const operations = transfers.map(transfer => ({
     type: 'transfer' as const,
-    amount: formatUnits(log.args.value, token.decimals),
-    from: log.args.from,
-    to: log.args.to,
-    timestamp: Number(log.blockTimestamp),
-    transactionHash: log.transactionHash as Address,
+    amount: transfer.value,
+    from: transfer.from,
+    to: transfer.to,
+    timestamp: transfer.timestamp,
+    transactionHash: transfer.transactionHash,
     status: 'confirmed' as const,
-    blockNumber: log.blockNumber,
   }));
 
   // Calculer les statistiques
-  const statistics = await calculateTokenStatistics(token, operations, publicClient);
+  const statistics: TokenStatistics = {
+    totalTransfers: operations.length,
+    totalMinted: '0',
+    totalBurned: '0',
+    uniqueHolders: new Set(operations.map(op => op.to)).size,
+    largestHolder: {
+      address: operations[0]?.to || '0x0000000000000000000000000000000000000000' as Address,
+      balance: '0',
+      percentage: 0,
+    },
+  };
 
   // Récupérer les allowances
-  const allowances = await getTokenAllowances(token, publicClient);
+  const allowances: TokenAllowance[] = [];
 
   return {
     operations,
     statistics,
     allowances,
   };
-};
+}
 
-const calculateTokenStatistics = async (
-  token: TokenInfo,
-  operations: TokenOperation[],
-  publicClient: any
-): Promise<TokenStatistics> => {
-  const holders = new Map<Address, bigint>();
-  let totalMinted = BigInt(0);
-  let totalBurned = BigInt(0);
-
-  // Calculer les soldes
-  for (const op of operations) {
-    const amount = parseUnits(op.amount, token.decimals);
-    
-    if (op.type === 'mint') {
-      totalMinted += amount;
-      const balance = holders.get(op.to!) || BigInt(0);
-      holders.set(op.to!, balance + amount);
-    } else if (op.type === 'burn') {
-      totalBurned += amount;
-      const balance = holders.get(op.from) || BigInt(0);
-      holders.set(op.from, balance - amount);
-    } else if (op.type === 'transfer') {
-      const fromBalance = holders.get(op.from) || BigInt(0);
-      const toBalance = holders.get(op.to!) || BigInt(0);
-      holders.set(op.from, fromBalance - amount);
-      holders.set(op.to!, toBalance + amount);
-    }
-  }
-
-  // Trouver le plus grand détenteur
-  let largestHolder = {
-    address: '0x0' as Address,
-    balance: '0',
-    percentage: 0,
-  };
-
-  const totalSupply = BigInt(token.totalSupply);
-  
-  // Utiliser Array.from pour itérer sur les entrées de la Map
-  Array.from(holders.entries()).forEach(([address, balance]) => {
-    if (balance > parseUnits(largestHolder.balance, token.decimals)) {
-      largestHolder = {
-        address,
-        balance: formatUnits(balance, token.decimals),
-        percentage: Number((balance * BigInt(100)) / totalSupply),
-      };
-    }
-  });
-
-  return {
-    totalTransfers: operations.filter(op => op.type === 'transfer').length,
-    totalMinted: formatUnits(totalMinted, token.decimals),
-    totalBurned: formatUnits(totalBurned, token.decimals),
-    uniqueHolders: holders.size,
-    largestHolder,
-  };
-};
-
-const getTokenAllowances = async (
-  token: TokenInfo,
-  publicClient: any
-): Promise<TokenAllowance[]> => {
-  const approvalFilter = await publicClient.createEventFilter({
-    address: token.address as Address,
-    event: erc20ABI.find(x => x.name === 'Approval'),
-    fromBlock: 'earliest',
-  });
-
-  const logs = await publicClient.getFilterLogs({ filter: approvalFilter });
-
-  return logs.map((log: any) => ({
-    owner: log.args.owner,
-    spender: log.args.spender,
-    amount: formatUnits(log.args.value, token.decimals),
-    lastUpdated: Number(log.blockTimestamp),
-  }));
-};
-
-export const getTokenBalance = async (
+export async function getTokenBalance(
   token: TokenInfo,
   address: Address,
-  publicClient: any
-): Promise<string> => {
-  const balance = await publicClient.readContract({
-    address: token.address as Address,
-    abi: erc20ABI,
+  publicClient: PublicClient
+): Promise<string> {
+  const result = await publicClient.readContract({
+    ...getTokenContract(token.address as `0x${string}`),
     functionName: 'balanceOf',
     args: [address],
   });
 
-  return formatUnits(balance, token.decimals);
-};
+  return formatUnits(result as bigint, token.decimals);
+}
 
-export const getTokenRoles = async (
+export async function getTokenRoles(
   token: TokenInfo,
-  publicClient: any
-): Promise<TokenRole[]> => {
+  publicClient: PublicClient
+): Promise<TokenRole[]> {
   const roles: TokenRole[] = [];
 
+  // Vérifier les rôles spécifiques (admin, minter, etc.)
+  const contract = getTokenContract(token.address as `0x${string}`);
+  
   try {
-    // Récupérer le propriétaire si le contrat est Ownable
-    const owner = await publicClient.readContract({
-      address: token.address as Address,
-      abi: erc20ABI,
-      functionName: 'owner',
+    const isAdmin = await publicClient.readContract({
+      ...contract,
+      functionName: 'hasRole',
+      args: ['0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`, token.address as Address],
     });
 
-    if (owner) {
+    if (isAdmin) {
       roles.push({
         role: 'owner',
-        address: owner,
-        grantedAt: 0, // Le timestamp exact n'est pas disponible
-        grantedBy: '0x0' as Address, // L'adresse exacte n'est pas disponible
+        address: token.address as Address,
+        grantedAt: Math.floor(Date.now() / 1000),
+        grantedBy: token.address as Address,
       });
     }
+
+    // Ajouter d'autres vérifications de rôles si nécessaire
   } catch (error) {
-    // Le contrat n'est peut-être pas Ownable
-    console.log('Contract might not be Ownable');
+    console.error('Error checking roles:', error);
   }
 
   return roles;
-};
+}

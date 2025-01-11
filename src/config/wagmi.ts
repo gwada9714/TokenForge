@@ -1,71 +1,36 @@
-import { configureChains, createConfig } from 'wagmi';
-import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet';
-import { InjectedConnector } from 'wagmi/connectors/injected';
-import { WalletConnectConnector } from 'wagmi/connectors/walletConnect';
-import { publicProvider } from 'wagmi/providers/public';
-import { alchemyProvider } from 'wagmi/providers/alchemy';
+import { http, createConfig } from 'wagmi';
+import { mainnet, sepolia } from 'wagmi/chains';
+import { defaultWagmiConfig } from '@web3modal/wagmi/react';
 
-import {
-  APP_NAME,
-  APP_DESCRIPTION,
-  APP_ICONS,
-  APP_URL,
-  SUPPORTED_CHAINS,
-  WEB3_MODAL_CONFIG,
-} from './index';
+const projectId = process.env.VITE_WALLET_CONNECT_PROJECT_ID;
+const alchemyId = process.env.VITE_ALCHEMY_API_KEY;
 
-if (!process.env.VITE_WALLET_CONNECT_PROJECT_ID) {
+if (!projectId) {
   throw new Error('Missing VITE_WALLET_CONNECT_PROJECT_ID');
 }
 
-if (!process.env.VITE_ALCHEMY_API_KEY) {
+if (!alchemyId) {
   throw new Error('Missing VITE_ALCHEMY_API_KEY');
 }
 
-const projectId = process.env.VITE_WALLET_CONNECT_PROJECT_ID;
-const alchemyKey = process.env.VITE_ALCHEMY_API_KEY;
+const metadata = {
+  name: 'TokenForge',
+  description: 'Create and manage your own tokens',
+  url: 'https://tokenforge.app',
+  icons: ['https://tokenforge.app/logo.png'],
+};
 
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  Object.values(SUPPORTED_CHAINS),
-  [
-    alchemyProvider({ apiKey: alchemyKey }),
-    publicProvider(),
-  ],
-);
+export const chains = [mainnet, sepolia] as const;
 
-export const config = createConfig({
-  autoConnect: true,
-  connectors: [
-    new WalletConnectConnector({
-      chains,
-      options: {
-        projectId,
-        showQrModal: true,
-        metadata: {
-          name: APP_NAME,
-          description: APP_DESCRIPTION,
-          url: APP_URL,
-          icons: APP_ICONS,
-        },
-      },
-    }),
-    new InjectedConnector({
-      chains,
-      options: {
-        name: 'Injected',
-        shimDisconnect: true,
-      },
-    }),
-    new CoinbaseWalletConnector({
-      chains,
-      options: {
-        appName: APP_NAME,
-        appLogoUrl: APP_ICONS[0],
-      },
-    }),
-  ],
-  publicClient,
-  webSocketPublicClient,
+export const config = defaultWagmiConfig({
+  chains,
+  projectId,
+  metadata,
+  ssr: false,
+  transports: {
+    [mainnet.id]: http(`https://eth-mainnet.g.alchemy.com/v2/${alchemyId}`),
+    [sepolia.id]: http(`https://eth-sepolia.g.alchemy.com/v2/${alchemyId}`),
+  },
 });
 
-export { chains };
+export { mainnet, sepolia };

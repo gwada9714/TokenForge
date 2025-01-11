@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
       'process.env.VITE_DEFAULT_NETWORK': JSON.stringify(env.VITE_DEFAULT_NETWORK),
       'process.env.MODE': JSON.stringify(mode),
       global: 'globalThis',
+      'process.env': process.env
     },
     plugins: [
       react({

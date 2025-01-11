@@ -1,19 +1,31 @@
 module.exports = {
+  root: true,
+  env: {
+    browser: true,
+    es2020: true,
+    node: true,
+  },
   extends: [
-    'react-app',
-    'react-app/jest',
-    'plugin:testing-library/react',
-    'plugin:jest/recommended',
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'plugin:react/jsx-runtime',
+    'plugin:react-hooks/recommended',
+    'plugin:prettier/recommended',
   ],
-  plugins: ['testing-library', 'jest'],
+  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['react-refresh', '@typescript-eslint', 'react'],
   rules: {
-    'testing-library/no-render-in-setup': 'off',
-    'testing-library/no-node-access': 'off',
-    'jest/no-conditional-expect': 'off',
-    'jest/valid-expect': 'off',
-    '@typescript-eslint/no-unused-vars': 'warn',
-    'no-restricted-globals': ['error', 'name', 'length'],
-    'import/first': 'error',
-    'no-new-func': 'warn',
+    'react-refresh/only-export-components': [
+      'warn',
+      { allowConstantExport: true },
+    ],
+    '@typescript-eslint/no-explicit-any': 'off',
+  },
+  settings: {
+    react: {
+      version: 'detect',
+    },
   },
 };

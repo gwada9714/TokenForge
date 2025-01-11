@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Paper, Typography, CircularProgress } from '@mui/material';
 import { usePublicClient, useWalletClient } from 'wagmi';
-import { formatEther } from 'viem';
+import { formatEther, parseUnits } from 'viem';
 import { TokenBaseConfig, TokenAdvancedConfig } from '../../types/tokens';
+import { getTokenFactoryContract } from '../../services/contracts';
 import { generateContractBytecode } from '../../services/contractGenerator';
 
 interface DeploymentCostProps {
@@ -11,16 +12,27 @@ interface DeploymentCostProps {
 }
 
 export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, advancedConfig }) => {
-  const [estimatedGas, setEstimatedGas] = useState<bigint | null>(null);
-  const [gasPrice, setGasPrice] = useState<bigint | null>(null);
+  const [estimatedCost, setEstimatedCost] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
   useEffect(() => {
-    const estimateCost = async () => {
+    const estimateGas = async () => {
+      if (!publicClient) return;
+
       try {
         setIsLoading(true);
+        setError(null);
+
+        const factoryAddress = process.env.VITE_TOKEN_FACTORY_ADDRESS;
+        if (!factoryAddress || !factoryAddress.startsWith('0x')) {
+          throw new Error('Invalid token factory address');
+        }
+
+        const contract = getTokenFactoryContract(factoryAddress as `0x${string}`);
+        
         const bytecode = await generateContractBytecode(baseConfig, advancedConfig);
         
         let address: `0x${string}` | undefined;
@@ -41,29 +53,20 @@ export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, adva
           data: bytecode,
         };
         
-        const gas = await publicClient.estimateGas(tx);
-        const price = await publicClient.getGasPrice();
+        const gasEstimate = await publicClient.estimateGas(tx);
+        const gasPrice = await publicClient.getGasPrice();
+        const gasCost = gasEstimate * gasPrice;
         
-        setEstimatedGas(gas);
-        setGasPrice(price);
-      } catch (error) {
-        console.error('Error estimating deployment cost:', error);
-        setEstimatedGas(null);
-        setGasPrice(null);
+        setEstimatedCost(formatEther(gasCost));
+      } catch (error: any) {
+        setError(error.message || 'Failed to estimate gas');
       } finally {
         setIsLoading(false);
       }
     };
 
-    estimateCost();
+    estimateGas();
   }, [baseConfig, advancedConfig, publicClient, walletClient]);
-
-  const calculateTotalCost = () => {
-    if (!estimatedGas || !gasPrice) return null;
-    return estimatedGas * gasPrice;
-  };
-
-  const totalCost = calculateTotalCost();
 
   return (
     <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
@@ -78,20 +81,18 @@ export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, adva
           </Box>
         ) : (
           <>
-            <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Estimated Gas:</Typography>
-              <Typography>{estimatedGas?.toString() ?? 'N/A'}</Typography>
-            </Box>
-            <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Gas Price:</Typography>
-              <Typography>{gasPrice ? `${formatEther(gasPrice)} ETH` : 'N/A'}</Typography>
-            </Box>
             <Box display="flex" justifyContent="space-between">
               <Typography fontWeight="bold">Total Cost:</Typography>
               <Typography fontWeight="bold">
-                {totalCost ? `${formatEther(totalCost)} ETH` : 'N/A'}
+                {estimatedCost ?? 'N/A'}
               </Typography>
             </Box>
+            {error && (
+              <Box display="flex" justifyContent="space-between" mt={1}>
+                <Typography color="error">Error:</Typography>
+                <Typography color="error">{error}</Typography>
+              </Box>
+            )}
           </>
         )}
       </Box>

@@ -40,7 +40,7 @@ export const CreateToken: React.FC = () => {
   const [isDeploying, setIsDeploying] = useState(false);
 
   const handleCreateToken = async () => {
-    if (!walletClient || !address) {
+    if (!walletClient || !address || !publicClient) {
       setDeploymentStatus({
         status: 'error',
         error: 'Please connect your wallet first',
@@ -57,10 +57,10 @@ export const CreateToken: React.FC = () => {
         publicClient
       );
       setDeploymentStatus(status);
-    } catch (error) {
+    } catch (error: any) {
       setDeploymentStatus({
         status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: error.message || 'Failed to deploy token',
       });
     } finally {
       setIsDeploying(false);

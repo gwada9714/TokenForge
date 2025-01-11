@@ -1,28 +1,20 @@
 import './polyfills';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { createConfig, WagmiConfig } from 'wagmi';
-import { createPublicClient, http } from 'viem';
-import { mainnet } from 'wagmi/chains';
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { config } from './config/wagmi';
 import App from './App';
 import './index.css';
 
-const config = createConfig({
-  autoConnect: true,
-  publicClient: createPublicClient({
-    chain: mainnet,
-    transport: http()
-  }),
-});
+const queryClient = new QueryClient();
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
-
-root.render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <WagmiConfig config={config}>
-      <App />
-    </WagmiConfig>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </WagmiProvider>
   </React.StrictMode>
 );
