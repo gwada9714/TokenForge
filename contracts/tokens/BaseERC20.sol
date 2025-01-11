@@ -39,6 +39,10 @@ contract BaseERC20 is ERC20, ERC20Burnable, ERC20Pausable, ERC20Permit, Ownable 
         return _maxSupply;
     }
 
+    function mintable() public view returns (bool) {
+        return _mintable;
+    }
+
     function mint(address to, uint256 amount) public onlyOwner {
         if (!_mintable) revert MintingDisabled();
         if (_maxSupply > 0 && totalSupply() + amount > _maxSupply) {

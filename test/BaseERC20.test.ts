@@ -85,7 +85,7 @@ describe("BaseERC20", function () {
 
       expect(actualName).to.equal(name);
       expect(actualSymbol).to.equal(symbol);
-      expect(actualDecimals).to.equal(decimals);
+      expect(Number(actualDecimals)).to.equal(decimals);
       expect(actualTotalSupply).to.equal(initialSupply);
       expect(actualMaxSupply).to.equal(maxSupply);
       expect(actualMintable).to.equal(mintable);
@@ -200,7 +200,7 @@ describe("BaseERC20", function () {
 
       // Should be able to mint any amount
       await token.mint((await hre.ethers.getSigners())[1].address, parseEther("1000000"));
-      expect(await token.balanceOf((await hre.ethers.getSigners())[1].address)).to.equal(parseEther("1000000"));
+      expect(Number(await token.balanceOf((await hre.ethers.getSigners())[1].address))).to.equal(Number(parseEther("1000000")));
     });
   });
 });
