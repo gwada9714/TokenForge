@@ -1,8 +1,16 @@
+# Dependencies
 /node_modules
 /.pnp
 .pnp.js
+
+# Testing
 /coverage
+
+# Production
 /build
+/dist
+
+# Misc
 .DS_Store
 .env.local
 .env.development.local
@@ -21,3 +29,27 @@
 # IDE
 .idea
 .vscode
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# Contract artifacts
+/deployments
+.openzeppelin
+
+# Coverage
+coverage.json
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Temporary files
+.temp
+.tmp

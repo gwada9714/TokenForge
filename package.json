@@ -30,6 +30,9 @@
     "@babel/preset-env": "^7.23.3",
     "@babel/preset-react": "^7.23.3",
     "@babel/preset-typescript": "^7.23.3",
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@hookform/resolvers": "^3.10.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
@@ -60,9 +63,13 @@
     "hardhat": "^2.19.0",
     "hardhat-gas-reporter": "^1.0.8",
     "https-browserify": "^1.0.0",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "^15.3.0",
+    "npm-run-all": "^4.1.5",
     "path-browserify": "^1.0.1",
+    "react-hook-form": "^7.54.2",
     "solc": "^0.8.28",
     "solidity-coverage": "^0.8.1",
     "stream-browserify": "^3.0.0",
@@ -73,7 +80,8 @@
     "typescript": "^5.3.3",
     "viem": "^1.21.3",
     "vite": "^5.0.0",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite-plugin-pwa": "^0.21.1",
+    "zod": "^3.24.1"
   },
   "scripts": {
     "start": "vite",
@@ -85,7 +93,15 @@
     "compile": "hardhat compile",
     "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia",
-    "deploy:mainnet": "hardhat run scripts/deploy.ts --network mainnet"
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network mainnet",
+    "prepare": "husky install",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "format": "prettier --write '**/*.{js,jsx,ts,tsx,sol,json,md}'",
+    "type-check": "tsc --noEmit",
+    "validate": "npm-run-all --parallel type-check lint test",
+    "precommit": "lint-staged"
   },
   "eslintConfig": {
     "extends": [
