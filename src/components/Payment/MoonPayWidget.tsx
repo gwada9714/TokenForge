@@ -87,8 +87,10 @@ export const MoonPayWidget: React.FC<MoonPayWidgetProps> = ({
         src={widgetUrl}
         height="600px"
         width="100%"
-        frameBorder="0"
+        title="MoonPay payment widget"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
         allow="accelerometer; autoplay; camera; gyroscope; payment"
+        loading="lazy"
       />
     </Box>
   );

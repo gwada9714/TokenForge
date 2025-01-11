@@ -9,48 +9,116 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
   const isDev = options.development ?? process.env.NODE_ENV === 'development';
   const nonces = new Set<string>();
 
+  function generateNonce(): string {
+    return createHash('sha256')
+      .update(Date.now().toString() + Math.random().toString())
+      .digest('base64');
+  }
+
+  function generateHash(content: string): string {
+    return "'sha256-" + createHash('sha256').update(content).digest('base64') + "'";
+  }
+
   return {
     name: 'vite-plugin-csp',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        const nonce = createHash('sha256').update(Date.now().toString()).digest('base64');
+        const nonce = generateNonce();
         nonces.add(nonce);
         
-        // Set CSP header
         res.setHeader(
           'Content-Security-Policy',
           generateCSPHeader(nonce, isDev)
         );
+
+        // Set other security headers
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+        res.setHeader('X-XSS-Protection', '1; mode=block');
+        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+        res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+
         next();
       });
     },
     transformIndexHtml(html) {
-      const nonce = createHash('sha256').update(Date.now().toString()).digest('base64');
+      const nonce = generateNonce();
       nonces.add(nonce);
 
-      // Add nonce to all inline scripts
-      html = html.replace(/<script/g, `<script nonce="\${nonce}"`);
+      // Collect all inline scripts and styles
+      const inlineScripts = new Set<string>();
+      const inlineStyles = new Set<string>();
 
-      // Add CSP meta tag
-      const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${generateCSPHeader(nonce, isDev)}">`;
-      html = html.replace('</head>', `${cspMeta}\n</head>`);
+      // Extract and hash inline scripts
+      html = html.replace(
+        /<script[^>]*>([\s\S]*?)<\/script>/gi,
+        (match, content) => {
+          if (content.trim()) {
+            inlineScripts.add(generateHash(content.trim()));
+          }
+          return match.replace('<script', `<script nonce="${nonce}"`);
+        }
+      );
 
-      return html;
+      // Extract and hash inline styles
+      html = html.replace(
+        /<style[^>]*>([\s\S]*?)<\/style>/gi,
+        (match, content) => {
+          if (content.trim()) {
+            inlineStyles.add(generateHash(content.trim()));
+          }
+          return match.replace('<style', `<style nonce="${nonce}"`);
+        }
+      );
+
+      // Add CSP meta tag with collected hashes
+      const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${generateCSPHeader(nonce, isDev, {
+        inlineScripts: Array.from(inlineScripts),
+        inlineStyles: Array.from(inlineStyles),
+      })}">`;
+      
+      return html.replace('</head>', `${cspMeta}\n</head>`);
     },
   };
 }
 
-function generateCSPHeader(nonce: string, isDev: boolean): string {
+interface CSPHashesOptions {
+  inlineScripts?: string[];
+  inlineStyles?: string[];
+}
+
+function generateCSPHeader(nonce: string, isDev: boolean, hashes: CSPHashesOptions = {}): string {
   const policies = {
     'default-src': ["'self'"],
     'script-src': [
       "'self'",
       "'strict-dynamic'",
       `'nonce-${nonce}'`,
-      // Only add unsafe-eval in development
-      ...(isDev ? ["'unsafe-eval'"] : []),
+      ...(hashes.inlineScripts || []),
+      // Development-specific sources
+      ...(isDev ? [
+        "'unsafe-eval'",
+        "'unsafe-inline'",
+        'http://localhost:*',
+        'ws://localhost:*'
+      ] : []),
     ],
-    'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    'script-src-elem': [
+      "'self'",
+      "'strict-dynamic'",
+      `'nonce-${nonce}'`,
+      ...(hashes.inlineScripts || []),
+      'https://*.moonpay.com',
+      ...(isDev ? ["'unsafe-inline'", 'http://localhost:*'] : []),
+    ],
+    'style-src': [
+      "'self'",
+      "'unsafe-inline'",
+      `'nonce-${nonce}'`,
+      ...(hashes.inlineStyles || []),
+      'https://fonts.googleapis.com',
+    ],
     'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
     'img-src': ["'self'", 'data:', 'https:', 'blob:'],
     'connect-src': [
@@ -64,20 +132,40 @@ function generateCSPHeader(nonce: string, isDev: boolean): string {
       'https://api.coingecko.com',
       'https://eth-sepolia.g.alchemy.com',
       'https://mainnet.infura.io',
-      ...(isDev ? ['ws://localhost:*'] : []),
+      'https://*.moonpay.com',
+      ...(isDev ? ['ws://localhost:*', 'http://localhost:*'] : []),
     ],
-    'frame-src': ["'self'", 'https://*.moonpay.com', 'https://*.walletconnect.org'],
-    'worker-src': ["'self'", 'blob:'],
+    'frame-src': [
+      "'self'",
+      'https://*.moonpay.com',
+      'https://*.walletconnect.org',
+      ...(isDev ? ['http://localhost:*'] : []),
+    ],
+    'worker-src': [
+      "'self'",
+      'blob:',
+      ...(isDev ? ["'unsafe-eval'"] : []),
+    ],
     'manifest-src': ["'self'"],
     'base-uri': ["'self'"],
     'form-action': ["'self'"],
     'object-src': ["'none'"],
+    'sandbox': [
+      'allow-scripts',
+      'allow-same-origin',
+      'allow-forms',
+      'allow-popups',
+      'allow-popups-to-escape-sandbox',
+      'allow-presentation',
+      'allow-downloads',
+    ],
     'upgrade-insecure-requests': [],
   };
 
   return Object.entries(policies)
     .map(([key, values]) => {
       if (values.length === 0) return key;
+      if (key === 'sandbox') return `${key} ${values.join(' ')}`;
       return `${key} ${values.join(' ')}`;
     })
     .join('; ');
