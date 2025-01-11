@@ -1,214 +1,207 @@
 import React from 'react';
 import {
   Box,
-  TextField,
+  FormControl,
   FormControlLabel,
   Switch,
-  Typography,
-  Paper,
-  Grid,
   Select,
   MenuItem,
-  FormControl,
   InputLabel,
+  TextField,
+  SelectChangeEvent,
 } from '@mui/material';
-import { TokenType } from '../../types/tokens';
+import { TokenAdvancedConfig } from '../../types/tokens';
+import { validateAddress } from '../../services/validation';
 
 interface AdvancedTokenFormProps {
-  tokenType: TokenType;
+  config: TokenAdvancedConfig;
+  onConfigChange: (config: TokenAdvancedConfig) => void;
 }
 
-export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({ tokenType }) => {
-  const isERC20 = tokenType.id === 'erc20';
-  const isNFT = tokenType.id === 'erc721' || tokenType.id === 'erc1155';
-  const isERC4626 = tokenType.id === 'erc4626';
+type AccessControlType = 'none' | 'ownable' | 'roles';
+
+export const AdvancedTokenForm: React.FC<AdvancedTokenFormProps> = ({
+  config,
+  onConfigChange
+}) => {
+  const handleSwitchChange = (field: keyof TokenAdvancedConfig) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    onConfigChange({
+      ...config,
+      [field]: event.target.checked
+    });
+  };
+
+  const handleSelectChange = (field: keyof TokenAdvancedConfig) => (
+    event: SelectChangeEvent<AccessControlType>
+  ) => {
+    onConfigChange({
+      ...config,
+      [field]: event.target.value
+    });
+  };
+
+  const handleTextChange = (field: keyof TokenAdvancedConfig) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { value } = event.target;
+    
+    if (field === 'asset' && value && !validateAddress(value)) {
+      return;
+    }
+    
+    onConfigChange({
+      ...config,
+      [field]: value
+    });
+  };
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Advanced {tokenType.name} Configuration
-      </Typography>
-      
-      <Box component="form" sx={{ mt: 3 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Token Name"
-              placeholder={isERC20 ? "e.g., 'My Token'" : "e.g., 'My NFT Collection'"}
-              required
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={config.burnable}
+              onChange={handleSwitchChange('burnable')}
             />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Token Symbol"
-              placeholder={isERC20 ? "e.g., 'MTK'" : "e.g., 'MNFT'"}
-              required
+          }
+          label="Burnable"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={config.mintable}
+              onChange={handleSwitchChange('mintable')}
             />
-          </Grid>
-
-          {isERC20 && (
-            <>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Initial Supply"
-                  type="number"
-                  placeholder="e.g., 1000000"
-                  required
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Max Supply"
-                  type="number"
-                  placeholder="e.g., 1000000000 (0 for unlimited)"
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Decimals"
-                  type="number"
-                  defaultValue={18}
-                  required
-                />
-              </Grid>
-            </>
-          )}
-
-          {isNFT && (
-            <>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Base URI"
-                  placeholder="e.g., https://api.mynft.com/tokens/"
-                  required
-                />
-              </Grid>
-            </>
-          )}
-
-          {isERC4626 && (
-            <>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Asset Token Address"
-                  placeholder="e.g., 0x..."
-                  required
-                />
-              </Grid>
-            </>
-          )}
-
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Access Control</InputLabel>
-              <Select
-                defaultValue="ownable"
-                label="Access Control"
-              >
-                <MenuItem value="ownable">Ownable (Single Owner)</MenuItem>
-                <MenuItem value="roles">Access Control Roles</MenuItem>
-                <MenuItem value="none">None</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom>
-              Token Features
-            </Typography>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Burnable"
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Mintable"
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={<Switch />}
-                  label="Pausable"
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={<Switch />}
-                  label="Upgradeable"
-                />
-              </Grid>
-
-              {isERC20 && (
-                <>
-                  <Grid item xs={12} sm={6}>
-                    <FormControlLabel
-                      control={<Switch />}
-                      label="Permit"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6}>
-                    <FormControlLabel
-                      control={<Switch />}
-                      label="Flash Minting"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6}>
-                    <FormControlLabel
-                      control={<Switch />}
-                      label="Snapshots"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6}>
-                    <FormControlLabel
-                      control={<Switch />}
-                      label="Votes"
-                    />
-                  </Grid>
-                </>
-              )}
-
-              {isNFT && (
-                <>
-                  <Grid item xs={12} sm={6}>
-                    <FormControlLabel
-                      control={<Switch />}
-                      label="Batch Minting"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6}>
-                    <FormControlLabel
-                      control={<Switch />}
-                      label="Enumerable"
-                    />
-                  </Grid>
-                </>
-              )}
-            </Grid>
-          </Grid>
-        </Grid>
+          }
+          label="Mintable"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={config.pausable}
+              onChange={handleSwitchChange('pausable')}
+            />
+          }
+          label="Pausable"
+        />
       </Box>
-    </Paper>
+
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={config.upgradeable}
+              onChange={handleSwitchChange('upgradeable')}
+            />
+          }
+          label="Upgradeable"
+        />
+        {config.upgradeable && (
+          <>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.transparent}
+                  onChange={handleSwitchChange('transparent')}
+                />
+              }
+              label="Transparent"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.uups}
+                  onChange={handleSwitchChange('uups')}
+                />
+              }
+              label="UUPS"
+            />
+          </>
+        )}
+      </Box>
+
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={config.permit}
+              onChange={handleSwitchChange('permit')}
+            />
+          }
+          label="Permit"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={config.votes}
+              onChange={handleSwitchChange('votes')}
+            />
+          }
+          label="Votes"
+        />
+      </Box>
+
+      <FormControl fullWidth>
+        <InputLabel>Access Control</InputLabel>
+        <Select<AccessControlType>
+          value={config.accessControl as AccessControlType}
+          onChange={handleSelectChange('accessControl')}
+          label="Access Control"
+        >
+          <MenuItem value="none">None</MenuItem>
+          <MenuItem value="ownable">Ownable</MenuItem>
+          <MenuItem value="roles">Roles</MenuItem>
+        </Select>
+      </FormControl>
+
+      {config.votes && (
+        <FormControl fullWidth>
+          <TextField
+            label="Base URI"
+            value={config.baseURI}
+            onChange={handleTextChange('baseURI')}
+            placeholder="https://..."
+          />
+        </FormControl>
+      )}
+
+      <FormControl fullWidth>
+        <TextField
+          label="Asset Address"
+          value={config.asset}
+          onChange={handleTextChange('asset')}
+          placeholder="0x..."
+          error={!!config.asset && !validateAddress(config.asset)}
+          helperText={
+            config.asset && !validateAddress(config.asset)
+              ? 'Invalid address format'
+              : ''
+          }
+        />
+      </FormControl>
+
+      <FormControl fullWidth>
+        <TextField
+          label="Max Supply"
+          value={config.maxSupply}
+          onChange={handleTextChange('maxSupply')}
+          type="number"
+          placeholder="0"
+        />
+      </FormControl>
+
+      <FormControl fullWidth>
+        <TextField
+          label="Deposit Limit"
+          value={config.depositLimit}
+          onChange={handleTextChange('depositLimit')}
+          type="number"
+          placeholder="0"
+        />
+      </FormControl>
+    </Box>
   );
 };

@@ -1,98 +1,146 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   TextField,
-  FormControlLabel,
-  Switch,
-  Typography,
-  Paper,
+  FormControl,
+  FormHelperText,
 } from '@mui/material';
-import { TokenType } from '../../types/tokens';
+import { TokenBaseConfig } from '../../types/tokens';
+import { validatePositiveNumber } from '../../utils/validation';
 
 interface BasicTokenFormProps {
-  tokenType: TokenType;
+  config: TokenBaseConfig;
+  onConfigChange: (config: TokenBaseConfig) => void;
 }
 
-export const BasicTokenForm: React.FC<BasicTokenFormProps> = ({ tokenType }) => {
-  const isERC20 = tokenType.id === 'erc20';
-  const isNFT = tokenType.id === 'erc721' || tokenType.id === 'erc1155';
+type FormErrors = Partial<Record<keyof TokenBaseConfig, string>>;
+
+export const BasicTokenForm: React.FC<BasicTokenFormProps> = ({ 
+  config, 
+  onConfigChange 
+}) => {
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validateField = (field: keyof TokenBaseConfig, value: string | number): string | undefined => {
+    const newValue = value.toString().trim();
+    
+    switch (field) {
+      case 'name':
+        if (!newValue) {
+          return 'Token name is required';
+        }
+        if (newValue.length > 50) {
+          return 'Token name must be less than 50 characters';
+        }
+        break;
+
+      case 'symbol':
+        if (!newValue) {
+          return 'Token symbol is required';
+        }
+        if (!/^[A-Z0-9]+$/.test(newValue)) {
+          return 'Symbol must contain only uppercase letters and numbers';
+        }
+        if (newValue.length > 11) {
+          return 'Symbol must be less than 11 characters';
+        }
+        break;
+
+      case 'decimals':
+        if (!newValue) {
+          return 'Decimals is required';
+        }
+        const decimals = parseInt(newValue);
+        if (isNaN(decimals) || decimals < 0 || decimals > 18) {
+          return 'Decimals must be between 0 and 18';
+        }
+        break;
+
+      case 'initialSupply':
+        if (!newValue) {
+          return 'Initial supply is required';
+        }
+        if (!validatePositiveNumber(newValue)) {
+          return 'Initial supply must be a positive number';
+        }
+        break;
+    }
+    return undefined;
+  };
+
+  const handleChange = (field: keyof TokenBaseConfig) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { value } = event.target;
+    const error = validateField(field, value);
+    
+    setErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
+
+    if (!error) {
+      let parsedValue: string | number = value;
+      if (field === 'decimals') {
+        parsedValue = parseInt(value) || 0;
+      }
+      
+      onConfigChange({
+        ...config,
+        [field]: parsedValue
+      });
+    }
+  };
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Basic {tokenType.name} Configuration
-      </Typography>
-      
-      <Box component="form" sx={{ mt: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <FormControl fullWidth error={!!errors.name}>
         <TextField
-          fullWidth
           label="Token Name"
-          placeholder={isERC20 ? "e.g., 'My Token'" : "e.g., 'My NFT Collection'"}
-          margin="normal"
-          required
+          value={config.name}
+          onChange={handleChange('name')}
+          error={!!errors.name}
+          helperText={errors.name || 'The name of your token'}
+          placeholder="e.g., My Token"
         />
-        
+      </FormControl>
+
+      <FormControl fullWidth error={!!errors.symbol}>
         <TextField
-          fullWidth
           label="Token Symbol"
-          placeholder={isERC20 ? "e.g., 'MTK'" : "e.g., 'MNFT'"}
-          margin="normal"
-          required
+          value={config.symbol}
+          onChange={handleChange('symbol')}
+          error={!!errors.symbol}
+          helperText={errors.symbol || 'The symbol of your token (e.g., BTC, ETH)'}
+          placeholder="e.g., TKN"
         />
+      </FormControl>
 
-        {isERC20 && (
-          <>
-            <TextField
-              fullWidth
-              label="Initial Supply"
-              type="number"
-              placeholder="e.g., 1000000"
-              margin="normal"
-              required
-            />
-            
-            <TextField
-              fullWidth
-              label="Decimals"
-              type="number"
-              defaultValue={18}
-              margin="normal"
-              required
-            />
-          </>
-        )}
+      <FormControl fullWidth error={!!errors.decimals}>
+        <TextField
+          label="Decimals"
+          type="number"
+          value={config.decimals}
+          onChange={handleChange('decimals')}
+          error={!!errors.decimals}
+          helperText={errors.decimals || 'Number of decimal places (0-18)'}
+          inputProps={{ min: 0, max: 18 }}
+        />
+      </FormControl>
 
-        {isNFT && (
-          <TextField
-            fullWidth
-            label="Base URI"
-            placeholder="e.g., https://api.mynft.com/tokens/"
-            margin="normal"
-            required
-          />
-        )}
-
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Basic Features
-          </Typography>
-          
-          <FormControlLabel
-            control={<Switch defaultChecked />}
-            label="Burnable (tokens can be destroyed)"
-          />
-          
-          <FormControlLabel
-            control={<Switch defaultChecked />}
-            label="Mintable (new tokens can be created)"
-          />
-          
-          <FormControlLabel
-            control={<Switch />}
-            label="Pausable (transfers can be paused)"
-          />
-        </Box>
-      </Box>
-    </Paper>
+      <FormControl fullWidth error={!!errors.initialSupply}>
+        <TextField
+          label="Initial Supply"
+          value={config.initialSupply}
+          onChange={handleChange('initialSupply')}
+          error={!!errors.initialSupply}
+          helperText={errors.initialSupply || 'The initial amount of tokens to mint'}
+          placeholder="e.g., 1000000"
+        />
+        <FormHelperText>
+          This will be multiplied by 10^(decimals) to get the actual supply
+        </FormHelperText>
+      </FormControl>
+    </Box>
   );
 };

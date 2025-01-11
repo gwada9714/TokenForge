@@ -1,35 +1,29 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { Header } from './components/Header/Header';
-import { Footer } from './components/Footer/Footer';
-import { theme } from './styles/theme';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import { theme } from './theme';
 import { Home } from './pages/Home';
 import { CreateToken } from './pages/CreateToken';
+import { Layout } from './components/Layout';
+import { Footer } from './components/Footer/Footer';
+import { Web3Provider } from './contexts/Web3Provider';
 import { MyTokens } from './pages/MyTokens';
 
 const App = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <div style={{ 
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          <Header />
-          <main style={{ flex: 1, padding: '2rem' }}>
+    <Web3Provider>
+      <ThemeProvider theme={theme}>
+        <Router>
+          <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/create" element={<CreateToken />} />
               <Route path="/my-tokens" element={<MyTokens />} />
             </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
-    </ThemeProvider>
+          </Layout>
+        </Router>
+      </ThemeProvider>
+    </Web3Provider>
   );
 };
 

@@ -1,26 +1,34 @@
 import React from 'react';
-import { Container, Typography, Box, Button } from '@mui/material';
+import { Box, Button, Container, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { TokenStats } from '../components/Stats/TokenStats';
+import { FeatureList } from '../components/Features/FeatureList';
 
-export const Home = () => {
+export const Home: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <Container maxWidth="md">
+    <Container>
+      {/* Hero Section */}
       <Box
         sx={{
-          mt: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          pt: 8,
+          pb: 6,
           textAlign: 'center',
         }}
       >
-        <Typography variant="h2" component="h1" gutterBottom>
-          Welcome to TokenForge
+        <Typography
+          component="h1"
+          variant="h2"
+          color="primary"
+          gutterBottom
+          sx={{ fontWeight: 'bold' }}
+        >
+          TokenForge
         </Typography>
         <Typography variant="h5" color="text.secondary" paragraph>
-          Create and manage your custom tokens with ease
+          Créez vos tokens ERC20 en quelques clics.
+          Simple, rapide et sécurisé.
         </Typography>
         <Box sx={{ mt: 4 }}>
           <Button
@@ -29,16 +37,35 @@ export const Home = () => {
             onClick={() => navigate('/create')}
             sx={{ mr: 2 }}
           >
-            Create Token
+            Créer un Token
           </Button>
           <Button
             variant="outlined"
             size="large"
-            onClick={() => navigate('/my-tokens')}
+            onClick={() => navigate('/info')}
           >
-            View My Tokens
+            En savoir plus
           </Button>
         </Box>
+      </Box>
+
+      {/* Stats Section */}
+      <Box sx={{ my: 6 }}>
+        <TokenStats />
+      </Box>
+
+      {/* Features Section */}
+      <Box sx={{ my: 6 }}>
+        <Typography
+          variant="h4"
+          component="h2"
+          align="center"
+          gutterBottom
+          sx={{ mb: 4 }}
+        >
+          Pourquoi choisir TokenForge ?
+        </Typography>
+        <FeatureList />
       </Box>
     </Container>
   );

@@ -1,5 +1,10 @@
 // jest-dom adds custom jest matchers for asserting on DOM nodes.
 import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as any;
+
 import React from 'react';
 
 // Mock window.matchMedia
@@ -29,7 +34,7 @@ jest.mock('@web3modal/wagmi/react', () => ({
 
 // Mock wagmi
 const MockProvider = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>;
+  return React.createElement(React.Fragment, null, children);
 };
 
 jest.mock('wagmi', () => ({

@@ -1,59 +1,51 @@
 import React, { useState } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-  Card,
-  CardContent,
-  Grid,
-  Button,
-} from '@mui/material';
-import { TokenType } from '../types/tokens';
+import { Box, Stepper, Step, StepLabel, Button } from '@mui/material';
+import { useWalletClient, usePublicClient } from 'wagmi';
+import { TokenBaseConfig, TokenAdvancedConfig, DeploymentStatus } from '../types/tokens';
 import { BasicTokenForm } from '../components/CreateTokenForm/BasicTokenForm';
 import { AdvancedTokenForm } from '../components/CreateTokenForm/AdvancedTokenForm';
+import { TokenTypeSelector, TokenType } from '../components/CreateTokenForm/TokenTypeSelector';
+import { ContractPreview } from '../components/CreateTokenForm/ContractPreview';
+import { DeploymentStatus as DeploymentStatusComponent } from '../components/CreateTokenForm/DeploymentStatus';
+import { deployToken } from '../services/contractDeployment';
+import { TokenPreview } from '../components/TokenPreview/TokenPreview';
+import { DeploymentCost } from '../components/DeploymentCost/DeploymentCost';
 
-const tokenTypes: TokenType[] = [
-  {
-    id: 'erc20',
-    name: 'ERC20 Token',
-    description: 'Standard fungible token, perfect for cryptocurrencies and utility tokens',
-    difficulty: 'Beginner',
-  },
-  {
-    id: 'erc721',
-    name: 'ERC721 NFT',
-    description: 'Non-fungible tokens for unique digital assets',
-    difficulty: 'Intermediate',
-  },
-  {
-    id: 'erc1155',
-    name: 'ERC1155 Multi Token',
-    description: 'Multiple token types in a single contract',
-    difficulty: 'Advanced',
-  },
-  {
-    id: 'erc777',
-    name: 'ERC777 Advanced Token',
-    description: 'Enhanced token standard with hooks and improved usability',
-    difficulty: 'Advanced',
-  },
-  {
-    id: 'erc4626',
-    name: 'ERC4626 Tokenized Vault',
-    description: 'Standard for tokenized yield-bearing vaults',
-    difficulty: 'Expert',
-  },
-];
+const steps = ['Select Token Type', 'Basic Configuration', 'Advanced Features', 'Review & Deploy'];
 
-const steps = ['Select Token Type', 'Configure Token', 'Review & Deploy'];
+const initialBaseConfig: TokenBaseConfig = {
+  name: '',
+  symbol: '',
+  decimals: 18,
+  initialSupply: '0',
+};
 
-export const CreateToken = () => {
+const initialAdvancedConfig: TokenAdvancedConfig = {
+  burnable: false,
+  mintable: false,
+  pausable: false,
+  upgradeable: false,
+  transparent: false,
+  uups: false,
+  permit: false,
+  votes: false,
+  accessControl: 'none',
+  baseURI: '',
+  asset: '',
+  maxSupply: '',
+  depositLimit: '',
+};
+
+export const CreateToken: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
-  const [selectedType, setSelectedType] = useState<TokenType | null>(null);
-  const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+  const [tokenType, setTokenType] = useState<TokenType>('ERC20');
+  const [baseConfig, setBaseConfig] = useState<TokenBaseConfig>(initialBaseConfig);
+  const [advancedConfig, setAdvancedConfig] = useState<TokenAdvancedConfig>(initialAdvancedConfig);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus | null>(null);
+
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -63,110 +55,115 @@ export const CreateToken = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const renderStepContent = () => {
-    switch (activeStep) {
+  const handleDeploy = async () => {
+    if (!walletClient || !publicClient.chain) return;
+
+    setIsDeploying(true);
+    try {
+      const txHash = await deployToken(
+        tokenType,
+        baseConfig,
+        advancedConfig,
+        walletClient,
+        publicClient.chain.id
+      );
+
+      setDeploymentStatus({
+        status: 'pending',
+        confirmations: 0,
+        txHash,
+      });
+    } catch (error) {
+      setDeploymentStatus({
+        status: 'failed',
+        confirmations: 0,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      });
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
+  const renderStepContent = (step: number) => {
+    switch (step) {
       case 0:
         return (
-          <Grid container spacing={3}>
-            {tokenTypes.map((type) => (
-              <Grid item xs={12} sm={6} md={4} key={type.id}>
-                <Card
-                  sx={{
-                    cursor: 'pointer',
-                    height: '100%',
-                    transition: '0.3s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4,
-                    },
-                    border: selectedType?.id === type.id ? 2 : 0,
-                    borderColor: 'primary.main',
-                  }}
-                  onClick={() => setSelectedType(type)}
-                >
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      {type.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {type.description}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: (theme) =>
-                          type.difficulty === 'Beginner'
-                            ? theme.palette.success.main
-                            : type.difficulty === 'Intermediate'
-                            ? theme.palette.warning.main
-                            : theme.palette.error.main,
-                      }}
-                    >
-                      {type.difficulty} Level
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+          <TokenTypeSelector
+            selectedType={tokenType}
+            onTypeSelect={setTokenType}
+          />
         );
       case 1:
-        return isAdvancedMode ? (
-          <AdvancedTokenForm tokenType={selectedType!} />
-        ) : (
-          <BasicTokenForm tokenType={selectedType!} />
+        return (
+          <BasicTokenForm
+            config={baseConfig}
+            onConfigChange={setBaseConfig}
+          />
         );
       case 2:
-        return <div>Review & Deploy</div>;
+        return (
+          <AdvancedTokenForm
+            config={advancedConfig}
+            onConfigChange={setAdvancedConfig}
+          />
+        );
+      case 3:
+        return (
+          <Box>
+            <TokenPreview baseConfig={baseConfig} advancedConfig={advancedConfig} />
+            <DeploymentCost baseConfig={baseConfig} advancedConfig={advancedConfig} />
+            <ContractPreview
+              tokenType={tokenType}
+              baseConfig={baseConfig}
+              advancedConfig={advancedConfig}
+            />
+            {deploymentStatus && (
+              <DeploymentStatusComponent
+                status={deploymentStatus}
+                publicClient={publicClient}
+              />
+            )}
+          </Box>
+        );
       default:
         return null;
     }
   };
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 8 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center">
-          Create Your Token
-        </Typography>
-        
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+    <Box sx={{ width: '100%' }}>
+      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+        {steps.map((label) => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
 
-        {activeStep === 1 && (
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              onClick={() => setIsAdvancedMode(!isAdvancedMode)}
-              color="primary"
-            >
-              Switch to {isAdvancedMode ? 'Basic' : 'Advanced'} Mode
-            </Button>
-          </Box>
-        )}
+      <Box sx={{ mt: 2, mb: 4 }}>{renderStepContent(activeStep)}</Box>
 
-        {renderStepContent()}
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
-          >
-            Back
-          </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Button
+          variant="outlined"
+          onClick={handleBack}
+          disabled={activeStep === 0}
+        >
+          Back
+        </Button>
+        {activeStep === steps.length - 1 ? (
           <Button
             variant="contained"
-            onClick={handleNext}
-            disabled={activeStep === 0 && !selectedType}
+            onClick={handleDeploy}
+            disabled={isDeploying || !walletClient}
           >
-            {activeStep === steps.length - 1 ? 'Deploy' : 'Next'}
+            {isDeploying ? 'Deploying...' : 'Deploy Token'}
           </Button>
-        </Box>
+        ) : (
+          <Button variant="contained" onClick={handleNext}>
+            Next
+          </Button>
+        )}
       </Box>
-    </Container>
+    </Box>
   );
 };
