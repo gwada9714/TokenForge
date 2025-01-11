@@ -8,47 +8,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isDev = mode === 'development';
 
-  const cspDirectives = isDev
-    ? false // Désactive CSP en mode développement
-    : {
-        'default-src': ["'self'"],
-        'script-src': [
-          "'self'",
-          "'unsafe-inline'",
-          "'unsafe-eval'",
-          "'wasm-unsafe-eval'",
-          "'strict-dynamic'",
-          'https:',
-          'blob:',
-          'data:',
-        ],
-        'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-        'font-src': ["'self'", 'https://fonts.gstatic.com'],
-        'connect-src': [
-          "'self'",
-          'https://*.walletconnect.com',
-          'wss://*.walletconnect.com',
-          'https://*.walletconnect.org',
-          'wss://*.walletconnect.org',
-          'https://*.infura.io',
-          'wss://*.infura.io',
-          'https://*.alchemy.com',
-          'wss://*.alchemy.com',
-          'wss://*.walletlink.org',
-          'https://ethereum-api.xyz',
-          'https://*.ethereum-api.xyz',
-          'https://binaries.soliditylang.org',
-        ],
-        'img-src': ["'self'", 'data:', 'https:', 'chrome-extension://*'],
-        'media-src': ["'self'"],
-        'object-src': ["'none'"],
-        'worker-src': ["'self'", 'blob:'],
-        'frame-src': [
-          "'self'",
-          'https://*.walletconnect.com',
-        ],
-      };
-
   return {
     define: {
       'process.env.VITE_WALLET_CONNECT_PROJECT_ID': JSON.stringify(env.VITE_WALLET_CONNECT_PROJECT_ID),
@@ -125,13 +84,20 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: false,
       open: true,
-      headers: cspDirectives
-        ? {
-            'Content-Security-Policy': Object.entries(cspDirectives)
-              .map(([key, values]) => `${key} ${values.join(' ')}`)
-              .join('; '),
-          }
-        : {},
+      headers: {
+        "Content-Security-Policy": [
+          "default-src 'self';",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: blob: data:;",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
+          "font-src 'self' https://fonts.gstatic.com;",
+          "connect-src 'self' https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.infura.io wss://*.infura.io https://*.alchemy.com wss://*.alchemy.com wss://*.walletlink.org https://ethereum-api.xyz https://*.ethereum-api.xyz https://binaries.soliditylang.org ws://localhost:* http://localhost:*;",
+          "img-src 'self' data: https: blob:;",
+          "media-src 'self';",
+          "object-src 'none';",
+          "worker-src 'self' blob:;",
+          "frame-src 'self' https://*.walletconnect.com;"
+        ].join(' ')
+      },
       hmr: {
         overlay: true,
       },
