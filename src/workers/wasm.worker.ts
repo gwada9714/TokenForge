@@ -1,4 +1,5 @@
-import * as solc from 'solc';
+import type { CompilerInput, CompilerOutput } from 'solc';
+import type { SolcInstance } from 'solc/wrapper';
 
 /**
  * Initializes the Solidity compiler with WASM support
@@ -7,9 +8,9 @@ import * as solc from 'solc';
 const SOLC_VERSION = '0.8.20';
 const SOLC_CDN = `https://binaries.soliditylang.org/bin/soljson-v${SOLC_VERSION}+commit.a1b79de6.js`;
 
-let solcInstance: any = null;
+let solcInstance: SolcInstance | null = null;
 
-async function loadSolc() {
+async function loadSolc(): Promise<SolcInstance> {
   if (solcInstance) return solcInstance;
 
   try {
@@ -38,12 +39,22 @@ async function loadSolc() {
 /**
  * Worker message handler for Solidity compilation
  */
-self.onmessage = async (e) => {
+interface WorkerMessage {
+  source: string;
+  settings?: CompilerInput['settings'];
+}
+
+interface WorkerResponse {
+  result?: CompilerOutput;
+  error?: string;
+}
+
+self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   try {
     const { source, settings } = e.data;
     const solc = await loadSolc();
 
-    const input = {
+    const input: CompilerInput = {
       language: 'Solidity',
       sources: {
         'contract.sol': {
@@ -63,10 +74,12 @@ self.onmessage = async (e) => {
       }
     };
 
-    const output = JSON.parse(solc.compile(JSON.stringify(input)));
-    self.postMessage({ result: output });
+    const output = JSON.parse(solc.compile(JSON.stringify(input))) as CompilerOutput;
+    self.postMessage({ result: output } as WorkerResponse);
   } catch (error) {
-    self.postMessage({ error: error.message });
+    self.postMessage({ 
+      error: error instanceof Error ? error.message : 'Unknown error during compilation'
+    } as WorkerResponse);
   }
 };
 
