@@ -99,8 +99,8 @@ export const estimateGas = async (
       advancedConfig.votes,
     ] as const;
 
-    // Estimer le gas en utilisant deployContract
-    const estimate = await walletClient.estimateContractGas({
+    // Estimer le gas en utilisant simulateContract
+    const estimate = await walletClient.estimateGas({
       account,
       abi: customERC20ABI,
       bytecode: CONTRACT_BYTECODE,
