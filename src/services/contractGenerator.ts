@@ -1,7 +1,5 @@
 import { TokenBaseConfig, TokenAdvancedConfig } from '../types/tokens';
-
-// @ts-ignore
-import solc from 'solc';
+import { compile } from './solc-cdn-loader';
 
 const generateSoliditySource = (baseConfig: TokenBaseConfig, advancedConfig: TokenAdvancedConfig): string => {
   return `
@@ -26,42 +24,35 @@ const generateSoliditySource = (baseConfig: TokenBaseConfig, advancedConfig: Tok
   `;
 };
 
-export const generateContractBytecode = async (
+export async function generateContractBytecode(
   baseConfig: TokenBaseConfig,
   advancedConfig: TokenAdvancedConfig
-): Promise<`0x${string}`> => {
+): Promise<`0x${string}`> {
   const source = generateSoliditySource(baseConfig, advancedConfig);
 
-  const input = {
-    language: 'Solidity',
-    sources: {
-      'token.sol': {
-        content: source,
-      },
-    },
-    settings: {
-      outputSelection: {
-        '*': {
-          '*': ['*'],
-        },
-      },
-    },
-  };
-
   try {
-    const output = JSON.parse(solc.compile(JSON.stringify(input)));
-
-    if (output.errors) {
-      const errors = output.errors.filter((error: any) => error.severity === 'error');
-      if (errors.length > 0) {
-        throw new Error(`Compilation errors: ${errors.map((e: any) => e.message).join('\n')}`);
-      }
+    const output = await compile(source);
+    
+    if (output.errors?.some(error => error.severity === 'error')) {
+      throw new Error(
+        'Compilation failed: ' + 
+        output.errors
+          .filter(error => error.severity === 'error')
+          .map(error => error.message)
+          .join('\n')
+      );
     }
 
-    const bytecode = output.contracts['token.sol'][`${baseConfig.name}Token`].evm.bytecode.object;
+    const contractName = `${baseConfig.name}Token`;
+    const bytecode = output.contracts['contract.sol'][contractName].evm.bytecode.object;
+
+    if (!bytecode) {
+      throw new Error('No bytecode generated');
+    }
+
     return `0x${bytecode}` as `0x${string}`;
   } catch (error) {
-    console.error('Contract compilation error:', error);
-    throw new Error('Failed to compile contract');
+    console.error('Contract compilation failed:', error);
+    throw error;
   }
-};
+}
