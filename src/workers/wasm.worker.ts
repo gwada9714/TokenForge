@@ -4,27 +4,33 @@ import * as solc from 'solc';
  * Initializes the Solidity compiler with WASM support
  * @returns Initialized solc instance
  */
-async function initializeCompiler() {
-  try {
-    if (typeof solc.compile === 'function') {
-      return solc;
-    }
+const SOLC_VERSION = '0.8.20';
+const SOLC_CDN = `https://binaries.soliditylang.org/bin/soljson-v${SOLC_VERSION}+commit.a1b79de6.js`;
 
-    const response = await fetch('/node_modules/solc/soljson.wasm');
-    const wasmBinary = await response.arrayBuffer();
+let solcInstance: any = null;
+
+async function loadSolc() {
+  if (solcInstance) return solcInstance;
+
+  try {
+    const response = await fetch(SOLC_CDN);
+    const code = await response.text();
     
-    const wasmModule = await WebAssembly.compile(wasmBinary);
-    const wasmInstance = await WebAssembly.instantiate(wasmModule, {
-      env: {
-        memory: new WebAssembly.Memory({ initial: 256 })
-      }
-    });
+    // Create a function from the downloaded code
+    const wrapper = new Function('self', code);
+    wrapper(self);
 
     // @ts-ignore
-    solc._wasm = wasmInstance;
-    return solc;
+    if (typeof self.Module === 'undefined') {
+      throw new Error('Solc module not loaded correctly');
+    }
+
+    const solcWrapper = await import('solc/wrapper');
+    // @ts-ignore
+    solcInstance = solcWrapper.default(self.Module);
+    return solcInstance;
   } catch (error) {
-    console.error('Error initializing WASM compiler:', error);
+    console.error('Error loading Solc:', error);
     throw error;
   }
 }
@@ -33,11 +39,10 @@ async function initializeCompiler() {
  * Worker message handler for Solidity compilation
  */
 self.onmessage = async (e) => {
-  const { source, settings } = e.data;
-  
   try {
-    const compiler = await initializeCompiler();
-    
+    const { source, settings } = e.data;
+    const solc = await loadSolc();
+
     const input = {
       language: 'Solidity',
       sources: {
@@ -58,13 +63,10 @@ self.onmessage = async (e) => {
       }
     };
 
-    const output = JSON.parse(compiler.compile(JSON.stringify(input)));
-    self.postMessage({ success: true, data: output });
+    const output = JSON.parse(solc.compile(JSON.stringify(input)));
+    self.postMessage({ result: output });
   } catch (error) {
-    self.postMessage({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error during compilation'
-    });
+    self.postMessage({ error: error.message });
   }
 };
 
