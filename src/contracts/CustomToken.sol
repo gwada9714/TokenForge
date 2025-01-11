@@ -85,9 +85,17 @@ contract CustomToken is ERC20, ERC20Burnable, ERC20Pausable, ERC20Permit, ERC20V
     function nonces(address owner)
         public
         view
-        override(ERC20Permit)
+        override(ERC20Permit, ERC20)
         returns (uint256)
     {
         return super.nonces(owner);
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Votes) {
+        super._afterTokenTransfer(from, to, amount);
     }
 }
