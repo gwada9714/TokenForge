@@ -22,22 +22,22 @@ export default defineConfig(({ mode }) => {
           global: true,
           process: true,
         },
-        overrides: {
-          util: true,
-        },
+        protocolImports: true,
       }),
     ],
     resolve: {
-      alias: {
-        '@': resolve(__dirname, './src'),
-        stream: 'stream-browserify',
-        http: 'stream-http',
-        https: 'https-browserify',
-        util: 'util',
-        path: 'path-browserify',
-        zlib: 'browserify-zlib',
-        crypto: 'crypto-browserify',
-      },
+      alias: [
+        { find: '@', replacement: resolve(__dirname, './src') },
+        { find: 'stream', replacement: 'stream-browserify' },
+        { find: 'http', replacement: 'stream-http' },
+        { find: 'https', replacement: 'https-browserify' },
+        { find: 'util', replacement: 'util' },
+        { find: 'path', replacement: 'path-browserify' },
+        { find: 'zlib', replacement: 'browserify-zlib' },
+        { find: 'crypto', replacement: 'crypto-browserify' },
+      ],
+      dedupe: ['react', 'react-dom'],
+      preserveSymlinks: true,
     },
     server: {
       port: 5173,
@@ -49,10 +49,20 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       exclude: ['solc'],
+      include: [
+        'react',
+        'react-dom',
+        'wagmi',
+        'viem',
+        '@wagmi/core',
+        'ethers',
+      ],
       esbuildOptions: {
         define: {
           global: 'globalThis'
-        }
+        },
+        platform: 'browser',
+        target: 'esnext',
       }
     },
     build: {
@@ -69,6 +79,8 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
+      target: 'esnext',
+      sourcemap: true,
     },
   };
 });
