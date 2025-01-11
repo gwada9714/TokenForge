@@ -56,14 +56,39 @@ describe("BaseERC20", function () {
       if (!tokenAddress) throw new Error("Token address not found in event");
 
       const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
-      const token = await BaseERC20Factory.attach(tokenAddress);
+      const token = BaseERC20Factory.attach(tokenAddress);
 
-      expect(await token.name()).to.equal(name);
-      expect(await token.symbol()).to.equal(symbol);
-      expect(await token.decimals()).to.equal(decimals);
-      expect(await token.totalSupply()).to.equal(initialSupply);
-      expect(await token.maxSupply()).to.equal(maxSupply);
-      expect(await token.mintable()).to.equal(mintable);
+      // Log the values for debugging
+      console.log("Token name:", await token.name());
+      console.log("Token symbol:", await token.symbol());
+      console.log("Token decimals:", await token.decimals());
+      console.log("Token totalSupply:", await token.totalSupply());
+      console.log("Token maxSupply:", await token.maxSupply());
+      console.log("Token mintable:", await token.mintable());
+
+      // Use callStatic to get the values
+      const [
+        actualName,
+        actualSymbol,
+        actualDecimals,
+        actualTotalSupply,
+        actualMaxSupply,
+        actualMintable
+      ] = await Promise.all([
+        token.name(),
+        token.symbol(),
+        token.decimals(),
+        token.totalSupply(),
+        token.maxSupply(),
+        token.mintable()
+      ]);
+
+      expect(actualName).to.equal(name);
+      expect(actualSymbol).to.equal(symbol);
+      expect(actualDecimals).to.equal(decimals);
+      expect(actualTotalSupply).to.equal(initialSupply);
+      expect(actualMaxSupply).to.equal(maxSupply);
+      expect(actualMintable).to.equal(mintable);
     });
 
     it("Should not allow minting when disabled", async function () {
