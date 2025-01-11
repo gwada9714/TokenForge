@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Paper, Typography, Box, Button, Alert } from '@mui/material';
-import { useAccount, useClient } from 'wagmi';
+import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { TokenBaseConfig, TokenAdvancedConfig, TokenDeploymentStatus } from '../types/tokens';
 import { TokenPreview } from '../components/TokenPreview/TokenPreview';
 import { DeploymentCost } from '../components/DeploymentCost/DeploymentCost';
@@ -10,7 +10,8 @@ import { deployToken } from '../services/tokenDeployment';
 
 export const CreateToken: React.FC = () => {
   const { address } = useAccount();
-  const { data: client } = useClient();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
 
   const [baseConfig, setBaseConfig] = useState<TokenBaseConfig>({
     name: '',
@@ -39,7 +40,7 @@ export const CreateToken: React.FC = () => {
   const [isDeploying, setIsDeploying] = useState(false);
 
   const handleCreateToken = async () => {
-    if (!client || !address) {
+    if (!walletClient || !address) {
       setDeploymentStatus({
         status: 'error',
         error: 'Please connect your wallet first',
@@ -52,8 +53,8 @@ export const CreateToken: React.FC = () => {
       const status = await deployToken(
         baseConfig,
         advancedConfig,
-        client,
-        client
+        walletClient,
+        publicClient
       );
       setDeploymentStatus(status);
     } catch (error) {

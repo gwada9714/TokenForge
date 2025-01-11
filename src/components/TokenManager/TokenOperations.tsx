@@ -15,6 +15,7 @@ import { usePublicClient, useWalletClient } from 'wagmi';
 import { TokenInfo } from '../../types/tokens';
 import { isValidAddress } from '../../utils/address';
 import { executeTokenOperation } from '../../services/tokenOperations';
+import { getTokenContract } from '../../services/contracts';
 
 interface TokenOperationsProps {
   token: TokenInfo;
@@ -74,7 +75,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({ token, onOpera
       const { request } = await publicClient.simulateContract({
         ...contract,
         functionName: operation,
-        args: params,
+        args: params.map(p => typeof p === 'string' && p.startsWith('0x') ? p as `0x${string}` : p),
       });
 
       const hash = await walletClient.writeContract(request);

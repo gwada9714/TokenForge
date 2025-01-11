@@ -1,16 +1,22 @@
-import { Client } from 'wagmi';
+import { type WalletClient, type PublicClient } from 'wagmi';
 import { getTokenFactoryContract } from './contracts';
 import { TokenBaseConfig, TokenAdvancedConfig, TokenDeploymentStatus } from '../types/tokens';
+import { parseUnits } from 'viem';
 
 export async function deployToken(
   baseConfig: TokenBaseConfig,
   advancedConfig: TokenAdvancedConfig,
-  client: Client,
-  publicClient: Client
+  walletClient: WalletClient,
+  publicClient: PublicClient
 ): Promise<TokenDeploymentStatus> {
   try {
-    const contract = getTokenFactoryContract(client);
+    const contract = getTokenFactoryContract(process.env.VITE_TOKEN_FACTORY_ADDRESS as `0x${string}`);
     
+    const initialSupply = parseUnits(
+      baseConfig.initialSupply.toString(),
+      baseConfig.decimals
+    );
+
     const { request } = await publicClient.simulateContract({
       ...contract,
       functionName: 'createToken',
@@ -18,21 +24,21 @@ export async function deployToken(
         baseConfig.name,
         baseConfig.symbol,
         baseConfig.decimals,
-        baseConfig.totalSupply,
+        initialSupply,
         advancedConfig.burnable,
         advancedConfig.mintable,
         advancedConfig.pausable
       ],
     });
 
-    const hash = await client.writeContract(request);
-    
+    const hash = await walletClient.writeContract(request);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
     if (receipt.status === 'success') {
       return {
         status: 'success',
-        hash: receipt.transactionHash,
+        contractAddress: receipt.contractAddress as string,
+        txHash: hash,
       };
     } else {
       return {
