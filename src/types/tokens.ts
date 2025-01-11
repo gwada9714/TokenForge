@@ -4,34 +4,15 @@ export interface TokenBaseConfig {
   name: string;
   symbol: string;
   decimals: number;
-  initialSupply: string;
+  initialSupply: number;
 }
 
 export interface TokenAdvancedConfig {
-  burnable: boolean;
   mintable: boolean;
+  burnable: boolean;
   pausable: boolean;
-  upgradeable: boolean;
-  transparent: boolean;
-  uups: boolean;
   permit: boolean;
   votes: boolean;
-  accessControl: 'none' | 'ownable' | 'roles';
-  baseURI?: string;
-  asset?: string;
-  maxSupply?: string;
-  depositLimit?: string;
-}
-
-export type DeploymentStatusType = 'pending' | 'success' | 'failed';
-
-export interface DeploymentStatus {
-  status: DeploymentStatusType;
-  confirmations: number;
-  error?: string;
-  txHash?: Address;
-  tokenAddress?: Address;
-  proxyAddress?: Address;
 }
 
 export interface TokenInfo {
@@ -39,9 +20,67 @@ export interface TokenInfo {
   name: string;
   symbol: string;
   decimals: number;
-  maxSupply: bigint | null;
-  burnable: boolean;
+  totalSupply: string;
   mintable: boolean;
-  owner?: string;
-  totalSupply?: bigint;
+  burnable: boolean;
+}
+
+export interface TokenOperation {
+  type: 'mint' | 'burn' | 'transfer' | 'approve';
+  amount: string;
+  from: Address;
+  to?: Address;
+  timestamp: number;
+  transactionHash: Address;
+  status: 'pending' | 'confirmed' | 'failed';
+  blockNumber?: number;
+}
+
+export interface TokenStatistics {
+  totalTransfers: number;
+  totalMinted: string;
+  totalBurned: string;
+  uniqueHolders: number;
+  largestHolder: {
+    address: Address;
+    balance: string;
+    percentage: number;
+  };
+  marketData?: {
+    price?: number;
+    marketCap?: number;
+    volume24h?: number;
+  };
+}
+
+export interface TokenAllowance {
+  owner: Address;
+  spender: Address;
+  amount: string;
+  lastUpdated: number;
+}
+
+export interface TokenHistory {
+  operations: TokenOperation[];
+  statistics: TokenStatistics;
+  allowances: TokenAllowance[];
+}
+
+export interface TokenRole {
+  role: 'owner' | 'minter' | 'pauser';
+  address: Address;
+  grantedAt: number;
+  grantedBy: Address;
+}
+
+export interface TokenMetadata {
+  logo?: string;
+  website?: string;
+  description?: string;
+  social?: {
+    twitter?: string;
+    telegram?: string;
+    discord?: string;
+    github?: string;
+  };
 }
