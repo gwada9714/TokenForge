@@ -10,14 +10,14 @@ export const SUPPORTED_CHAINS = {
   sepolia,
 };
 
-export const DEFAULT_CHAIN = process.env.REACT_APP_DEFAULT_NETWORK === 'mainnet' ? mainnet : sepolia;
+export const DEFAULT_CHAIN = process.env.VITE_DEFAULT_NETWORK === 'mainnet' ? mainnet : sepolia;
 
 export const TOKEN_FACTORY_ADDRESS = {
-  [mainnet.id]: process.env.REACT_APP_TOKEN_FACTORY_MAINNET,
-  [sepolia.id]: process.env.REACT_APP_TOKEN_FACTORY_SEPOLIA,
+  [mainnet.id]: process.env.VITE_TOKEN_FACTORY_MAINNET,
+  [sepolia.id]: process.env.VITE_TOKEN_FACTORY_SEPOLIA,
 } as const;
 
-export const IPFS_GATEWAY = process.env.REACT_APP_IPFS_GATEWAY || 'https://ipfs.io/ipfs/';
+export const IPFS_GATEWAY = process.env.VITE_IPFS_GATEWAY || 'https://ipfs.io/ipfs/';
 
 export const FEATURED_WALLETS = [
   'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
@@ -25,8 +25,8 @@ export const FEATURED_WALLETS = [
 ] as const;
 
 export const FEATURES = {
-  faucet: process.env.REACT_APP_ENABLE_FAUCET === 'true',
-  analytics: process.env.REACT_APP_ENABLE_ANALYTICS === 'true',
+  faucet: process.env.VITE_ENABLE_FAUCET === 'true',
+  analytics: process.env.VITE_ENABLE_ANALYTICS === 'true',
 } as const;
 
 export const QUERY_CLIENT_CONFIG = {
@@ -47,16 +47,16 @@ export const WEB3_MODAL_CONFIG = {
 
 // Validation des variables d'environnement requises
 const requiredEnvVars = [
-  'REACT_APP_WALLET_CONNECT_PROJECT_ID',
-  'REACT_APP_TOKEN_FACTORY_SEPOLIA',
+  'VITE_WALLET_CONNECT_PROJECT_ID',
+  'VITE_TOKEN_FACTORY_SEPOLIA',
+  'VITE_ALCHEMY_API_KEY',
 ] as const;
 
 requiredEnvVars.forEach((envVar) => {
   if (!process.env[envVar]) {
-    console.error(`Missing required environment variable: ${envVar}`);
+    throw new Error(`Missing required environment variable: ${envVar}`);
   }
 });
 
-// Types pour les chaînes supportées
 export type SupportedChainId = keyof typeof TOKEN_FACTORY_ADDRESS;
 export type SupportedChain = typeof SUPPORTED_CHAINS[keyof typeof SUPPORTED_CHAINS];

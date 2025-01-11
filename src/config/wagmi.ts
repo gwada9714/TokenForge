@@ -9,20 +9,21 @@ import {
   APP_NAME,
   APP_DESCRIPTION,
   APP_ICONS,
+  APP_URL,
   SUPPORTED_CHAINS,
   WEB3_MODAL_CONFIG,
 } from './index';
 
-if (!process.env.REACT_APP_WALLET_CONNECT_PROJECT_ID) {
-  throw new Error('Missing REACT_APP_WALLET_CONNECT_PROJECT_ID');
+if (!process.env.VITE_WALLET_CONNECT_PROJECT_ID) {
+  throw new Error('Missing VITE_WALLET_CONNECT_PROJECT_ID');
 }
 
-if (!process.env.REACT_APP_ALCHEMY_API_KEY) {
-  throw new Error('Missing REACT_APP_ALCHEMY_API_KEY');
+if (!process.env.VITE_ALCHEMY_API_KEY) {
+  throw new Error('Missing VITE_ALCHEMY_API_KEY');
 }
 
-const projectId = process.env.REACT_APP_WALLET_CONNECT_PROJECT_ID;
-const alchemyKey = process.env.REACT_APP_ALCHEMY_API_KEY;
+const projectId = process.env.VITE_WALLET_CONNECT_PROJECT_ID;
+const alchemyKey = process.env.VITE_ALCHEMY_API_KEY;
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   Object.values(SUPPORTED_CHAINS),
@@ -43,6 +44,7 @@ export const config = createConfig({
         metadata: {
           name: APP_NAME,
           description: APP_DESCRIPTION,
+          url: APP_URL,
           icons: APP_ICONS,
         },
       },
@@ -58,7 +60,7 @@ export const config = createConfig({
       chains,
       options: {
         appName: APP_NAME,
-        headlessMode: true,
+        appLogoUrl: APP_ICONS[0],
       },
     }),
   ],
