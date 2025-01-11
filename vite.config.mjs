@@ -66,9 +66,12 @@ export default defineConfig(({ mode }) => {
         fastRefresh: true,
         babel: {
           plugins: [
-            ['@babel/plugin-proposal-decorators', { legacy: true }],
-            ['@babel/plugin-proposal-class-properties', { loose: true }],
+            ['@babel/plugin-proposal-decorators', { version: '2023-05' }],
+            '@babel/plugin-transform-class-properties',
           ],
+          parserOpts: {
+            plugins: ['decorators-legacy', 'classProperties'],
+          },
         },
       }),
       nodePolyfills({
