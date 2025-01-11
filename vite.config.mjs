@@ -20,17 +20,26 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react({
-        jsxRuntime: 'automatic',
-        fastRefresh: true,
         babel: {
           plugins: [
-            ['@babel/plugin-proposal-decorators', { version: '2023-05' }],
-            '@babel/plugin-transform-class-properties',
+            'babel-plugin-macros',
+            [
+              '@emotion/babel-plugin-jsx-pragmatic',
+              {
+                export: 'jsx',
+                import: '__cssprop',
+                module: '@emotion/react',
+              },
+            ],
+            [
+              '@babel/plugin-transform-react-jsx',
+              { pragma: '__cssprop' },
+              'twin.macro',
+            ],
           ],
         },
       }),
       nodePolyfills({
-        include: ['buffer', 'process', 'util', 'stream', 'path', 'http', 'https', 'fs', 'crypto'],
         globals: {
           Buffer: true,
           global: true,
@@ -40,28 +49,21 @@ export default defineConfig(({ mode }) => {
       }),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['favicon.svg'],
         manifest: {
           name: 'TokenForge',
           short_name: 'TokenForge',
-          description: 'Create your own token in seconds',
           theme_color: '#ffffff',
           icons: [
             {
-              src: 'pwa-192x192.png',
+              src: '/android-chrome-192x192.png',
               sizes: '192x192',
               type: 'image/png',
             },
             {
-              src: 'pwa-512x512.png',
+              src: '/android-chrome-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-            },
-            {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any maskable',
             },
           ],
         },
@@ -69,86 +71,52 @@ export default defineConfig(({ mode }) => {
       cspPlugin(),
     ],
     resolve: {
-      alias: [
-        { find: '@', replacement: resolve(__dirname, './src') },
-        { find: 'stream', replacement: 'stream-browserify' },
-        { find: 'http', replacement: 'stream-http' },
-        { find: 'https', replacement: 'https-browserify' },
-        { find: 'util', replacement: 'util' },
-        { find: 'path', replacement: 'path-browserify' },
-        { find: 'zlib', replacement: 'browserify-zlib' },
-        { find: 'crypto', replacement: 'crypto-browserify' },
+      alias: {
+        '@': resolve(__dirname, './src'),
+        'process': 'process/browser',
+        'stream': 'stream-browserify',
+        'zlib': 'browserify-zlib',
+        'util': 'util',
+      },
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'es2020',
+        supported: { bigint: true },
+        define: {
+          global: 'globalThis',
+        },
+      },
+      include: [
+        '@wagmi/core',
+        'ethers',
+        'web3',
+        'buffer',
       ],
-      dedupe: ['react', 'react-dom'],
-      preserveSymlinks: true,
+    },
+    build: {
+      target: 'es2020',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            web3: ['ethers', 'web3', '@wagmi/core'],
+          },
+        },
+      },
+      sourcemap: !isDev,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
     },
     server: {
-      port: 5173,
-      strictPort: false,
-      open: true,
       headers: {
-        "Content-Security-Policy": isDev ? 
-          "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src 'self' https: wss: ws:; font-src 'self' https:; object-src 'none'; media-src 'self' https:; worker-src 'self' blob:; frame-src 'self' https:;" 
-          : [
-            "default-src 'self' 'unsafe-inline' 'unsafe-eval';",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:;",
-            "style-src 'self' 'unsafe-inline' https:;",
-            "img-src 'self' data: https:;",
-            "connect-src 'self' https: wss: ws:;",
-            "font-src 'self' https:;",
-            "object-src 'none';",
-            "media-src 'self' https:;",
-            "worker-src 'self' blob:;",
-            "frame-src 'self' https:;"
-          ].join(' '),
         'Cross-Origin-Embedder-Policy': 'require-corp',
         'Cross-Origin-Opener-Policy': 'same-origin',
       },
       hmr: {
         overlay: true,
       },
-      watch: {
-        usePolling: true,
-      },
-    },
-    optimizeDeps: {
-      exclude: ['solc'],
-      include: [
-        'react',
-        'react-dom',
-        'wagmi',
-        'viem',
-        '@wagmi/core',
-        'ethers',
-      ],
-      esbuildOptions: {
-        define: {
-          global: 'globalThis'
-        },
-        platform: 'browser',
-        target: 'esnext',
-        supported: {
-          'top-level-await': true,
-        },
-      }
-    },
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            'web3-deps': [
-              'ethers',
-              'viem',
-              'wagmi',
-              '@wagmi/core',
-              '@wagmi/connectors',
-            ],
-          },
-        },
-      },
-      target: 'esnext',
-      sourcemap: true,
-      minify: !isDev,
     },
   };
 });
