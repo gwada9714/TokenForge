@@ -1,5 +1,4 @@
 import type { CompilerInput, CompilerOutput } from 'solc';
-import type { SolcWrapper } from 'solc/wrapper';
 
 /**
  * Initializes the Solidity compiler with WASM support
@@ -8,27 +7,30 @@ import type { SolcWrapper } from 'solc/wrapper';
 const SOLC_VERSION = '0.8.20';
 const SOLC_CDN = `https://binaries.soliditylang.org/bin/soljson-v${SOLC_VERSION}+commit.a1b79de6.js`;
 
-let solcInstance: SolcWrapper | null = null;
+let solcInstance: any = null;
 
-async function loadSolc(): Promise<SolcWrapper> {
+async function loadScript(url: string): Promise<void> {
+  const response = await fetch(url);
+  const code = await response.text();
+  
+  // Create a function from the downloaded code and execute it in worker scope
+  const wrapper = new Function('self', code);
+  wrapper(self);
+}
+
+async function loadSolc() {
   if (solcInstance) return solcInstance;
 
   try {
-    const response = await fetch(SOLC_CDN);
-    const wasmBinary = await response.arrayBuffer();
+    await loadScript(SOLC_CDN);
     
-    // Use WebAssembly.compile instead of instantiateSync
-    const wasmModule = await WebAssembly.compile(wasmBinary);
-    const wasmInstance = await WebAssembly.instantiate(wasmModule, {
-      env: {
-        memory: new WebAssembly.Memory({ initial: 256 })
-      }
-    });
-
-    const solcWrapper = await import('solc/wrapper');
     // @ts-ignore
-    solcInstance = solcWrapper.default(wasmInstance.exports);
-    return solcInstance;
+    if (typeof self.Module === 'undefined') {
+      throw new Error('Solc module not loaded correctly');
+    }
+
+    // @ts-ignore
+    return self.Module;
   } catch (error) {
     console.error('Error loading Solc:', error);
     throw error;
@@ -73,6 +75,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
       }
     };
 
+    // @ts-ignore
     const output = JSON.parse(solc.compile(JSON.stringify(input))) as CompilerOutput;
     self.postMessage({ result: output } as WorkerResponse);
   } catch (error) {

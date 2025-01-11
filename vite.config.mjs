@@ -20,7 +20,7 @@ export default defineConfig({
     strictPort: false,
     open: true,
     headers: {
-      'Content-Security-Policy': "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+      'Content-Security-Policy': "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' https://fonts.googleapis.com https://binaries.soliditylang.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
     }
   },
   define: {
@@ -33,6 +33,9 @@ export default defineConfig({
       https: 'https-browserify',
       path: 'path-browserify',
     },
+  },
+  optimizeDeps: {
+    exclude: ['solc']
   },
   build: {
     rollupOptions: {
