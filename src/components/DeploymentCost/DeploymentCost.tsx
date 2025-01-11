@@ -4,6 +4,7 @@ import { usePublicClient } from 'wagmi';
 import { formatEther } from 'viem';
 import { TokenBaseConfig, TokenAdvancedConfig } from '../../types/tokens';
 import { generateContractBytecode } from '../../services/contractGenerator';
+import { useWalletClient } from '../../hooks/useWalletClient';
 
 interface DeploymentCostProps {
   baseConfig: TokenBaseConfig;
@@ -22,10 +23,13 @@ export const DeploymentCost: React.FC<DeploymentCostProps> = ({ baseConfig, adva
         setIsLoading(true);
         const bytecode = await generateContractBytecode(baseConfig, advancedConfig);
         
-        // Create a mock contract creation transaction
+        const { data: signer } = useWalletClient();
+        const address = signer ? (await signer.getAddresses())[0] : undefined;
+        
+        // Create a contract deployment transaction
         const tx = {
-          account: undefined,
-          to: null,
+          account: address as `0x${string}`,
+          to: undefined,
           data: bytecode,
         };
         

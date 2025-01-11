@@ -1,4 +1,4 @@
-import { Address, parseUnits } from 'viem';
+import { Address, parseUnits, ContractFunctionExecutionError } from 'viem';
 import { TokenInfo } from '../types/tokens';
 import { getContract } from 'viem';
 import { erc20ABI } from 'wagmi';
@@ -24,57 +24,74 @@ export const executeTokenOperation = async (
     throw new Error('Wallet not connected');
   }
 
-  const contract = getContract({
-    address: token.address as Address,
-    abi: erc20ABI,
-    publicClient,
-    walletClient,
-  });
-
-  const decimals = token.decimals;
-  const parsedAmount = parseUnits(amount, decimals);
+  const [account] = await walletClient.getAddresses();
+  const parsedAmount = parseUnits(amount, token.decimals);
 
   let hash: Address;
-  const account = await walletClient.getAddresses();
-  const from = account[0];
 
-  switch (operation) {
-    case 'mint':
-      if (!token.mintable) {
-        throw new Error('Token is not mintable');
-      }
-      hash = await contract.write.mint([from, parsedAmount]);
-      break;
-
-    case 'burn':
-      if (!token.burnable) {
-        throw new Error('Token is not burnable');
-      }
-      hash = await contract.write.burn([parsedAmount]);
-      break;
-
-    case 'transfer':
-      if (!toAddress) {
-        throw new Error('Transfer address is required');
-      }
-      hash = await contract.write.transfer([toAddress, parsedAmount]);
-      break;
-
-    default:
-      throw new Error('Invalid operation');
-  }
-
-  // Attendre la confirmation de la transaction
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
-
-  return {
-    type: operation,
-    amount,
-    to: toAddress,
-    from,
-    timestamp: Math.floor(Date.now() / 1000),
-    transactionHash: hash,
+  const contract = {
+    abi: erc20ABI,
+    address: token.address as Address,
+    walletClient,
+    account,
   };
+
+  try {
+    switch (operation) {
+      case 'mint':
+        if (!token.mintable) {
+          throw new Error('Token is not mintable');
+        }
+        hash = await walletClient.writeContract({
+          ...contract,
+          functionName: 'mint',
+          args: [account, parsedAmount],
+        });
+        break;
+
+      case 'burn':
+        if (!token.burnable) {
+          throw new Error('Token is not burnable');
+        }
+        hash = await walletClient.writeContract({
+          ...contract,
+          functionName: 'burn',
+          args: [parsedAmount],
+        });
+        break;
+
+      case 'transfer':
+        if (!toAddress) {
+          throw new Error('Transfer address is required');
+        }
+        hash = await walletClient.writeContract({
+          ...contract,
+          functionName: 'transfer',
+          args: [toAddress, parsedAmount],
+        });
+        break;
+
+      default:
+        throw new Error('Invalid operation');
+    }
+
+    // Attendre la confirmation de la transaction
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+    return {
+      type: operation,
+      amount,
+      to: toAddress,
+      from: account,
+      timestamp: Math.floor(Date.now() / 1000),
+      transactionHash: hash,
+    };
+  } catch (error) {
+    if (error instanceof ContractFunctionExecutionError) {
+      throw new Error(`Transaction failed: ${error.message}`);
+    }
+    throw error;
+  }
 };
 
 export const getTokenHistory = async (
@@ -104,12 +121,12 @@ export const getTokenBalance = async (
   address: Address,
   publicClient: any
 ): Promise<string> => {
-  const contract = getContract({
+  const balance = await publicClient.readContract({
     address: token.address as Address,
     abi: erc20ABI,
-    publicClient,
+    functionName: 'balanceOf',
+    args: [address],
   });
 
-  const balance = await contract.read.balanceOf([address]);
   return balance.toString();
 };
