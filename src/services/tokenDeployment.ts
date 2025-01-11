@@ -33,6 +33,10 @@ export const deployToken = async (
   publicClient: PublicClient
 ): Promise<TokenDeploymentStatus> => {
   try {
+    if (!walletClient.account) {
+      throw new Error('No account connected');
+    }
+
     // Préparer les arguments du constructeur
     const constructorArgs = [
       baseConfig.name,
@@ -96,15 +100,15 @@ export const estimateGas = async (
       advancedConfig.votes,
     ] as const;
 
-    // Estimer le gas en utilisant simulateContract
-    const { gas } = await walletClient.simulateContract({
+    // Estimer le gas en utilisant deployContract
+    const gasEstimate = await walletClient.estimateContractDeployGas({
       abi: customERC20ABI,
       bytecode: CONTRACT_BYTECODE,
       args: constructorArgs,
       account,
     });
 
-    return gas || BigInt(0);
+    return gasEstimate;
   } catch (error) {
     console.error('Gas estimation failed:', error);
     throw error;
