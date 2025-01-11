@@ -26,18 +26,29 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
         const nonce = generateNonce();
         nonces.add(nonce);
         
-        res.setHeader(
-          'Content-Security-Policy',
-          generateCSPHeader(nonce, isDev)
-        );
+        if (isDev) {
+          // En développement, on utilise une CSP plus permissive
+          res.setHeader(
+            'Content-Security-Policy',
+            generateCSPHeader(nonce, true)
+          );
+        } else {
+          res.setHeader(
+            'Content-Security-Policy',
+            generateCSPHeader(nonce, false)
+          );
+        }
 
         // Set other security headers
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('X-Frame-Options', 'SAMEORIGIN');
         res.setHeader('X-XSS-Protection', '1; mode=block');
         res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-        res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+
+        if (!isDev) {
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+        }
 
         next();
       });
@@ -73,7 +84,11 @@ export function cspPlugin(options: CSPPluginOptions = {}): Plugin {
       );
 
       // Add CSP meta tag with collected hashes
-      const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${generateCSPHeader(nonce, isDev, {
+      if (isDev) {
+        return html;  // Skip CSP meta tag in development
+      }
+
+      const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${generateCSPHeader(nonce, false, {
         inlineScripts: Array.from(inlineScripts),
         inlineStyles: Array.from(inlineStyles),
       })}">`;
@@ -93,7 +108,6 @@ function generateCSPHeader(nonce: string, isDev: boolean, hashes: CSPHashesOptio
     'default-src': ["'self'"],
     'script-src': [
       "'self'",
-      "'strict-dynamic'",
       `'nonce-${nonce}'`,
       ...(hashes.inlineScripts || []),
       // Development-specific sources
@@ -101,16 +115,22 @@ function generateCSPHeader(nonce: string, isDev: boolean, hashes: CSPHashesOptio
         "'unsafe-eval'",
         "'unsafe-inline'",
         'http://localhost:*',
-        'ws://localhost:*'
-      ] : []),
+        'ws://localhost:*',
+        'https://*.moonpay.com',
+      ] : [
+        "'strict-dynamic'"
+      ]),
     ],
     'script-src-elem': [
       "'self'",
-      "'strict-dynamic'",
       `'nonce-${nonce}'`,
       ...(hashes.inlineScripts || []),
       'https://*.moonpay.com',
-      ...(isDev ? ["'unsafe-inline'", 'http://localhost:*'] : []),
+      ...(isDev ? [
+        "'unsafe-inline'",
+        'http://localhost:*',
+        'ws://localhost:*'
+      ] : []),
     ],
     'style-src': [
       "'self'",
@@ -133,7 +153,11 @@ function generateCSPHeader(nonce: string, isDev: boolean, hashes: CSPHashesOptio
       'https://eth-sepolia.g.alchemy.com',
       'https://mainnet.infura.io',
       'https://*.moonpay.com',
-      ...(isDev ? ['ws://localhost:*', 'http://localhost:*'] : []),
+      ...(isDev ? [
+        'ws://localhost:*',
+        'http://localhost:*',
+        'chrome-extension://*'
+      ] : []),
     ],
     'frame-src': [
       "'self'",
@@ -150,7 +174,12 @@ function generateCSPHeader(nonce: string, isDev: boolean, hashes: CSPHashesOptio
     'base-uri': ["'self'"],
     'form-action': ["'self'"],
     'object-src': ["'none'"],
-    'sandbox': [
+    'upgrade-insecure-requests': [],
+  };
+
+  // En développement, on ne met pas la directive sandbox
+  if (!isDev) {
+    policies['sandbox'] = [
       'allow-scripts',
       'allow-same-origin',
       'allow-forms',
@@ -158,9 +187,8 @@ function generateCSPHeader(nonce: string, isDev: boolean, hashes: CSPHashesOptio
       'allow-popups-to-escape-sandbox',
       'allow-presentation',
       'allow-downloads',
-    ],
-    'upgrade-insecure-requests': [],
-  };
+    ];
+  }
 
   return Object.entries(policies)
     .map(([key, values]) => {
