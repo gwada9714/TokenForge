@@ -1,4 +1,4 @@
-import { Address, Chain, encodeDeployData, PublicClient, WalletClient } from 'viem';
+import { Address, Chain, encodeDeployData, PublicClient, WalletClient, Account } from 'viem';
 import { TokenBaseConfig, TokenAdvancedConfig, TokenDeploymentStatus } from '../types/tokens';
 import { erc20ABI } from 'wagmi';
 import { parseUnits } from 'viem';
@@ -51,6 +51,7 @@ export const deployToken = async (
       abi: customERC20ABI,
       bytecode: CONTRACT_BYTECODE,
       args: constructorArgs,
+      account: walletClient.account,
     });
 
     // Attendre la confirmation de la transaction
@@ -95,15 +96,15 @@ export const estimateGas = async (
       advancedConfig.votes,
     ] as const;
 
-    // Estimer le gas
-    const gasEstimate = await walletClient.estimateContractDeploy({
+    // Estimer le gas en utilisant simulateContract
+    const { gas } = await walletClient.simulateContract({
       abi: customERC20ABI,
       bytecode: CONTRACT_BYTECODE,
       args: constructorArgs,
       account,
     });
 
-    return gasEstimate;
+    return gas || BigInt(0);
   } catch (error) {
     console.error('Gas estimation failed:', error);
     throw error;
