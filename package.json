@@ -90,6 +90,7 @@
     "zod": "^3.24.1"
   },
   "scripts": {
+    "prestart": "taskkill /F /IM node.exe /T || true",
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",

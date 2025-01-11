@@ -102,16 +102,19 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      port: 3000,
+      strictPort: true,
       headers: isDev ? {} : {
         'Cross-Origin-Embedder-Policy': 'require-corp',
         'Cross-Origin-Opener-Policy': 'same-origin',
       },
       hmr: {
-        overlay: true,
         port: 24678,
+        overlay: true,
       },
       watch: {
         usePolling: true,
+        interval: 1000,
       },
       fs: {
         strict: false,
