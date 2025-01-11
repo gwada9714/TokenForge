@@ -16,6 +16,9 @@ export const DeploymentCost = ({ bytecode }: DeploymentCostProps) => {
     const estimateDeploymentCost = async () => {
       try {
         setIsLoading(true);
+        if (!publicClient) {
+          throw new Error("No public client available");
+        }
         const gasPrice = await publicClient.getGasPrice();
         const gasEstimate = await publicClient.estimateGas({
           data: bytecode as `0x${string}`,

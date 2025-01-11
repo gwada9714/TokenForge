@@ -50,6 +50,7 @@ export const CreateToken: React.FC = () => {
   const [deploymentStatus, setDeploymentStatus] =
     useState<TokenDeploymentStatus | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [bytecode, setBytecode] = useState<string | null>(null);
 
   const handleCreateToken = async () => {
     if (!walletClient || !address || !publicClient) {
@@ -138,10 +139,9 @@ export const CreateToken: React.FC = () => {
               />
             </Box>
             <Box flex={1}>
-              <DeploymentCost
-                baseConfig={baseConfig}
-                advancedConfig={advancedConfig}
-              />
+              {bytecode && (
+                <DeploymentCost bytecode={bytecode} />
+              )}
             </Box>
           </Box>
 

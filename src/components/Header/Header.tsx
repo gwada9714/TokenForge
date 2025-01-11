@@ -1,7 +1,7 @@
 import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { InjectedConnector } from "wagmi/connectors/injected";
+import { InjectedConnector } from "@wagmi/connectors/injected";
 
 const Header = () => {
   const { address, isConnected } = useAccount();
@@ -10,11 +10,11 @@ const Header = () => {
   });
   const { disconnect } = useDisconnect();
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (isConnected) {
       disconnect();
     } else {
-      connect();
+      await connect();
     }
   };
 
