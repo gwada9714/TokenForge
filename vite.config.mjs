@@ -27,6 +27,18 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, './src'),
+        stream: 'stream-browserify',
+        http: 'stream-http',
+        https: 'https-browserify',
+        util: 'util',
+        path: 'path-browserify',
+        zlib: 'browserify-zlib',
+        crypto: 'crypto-browserify',
+      },
+    },
     server: {
       port: 5173,
       strictPort: false,
@@ -56,14 +68,6 @@ export default defineConfig(({ mode }) => {
             ],
           },
         },
-      },
-    },
-    resolve: {
-      alias: {
-        stream: 'stream-browserify',
-        http: 'stream-http',
-        https: 'https-browserify',
-        util: 'util',
       },
     },
   };
