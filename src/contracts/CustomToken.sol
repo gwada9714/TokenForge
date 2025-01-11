@@ -92,12 +92,11 @@ contract CustomToken is ERC20, ERC20Burnable, ERC20Pausable, ERC20Permit, ERC20V
         return super.nonces(owner);
     }
 
-    function DOMAIN_SEPARATOR() 
-        public 
-        view 
-        override(ERC20Permit)
-        returns (bytes32) 
-    {
-        return super.DOMAIN_SEPARATOR();
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Votes) {
+        super._afterTokenTransfer(from, to, amount);
     }
 }
