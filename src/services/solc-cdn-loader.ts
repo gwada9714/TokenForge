@@ -1,5 +1,4 @@
-const SOLC_VERSION = '0.8.20';
-const SOLC_CDN = `https://binaries.soliditylang.org/bin/soljson-v${SOLC_VERSION}+commit.a1b79de6.js`;
+import type { CompilerInput, CompilerOutput } from 'solc';
 
 let worker: Worker | null = null;
 
@@ -12,7 +11,7 @@ function getWorker(): Worker {
   return worker;
 }
 
-export async function compile(source: string, settings: any = null) {
+export async function compile(source: string, settings?: CompilerInput['settings']): Promise<CompilerOutput> {
   const worker = getWorker();
   
   return new Promise((resolve, reject) => {
@@ -28,16 +27,7 @@ export async function compile(source: string, settings: any = null) {
       reject(new Error('Worker error: ' + error.message));
     };
 
-    worker.postMessage({
-      source,
-      settings: settings || {
-        outputSelection: {
-          '*': {
-            '*': ['*']
-          }
-        }
-      }
-    });
+    worker.postMessage({ source, settings });
   });
 }
 

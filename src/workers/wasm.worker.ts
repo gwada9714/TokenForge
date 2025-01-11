@@ -15,20 +15,19 @@ async function loadSolc(): Promise<SolcWrapper> {
 
   try {
     const response = await fetch(SOLC_CDN);
-    const code = await response.text();
+    const wasmBinary = await response.arrayBuffer();
     
-    // Create a function from the downloaded code
-    const wrapper = new Function('self', code);
-    wrapper(self);
-
-    // @ts-ignore
-    if (typeof self.Module === 'undefined') {
-      throw new Error('Solc module not loaded correctly');
-    }
+    // Use WebAssembly.compile instead of instantiateSync
+    const wasmModule = await WebAssembly.compile(wasmBinary);
+    const wasmInstance = await WebAssembly.instantiate(wasmModule, {
+      env: {
+        memory: new WebAssembly.Memory({ initial: 256 })
+      }
+    });
 
     const solcWrapper = await import('solc/wrapper');
     // @ts-ignore
-    solcInstance = solcWrapper.default(self.Module);
+    solcInstance = solcWrapper.default(wasmInstance.exports);
     return solcInstance;
   } catch (error) {
     console.error('Error loading Solc:', error);
