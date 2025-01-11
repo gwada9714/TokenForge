@@ -68,7 +68,9 @@ export default defineConfig(({ mode }) => {
           ],
         },
       }),
-      cspPlugin(),
+      cspPlugin({
+        development: mode === 'development'
+      }),
     ],
     resolve: {
       alias: {
