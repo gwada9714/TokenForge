@@ -1,16 +1,10 @@
 // src/components/common/ErrorMessage.tsx
 import React from 'react';
 
-interface ErrorMessageProps {
-  message: string;
-}
-
-const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
-  return (
-    <div className="error-message">
-      {message}
-    </div>
-  );
-};
+const ErrorMessage = ({ message }: { message: string }) => (
+  <div className="alert alert-error" role="alert">
+    {message}
+  </div>
+);
 
 export default ErrorMessage;

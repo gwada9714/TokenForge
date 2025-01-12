@@ -1,25 +1,26 @@
-import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
+import { Home } from './pages/Home';
+import { Tokens } from './pages/Tokens';
+import { TokenDetails } from './pages/TokenDetails';
+import { CreateToken } from './pages/CreateToken';
+import { Header } from './components/Header/Header';
+import { Toaster } from 'react-hot-toast';
 
-const Home = () => <div>Accueil TokenForge</div>;
-
-const App: React.FC = () => {
+function App() {
   return (
-    <ThemeProvider theme={{ palette: { mode: 'light' } }}>
-      <CssBaseline />
-      <Container maxWidth="lg">
-        <Box sx={{ my: 4 }}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-          </Routes>
-        </Box>
-      </Container>
-    </ThemeProvider>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <main className="py-8">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/tokens" element={<Tokens />} />
+          <Route path="/tokens/create" element={<CreateToken />} />
+          <Route path="/tokens/:tokenId" element={<TokenDetails />} />
+        </Routes>
+      </main>
+      <Toaster position="top-right" />
+    </div>
   );
-};
+}
 
 export default App;

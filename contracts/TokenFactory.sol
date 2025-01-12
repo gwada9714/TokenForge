@@ -63,4 +63,11 @@ contract TokenFactory is Ownable {
 
         return Create2.computeAddress(salt, keccak256(bytecode));
     }
+
+    function createToken(string memory name, string memory symbol, uint256 initialSupply) public {
+        require(bytes(name).length > 0, "Name cannot be empty");
+        require(bytes(symbol).length > 0, "Symbol cannot be empty");
+        require(initialSupply > 0, "Supply must be positive");
+        // ... reste du code
+    }
 }

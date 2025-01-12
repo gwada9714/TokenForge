@@ -1,162 +1,27 @@
-import React, { useState } from "react";
-import {
-  Container,
-  Paper,
-  Typography,
-  Box,
-  Button,
-  Alert,
-} from "@mui/material";
-import { useAccount, useWalletClient, usePublicClient } from "wagmi";
-import {
-  TokenBaseConfig,
-  TokenAdvancedConfig,
-  TokenDeploymentStatus,
-} from "../types/tokens";
-import { TokenPreview } from "../components/TokenPreview/TokenPreview";
-import { DeploymentCost } from "../components/DeploymentCost/DeploymentCost";
-import { BasicTokenForm } from "../components/TokenForm/BasicTokenForm";
-import { AdvancedTokenForm } from "../components/TokenForm/AdvancedTokenForm";
-import { deployToken } from "../services/tokenDeployment";
+import React from 'react';
+import { useAccount } from 'wagmi';
+import { TokenForm } from '../components/TokenForm/TokenForm';
 
-export const CreateToken: React.FC = () => {
-  const { address } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
+export const CreateToken = () => {
+  const { isConnected } = useAccount();
 
-  const [baseConfig, setBaseConfig] = useState<TokenBaseConfig>({
-    name: "",
-    symbol: "",
-    decimals: 18,
-    initialSupply: 0,
-  });
-
-  const [advancedConfig, setAdvancedConfig] = useState<TokenAdvancedConfig>({
-    mintable: false,
-    burnable: false,
-    pausable: false,
-    permit: false,
-    votes: false,
-    upgradeable: false,
-    transparent: false,
-    uups: false,
-    accessControl: "none",
-    baseURI: "",
-    asset: "",
-    maxSupply: "0",
-    depositLimit: "0",
-  });
-
-  const [deploymentStatus, setDeploymentStatus] =
-    useState<TokenDeploymentStatus | null>(null);
-  const [isDeploying, setIsDeploying] = useState(false);
-  const [bytecode, setBytecode] = useState<string | null>(null);
-
-  const handleCreateToken = async () => {
-    if (!walletClient || !address || !publicClient) {
-      setDeploymentStatus({
-        status: "error",
-        error: "Please connect your wallet first",
-      });
-      return;
-    }
-
-    setIsDeploying(true);
-    try {
-      const status = await deployToken(
-        baseConfig,
-        advancedConfig,
-        walletClient,
-        publicClient,
-      );
-      setDeploymentStatus(status);
-    } catch (error: any) {
-      setDeploymentStatus({
-        status: "error",
-        error: error.message || "Failed to deploy token",
-      });
-    } finally {
-      setIsDeploying(false);
-    }
-  };
-
-  const isFormValid = () => {
+  if (!isConnected) {
     return (
-      baseConfig.name.trim() !== "" &&
-      baseConfig.symbol.trim() !== "" &&
-      baseConfig.initialSupply > 0
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-2xl font-bold mb-4">Connectez votre wallet</h2>
+        <p className="text-gray-600">
+          Vous devez connecter votre wallet pour créer un token
+        </p>
+      </div>
     );
-  };
+  }
 
   return (
-    <Container maxWidth="lg">
-      <Box my={4}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Create Token
-        </Typography>
-
-        {deploymentStatus && (
-          <Box mb={3}>
-            {deploymentStatus.status === "success" ? (
-              <Alert severity="success">
-                Token deployed successfully!
-                {deploymentStatus.contractAddress && (
-                  <Typography variant="body2">
-                    Contract Address: {deploymentStatus.contractAddress}
-                  </Typography>
-                )}
-              </Alert>
-            ) : (
-              <Alert severity="error">
-                Deployment failed: {deploymentStatus.error}
-              </Alert>
-            )}
-          </Box>
-        )}
-
-        <Box display="grid" gap={3}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <BasicTokenForm
-              config={baseConfig}
-              onConfigChange={setBaseConfig}
-              disabled={isDeploying}
-            />
-          </Paper>
-
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <AdvancedTokenForm
-              config={advancedConfig}
-              onConfigChange={setAdvancedConfig}
-              disabled={isDeploying}
-            />
-          </Paper>
-
-          <Box display="flex" gap={3}>
-            <Box flex={1}>
-              <TokenPreview
-                baseConfig={baseConfig}
-                advancedConfig={advancedConfig}
-              />
-            </Box>
-            <Box flex={1}>
-              {bytecode && (
-                <DeploymentCost bytecode={bytecode} />
-              )}
-            </Box>
-          </Box>
-
-          <Box display="flex" justifyContent="center" mt={2}>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleCreateToken}
-              disabled={!isFormValid() || isDeploying || !address}
-            >
-              {isDeploying ? "Deploying..." : "Create Token"}
-            </Button>
-          </Box>
-        </Box>
-      </Box>
-    </Container>
+    <div className="container mx-auto px-4">
+      <h1 className="text-3xl font-bold mb-6">Créer un nouveau Token</h1>
+      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+        <TokenForm />
+      </div>
+    </div>
   );
 };

@@ -1,98 +1,29 @@
-import React, { Suspense } from "react";
-import { Box, Button, Container, Typography, Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-// Lazy loading des composants lourds
-const TokenStats = React.lazy(() => import("../components/Stats/TokenStats"));
-const FeatureList = React.lazy(() => import("../components/Features/FeatureList"));
-
-export const Home: React.FC = () => {
-  const navigate = useNavigate();
-
-  const handleNavigation = (path: string) => {
-    try {
-      navigate(path);
-    } catch (error) {
-      console.error("Navigation error:", error);
-      // Vous pouvez ajouter ici une notification pour l'utilisateur
-    }
-  };
-
+export const Home = () => {
   return (
-    <Container maxWidth="lg">
-      <Grid container spacing={4}>
-        {/* Hero Section */}
-        <Grid item xs={12}>
-          <Box
-            sx={{
-              pt: { xs: 4, sm: 6, md: 8 },
-              pb: { xs: 3, sm: 4, md: 6 },
-              textAlign: "center",
-            }}
+    <div className="container mx-auto px-4">
+      <div className="text-center max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold mb-6">TokenForge</h1>
+        <p className="text-xl mb-8 text-gray-600">
+          Créez et gérez vos tokens ERC20 en quelques clics
+        </p>
+        <div className="space-x-4">
+          <Link
+            to="/tokens/create"
+            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
           >
-            <Typography
-              component="h1"
-              variant="h2"
-              color="primary"
-              gutterBottom
-              sx={{ fontWeight: "bold", fontSize: { xs: "2.5rem", sm: "3rem", md: "3.75rem" } }}
-            >
-              TokenForge
-            </Typography>
-            <Typography variant="h5" color="text.secondary" paragraph sx={{ mb: 4 }}>
-              Créez vos tokens ERC20 en quelques clics. Simple, rapide et sécurisé.
-            </Typography>
-            <Box sx={{ mt: 4 }}>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => handleNavigation("/create")}
-                sx={{ mr: 2, mb: { xs: 2, sm: 0 } }}
-                aria-label="Créer un nouveau token"
-              >
-                Créer un Token
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => handleNavigation("/info")}
-                aria-label="En savoir plus sur TokenForge"
-              >
-                En savoir plus
-              </Button>
-            </Box>
-          </Box>
-        </Grid>
-
-        {/* Stats Section */}
-        <Grid item xs={12}>
-          <Box sx={{ my: { xs: 3, sm: 4, md: 6 } }}>
-            <Suspense fallback={<Typography align="center">Chargement des statistiques...</Typography>}>
-              <TokenStats />
-            </Suspense>
-          </Box>
-        </Grid>
-
-        {/* Features Section */}
-        <Grid item xs={12}>
-          <Box sx={{ my: { xs: 3, sm: 4, md: 6 } }}>
-            <Typography
-              variant="h4"
-              component="h2"
-              align="center"
-              gutterBottom
-              sx={{ mb: 4, fontSize: { xs: "1.75rem", sm: "2rem", md: "2.25rem" } }}
-            >
-              Pourquoi choisir TokenForge ?
-            </Typography>
-            <Suspense fallback={<Typography align="center">Chargement des fonctionnalités...</Typography>}>
-              <FeatureList />
-            </Suspense>
-          </Box>
-        </Grid>
-      </Grid>
-    </Container>
+            Créer un Token
+          </Link>
+          <Link
+            to="/tokens"
+            className="inline-block bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200"
+          >
+            Mes Tokens
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 };
-
-export default Home;
