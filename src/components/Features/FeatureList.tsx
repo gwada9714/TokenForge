@@ -29,7 +29,10 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   </Card>
 );
 
-export const FeatureList: React.FC = () => {
+// Changez cette ligne de:
+// export const FeatureList: React.FC = () => {
+// à:
+const FeatureList: React.FC = () => {
   const features = [
     {
       title: "Sécurisé",
@@ -64,3 +67,6 @@ export const FeatureList: React.FC = () => {
     </Grid>
   );
 };
+
+// Ajoutez cette ligne à la fin du fichier
+export default FeatureList;

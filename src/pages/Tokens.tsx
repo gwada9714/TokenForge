@@ -1,4 +1,4 @@
-// src/pages/MyTokens.tsx
+// src/pages/Tokens.tsx
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -12,10 +12,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { TokenCard } from "../components/TokenCard/TokenCard";
-import { TokenInfo } from "../services/tokenService"; // Changé l'import
+import { TokenInfo } from "../services/tokenService";
 import AddIcon from "@mui/icons-material/Add";
 
-export const MyTokens: React.FC = () => {
+const Tokens: React.FC = () => {
   const navigate = useNavigate();
   const { address, isConnected } = useAccount();
   const [tokens, setTokens] = useState<TokenInfo[]>([]);
@@ -38,7 +38,7 @@ export const MyTokens: React.FC = () => {
             decimals: 18,
             maxSupply: "1000000000000000000000000",
             totalSupply: "0",
-            balance: "0", // Ajouté le champ balance requis
+            balance: "0",
             burnable: true,
             mintable: true,
             owner: "0x0000000000000000000000000000000000000000",
@@ -50,7 +50,7 @@ export const MyTokens: React.FC = () => {
             decimals: 18,
             maxSupply: "0",
             totalSupply: "0",
-            balance: "0", // Ajouté le champ balance requis
+            balance: "0",
             burnable: false,
             mintable: true,
             owner: "0x0000000000000000000000000000000000000000",
@@ -68,7 +68,7 @@ export const MyTokens: React.FC = () => {
     loadTokens();
   }, [address, isConnected]);
 
-  const handleTokenAction = (address: string) => { // Changé pour correspondre à la nouvelle prop
+  const handleTokenAction = (address: string) => {
     navigate(`/token/${address}`);
   };
 
@@ -137,7 +137,7 @@ export const MyTokens: React.FC = () => {
               <Grid item xs={12} sm={6} md={4} key={token.address}>
                 <TokenCard 
                   token={token} 
-                  onAction={handleTokenAction} // Changé onManage en onAction
+                  onAction={handleTokenAction}
                 />
               </Grid>
             ))}
@@ -147,3 +147,5 @@ export const MyTokens: React.FC = () => {
     </Container>
   );
 };
+
+export default Tokens;

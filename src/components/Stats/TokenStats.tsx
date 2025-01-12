@@ -30,7 +30,10 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => (
   </Card>
 );
 
-export const TokenStats: React.FC = () => {
+// Changez cette ligne de:
+// export const TokenStats: React.FC = () => {
+// à:
+const TokenStats: React.FC = () => {
   // Ces valeurs seront plus tard récupérées depuis le smart contract
   const stats = {
     totalTokens: 150,
@@ -64,3 +67,6 @@ export const TokenStats: React.FC = () => {
     </Grid>
   );
 };
+
+// Ajoutez cette ligne à la fin du fichier
+export default TokenStats;

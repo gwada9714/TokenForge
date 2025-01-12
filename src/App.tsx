@@ -1,27 +1,36 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Layout } from './components/Layout';
-import { Home } from './pages/Home';
-import { About } from './pages/About';
-import { Tokens } from './pages/Tokens';
+import { Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import theme from './theme'; // Assurez-vous de créer ce fichier
+import Container from '@mui/material/Container';
+import Box from '@mui/material/Box';
+
+// Composants et Pages
+import { Layout } from './components/Layout';
+import { Home } from './pages/Home';
+import AboutPage from './pages/About'; // Renommé ici
+import Tokens from './pages/Tokens';
+import Analyse from './pages/Analyse';
+
+// Thème
+import { theme } from './theme';
 
 const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/tokens" element={<Tokens />} />
-            {/* Ajoutez d'autres routes ici */}
-          </Routes>
-        </Layout>
-      </Router>
+      <Layout>
+        <Container maxWidth="lg">
+          <Box sx={{ my: 4 }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<AboutPage />} /> {/* Mis à jour ici */}
+              <Route path="/tokens" element={<Tokens />} />
+              <Route path="/analyse" element={<Analyse />} />
+            </Routes>
+          </Box>
+        </Container>
+      </Layout>
     </ThemeProvider>
   );
 };
