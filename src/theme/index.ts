@@ -51,6 +51,7 @@ export const theme = createTheme({
   shape: {
     borderRadius: 8,
   },
+  spacing: 8, // Définition de l'espacement de base
   components: {
     MuiButton: {
       styleOverrides: {
