@@ -32,12 +32,6 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import { useTokenStats } from '@/hooks/useTokenStats';
 import { useUserTokens } from '@/hooks/useUserTokens';
 
-interface ITokenStats {
-  totalValue: bigint;
-  transactionVolume: bigint;
-  uniqueHolders: number;
-}
-
 interface IToken {
   address: Address;
   name: string;
