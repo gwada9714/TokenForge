@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract TokenForgeFactory is Ownable {
     address public immutable tknToken;
     address public immutable treasury;
+    address public immutable taxDistributor;
     
     // Service tiers configuration
     uint256 public constant BASIC_TIER_PRICE = 100 * 10**18; // 100 TKN
@@ -39,11 +40,13 @@ contract TokenForgeFactory is Ownable {
         bool isPremium
     );
 
-    constructor(address _tknToken, address _treasury) {
+    constructor(address _tknToken, address _treasury, address _taxDistributor) {
         require(_tknToken != address(0), "TokenForge: TKN token address cannot be zero");
         require(_treasury != address(0), "TokenForge: Treasury address cannot be zero");
+        require(_taxDistributor != address(0), "TokenForge: Tax distributor address cannot be zero");
         tknToken = _tknToken;
         treasury = _treasury;
+        taxDistributor = _taxDistributor;
     }
 
     function createToken(
@@ -70,7 +73,8 @@ contract TokenForgeFactory is Ownable {
             mintable,
             burnable,
             pausable,
-            treasury
+            treasury,
+            taxDistributor
         );
 
         // Store token info
