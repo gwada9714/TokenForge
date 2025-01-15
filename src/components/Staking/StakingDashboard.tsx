@@ -61,9 +61,8 @@ const StakingDashboard: React.FC = () => {
 
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
-    const totalStakedHex = `0x${stakingStats.totalStaked.toString(16)}`;
     return {
-      totalStaked: formatEther(totalStakedHex as `0x${string}`),
+      totalStaked: formatEther(stakingStats.totalStaked.toString(16)),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };
@@ -71,13 +70,13 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    const amount = BigInt(parseFloat(stakeAmount) * Math.pow(10, 18));
+    const amount = parseEther(stakeAmount);
     await stake(amount);
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    const amount = BigInt(parseFloat(withdrawAmount) * Math.pow(10, 18));
+    const amount = parseEther(withdrawAmount);
     await withdraw(amount);
   };
 
