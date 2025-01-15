@@ -28,6 +28,7 @@ const plans = [
     ],
     buttonText: 'Commencer',
     value: 'apprentice',
+    isPopular: false,
   },
   {
     name: 'Forgeron',
@@ -58,6 +59,7 @@ const plans = [
     ],
     buttonText: 'Devenir Maître',
     value: 'master',
+    isPopular: false,
   },
 ] as const;
 
