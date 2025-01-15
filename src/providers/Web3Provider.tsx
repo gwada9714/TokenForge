@@ -52,8 +52,38 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
-      if (!chain) {
-        throw new Error('No chain selected');
+      if (typeof window === 'undefined' || !window.ethereum) {
+        throw new Error('Web3 provider not available - Please install MetaMask');
+      }
+
+      // Vérifier si MetaMask est connecté à un réseau
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      
+      // Si pas de chaîne sélectionnée, essayer de se connecter à Sepolia par défaut
+      if (!chainId || !chain) {
+        try {
+          // Sepolia chainId = '0xaa36a7'
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0xaa36a7' }],
+          });
+        } catch (switchError: any) {
+          // Si le réseau n'est pas configuré, proposer de l'ajouter
+          if (switchError.code === 4902) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0xaa36a7',
+                chainName: 'Sepolia',
+                nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                rpcUrls: [import.meta.env.VITE_SEPOLIA_RPC_URL],
+                blockExplorerUrls: ['https://sepolia.etherscan.io'],
+              }],
+            });
+          } else {
+            throw new Error('Please connect to Sepolia testnet or Ethereum mainnet');
+          }
+        }
       }
 
       await web3Service.connect();

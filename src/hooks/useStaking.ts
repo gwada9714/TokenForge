@@ -43,7 +43,7 @@ export function useStaking(_tokenAddress: string) {
   const { data: userStakeData } = useContractRead({
     address: stakingAddress ?? undefined,
     abi: stakingABI,
-    functionName: 'userStakes',
+    functionName: 'getUserStake',
     args: [address],
     enabled,
   });
