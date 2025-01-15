@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "@nomiclabs/hardhat-ethers";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 
