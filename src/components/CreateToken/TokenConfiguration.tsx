@@ -1,19 +1,18 @@
 import React from 'react';
 import {
-  VStack,
+  Stack,
   FormControl,
   FormLabel,
-  Input,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
+  TextField,
+  Typography,
+  FormGroup,
+  FormControlLabel,
   Checkbox,
-  CheckboxGroup,
-  SimpleGrid,
-  Heading,
-} from '@chakra-ui/react';
+  Grid,
+  InputAdornment,
+  IconButton
+} from '@mui/material';
+import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { TokenConfig } from '@/types/token';
 
 interface TokenConfigurationProps {
@@ -32,6 +31,14 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
     }));
   };
 
+  const handleFeatureChange = (feature: string) => {
+    const currentFeatures = tokenConfig.features || [];
+    const newFeatures = currentFeatures.includes(feature)
+      ? currentFeatures.filter(f => f !== feature)
+      : [...currentFeatures, feature];
+    handleChange('features', newFeatures);
+  };
+
   const features = [
     'Mint',
     'Burn',
@@ -43,74 +50,76 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
   ];
 
   return (
-    <VStack spacing={6} align="stretch">
-      <Heading size="md" mb={4}>Configuration du Token</Heading>
+    <Stack spacing={3}>
+      <Typography variant="h6" sx={{ mb: 2 }}>Configuration du Token</Typography>
 
-      <FormControl isRequired>
+      <FormControl required>
         <FormLabel>Nom du Token</FormLabel>
-        <Input
+        <TextField
+          fullWidth
           value={tokenConfig.name}
           onChange={(e) => handleChange('name', e.target.value)}
           placeholder="Ex: TokenForge Token"
+          variant="outlined"
         />
       </FormControl>
 
-      <FormControl isRequired>
+      <FormControl required>
         <FormLabel>Symbole</FormLabel>
-        <Input
+        <TextField
+          fullWidth
           value={tokenConfig.symbol}
           onChange={(e) => handleChange('symbol', e.target.value)}
           placeholder="Ex: TKN"
+          variant="outlined"
         />
       </FormControl>
 
-      <FormControl isRequired>
+      <FormControl required>
         <FormLabel>Offre Totale</FormLabel>
-        <NumberInput
+        <TextField
+          fullWidth
+          type="number"
           value={tokenConfig.supply}
-          onChange={(value) => handleChange('supply', value)}
-          min={1}
-        >
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
+          onChange={(e) => handleChange('supply', e.target.value)}
+          inputProps={{ min: 1 }}
+          variant="outlined"
+        />
       </FormControl>
 
       <FormControl>
         <FormLabel>Décimales</FormLabel>
-        <NumberInput
+        <TextField
+          fullWidth
+          type="number"
           value={tokenConfig.decimals}
-          onChange={(value) => handleChange('decimals', parseInt(value))}
-          min={0}
-          max={18}
-        >
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
+          onChange={(e) => handleChange('decimals', parseInt(e.target.value))}
+          inputProps={{ min: 0, max: 18 }}
+          variant="outlined"
+        />
       </FormControl>
 
       <FormControl>
         <FormLabel>Fonctionnalités</FormLabel>
-        <CheckboxGroup
-          value={tokenConfig.features}
-          onChange={(value) => handleChange('features', value)}
-        >
-          <SimpleGrid columns={[2, 3, 4]} spacing={4}>
+        <FormGroup>
+          <Grid container spacing={2}>
             {features.map((feature) => (
-              <Checkbox key={feature} value={feature}>
-                {feature}
-              </Checkbox>
+              <Grid item xs={6} sm={4} md={3} key={feature}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={tokenConfig.features?.includes(feature) || false}
+                      onChange={() => handleFeatureChange(feature)}
+                    />
+                  }
+                  label={feature}
+                />
+              </Grid>
             ))}
-          </SimpleGrid>
-        </CheckboxGroup>
+          </Grid>
+        </FormGroup>
       </FormControl>
-    </VStack>
+    </Stack>
   );
 };
 

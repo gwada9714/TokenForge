@@ -1,16 +1,16 @@
 import React from 'react';
 import {
-  VStack,
-  Text,
+  Stack,
+  Typography,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Badge,
-  Heading,
-} from '@chakra-ui/react';
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Chip,
+  Paper,
+  TableContainer
+} from '@mui/material';
 import { TokenConfig } from '@/types/token';
 
 interface TokenVerificationProps {
@@ -19,57 +19,70 @@ interface TokenVerificationProps {
 
 const TokenVerification: React.FC<TokenVerificationProps> = ({ tokenConfig }) => {
   return (
-    <VStack spacing={6} align="stretch">
-      <Heading size="md" mb={4}>Vérification du Token</Heading>
+    <Stack spacing={3}>
+      <Typography variant="h6" sx={{ mb: 2 }}>Vérification du Token</Typography>
 
-      <Table variant="simple">
-        <Thead>
-          <Tr>
-            <Th>Paramètre</Th>
-            <Th>Valeur</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          <Tr>
-            <Td>Plan</Td>
-            <Td>
-              <Badge colorScheme="red">{tokenConfig.plan}</Badge>
-            </Td>
-          </Tr>
-          <Tr>
-            <Td>Nom</Td>
-            <Td>{tokenConfig.name}</Td>
-          </Tr>
-          <Tr>
-            <Td>Symbole</Td>
-            <Td>{tokenConfig.symbol}</Td>
-          </Tr>
-          <Tr>
-            <Td>Offre Totale</Td>
-            <Td>{tokenConfig.supply}</Td>
-          </Tr>
-          <Tr>
-            <Td>Décimales</Td>
-            <Td>{tokenConfig.decimals}</Td>
-          </Tr>
-          <Tr>
-            <Td>Fonctionnalités</Td>
-            <Td>
-              {tokenConfig.features.map((feature) => (
-                <Badge key={feature} m={1} colorScheme="green">
-                  {feature}
-                </Badge>
-              ))}
-            </Td>
-          </Tr>
-        </Tbody>
-      </Table>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Paramètre</TableCell>
+              <TableCell>Valeur</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>Plan</TableCell>
+              <TableCell>
+                <Chip 
+                  label={tokenConfig.plan}
+                  color="error"
+                  size="small"
+                />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Nom</TableCell>
+              <TableCell>{tokenConfig.name}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Symbole</TableCell>
+              <TableCell>{tokenConfig.symbol}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Offre Totale</TableCell>
+              <TableCell>{tokenConfig.supply}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Décimales</TableCell>
+              <TableCell>{tokenConfig.decimals}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Fonctionnalités</TableCell>
+              <TableCell>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {tokenConfig.features?.map((feature) => (
+                    <Chip
+                      key={feature}
+                      label={feature}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      sx={{ m: 0.5 }}
+                    />
+                  ))}
+                </Stack>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-      <Text fontSize="sm" color="gray.500">
+      <Typography fontSize="sm" color="gray" sx={{ mt: 2 }}>
         Veuillez vérifier attentivement tous les paramètres avant le déploiement.
         Une fois le token déployé, certains paramètres ne pourront plus être modifiés.
-      </Text>
-    </VStack>
+      </Typography>
+    </Stack>
   );
 };
 

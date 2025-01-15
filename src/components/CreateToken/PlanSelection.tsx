@@ -1,25 +1,23 @@
 import React from 'react';
 import {
   Box,
-  SimpleGrid,
-  VStack,
-  Text,
+  Grid,
+  Stack,
+  Typography,
   Button,
-  useColorModeValue,
   List,
   ListItem,
-  ListIcon,
-  Icon,
-  Heading,
-} from '@chakra-ui/react';
-import { CheckIcon } from '@chakra-ui/icons';
+  ListItemIcon,
+  Paper,
+  useTheme,
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { FaHammer, FaGem, FaCrown } from 'react-icons/fa';
 import { PlanSelectionProps } from '@/types/components';
 import { TokenConfig } from '@/types/token';
 
 const PlanSelection: React.FC<PlanSelectionProps> = ({ setTokenConfig }) => {
-  const bgCard = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const theme = useTheme();
 
   const plans = [
     {
@@ -51,21 +49,22 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({ setTokenConfig }) => {
     },
     {
       name: 'Maître Forgeron',
-      price: '1 BNB',
+      price: '0.5 BNB',
       icon: FaCrown,
       features: [
-        'Toutes les fonctionnalités avancées',
+        'Toutes les fonctionnalités disponibles',
         'Audit de sécurité inclus',
-        'Badge "Trempé et Certifié"',
-        'Verrouillage de liquidité facilité',
         'Support prioritaire',
+        'Accès aux fonctionnalités avancées',
+        'Personnalisation complète',
+        'Listing prioritaire',
       ],
       buttonText: 'Devenir Maître',
       value: 'master',
     },
   ];
 
-  const handleSelectPlan = (planValue: string): void => {
+  const handlePlanSelection = (planValue: string) => {
     setTokenConfig((prev: TokenConfig) => ({
       ...prev,
       plan: planValue,
@@ -73,70 +72,96 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({ setTokenConfig }) => {
   };
 
   return (
-    <Box py={6}>
-      <Heading size="lg" mb={8} textAlign="center">
-        Choisissez votre Forge
-      </Heading>
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10}>
-        {plans.map((plan) => (
-          <Box
-            key={plan.name}
-            bg={bgCard}
-            border="1px"
-            borderColor={borderColor}
-            borderRadius="xl"
-            overflow="hidden"
-            position="relative"
-            transition="transform 0.2s"
-            _hover={{ transform: 'translateY(-5px)' }}
-          >
-            {plan.isPopular && (
-              <Box
-                position="absolute"
-                top={4}
-                right={4}
-                bg="red.500"
-                color="white"
-                px={3}
-                py={1}
-                borderRadius="md"
-                fontSize="sm"
-              >
-                Populaire
-              </Box>
-            )}
-            <VStack spacing={6} p={6} align="stretch" height="100%">
-              <VStack spacing={2}>
-                <Icon as={plan.icon} w={10} h={10} color="red.500" />
-                <Text fontSize="2xl" fontWeight="bold">
-                  {plan.name}
-                </Text>
-                <Text fontSize="3xl" fontWeight="bold">
-                  {plan.price}
-                </Text>
-              </VStack>
+    <Box sx={{ py: 4 }}>
+      <Typography 
+        variant="h4" 
+        component="h2" 
+        align="center"
+        gutterBottom
+        sx={{ mb: 4 }}
+      >
+        Choisissez votre Plan
+      </Typography>
 
-              <List spacing={3} flex="1">
-                {plan.features.map((feature) => (
-                  <ListItem key={feature}>
-                    <ListIcon as={CheckIcon} color="green.500" />
-                    {feature}
-                  </ListItem>
-                ))}
-              </List>
-
-              <Button
-                colorScheme={plan.isPopular ? 'red' : 'gray'}
-                size="lg"
-                w="full"
-                onClick={() => handleSelectPlan(plan.value)}
+      <Grid container spacing={4} justifyContent="center">
+        {plans.map((plan) => {
+          const Icon = plan.icon;
+          return (
+            <Grid item xs={12} sm={6} md={4} key={plan.value}>
+              <Paper
+                elevation={plan.isPopular ? 8 : 1}
+                sx={{
+                  p: 4,
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-8px)',
+                  },
+                  ...(plan.isPopular && {
+                    borderColor: 'primary.main',
+                    borderWidth: 2,
+                    borderStyle: 'solid',
+                  }),
+                }}
               >
-                {plan.buttonText}
-              </Button>
-            </VStack>
-          </Box>
-        ))}
-      </SimpleGrid>
+                {plan.isPopular && (
+                  <Typography
+                    sx={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    Populaire
+                  </Typography>
+                )}
+
+                <Stack spacing={3}>
+                  <Box sx={{ textAlign: 'center', mb: 2 }}>
+                    <Icon size={40} style={{ margin: '0 auto', color: theme.palette.primary.main }} />
+                    <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+                      {plan.name}
+                    </Typography>
+                    <Typography variant="h4" color="primary" fontWeight="bold">
+                      {plan.price}
+                    </Typography>
+                  </Box>
+
+                  <List sx={{ flexGrow: 1 }}>
+                    {plan.features.map((feature, index) => (
+                      <ListItem key={index}>
+                        <ListItemIcon>
+                          <CheckCircleIcon color="primary" fontSize="small" />
+                        </ListItemIcon>
+                        <Typography variant="body2">{feature}</Typography>
+                      </ListItem>
+                    ))}
+                  </List>
+
+                  <Button
+                    variant={plan.isPopular ? 'contained' : 'outlined'}
+                    color="primary"
+                    size="large"
+                    fullWidth
+                    onClick={() => handlePlanSelection(plan.value)}
+                  >
+                    {plan.buttonText}
+                  </Button>
+                </Stack>
+              </Paper>
+            </Grid>
+          );
+        })}
+      </Grid>
     </Box>
   );
 };

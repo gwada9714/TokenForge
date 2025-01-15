@@ -1,40 +1,60 @@
 import { 
-  VStack,
+  Stack,
   FormControl,
   FormLabel,
-  Input,
+  TextField,
   Button,
-  useColorModeValue,
-} from '@chakra-ui/react'
+  useTheme,
+  Paper
+} from '@mui/material'
 
 export const CreateTokenForm = () => {
-  const bgColor = useColorModeValue('white', 'gray.800')
+  const theme = useTheme();
   
   return (
-    <VStack 
-      as="form"
-      spacing={4} 
-      align="stretch"
-      p={6}
-      bg={bgColor}
-      borderRadius="lg"
-      boxShadow="sm"
+    <Paper 
+      component="form"
+      elevation={1}
+      sx={{
+        p: 3,
+        borderRadius: 2
+      }}
     >
-      <FormControl isRequired>
-        <FormLabel>Nom du Token</FormLabel>
-        <Input placeholder="Nom du Token" />
-      </FormControl>
-      <FormControl isRequired>
-        <FormLabel>Symbole</FormLabel>
-        <Input placeholder="Symbole" />
-      </FormControl>
-      <FormControl isRequired>
-        <FormLabel>Supply Initial</FormLabel>
-        <Input placeholder="Supply Initial" type="number" />
-      </FormControl>
-      <Button type="submit" size="lg">
-        Créer Token
-      </Button>
-    </VStack>
+      <Stack spacing={3}>
+        <FormControl required>
+          <FormLabel>Nom du Token</FormLabel>
+          <TextField 
+            fullWidth
+            placeholder="Nom du Token"
+            variant="outlined"
+          />
+        </FormControl>
+        <FormControl required>
+          <FormLabel>Symbole</FormLabel>
+          <TextField 
+            fullWidth
+            placeholder="Symbole"
+            variant="outlined"
+          />
+        </FormControl>
+        <FormControl required>
+          <FormLabel>Supply Initial</FormLabel>
+          <TextField 
+            fullWidth
+            placeholder="Supply Initial"
+            type="number"
+            variant="outlined"
+          />
+        </FormControl>
+        <Button 
+          type="submit" 
+          size="large"
+          variant="contained"
+          fullWidth
+        >
+          Créer Token
+        </Button>
+      </Stack>
+    </Paper>
   )
-} 
+}

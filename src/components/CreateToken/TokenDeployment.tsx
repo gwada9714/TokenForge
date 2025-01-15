@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import {
-  VStack,
+  Stack,
   Button,
-  Text,
-  Progress,
+  Typography,
+  LinearProgress,
   Alert,
-  AlertIcon,
   AlertTitle,
-  AlertDescription,
   Box,
-  Heading,
-  useToast,
-} from '@chakra-ui/react';
+  Snackbar
+} from '@mui/material';
 import { TokenConfig } from '@/types/token';
 
 interface TokenDeploymentProps {
@@ -22,7 +19,8 @@ const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentStep, setDeploymentStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const toast = useToast();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const deploymentSteps = [
     'Préparation du contrat',
@@ -47,63 +45,68 @@ const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
-      toast({
-        title: 'Déploiement réussi!',
-        description: 'Votre token a été forgé avec succès.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+      setSnackbarMessage('Déploiement réussi!');
+      setSnackbarOpen(true);
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue lors du déploiement');
+      setSnackbarMessage('Erreur lors du déploiement');
+      setSnackbarOpen(true);
     } finally {
       setIsDeploying(false);
     }
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
   return (
-    <VStack spacing={6} align="stretch">
-      <Heading size="md" mb={4}>Déploiement du Token</Heading>
+    <Stack spacing={3}>
+      <Typography variant="h6" sx={{ mb: 2 }}>Déploiement du Token</Typography>
 
       {error && (
-        <Alert status="error">
-          <AlertIcon />
-          <AlertTitle>Erreur de déploiement!</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          <AlertTitle>Erreur</AlertTitle>
+          {error}
         </Alert>
       )}
 
-      {isDeploying && (
-        <Box>
-          <Text mb={2}>
-            {deploymentSteps[deploymentStep]}... {Math.round((deploymentStep + 1) / deploymentSteps.length * 100)}%
-          </Text>
-          <Progress
-            value={(deploymentStep + 1) / deploymentSteps.length * 100}
-            size="lg"
-            colorScheme="red"
-            hasStripe
-            isAnimated
-          />
-        </Box>
-      )}
+      <Box sx={{ width: '100%', mb: 2 }}>
+        {isDeploying && (
+          <>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+              {deploymentSteps[deploymentStep]}
+            </Typography>
+            <LinearProgress 
+              variant="determinate" 
+              value={(deploymentStep + 1) * (100 / deploymentSteps.length)}
+            />
+          </>
+        )}
+      </Box>
 
       <Button
-        colorScheme="red"
-        size="lg"
+        variant="contained"
+        color="primary"
         onClick={handleDeploy}
-        isLoading={isDeploying}
-        loadingText="Déploiement en cours..."
-        w="full"
+        disabled={isDeploying}
+        sx={{ mt: 2 }}
       >
-        Forger le Token
+        {isDeploying ? 'Déploiement en cours...' : 'Déployer le Token'}
       </Button>
 
-      <Text fontSize="sm" color="gray.500">
-        Le déploiement peut prendre quelques minutes. Veuillez ne pas fermer cette fenêtre
-        pendant le processus.
-      </Text>
-    </VStack>
+      <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+        Le déploiement peut prendre quelques minutes. Veuillez ne pas fermer cette fenêtre.
+      </Typography>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={snackbarMessage}
+      />
+    </Stack>
   );
 };
 
