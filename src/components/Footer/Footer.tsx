@@ -2,30 +2,52 @@ import {
   Box,
   Container,
   Stack,
-  Text,
+  Typography,
   Link,
-  useColorModeValue,
-} from '@chakra-ui/react';
+  useTheme
+} from '@mui/material';
 
 const Footer = () => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+
   return (
     <Box
-      bg={useColorModeValue('gray.50', 'gray.900')}
-      color={useColorModeValue('gray.700', 'gray.200')}
+      sx={{
+        bgcolor: isDarkMode ? 'grey.900' : 'grey.50',
+        color: isDarkMode ? 'grey.200' : 'grey.700',
+        mt: 'auto'
+      }}
     >
       <Container
-        as={Stack}
-        maxW={'6xl'}
-        py={4}
-        spacing={4}
-        justify={'center'}
-        align={'center'}
+        maxWidth="xl"
+        sx={{
+          py: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 2
+        }}
       >
-        <Text> 2025 TokenForge. Tous droits rservs</Text>
-        <Stack direction={'row'} spacing={6}>
-          <Link href={'#'}>Accueil</Link>
-          <Link href={'#'}>Documentation</Link>
-          <Link href={'#'}>Contact</Link>
+        <Typography variant="body2">
+          2025 TokenForge. Tous droits rservs
+        </Typography>
+        <Stack 
+          direction="row" 
+          spacing={3}
+          sx={{
+            '& > a': {
+              color: 'inherit',
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline'
+              }
+            }
+          }}
+        >
+          <Link href="#">Accueil</Link>
+          <Link href="#">Documentation</Link>
+          <Link href="#">Contact</Link>
         </Stack>
       </Container>
     </Box>

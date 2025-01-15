@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, useColorModeValue } from '@chakra-ui/react';
+import { Box, Container, useTheme } from '@mui/material';
 import Header from '../Header';
 import Footer from '../Footer/Footer';
 
@@ -8,20 +8,30 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
-  const containerBg = useColorModeValue('white', 'gray.800');
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
 
   return (
-    <Box minH="100vh" bg={bgColor}>
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        bgcolor: isDarkMode ? 'grey.900' : 'grey.50',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       <Header />
-      <Container
-        maxW="container.xl"
-        py={8}
-        px={4}
-        bg={containerBg}
-        borderRadius="xl"
-        boxShadow="lg"
-        my={8}
+      <Container 
+        maxWidth="xl"
+        sx={{
+          py: 4,
+          px: 2,
+          my: 4,
+          bgcolor: 'background.paper',
+          borderRadius: 2,
+          boxShadow: theme.shadows[4],
+          flex: 1
+        }}
       >
         {children}
       </Container>

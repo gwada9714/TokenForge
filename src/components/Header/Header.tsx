@@ -1,105 +1,125 @@
 import {
   Box,
-  Flex,
+  AppBar,
+  Toolbar,
   Button,
-  useColorModeValue,
   Stack,
-  useColorMode,
-  Image,
-  HStack,
-  Link as ChakraLink,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   IconButton,
-} from '@chakra-ui/react';
+  useTheme,
+  Menu,
+  MenuItem,
+  Link as MuiLink,
+  useMediaQuery
+} from '@mui/material';
 import { Link } from 'react-router-dom';
-import { MoonIcon, SunIcon, HamburgerIcon } from '@chakra-ui/icons';
+import { DarkMode, LightMode, Menu as MenuIcon } from '@mui/icons-material';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useState } from 'react';
 
 const Header = () => {
-  const { colorMode, toggleColorMode } = useColorMode();
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => (
-    <ChakraLink
-      as={Link}
+    <MuiLink
+      component={Link}
       to={to}
-      px={2}
-      py={1}
-      rounded={'md'}
-      _hover={{
+      sx={{
+        px: 2,
+        py: 1,
+        borderRadius: 1,
         textDecoration: 'none',
-        bg: useColorModeValue('gray.200', 'gray.700'),
+        color: 'text.primary',
+        '&:hover': {
+          bgcolor: 'action.hover',
+        },
       }}
     >
       {children}
-    </ChakraLink>
+    </MuiLink>
   );
 
   return (
-    <Box
-      bg={bgColor}
-      px={4}
-      position="sticky"
-      top={0}
-      zIndex={1000}
-      borderBottom={1}
-      borderStyle={'solid'}
-      borderColor={borderColor}
+    <AppBar 
+      position="sticky" 
+      color="default" 
+      elevation={1}
+      sx={{ 
+        bgcolor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}
     >
-      <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
-        <HStack spacing={8} alignItems={'center'}>
-          <Link to="/">
-            <Image
-              src="/images/logo.svg"
-              alt="TokenForge Logo"
-              height="40px"
-              width="40px"
-            />
-          </Link>
+      <Toolbar sx={{ justifyContent: 'space-between' }}>
+        <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center' }}>
+          <img src="/images/logo.svg" alt="TokenForge Logo" style={{ height: 40 }} />
+        </Box>
 
-          {/* Navigation Desktop */}
-          <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
+        {isMobile ? (
+          <>
+            <IconButton
+              edge="end"
+              color="inherit"
+              aria-label="menu"
+              onClick={handleMenuOpen}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem component={Link} to="/create" onClick={handleMenuClose}>
+                Forger un Token
+              </MenuItem>
+              <MenuItem component={Link} to="/tokens" onClick={handleMenuClose}>
+                Mes Tokens
+              </MenuItem>
+              <MenuItem component={Link} to="/plans" onClick={handleMenuClose}>
+                Plans & Tarifs
+              </MenuItem>
+              <MenuItem component={Link} to="/staking" onClick={handleMenuClose}>
+                Staking
+              </MenuItem>
+              <MenuItem component={Link} to="/launchpad" onClick={handleMenuClose}>
+                Launchpad
+              </MenuItem>
+            </Menu>
+          </>
+        ) : (
+          <Stack direction="row" spacing={4} alignItems="center">
             <NavLink to="/create">Forger un Token</NavLink>
             <NavLink to="/tokens">Mes Tokens</NavLink>
             <NavLink to="/plans">Plans & Tarifs</NavLink>
             <NavLink to="/staking">Staking</NavLink>
             <NavLink to="/launchpad">Launchpad</NavLink>
-          </HStack>
-        </HStack>
-
-        {/* Menu Mobile */}
-        <Box display={{ base: 'block', md: 'none' }}>
-          <Menu>
-            <MenuButton
-              as={IconButton}
-              aria-label="Options"
-              icon={<HamburgerIcon />}
-              variant="outline"
-            />
-            <MenuList>
-              <MenuItem as={Link} to="/create">Forger un Token</MenuItem>
-              <MenuItem as={Link} to="/tokens">Mes Tokens</MenuItem>
-              <MenuItem as={Link} to="/plans">Plans & Tarifs</MenuItem>
-              <MenuItem as={Link} to="/staking">Staking</MenuItem>
-              <MenuItem as={Link} to="/launchpad">Launchpad</MenuItem>
-            </MenuList>
-          </Menu>
-        </Box>
-
-        <Flex alignItems={'center'}>
-          <Stack direction={'row'} spacing={7}>
-            <Button onClick={toggleColorMode}>
-              {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
-            </Button>
-            <ConnectButton />
           </Stack>
-        </Flex>
-      </Flex>
-    </Box>
+        )}
+
+        <Stack direction="row" spacing={2} alignItems="center">
+          <ConnectButton />
+          <IconButton 
+            onClick={() => {
+              // You'll need to implement dark mode toggle with MUI
+              document.documentElement.setAttribute('data-theme', theme.palette.mode === 'dark' ? 'light' : 'dark');
+            }}
+            color="inherit"
+          >
+            {theme.palette.mode === 'dark' ? <LightMode /> : <DarkMode />}
+          </IconButton>
+        </Stack>
+      </Toolbar>
+    </AppBar>
   );
 };
 

@@ -1,5 +1,6 @@
 // src/components/TokenCard/TokenCard.tsx
 import React, { memo } from 'react';
+import { Card, CardContent, Typography, Button, Box } from '@mui/material';
 import { truncateAddress } from '../utils';
 
 interface TokenCardProps {
@@ -13,14 +14,38 @@ interface TokenCardProps {
 
 const TokenCard = memo(({ token, onAction }: TokenCardProps) => {
   return (
-    <div className="token-card">
-      <h3>{token.symbol}</h3>
-      <p>Address: {truncateAddress(token.address)}</p>
-      <p>Balance: {token.balance}</p>
-      <button onClick={() => onAction(token.address)}>
-        Manage Token
-      </button>
-    </div>
+    <Card 
+      sx={{ 
+        minWidth: 275,
+        transition: '0.3s',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: (theme) => theme.shadows[4]
+        }
+      }}
+    >
+      <CardContent>
+        <Typography variant="h5" component="h3" gutterBottom>
+          {token.symbol}
+        </Typography>
+        <Box sx={{ mb: 1.5 }}>
+          <Typography variant="body2" color="text.secondary">
+            Address: {truncateAddress(token.address)}
+          </Typography>
+          <Typography variant="body1">
+            Balance: {token.balance}
+          </Typography>
+        </Box>
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={() => onAction(token.address)}
+          sx={{ mt: 2 }}
+        >
+          Manage Token
+        </Button>
+      </CardContent>
+    </Card>
   );
 });
 

@@ -3,21 +3,15 @@ import {
   Box,
   Stepper,
   Step,
-  StepIndicator,
-  StepStatus,
-  StepIcon,
-  StepNumber,
-  StepTitle,
-  StepDescription,
-  StepSeparator,
-  useSteps,
+  StepLabel,
   Container,
-  Heading,
+  Typography,
   Card,
-  CardBody,
+  CardContent,
   Button,
-  HStack,
-} from '@chakra-ui/react';
+  Stack,
+  StepContent,
+} from '@mui/material';
 import { TokenConfig } from '@/types/token';
 import PlanSelection from './PlanSelection';
 import TokenConfiguration from './TokenConfiguration';
@@ -32,10 +26,7 @@ const steps = [
 ];
 
 const CreateToken: React.FC = () => {
-  const { activeStep, setActiveStep } = useSteps({
-    index: 0,
-    count: steps.length,
-  });
+  const [activeStep, setActiveStep] = useState(0);
   const [tokenConfig, setTokenConfig] = useState<TokenConfig>({
     plan: '',
     name: '',
@@ -44,6 +35,14 @@ const CreateToken: React.FC = () => {
     decimals: 18,
     features: [],
   });
+
+  const handleNext = () => {
+    setActiveStep((prevStep) => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevStep) => prevStep - 1);
+  };
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -60,62 +59,49 @@ const CreateToken: React.FC = () => {
     }
   };
 
-  const handleNext = () => {
-    if (activeStep < steps.length - 1) {
-      setActiveStep(activeStep + 1);
-    }
-  };
-
-  const handleBack = () => {
-    if (activeStep > 0) {
-      setActiveStep(activeStep - 1);
-    }
-  };
-
   return (
-    <Container maxW="container.lg" py={8}>
-      <Heading mb={8} textAlign="center">Forge de Token</Heading>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 4 }}>
+        Forge de Token
+      </Typography>
       
-      <Stepper index={activeStep} mb={8}>
-        {steps.map((step, index) => (
-          <Step key={index}>
-            <StepIndicator>
-              <StepStatus
-                complete={<StepIcon />}
-                incomplete={<StepNumber />}
-                active={<StepNumber />}
-              />
-            </StepIndicator>
-            <Box flexShrink='0'>
-              <StepTitle>{step.title}</StepTitle>
-              <StepDescription>{step.description}</StepDescription>
-            </Box>
-            <StepSeparator />
-          </Step>
-        ))}
-      </Stepper>
-
-      <Card>
-        <CardBody>
-          {renderStepContent()}
-          
-          <HStack justify="space-between" mt={6}>
-            <Button
-              onClick={handleBack}
-              isDisabled={activeStep === 0}
-              variant="outline"
-            >
-              Retour
-            </Button>
-            <Button
-              onClick={handleNext}
-              isDisabled={activeStep === steps.length - 1}
-              colorScheme="red"
-            >
-              {activeStep === steps.length - 2 ? 'Déployer' : 'Suivant'}
-            </Button>
-          </HStack>
-        </CardBody>
+      <Card sx={{ mb: 4 }}>
+        <CardContent>
+          <Stepper activeStep={activeStep} orientation="vertical">
+            {steps.map((step, index) => (
+              <Step key={step.title}>
+                <StepLabel
+                  optional={
+                    <Typography variant="caption">{step.description}</Typography>
+                  }
+                >
+                  {step.title}
+                </StepLabel>
+                <StepContent>
+                  <Box sx={{ mb: 2 }}>
+                    {renderStepContent()}
+                    <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                      <Button
+                        disabled={activeStep === 0}
+                        onClick={handleBack}
+                        variant="outlined"
+                      >
+                        Retour
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={handleNext}
+                        disabled={activeStep === steps.length - 1}
+                      >
+                        {activeStep === steps.length - 1 ? 'Terminer' : 'Suivant'}
+                      </Button>
+                    </Stack>
+                  </Box>
+                </StepContent>
+              </Step>
+            ))}
+          </Stepper>
+        </CardContent>
       </Card>
     </Container>
   );
