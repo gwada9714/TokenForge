@@ -1,6 +1,7 @@
 import { createTheme } from '@mui/material/styles';
 
 const muiTheme = createTheme({
+  spacing: (factor: number) => `${0.25 * factor}rem`,
   palette: {
     primary: {
       main: '#006BFF',
@@ -42,6 +43,27 @@ const muiTheme = createTheme({
         root: {
           textTransform: 'none',
           borderRadius: '8px',
+        },
+      },
+    },
+    MuiBox: {
+      defaultProps: {
+        component: 'div',
+      },
+    },
+    MuiTypography: {
+      defaultProps: {
+        variantMapping: {
+          h1: 'h1',
+          h2: 'h2',
+          h3: 'h3',
+          h4: 'h4',
+          h5: 'h5',
+          h6: 'h6',
+          subtitle1: 'h6',
+          subtitle2: 'h6',
+          body1: 'p',
+          body2: 'p',
         },
       },
     },
