@@ -2,7 +2,7 @@ import { createConfig } from 'wagmi';
 import { http, createPublicClient } from 'viem';
 import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
-import { supportedChains } from './chains';
+import { supportedChains, defaultChain } from './chains';
 import { type Chain } from 'viem';
 
 // Vérification des variables d'environnement requises
@@ -21,16 +21,7 @@ Object.entries(requiredEnvVars).forEach(([key, value]) => {
 const projectId = requiredEnvVars.VITE_WALLET_CONNECT_PROJECT_ID as string;
 
 // Convert readonly chains to mutable array for RainbowKit
-const mutableChains: Chain[] = [...supportedChains].filter(chain => {
-  try {
-    // Vérifie si la chaîne a une URL RPC valide
-    const rpcUrl = chain.rpcUrls.default.http[0];
-    return !!rpcUrl && rpcUrl.startsWith('http');
-  } catch (error) {
-    console.warn(`Chain ${chain.name} skipped due to invalid RPC URL`);
-    return false;
-  }
-});
+const mutableChains: Chain[] = [...supportedChains];
 
 if (mutableChains.length === 0) {
   throw new Error('No valid chains configured. Please check your RPC URLs.');
@@ -44,19 +35,17 @@ const { connectors } = getDefaultWallets({
 
 // Create public client with fallback
 const publicClient = createPublicClient({
-  chain: mutableChains[0],
+  chain: defaultChain,
   transport: http(),
   batch: {
     multicall: true
   },
-  pollingInterval: 4_000
 });
 
-// Configuration Wagmi avec gestion des erreurs
-export const wagmiConfig = createConfig({
-  connectors,
+export const config = createConfig({
+  autoConnect: true,
   publicClient,
-  autoConnect: true
+  connectors
 });
 
 // Export des chaînes supportées pour RainbowKit

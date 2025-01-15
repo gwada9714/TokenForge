@@ -37,6 +37,19 @@ const contractAddresses = {
 const chainsConfig: ChainConfig[] = [
   {
     chain: {
+      ...sepolia,
+      rpcUrls: {
+        ...sepolia.rpcUrls,
+        default: {
+          http: [import.meta.env.VITE_SEPOLIA_RPC_URL],
+        },
+      },
+    },
+    contractAddress: contractAddresses.sepolia,
+    name: 'Sepolia Testnet'
+  },
+  {
+    chain: {
       ...mainnet,
       rpcUrls: {
         ...mainnet.rpcUrls,
@@ -47,34 +60,19 @@ const chainsConfig: ChainConfig[] = [
     },
     contractAddress: contractAddresses.mainnet,
     name: 'Ethereum Mainnet'
-  },
-  {
-    chain: {
-      ...sepolia,
-      rpcUrls: {
-        ...sepolia.rpcUrls,
-        default: {
-          http: [import.meta.env.VITE_SEPOLIA_RPC_URL],
-        },
-      },
-    },
-    contractAddress: contractAddresses.sepolia,
-    name: 'Sepolia'
   }
 ];
 
 // Filtrer les chaînes qui ont des adresses de contrat valides
 export const supportedChains = chainsConfig
   .filter(({ contractAddress }) => contractAddress !== null)
-  .map(({ chain, contractAddress, name }) => ({
-    ...chain,
-    contracts: {
-      tokenFactory: {
-        address: contractAddress!,
-        blockCreated: name === 'Sepolia' ? 4728124 : 0,
-      },
-    },
-  })) as Chain[];
+  .map(({ chain }) => chain);
+
+// Export the chain IDs
+export const supportedChainIds = supportedChains.map(chain => chain.id);
+
+// Get the default chain (Sepolia for development)
+export const defaultChain = supportedChains.find(chain => chain.id === sepolia.id) || supportedChains[0];
 
 if (supportedChains.length === 0) {
   console.warn('Aucune chaîne n\'est configurée avec des adresses TokenFactory valides');
