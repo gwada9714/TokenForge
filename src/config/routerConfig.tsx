@@ -13,6 +13,8 @@ const StakingPage = lazy(() => import('../pages/Staking'));
 const LaunchpadPage = lazy(() => import('../pages/Launchpad'));
 const TokensPage = lazy(() => import('../pages/Tokens'));
 const CreateTokenPage = lazy(() => import('../pages/CreateToken'));
+const TokenDetailsPage = lazy(() => import('../pages/TokenDetails'));
+const PlansPage = lazy(() => import('../pages/Plans'));
 
 // Define routes configuration
 export const routes: RouteObject[] = [
@@ -45,10 +47,26 @@ export const routes: RouteObject[] = [
     )
   },
   {
+    path: '/tokens/:tokenAddress',
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <TokenDetailsPage />
+      </Suspense>
+    )
+  },
+  {
     path: '/tokens/create',
     element: (
       <Suspense fallback={<LoadingComponent />}>
         <CreateTokenPage />
+      </Suspense>
+    )
+  },
+  {
+    path: '/plans',
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <PlansPage />
       </Suspense>
     )
   }
