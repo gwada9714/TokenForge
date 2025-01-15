@@ -37,8 +37,16 @@ export const CreatePool: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.token || !formData.tokenPrice || !formData.softCap || !formData.hardCap || !formData.maxContribution) {
+      setSnackbar({
+        open: true,
+        message: 'Please fill in all fields',
+        severity: 'error'
+      });
+      return;
+    }
 
     const startTimestamp = new Date(formData.startTime).getTime() / 1000;
     const endTimestamp = new Date(formData.endTime).getTime() / 1000;
@@ -52,30 +60,30 @@ export const CreatePool: React.FC = () => {
       return;
     }
 
-    createPool(
-      formData.token,
-      formData.tokenPrice,
-      formData.hardCap,
-      formData.softCap,
-      formData.minContribution,
-      formData.maxContribution,
-      startTimestamp,
-      endTimestamp
-    )
-      .then(() => {
-        setSnackbar({
-          open: true,
-          message: 'Pool created successfully',
-          severity: 'success'
-        });
-      })
-      .catch((error) => {
-        setSnackbar({
-          open: true,
-          message: error.message || 'Failed to create pool',
-          severity: 'error'
-        });
+    try {
+      await createPool(
+        formData.token,
+        formData.tokenPrice,
+        formData.hardCap,
+        formData.softCap,
+        formData.minContribution,
+        formData.maxContribution,
+        startTimestamp,
+        endTimestamp
+      );
+      
+      setSnackbar({
+        open: true,
+        message: 'Pool created successfully',
+        severity: 'success'
       });
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Failed to create pool',
+        severity: 'error'
+      });
+    }
   };
 
   const handleCloseSnackbar = () => {

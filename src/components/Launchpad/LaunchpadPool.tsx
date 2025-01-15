@@ -7,7 +7,9 @@ import {
   Stack,
   LinearProgress,
   Badge,
+  Typography,
 } from '@mui/material';
+import { useLaunchpad } from '../../hooks/useLaunchpad';
 
 interface LaunchpadPoolProps {
   poolId: number;
@@ -56,14 +58,14 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
   return (
     <Card sx={{ p: 6, maxWidth: 'xl', mx: 'auto', mt: 8 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
-        <Box variant="h5">Pool #{poolId}</Box>
+        <Typography variant="h5">Pool #{poolId}</Typography>
         {getPoolStatus()}
       </Stack>
 
       <Box mb={6}>
-        <Box variant="subtitle1" mb={2}>
+        <Typography variant="subtitle1" mb={2}>
           Pool Information
-        </Box>
+        </Typography>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Box>Token Address:</Box>
           <Box>{poolInfo.token}</Box>
@@ -82,17 +84,17 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
       </Box>
 
       <Box mb={6}>
-        <Box variant="subtitle1" mb={2}>
+        <Typography variant="subtitle1" mb={2}>
           Your Contribution
-        </Box>
+        </Typography>
         <Box>{userContribution} ETH</Box>
       </Box>
 
       {isLive && !poolInfo.finalized && !poolInfo.cancelled && (
         <Box mb={6}>
-          <Box variant="subtitle1" mb={2}>
+          <Typography variant="subtitle1" mb={2}>
             Contribute
-          </Box>
+          </Typography>
           <Stack direction="row" gap={2}>
             <TextField
               type="number"

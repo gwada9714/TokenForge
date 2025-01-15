@@ -139,11 +139,11 @@ const Home = () => {
 
       <Box py={10} sx={{ background: 'white' }}>
         <Container maxWidth="lg">
-          <Flex justify="center">
+          <Stack direction="row" justifyContent="center">
             <Typography color="text.secondary">
               2025 TokenForge. All rights reserved.
             </Typography>
-          </Flex>
+          </Stack>
         </Container>
       </Box>
     </Box>
