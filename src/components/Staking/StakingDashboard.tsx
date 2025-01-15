@@ -12,7 +12,7 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { formatEther, parseEther } from 'viem';
+import { formatEther, parseEther, hexToBigInt } from 'viem';
 import { useStaking } from '@/hooks/useStaking';
 import { STAKING_CONFIG } from '@/constants/tokenforge';
 import TokenIcon from '@mui/icons-material/Token';
@@ -62,7 +62,7 @@ const StakingDashboard: React.FC = () => {
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
     return {
-      totalStaked: formatEther(stakingStats.totalStaked),
+      totalStaked: formatEther(hexToBigInt(stakingStats.totalStaked)),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };
@@ -70,12 +70,14 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    await stake(parseEther(stakeAmount));
+    const amount = parseEther(stakeAmount);
+    await stake(hexToBigInt(amount));
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    await withdraw(parseEther(withdrawAmount));
+    const amount = parseEther(withdrawAmount);
+    await withdraw(hexToBigInt(amount));
   };
 
   const handleClaimRewards = async () => {

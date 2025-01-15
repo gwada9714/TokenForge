@@ -21,6 +21,7 @@ import { Virtuoso } from 'react-virtuoso';
 import { useUserTokens } from '../../hooks/useUserTokens';
 import { useTokenStats } from '../../hooks/useTokenStats';
 import { TokenIcon } from '../TokenDisplay/TokenIcon';
+import CircularProgress from '@mui/material/CircularProgress';
 
 interface TokenData {
   address: string;
@@ -155,10 +156,18 @@ const useGlobalStats = () => {
   }, [tokens, isLoading, error]);
 };
 
-const Dashboard: React.FC = () => {
+const Dashboard = memo(() => {
   const navigate = useNavigate();
   const { tokens, isLoading } = useUserTokens();
   
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   const statsCards = useMemo(() => (
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6}>
@@ -254,6 +263,6 @@ const Dashboard: React.FC = () => {
       </Grid>
     </Box>
   );
-};
+});
 
 export default memo(Dashboard);
