@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
 import {
   Card,
+  CardContent,
   Button,
-  Input,
-  Text,
+  TextField,
+  Typography,
   FormControl,
   FormLabel,
-  VStack,
-  useToast,
-} from '@chakra-ui/react';
+  Stack,
+  Snackbar,
+  Alert,
+} from '@mui/material';
 import { useLaunchpad } from '../../hooks/useLaunchpad';
 
 export const CreatePool: React.FC = () => {
-  const toast = useToast();
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'error' as 'error' | 'success' | 'info' | 'warning'
+  });
   const { createPool, isCreating } = useLaunchpad();
 
   const [formData, setFormData] = useState({
@@ -38,10 +44,10 @@ export const CreatePool: React.FC = () => {
     const endTimestamp = new Date(formData.endTime).getTime() / 1000;
 
     if (startTimestamp >= endTimestamp) {
-      toast({
-        title: 'Invalid dates',
-        description: 'End time must be after start time',
-        status: 'error',
+      setSnackbar({
+        open: true,
+        message: 'End time must be after start time',
+        severity: 'error'
       });
       return;
     }
@@ -55,118 +61,163 @@ export const CreatePool: React.FC = () => {
       formData.maxContribution,
       startTimestamp,
       endTimestamp
-    );
+    )
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: 'Pool created successfully',
+          severity: 'success'
+        });
+      })
+      .catch((error) => {
+        setSnackbar({
+          open: true,
+          message: error.message || 'Failed to create pool',
+          severity: 'error'
+        });
+      });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   return (
-    <Card p={6} maxW="xl" mx="auto" mt={8}>
-      <Text variant="h5" mb={4}>
-        Create Launchpad Pool
-      </Text>
+    <Card>
+      <CardContent>
+        <form onSubmit={handleSubmit}>
+          <Stack spacing={3}>
+            <Typography variant="h6" gutterBottom>
+              Create Launchpad Pool
+            </Typography>
 
-      <form onSubmit={handleSubmit}>
-        <VStack spacing={4}>
-          <FormControl isRequired>
-            <FormLabel>Token Address</FormLabel>
-            <Input
-              name="token"
-              value={formData.token}
-              onChange={handleInputChange}
-              placeholder="0x..."
-            />
-          </FormControl>
+            <FormControl>
+              <FormLabel>Token Address</FormLabel>
+              <TextField
+                fullWidth
+                name="token"
+                value={formData.token}
+                onChange={handleInputChange}
+                placeholder="Token contract address"
+                required
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Token Price (ETH)</FormLabel>
-            <Input
-              name="tokenPrice"
-              type="number"
-              step="0.000000000000000001"
-              value={formData.tokenPrice}
-              onChange={handleInputChange}
-              placeholder="0.0"
-            />
-          </FormControl>
+            <FormControl>
+              <FormLabel>Token Price</FormLabel>
+              <TextField
+                fullWidth
+                name="tokenPrice"
+                type="number"
+                value={formData.tokenPrice}
+                onChange={handleInputChange}
+                placeholder="Price per token"
+                required
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Hard Cap (ETH)</FormLabel>
-            <Input
-              name="hardCap"
-              type="number"
-              step="0.01"
-              value={formData.hardCap}
-              onChange={handleInputChange}
-              placeholder="100"
-            />
-          </FormControl>
+            <FormControl>
+              <FormLabel>Hard Cap</FormLabel>
+              <TextField
+                fullWidth
+                name="hardCap"
+                type="number"
+                value={formData.hardCap}
+                onChange={handleInputChange}
+                placeholder="Maximum amount to raise"
+                required
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Soft Cap (ETH)</FormLabel>
-            <Input
-              name="softCap"
-              type="number"
-              step="0.01"
-              value={formData.softCap}
-              onChange={handleInputChange}
-              placeholder="50"
-            />
-          </FormControl>
+            <FormControl>
+              <FormLabel>Soft Cap</FormLabel>
+              <TextField
+                fullWidth
+                name="softCap"
+                type="number"
+                value={formData.softCap}
+                onChange={handleInputChange}
+                placeholder="Minimum amount to raise"
+                required
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Minimum Contribution (ETH)</FormLabel>
-            <Input
-              name="minContribution"
-              type="number"
-              step="0.01"
-              value={formData.minContribution}
-              onChange={handleInputChange}
-              placeholder="0.1"
-            />
-          </FormControl>
+            <FormControl>
+              <FormLabel>Minimum Contribution</FormLabel>
+              <TextField
+                fullWidth
+                name="minContribution"
+                type="number"
+                value={formData.minContribution}
+                onChange={handleInputChange}
+                placeholder="Minimum contribution amount"
+                required
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Maximum Contribution (ETH)</FormLabel>
-            <Input
-              name="maxContribution"
-              type="number"
-              step="0.01"
-              value={formData.maxContribution}
-              onChange={handleInputChange}
-              placeholder="10"
-            />
-          </FormControl>
+            <FormControl>
+              <FormLabel>Maximum Contribution</FormLabel>
+              <TextField
+                fullWidth
+                name="maxContribution"
+                type="number"
+                value={formData.maxContribution}
+                onChange={handleInputChange}
+                placeholder="Maximum contribution amount"
+                required
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Start Time</FormLabel>
-            <Input
-              name="startTime"
-              type="datetime-local"
-              value={formData.startTime}
-              onChange={handleInputChange}
-            />
-          </FormControl>
+            <FormControl>
+              <FormLabel>Start Time</FormLabel>
+              <TextField
+                fullWidth
+                name="startTime"
+                type="datetime-local"
+                value={formData.startTime}
+                onChange={handleInputChange}
+                required
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>End Time</FormLabel>
-            <Input
-              name="endTime"
-              type="datetime-local"
-              value={formData.endTime}
-              onChange={handleInputChange}
-            />
-          </FormControl>
+            <FormControl>
+              <FormLabel>End Time</FormLabel>
+              <TextField
+                fullWidth
+                name="endTime"
+                type="datetime-local"
+                value={formData.endTime}
+                onChange={handleInputChange}
+                required
+              />
+            </FormControl>
 
-          <Button
-            type="submit"
-            colorScheme="blue"
-            isLoading={isCreating}
-            loadingText="Creating"
-            w="full"
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isCreating}
+              sx={{ mt: 2 }}
+            >
+              {isCreating ? 'Creating...' : 'Create Pool'}
+            </Button>
+          </Stack>
+        </form>
+
+        <Snackbar 
+          open={snackbar.open} 
+          autoHideDuration={6000} 
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert 
+            onClose={handleCloseSnackbar} 
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
           >
-            Create Pool
-          </Button>
-        </VStack>
-      </form>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </CardContent>
     </Card>
   );
 };
