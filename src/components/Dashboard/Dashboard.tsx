@@ -1,22 +1,33 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Grid, Text } from '@chakra-ui/react';
+import { Box, Button, Grid, Typography, Paper } from '@mui/material';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <Box p={4}>
-      <Grid templateColumns="repeat(3, 1fr)" gap={6}>
-        <Box p={5} shadow="md" borderWidth="1px">
-          <Text fontSize="xl" mb={4}>Create New Token</Text>
-          <Button
-            colorScheme="blue"
-            onClick={() => navigate('/tokens/create')}
+    <Box sx={{ p: 2 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={4}>
+          <Paper 
+            elevation={1}
+            sx={{ 
+              p: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
+            }}
           >
-            Create Token
-          </Button>
-        </Box>
+            <Typography variant="h6">Create New Token</Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => navigate('/tokens/create')}
+            >
+              Create Token
+            </Button>
+          </Paper>
+        </Grid>
       </Grid>
     </Box>
   );

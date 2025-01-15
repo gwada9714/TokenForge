@@ -1,9 +1,17 @@
-import { Box, Text } from '@chakra-ui/react'
+import { Box, Typography } from '@mui/material'
 
 export const Footer = () => {
   return (
-    <Box as="footer" p={4} textAlign="center">
-      <Text>© 2024 TokenForge. Tous droits réservés.</Text>
+    <Box 
+      component="footer" 
+      sx={{ 
+        p: 2,
+        textAlign: 'center'
+      }}
+    >
+      <Typography variant="body2" color="text.secondary">
+        2024 TokenForge. Tous droits rservs.
+      </Typography>
     </Box>
   )
-} 
+}
