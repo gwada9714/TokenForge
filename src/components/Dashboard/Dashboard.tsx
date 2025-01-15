@@ -64,26 +64,35 @@ interface IToken {
     price: string;
     marketCap: string;
   };
+  // Ajout des statistiques de taxe
+  taxStats?: {
+    totalTaxCollected: bigint;
+    totalTransactions: number;
+  };
+  tier: 'basic' | 'premium';
 }
 
 const StatCard = memo<{
   title: string;
   value: string;
   icon: React.ReactNode;
-  isLoading?: boolean;
-}>(({ title, value, icon, isLoading }) => (
+  subValue?: string;
+}>(({ title, value, icon, subValue }) => (
   <Card>
     <CardContent>
       <Box display="flex" alignItems="center" gap={1} mb={1}>
         {icon}
-        <Typography color="text.secondary" variant="subtitle2">
+        <Typography variant="h6" component="div">
           {title}
         </Typography>
       </Box>
-      {isLoading ? (
-        <CircularProgress size={20} />
-      ) : (
-        <Typography variant="h5">{value}</Typography>
+      <Typography variant="h4" component="div">
+        {value}
+      </Typography>
+      {subValue && (
+        <Typography variant="body2" color="text.secondary">
+          {subValue}
+        </Typography>
       )}
     </CardContent>
   </Card>
@@ -146,6 +155,35 @@ const TokensTable = memo<{ tokens: IToken[] | undefined; isLoading: boolean }>((
   );
 });
 
+// Ajout des hooks pour les statistiques globales
+const useGlobalStats = () => {
+  const { data: tokenStats } = useTokenStats();
+  
+  return useMemo(() => {
+    let totalTaxCollected = BigInt(0);
+    let totalTransactions = 0;
+    let totalTokens = tokenStats?.length || 0;
+    let totalPremiumTokens = 0;
+
+    tokenStats?.forEach(token => {
+      if (token.taxStats) {
+        totalTaxCollected += token.taxStats.totalTaxCollected;
+        totalTransactions += token.taxStats.totalTransactions;
+      }
+      if (token.tier === 'premium') {
+        totalPremiumTokens++;
+      }
+    });
+
+    return {
+      totalTaxCollected,
+      totalTransactions,
+      totalTokens,
+      totalPremiumTokens
+    };
+  }, [tokenStats]);
+};
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { chain } = useNetwork();
@@ -162,6 +200,8 @@ const Dashboard: React.FC = () => {
     tokens,
     isLoading: isTokensLoading
   } = useUserTokens(selectedNetwork?.chain.id);
+
+  const globalStats = useGlobalStats();
 
   const statsCards = useMemo(() => (
     <Grid container spacing={2}>
@@ -197,8 +237,39 @@ const Dashboard: React.FC = () => {
           isLoading={isStatsLoading}
         />
       </Grid>
+      <Grid item xs={12} sm={6}>
+        <StatCard
+          title="Tokens Créés"
+          value={globalStats.totalTokens.toString()}
+          icon={<TokenIcon />}
+          subValue={`${globalStats.totalPremiumTokens} Premium`}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <StatCard
+          title="Taxes Collectées"
+          value={formatEther(globalStats.totalTaxCollected)}
+          icon={<AccountBalanceWalletIcon />}
+          subValue="Total depuis le lancement"
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <StatCard
+          title="Transactions"
+          value={globalStats.totalTransactions.toString()}
+          icon={<ShowChartIcon />}
+          subValue="Transactions totales"
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <StatCard
+          title="Réseau Actif"
+          value={chain?.name || 'Non connecté'}
+          icon={<GroupIcon />}
+        />
+      </Grid>
     </Grid>
-  ), [stats, tokens, isStatsLoading, isTokensLoading]);
+  ), [stats, tokens, isStatsLoading, isTokensLoading, globalStats]);
 
   return (
     <Box sx={{ p: 2 }}>

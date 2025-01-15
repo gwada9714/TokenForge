@@ -1,171 +1,168 @@
-import React, { useMemo, useCallback } from 'react';
+import React from 'react';
 import {
   Box,
-  Grid,
-  Stack,
+  Card,
+  CardContent,
   Typography,
   Button,
-  List,
-  ListItem,
-  ListItemIcon,
-  Paper,
-  useTheme,
+  Grid,
+  FormControlLabel,
+  Switch,
+  Tooltip,
+  Stack
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { FaHammer, FaGem, FaCrown } from 'react-icons/fa';
-import { PlanSelectionProps } from '@/types/components';
-import { TokenConfig } from '@/types/token';
+import { formatEther } from 'viem';
+import TokenIcon from '@mui/icons-material/Token';
+import StarIcon from '@mui/icons-material/Star';
 
-const plans = [
-  {
-    name: 'Apprenti Forgeron',
-    price: 'Gratuit',
-    icon: FaHammer,
-    features: [
-      'Création de token simple sur testnet',
-      'Fonctionnalités très limitées',
-      'Code non audité',
-    ],
-    buttonText: 'Commencer',
-    value: 'apprentice',
-    isPopular: false,
-  },
-  {
-    name: 'Forgeron',
-    price: '0.3 BNB',
-    icon: FaGem,
-    features: [
-      'Création de token sur mainnet',
-      'Fonctionnalités de base',
-      'Option de taxe de la forge',
-      'Audit de sécurité en option',
-      'Support standard',
-    ],
-    buttonText: 'Choisir ce Plan',
-    value: 'smith',
-    isPopular: true,
-  },
-  {
-    name: 'Maître Forgeron',
-    price: '0.5 BNB',
-    icon: FaCrown,
-    features: [
-      'Toutes les fonctionnalités disponibles',
-      'Audit de sécurité inclus',
-      'Support prioritaire',
-      'Accès aux fonctionnalités avancées',
-      'Personnalisation complète',
-      'Listing prioritaire',
-    ],
-    buttonText: 'Devenir Maître',
-    value: 'master',
-    isPopular: false,
-  },
-] as const;
+interface PlanSelectionProps {
+  selectedPlan: 'basic' | 'premium';
+  onPlanSelect: (plan: 'basic' | 'premium') => void;
+  price: bigint;
+  tknBalance: bigint;
+  payWithTKN: boolean;
+  onPaymentMethodChange: (payWithTKN: boolean) => void;
+}
 
-const PlanSelection: React.FC<PlanSelectionProps> = React.memo(({ setTokenConfig }) => {
-  const theme = useTheme();
+const PlanCard: React.FC<{
+  title: string;
+  price: string;
+  features: string[];
+  selected: boolean;
+  isPremium?: boolean;
+  onClick: () => void;
+}> = ({ title, price, features, selected, isPremium, onClick }) => (
+  <Card 
+    sx={{ 
+      height: '100%',
+      border: selected ? 2 : 1,
+      borderColor: selected ? 'primary.main' : 'divider',
+      position: 'relative',
+      cursor: 'pointer'
+    }}
+    onClick={onClick}
+  >
+    {isPremium && (
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          color: 'warning.main'
+        }}
+      >
+        <StarIcon />
+      </Box>
+    )}
+    <CardContent>
+      <Typography variant="h5" component="div" gutterBottom>
+        {title}
+      </Typography>
+      <Typography variant="h4" color="primary" gutterBottom>
+        {price} TKN
+      </Typography>
+      <Box mt={2}>
+        {features.map((feature, index) => (
+          <Typography
+            key={index}
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 1 }}
+          >
+            • {feature}
+          </Typography>
+        ))}
+      </Box>
+    </CardContent>
+  </Card>
+);
 
-  const handlePlanSelection = useCallback((planValue: string) => {
-    setTokenConfig((prev: TokenConfig) => ({
-      ...prev,
-      plan: planValue,
-    }));
-  }, [setTokenConfig]);
+const PlanSelection: React.FC<PlanSelectionProps> = ({
+  selectedPlan,
+  onPlanSelect,
+  price,
+  tknBalance,
+  payWithTKN,
+  onPaymentMethodChange
+}) => {
+  const basicFeatures = [
+    'Création de token ERC20',
+    'Fonctions de base (Mint, Burn)',
+    'Support multi-chain',
+    'Taxe de la forge incluse'
+  ];
 
-  const planCards = useMemo(() => plans.map((plan) => {
-    const Icon = plan.icon;
-    return (
-      <Grid item xs={12} sm={6} md={4} key={plan.value}>
-        <Paper
-          elevation={plan.isPopular ? 8 : 1}
-          sx={{
-            p: 4,
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative',
-            transition: 'transform 0.2s',
-            '&:hover': {
-              transform: 'translateY(-8px)',
-              boxShadow: theme.shadows[plan.isPopular ? 12 : 4],
-            },
-            ...(plan.isPopular && {
-              border: `2px solid ${theme.palette.primary.main}`,
-            }),
-          }}
-        >
-          {plan.isPopular && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                px: 2,
-                py: 0.5,
-                borderRadius: 1,
-              }}
-            >
-              Populaire
-            </Box>
-          )}
+  const premiumFeatures = [
+    ...basicFeatures,
+    'Fonctionnalités avancées',
+    'Priorité dans le support',
+    'Accès aux futures fonctionnalités',
+    'Badge Premium'
+  ];
 
-          <Stack spacing={3} sx={{ height: '100%' }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Icon size={40} color={theme.palette.primary.main} />
-              <Typography variant="h5" component="h3" sx={{ mt: 2 }}>
-                {plan.name}
-              </Typography>
-              <Typography variant="h4" component="p" sx={{ mt: 2, fontWeight: 'bold' }}>
-                {plan.price}
-              </Typography>
-            </Box>
-
-            <List sx={{ flexGrow: 1 }}>
-              {plan.features.map((feature, index) => (
-                <ListItem key={index} sx={{ px: 0 }}>
-                  <ListItemIcon sx={{ minWidth: 36 }}>
-                    <CheckCircleIcon color="primary" fontSize="small" />
-                  </ListItemIcon>
-                  <Typography variant="body2">{feature}</Typography>
-                </ListItem>
-              ))}
-            </List>
-
-            <Button
-              variant={plan.isPopular ? 'contained' : 'outlined'}
-              color="primary"
-              fullWidth
-              onClick={() => handlePlanSelection(plan.value)}
-              sx={{ mt: 'auto' }}
-            >
-              {plan.buttonText}
-            </Button>
-          </Stack>
-        </Paper>
-      </Grid>
-    );
-  }), [theme, handlePlanSelection]);
+  const formattedPrice = formatEther(price);
+  const hasEnoughTKN = tknBalance >= price;
 
   return (
-    <Box sx={{ py: 4 }}>
-      <Typography 
-        variant="h4" 
-        component="h2" 
-        align="center"
-        gutterBottom
-        sx={{ mb: 4 }}
-      >
+    <Box>
+      <Typography variant="h6" gutterBottom>
         Choisissez votre Plan
       </Typography>
-
-      <Grid container spacing={4} justifyContent="center">
-        {planCards}
+      
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={6}>
+          <PlanCard
+            title="Forgeron"
+            price={formattedPrice}
+            features={basicFeatures}
+            selected={selectedPlan === 'basic'}
+            onClick={() => onPlanSelect('basic')}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <PlanCard
+            title="Maître Forgeron"
+            price={formattedPrice}
+            features={premiumFeatures}
+            selected={selectedPlan === 'premium'}
+            isPremium
+            onClick={() => onPlanSelect('premium')}
+          />
+        </Grid>
       </Grid>
+
+      <Stack spacing={2}>
+        <Box display="flex" alignItems="center" gap={2}>
+          <TokenIcon color={hasEnoughTKN ? 'primary' : 'error'} />
+          <Typography>
+            Balance TKN: {formatEther(tknBalance)} TKN
+          </Typography>
+        </Box>
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={payWithTKN}
+              onChange={(e) => onPaymentMethodChange(e.target.checked)}
+            />
+          }
+          label={
+            <Tooltip title="Payez en TKN pour obtenir une réduction de 20%">
+              <Typography>
+                Payer en TKN (-20%)
+              </Typography>
+            </Tooltip>
+          }
+        />
+
+        {!hasEnoughTKN && payWithTKN && (
+          <Typography color="error">
+            Balance TKN insuffisante. Veuillez acheter plus de TKN ou choisir un autre mode de paiement.
+          </Typography>
+        )}
+      </Stack>
     </Box>
   );
-});
+};
 
-export default PlanSelection;
+export default React.memo(PlanSelection);

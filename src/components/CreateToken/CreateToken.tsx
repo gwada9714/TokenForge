@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useCallback, useMemo } from 'react';
 import {
   Box,
   Stepper,
@@ -14,19 +14,14 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { TokenConfig } from '@/types/token';
+import { useNetwork, useAccount, useBalance } from 'wagmi';
+import { TKN_TOKEN_ADDRESS, PREMIUM_TIER_PRICE, BASIC_TIER_PRICE, TKN_PAYMENT_DISCOUNT } from '@/constants';
 
 // Lazy loading des composants
 const PlanSelection = lazy(() => import('./PlanSelection'));
 const TokenConfiguration = lazy(() => import('./TokenConfiguration'));
 const TokenVerification = lazy(() => import('./TokenVerification'));
 const TokenDeployment = lazy(() => import('./TokenDeployment'));
-
-const steps = [
-  { title: 'Plan', description: 'Choisissez votre forge' },
-  { title: 'Configuration', description: 'Forgez votre token' },
-  { title: 'Vérification', description: 'Vérifiez les détails' },
-  { title: 'Déploiement', description: 'Déployez votre création' },
-];
 
 const LoadingFallback = () => (
   <Box display="flex" justifyContent="center" alignItems="center" py={4}>
@@ -37,12 +32,20 @@ const LoadingFallback = () => (
 const CreateToken: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [tokenConfig, setTokenConfig] = useState<TokenConfig>({
-    plan: '',
+    plan: 'basic',
     name: '',
     symbol: '',
     supply: '',
     decimals: 18,
     features: [],
+    payWithTKN: true
+  });
+
+  const { chain } = useNetwork();
+  const { address } = useAccount();
+  const { data: tknBalance } = useBalance({
+    address,
+    token: TKN_TOKEN_ADDRESS[chain?.id || 1]
   });
 
   const handleNext = () => {
@@ -53,36 +56,65 @@ const CreateToken: React.FC = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const renderStepContent = () => {
-    switch (activeStep) {
-      case 0:
-        return (
-          <Suspense fallback={<LoadingFallback />}>
-            <PlanSelection setTokenConfig={setTokenConfig} />
-          </Suspense>
-        );
-      case 1:
-        return (
-          <Suspense fallback={<LoadingFallback />}>
-            <TokenConfiguration tokenConfig={tokenConfig} setTokenConfig={setTokenConfig} />
-          </Suspense>
-        );
-      case 2:
-        return (
-          <Suspense fallback={<LoadingFallback />}>
-            <TokenVerification tokenConfig={tokenConfig} />
-          </Suspense>
-        );
-      case 3:
-        return (
-          <Suspense fallback={<LoadingFallback />}>
-            <TokenDeployment tokenConfig={tokenConfig} />
-          </Suspense>
-        );
-      default:
-        return null;
+  const calculatePrice = useCallback(() => {
+    const basePrice = tokenConfig.plan === 'premium' ? PREMIUM_TIER_PRICE : BASIC_TIER_PRICE;
+    if (tokenConfig.payWithTKN) {
+      return basePrice - (basePrice * TKN_PAYMENT_DISCOUNT / 10000);
     }
-  };
+    return basePrice;
+  }, [tokenConfig.plan, tokenConfig.payWithTKN]);
+
+  const steps = useMemo(() => [
+    {
+      title: 'Plan',
+      description: 'Choisissez votre forge',
+      content: (
+        <PlanSelection
+          selectedPlan={tokenConfig.plan}
+          onPlanSelect={(plan) => setTokenConfig(prev => ({ ...prev, plan }))}
+          price={calculatePrice()}
+          tknBalance={tknBalance?.value || 0n}
+          payWithTKN={tokenConfig.payWithTKN}
+          onPaymentMethodChange={(payWithTKN) => 
+            setTokenConfig(prev => ({ ...prev, payWithTKN }))
+          }
+        />
+      )
+    },
+    {
+      title: 'Configuration',
+      description: 'Forgez votre token',
+      content: (
+        <TokenConfiguration
+          config={tokenConfig}
+          onChange={(updates) => setTokenConfig(prev => ({ ...prev, ...updates }))}
+          isPremium={tokenConfig.plan === 'premium'}
+        />
+      )
+    },
+    {
+      title: 'Vérification',
+      description: 'Vérifiez les détails',
+      content: (
+        <TokenVerification
+          config={tokenConfig}
+          price={calculatePrice()}
+          payWithTKN={tokenConfig.payWithTKN}
+        />
+      )
+    },
+    {
+      title: 'Déploiement',
+      description: 'Déployez votre création',
+      content: (
+        <TokenDeployment
+          config={tokenConfig}
+          price={calculatePrice()}
+          payWithTKN={tokenConfig.payWithTKN}
+        />
+      )
+    }
+  ], [tokenConfig, calculatePrice, tknBalance]);
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -93,7 +125,7 @@ const CreateToken: React.FC = () => {
       <Card sx={{ mb: 4 }}>
         <CardContent>
           <Stepper activeStep={activeStep} orientation="vertical">
-            {steps.map((step) => (
+            {steps.map((step, index) => (
               <Step key={step.title}>
                 <StepLabel
                   optional={
@@ -104,7 +136,9 @@ const CreateToken: React.FC = () => {
                 </StepLabel>
                 <StepContent>
                   <Box sx={{ mb: 2 }}>
-                    {renderStepContent()}
+                    <Suspense fallback={<LoadingFallback />}>
+                      {step.content}
+                    </Suspense>
                     <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
                       <Button
                         disabled={activeStep === 0}
