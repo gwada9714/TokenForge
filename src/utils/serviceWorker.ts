@@ -1,24 +1,18 @@
 export function registerServiceWorker() {
-  if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.workbox !== undefined) {
-    const wb = window.workbox;
-    
-    // Add event listeners to handle any notifications and updates
-    wb.addEventListener('installed', (event: any) => {
-      console.log(`Event ${event.type} is triggered.`);
-      console.log(event);
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('ServiceWorker registration successful');
+          
+          registration.addEventListener('statechange', (e) => {
+            console.log('ServiceWorker state changed:', e);
+          });
+        })
+        .catch((error) => {
+          console.error('ServiceWorker registration failed:', error);
+        });
     });
-
-    wb.addEventListener('controlling', (event: any) => {
-      console.log(`Event ${event.type} is triggered.`);
-      console.log(event);
-    });
-
-    wb.addEventListener('activated', (event: any) => {
-      console.log(`Event ${event.type} is triggered.`);
-      console.log(event);
-    });
-
-    // Register the service worker after event listeners are added
-    wb.register();
   }
 }

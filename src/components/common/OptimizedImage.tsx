@@ -1,5 +1,4 @@
-import React from 'react';
-import Image from 'next/image';
+import React, { useState } from 'react';
 import { Box, Skeleton } from '@mui/material';
 
 interface OptimizedImageProps {
@@ -21,7 +20,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   className = '',
   quality = 75,
 }) => {
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <Box position="relative" width={width} height={height} className={className}>
@@ -34,18 +33,17 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           sx={{ position: 'absolute', top: 0, left: 0 }}
         />
       )}
-      <Image
+      <img
         src={src}
         alt={alt}
         width={width}
         height={height}
-        quality={quality}
-        priority={priority}
-        onLoadingComplete={() => setIsLoading(false)}
+        className={className}
+        loading={priority ? "eager" : "lazy"}
+        onLoad={() => setIsLoading(false)}
         style={{
           objectFit: 'cover',
-          opacity: isLoading ? 0 : 1,
-          transition: 'opacity 0.3s ease-in-out',
+          display: isLoading ? 'none' : 'block',
         }}
       />
     </Box>
