@@ -73,12 +73,13 @@ interface IToken {
 }
 
 interface TokenStats {
-  length?: number;
   data?: TokenData[];
+  isLoading: boolean;
+  error?: Error;
 }
 
 interface TokenData extends Omit<IToken, 'tier'> {
-  // Ajoutez ici d'autres propriétés spécifiques à TokenData si nécessaire
+  tier?: 'basic' | 'premium';
 }
 
 interface StatCardProps {
@@ -110,7 +111,7 @@ const StatCard = memo<StatCardProps>(({ title, value, icon, isLoading, subValue 
   </Card>
 ));
 
-const TokenRow = memo<{ token: IToken }>(({ token }) => (
+const TokenRow = memo<{ token: TokenData }>(({ token }) => (
   <TableRow>
     <TableCell>{token.name}</TableCell>
     <TableCell>{token.symbol}</TableCell>
@@ -143,21 +144,7 @@ const TokenRow = memo<{ token: IToken }>(({ token }) => (
   </TableRow>
 ));
 
-const TokensTable = memo<{ tokens: IToken[] | undefined; isLoading: boolean }>(({ tokens, isLoading }) => {
-  if (isLoading) {
-    return <CircularProgress />;
-  }
-
-  if (!tokens?.length) {
-    return (
-      <TableRow>
-        <TableCell colSpan={6} align="center">
-          No tokens created yet
-        </TableCell>
-      </TableRow>
-    );
-  }
-
+const TokenList = memo(({ tokens }: { tokens: TokenData[] }) => {
   return (
     <Virtuoso
       style={{ height: '400px' }}
@@ -167,9 +154,8 @@ const TokensTable = memo<{ tokens: IToken[] | undefined; isLoading: boolean }>((
   );
 });
 
-// Ajout des hooks pour les statistiques globales
 const useGlobalStats = () => {
-  const { data: tokenStats } = useTokenStats();
+  const { stats: tokenStats, isLoading, error } = useTokenStats();
   
   return useMemo(() => {
     let totalTaxCollected = BigInt(0);
@@ -182,15 +168,20 @@ const useGlobalStats = () => {
         totalTaxCollected += token.taxStats.totalTaxCollected;
         totalTransactions += token.taxStats.totalTransactions;
       }
+      if (token.tier === 'premium') {
+        totalPremiumTokens++;
+      }
     });
 
     return {
       totalTaxCollected,
       totalTransactions,
       totalTokens,
-      totalPremiumTokens
+      totalPremiumTokens,
+      isLoading,
+      error
     };
-  }, [tokenStats]);
+  }, [tokenStats, isLoading, error]);
 };
 
 const Dashboard: React.FC = () => {
@@ -338,7 +329,10 @@ const Dashboard: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <TokensTable tokens={tokens} isLoading={isTokensLoading} />
+                  <TokenList tokens={tokens.map(token => ({
+                    ...token,
+                    tier: token.features?.isPremium ? 'premium' : 'basic'
+                  }))} />
                 </TableBody>
               </Table>
             </TableContainer>
