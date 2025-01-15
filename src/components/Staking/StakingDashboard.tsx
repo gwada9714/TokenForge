@@ -71,13 +71,13 @@ const StakingDashboard: React.FC = () => {
   const handleStake = async () => {
     if (!stakeAmount) return;
     const amount = parseEther(stakeAmount);
-    await stake(hexToBigInt(amount));
+    await stake(`0x${amount.toString(16)}`);
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
     const amount = parseEther(withdrawAmount);
-    await withdraw(hexToBigInt(amount));
+    await withdraw(`0x${amount.toString(16)}`);
   };
 
   const handleClaimRewards = async () => {
