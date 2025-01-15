@@ -23,43 +23,44 @@ interface PoolInfo {
 export function useStaking(_tokenAddress: string) {
   const { address } = useAccount();
   const { chain } = useNetwork();
-  const stakingAddress = chain ? getContractAddress('STAKING_CONTRACT', chain.id) : undefined;
+  const stakingAddress = chain ? getContractAddress('STAKING_CONTRACT', chain.id) : null;
 
   const [userStake, setUserStake] = useState<StakeInfo>({
     amount: '0',
     since: 0,
     claimedRewards: '0',
   });
+
   const [poolInfo, setPoolInfo] = useState<PoolInfo>({
     totalStaked: '0',
     rewardRate: '0',
     lastUpdateTime: 0,
   });
 
-  // Read user stake info
-  const { data: stakeInfo } = useContractRead({
-    address: stakingAddress,
+  // Only proceed with contract interactions if we have a valid staking address
+  const enabled = Boolean(stakingAddress && address);
+
+  const { data: userStakeData, refetch: refetchUserStake } = useContractRead({
+    address: stakingAddress ?? undefined,
     abi: stakingABI,
-    functionName: 'getUserStake',
+    functionName: 'userStakes',
     args: [address],
-    watch: true,
+    enabled,
   });
 
-  // Read pool info
-  const { data: poolData } = useContractRead({
-    address: stakingAddress,
+  const { data: poolInfoData, refetch: refetchPoolInfo } = useContractRead({
+    address: stakingAddress ?? undefined,
     abi: stakingABI,
     functionName: 'getPoolInfo',
-    watch: true,
+    enabled,
   });
 
-  // Calculate rewards
-  const { data: rewards } = useContractRead({
-    address: stakingAddress,
+  const { data: rewardsData, refetch: refetchRewards } = useContractRead({
+    address: stakingAddress ?? undefined,
     abi: stakingABI,
     functionName: 'calculateRewards',
     args: [address],
-    watch: true,
+    enabled,
   });
 
   // Stake tokens
@@ -97,24 +98,24 @@ export function useStaking(_tokenAddress: string) {
   });
 
   useEffect(() => {
-    if (stakeInfo && Array.isArray(stakeInfo)) {
+    if (userStakeData && Array.isArray(userStakeData)) {
       setUserStake({
-        amount: formatEther(BigInt(stakeInfo[0].toString())),
-        since: Number(stakeInfo[1]),
-        claimedRewards: formatEther(BigInt(stakeInfo[2].toString())),
+        amount: formatEther(BigInt(userStakeData[0].toString())),
+        since: Number(userStakeData[1]),
+        claimedRewards: formatEther(BigInt(userStakeData[2].toString())),
       });
     }
-  }, [stakeInfo]);
+  }, [userStakeData]);
 
   useEffect(() => {
-    if (poolData && Array.isArray(poolData)) {
+    if (poolInfoData && Array.isArray(poolInfoData)) {
       setPoolInfo({
-        totalStaked: formatEther(BigInt(poolData[0].toString())),
-        rewardRate: formatEther(BigInt(poolData[1].toString())),
-        lastUpdateTime: Number(poolData[2]),
+        totalStaked: formatEther(BigInt(poolInfoData[0].toString())),
+        rewardRate: formatEther(BigInt(poolInfoData[1].toString())),
+        lastUpdateTime: Number(poolInfoData[2]),
       });
     }
-  }, [poolData]);
+  }, [poolInfoData]);
 
   // Handlers
   const handleStake = useCallback((amount: string) => {
@@ -132,7 +133,7 @@ export function useStaking(_tokenAddress: string) {
   return {
     userStake,
     poolInfo,
-    rewards: rewards ? formatEther(rewards as unknown as bigint) : '0',
+    rewards: rewardsData ? formatEther(rewardsData as unknown as bigint) : '0',
     stake: handleStake,
     withdraw: handleWithdraw,
     claimRewards: handleClaimRewards,

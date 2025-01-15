@@ -2,14 +2,17 @@
 type Address = `0x${string}`;
 
 // Helper function to ensure address format
-const formatAddress = (address: string | undefined): Address => {
-  if (!address) return '0x0000000000000000000000000000000000000000' as Address;
+const formatAddress = (address: string | undefined): Address | null => {
+  if (!address || address === '0x0000000000000000000000000000000000000000') {
+    return null;
+  }
   if (!address.startsWith('0x')) {
     return `0x${address}` as Address;
   }
   return address as Address;
 };
 
+// Contract addresses configuration
 export const CONTRACT_ADDRESSES = {
   TOKEN_FACTORY: {
     sepolia: formatAddress(import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA),
@@ -48,19 +51,33 @@ export const CONTRACT_ADDRESSES = {
   }
 } as const;
 
-// DeFi contracts
-
 export type ContractType = keyof typeof CONTRACT_ADDRESSES;
 
-export function getContractAddress(contract: ContractType, chainId: number): Address {
-  const networkMap = {
-    [SUPPORTED_NETWORKS.LOCAL]: 'local',
-    [SUPPORTED_NETWORKS.SEPOLIA]: 'sepolia',
-    [SUPPORTED_NETWORKS.MAINNET]: 'mainnet'
-  } as const;
+export function getContractAddress(contract: ContractType, chainId: number): Address | null {
+  let network: 'mainnet' | 'sepolia' | 'local';
+  
+  switch (chainId) {
+    case SUPPORTED_NETWORKS.MAINNET:
+      network = 'mainnet';
+      break;
+    case SUPPORTED_NETWORKS.SEPOLIA:
+      network = 'sepolia';
+      break;
+    case SUPPORTED_NETWORKS.LOCAL:
+      network = 'local';
+      break;
+    default:
+      console.warn(`Chain ID ${chainId} not supported, defaulting to Sepolia`);
+      network = 'sepolia';
+  }
 
-  const network = networkMap[chainId as keyof typeof networkMap] || 'local';
-  return CONTRACT_ADDRESSES[contract][network];
+  const address = CONTRACT_ADDRESSES[contract][network];
+  if (!address) {
+    console.warn(`No contract address found for ${contract} on network ${network}`);
+    return null;
+  }
+
+  return address;
 }
 
 export const SUPPORTED_NETWORKS = {
