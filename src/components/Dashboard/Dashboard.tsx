@@ -6,9 +6,19 @@ import {
   Card,
   CardContent,
   Grid,
-  Typography 
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton
 } from '@mui/material';
-import { TokenIcon } from '../Icons';
+import LaunchIcon from '@mui/icons-material/Launch';
+import { Virtuoso } from 'react-virtuoso';
+import { TokenIcon } from '../TokenDisplay/TokenIcon';
 import { useUserTokens } from '../../hooks/useUserTokens';
 import { useTokenStats } from '../../hooks/useTokenStats';
 
@@ -110,7 +120,7 @@ const TokenList = memo<{ tokens: TokenData[] }>(({ tokens }) => (
   <Virtuoso
     style={{ height: '400px' }}
     totalCount={tokens.length}
-    itemContent={index => <TokenRow token={tokens[index]} />}
+    itemContent={(_: number, index: number) => <TokenRow token={tokens[index]} />}
   />
 ));
 
