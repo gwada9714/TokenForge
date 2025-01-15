@@ -1,6 +1,9 @@
 import { mainnet, sepolia } from 'viem/chains';
 import { type Chain } from 'viem';
 
+// Export des chaînes individuelles pour une utilisation directe
+export { mainnet, sepolia };
+
 // Type pour notre configuration de chaîne étendue
 type ChainConfig = {
   chain: Chain;
