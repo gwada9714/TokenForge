@@ -61,8 +61,9 @@ const StakingDashboard: React.FC = () => {
 
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
+    const totalStakedHex = `0x${stakingStats.totalStaked.toString(16)}`;
     return {
-      totalStaked: formatEther(stakingStats.totalStaked.toString(16)),
+      totalStaked: formatEther(totalStakedHex as `0x${string}`),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };
@@ -70,12 +71,18 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    await stake(BigInt(stakeAmount));
+    const amount = BigInt(parseFloat(stakeAmount) * Math.pow(10, 18));
+    await stake(amount);
   };
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    withdraw(withdrawAmount);
+    const amount = BigInt(parseFloat(withdrawAmount) * Math.pow(10, 18));
+    await withdraw(amount);
+  };
+
+  const handleClaimRewards = async () => {
+    await claimRewards();
   };
 
   if (isLoading) {
@@ -186,7 +193,7 @@ const StakingDashboard: React.FC = () => {
                 </Button>
                 <Button
                   variant="contained"
-                  onClick={() => claimRewards()}
+                  onClick={handleClaimRewards}
                   disabled={!(pendingRewards > 0n)}
                   fullWidth
                 >

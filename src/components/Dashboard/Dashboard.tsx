@@ -5,39 +5,21 @@ import {
   Button,
   Card,
   CardContent,
-  Typography,
   Grid,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper
+  Typography 
 } from '@mui/material';
-import { NetworkSelector } from '../NetworkSelector/NetworkSelector';
-import { NetworkConfig, getNetwork } from '@/config/networks';
-import { formatEther } from 'viem';
-import { useNetwork } from 'wagmi';
-import { Address } from 'viem';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import ShowChartIcon from '@mui/icons-material/ShowChart';
-import TokenIcon from '@mui/icons-material/Token';
-import GroupIcon from '@mui/icons-material/Group';
-import LaunchIcon from '@mui/icons-material/Launch';
-import { useTokenStats } from '@/hooks/useTokenStats';
-import { useUserTokens } from '@/hooks/useUserTokens';
-import { Virtuoso } from 'react-virtuoso';
+import { TokenIcon } from '../Icons';
+import { useUserTokens } from '../../hooks/useUserTokens';
+import { useTokenStats } from '../../hooks/useTokenStats';
 
 interface TokenData {
-  address: Address;
+  address: string;
   name: string;
   symbol: string;
   totalSupply: bigint;
   decimals: number;
-  owner: Address;
-  network: ReturnType<typeof getNetwork>;
+  owner: string;
+  network: any;
   createdAt: Date;
   features: {
     isBurnable: boolean;
@@ -54,7 +36,7 @@ interface TokenData {
     buyTax: number;
     sellTax: number;
     transferTax: number;
-    taxRecipient: `0x${string}`;
+    taxRecipient: string;
     taxStats?: {
       totalTaxCollected: bigint;
       totalTransactions: number;
@@ -104,7 +86,7 @@ const TokenRow = memo<{ token: TokenData }>(({ token }) => (
         {token.network?.name || 'Unknown Network'}
       </Paper>
     </TableCell>
-    <TableCell>{formatEther(token.totalSupply)}</TableCell>
+    <TableCell>{token.totalSupply.toString()}</TableCell>
     <TableCell>
       {new Date(token.createdAt).toLocaleDateString()}
     </TableCell>
@@ -173,14 +155,14 @@ const Dashboard: React.FC = () => {
         <StatCard
           title="Total Value Locked"
           value="0"
-          icon={<AccountBalanceWalletIcon color="primary" />}
+          icon={<TokenIcon color="primary" />}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Transaction Volume"
           value="0"
-          icon={<ShowChartIcon color="primary" />}
+          icon={<TokenIcon color="primary" />}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -195,7 +177,7 @@ const Dashboard: React.FC = () => {
         <StatCard
           title="Unique Holders"
           value="0"
-          icon={<GroupIcon color="primary" />}
+          icon={<TokenIcon color="primary" />}
         />
       </Grid>
     </Grid>

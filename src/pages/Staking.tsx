@@ -1,4 +1,3 @@
-import React from 'react';
 import { Container, Typography, Box } from '@mui/material';
 import { StakingPool } from '../components/Staking/StakingPool';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
