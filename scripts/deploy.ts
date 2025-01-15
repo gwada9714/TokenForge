@@ -1,19 +1,20 @@
-const { ethers } = require("hardhat");
-const { HardhatEthersSigner } = require("@nomicfoundation/hardhat-ethers/signers");
-const { TokenForgeToken, TokenForgeToken__factory } = require("../typechain-types");
+/// <reference path="../types/hardhat-runtime.d.ts" />
 
-async function main() {
-  const [deployer] = await ethers.getSigners();
+async function deployToken() {
+  const [deployer] = await hre.ethers.getSigners();
 
   console.log("Déploiement des contrats avec le compte:", deployer.address);
 
-  const TokenForge = await ethers.getContractFactory("TokenForgeToken");
+  const TokenForge = await hre.ethers.getContractFactory("TokenForgeToken");
   const tokenForge = await TokenForge.deploy(
-    "TokenForge Token", // nom
-    "TFT",             // symbole
-    ethers.parseEther("1000000"), // supply total
-    deployer.address,  // propriétaire
-    true              // transferEnabled
+    "TokenForge Token",        // nom
+    "TFT",                     // symbole
+    18,                        // decimals (standard pour ERC20)
+    hre.ethers.utils.parseEther("1000000"), // supply total
+    deployer.address,          // propriétaire
+    true,                      // burnable
+    true,                      // mintable
+    false                      // pausable (false pour permettre les transferts immédiatement)
   );
 
   await tokenForge.deployed();
@@ -21,9 +22,11 @@ async function main() {
   console.log("TokenForgeToken déployé à l'adresse:", tokenForge.address);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+if (require.main === module) {
+  deployToken()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
