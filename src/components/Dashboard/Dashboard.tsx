@@ -17,6 +17,7 @@ import {
   IconButton
 } from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { Virtuoso } from 'react-virtuoso';
 import { useUserTokens } from '../../hooks/useUserTokens';
 import { useTokenStats } from '../../hooks/useTokenStats';
@@ -158,8 +159,11 @@ const useGlobalStats = () => {
 
 const Dashboard = memo(() => {
   const navigate = useNavigate();
-  const { tokens, isLoading } = useUserTokens();
+  const { tokens, isLoading: tokensLoading } = useUserTokens();
+  const { stats, isLoading: statsLoading } = useGlobalStats();
   
+  const isLoading = tokensLoading || statsLoading;
+
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -172,35 +176,21 @@ const Dashboard = memo(() => {
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6}>
         <StatCard
-          title="Total Value Locked"
-          value="0"
-          icon={<TokenIcon color="primary" />}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <StatCard
-          title="Transaction Volume"
-          value="0"
-          icon={<TokenIcon color="primary" />}
+          title="Total Tax Collected"
+          value={stats?.totalTaxCollected.toString() || "0"}
+          icon={<MonetizationOnIcon color="primary" />}
+          subValue={`${stats?.totalTransactions || 0} transactions`}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Total Tokens"
-          value={tokens ? tokens.length.toString() : "0"}
-          icon={<TokenIcon color="primary" />}
-          isLoading={isLoading}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <StatCard
-          title="Unique Holders"
-          value="0"
+          value={tokens.length.toString()}
           icon={<TokenIcon color="primary" />}
         />
       </Grid>
     </Grid>
-  ), [tokens, isLoading]);
+  ), [stats, tokens.length]);
 
   const mappedTokens = tokens?.map(token => ({
     ...token,
