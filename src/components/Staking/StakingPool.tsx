@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { Card, Button, Input, Divider, Flex, Box, Text } from '@chakra-ui/react';
-import { useStaking } from '../../hooks/useStaking';
+import {
+  Card,
+  Button,
+  TextField,
+  Box,
+  Stack,
+  Typography,
+  LinearProgress
+} from '@mui/material';
 
 interface StakingPoolProps {
   tokenAddress: string;
@@ -36,94 +43,91 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
   };
 
   return (
-    <Card p={6} maxW="xl" mx="auto" mt={8}>
-      <Text variant="h5" mb={4}>
+    <Card sx={{ p: 6, maxWidth: 'xl', mx: 'auto', mt: 8 }}>
+      <Typography variant="h5" mb={4}>
         {tokenSymbol} Staking Pool
-      </Text>
-
-      <Divider my={4} />
+      </Typography>
 
       <Box mb={6}>
-        <Text variant="subtitle1" mb={2}>
+        <Typography variant="subtitle1" mb={2}>
           Pool Statistics
-        </Text>
-        <Flex justify="space-between" mb={2}>
-          <Text>Total Staked:</Text>
-          <Text>{poolInfo.totalStaked} {tokenSymbol}</Text>
-        </Flex>
-        <Flex justify="space-between" mb={2}>
-          <Text>Reward Rate:</Text>
-          <Text>{poolInfo.rewardRate} {tokenSymbol}/day</Text>
-        </Flex>
+        </Typography>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Typography>Total Staked:</Typography>
+          <Typography>{poolInfo.totalStaked} {tokenSymbol}</Typography>
+        </Stack>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Typography>Reward Rate:</Typography>
+          <Typography>{poolInfo.rewardRate} {tokenSymbol}/day</Typography>
+        </Stack>
       </Box>
 
       <Box mb={6}>
-        <Text variant="subtitle1" mb={2}>
+        <Typography variant="subtitle1" mb={2}>
           Your Stake
-        </Text>
-        <Flex justify="space-between" mb={2}>
-          <Text>Staked Amount:</Text>
-          <Text>{userStake.amount} {tokenSymbol}</Text>
-        </Flex>
-        <Flex justify="space-between" mb={2}>
-          <Text>Pending Rewards:</Text>
-          <Text>{rewards} {tokenSymbol}</Text>
-        </Flex>
+        </Typography>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Typography>Staked Amount:</Typography>
+          <Typography>{userStake.amount} {tokenSymbol}</Typography>
+        </Stack>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Typography>Pending Rewards:</Typography>
+          <Typography>{rewards} {tokenSymbol}</Typography>
+        </Stack>
       </Box>
 
       <Box mb={6}>
-        <Text variant="subtitle1" mb={2}>
+        <Typography variant="subtitle1" mb={2}>
           Stake Tokens
-        </Text>
-        <Flex gap={2}>
-          <Input
+        </Typography>
+        <Stack direction="row" gap={2}>
+          <TextField
             type="number"
             value={stakeAmount}
-            onChange={(e) => setStakeAmount(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStakeAmount(e.target.value)}
             placeholder="Amount to stake"
           />
           <Button
-            colorScheme="blue"
+            variant="contained"
+            color="primary"
             onClick={handleStake}
-            isLoading={isStaking}
-            loadingText="Staking"
+            disabled={isStaking}
           >
-            Stake
+            {isStaking ? 'Staking' : 'Stake'}
           </Button>
-        </Flex>
+        </Stack>
       </Box>
 
       <Box mb={6}>
-        <Text variant="subtitle1" mb={2}>
+        <Typography variant="subtitle1" mb={2}>
           Withdraw Tokens
-        </Text>
-        <Flex gap={2}>
-          <Input
+        </Typography>
+        <Stack direction="row" gap={2}>
+          <TextField
             type="number"
             value={withdrawAmount}
-            onChange={(e) => setWithdrawAmount(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWithdrawAmount(e.target.value)}
             placeholder="Amount to withdraw"
           />
           <Button
-            colorScheme="red"
+            variant="contained"
+            color="error"
             onClick={handleWithdraw}
-            isLoading={isWithdrawing}
-            loadingText="Withdrawing"
+            disabled={isWithdrawing}
           >
-            Withdraw
+            {isWithdrawing ? 'Withdrawing' : 'Withdraw'}
           </Button>
-        </Flex>
+        </Stack>
       </Box>
 
       <Button
-        colorScheme="green"
+        variant="contained"
+        color="success"
         onClick={claimRewards}
-        isLoading={isClaiming}
-        loadingText="Claiming"
-        isDisabled={Number(rewards) === 0}
-        w="full"
+        disabled={isClaiming || Number(rewards) === 0}
+        sx={{ width: '100%' }}
       >
-        Claim Rewards
+        {isClaiming ? 'Claiming' : 'Claim Rewards'}
       </Button>
     </Card>
   );

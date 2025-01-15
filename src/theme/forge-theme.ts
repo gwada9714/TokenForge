@@ -1,29 +1,16 @@
-import { extendTheme } from '@chakra-ui/react';
+import { createTheme } from '@mui/material/styles';
+import { Components, Theme } from '@mui/material/styles';
 
 const colors = {
   forge: {
-    50: '#fff3e0',
-    100: '#ffe0b2',
-    200: '#ffcc80',
-    300: '#ffb74d',
-    400: '#ffa726',
-    500: '#ff9800', // Primary
-    600: '#fb8c00',
-    700: '#f57c00',
-    800: '#ef6c00',
-    900: '#e65100',
+    main: '#FF6B2B',
+    dark: '#E65A1F',
+    light: '#FF8C5A'
   },
   ember: {
-    50: '#ffebee',
-    100: '#ffcdd2',
-    200: '#ef9a9a',
-    300: '#e57373',
-    400: '#ef5350',
-    500: '#f44336', // Secondary
-    600: '#e53935',
-    700: '#d32f2f',
-    800: '#c62828',
-    900: '#b71c1c',
+    main: '#FF4B2B',
+    dark: '#E63A1F',
+    light: '#FF6C5A'
   },
   metal: {
     50: '#fafafa',
@@ -39,113 +26,140 @@ const colors = {
   },
 };
 
-const components = {
-  Button: {
-    variants: {
-      forge: {
-        bg: 'forge.500',
-        color: 'white',
-        _hover: {
-          bg: 'forge.600',
-          _disabled: {
-            bg: 'forge.300',
-          },
-        },
-        _active: {
-          bg: 'forge.700',
-        },
-      },
-      ember: {
-        bg: 'ember.500',
-        color: 'white',
-        _hover: {
-          bg: 'ember.600',
-          _disabled: {
-            bg: 'ember.300',
-          },
-        },
-        _active: {
-          bg: 'ember.700',
-        },
-      },
+const components: Components<Omit<Theme, "components">> = {
+  MuiButton: {
+    styleOverrides: {
+      root: {
+        textTransform: 'none',
+        borderRadius: '8px',
+        padding: '8px 16px',
+      }
     },
+    variants: [
+      {
+        props: { variant: 'forge' },
+        style: {
+          backgroundColor: colors.forge.main,
+          color: '#ffffff',
+          '&:hover': {
+            backgroundColor: colors.forge.dark,
+          },
+          '&:active': {
+            backgroundColor: colors.forge.light,
+          },
+        },
+      },
+      {
+        props: { variant: 'ember' },
+        style: {
+          backgroundColor: colors.ember.main,
+          color: '#ffffff',
+          '&:hover': {
+            backgroundColor: colors.ember.dark,
+          },
+          '&:active': {
+            backgroundColor: colors.ember.light,
+          },
+        },
+      },
+    ],
   },
-  Card: {
-    baseStyle: {
-      p: '6',
-      bg: 'white',
-      boxShadow: 'lg',
-      rounded: 'lg',
-      borderWidth: '1px',
-      borderColor: 'gray.100',
+  MuiCard: {
+    styleOverrides: {
+      root: {
+        borderRadius: '16px',
+        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+        padding: '16px',
+        backgroundColor: 'white',
+        borderWidth: '1px',
+        borderColor: colors.metal[400],
+      }
     },
     variants: {
       forge: {
         borderLeftWidth: '4px',
-        borderLeftColor: 'forge.500',
+        borderLeftColor: colors.forge.main,
       },
       ember: {
         borderLeftWidth: '4px',
-        borderLeftColor: 'ember.500',
+        borderLeftColor: colors.ember.main,
       },
     },
   },
-  // Styles personnalisés pour les composants de formulaire
-  Input: {
-    variants: {
-      forge: {
-        field: {
-          borderColor: 'forge.200',
-          _hover: {
-            borderColor: 'forge.300',
-          },
-          _focus: {
-            borderColor: 'forge.500',
-            boxShadow: '0 0 0 1px var(--chakra-colors-forge-500)',
-          },
+  MuiInput: {
+    styleOverrides: {
+      root: {
+        borderColor: colors.forge[200],
+        '&:hover': {
+          borderColor: colors.forge[300],
         },
-      },
-    },
-  },
-  Select: {
-    variants: {
-      forge: {
-        field: {
-          borderColor: 'forge.200',
-          _hover: {
-            borderColor: 'forge.300',
-          },
-          _focus: {
-            borderColor: 'forge.500',
-            boxShadow: '0 0 0 1px var(--chakra-colors-forge-500)',
-          },
+        '&:focus': {
+          borderColor: colors.forge.main,
+          boxShadow: `0 0 0 1px ${colors.forge.main}`,
         },
-      },
-    },
+      }
+    }
   },
+  MuiSelect: {
+    styleOverrides: {
+      root: {
+        borderColor: colors.forge[200],
+        '&:hover': {
+          borderColor: colors.forge[300],
+        },
+        '&:focus': {
+          borderColor: colors.forge.main,
+          boxShadow: `0 0 0 1px ${colors.forge.main}`,
+        },
+      }
+    }
+  },
+  MuiTextField: {
+    styleOverrides: {
+      root: {
+        '& .MuiOutlinedInput-root': {
+          borderRadius: '8px',
+        }
+      }
+    }
+  }
 };
 
 const fonts = {
-  heading: '"Roboto Slab", serif',
-  body: '"Open Sans", sans-serif',
+  fontFamily: [
+    '-apple-system',
+    'BlinkMacSystemFont',
+    '"Segoe UI"',
+    'Roboto',
+    '"Helvetica Neue"',
+    'Arial',
+    'sans-serif',
+  ].join(','),
 };
 
 const styles = {
   global: {
     body: {
-      bg: 'gray.50',
-      color: 'metal.800',
+      backgroundColor: colors.metal[50],
+      color: colors.metal[800],
     },
   },
 };
 
-export const forgeTheme = extendTheme({
-  colors,
-  components,
-  fonts,
-  styles,
-  config: {
-    initialColorMode: 'light',
-    useSystemColorMode: false,
+export const forgeTheme = createTheme({
+  palette: {
+    primary: {
+      main: colors.forge.main,
+      dark: colors.forge.dark,
+      light: colors.forge.light,
+    },
+    secondary: {
+      main: colors.ember.main,
+      dark: colors.ember.dark,
+      light: colors.ember.light,
+    }
   },
+  typography: fonts,
+  components,
+  styles,
 });

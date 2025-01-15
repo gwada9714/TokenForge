@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import {
   Card,
   Button,
-  Input,
-  Text,
-  Divider,
-  Flex,
+  TextField,
   Box,
-  Progress,
+  Stack,
+  LinearProgress,
   Badge,
-} from '@chakra-ui/react';
-import { useLaunchpad } from '../../hooks/useLaunchpad';
+} from '@mui/material';
 
 interface LaunchpadPoolProps {
   poolId: number;
@@ -49,122 +46,112 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
   };
 
   const getPoolStatus = () => {
-    if (poolInfo.cancelled) return <Badge colorScheme="red">Cancelled</Badge>;
-    if (poolInfo.finalized) return <Badge colorScheme="green">Finalized</Badge>;
-    if (isEnded) return <Badge colorScheme="yellow">Ended</Badge>;
-    if (isLive) return <Badge colorScheme="green">Live</Badge>;
-    return <Badge colorScheme="blue">Upcoming</Badge>;
+    if (poolInfo.cancelled) return <Badge color="error">Cancelled</Badge>;
+    if (poolInfo.finalized) return <Badge color="success">Finalized</Badge>;
+    if (isEnded) return <Badge color="warning">Ended</Badge>;
+    if (isLive) return <Badge color="success">Live</Badge>;
+    return <Badge color="info">Upcoming</Badge>;
   };
 
   return (
-    <Card p={6} maxW="xl" mx="auto" mt={8}>
-      <Flex justify="space-between" align="center" mb={4}>
-        <Text variant="h5">Pool #{poolId}</Text>
+    <Card sx={{ p: 6, maxWidth: 'xl', mx: 'auto', mt: 8 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box variant="h5">Pool #{poolId}</Box>
         {getPoolStatus()}
-      </Flex>
-
-      <Divider my={4} />
+      </Stack>
 
       <Box mb={6}>
-        <Text variant="subtitle1" mb={2}>
+        <Box variant="subtitle1" mb={2}>
           Pool Information
-        </Text>
-        <Flex justify="space-between" mb={2}>
-          <Text>Token Address:</Text>
-          <Text>{poolInfo.token}</Text>
-        </Flex>
-        <Flex justify="space-between" mb={2}>
-          <Text>Token Price:</Text>
-          <Text>{poolInfo.tokenPrice} ETH</Text>
-        </Flex>
-        <Flex justify="space-between" mb={2}>
-          <Text>Progress:</Text>
-          <Text>
+        </Box>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Box>Token Address:</Box>
+          <Box>{poolInfo.token}</Box>
+        </Stack>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Box>Token Price:</Box>
+          <Box>{poolInfo.tokenPrice} ETH</Box>
+        </Stack>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Box>Progress:</Box>
+          <Box>
             {poolInfo.totalRaised} / {poolInfo.hardCap} ETH
-          </Text>
-        </Flex>
-        <Progress value={progress} colorScheme="blue" mt={2} />
+          </Box>
+        </Stack>
+        <LinearProgress variant="determinate" value={progress} sx={{ mt: 2 }} />
       </Box>
 
       <Box mb={6}>
-        <Text variant="subtitle1" mb={2}>
+        <Box variant="subtitle1" mb={2}>
           Your Contribution
-        </Text>
-        <Text>{userContribution} ETH</Text>
+        </Box>
+        <Box>{userContribution} ETH</Box>
       </Box>
 
       {isLive && !poolInfo.finalized && !poolInfo.cancelled && (
         <Box mb={6}>
-          <Text variant="subtitle1" mb={2}>
+          <Box variant="subtitle1" mb={2}>
             Contribute
-          </Text>
-          <Flex gap={2}>
-            <Input
+          </Box>
+          <Stack direction="row" gap={2}>
+            <TextField
               type="number"
               value={contributionAmount}
-              onChange={(e) => setContributionAmount(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setContributionAmount(e.target.value)}
               placeholder="Amount in ETH"
             />
             <Button
-              colorScheme="blue"
+              color="primary"
               onClick={handleContribute}
-              isLoading={isContributing}
-              loadingText="Contributing"
+              disabled={isContributing}
             >
-              Contribute
+              {isContributing ? 'Contributing' : 'Contribute'}
             </Button>
-          </Flex>
+          </Stack>
         </Box>
       )}
 
       {isEnded && !poolInfo.finalized && !poolInfo.cancelled && isSoftCapReached && (
         <Button
-          colorScheme="green"
+          color="success"
           onClick={finalizePool}
-          isLoading={isFinalizing}
-          loadingText="Finalizing"
-          mb={4}
-          w="full"
+          disabled={isFinalizing}
+          sx={{ mb: 4, width: '100%' }}
         >
-          Finalize Pool
+          {isFinalizing ? 'Finalizing' : 'Finalize Pool'}
         </Button>
       )}
 
       {!poolInfo.finalized && !poolInfo.cancelled && (
         <Button
-          colorScheme="red"
+          color="error"
           onClick={cancelPool}
-          isLoading={isCancelling}
-          loadingText="Cancelling"
-          mb={4}
-          w="full"
+          disabled={isCancelling}
+          sx={{ mb: 4, width: '100%' }}
         >
-          Cancel Pool
+          {isCancelling ? 'Cancelling' : 'Cancel Pool'}
         </Button>
       )}
 
       {poolInfo.finalized && Number(userContribution) > 0 && (
         <Button
-          colorScheme="green"
+          color="success"
           onClick={claimTokens}
-          isLoading={isClaiming}
-          loadingText="Claiming"
-          mb={4}
-          w="full"
+          disabled={isClaiming}
+          sx={{ mb: 4, width: '100%' }}
         >
-          Claim Tokens
+          {isClaiming ? 'Claiming' : 'Claim Tokens'}
         </Button>
       )}
 
       {(poolInfo.cancelled || (isEnded && !isSoftCapReached)) && Number(userContribution) > 0 && (
         <Button
-          colorScheme="yellow"
+          color="warning"
           onClick={claimRefund}
-          isLoading={isRefunding}
-          loadingText="Claiming Refund"
-          w="full"
+          disabled={isRefunding}
+          sx={{ width: '100%' }}
         >
-          Claim Refund
+          {isRefunding ? 'Claiming Refund' : 'Claim Refund'}
         </Button>
       )}
     </Card>
