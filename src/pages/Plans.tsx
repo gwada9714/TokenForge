@@ -1,10 +1,10 @@
 import React from 'react';
-import { Container } from '@chakra-ui/react';
+import { Container } from '@mui/material';
 import PlanSelector from '../components/Plans/PlanSelector';
 
 const Plans: React.FC = () => {
   return (
-    <Container maxW="container.xl">
+    <Container maxWidth="xl">
       <PlanSelector />
     </Container>
   );

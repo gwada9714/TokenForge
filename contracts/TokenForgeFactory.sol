@@ -74,7 +74,7 @@ contract TokenForgeFactory {
         }
         
         // Pour le plan Maître Forgeron, la taxe de la forge est activée par défaut
-        (bool includesAudit, bool defaultForgeTax) = plans.getPlanFeatures(userPlan);
+        (, bool defaultForgeTax) = plans.getPlanFeatures(userPlan);
         if (defaultForgeTax) {
             params.enableForgeTax = true;
         }

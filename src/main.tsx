@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import { BrowserRouter } from 'react-router-dom'
-import { Providers } from './providers/Providers'
+import Providers from './providers/Providers'
 import './styles/index.css'
 import { routerFutureConfig } from './config/routerConfig'
 

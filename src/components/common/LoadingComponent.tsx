@@ -1,11 +1,17 @@
 import React from 'react';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 const LoadingComponent: React.FC = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-      <span className="ml-2">Loading...</span>
-    </div>
+    <Box
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      minHeight="100vh"
+    >
+      <CircularProgress size={24} />
+      <Typography sx={{ ml: 2 }}>Loading...</Typography>
+    </Box>
   );
 };
 
