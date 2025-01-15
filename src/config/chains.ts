@@ -33,50 +33,34 @@ const contractAddresses = {
   )
 };
 
-// Configuration des chaînes avec leurs contrats respectifs
-const chainsConfig: ChainConfig[] = [
+// Configuration des chaînes supportées
+const chainConfigs: ChainConfig[] = [
   {
-    chain: {
-      ...sepolia,
-      rpcUrls: {
-        ...sepolia.rpcUrls,
-        default: {
-          http: [import.meta.env.VITE_SEPOLIA_RPC_URL],
-        },
-      },
-    },
-    contractAddress: contractAddresses.sepolia,
-    name: 'Sepolia Testnet'
-  },
-  {
-    chain: {
-      ...mainnet,
-      rpcUrls: {
-        ...mainnet.rpcUrls,
-        default: {
-          http: [import.meta.env.VITE_MAINNET_RPC_URL],
-        },
-      },
-    },
+    chain: mainnet,
     contractAddress: contractAddresses.mainnet,
     name: 'Ethereum Mainnet'
+  },
+  {
+    chain: sepolia,
+    contractAddress: contractAddresses.sepolia,
+    name: 'Sepolia Testnet'
   }
 ];
 
 // Filtrer les chaînes qui ont des adresses de contrat valides
-export const supportedChains = chainsConfig
-  .filter(({ contractAddress }) => contractAddress !== null)
-  .map(({ chain }) => chain);
+export const supportedChains = chainConfigs
+  .filter(config => config.contractAddress !== null)
+  .map(config => config.chain);
+
+// Définir la chaîne par défaut (Sepolia si disponible, sinon la première chaîne supportée)
+export const defaultChain = supportedChains.find(chain => chain.id === sepolia.id) || supportedChains[0];
+
+if (!defaultChain) {
+  throw new Error('No valid chains configured. Please check your contract addresses and RPC URLs.');
+}
 
 // Export the chain IDs
 export const supportedChainIds = supportedChains.map(chain => chain.id);
-
-// Get the default chain (Sepolia for development)
-export const defaultChain = supportedChains.find(chain => chain.id === sepolia.id) || supportedChains[0];
-
-if (supportedChains.length === 0) {
-  console.warn('Aucune chaîne n\'est configurée avec des adresses TokenFactory valides');
-}
 
 // Configuration RPC par chaîne
 export const getRpcUrl = (chainId: number): string => {

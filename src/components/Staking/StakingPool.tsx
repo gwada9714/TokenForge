@@ -8,6 +8,7 @@ import {
   Typography,
   LinearProgress
 } from '@mui/material';
+import { useStaking } from '../../hooks/useStaking';
 
 interface StakingPoolProps {
   tokenAddress: string;

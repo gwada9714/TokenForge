@@ -25,29 +25,29 @@ const projectId = requiredEnvVars.VITE_WALLET_CONNECT_PROJECT_ID as string;
 const mutableChains: Chain[] = [...supportedChains];
 
 if (mutableChains.length === 0) {
-  throw new Error('No valid chains configured. Please check your RPC URLs.');
+  throw new Error('No valid chains configured. Please check your contract addresses in environment variables.');
 }
 
 const { connectors } = getDefaultWallets({
   appName: 'TokenForge',
   projectId,
-  chains: mutableChains
+  chains: mutableChains,
 });
 
-// Create public client with fallback
-const publicClient = createPublicClient({
-  chain: defaultChain,
-  transport: http(),
-  batch: {
-    multicall: true
+// Create wagmi config
+const config = createConfig({
+  connectors,
+  publicClient: ({ chainId }) => {
+    const chain = mutableChains.find(c => c.id === chainId) ?? defaultChain;
+    return createPublicClient({
+      chain,
+      transport: http()
+    });
   },
 });
 
-export const config = createConfig({
-  autoConnect: true,
-  publicClient,
-  connectors
-});
+console.log(`Web3 configuration initialized with ${mutableChains.length} chains:`, 
+  mutableChains.map(chain => chain.name).join(', '));
 
 // Export des chaînes supportées pour RainbowKit
 export const chains = mutableChains;
@@ -59,4 +59,4 @@ export const getFactoryAddress = () => {
   return getContractAddress('TOKEN_FACTORY', chainId);
 };
 
-console.log(`Web3 configuration initialized with ${mutableChains.length} chains`);
+export default config;
