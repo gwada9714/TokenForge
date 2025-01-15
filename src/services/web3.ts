@@ -4,8 +4,8 @@ import { getFactoryAddress } from '../config/web3Config';
 import type { TokenContract, FactoryContract } from '../types/contracts';
 
 export class Web3Service {
-  private provider: ethers.BrowserProvider | null = null;
-  private signer: ethers.JsonRpcSigner | null = null;
+  private provider: ethers.providers.Web3Provider | null = null;
+  private signer: ethers.providers.JsonRpcSigner | null = null;
   private connectionPromise: Promise<void> | null = null;
 
   async connect() {
@@ -19,7 +19,7 @@ export class Web3Service {
           throw new Error('Metamask non détecté');
         }
 
-        this.provider = new ethers.BrowserProvider(window.ethereum);
+        this.provider = new ethers.providers.Web3Provider(window.ethereum);
         
         // Attendre que la connexion soit établie
         await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -33,7 +33,7 @@ export class Web3Service {
     return this.connectionPromise;
   }
 
-  async getSigner(): Promise<ethers.JsonRpcSigner> {
+  async getSigner(): Promise<ethers.providers.JsonRpcSigner> {
     if (!this.signer) {
       await this.connect();
       if (!this.signer) {
@@ -55,9 +55,6 @@ export class Web3Service {
 
   async getTokenContract(address: string): Promise<TokenContract> {
     const signer = await this.getSigner();
-    if (!ethers.isAddress(address)) {
-      throw new Error('Adresse de contrat invalide');
-    }
     return new ethers.Contract(
       address,
       TOKEN_ABI,
@@ -65,26 +62,15 @@ export class Web3Service {
     ) as TokenContract;
   }
 
-  async executeTokenTransaction(params: {
-    type: 'transfer' | 'mint' | 'burn';
-    tokenAddress: string;
-    amount: string;
-    recipient?: string;
-  }) {
-    const contract = await this.getTokenContract(params.tokenAddress);
-    const amount = ethers.parseUnits(params.amount, 18);
-
-    switch (params.type) {
-      case 'transfer':
-        if (!params.recipient) throw new Error('Destinataire requis');
-        return await contract.transfer(params.recipient, amount);
-      case 'mint':
-        const signer = await this.getSigner();
-        return await contract.mint(await signer.getAddress(), amount);
-      case 'burn':
-        return await contract.burn(amount);
+  async getProvider(): Promise<ethers.providers.Web3Provider> {
+    if (!this.provider) {
+      await this.connect();
+      if (!this.provider) {
+        throw new Error('Provider not initialized');
+      }
     }
+    return this.provider;
   }
 }
 
-export const web3Service = new Web3Service(); 
+export const web3Service = new Web3Service();

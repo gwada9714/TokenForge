@@ -3,11 +3,12 @@ import { WagmiConfig } from 'wagmi';
 import { config as wagmiConfig, chains } from '../config/web3Config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ChakraProvider } from '@chakra-ui/react';
-import { ThemeProvider } from '@mui/material/styles';
+import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { memo } from 'react';
 import chakraTheme from '../theme';
-import muiTheme from '../theme/mui';
+import { muiTheme } from '../theme/mui';
+import { Web3Provider } from './Web3Provider';
 
 // Configuration du client de requête avec mise en cache optimisée
 const queryClient = new QueryClient({
@@ -28,28 +29,28 @@ interface ProvidersProps {
 }
 
 // Utilisation de memo pour éviter les re-rendus inutiles
-const Providers = memo(({ children }: ProvidersProps) => {
+const Providers: React.FC<ProvidersProps> = memo(({ children }) => {
   return (
-    <ThemeProvider theme={muiTheme}>
-      <CssBaseline />
-      <ChakraProvider theme={chakraTheme}>
-        <QueryClientProvider client={queryClient}>
-          <WagmiConfig config={wagmiConfig}>
-            <RainbowKitProvider 
-              chains={chains}
-              theme={lightTheme()} 
-              modalSize="compact"
-              coolMode // Effet visuel sympa sans impact sur les performances
-            >
-              {children}
-            </RainbowKitProvider>
-          </WagmiConfig>
-        </QueryClientProvider>
-      </ChakraProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiConfig config={wagmiConfig}>
+        <RainbowKitProvider
+          chains={chains}
+          theme={lightTheme({
+            accentColor: '#7b3fe4',
+          })}
+        >
+          <StyledEngineProvider injectFirst>
+            <ThemeProvider theme={muiTheme}>
+              <CssBaseline />
+              <ChakraProvider theme={chakraTheme}>
+                <Web3Provider>{children}</Web3Provider>
+              </ChakraProvider>
+            </ThemeProvider>
+          </StyledEngineProvider>
+        </RainbowKitProvider>
+      </WagmiConfig>
+    </QueryClientProvider>
   );
 });
 
-Providers.displayName = 'Providers';
-
-export { Providers };
+export default Providers;
