@@ -1,6 +1,5 @@
-import React, { lazy, Suspense } from 'react';
-import type { AppRoute } from '../types/router';
-import { createRouteObject } from '../utils/route';
+import { lazy, Suspense } from 'react';
+import { RouteObject } from 'react-router-dom';
 import LoadingComponent from '../components/common/LoadingComponent';
 
 // Configure future flags for React Router v7
@@ -14,16 +13,21 @@ const StakingPage = lazy(() => import('../pages/Staking').then(module => ({ defa
 const LaunchpadPage = lazy(() => import('../pages/Launchpad').then(module => ({ default: module.LaunchpadPage })));
 
 // Define routes configuration
-const routesConfig: AppRoute[] = [
+export const routes: RouteObject[] = [
   {
     path: '/staking',
-    component: StakingPage
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <StakingPage />
+      </Suspense>
+    )
   },
   {
     path: '/launchpad',
-    component: LaunchpadPage
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <LaunchpadPage />
+      </Suspense>
+    )
   }
 ];
-
-// Create route objects with proper typing
-export const routes = routesConfig.map(createRouteObject);
