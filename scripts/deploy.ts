@@ -1,5 +1,5 @@
 import * as hardhat from "hardhat";
-import { ethers } from "ethers";
+import { ethers } from "hardhat";
 
 async function main() {
   const [deployer] = await hardhat.ethers.getSigners() as unknown as ethers.Signer[];
