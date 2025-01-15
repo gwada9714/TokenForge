@@ -4,6 +4,7 @@ import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { supportedChains, defaultChain } from './chains';
 import { type Chain } from 'viem';
+import { CONTRACT_ADDRESSES, getContractAddress } from './contracts';
 
 // Vérification des variables d'environnement requises
 const requiredEnvVars = {
@@ -50,5 +51,12 @@ export const config = createConfig({
 
 // Export des chaînes supportées pour RainbowKit
 export const chains = mutableChains;
+
+// Helper function to get factory address for current chain
+export const getFactoryAddress = () => {
+  // Default to the first chain in supportedChains if no chain is selected
+  const chainId = defaultChain.id;
+  return getContractAddress('TOKEN_FACTORY', chainId);
+};
 
 console.log(`Web3 configuration initialized with ${mutableChains.length} chains`);
