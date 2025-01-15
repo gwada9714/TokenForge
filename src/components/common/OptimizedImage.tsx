@@ -8,7 +8,6 @@ interface OptimizedImageProps {
   height: number;
   priority?: boolean;
   className?: string;
-  quality?: number;
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -18,7 +17,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   height,
   priority = false,
   className = '',
-  quality = 75,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
 
