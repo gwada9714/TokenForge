@@ -23,6 +23,10 @@ export const routes: RouteObject[] = [
     element: <Navigate to="/staking" replace />
   },
   {
+    path: '/create',
+    element: <Navigate to="/tokens/create" replace />
+  },
+  {
     path: '/staking',
     element: (
       <Suspense fallback={<LoadingComponent />}>
@@ -47,18 +51,18 @@ export const routes: RouteObject[] = [
     )
   },
   {
-    path: '/tokens/:tokenAddress',
-    element: (
-      <Suspense fallback={<LoadingComponent />}>
-        <TokenDetailsPage />
-      </Suspense>
-    )
-  },
-  {
     path: '/tokens/create',
     element: (
       <Suspense fallback={<LoadingComponent />}>
         <CreateTokenPage />
+      </Suspense>
+    )
+  },
+  {
+    path: '/tokens/:tokenAddress',
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <TokenDetailsPage />
       </Suspense>
     )
   },
