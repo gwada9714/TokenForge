@@ -28,14 +28,16 @@ import ShowChartIcon from '@mui/icons-material/ShowChart';
 import TokenIcon from '@mui/icons-material/Token';
 import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
+import { useTokenStats } from '@/hooks/useTokenStats';
+import { useUserTokens } from '@/hooks/useUserTokens';
 
-interface TokenStats {
+interface ITokenStats {
   totalValue: bigint;
   transactionVolume: bigint;
   uniqueHolders: number;
 }
 
-interface Token {
+interface IToken {
   address: string;
   name: string;
   symbol: string;
@@ -192,7 +194,7 @@ const Dashboard: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    tokens?.map((token) => (
+                    tokens?.map((token: IToken) => (
                       <TableRow key={token.address}>
                         <TableCell>{token.name}</TableCell>
                         <TableCell>{token.symbol}</TableCell>
