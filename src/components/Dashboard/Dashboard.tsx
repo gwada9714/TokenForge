@@ -23,6 +23,7 @@ import { NetworkSelector } from '../NetworkSelector/NetworkSelector';
 import { NetworkConfig, getNetwork } from '@/config/networks';
 import { formatEther } from 'viem';
 import { useNetwork } from 'wagmi';
+import { Address } from 'viem';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import TokenIcon from '@mui/icons-material/Token';
@@ -38,12 +39,23 @@ interface ITokenStats {
 }
 
 interface IToken {
-  address: string;
+  address: Address;
   name: string;
   symbol: string;
   totalSupply: bigint;
-  network: NetworkConfig;
+  decimals: number;
+  owner: Address;
+  network?: ReturnType<typeof getNetwork>;
   createdAt: Date;
+  features: {
+    isBurnable: boolean;
+    isMintable: boolean;
+    isPausable: boolean;
+    hasMaxWallet: boolean;
+    hasMaxTransaction: boolean;
+    hasFee: boolean;
+    hasLiquidityLock: boolean;
+  };
 }
 
 const Dashboard: React.FC = () => {
