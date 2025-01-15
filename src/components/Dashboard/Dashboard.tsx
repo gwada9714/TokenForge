@@ -34,12 +34,12 @@ import { useUserTokens } from '@/hooks/useUserTokens';
 import { Virtuoso } from 'react-virtuoso';
 
 interface IToken {
-  address: Address;
+  address: string;
   name: string;
   symbol: string;
   totalSupply: bigint;
   decimals: number;
-  owner: Address;
+  owner: string;
   network?: ReturnType<typeof getNetwork>;
   createdAt: Date;
   features: {
@@ -50,6 +50,7 @@ interface IToken {
     hasMaxTransaction: boolean;
     hasAntiBot: boolean;
     hasBlacklist: boolean;
+    premium: boolean;
   };
   taxConfig?: {
     enabled: boolean;
@@ -99,9 +100,7 @@ const StatCard = memo<StatCardProps>(({ title, value, icon, isLoading, subValue 
           {title}
         </Typography>
       </Box>
-      <Typography variant="h4" component="div">
-        {value}
-      </Typography>
+      <Typography variant="h4">{isLoading ? '...' : value}</Typography>
       {subValue && (
         <Typography variant="body2" color="text.secondary">
           {subValue}
@@ -144,15 +143,13 @@ const TokenRow = memo<{ token: TokenData }>(({ token }) => (
   </TableRow>
 ));
 
-const TokenList = memo(({ tokens }: { tokens: TokenData[] }) => {
-  return (
-    <Virtuoso
-      style={{ height: '400px' }}
-      totalCount={tokens.length}
-      itemContent={index => <TokenRow token={tokens[index]} />}
-    />
-  );
-});
+const TokenList = memo<{ tokens: TokenData[] }>(({ tokens }) => (
+  <Virtuoso
+    style={{ height: '400px' }}
+    totalCount={tokens.length}
+    itemContent={index => <TokenRow token={tokens[index]} />}
+  />
+));
 
 const useGlobalStats = () => {
   const { stats: tokenStats, isLoading, error } = useTokenStats();
@@ -271,6 +268,11 @@ const Dashboard: React.FC = () => {
     </Grid>
   ), [stats, tokens, isStatsLoading, isTokensLoading, globalStats]);
 
+  const mappedTokens = tokens.map(token => ({
+    ...token,
+    tier: token.features.premium ? 'premium' : 'basic'
+  }));
+
   return (
     <Box sx={{ p: 2 }}>
       <Grid container spacing={3}>
@@ -329,10 +331,7 @@ const Dashboard: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <TokenList tokens={tokens.map(token => ({
-                    ...token,
-                    tier: token.features?.isPremium ? 'premium' : 'basic'
-                  }))} />
+                  <TokenList tokens={mappedTokens} />
                 </TableBody>
               </Table>
             </TableContainer>
