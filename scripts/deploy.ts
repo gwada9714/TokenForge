@@ -1,5 +1,6 @@
 /// <reference path="../types/hardhat.d.ts" />
-import { ethers } from "hardhat";
+import { ethers } from "@nomiclabs/hardhat-ethers";
+import * as hre from "hardhat";
 
 async function deployToken() {
   const [deployer] = await ethers.getSigners();
