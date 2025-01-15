@@ -41,6 +41,26 @@ const baseTheme = createTheme({
       light: '#5CA0FF',
       dark: '#002766',
     },
+    error: {
+      main: '#D32F2F',
+      light: '#EF5350',
+      dark: '#C62828',
+    },
+    warning: {
+      main: '#ED6C02',
+      light: '#FF9800',
+      dark: '#E65100',
+    },
+    info: {
+      main: '#0288D1',
+      light: '#03A9F4',
+      dark: '#01579B',
+    },
+    success: {
+      main: '#2E7D32',
+      light: '#4CAF50',
+      dark: '#1B5E20',
+    },
     background: {
       default: '#F5F5F5',
       paper: '#FFFFFF',
@@ -79,11 +99,21 @@ const baseTheme = createTheme({
           textTransform: 'none',
           borderRadius: '8px',
           fontWeight: 500,
+          padding: '8px 16px',
         },
         contained: {
           boxShadow: 'none',
           '&:hover': {
             boxShadow: 'none',
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& label.Mui-focused': {
+            color: '#006BFF',
           },
         },
       },
