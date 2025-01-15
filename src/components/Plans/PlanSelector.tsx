@@ -2,15 +2,13 @@ import React from 'react';
 import {
   Box,
   Button,
-  Flex,
-  Heading,
-  Text,
-  VStack,
-  HStack,
+  Stack,
+  Typography,
   Badge,
-  useColorModeValue,
-  Icon,
-} from '@chakra-ui/react';
+  useTheme,
+  Paper,
+  Grid
+} from '@mui/material';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import { UserLevel, DEFAULT_PLANS } from '../../types/plans';
 import { useUserPlan } from '../../contexts/UserPlanContext';
@@ -18,73 +16,65 @@ import { useUserPlan } from '../../contexts/UserPlanContext';
 const PlanFeatureItem: React.FC<{ feature: string; isAvailable: boolean }> = ({
   feature,
   isAvailable,
-}) => (
-  <HStack spacing={2}>
-    <Icon
-      as={isAvailable ? FaCheck : FaTimes}
-      color={isAvailable ? 'green.500' : 'red.500'}
-    />
-    <Text>{feature}</Text>
-  </HStack>
-);
+}) => {
+  const theme = useTheme();
+  return (
+    <Stack direction="row" spacing={2} alignItems="center">
+      {isAvailable ? (
+        <FaCheck color={theme.palette.success.main} />
+      ) : (
+        <FaTimes color={theme.palette.error.main} />
+      )}
+      <Typography>{feature}</Typography>
+    </Stack>
+  );
+};
 
-const PlanCard: React.FC<{
+interface PlanCardProps {
   level: UserLevel;
   isCurrentPlan: boolean;
   onSelect: () => void;
-}> = ({ level, isCurrentPlan, onSelect }) => {
+}
+
+const PlanCard: React.FC<PlanCardProps> = ({ level, isCurrentPlan, onSelect }) => {
   const plan = DEFAULT_PLANS[level];
-  const bgColor = useColorModeValue('white', 'gray.800');
+  const theme = useTheme();
 
   return (
-    <Box
-      p={6}
-      bg={bgColor}
-      borderRadius="lg"
-      border="2px"
-      borderColor={isCurrentPlan ? 'forge.500' : 'gray.200'}
-      boxShadow="lg"
-      width="full"
-      maxW="sm"
-      position="relative"
-      transition="transform 0.2s"
-      _hover={{ transform: 'translateY(-4px)' }}
+    <Paper 
+      elevation={3}
+      sx={{
+        p: 6,
+        borderRadius: 2,
+        border: isCurrentPlan ? `2px solid ${theme.palette.primary.main}` : 'none',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
     >
-      {isCurrentPlan && (
-        <Badge
-          position="absolute"
-          top={-3}
-          right={-3}
-          colorScheme="orange"
-          fontSize="sm"
-          px={3}
-          py={1}
-          borderRadius="full"
-        >
-          Plan Actuel
-        </Badge>
-      )}
-
-      <VStack spacing={4} align="stretch">
-        <Heading size="lg" color="forge.500">
-          {plan.name}
-        </Heading>
-        <Text color="gray.600">{plan.description}</Text>
-
-        <Box py={4}>
-          <Heading size="xl" mb={2}>
+      <Stack spacing={4}>
+        <Box>
+          <Typography variant="h5" gutterBottom>
+            {plan.name}
+          </Typography>
+          <Typography variant="h4" color="primary" gutterBottom>
             {plan.price.bnb} BNB
-            <Text as="span" fontSize="md" color="gray.500">
+            <Typography as="span" variant="h6" color="text.secondary">
               {' '}
               ou {plan.price.tkn} TKN
-            </Text>
-          </Heading>
+            </Typography>
+          </Typography>
+          {isCurrentPlan && (
+            <Badge color="primary" sx={{ mt: 2 }}>
+              Plan Actuel
+            </Badge>
+          )}
         </Box>
 
-        <VStack align="stretch" spacing={3}>
-          <Text fontWeight="bold" mb={2}>
+        <Stack spacing={2}>
+          <Typography fontWeight="bold" mb={2}>
             Fonctionnalités incluses :
-          </Text>
+          </Typography>
           <PlanFeatureItem
             feature="Déploiement Mainnet"
             isAvailable={plan.features.canDeployMainnet}
@@ -101,23 +91,23 @@ const PlanCard: React.FC<{
             feature="Support Prioritaire"
             isAvailable={plan.features.prioritySupport}
           />
-        </VStack>
+        </Stack>
 
         <Button
-          variant="forge"
-          size="lg"
-          isDisabled={isCurrentPlan}
+          variant={isCurrentPlan ? "outlined" : "contained"}
+          color="primary"
           onClick={onSelect}
-          mt={4}
+          disabled={isCurrentPlan}
+          sx={{ mt: 'auto' }}
         >
           {isCurrentPlan ? 'Plan Actuel' : 'Sélectionner'}
         </Button>
-      </VStack>
-    </Box>
+      </Stack>
+    </Paper>
   );
 };
 
-export const PlanSelector: React.FC = () => {
+const PlanSelector: React.FC = () => {
   const { userLevel, upgradePlan } = useUserPlan();
 
   const handlePlanSelect = async (selectedLevel: UserLevel) => {
@@ -129,33 +119,25 @@ export const PlanSelector: React.FC = () => {
   };
 
   return (
-    <Box py={8}>
-      <VStack spacing={8} align="stretch">
-        <Box textAlign="center" mb={8}>
-          <Heading as="h1" size="2xl" mb={4}>
-            Choisissez votre Plan
-          </Heading>
-          <Text fontSize="xl" color="gray.600">
-            Forgez votre token avec le plan qui correspond à vos besoins
-          </Text>
-        </Box>
+    <Box sx={{ py: 8 }}>
+      <Typography variant="h4" align="center" gutterBottom>
+        Choisissez votre Plan
+      </Typography>
+      <Typography variant="subtitle1" align="center" color="text.secondary" sx={{ mb: 8 }}>
+        Forgez votre token avec le plan qui correspond à vos besoins
+      </Typography>
 
-        <Flex
-          direction={{ base: 'column', lg: 'row' }}
-          gap={8}
-          justify="center"
-          align="stretch"
-        >
-          {Object.values(UserLevel).map((level) => (
+      <Grid container spacing={4} justifyContent="center">
+        {Object.values(UserLevel).map((level) => (
+          <Grid item xs={12} md={4} key={level}>
             <PlanCard
-              key={level}
               level={level}
               isCurrentPlan={level === userLevel}
               onSelect={() => handlePlanSelect(level)}
             />
-          ))}
-        </Flex>
-      </VStack>
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 };

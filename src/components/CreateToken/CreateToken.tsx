@@ -68,7 +68,7 @@ const CreateToken: React.FC = () => {
       <Card sx={{ mb: 4 }}>
         <CardContent>
           <Stepper activeStep={activeStep} orientation="vertical">
-            {steps.map((step, index) => (
+            {steps.map((step) => (
               <Step key={step.title}>
                 <StepLabel
                   optional={

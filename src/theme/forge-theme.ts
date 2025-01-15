@@ -1,16 +1,32 @@
-import { createTheme } from '@mui/material/styles';
-import { Components, Theme } from '@mui/material/styles';
+import { createTheme, Theme } from '@mui/material/styles';
+import { Components } from '@mui/material/styles';
+
+declare module '@mui/material/Button' {
+  interface ButtonPropsVariantOverrides {
+    forge: true;
+    ember: true;
+  }
+}
+
+declare module '@mui/material/Card' {
+  interface CardPropsVariantOverrides {
+    forge: true;
+    ember: true;
+  }
+}
 
 const colors = {
   forge: {
     main: '#FF6B2B',
     dark: '#E65A1F',
-    light: '#FF8C5A'
+    light: '#FF8C5A',
+    border: '#FFE0B2'
   },
   ember: {
     main: '#FF4B2B',
     dark: '#E63A1F',
-    light: '#FF6C5A'
+    light: '#FF6C5A',
+    border: '#FFCDD2'
   },
   metal: {
     50: '#fafafa',
@@ -75,16 +91,20 @@ const components: Components<Omit<Theme, "components">> = {
         borderColor: colors.metal[400],
       }
     },
-    variants: {
-      forge: {
-        borderLeftWidth: '4px',
-        borderLeftColor: colors.forge.main,
+    variants: [
+      {
+        props: { variant: 'forge' },
+        style: {
+          borderLeft: `4px solid ${colors.forge.main}`,
+        },
       },
-      ember: {
-        borderLeftWidth: '4px',
-        borderLeftColor: colors.ember.main,
+      {
+        props: { variant: 'ember' },
+        style: {
+          borderLeft: `4px solid ${colors.ember.main}`,
+        },
       },
-    },
+    ],
   },
   MuiInput: {
     styleOverrides: {
@@ -119,6 +139,14 @@ const components: Components<Omit<Theme, "components">> = {
       root: {
         '& .MuiOutlinedInput-root': {
           borderRadius: '8px',
+          borderColor: colors.forge.border,
+          '&:hover': {
+            borderColor: colors.forge.light,
+          },
+          '&.Mui-focused': {
+            borderColor: colors.forge.main,
+            boxShadow: `0 0 0 1px ${colors.forge.main}`,
+          },
         }
       }
     }
