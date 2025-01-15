@@ -127,30 +127,23 @@ const TokenList = memo<{ tokens: TokenData[] }>(({ tokens }) => (
 ));
 
 const useGlobalStats = () => {
-  const { stats, isLoading, error } = useTokenStats();
+  const { isLoading, error } = useTokenStats();
   const { tokens } = useUserTokens();
   
   return useMemo(() => {
     let totalTaxCollected = BigInt(0);
     let totalTransactions = 0;
-    let totalTokens = tokens?.length || 0;
-    let totalPremiumTokens = 0;
 
-    tokens?.forEach((token: TokenData) => {
-      if (token.taxConfig?.taxStats) {
-        totalTaxCollected += token.taxConfig.taxStats.totalTaxCollected;
-        totalTransactions += token.taxConfig.taxStats.totalTransactions;
-      }
-      if (token.features.premium) {
-        totalPremiumTokens++;
+    tokens?.forEach(token => {
+      if (token.taxStats) {
+        totalTaxCollected += token.taxStats.totalTaxCollected;
+        totalTransactions += token.taxStats.totalTransactions;
       }
     });
 
     return {
       totalTaxCollected,
       totalTransactions,
-      totalTokens,
-      totalPremiumTokens,
       isLoading,
       error
     };
@@ -160,7 +153,7 @@ const useGlobalStats = () => {
 const Dashboard = memo(() => {
   const navigate = useNavigate();
   const { tokens, isLoading: tokensLoading } = useUserTokens();
-  const { stats, isLoading: statsLoading } = useGlobalStats();
+  const { totalTaxCollected, totalTransactions, isLoading: statsLoading } = useGlobalStats();
   
   const isLoading = tokensLoading || statsLoading;
 
@@ -177,9 +170,9 @@ const Dashboard = memo(() => {
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Total Tax Collected"
-          value={stats?.totalTaxCollected.toString() || "0"}
+          value={totalTaxCollected?.toString() || "0"}
           icon={<MonetizationOnIcon color="primary" />}
-          subValue={`${stats?.totalTransactions || 0} transactions`}
+          subValue={`${totalTransactions || 0} transactions`}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -190,7 +183,7 @@ const Dashboard = memo(() => {
         />
       </Grid>
     </Grid>
-  ), [stats, tokens.length]);
+  ), [totalTaxCollected, totalTransactions, tokens.length]);
 
   const mappedTokens = tokens?.map(token => ({
     ...token,
