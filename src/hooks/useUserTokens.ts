@@ -30,6 +30,10 @@ export interface TokenData {
     sellTax: number;
     transferTax: number;
     taxRecipient: Address;
+    taxStats?: {
+      totalTaxCollected: number;
+      totalTransactions: number;
+    };
   };
   stats: {
     holders: number;

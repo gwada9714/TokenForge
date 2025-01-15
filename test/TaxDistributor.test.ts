@@ -1,12 +1,8 @@
-import { expect, use } from "chai";
-import chaiAsPromised from "chai-as-promised";
-import chaiEvents from "chai-events";
-import { ethers, network } from "@nomicfoundation/hardhat-ethers";
+import { expect } from "chai";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
-
-use(chaiAsPromised);
-use(chaiEvents);
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("TaxDistributor", () => {
     let taxDistributor: Contract;
