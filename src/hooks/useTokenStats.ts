@@ -12,7 +12,7 @@ interface TokenStats {
 export const useTokenStats = (chainId?: number) => {
   const [stats, setStats] = useState<TokenStats>();
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error>();
+  const [error, setError] = useState<Error | null>(null);
 
   const network = chainId ? getNetwork(chainId) : undefined;
   const publicClient = usePublicClient();
@@ -34,6 +34,11 @@ export const useTokenStats = (chainId?: number) => {
 
       try {
         setIsLoading(true);
+        setError(null);
+        
+        if (!network?.factoryAddress) {
+          throw new Error('Network configuration not found');
+        }
         
         // Si nous avons les stats du contrat factory
         if (factoryStats) {
@@ -46,7 +51,8 @@ export const useTokenStats = (chainId?: number) => {
           });
         }
       } catch (err) {
-        setError(err as Error);
+        console.error('Error fetching token stats:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch token stats'));
       } finally {
         setIsLoading(false);
       }

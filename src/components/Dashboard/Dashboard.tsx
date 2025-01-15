@@ -31,13 +31,13 @@ import { useUserTokens } from '@/hooks/useUserTokens';
 import { Virtuoso } from 'react-virtuoso';
 
 interface TokenData {
-  address: `0x${string}`;
+  address: Address;
   name: string;
   symbol: string;
   totalSupply: bigint;
   decimals: number;
-  owner: `0x${string}`;
-  network?: NetworkConfig;
+  owner: Address;
+  network: ReturnType<typeof getNetwork>;
   createdAt: Date;
   features: {
     isBurnable: boolean;
@@ -49,18 +49,14 @@ interface TokenData {
     hasBlacklist: boolean;
     premium: boolean;
   };
-  taxConfig?: {
+  taxConfig: {
     enabled: boolean;
     buyTax: number;
     sellTax: number;
     transferTax: number;
-    taxRecipient: `0x${string}`;
-    taxStats?: {
-      totalTaxCollected: bigint;
-      totalTransactions: number;
-    };
+    taxRecipient: Address;
   };
-  stats?: {
+  stats: {
     holders: number;
     transactions: number;
     price: string;
