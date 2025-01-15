@@ -7,6 +7,11 @@ export interface AppRoute {
   children?: AppRoute[];
 }
 
+export interface LazyRouteProps {
+  path: string;
+  component: React.LazyExoticComponent<React.ComponentType<any>>;
+}
+
 export type AppRouteObject = Omit<RouteObject, 'children'> & {
   children?: AppRouteObject[];
 };
