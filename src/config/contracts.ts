@@ -27,8 +27,17 @@ export const CONTRACT_ADDRESSES = {
 } as const;
 
 // DeFi contracts
-export const STAKING_CONTRACT_ADDRESS = '0x...'; // Replace with actual address after deployment
-export const LAUNCHPAD_CONTRACT_ADDRESS = '0x...'; // Replace with actual address after deployment
+export const STAKING_CONTRACT_ADDRESS = {
+  sepolia: import.meta.env.VITE_STAKING_CONTRACT_SEPOLIA,
+  mainnet: import.meta.env.VITE_STAKING_CONTRACT_MAINNET,
+  local: '0x5FbDB2315678afecb367f032d93F642f64180aa3' // Replace with your local deployment address
+};
+
+export const LAUNCHPAD_CONTRACT_ADDRESS = {
+  sepolia: import.meta.env.VITE_LAUNCHPAD_CONTRACT_SEPOLIA,
+  mainnet: import.meta.env.VITE_LAUNCHPAD_CONTRACT_MAINNET,
+  local: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' // Replace with your local deployment address
+};
 
 export const SUPPORTED_NETWORKS = {
   LOCAL: Number(import.meta.env.VITE_LOCAL_CHAIN_ID) || 31337,
