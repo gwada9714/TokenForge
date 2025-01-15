@@ -1,16 +1,17 @@
-/// <reference path="../types/hardhat-runtime.d.ts" />
+/// <reference path="../types/hardhat.d.ts" />
+import { ethers } from "hardhat";
 
 async function deployToken() {
-  const [deployer] = await hre.ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
 
   console.log("Déploiement des contrats avec le compte:", deployer.address);
 
-  const TokenForge = await hre.ethers.getContractFactory("TokenForgeToken");
+  const TokenForge = await ethers.getContractFactory("TokenForgeToken");
   const tokenForge = await TokenForge.deploy(
     "TokenForge Token",        // nom
     "TFT",                     // symbole
     18,                        // decimals (standard pour ERC20)
-    hre.ethers.utils.parseEther("1000000"), // supply total
+    ethers.utils.parseEther("1000000"), // supply total
     deployer.address,          // propriétaire
     true,                      // burnable
     true,                      // mintable
