@@ -201,17 +201,17 @@ export function useLaunchpad(poolId?: number) {
   return {
     poolInfo,
     userContribution,
-    createPool: handleCreatePool,
-    contribute: handleContribute,
-    finalizePool: handleFinalizePool,
-    cancelPool: handleCancelPool,
-    claimTokens: handleClaimTokens,
-    claimRefund: handleClaimRefund,
     isCreating,
     isContributing,
     isFinalizing,
     isCancelling,
     isClaiming,
     isRefunding,
+    createPool: handleCreatePool,
+    contribute: handleContribute,
+    finalizePool: handleFinalizePool,
+    cancelPool: handleCancelPool,
+    claimTokens: handleClaimTokens,
+    claimRefund: handleClaimRefund,
   };
 }

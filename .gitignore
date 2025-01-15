@@ -26,6 +26,12 @@
 /artifacts
 /typechain-types
 
+# Hardhat artifacts
+src/artifacts
+artifacts
+cache
+typechain-types
+
 # IDE
 .idea
 .vscode
