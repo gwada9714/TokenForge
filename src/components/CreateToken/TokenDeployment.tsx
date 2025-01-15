@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Stack,
   Button,
@@ -15,6 +15,14 @@ interface TokenDeploymentProps {
   tokenConfig: TokenConfig;
 }
 
+const deploymentSteps = [
+  'Préparation du contrat',
+  'Compilation',
+  'Déploiement sur la blockchain',
+  'Vérification du contrat',
+  'Finalisation',
+];
+
 const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentStep, setDeploymentStep] = useState(0);
@@ -22,26 +30,15 @@ const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  const deploymentSteps = [
-    'Préparation du contrat',
-    'Compilation',
-    'Déploiement sur la blockchain',
-    'Vérification du contrat',
-    'Finalisation',
-  ];
-
-  const handleDeploy = async () => {
+  const handleDeploy = useCallback(async () => {
     setIsDeploying(true);
     setError(null);
 
     try {
-      // Log token configuration before deployment
       console.log('Deploying token with config:', tokenConfig);
       
-      // Simulation des étapes de déploiement
       for (let i = 0; i < deploymentSteps.length; i++) {
         setDeploymentStep(i);
-        // Simuler le temps de traitement
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
@@ -55,11 +52,11 @@ const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
     } finally {
       setIsDeploying(false);
     }
-  };
+  }, [tokenConfig]);
 
-  const handleCloseSnackbar = () => {
+  const handleCloseSnackbar = useCallback(() => {
     setSnackbarOpen(false);
-  };
+  }, []);
 
   return (
     <Stack spacing={3}>
@@ -110,4 +107,4 @@ const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
   );
 };
 
-export default TokenDeployment;
+export default React.memo(TokenDeployment);

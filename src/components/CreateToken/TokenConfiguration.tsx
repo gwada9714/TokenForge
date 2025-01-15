@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   Stack,
   FormControl,
@@ -17,34 +17,36 @@ interface TokenConfigurationProps {
   setTokenConfig: React.Dispatch<React.SetStateAction<TokenConfig>>;
 }
 
+const features = [
+  'Mint',
+  'Burn',
+  'Pause',
+  'Blacklist',
+  'Anti-Bot',
+  'Max Transaction',
+  'Max Wallet',
+];
+
 const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
   tokenConfig,
   setTokenConfig,
 }) => {
-  const handleChange = (field: keyof TokenConfig, value: any) => {
+  const handleChange = useCallback((field: keyof TokenConfig, value: any) => {
     setTokenConfig((prev) => ({
       ...prev,
       [field]: value,
     }));
-  };
+  }, [setTokenConfig]);
 
-  const handleFeatureChange = (feature: string) => {
-    const currentFeatures = tokenConfig.features || [];
-    const newFeatures = currentFeatures.includes(feature)
-      ? currentFeatures.filter(f => f !== feature)
-      : [...currentFeatures, feature];
-    handleChange('features', newFeatures);
-  };
-
-  const features = [
-    'Mint',
-    'Burn',
-    'Pause',
-    'Blacklist',
-    'Anti-Bot',
-    'Max Transaction',
-    'Max Wallet',
-  ];
+  const handleFeatureChange = useCallback((feature: string) => {
+    setTokenConfig((prev) => {
+      const currentFeatures = prev.features || [];
+      const newFeatures = currentFeatures.includes(feature)
+        ? currentFeatures.filter(f => f !== feature)
+        : [...currentFeatures, feature];
+      return { ...prev, features: newFeatures };
+    });
+  }, [setTokenConfig]);
 
   return (
     <Stack spacing={3}>
@@ -120,4 +122,4 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
   );
 };
 
-export default TokenConfiguration;
+export default React.memo(TokenConfiguration);
