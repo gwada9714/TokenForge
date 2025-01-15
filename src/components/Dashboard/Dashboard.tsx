@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -28,8 +28,6 @@ import ShowChartIcon from '@mui/icons-material/ShowChart';
 import TokenIcon from '@mui/icons-material/Token';
 import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
-import { useTokenStats } from '@/hooks/useTokenStats';
-import { useUserTokens } from '@/hooks/useUserTokens';
 
 interface TokenStats {
   totalValue: bigint;
@@ -200,7 +198,7 @@ const Dashboard: React.FC = () => {
                         <TableCell>{token.symbol}</TableCell>
                         <TableCell>
                           <Chip 
-                            label={token.network.name}
+                            label={token.network?.name || 'Unknown Network'}
                             size="small"
                             variant="outlined"
                           />
@@ -214,7 +212,9 @@ const Dashboard: React.FC = () => {
                             <IconButton
                               size="small"
                               onClick={() => window.open(
-                                `${token.network.explorerUrl}/token/${token.address}`,
+                                token.network ? 
+                                  `${token.network.explorerUrl}/token/${token.address}` :
+                                  '#',
                                 '_blank'
                               )}
                             >

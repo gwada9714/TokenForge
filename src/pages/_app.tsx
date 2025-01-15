@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { CacheProvider } from '@emotion/react';
 import createEmotionCache from '@/utils/createEmotionCache';
-import theme from '@/styles/theme';
+import { theme } from '@/styles/theme';
 import { registerServiceWorker } from '@/utils/serviceWorker';
 
 // Client-side cache, shared for the whole session of the user in the browser
