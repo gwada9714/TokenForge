@@ -8,11 +8,8 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Grid,
-  InputAdornment,
-  IconButton
+  Grid
 } from '@mui/material';
-import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { TokenConfig } from '@/types/token';
 
 interface TokenConfigurationProps {

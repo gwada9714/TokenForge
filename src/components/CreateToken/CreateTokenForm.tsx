@@ -4,13 +4,10 @@ import {
   FormLabel,
   TextField,
   Button,
-  useTheme,
   Paper
 } from '@mui/material'
 
 export const CreateTokenForm = () => {
-  const theme = useTheme();
-  
   return (
     <Paper 
       component="form"

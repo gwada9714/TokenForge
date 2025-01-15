@@ -1,5 +1,5 @@
 // src/components/TokenCard/TokenCard.tsx
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Card, CardContent, Typography, Button, Box } from '@mui/material';
 import { truncateAddress } from '../utils';
 

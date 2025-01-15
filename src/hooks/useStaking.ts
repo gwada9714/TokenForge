@@ -40,7 +40,7 @@ export function useStaking(_tokenAddress: string) {
   // Only proceed with contract interactions if we have a valid staking address
   const enabled = Boolean(stakingAddress && address);
 
-  const { data: userStakeData, refetch: refetchUserStake } = useContractRead({
+  const { data: userStakeData } = useContractRead({
     address: stakingAddress ?? undefined,
     abi: stakingABI,
     functionName: 'userStakes',
@@ -48,14 +48,14 @@ export function useStaking(_tokenAddress: string) {
     enabled,
   });
 
-  const { data: poolInfoData, refetch: refetchPoolInfo } = useContractRead({
+  const { data: poolInfoData } = useContractRead({
     address: stakingAddress ?? undefined,
     abi: stakingABI,
     functionName: 'getPoolInfo',
     enabled,
   });
 
-  const { data: rewardsData, refetch: refetchRewards } = useContractRead({
+  const { data: rewardsData } = useContractRead({
     address: stakingAddress ?? undefined,
     abi: stakingABI,
     functionName: 'calculateRewards',

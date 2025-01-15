@@ -2,7 +2,6 @@ import {
   Box,
   AppBar,
   Toolbar,
-  Button,
   Stack,
   IconButton,
   useTheme,
