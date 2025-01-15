@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useContractWrite, useContractRead, useAccount, useWaitForTransaction } from 'wagmi';
+import { useContractWrite, useContractRead, useAccount, useWaitForTransaction, useNetwork } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
-import { LAUNCHPAD_CONTRACT_ADDRESS } from '../config/contracts';
+import { getContractAddress } from '../config/contracts';
 import { launchpadABI } from '../contracts/abis';
 
 interface PoolInfo {
@@ -18,6 +18,9 @@ interface PoolInfo {
 
 export function useLaunchpad(poolId?: number) {
   const { address } = useAccount();
+  const { chain } = useNetwork();
+  const chainId = chain?.id || 11155111; // Default to Sepolia
+
   const [poolInfo, setPoolInfo] = useState<PoolInfo>({
     token: '',
     tokenPrice: '0',
@@ -34,7 +37,7 @@ export function useLaunchpad(poolId?: number) {
 
   // Read pool info
   const { data: poolData } = useContractRead({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'getPoolInfo',
     args: [poolId],
@@ -44,7 +47,7 @@ export function useLaunchpad(poolId?: number) {
 
   // Read user contribution
   const { data: contributionData } = useContractRead({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'getContribution',
     args: [poolId, address],
@@ -54,42 +57,42 @@ export function useLaunchpad(poolId?: number) {
 
   // Create pool
   const { write: createPool, data: createPoolData } = useContractWrite({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'createPool',
   });
 
   // Contribute to pool
   const { write: contribute, data: contributeData } = useContractWrite({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'contribute',
   });
 
   // Finalize pool
   const { write: finalizePool, data: finalizeData } = useContractWrite({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'finalizePool',
   });
 
   // Cancel pool
   const { write: cancelPool, data: cancelData } = useContractWrite({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'cancelPool',
   });
 
   // Claim tokens
   const { write: claimTokens, data: claimData } = useContractWrite({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'claimTokens',
   });
 
   // Claim refund
   const { write: claimRefund, data: refundData } = useContractWrite({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'claimRefund',
   });

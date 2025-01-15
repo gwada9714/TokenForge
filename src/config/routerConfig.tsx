@@ -9,8 +9,10 @@ export const routerFutureConfig = {
 } as const;
 
 // Lazy load pages
-const StakingPage = lazy(() => import('../pages/Staking').then(module => ({ default: module.StakingPage })));
-const LaunchpadPage = lazy(() => import('../pages/Launchpad').then(module => ({ default: module.LaunchpadPage })));
+const StakingPage = lazy(() => import('../pages/Staking'));
+const LaunchpadPage = lazy(() => import('../pages/Launchpad'));
+const TokensPage = lazy(() => import('../pages/Tokens'));
+const CreateTokenPage = lazy(() => import('../pages/CreateToken'));
 
 // Define routes configuration
 export const routes: RouteObject[] = [
@@ -31,6 +33,22 @@ export const routes: RouteObject[] = [
     element: (
       <Suspense fallback={<LoadingComponent />}>
         <LaunchpadPage />
+      </Suspense>
+    )
+  },
+  {
+    path: '/tokens',
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <TokensPage />
+      </Suspense>
+    )
+  },
+  {
+    path: '/tokens/create',
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <CreateTokenPage />
       </Suspense>
     )
   }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useContractWrite, useContractRead, useAccount, useWaitForTransaction, useNetwork } from 'wagmi';
 import { parseEther, formatEther } from 'viem'; 
-import { STAKING_CONTRACT_ADDRESS, SUPPORTED_NETWORKS } from '../config/contracts';
+import { getContractAddress } from '../config/contracts';
 import { stakingABI } from '../contracts/abis';
 
 interface StakeInfo {
@@ -16,19 +16,6 @@ interface PoolInfo {
   lastUpdateTime: number;
 }
 
-const getStakingAddress = (chainId: number) => {
-  switch (chainId) {
-    case SUPPORTED_NETWORKS.SEPOLIA:
-      return STAKING_CONTRACT_ADDRESS.sepolia;
-    case SUPPORTED_NETWORKS.MAINNET:
-      return STAKING_CONTRACT_ADDRESS.mainnet;
-    case SUPPORTED_NETWORKS.LOCAL:
-      return STAKING_CONTRACT_ADDRESS.local;
-    default:
-      throw new Error('Unsupported network');
-  }
-};
-
 /**
  * Hook for interacting with the staking contract
  * @param _tokenAddress The address of the token being staked (reserved for future multi-token staking support)
@@ -36,7 +23,7 @@ const getStakingAddress = (chainId: number) => {
 export function useStaking(_tokenAddress: string) {
   const { address } = useAccount();
   const { chain } = useNetwork();
-  const stakingAddress = chain ? getStakingAddress(chain.id) : undefined;
+  const stakingAddress = chain ? getContractAddress('STAKING_CONTRACT', chain.id) : undefined;
 
   const [userStake, setUserStake] = useState<StakeInfo>({
     amount: '0',

@@ -3,7 +3,7 @@ import { Container, Text, Box } from '@chakra-ui/react';
 import { StakingPool } from '../components/Staking/StakingPool';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
 
-export const StakingPage: React.FC = () => {
+const StakingPage: React.FC = () => {
   const platformTokenAddress = CONTRACT_ADDRESSES.PLATFORM_TOKEN.sepolia;
   
   return (
@@ -22,3 +22,5 @@ export const StakingPage: React.FC = () => {
     </Container>
   );
 };
+
+export default StakingPage;

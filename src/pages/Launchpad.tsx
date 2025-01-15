@@ -12,16 +12,18 @@ import {
 } from '@chakra-ui/react';
 import { CreatePool } from '../components/Launchpad/CreatePool';
 import { LaunchpadPool } from '../components/Launchpad/LaunchpadPool';
-import { useContractRead } from 'wagmi';
-import { LAUNCHPAD_CONTRACT_ADDRESS } from '../config/contracts';
+import { useContractRead, useNetwork } from 'wagmi';
+import { getContractAddress } from '../config/contracts';
 import { launchpadABI } from '../contracts/abis';
 
-export const LaunchpadPage: React.FC = () => {
+const LaunchpadPage: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
+  const { chain } = useNetwork();
+  const chainId = chain?.id || 11155111; // Default to Sepolia
 
   // Get total number of pools
   const { data: poolCount } = useContractRead({
-    address: LAUNCHPAD_CONTRACT_ADDRESS,
+    address: getContractAddress('LAUNCHPAD', chainId),
     abi: launchpadABI,
     functionName: 'poolCount',
     watch: true,
@@ -65,3 +67,5 @@ export const LaunchpadPage: React.FC = () => {
     </Container>
   );
 };
+
+export default LaunchpadPage;
