@@ -1,4 +1,5 @@
 import { customERC20ABI } from "../contracts/compiled";
+import { config } from "../utils/config";
 
 export const CONTRACT_ABI = [
   {
@@ -84,9 +85,9 @@ export function getTokenContract(address: `0x${string}`) {
   };
 }
 
-export function getTokenFactoryContract(address: `0x${string}`) {
+export function getTokenFactoryContract(address?: `0x${string}`) {
   return {
-    address,
+    address: address ?? config.contracts.tokenFactory,
     abi: customERC20ABI,
   };
 }

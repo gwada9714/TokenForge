@@ -28,8 +28,10 @@ export const useUserTokens = (address?: Address) => {
   const { data: tokenAddresses, isError, isLoading } = useContractRead({
     ...getTokenFactoryContract(),
     functionName: 'getTokensByOwner',
-    args: address ? [address] : undefined,
-    account: address
+    args: [address ?? '0x0000000000000000000000000000000000000000'] as const,
+    query: {
+      enabled: !!address
+    }
   });
 
   useEffect(() => {
