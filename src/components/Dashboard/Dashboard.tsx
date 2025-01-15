@@ -7,7 +7,6 @@ import {
   CardContent,
   Typography,
   Grid,
-  Stack,
   IconButton,
   Table,
   TableBody,
@@ -34,7 +33,6 @@ import { useUserTokens } from '@/hooks/useUserTokens';
 import { Virtuoso } from 'react-virtuoso';
 
 interface TokenData {
-  tier: 'basic' | 'premium';
   address: `0x${string}`;
   name: string;
   symbol: string;
@@ -51,7 +49,6 @@ interface TokenData {
     hasMaxTransaction: boolean;
     hasAntiBot: boolean;
     hasBlacklist: boolean;
-    premium: boolean;
   };
   taxConfig?: {
     enabled: boolean;
