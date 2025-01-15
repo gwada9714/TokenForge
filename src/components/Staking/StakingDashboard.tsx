@@ -63,7 +63,7 @@ const StakingDashboard: React.FC = () => {
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
     return {
-      totalStaked: formatEther(BigNumber.from(stakingStats.totalStaked)),
+      totalStaked: formatEther(stakingStats.totalStaked),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };
@@ -71,14 +71,12 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    const amount = BigNumber.from(stakeAmount);
-    await stake(amount);
+    await stake(stakeAmount.toString());
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    const amount = BigNumber.from(withdrawAmount);
-    await withdraw(amount);
+    await withdraw(withdrawAmount.toString());
   };
 
   const handleClaimRewards = async () => {

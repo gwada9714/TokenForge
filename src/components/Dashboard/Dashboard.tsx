@@ -48,7 +48,7 @@ interface TokenData {
     buyTax: number;
     sellTax: number;
     transferTax: number;
-    taxRecipient: string;
+    taxRecipient: `0x${string}`;
     taxStats?: {
       totalTaxCollected: number;
       totalTransactions: number;
