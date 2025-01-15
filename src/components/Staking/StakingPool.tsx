@@ -5,8 +5,7 @@ import {
   TextField,
   Box,
   Stack,
-  Typography,
-  LinearProgress
+  Typography
 } from '@mui/material';
 import { useStaking } from '../../hooks/useStaking';
 
