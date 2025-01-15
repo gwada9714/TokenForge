@@ -135,9 +135,9 @@ const useGlobalStats = () => {
     let totalTransactions = 0;
 
     tokens?.forEach(token => {
-      if (token.taxStats) {
-        totalTaxCollected += token.taxStats.totalTaxCollected;
-        totalTransactions += token.taxStats.totalTransactions;
+      if (token.taxConfig?.taxStats) {
+        totalTaxCollected += token.taxConfig.taxStats.totalTaxCollected;
+        totalTransactions += token.taxConfig.taxStats.totalTransactions;
       }
     });
 
