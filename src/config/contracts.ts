@@ -24,7 +24,12 @@ export const CONTRACT_ADDRESSES = {
   PLATFORM_TOKEN: {
     sepolia: formatAddress(import.meta.env.VITE_PLATFORM_TOKEN_SEPOLIA),
     mainnet: formatAddress(import.meta.env.VITE_PLATFORM_TOKEN_MAINNET),
-    local: formatAddress('0x5FbDB2315678afecb367f032d93F642f64180aa3')
+    local: formatAddress('0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0')
+  },
+  STAKING_CONTRACT: {
+    sepolia: formatAddress(import.meta.env.VITE_STAKING_CONTRACT_SEPOLIA),
+    mainnet: formatAddress(import.meta.env.VITE_STAKING_CONTRACT_MAINNET),
+    local: formatAddress('0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82')
   },
   LIQUIDITY_LOCKER: {
     sepolia: formatAddress(import.meta.env.VITE_LIQUIDITY_LOCKER_SEPOLIA),
@@ -34,11 +39,6 @@ export const CONTRACT_ADDRESSES = {
   LAUNCHPAD: {
     sepolia: formatAddress(import.meta.env.VITE_LAUNCHPAD_SEPOLIA),
     mainnet: formatAddress(import.meta.env.VITE_LAUNCHPAD_MAINNET),
-    local: formatAddress('0x5FbDB2315678afecb367f032d93F642f64180aa3')
-  },
-  STAKING_CONTRACT: {
-    sepolia: formatAddress(import.meta.env.VITE_STAKING_CONTRACT_SEPOLIA),
-    mainnet: formatAddress(import.meta.env.VITE_STAKING_CONTRACT_MAINNET),
     local: formatAddress('0x5FbDB2315678afecb367f032d93F642f64180aa3')
   },
   USDT: {
@@ -52,18 +52,16 @@ export const CONTRACT_ADDRESSES = {
 
 export type ContractType = keyof typeof CONTRACT_ADDRESSES;
 
-export const getContractAddress = (contract: ContractType, chainId: number): Address => {
-  switch (chainId) {
-    case SUPPORTED_NETWORKS.SEPOLIA:
-      return CONTRACT_ADDRESSES[contract].sepolia;
-    
-    case SUPPORTED_NETWORKS.MAINNET:
-      return CONTRACT_ADDRESSES[contract].mainnet;
+export function getContractAddress(contract: ContractType, chainId: number): Address {
+  const networkMap = {
+    [SUPPORTED_NETWORKS.LOCAL]: 'local',
+    [SUPPORTED_NETWORKS.SEPOLIA]: 'sepolia',
+    [SUPPORTED_NETWORKS.MAINNET]: 'mainnet'
+  } as const;
 
-    default:
-      return CONTRACT_ADDRESSES[contract].local;
-  }
-};
+  const network = networkMap[chainId as keyof typeof networkMap] || 'local';
+  return CONTRACT_ADDRESSES[contract][network];
+}
 
 export const SUPPORTED_NETWORKS = {
   LOCAL: Number(import.meta.env.VITE_LOCAL_CHAIN_ID) || 31337,
