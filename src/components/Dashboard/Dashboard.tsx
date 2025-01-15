@@ -50,7 +50,7 @@ interface TokenData {
     transferTax: number;
     taxRecipient: string;
     taxStats?: {
-      totalTaxCollected: bigint;
+      totalTaxCollected: number;
       totalTransactions: number;
     };
   };
@@ -131,7 +131,7 @@ const useGlobalStats = () => {
   const { tokens } = useUserTokens();
   
   return useMemo(() => {
-    let totalTaxCollected = BigInt(0);
+    let totalTaxCollected = 0;
     let totalTransactions = 0;
 
     tokens?.forEach(token => {

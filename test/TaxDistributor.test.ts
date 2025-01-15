@@ -1,16 +1,11 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers } from "@nomiclabs/hardhat-ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { 
-    TaxDistributor,
-    TokenForgeToken,
-    TaxDistributor__factory,
-    TokenForgeToken__factory
-} from "../typechain-types";
+import { Contract } from "ethers";
 
 describe("TaxDistributor", () => {
-    let taxDistributor: TaxDistributor;
-    let token: TokenForgeToken;
+    let taxDistributor: Contract;
+    let token: Contract;
     let owner: SignerWithAddress;
     let treasury: SignerWithAddress;
     let development: SignerWithAddress;
@@ -26,10 +21,7 @@ describe("TaxDistributor", () => {
         [owner, treasury, development, buyback, staking, user1, user2] = await ethers.getSigners();
 
         // Deploy TaxDistributor
-        const TaxDistributorFactory = (await ethers.getContractFactory(
-            "TaxDistributor"
-        )) as TaxDistributor__factory;
-
+        const TaxDistributorFactory = await ethers.getContractFactory("TaxDistributor");
         taxDistributor = await TaxDistributorFactory.deploy(
             treasury.address,
             development.address,
@@ -39,10 +31,7 @@ describe("TaxDistributor", () => {
         await taxDistributor.deployed();
 
         // Deploy Token
-        const TokenFactory = (await ethers.getContractFactory(
-            "TokenForgeToken"
-        )) as TokenForgeToken__factory;
-
+        const TokenFactory = await ethers.getContractFactory("TokenForgeToken");
         token = await TokenFactory.deploy(
             "Test Token",
             "TEST",
@@ -50,9 +39,7 @@ describe("TaxDistributor", () => {
             INITIAL_SUPPLY,
             true,
             true,
-            true,
-            treasury.address,
-            taxDistributor.address
+            treasury.address
         );
         await token.deployed();
     });
@@ -78,7 +65,14 @@ describe("TaxDistributor", () => {
             const initialStakingBalance = await token.balanceOf(staking.address);
             
             // Distribute taxes
-            await taxDistributor.distributeTaxes(token.address);
+            await expect(taxDistributor.distributeTaxes(token.address))
+                .to.emit(taxDistributor, "TaxDistributed")
+                .withArgs(
+                    treasuryShare,
+                    developmentShare,
+                    buybackShare,
+                    stakingShare
+                );
             
             // Check final balances
             expect(await token.balanceOf(treasury.address))
@@ -89,6 +83,11 @@ describe("TaxDistributor", () => {
                 .to.equal(initialBuybackBalance.add(buybackShare));
             expect(await token.balanceOf(staking.address))
                 .to.equal(initialStakingBalance.add(stakingShare));
+        });
+
+        it("should prevent distribution when no taxes collected", async () => {
+            await expect(taxDistributor.distributeTaxes(token.address))
+                .to.be.rejectedWith("No taxes to distribute");
         });
 
         it("should emit TaxDistributed event with correct amounts", async () => {
@@ -109,11 +108,6 @@ describe("TaxDistributor", () => {
                     stakingShare
                 );
         });
-
-        it("should prevent distribution when no taxes collected", async () => {
-            await expect(taxDistributor.distributeTaxes(token.address))
-                .to.be.revertedWith("No taxes to distribute");
-        });
     });
 
     describe("Admin Functions", () => {
@@ -128,12 +122,12 @@ describe("TaxDistributor", () => {
 
         it("should prevent non-owner from updating wallets", async () => {
             await expect(taxDistributor.connect(user1).setTreasuryWallet(user2.address))
-                .to.be.revertedWith("Ownable: caller is not the owner");
+                .to.be.rejectedWith("Ownable: caller is not the owner");
         });
 
         it("should prevent setting zero address as wallet", async () => {
             await expect(taxDistributor.setTreasuryWallet(ethers.constants.AddressZero))
-                .to.be.revertedWith("New wallet cannot be zero");
+                .to.be.rejectedWith("New wallet cannot be zero");
         });
     });
 });
