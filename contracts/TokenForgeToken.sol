@@ -16,7 +16,7 @@ contract TokenForgeToken is ERC20, ReentrancyGuard {
     address private immutable _stakingPoolAddress;
     
     // TokenForge Platform Tax
-    TokenForgeTKN private immutable _forgeTknToken;
+    TokenForgeTKN private _forgeTknToken;
     bool private immutable _forgeTaxEnabled;
     uint256 private constant FORGE_TAX_RATE = 100; // 1% taxe de la forge
     
@@ -47,11 +47,7 @@ contract TokenForgeToken is ERC20, ReentrancyGuard {
         
         // Configuration de la taxe de la forge
         _forgeTaxEnabled = forgeTknToken_ != address(0);
-        if (_forgeTaxEnabled) {
-            _forgeTknToken = TokenForgeTKN(forgeTknToken_);
-        } else {
-            _forgeTknToken = TokenForgeTKN(address(0));
-        }
+        _forgeTknToken = TokenForgeTKN(forgeTknToken_);
         
         // Exemption des adresses critiques
         _isExempt[treasury_] = true;

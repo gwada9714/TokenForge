@@ -84,29 +84,29 @@ contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl {
         _unpause();
     }
 
-    function _update(
+    function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 value
+        uint256 amount
     ) internal virtual override(ERC20, ERC20Pausable) {
+        super._beforeTokenTransfer(from, to, amount);
+        
         // Skip tax collection for minting and burning
         if (from != address(0) && to != address(0)) {
-            uint256 taxAmount = (value * FORGE_TAX_RATE) / 10000; // Calculate 1% tax
-            uint256 transferAmount = value - taxAmount;
-
-            // Transfer tax to treasury
-            super._update(from, FORGE_TREASURY, taxAmount);
-            
-            // Transfer remaining amount to recipient
-            super._update(from, to, transferAmount);
-
-            // Update statistics
+            uint256 taxAmount = (amount * FORGE_TAX_RATE) / 10000; // Calculate 1% tax
             totalTaxCollected += taxAmount;
             totalTransactions += 1;
-
+            
             emit TaxCollected(from, to, taxAmount);
-        } else {
-            super._update(from, to, value);
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(AccessControl)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
