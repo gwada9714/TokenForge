@@ -49,13 +49,15 @@ const StakingDashboard: React.FC = () => {
     stakingStats,
     isLoading,
     stake,
-    unstake,
+    withdraw,
     claimRewards,
     stakeAmount,
     setStakeAmount,
+    withdrawAmount,
+    setWithdrawAmount,
     canUnstake,
     timeUntilUnstake,
-  } = useStaking();
+  } = useStaking(STAKING_CONFIG.address);
 
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
@@ -66,18 +68,14 @@ const StakingDashboard: React.FC = () => {
     };
   }, [stakingStats]);
 
-  const handleStake = async () => {
+  const handleStake = () => {
     if (!stakeAmount) return;
-    try {
-      const amount = parseEther(stakeAmount);
-      if (amount < STAKING_CONFIG.MINIMUM_AMOUNT) {
-        throw new Error(`Minimum stake amount is ${formatEther(STAKING_CONFIG.MINIMUM_AMOUNT)} TKN`);
-      }
-      await stake(amount);
-      setStakeAmount('');
-    } catch (error) {
-      console.error('Staking error:', error);
-    }
+    stake(stakeAmount);
+  };
+
+  const handleWithdraw = () => {
+    if (!withdrawAmount) return;
+    withdraw(withdrawAmount);
   };
 
   if (isLoading) {
@@ -171,13 +169,20 @@ const StakingDashboard: React.FC = () => {
                     Temps restant avant unstake: {Math.ceil(timeUntilUnstake / (24 * 3600))} jours
                   </Alert>
                 )}
+                <TextField
+                  label="Montant à retirer"
+                  type="number"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  fullWidth
+                />
                 <Button
                   variant="outlined"
-                  onClick={() => unstake()}
+                  onClick={handleWithdraw}
                   disabled={!canUnstake || !(stakedAmount > 0n)}
                   fullWidth
                 >
-                  Unstake
+                  Retirer
                 </Button>
                 <Button
                   variant="contained"

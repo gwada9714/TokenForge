@@ -15,19 +15,18 @@ interface StakingPoolProps {
 }
 
 export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSymbol }) => {
-  const [stakeAmount, setStakeAmount] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-
   const {
-    userStake,
-    poolInfo,
-    rewards,
+    stakedAmount,
+    pendingRewards,
+    stakingStats,
     stake,
     withdraw,
     claimRewards,
-    isStaking,
-    isWithdrawing,
-    isClaiming,
+    isLoading,
+    stakeAmount,
+    setStakeAmount,
+    withdrawAmount,
+    setWithdrawAmount,
   } = useStaking(tokenAddress);
 
   const handleStake = () => {
@@ -54,11 +53,11 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
         </Typography>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Typography>Total Staked:</Typography>
-          <Typography>{poolInfo.totalStaked} {tokenSymbol}</Typography>
+          <Typography>{stakingStats.totalStaked} {tokenSymbol}</Typography>
         </Stack>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Typography>Reward Rate:</Typography>
-          <Typography>{poolInfo.rewardRate} {tokenSymbol}/day</Typography>
+          <Typography>{stakingStats.rewardRate} {tokenSymbol}/day</Typography>
         </Stack>
       </Box>
 
@@ -68,11 +67,11 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
         </Typography>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Typography>Staked Amount:</Typography>
-          <Typography>{userStake.amount} {tokenSymbol}</Typography>
+          <Typography>{stakedAmount} {tokenSymbol}</Typography>
         </Stack>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Typography>Pending Rewards:</Typography>
-          <Typography>{rewards} {tokenSymbol}</Typography>
+          <Typography>{pendingRewards} {tokenSymbol}</Typography>
         </Stack>
       </Box>
 
@@ -91,9 +90,9 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
             variant="contained"
             color="primary"
             onClick={handleStake}
-            disabled={isStaking}
+            disabled={isLoading}
           >
-            {isStaking ? 'Staking' : 'Stake'}
+            {isLoading ? 'Staking' : 'Stake'}
           </Button>
         </Stack>
       </Box>
@@ -113,9 +112,9 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
             variant="contained"
             color="error"
             onClick={handleWithdraw}
-            disabled={isWithdrawing}
+            disabled={isLoading}
           >
-            {isWithdrawing ? 'Withdrawing' : 'Withdraw'}
+            {isLoading ? 'Withdrawing' : 'Withdraw'}
           </Button>
         </Stack>
       </Box>
@@ -124,10 +123,10 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
         variant="contained"
         color="success"
         onClick={claimRewards}
-        disabled={isClaiming || Number(rewards) === 0}
+        disabled={isLoading || Number(pendingRewards) === 0}
         sx={{ width: '100%' }}
       >
-        {isClaiming ? 'Claiming' : 'Claim Rewards'}
+        {isLoading ? 'Claiming' : 'Claim Rewards'}
       </Button>
     </Card>
   );

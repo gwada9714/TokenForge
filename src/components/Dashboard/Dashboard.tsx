@@ -2,22 +2,22 @@ import React, { useState, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
-  Button, 
-  Grid, 
-  Typography, 
-  Paper,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Stack,
+  IconButton,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Card,
-  CardContent,
+  Paper,
   Chip,
-  IconButton,
   Tooltip,
-  CircularProgress
 } from '@mui/material';
 import { NetworkSelector } from '../NetworkSelector/NetworkSelector';
 import { NetworkConfig, getNetwork } from '@/config/networks';
@@ -33,14 +33,15 @@ import { useTokenStats } from '@/hooks/useTokenStats';
 import { useUserTokens } from '@/hooks/useUserTokens';
 import { Virtuoso } from 'react-virtuoso';
 
-interface IToken {
-  address: string;
+interface TokenData {
+  tier: 'basic' | 'premium';
+  address: `0x${string}`;
   name: string;
   symbol: string;
   totalSupply: bigint;
   decimals: number;
-  owner: string;
-  network?: ReturnType<typeof getNetwork>;
+  owner: `0x${string}`;
+  network?: NetworkConfig;
   createdAt: Date;
   features: {
     isBurnable: boolean;
@@ -57,7 +58,7 @@ interface IToken {
     buyTax: number;
     sellTax: number;
     transferTax: number;
-    taxRecipient: Address;
+    taxRecipient: `0x${string}`;
   };
   stats?: {
     holders: number;
@@ -65,22 +66,12 @@ interface IToken {
     price: string;
     marketCap: string;
   };
-  // Ajout des statistiques de taxe
-  taxStats?: {
-    totalTaxCollected: bigint;
-    totalTransactions: number;
-  };
-  tier: 'basic' | 'premium';
 }
 
 interface TokenStats {
-  data?: TokenData[];
+  data: TokenData[];
   isLoading: boolean;
   error?: Error;
-}
-
-interface TokenData extends Omit<IToken, 'tier'> {
-  tier?: 'basic' | 'premium';
 }
 
 interface StatCardProps {
@@ -160,12 +151,12 @@ const useGlobalStats = () => {
     let totalTokens = tokenStats?.data?.length || 0;
     let totalPremiumTokens = 0;
 
-    tokenStats?.data?.forEach(token => {
+    tokenStats?.data?.forEach((token: TokenData) => {
       if (token.taxStats) {
         totalTaxCollected += token.taxStats.totalTaxCollected;
         totalTransactions += token.taxStats.totalTransactions;
       }
-      if (token.tier === 'premium') {
+      if (token.features.premium) {
         totalPremiumTokens++;
       }
     });
