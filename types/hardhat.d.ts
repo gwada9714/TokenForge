@@ -1,13 +1,13 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ethers } from "ethers";
 
-declare global {
-  var hre: HardhatRuntimeEnvironment & {
+declare module "hardhat/types" {
+  interface HardhatRuntimeEnvironment {
     ethers: typeof ethers & {
-      getSigners(): Promise<any[]>;
-      getContractFactory(name: string): Promise<any>;
+      getSigners(): Promise<ethers.Signer[]>;
+      getContractFactory(name: string): Promise<ethers.ContractFactory>;
     };
-  };
+  }
 }
 
 export {};

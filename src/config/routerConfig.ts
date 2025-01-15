@@ -1,8 +1,9 @@
+import React from 'react';
 import { RouteObject } from 'react-router-dom';
 import Home from '../pages/Home';
 import CreateToken from '../pages/CreateToken';
 import TokenDetails from '../pages/TokenDetails';
-import TokenList from '../pages/TokenList';
+import { TokenList } from '../pages/TokenList';
 import Plans from '../pages/Plans';
 import Launchpad from '../pages/Launchpad';
 import Staking from '../pages/Staking';
@@ -10,30 +11,30 @@ import Staking from '../pages/Staking';
 export const routes: RouteObject[] = [
   {
     path: '/',
-    element: <Home />,
+    element: React.createElement(Home),
   },
   {
     path: '/create',
-    element: <CreateToken />,
+    element: React.createElement(CreateToken),
   },
   {
     path: '/tokens',
-    element: <TokenList />,
+    element: React.createElement(TokenList),
   },
   {
     path: '/token/:address',
-    element: <TokenDetails />,
+    element: React.createElement(TokenDetails),
   },
   {
     path: '/plans',
-    element: <Plans />,
+    element: React.createElement(Plans),
   },
   {
     path: '/launchpad',
-    element: <Launchpad />,
+    element: React.createElement(Launchpad),
   },
   {
     path: '/staking',
-    element: <Staking />,
+    element: React.createElement(Staking),
   },
 ];
