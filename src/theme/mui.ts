@@ -1,7 +1,35 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
-// Create base theme
+declare module '@mui/material/styles' {
+  interface BreakpointOverrides {
+    xs: true;
+    sm: true;
+    md: true;
+    lg: true;
+    xl: true;
+  }
+  interface Theme {
+    status: {
+      danger: string;
+    };
+  }
+  interface ThemeOptions {
+    status?: {
+      danger?: string;
+    };
+  }
+}
+
 const baseTheme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
   palette: {
     primary: {
       main: '#006BFF',
@@ -12,6 +40,10 @@ const baseTheme = createTheme({
       main: '#003D99',
       light: '#5CA0FF',
       dark: '#002766',
+    },
+    background: {
+      default: '#F5F5F5',
+      paper: '#FFFFFF',
     },
   },
   typography: {
@@ -24,6 +56,9 @@ const baseTheme = createTheme({
       'Arial',
       'sans-serif',
     ].join(','),
+    h4: {
+      fontWeight: 600,
+    },
   },
   components: {
     MuiContainer: {
@@ -43,13 +78,24 @@ const baseTheme = createTheme({
         root: {
           textTransform: 'none',
           borderRadius: '8px',
+          fontWeight: 500,
+        },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
         },
       },
     },
   },
 });
 
-// Apply responsive font sizes and export
-const muiTheme = responsiveFontSizes(baseTheme);
-
-export default muiTheme;
+export const muiTheme = responsiveFontSizes(baseTheme);
