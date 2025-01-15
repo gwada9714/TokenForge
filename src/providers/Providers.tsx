@@ -3,6 +3,7 @@ import { WagmiConfig } from 'wagmi';
 import { config as wagmiConfig, chains } from '../config/web3Config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ChakraProvider } from '@chakra-ui/react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { memo } from 'react';
 import theme from '../theme';
 
@@ -20,6 +21,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Create MUI theme
+const muiTheme = createTheme();
+
 interface ProvidersProps {
   children: React.ReactNode;
 }
@@ -27,20 +31,22 @@ interface ProvidersProps {
 // Utilisation de memo pour éviter les re-rendus inutiles
 const Providers = memo(({ children }: ProvidersProps) => {
   return (
-    <ChakraProvider theme={theme}>
-      <QueryClientProvider client={queryClient}>
-        <WagmiConfig config={wagmiConfig}>
-          <RainbowKitProvider 
-            chains={chains}
-            theme={lightTheme()} 
-            modalSize="compact"
-            coolMode // Effet visuel sympa sans impact sur les performances
-          >
-            {children}
-          </RainbowKitProvider>
-        </WagmiConfig>
-      </QueryClientProvider>
-    </ChakraProvider>
+    <ThemeProvider theme={muiTheme}>
+      <ChakraProvider theme={theme}>
+        <QueryClientProvider client={queryClient}>
+          <WagmiConfig config={wagmiConfig}>
+            <RainbowKitProvider 
+              chains={chains}
+              theme={lightTheme()} 
+              modalSize="compact"
+              coolMode // Effet visuel sympa sans impact sur les performances
+            >
+              {children}
+            </RainbowKitProvider>
+          </WagmiConfig>
+        </QueryClientProvider>
+      </ChakraProvider>
+    </ThemeProvider>
   );
 });
 
