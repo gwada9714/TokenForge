@@ -14,7 +14,8 @@ const config = {
     sources: "./contracts",
     tests: "./test",
     cache: "./cache",
-    artifacts: "./src/artifacts"
+    artifacts: "./src/artifacts",
+    root: "."
   }
 };
 

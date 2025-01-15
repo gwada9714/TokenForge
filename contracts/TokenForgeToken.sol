@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
@@ -33,6 +33,11 @@ contract TokenForgeToken is ERC20, ERC20Burnable, Pausable, Ownable {
         
         // Mint initial supply
         _mint(tokenOwner, initialSupply * (10 ** decimals()));
+        
+        // Si pausable est true, mettre le token en pause initialement
+        if (pausable) {
+            _pause();
+        }
     }
     
     function decimals() public view virtual override returns (uint8) {

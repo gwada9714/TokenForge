@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "./interfaces/ITokenForgeToken.sol";
 
 contract TokenForgeLaunchpad is ReentrancyGuard, Ownable {
     using SafeMath for uint256;
     
     struct Pool {
-        IERC20 token;
+        ITokenForgeToken token;
         uint256 tokenPrice;
         uint256 hardCap;
         uint256 softCap;
@@ -61,7 +62,7 @@ contract TokenForgeLaunchpad is ReentrancyGuard, Ownable {
         uint256 poolId = poolCount++;
         Pool storage pool = pools[poolId];
         
-        pool.token = IERC20(_token);
+        pool.token = ITokenForgeToken(_token);
         pool.tokenPrice = _tokenPrice;
         pool.hardCap = _hardCap;
         pool.softCap = _softCap;

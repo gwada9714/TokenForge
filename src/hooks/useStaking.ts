@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useContractWrite, useContractRead, useAccount, useWaitForTransaction } from 'wagmi';
-import { parseEther, formatEther } from 'ethers'; // changed 'viem' to 'ethers'
+import { parseEther, formatEther } from 'viem'; 
 import { STAKING_CONTRACT_ADDRESS } from '../config/contracts';
 import { stakingABI } from '../contracts/abis';
 
@@ -115,7 +115,7 @@ export function useStaking(tokenAddress: string) {
 
   // Handlers
   const handleStake = useCallback((amount: string) => {
-    stake({ args: [parseEther(amount.toString())] }); // changed amount to amount.toString()
+    stake({ args: [parseEther(amount)] });
   }, [stake]);
 
   const handleWithdraw = useCallback((amount: string) => {
@@ -129,7 +129,7 @@ export function useStaking(tokenAddress: string) {
   return {
     userStake,
     poolInfo,
-    rewards: rewards ? formatEther(rewards) : '0',
+    rewards: rewards ? formatEther(rewards as unknown as bigint) : '0',
     stake: handleStake,
     withdraw: handleWithdraw,
     claimRewards: handleClaimRewards,

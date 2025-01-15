@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 import "./tokens/BaseERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -18,8 +18,13 @@ contract TokenFactory is Ownable {
     
     error InvalidInitialSupply();
     error InvalidMaxSupply();
+    error EmptyName();
+    error EmptySymbol();
+    error ZeroSupply();
     
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address initialOwner) {
+        _transferOwnership(initialOwner);
+    }
 
     function createERC20(
         string memory name,
@@ -30,6 +35,9 @@ contract TokenFactory is Ownable {
         bool mintable,
         bytes32 salt
     ) external returns (address) {
+        if (bytes(name).length == 0) revert EmptyName();
+        if (bytes(symbol).length == 0) revert EmptySymbol();
+        if (initialSupply == 0) revert ZeroSupply();
         if (maxSupply > 0 && initialSupply > maxSupply) revert InvalidInitialSupply();
         
         bytes memory bytecode = abi.encodePacked(
@@ -54,6 +62,9 @@ contract TokenFactory is Ownable {
         bool mintable,
         bytes32 salt
     ) external view returns (address) {
+        if (bytes(name).length == 0) revert EmptyName();
+        if (bytes(symbol).length == 0) revert EmptySymbol();
+        if (initialSupply == 0) revert ZeroSupply();
         if (maxSupply > 0 && initialSupply > maxSupply) revert InvalidInitialSupply();
         
         bytes memory bytecode = abi.encodePacked(
@@ -62,12 +73,5 @@ contract TokenFactory is Ownable {
         );
 
         return Create2.computeAddress(salt, keccak256(bytecode));
-    }
-
-    function createToken(string memory name, string memory symbol, uint256 initialSupply) public {
-        require(bytes(name).length > 0, "Name cannot be empty");
-        require(bytes(symbol).length > 0, "Symbol cannot be empty");
-        require(initialSupply > 0, "Supply must be positive");
-        // ... reste du code
     }
 }
