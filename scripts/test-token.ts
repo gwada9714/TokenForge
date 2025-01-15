@@ -1,4 +1,4 @@
-/// <reference path="../types/hardhat-runtime.d.ts" />
+/// <reference path="../types/hardhat.d.ts" />
 
 async function testToken() {
   const [owner, addr1] = await hre.ethers.getSigners();

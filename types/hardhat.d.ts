@@ -8,7 +8,6 @@ declare global {
       getContractFactory(name: string): Promise<any>;
     };
   };
-  var ethers: typeof import("ethers");
 }
 
 export {};
