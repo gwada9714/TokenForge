@@ -25,7 +25,7 @@ async function main() {
   // Test 2: Vérifier le supply total et le solde du propriétaire
   console.log("2. Supply et solde:");
   const totalSupply = await token.totalSupply();
-  const ownerBalance = await token.balanceOf(owner.address);
+  const ownerBalance = await token.balanceOf(await owner.getAddress());
   console.log(`   Supply total: ${ethers.utils.formatEther(totalSupply)} ${symbol}`);
   console.log(`   Solde du propriétaire: ${ethers.utils.formatEther(ownerBalance)} ${symbol}`);
   console.log();
@@ -33,10 +33,10 @@ async function main() {
   // Test 3: Tester le transfert
   console.log("3. Test du transfert:");
   const transferAmount = ethers.utils.parseEther("1000");
-  console.log(`   Transfert de ${ethers.utils.formatEther(transferAmount)} ${symbol} à ${addr1.address}`);
-  await token.transfer(addr1.address, transferAmount);
+  console.log(`   Transfert de ${ethers.utils.formatEther(transferAmount)} ${symbol} à ${await addr1.getAddress()}`);
+  await token.transfer(await addr1.getAddress(), transferAmount);
   
-  const addr1Balance = await token.balanceOf(addr1.address);
+  const addr1Balance = await token.balanceOf(await addr1.getAddress());
   console.log(`   Nouveau solde de addr1: ${ethers.utils.formatEther(addr1Balance)} ${symbol}`);
   console.log();
 
@@ -44,8 +44,8 @@ async function main() {
   console.log("4. Test du mint:");
   const mintAmount = ethers.utils.parseEther("500");
   try {
-    await token.mint(addr1.address, mintAmount);
-    const newAddr1Balance = await token.balanceOf(addr1.address);
+    await token.mint(await addr1.getAddress(), mintAmount);
+    const newAddr1Balance = await token.balanceOf(await addr1.getAddress());
     console.log(`   Mint de ${ethers.utils.formatEther(mintAmount)} ${symbol} à addr1`);
     console.log(`   Nouveau solde après mint: ${ethers.utils.formatEther(newAddr1Balance)} ${symbol}`);
   } catch (error) {
@@ -58,7 +58,7 @@ async function main() {
   const burnAmount = ethers.utils.parseEther("100");
   try {
     await token.connect(addr1).burn(burnAmount);
-    const finalAddr1Balance = await token.balanceOf(addr1.address);
+    const finalAddr1Balance = await token.balanceOf(await addr1.getAddress());
     console.log(`   Burn de ${ethers.utils.formatEther(burnAmount)} ${symbol} par addr1`);
     console.log(`   Solde final de addr1: ${ethers.utils.formatEther(finalAddr1Balance)} ${symbol}`);
   } catch (error) {

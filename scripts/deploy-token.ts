@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 
 async function main() {
   const [deployer] = await hardhat.ethers.getSigners() as unknown as ethers.Signer[];
-  console.log("Deploying contracts with the account:", deployer.address);
+  console.log("Deploying contracts with the account:", await deployer.getAddress());
 
   // Configuration addresses
   const TREASURY_ADDRESS = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Adresse de test sur Sepolia
@@ -17,7 +17,7 @@ async function main() {
   );
 
   await token.deployed();
-  console.log("TokenForgeToken deployed to:", token.address);
+  console.log("TokenForgeToken deployed to:", await token.getAddress());
 
   // Configuration initiale
   console.log("\nConfiguring initial parameters...");
@@ -30,7 +30,7 @@ async function main() {
 
   // Configurer les adresses exemptées
   const exemptAddresses = [
-    deployer.address, // Le déployeur
+    await deployer.getAddress(), // Le déployeur
     TREASURY_ADDRESS, // Le treasury
     STAKING_POOL_ADDRESS, // Le pool de staking
     "0x..." // Autres adresses à exempter (à remplacer)
@@ -45,7 +45,7 @@ async function main() {
   console.log("\nInitial configuration completed!");
   console.log("\nContract deployment and configuration summary:");
   console.log("-------------------------------------------");
-  console.log("Token Address:", token.address);
+  console.log("Token Address:", await token.getAddress());
   console.log("Treasury:", TREASURY_ADDRESS);
   console.log("Staking Pool:", STAKING_POOL_ADDRESS);
   console.log("Tax Rate:", newTaxRate/100, "%");

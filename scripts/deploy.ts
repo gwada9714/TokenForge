@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 async function main() {
   const [deployer] = await hardhat.ethers.getSigners() as unknown as ethers.Signer[];
 
-  console.log("Déploiement des contrats avec le compte:", deployer.address);
+  console.log("Déploiement des contrats avec le compte:", await deployer.getAddress());
 
   // Déploiement du TokenForgeToken
   const TokenForgeFactory = await hardhat.ethers.getContractFactory("TokenForgeToken");
@@ -13,25 +13,25 @@ async function main() {
     "TFT",                     // symbole
     18,                        // decimals
     hardhat.ethers.utils.parseEther("1000000"), // supply total
-    deployer.address,          // propriétaire
+    await deployer.getAddress(),          // propriétaire
     true,                      // burnable
     true,                      // mintable
     true                       // pausable
   );
 
   await tokenForge.deployed();
-  console.log("TokenForgeToken déployé à l'adresse:", tokenForge.address);
+  console.log("TokenForgeToken déployé à l'adresse:", await tokenForge.getAddress());
 
   // Déploiement du contrat de staking
   const StakingFactory = await hardhat.ethers.getContractFactory("TokenForgeStaking");
-  const staking = await StakingFactory.deploy(tokenForge.address);
+  const staking = await StakingFactory.deploy(await tokenForge.getAddress());
   
   await staking.deployed();
-  console.log("TokenForgeStaking déployé à l'adresse:", staking.address);
+  console.log("TokenForgeStaking déployé à l'adresse:", await staking.getAddress());
 
   // Configuration initiale
   const MINTER_ROLE = hardhat.ethers.utils.id("MINTER_ROLE");
-  await tokenForge.grantRole(MINTER_ROLE, staking.address);
+  await tokenForge.grantRole(MINTER_ROLE, await staking.getAddress());
   console.log("Rôle MINTER accordé au contrat de staking");
 
   // Désactiver la pause du contrat
@@ -46,7 +46,7 @@ async function main() {
     lastUpdateTime: poolInfo[2].toString()
   });
 
-  const userStake = await staking.getUserStake(deployer.address);
+  const userStake = await staking.getUserStake(await deployer.getAddress());
   console.log("User Stake initial:", {
     amount: hardhat.ethers.utils.formatEther(userStake[0]),
     since: userStake[1].toString(),
@@ -54,12 +54,12 @@ async function main() {
   });
 
   // Calculer les récompenses potentielles
-  const rewards = await staking.calculateRewards(deployer.address);
+  const rewards = await staking.calculateRewards(await deployer.getAddress());
   console.log("Calculated Rewards:", rewards.toString());
 
   // Effectuer un stake de test
   const stakeAmount = hardhat.ethers.utils.parseEther("100");
-  await tokenForge.approve(staking.address, stakeAmount);
+  await tokenForge.approve(await staking.getAddress(), stakeAmount);
   await staking.stake(stakeAmount);
   console.log("\nStake de test effectué :", hardhat.ethers.utils.formatEther(stakeAmount), "tokens");
 
@@ -71,7 +71,7 @@ async function main() {
     lastUpdateTime: poolInfoAfter[2].toString()
   });
 
-  const userStakeAfter = await staking.getUserStake(deployer.address);
+  const userStakeAfter = await staking.getUserStake(await deployer.getAddress());
   console.log("User Stake après stake:", {
     amount: hardhat.ethers.utils.formatEther(userStakeAfter[0]),
     since: userStakeAfter[1].toString(),
@@ -79,8 +79,9 @@ async function main() {
   });
 
   console.log("\nAdresses des contrats déployés :");
-  console.log("TokenForgeToken:", tokenForge.address);
-  console.log("TokenForgeStaking:", staking.address);
+  console.log("TokenForgeToken:", await tokenForge.getAddress());
+  console.log("TokenForgeStaking:", await staking.getAddress());
+  console.log("Deployer:", await deployer.getAddress());
 }
 
 main()
