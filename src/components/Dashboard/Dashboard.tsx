@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -31,6 +31,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
 import { useTokenStats } from '@/hooks/useTokenStats';
 import { useUserTokens } from '@/hooks/useUserTokens';
+import { Virtuoso } from 'react-virtuoso';
 
 interface IToken {
   address: Address;
@@ -65,6 +66,86 @@ interface IToken {
   };
 }
 
+const StatCard = memo<{
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  isLoading?: boolean;
+}>(({ title, value, icon, isLoading }) => (
+  <Card>
+    <CardContent>
+      <Box display="flex" alignItems="center" gap={1} mb={1}>
+        {icon}
+        <Typography color="text.secondary" variant="subtitle2">
+          {title}
+        </Typography>
+      </Box>
+      {isLoading ? (
+        <CircularProgress size={20} />
+      ) : (
+        <Typography variant="h5">{value}</Typography>
+      )}
+    </CardContent>
+  </Card>
+));
+
+const TokenRow = memo<{ token: IToken }>(({ token }) => (
+  <TableRow>
+    <TableCell>{token.name}</TableCell>
+    <TableCell>{token.symbol}</TableCell>
+    <TableCell>
+      <Chip 
+        label={token.network?.name || 'Unknown Network'}
+        size="small"
+        variant="outlined"
+      />
+    </TableCell>
+    <TableCell>{formatEther(token.totalSupply)}</TableCell>
+    <TableCell>
+      {new Date(token.createdAt).toLocaleDateString()}
+    </TableCell>
+    <TableCell align="right">
+      <Tooltip title="View on Explorer">
+        <IconButton
+          size="small"
+          onClick={() => window.open(
+            token.network ? 
+              `${token.network.explorerUrl}/token/${token.address}` :
+              '#',
+            '_blank'
+          )}
+        >
+          <LaunchIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </TableCell>
+  </TableRow>
+));
+
+const TokensTable = memo<{ tokens: IToken[] | undefined; isLoading: boolean }>(({ tokens, isLoading }) => {
+  if (isLoading) {
+    return <CircularProgress />;
+  }
+
+  if (!tokens?.length) {
+    return (
+      <TableRow>
+        <TableCell colSpan={6} align="center">
+          No tokens created yet
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  return (
+    <Virtuoso
+      style={{ height: '400px' }}
+      totalCount={tokens.length}
+      itemContent={index => <TokenRow token={tokens[index]} />}
+    />
+  );
+});
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { chain } = useNetwork();
@@ -82,33 +163,46 @@ const Dashboard: React.FC = () => {
     isLoading: isTokensLoading
   } = useUserTokens(selectedNetwork?.chain.id);
 
-  const StatCard: React.FC<{
-    title: string;
-    value: string;
-    icon: React.ReactNode;
-    isLoading?: boolean;
-  }> = ({ title, value, icon, isLoading }) => (
-    <Card>
-      <CardContent>
-        <Box display="flex" alignItems="center" gap={1} mb={1}>
-          {icon}
-          <Typography color="text.secondary" variant="subtitle2">
-            {title}
-          </Typography>
-        </Box>
-        {isLoading ? (
-          <CircularProgress size={20} />
-        ) : (
-          <Typography variant="h5">{value}</Typography>
-        )}
-      </CardContent>
-    </Card>
-  );
+  const statsCards = useMemo(() => (
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <StatCard
+          title="Total Value Locked"
+          value={stats ? formatEther(stats.totalValue) : "0"}
+          icon={<AccountBalanceWalletIcon color="primary" />}
+          isLoading={isStatsLoading}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <StatCard
+          title="Transaction Volume"
+          value={stats ? formatEther(stats.transactionVolume) : "0"}
+          icon={<ShowChartIcon color="primary" />}
+          isLoading={isStatsLoading}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <StatCard
+          title="Total Tokens"
+          value={tokens ? tokens.length.toString() : "0"}
+          icon={<TokenIcon color="primary" />}
+          isLoading={isTokensLoading}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <StatCard
+          title="Unique Holders"
+          value={stats ? stats.uniqueHolders.toString() : "0"}
+          icon={<GroupIcon color="primary" />}
+          isLoading={isStatsLoading}
+        />
+      </Grid>
+    </Grid>
+  ), [stats, tokens, isStatsLoading, isTokensLoading]);
 
   return (
     <Box sx={{ p: 2 }}>
       <Grid container spacing={3}>
-        {/* Network Selector */}
         <Grid item xs={12}>
           <Paper sx={{ p: 2 }}>
             <NetworkSelector
@@ -120,7 +214,6 @@ const Dashboard: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Quick Actions */}
         <Grid item xs={12} sm={4}>
           <Paper 
             elevation={1}
@@ -143,45 +236,10 @@ const Dashboard: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Statistics */}
         <Grid item xs={12} sm={8}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <StatCard
-                title="Total Value Locked"
-                value={stats ? formatEther(stats.totalValue) : "0"}
-                icon={<AccountBalanceWalletIcon color="primary" />}
-                isLoading={isStatsLoading}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <StatCard
-                title="Transaction Volume"
-                value={stats ? formatEther(stats.transactionVolume) : "0"}
-                icon={<ShowChartIcon color="primary" />}
-                isLoading={isStatsLoading}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <StatCard
-                title="Total Tokens"
-                value={tokens ? tokens.length.toString() : "0"}
-                icon={<TokenIcon color="primary" />}
-                isLoading={isTokensLoading}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <StatCard
-                title="Unique Holders"
-                value={stats ? stats.uniqueHolders.toString() : "0"}
-                icon={<GroupIcon color="primary" />}
-                isLoading={isStatsLoading}
-              />
-            </Grid>
-          </Grid>
+          {statsCards}
         </Grid>
 
-        {/* Tokens Table */}
         <Grid item xs={12}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
@@ -200,52 +258,7 @@ const Dashboard: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {isTokensLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} align="center">
-                        <CircularProgress size={20} />
-                      </TableCell>
-                    </TableRow>
-                  ) : tokens?.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} align="center">
-                        No tokens created yet
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    tokens?.map((token: IToken) => (
-                      <TableRow key={token.address}>
-                        <TableCell>{token.name}</TableCell>
-                        <TableCell>{token.symbol}</TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={token.network?.name || 'Unknown Network'}
-                            size="small"
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>{formatEther(token.totalSupply)}</TableCell>
-                        <TableCell>
-                          {new Date(token.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell align="right">
-                          <Tooltip title="View on Explorer">
-                            <IconButton
-                              size="small"
-                              onClick={() => window.open(
-                                token.network ? 
-                                  `${token.network.explorerUrl}/token/${token.address}` :
-                                  '#',
-                                '_blank'
-                              )}
-                            >
-                              <LaunchIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  <TokensTable tokens={tokens} isLoading={isTokensLoading} />
                 </TableBody>
               </Table>
             </TableContainer>
@@ -256,4 +269,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default memo(Dashboard);
