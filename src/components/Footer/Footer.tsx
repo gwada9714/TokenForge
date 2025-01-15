@@ -1,28 +1,35 @@
-import { Box, Typography, Container } from "@mui/material";
+import {
+  Box,
+  Container,
+  Stack,
+  Text,
+  Link,
+  useColorModeValue,
+} from '@chakra-ui/react';
 
-export const Footer = () => {
+const Footer = () => {
   return (
     <Box
-      component="footer"
-      sx={{
-        py: 3,
-        px: 2,
-        mt: "auto",
-        backgroundColor: (theme) =>
-          theme.palette.mode === "light"
-            ? theme.palette.grey[200]
-            : theme.palette.grey[800],
-      }}
+      bg={useColorModeValue('gray.50', 'gray.900')}
+      color={useColorModeValue('gray.700', 'gray.200')}
     >
-      <Container maxWidth="sm">
-        <Typography variant="body2" color="text.secondary" align="center">
-          {"Copyright "}
-          <Typography variant="body2" color="text.secondary" align="center" component="span">
-            {new Date().getFullYear()}
-          </Typography>
-          {" TokenForge. All rights reserved."}
-        </Typography>
+      <Container
+        as={Stack}
+        maxW={'6xl'}
+        py={4}
+        spacing={4}
+        justify={'center'}
+        align={'center'}
+      >
+        <Text> 2025 TokenForge. Tous droits rservs</Text>
+        <Stack direction={'row'} spacing={6}>
+          <Link href={'#'}>Accueil</Link>
+          <Link href={'#'}>Documentation</Link>
+          <Link href={'#'}>Contact</Link>
+        </Stack>
       </Container>
     </Box>
   );
 };
+
+export default Footer;

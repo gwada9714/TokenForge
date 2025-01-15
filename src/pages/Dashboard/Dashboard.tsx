@@ -121,9 +121,9 @@ export const Dashboard: React.FC = () => {
                   <React.Fragment key={token.address}>
                     {index > 0 && <Divider />}
                     <ListItem
-                      button
+                      component="div"
                       onClick={() => navigate(`/tokens/${token.address}`)}
-                      sx={{ py: 2 }}
+                      sx={{ py: 2, cursor: 'pointer' }}
                     >
                       <ListItemText
                         primary={token.name}

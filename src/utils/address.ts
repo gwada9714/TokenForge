@@ -7,7 +7,7 @@ import { ethers } from "ethers";
  */
 export const validateAddress = (address: string): boolean => {
   try {
-    return ethers.isAddress(address);
+    return ethers.utils.isAddress(address);
   } catch {
     return false;
   }
@@ -31,9 +31,8 @@ export const shortenAddress = (address: string): string => {
  * @returns string Adresse avec checksum
  */
 export const checksumAddress = (address: string): string => {
-  try {
-    return ethers.getAddress(address);
-  } catch {
-    throw new Error("Adresse invalide pour checksum");
+  if (!validateAddress(address)) {
+    throw new Error("Format d'adresse invalide");
   }
+  return ethers.utils.getAddress(address);
 };

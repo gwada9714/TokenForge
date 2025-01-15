@@ -1,22 +1,49 @@
 import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
 import { WagmiConfig } from 'wagmi';
-import { wagmiConfig } from '../config/web3Config';
+import { wagmiConfig, chains } from '../config/web3Config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ChakraProvider } from '@chakra-ui/react';
+import { memo } from 'react';
+import theme from '../theme';
+
+// Configuration du client de requête avec mise en cache optimisée
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnMount: false
+    },
+  },
+});
 
 interface ProvidersProps {
   children: React.ReactNode;
 }
 
-const queryClient = new QueryClient();
-
-export const Providers = ({ children }: ProvidersProps) => {
+// Utilisation de memo pour éviter les re-rendus inutiles
+const Providers = memo(({ children }: ProvidersProps) => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <WagmiConfig config={wagmiConfig}>
-        <RainbowKitProvider theme={lightTheme()} modalSize="compact">
-          {children}
-        </RainbowKitProvider>
-      </WagmiConfig>
-    </QueryClientProvider>
+    <ChakraProvider theme={theme}>
+      <QueryClientProvider client={queryClient}>
+        <WagmiConfig config={wagmiConfig}>
+          <RainbowKitProvider 
+            chains={chains}
+            theme={lightTheme()} 
+            modalSize="compact"
+            coolMode // Effet visuel sympa sans impact sur les performances
+          >
+            {children}
+          </RainbowKitProvider>
+        </WagmiConfig>
+      </QueryClientProvider>
+    </ChakraProvider>
   );
-}; 
+});
+
+Providers.displayName = 'Providers';
+
+export { Providers };

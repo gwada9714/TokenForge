@@ -1,4 +1,4 @@
-import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react'
+import { Heading, Text, Button, VStack } from '@chakra-ui/react'
 import { Link } from 'react-router-dom'
 
 export const Home = () => {
@@ -13,7 +13,7 @@ export const Home = () => {
       </Text>
       <Button
         as={Link}
-        to="/create"
+        to="/tokens/create"
         size="lg"
         colorScheme="blue"
       >
@@ -21,4 +21,6 @@ export const Home = () => {
       </Button>
     </VStack>
   )
-} 
+}
+
+export default Home;

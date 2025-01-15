@@ -1,9 +1,9 @@
-import { ethers } from 'ethers';
+import { ethers, ContractTransaction } from 'ethers';
 
 export interface TokenContractMethods {
-  transfer: (to: string, amount: bigint) => Promise<ethers.ContractTransactionResponse>;
-  mint: (to: string, amount: bigint) => Promise<ethers.ContractTransactionResponse>;
-  burn: (amount: bigint) => Promise<ethers.ContractTransactionResponse>;
+  transfer: (to: string, amount: bigint) => Promise<ContractTransaction>;
+  mint: (to: string, amount: bigint) => Promise<ContractTransaction>;
+  burn: (amount: bigint) => Promise<ContractTransaction>;
   name: () => Promise<string>;
   symbol: () => Promise<string>;
   decimals: () => Promise<number>;
@@ -20,7 +20,7 @@ export interface FactoryContractMethods {
     burnable: boolean,
     mintable: boolean,
     pausable: boolean
-  ) => Promise<ethers.ContractTransactionResponse>;
+  ) => Promise<ContractTransaction>;
   getTokensByCreator: (creator: string) => Promise<string[]>;
 }
 
@@ -33,11 +33,12 @@ export interface TaxConfig {
 export interface TokenConfig {
   name: string;
   symbol: string;
-  totalSupply: string;
-  decimals: string;
+  totalSupply: bigint;
+  decimals: number;
   owner: string;
   isBurnable: boolean;
   isMintable: boolean;
+  isPausable: boolean;
   taxConfig: TaxConfig;
 }
 

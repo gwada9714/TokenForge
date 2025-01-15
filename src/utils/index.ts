@@ -1,10 +1,10 @@
 // Export spécifique des fonctions d'adresse
 export { 
-  truncateAddress,
   validateAddress,
-  shortenAddress 
+  shortenAddress,
+  checksumAddress
 } from './address';
 
 // Export des autres utilitaires
 export * from './format';
-export * from './validation'; 
+export * from './validation';

@@ -9,11 +9,12 @@ export interface TokenData {
   symbol: string;
   totalSupply: bigint;
   decimals: number;
-  burned?: boolean;
-  owner?: Address;
-  isBurnable?: boolean;
-  isMintable?: boolean;
-  taxConfig?: {
+  owner: Address;
+  isBurnable: boolean;
+  isMintable: boolean;
+  isPausable: boolean;
+  burned: boolean;
+  taxConfig: {
     enabled: boolean;
     taxPercentage: number;
     taxRecipient: Address;
@@ -28,15 +29,13 @@ export const useUserTokens = (address?: Address) => {
   const { data: tokenAddresses, isError, isLoading } = useContractRead({
     ...getTokenFactoryContract(),
     functionName: 'getTokensByOwner',
-    args: [address ?? '0x0000000000000000000000000000000000000000'] as const,
-    query: {
-      enabled: !!address
-    }
+    args: address ? [address] : undefined,
+    enabled: !!address
   });
 
   useEffect(() => {
     const fetchTokensData = async () => {
-      if (!tokenAddresses || !Array.isArray(tokenAddresses)) {
+      if (!tokenAddresses || !Array.isArray(tokenAddresses) || !address) {
         setTokens([]);
         setLoading(false);
         return;
@@ -54,6 +53,7 @@ export const useUserTokens = (address?: Address) => {
             burned: false,
             isBurnable: false,
             isMintable: false,
+            isPausable: false,
             owner: address,
             taxConfig: {
               enabled: false,
@@ -76,7 +76,7 @@ export const useUserTokens = (address?: Address) => {
     if (tokenAddresses) {
       fetchTokensData();
     }
-  }, [tokenAddresses]);
+  }, [tokenAddresses, address]);
 
   return {
     tokens,

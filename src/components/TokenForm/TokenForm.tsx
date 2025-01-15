@@ -36,7 +36,24 @@ export const TokenForm = () => {
     setIsLoading(true);
 
     try {
-      await createToken(formData);
+      // Validation des valeurs
+      if (formData.decimals < 0 || formData.decimals > 18) {
+        throw new Error('Les décimales doivent être comprises entre 0 et 18');
+      }
+
+      if (!/^\d+$/.test(formData.initialSupply)) {
+        throw new Error('Le supply initial doit être un nombre entier positif');
+      }
+
+      // Conversion en BigInt avec les décimales
+      const initialSupplyBigInt = BigInt(formData.initialSupply) * BigInt(10) ** BigInt(formData.decimals);
+
+      const tokenData = {
+        ...formData,
+        initialSupply: initialSupplyBigInt.toString() // Conversion en string pour correspondre au type attendu
+      };
+
+      await createToken(tokenData);
       toast.success('Token créé avec succès !');
       navigate('/tokens');
     } catch (err) {

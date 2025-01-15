@@ -17,7 +17,6 @@ import {
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { injected } from "wagmi/connectors";
 
 export const Navbar = () => {
   const theme = useTheme();
@@ -33,7 +32,7 @@ export const Navbar = () => {
 
   const handleConnect = async () => {
     try {
-      await connectAsync({ connector: injected() });
+      await connectAsync();
     } catch (error) {
       console.error("Failed to connect:", error);
     }
@@ -48,7 +47,7 @@ export const Navbar = () => {
   };
 
   const menuItems = [
-    { text: "Create Token", path: "/create" },
+    { text: "Create Token", path: "/tokens/create" },
     { text: "My Tokens", path: "/tokens" },
     { text: "Documentation", path: "/docs" },
   ];
@@ -57,7 +56,6 @@ export const Navbar = () => {
     <List>
       {menuItems.map((item) => (
         <ListItem
-          button
           key={item.text}
           component={RouterLink}
           to={item.path}
@@ -70,64 +68,36 @@ export const Navbar = () => {
   );
 
   return (
-    <AppBar
-      position="fixed"
-      elevation={0}
-      sx={{ backgroundColor: "background.paper" }}
-    >
+    <AppBar position="static">
       <Container maxWidth="xl">
-        <Toolbar disableGutters>
-          {/* Logo */}
-          <Typography
-            variant="h6"
-            component={RouterLink}
-            to="/"
-            sx={{
-              mr: 2,
-              fontWeight: 700,
-              color: "primary.main",
-              textDecoration: "none",
-              flexGrow: { xs: 1, md: 0 },
-            }}
-          >
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             TokenForge
           </Typography>
-
-          {/* Mobile Menu Icon */}
-          {isMobile && (
+          
+          {isMobile ? (
             <IconButton
-              color="primary"
+              color="inherit"
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
             >
               <MenuIcon />
             </IconButton>
-          )}
-
-          {/* Desktop Navigation */}
-          {!isMobile && (
-            <Box sx={{ flexGrow: 1, display: "flex", ml: 4 }}>
+          ) : (
+            <Box sx={{ display: "flex", gap: 2 }}>
               {menuItems.map((item) => (
                 <Button
                   key={item.text}
+                  color="inherit"
                   component={RouterLink}
                   to={item.path}
-                  sx={{
-                    mx: 1,
-                    color: "text.primary",
-                    "&:hover": {
-                      color: "primary.main",
-                    },
-                  }}
                 >
                   {item.text}
                 </Button>
               ))}
             </Box>
           )}
-
-          {/* Wallet Connection Button */}
           <Button
             variant="contained"
             onClick={isConnected ? handleDisconnect : handleConnect}
@@ -144,18 +114,13 @@ export const Navbar = () => {
         </Toolbar>
       </Container>
 
-      {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
         anchor="right"
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{
-          keepMounted: true, // Better mobile performance
-        }}
-        sx={{
-          display: { xs: "block", md: "none" },
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: 240 },
+          keepMounted: true,
         }}
       >
         {drawer}
@@ -163,3 +128,5 @@ export const Navbar = () => {
     </AppBar>
   );
 };
+
+export default Navbar;
