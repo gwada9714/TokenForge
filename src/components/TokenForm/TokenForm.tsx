@@ -36,7 +36,7 @@ export const TokenForm = () => {
     setIsLoading(true);
 
     try {
-      const hash = await createToken(formData);
+      await createToken(formData);
       toast.success('Token créé avec succès !');
       navigate('/tokens');
     } catch (err) {
@@ -132,4 +132,4 @@ export const TokenForm = () => {
       </button>
     </form>
   );
-}; 
+};

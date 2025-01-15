@@ -1,25 +1,33 @@
-import React, { useTransition } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Box, Container, useColorModeValue } from '@chakra-ui/react';
 import Header from '../Header';
-import { Container, LinearProgress } from '@mui/material';
+import Footer from '../Footer/Footer';
 
-export const Layout: React.FC = () => {
-  const navigate = useNavigate();
-  const [isPending, startTransition] = useTransition();
+interface LayoutProps {
+  children: React.ReactNode;
+}
 
-  const handleNavigation = (to: string) => {
-    startTransition(() => {
-      navigate(to);
-    });
-  };
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  const containerBg = useColorModeValue('white', 'gray.800');
 
   return (
-    <>
-      <Header onNavigate={handleNavigation} />
-      {isPending && <LinearProgress />}
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Outlet />
+    <Box minH="100vh" bg={bgColor}>
+      <Header />
+      <Container
+        maxW="container.xl"
+        py={8}
+        px={4}
+        bg={containerBg}
+        borderRadius="xl"
+        boxShadow="lg"
+        my={8}
+      >
+        {children}
       </Container>
-    </>
+      <Footer />
+    </Box>
   );
 };
+
+export default Layout;
