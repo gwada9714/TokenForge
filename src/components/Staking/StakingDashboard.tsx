@@ -72,12 +72,14 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    await stake(parseUnits(stakeAmount, 18));
+    const formattedAmount = formatUnits(parseUnits(stakeAmount, 18), 18);
+    await stake(formattedAmount);
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    await withdraw(parseUnits(withdrawAmount, 18));
+    const formattedAmount = formatUnits(parseUnits(withdrawAmount, 18), 18);
+    await withdraw(formattedAmount);
   };
 
   const handleClaimRewards = async () => {
