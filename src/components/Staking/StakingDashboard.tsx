@@ -19,7 +19,7 @@ import { STAKING_CONFIG } from '@/constants/tokenforge';
 import TokenIcon from '@mui/icons-material/Token';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import { formatUnits } from '@ethersproject/units';
+import { formatUnits, toHex } from 'viem';
 
 const StatCard: React.FC<{
   title: string;
@@ -65,7 +65,7 @@ const StakingDashboard: React.FC = () => {
     if (!stakingStats) return null;
     const totalStakedBigInt = BigInt(stakingStats.totalStaked.toString());
     return {
-      totalStaked: formatUnits(BigNumber.from(totalStakedBigInt).toHexString(), 18),
+      totalStaked: formatUnits(toHex(totalStakedBigInt), 18),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };
