@@ -1,15 +1,16 @@
 import React from 'react'
 import { render, RenderOptions } from '@testing-library/react'
-import { ChakraProvider } from '@chakra-ui/react'
+import { ThemeProvider } from '@mui/material/styles'
 import { BrowserRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
+import { theme } from './theme/mui'
 
 const AllProviders = ({ children }: { children: React.ReactNode }) => (
-  <ChakraProvider>
+  <ThemeProvider theme={theme}>
     <BrowserRouter>
       {children}
     </BrowserRouter>
-  </ChakraProvider>
+  </ThemeProvider>
 )
 
 const customRender = (
@@ -21,4 +22,4 @@ const customRender = (
 })
 
 export * from '@testing-library/react'
-export { customRender as render } 
+export { customRender as render }
