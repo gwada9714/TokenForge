@@ -3,8 +3,8 @@ import { Container, Typography, Box } from '@mui/material';
 import { StakingPool } from '../components/Staking/StakingPool';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
 
-const StakingPage: React.FC = () => {
-  const platformTokenAddress = CONTRACT_ADDRESSES.PLATFORM_TOKEN.sepolia || '';
+const StakingPage = () => {
+  const platformTokenAddress = CONTRACT_ADDRESSES.PLATFORM_TOKEN.sepolia || "0x0000000000000000000000000000000000000000";
   
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>

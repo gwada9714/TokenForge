@@ -7,6 +7,7 @@ import {
   CardContent,
   Typography,
   Grid,
+  CircularProgress,
   IconButton,
   Table,
   TableBody,
@@ -49,6 +50,7 @@ interface TokenData {
     hasMaxTransaction: boolean;
     hasAntiBot: boolean;
     hasBlacklist: boolean;
+    premium: boolean;
   };
   taxConfig?: {
     enabled: boolean;
