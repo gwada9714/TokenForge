@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import {
   Container,
-  Text,
+  Typography,
   Box,
   Tabs,
-  TabList,
   Tab,
-  TabPanels,
-  TabPanel,
-  SimpleGrid,
-} from '@chakra-ui/react';
+  Grid,
+} from '@mui/material';
 import { CreatePool } from '../components/Launchpad/CreatePool';
 import { LaunchpadPool } from '../components/Launchpad/LaunchpadPool';
 import { useContractRead, useNetwork } from 'wagmi';
@@ -32,38 +29,44 @@ const LaunchpadPage: React.FC = () => {
   // Create array of pool IDs
   const poolIds = poolCount ? Array.from({ length: Number(poolCount) }, (_, i) => i) : [];
 
-  return (
-    <Container maxW="container.xl" py={8}>
-      <Text variant="h4" mb={6}>
-        TokenForge Launchpad
-      </Text>
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabIndex(newValue);
+  };
 
-      <Box mb={8}>
-        <Text variant="body1" mb={4}>
+  return (
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Typography variant="h4" sx={{ mb: 3 }}>
+        TokenForge Launchpad
+      </Typography>
+
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="body1" sx={{ mb: 2 }}>
           Launch your token with TokenForge's secure and easy-to-use launchpad platform.
           Create your own pool or participate in existing ones.
-        </Text>
+        </Typography>
       </Box>
 
-      <Tabs index={tabIndex} onChange={setTabIndex}>
-        <TabList mb={4}>
-          <Tab>Active Pools</Tab>
-          <Tab>Create Pool</Tab>
-        </TabList>
-
-        <TabPanels>
-          <TabPanel>
-            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
+      <Box sx={{ width: '100%' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={tabIndex} onChange={handleTabChange}>
+            <Tab label="Active Pools" />
+            <Tab label="Create Pool" />
+          </Tabs>
+        </Box>
+        
+        <Box sx={{ mt: 3 }}>
+          {tabIndex === 0 && (
+            <Grid container spacing={3}>
               {poolIds.map((poolId) => (
-                <LaunchpadPool key={poolId} poolId={poolId} />
+                <Grid item xs={12} sm={6} md={4} key={poolId}>
+                  <LaunchpadPool poolId={poolId} />
+                </Grid>
               ))}
-            </SimpleGrid>
-          </TabPanel>
-          <TabPanel>
-            <CreatePool />
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+            </Grid>
+          )}
+          {tabIndex === 1 && <CreatePool />}
+        </Box>
+      </Box>
     </Container>
   );
 };

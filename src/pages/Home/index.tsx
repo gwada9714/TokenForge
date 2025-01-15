@@ -1,25 +1,34 @@
-import { Heading, Text, Button, VStack } from '@chakra-ui/react'
+import { Typography, Button, Stack, Container } from '@mui/material'
 import { Link } from 'react-router-dom'
 
 export const Home = () => {
   return (
-    <VStack spacing={8} py={20} textAlign="center">
-      <Heading size="2xl">
-        Créez votre Token en quelques clics
-      </Heading>
-      <Text fontSize="xl" maxW="container.md">
-        TokenForge vous permet de créer et déployer vos propres tokens sur la blockchain 
-        rapidement et en toute sécurité.
-      </Text>
-      <Button
-        as={Link}
-        to="/tokens/create"
-        size="lg"
-        colorScheme="blue"
+    <Container maxWidth="md">
+      <Stack 
+        spacing={4} 
+        sx={{ 
+          py: 10,
+          textAlign: 'center'
+        }}
       >
-        Commencer
-      </Button>
-    </VStack>
+        <Typography variant="h2" component="h1" gutterBottom>
+          Créez votre Token en quelques clics
+        </Typography>
+        <Typography variant="h5" color="text.secondary" paragraph>
+          TokenForge vous permet de créer et déployer vos propres tokens sur la blockchain 
+          rapidement et en toute sécurité.
+        </Typography>
+        <Button
+          component={Link}
+          to="/tokens/create"
+          variant="contained"
+          size="large"
+          sx={{ mt: 2 }}
+        >
+          Commencer
+        </Button>
+      </Stack>
+    </Container>
   )
 }
 
