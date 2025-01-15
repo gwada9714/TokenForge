@@ -4,7 +4,7 @@ import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { supportedChains, defaultChain } from './chains';
 import { type Chain } from 'viem';
-import { CONTRACT_ADDRESSES, getContractAddress } from './contracts';
+import { getContractAddress } from './contracts';
 
 // Vérification des variables d'environnement requises
 const requiredEnvVars = {
