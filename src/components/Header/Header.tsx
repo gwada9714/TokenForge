@@ -17,11 +17,9 @@ import {
 import { Link } from 'react-router-dom';
 import { MoonIcon, SunIcon, HamburgerIcon } from '@chakra-ui/icons';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useUserPlan } from '../../contexts/UserPlanContext';
 
 const Header = () => {
   const { colorMode, toggleColorMode } = useColorMode();
-  const { userLevel } = useUserPlan();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
