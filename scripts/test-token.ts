@@ -1,11 +1,12 @@
-/// <reference path="../types/hardhat.d.ts" />
+import { ethers } from "hardhat";
 
-async function testToken() {
-  const [owner, addr1] = await hre.ethers.getSigners();
+async function main() {
+  // Get signers
+  const [owner, addr1, addr2] = await ethers.getSigners();
   
   // Récupérer le contrat déployé
   const tokenAddress = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
-  const TokenForge = await hre.ethers.getContractFactory("TokenForgeToken");
+  const TokenForge = await ethers.getContractFactory("TokenForgeToken");
   const token = TokenForge.attach(tokenAddress);
 
   console.log("Test du TokenForgeToken déployé à l'adresse:", tokenAddress);
@@ -25,28 +26,28 @@ async function testToken() {
   console.log("2. Supply et solde:");
   const totalSupply = await token.totalSupply();
   const ownerBalance = await token.balanceOf(owner.address);
-  console.log(`   Supply total: ${hre.ethers.utils.formatEther(totalSupply)} ${symbol}`);
-  console.log(`   Solde du propriétaire: ${hre.ethers.utils.formatEther(ownerBalance)} ${symbol}`);
+  console.log(`   Supply total: ${ethers.utils.formatEther(totalSupply)} ${symbol}`);
+  console.log(`   Solde du propriétaire: ${ethers.utils.formatEther(ownerBalance)} ${symbol}`);
   console.log();
 
   // Test 3: Tester le transfert
   console.log("3. Test du transfert:");
-  const transferAmount = hre.ethers.utils.parseEther("1000");
-  console.log(`   Transfert de ${hre.ethers.utils.formatEther(transferAmount)} ${symbol} à ${addr1.address}`);
+  const transferAmount = ethers.utils.parseEther("1000");
+  console.log(`   Transfert de ${ethers.utils.formatEther(transferAmount)} ${symbol} à ${addr1.address}`);
   await token.transfer(addr1.address, transferAmount);
   
   const addr1Balance = await token.balanceOf(addr1.address);
-  console.log(`   Nouveau solde de addr1: ${hre.ethers.utils.formatEther(addr1Balance)} ${symbol}`);
+  console.log(`   Nouveau solde de addr1: ${ethers.utils.formatEther(addr1Balance)} ${symbol}`);
   console.log();
 
   // Test 4: Tester le mint (si activé)
   console.log("4. Test du mint:");
-  const mintAmount = hre.ethers.utils.parseEther("500");
+  const mintAmount = ethers.utils.parseEther("500");
   try {
     await token.mint(addr1.address, mintAmount);
     const newAddr1Balance = await token.balanceOf(addr1.address);
-    console.log(`   Mint de ${hre.ethers.utils.formatEther(mintAmount)} ${symbol} à addr1`);
-    console.log(`   Nouveau solde après mint: ${hre.ethers.utils.formatEther(newAddr1Balance)} ${symbol}`);
+    console.log(`   Mint de ${ethers.utils.formatEther(mintAmount)} ${symbol} à addr1`);
+    console.log(`   Nouveau solde après mint: ${ethers.utils.formatEther(newAddr1Balance)} ${symbol}`);
   } catch (error) {
     console.log(`   Mint échoué: ${error.message}`);
   }
@@ -54,19 +55,19 @@ async function testToken() {
 
   // Test 5: Tester le burn
   console.log("5. Test du burn:");
-  const burnAmount = hre.ethers.utils.parseEther("100");
+  const burnAmount = ethers.utils.parseEther("100");
   try {
     await token.connect(addr1).burn(burnAmount);
     const finalAddr1Balance = await token.balanceOf(addr1.address);
-    console.log(`   Burn de ${hre.ethers.utils.formatEther(burnAmount)} ${symbol} par addr1`);
-    console.log(`   Solde final de addr1: ${hre.ethers.utils.formatEther(finalAddr1Balance)} ${symbol}`);
+    console.log(`   Burn de ${ethers.utils.formatEther(burnAmount)} ${symbol} par addr1`);
+    console.log(`   Solde final de addr1: ${ethers.utils.formatEther(finalAddr1Balance)} ${symbol}`);
   } catch (error) {
     console.log(`   Burn échoué: ${error.message}`);
   }
 }
 
 if (require.main === module) {
-  testToken()
+  main()
     .then(() => process.exit(0))
     .catch((error) => {
       console.error(error);

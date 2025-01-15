@@ -1,7 +1,8 @@
 import * as hardhat from "hardhat";
+import { ethers } from "ethers";
 
 async function main() {
-  const [deployer] = await hardhat.ethers.getSigners();
+  const [deployer] = await hardhat.ethers.getSigners() as unknown as ethers.Signer[];
 
   console.log("Déploiement des contrats avec le compte:", deployer.address);
 
