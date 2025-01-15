@@ -1,6 +1,6 @@
 import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
 import { WagmiConfig } from 'wagmi';
-import { wagmiConfig, chains } from '../config/web3Config';
+import { config as wagmiConfig, chains } from '../config/web3Config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ChakraProvider } from '@chakra-ui/react';
 import { memo } from 'react';
