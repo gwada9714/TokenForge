@@ -1,4 +1,5 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, Components, Theme } from '@mui/material/styles';
+import { Box, Typography } from '@mui/material';
 
 const muiTheme = createTheme({
   spacing: (factor: number) => `${0.25 * factor}rem`,

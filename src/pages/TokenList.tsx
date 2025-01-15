@@ -7,22 +7,22 @@ const TokenList: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ padding: 4 }}>
+      <Box sx={{ py: 4 }}>
         <Typography 
           component="h1" 
           variant="h4" 
           gutterBottom
-          sx={{ marginBottom: 4 }}
+          sx={{ mb: 4 }}
         >
           Mes Tokens
         </Typography>
 
         {error && (
-          <Box sx={{ marginBottom: 2 }}>
+          <Box sx={{ mb: 2 }}>
             <Typography 
               color="error" 
               variant="body1"
-              sx={{ marginBottom: 2 }}
+              sx={{ mb: 2 }}
             >
               {error}
             </Typography>
@@ -30,7 +30,7 @@ const TokenList: React.FC = () => {
         )}
 
         {!isConnected && (
-          <Box sx={{ marginTop: 2 }}>
+          <Box sx={{ mt: 2 }}>
             <Button 
               variant="contained" 
               color="primary" 
