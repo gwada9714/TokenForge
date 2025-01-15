@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useContractWrite, useContractRead, useAccount } from 'wagmi';
 import { TokenForgePlansABI } from '../contracts/abis';
-import { PlanType } from '../contracts/types';
+import { UserLevel, DEFAULT_PLANS } from '../types/plans';
 import { parseEther } from 'viem';
 import { toast } from 'react-hot-toast';
 
@@ -10,7 +10,8 @@ const CONTRACT_ADDRESS = ''; // À remplir après le déploiement
 export const useTokenForgePlans = () => {
   const { address } = useAccount();
 
-  const { data: userPlan } = useContractRead({
+  // Lecture du plan actuel de l'utilisateur
+  const { data: userPlanData, isError, isLoading } = useContractRead({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: TokenForgePlansABI,
     functionName: 'getUserPlan',
@@ -18,34 +19,74 @@ export const useTokenForgePlans = () => {
     enabled: !!address,
   });
 
-  const { writeAsync: purchasePlan } = useContractWrite({
+  // Achat avec BNB
+  const { writeAsync: purchasePlanWithBNB } = useContractWrite({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: TokenForgePlansABI,
-    functionName: 'purchasePlan',
+    functionName: 'purchasePlanWithBNB',
   });
 
-  const handlePurchasePlan = useCallback(async (planType: PlanType) => {
+  // Achat avec TKN
+  const { writeAsync: purchasePlanWithTKN } = useContractWrite({
+    address: CONTRACT_ADDRESS as `0x${string}`,
+    abi: TokenForgePlansABI,
+    functionName: 'purchasePlanWithTKN',
+  });
+
+  const getUserPlan = useCallback(async (userAddress: string): Promise<UserLevel> => {
+    if (!userAddress) return UserLevel.APPRENTICE;
+    
     try {
-      const prices = {
-        [PlanType.Apprenti]: '0',
-        [PlanType.Forgeron]: '0.3',
-        [PlanType.MaitreForgeron]: '1',
-      };
+      if (isError) throw new Error('Failed to fetch user plan');
+      if (isLoading) return UserLevel.APPRENTICE;
+      
+      // Conversion de la réponse du contrat en UserLevel
+      const planLevel = userPlanData as number;
+      switch (planLevel) {
+        case 0:
+          return UserLevel.APPRENTICE;
+        case 1:
+          return UserLevel.FORGE;
+        case 2:
+          return UserLevel.MASTER;
+        case 3:
+          return UserLevel.DEVELOPER;
+        default:
+          return UserLevel.APPRENTICE;
+      }
+    } catch (error) {
+      console.error('Error fetching user plan:', error);
+      return UserLevel.APPRENTICE;
+    }
+  }, [userPlanData, isError, isLoading]);
 
-      await purchasePlan({
-        args: [planType],
-        value: parseEther(prices[planType]),
-      });
+  const upgradeToPlan = useCallback(async (newLevel: UserLevel, paymentMethod: 'BNB' | 'TKN' = 'BNB') => {
+    try {
+      const plan = DEFAULT_PLANS[newLevel];
+      
+      if (paymentMethod === 'BNB') {
+        await purchasePlanWithBNB({
+          args: [Object.values(UserLevel).indexOf(newLevel)],
+          value: parseEther(plan.price.bnb.toString()),
+        });
+      } else {
+        await purchasePlanWithTKN({
+          args: [Object.values(UserLevel).indexOf(newLevel)],
+        });
+      }
 
-      toast.success('Plan acheté avec succès!');
+      toast.success(`Plan ${plan.name} acheté avec succès!`);
     } catch (error) {
       console.error('Erreur lors de l\'achat du plan:', error);
       toast.error('Erreur lors de l\'achat du plan');
+      throw error;
     }
-  }, [purchasePlan]);
+  }, [purchasePlanWithBNB, purchasePlanWithTKN]);
 
   return {
-    userPlan,
-    purchasePlan: handlePurchasePlan,
+    getUserPlan,
+    upgradeToPlan,
+    isLoading,
+    isError
   };
 };
