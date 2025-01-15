@@ -1,8 +1,10 @@
 import { ethers } from "hardhat";
+import * as hre from "hardhat";
 
 async function main() {
   // Get signers
   const [owner, addr1, addr2] = await ethers.getSigners();
+  console.log("Testing with the account:", await owner.getAddress());
   
   // Récupérer le contrat déployé
   const tokenAddress = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";

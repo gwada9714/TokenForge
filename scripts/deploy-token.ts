@@ -1,8 +1,8 @@
-import * as hardhat from "hardhat";
-import { ethers } from "hardhat";
+import { ethers } from "ethers";
+import * as hre from "hardhat";
 
 async function main() {
-  const [deployer] = await hardhat.ethers.getSigners() as unknown as ethers.Signer[];
+  const [deployer] = await hre.ethers.getSigners();
   console.log("Deploying contracts with the account:", await deployer.getAddress());
 
   // Configuration addresses
@@ -10,7 +10,7 @@ async function main() {
   const STAKING_POOL_ADDRESS = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" // Adresse de test sur Sepolia
 
   // Deploy TokenForgeToken
-  const TokenForgeToken = await hardhat.ethers.getContractFactory("TokenForgeToken");
+  const TokenForgeToken = await hre.ethers.getContractFactory("TokenForgeToken");
   const token = await TokenForgeToken.deploy(
     TREASURY_ADDRESS,
     STAKING_POOL_ADDRESS

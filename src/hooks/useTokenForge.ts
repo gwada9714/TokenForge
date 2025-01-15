@@ -1,15 +1,17 @@
 import { useMemo } from 'react';
 import { useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
 import { 
-  TKN_TOKEN_ADDRESS, 
-  TREASURY_ADDRESS,
+  TKN_TOKEN_ADDRESS,
   BASIC_TIER_PRICE,
   PREMIUM_TIER_PRICE,
   TKN_PAYMENT_DISCOUNT 
 } from '@/constants/tokenforge';
-import { TokenForgeFactoryABI } from '@/contracts/abi/TokenForgeFactory';
-import { TKNTokenABI } from '@/contracts/abi/TKNToken';
+import TokenForgeFactoryJSON from '../contracts/abi/TokenForgeFactory.json';
+import TKNTokenJSON from '../contracts/abi/TKNToken.json';
 import { useNetwork } from 'wagmi';
+
+export const TokenForgeFactoryABI = TokenForgeFactoryJSON.abi;
+export const TKNTokenABI = TKNTokenJSON.abi;
 
 export const useTokenForge = () => {
   const { chain } = useNetwork();
