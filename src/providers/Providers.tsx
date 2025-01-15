@@ -2,11 +2,9 @@ import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
 import { WagmiConfig } from 'wagmi';
 import { config as wagmiConfig, chains } from '../config/web3Config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ChakraProvider } from '@chakra-ui/react';
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { memo } from 'react';
-import chakraTheme from '../theme';
 import { muiTheme } from '../theme/mui';
 import { Web3Provider } from './Web3Provider';
 
@@ -42,9 +40,7 @@ const Providers: React.FC<ProvidersProps> = memo(({ children }) => {
           <StyledEngineProvider injectFirst>
             <ThemeProvider theme={muiTheme}>
               <CssBaseline />
-              <ChakraProvider theme={chakraTheme}>
-                <Web3Provider>{children}</Web3Provider>
-              </ChakraProvider>
+              <Web3Provider>{children}</Web3Provider>
             </ThemeProvider>
           </StyledEngineProvider>
         </RainbowKitProvider>

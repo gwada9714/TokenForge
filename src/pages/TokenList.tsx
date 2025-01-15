@@ -31,25 +31,25 @@ const TokenList: React.FC = () => {
         margin: '0 auto'
       }}
     >
-      <Stack spacing={4}>
+      <Stack spacing={4} sx={{ width: '100%' }}>
         <Typography 
           component="h1" 
           variant="h4" 
           gutterBottom
-          fontWeight="bold"
+          sx={{ fontWeight: "bold" }}
         >
           Mes Tokens
         </Typography>
 
         {error && (
-          <Stack spacing={2} bgcolor="error.light" p={2} borderRadius={1}>
+          <Box sx={{ bgcolor: 'error.light', p: 2, borderRadius: 1 }}>
             <Typography 
               color="error.main" 
               variant="body1"
             >
               {error}
             </Typography>
-          </Stack>
+          </Box>
         )}
 
         {!isConnected && (
