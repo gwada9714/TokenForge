@@ -1,144 +1,133 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useContractWrite, useContractRead, useAccount, useWaitForTransaction, useNetwork } from 'wagmi';
-import { parseEther, formatEther } from 'viem'; 
-import { getContractAddress } from '../config/contracts';
-import { stakingABI } from '../contracts/abis';
+import { useState, useEffect, useMemo } from 'react';
+import { useContractRead, useContractWrite, useWaitForTransaction, useBalance } from 'wagmi';
+import { TKN_TOKEN_ADDRESS, STAKING_CONFIG } from '@/constants/tokenforge';
+import { TKNTokenABI } from '@/contracts/abi/TKNToken';
+import { useNetwork, useAccount } from 'wagmi';
 
-interface StakeInfo {
-  amount: string;
-  since: number;
-  claimedRewards: string;
-}
-
-interface PoolInfo {
-  totalStaked: string;
-  rewardRate: string;
-  lastUpdateTime: number;
-}
-
-/**
- * Hook for interacting with the staking contract
- * @param _tokenAddress The address of the token being staked (reserved for future multi-token staking support)
- */
-export function useStaking(_tokenAddress: string) {
-  const { address } = useAccount();
+export const useStaking = () => {
   const { chain } = useNetwork();
-  const stakingAddress = chain ? getContractAddress('STAKING_CONTRACT', chain.id) : null;
+  const { address } = useAccount();
+  const chainId = chain?.id || 1;
+  const [stakeAmount, setStakeAmount] = useState('');
 
-  const [userStake, setUserStake] = useState<StakeInfo>({
-    amount: '0',
-    since: 0,
-    claimedRewards: '0',
+  // Lecture du solde TKN
+  const { data: tokenBalance } = useBalance({
+    address,
+    token: TKN_TOKEN_ADDRESS[chainId],
   });
 
-  const [poolInfo, setPoolInfo] = useState<PoolInfo>({
-    totalStaked: '0',
-    rewardRate: '0',
-    lastUpdateTime: 0,
-  });
-
-  // Only proceed with contract interactions if we have a valid staking address
-  const enabled = Boolean(stakingAddress && address);
-
-  const { data: userStakeData } = useContractRead({
-    address: stakingAddress ?? undefined,
-    abi: stakingABI,
-    functionName: 'getUserStake',
+  // Lecture des informations de staking
+  const { data: stakeInfo } = useContractRead({
+    address: TKN_TOKEN_ADDRESS[chainId],
+    abi: TKNTokenABI,
+    functionName: 'getStakeInfo',
     args: [address],
-    enabled,
   });
 
-  const { data: poolInfoData } = useContractRead({
-    address: stakingAddress ?? undefined,
-    abi: stakingABI,
-    functionName: 'getPoolInfo',
-    enabled,
+  // Statistiques globales de staking
+  const { data: totalStaked } = useContractRead({
+    address: TKN_TOKEN_ADDRESS[chainId],
+    abi: TKNTokenABI,
+    functionName: 'totalStaked',
   });
 
-  const { data: rewardsData } = useContractRead({
-    address: stakingAddress ?? undefined,
-    abi: stakingABI,
-    functionName: 'calculateRewards',
-    args: [address],
-    enabled,
-  });
-
-  // Stake tokens
-  const { write: stake, data: stakeData } = useContractWrite({
-    address: stakingAddress,
-    abi: stakingABI,
+  // Actions de staking
+  const { write: stakeTokens, data: stakeData } = useContractWrite({
+    address: TKN_TOKEN_ADDRESS[chainId],
+    abi: TKNTokenABI,
     functionName: 'stake',
   });
 
-  // Withdraw tokens
-  const { write: withdraw, data: withdrawData } = useContractWrite({
-    address: stakingAddress,
-    abi: stakingABI,
-    functionName: 'withdraw',
+  const { write: unstakeTokens, data: unstakeData } = useContractWrite({
+    address: TKN_TOKEN_ADDRESS[chainId],
+    abi: TKNTokenABI,
+    functionName: 'unstake',
   });
 
-  // Claim rewards
-  const { write: claimRewards, data: claimData } = useContractWrite({
-    address: stakingAddress,
-    abi: stakingABI,
-    functionName: 'claimRewards',
+  const { write: claimRewardsAction, data: claimData } = useContractWrite({
+    address: TKN_TOKEN_ADDRESS[chainId],
+    abi: TKNTokenABI,
+    functionName: 'claimReward',
   });
 
-  // Wait for transactions
+  // Attendre les confirmations des transactions
   const { isLoading: isStaking } = useWaitForTransaction({
     hash: stakeData?.hash,
   });
 
-  const { isLoading: isWithdrawing } = useWaitForTransaction({
-    hash: withdrawData?.hash,
+  const { isLoading: isUnstaking } = useWaitForTransaction({
+    hash: unstakeData?.hash,
   });
 
   const { isLoading: isClaiming } = useWaitForTransaction({
     hash: claimData?.hash,
   });
 
-  useEffect(() => {
-    if (userStakeData && Array.isArray(userStakeData)) {
-      setUserStake({
-        amount: formatEther(BigInt(userStakeData[0].toString())),
-        since: Number(userStakeData[1]),
-        claimedRewards: formatEther(BigInt(userStakeData[2].toString())),
-      });
+  // Calcul du temps restant avant de pouvoir unstake
+  const timeUntilUnstake = useMemo(() => {
+    if (!stakeInfo?.timestamp) return 0;
+    const lockEnd = Number(stakeInfo.timestamp) + STAKING_CONFIG.LOCK_PERIOD;
+    const now = Math.floor(Date.now() / 1000);
+    return Math.max(0, lockEnd - now);
+  }, [stakeInfo?.timestamp]);
+
+  // Vérifier si l'unstake est possible
+  const canUnstake = useMemo(() => {
+    return timeUntilUnstake === 0;
+  }, [timeUntilUnstake]);
+
+  // Actions
+  const stake = async (amount: bigint) => {
+    try {
+      await stakeTokens({ args: [amount] });
+      return true;
+    } catch (error) {
+      console.error('Staking error:', error);
+      return false;
     }
-  }, [userStakeData]);
+  };
 
-  useEffect(() => {
-    if (poolInfoData && Array.isArray(poolInfoData)) {
-      setPoolInfo({
-        totalStaked: formatEther(BigInt(poolInfoData[0].toString())),
-        rewardRate: formatEther(BigInt(poolInfoData[1].toString())),
-        lastUpdateTime: Number(poolInfoData[2]),
-      });
+  const unstake = async () => {
+    try {
+      await unstakeTokens();
+      return true;
+    } catch (error) {
+      console.error('Unstaking error:', error);
+      return false;
     }
-  }, [poolInfoData]);
+  };
 
-  // Handlers
-  const handleStake = useCallback((amount: string) => {
-    stake({ args: [parseEther(amount)] });
-  }, [stake]);
-
-  const handleWithdraw = useCallback((amount: string) => {
-    withdraw({ args: [parseEther(amount)] });
-  }, [withdraw]);
-
-  const handleClaimRewards = useCallback(() => {
-    claimRewards({ args: [] });
-  }, [claimRewards]);
+  const claimRewards = async () => {
+    try {
+      await claimRewardsAction();
+      return true;
+    } catch (error) {
+      console.error('Claim rewards error:', error);
+      return false;
+    }
+  };
 
   return {
-    userStake,
-    poolInfo,
-    rewards: rewardsData ? formatEther(rewardsData as unknown as bigint) : '0',
-    stake: handleStake,
-    withdraw: handleWithdraw,
-    claimRewards: handleClaimRewards,
-    isStaking,
-    isWithdrawing,
-    isClaiming,
+    // États
+    balance: tokenBalance?.value,
+    stakedAmount: stakeInfo?.amount,
+    pendingRewards: stakeInfo?.pendingReward,
+    stakingStats: {
+      totalStaked: totalStaked || 0n,
+      apy: STAKING_CONFIG.APY,
+      stakersCount: 0, // À implémenter via un nouveau appel de contrat
+    },
+    stakeAmount,
+    setStakeAmount,
+    timeUntilUnstake,
+    canUnstake,
+
+    // Actions
+    stake,
+    unstake,
+    claimRewards,
+
+    // États de chargement
+    isLoading: isStaking || isUnstaking || isClaiming,
   };
 };
