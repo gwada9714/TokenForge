@@ -19,47 +19,10 @@ import {
 import LaunchIcon from '@mui/icons-material/Launch';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { Virtuoso } from 'react-virtuoso';
-import { useUserTokens } from '../../hooks/useUserTokens';
+import { useUserTokens, TokenData } from '../../hooks/useUserTokens';
 import { useTokenStats } from '../../hooks/useTokenStats';
 import { TokenIcon } from '../TokenDisplay/TokenIcon';
 import CircularProgress from '@mui/material/CircularProgress';
-
-interface TokenData {
-  address: string;
-  name: string;
-  symbol: string;
-  totalSupply: bigint;
-  decimals: number;
-  owner: string;
-  network: any;
-  createdAt: Date;
-  features: {
-    isBurnable: boolean;
-    isMintable: boolean;
-    isPausable: boolean;
-    hasMaxWallet: boolean;
-    hasMaxTransaction: boolean;
-    hasAntiBot: boolean;
-    hasBlacklist: boolean;
-  };
-  taxConfig: {
-    enabled: boolean;
-    buyTax: number;
-    sellTax: number;
-    transferTax: number;
-    taxRecipient: `0x${string}`;
-    taxStats?: {
-      totalTaxCollected: number;
-      totalTransactions: number;
-    };
-  };
-  stats: {
-    holders: number;
-    transactions: number;
-    price: string;
-    marketCap: string;
-  };
-}
 
 interface StatCardProps {
   title: string;
@@ -67,6 +30,13 @@ interface StatCardProps {
   icon: React.ReactNode;
   isLoading?: boolean;
   subValue?: string;
+}
+
+interface ExtendedTokenData extends TokenData {
+  taxStats?: {
+    totalTaxCollected: number;
+    totalTransactions: number;
+  };
 }
 
 const StatCard = memo<StatCardProps>(({ title, value, icon, isLoading, subValue }) => (
@@ -133,7 +103,7 @@ const useGlobalStats = () => {
     let totalTaxCollected = 0;
     let totalTransactions = 0;
 
-    tokens?.forEach(token => {
+    tokens?.forEach((token: ExtendedTokenData) => {
       if (token.taxConfig?.enabled && token.taxConfig?.taxStats) {
         totalTaxCollected += token.taxConfig.taxStats.totalTaxCollected;
         totalTransactions += token.taxConfig.taxStats.totalTransactions;
