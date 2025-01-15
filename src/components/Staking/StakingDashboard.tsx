@@ -57,7 +57,7 @@ const StakingDashboard: React.FC = () => {
     setWithdrawAmount,
     canUnstake,
     timeUntilUnstake,
-  } = useStaking(STAKING_CONFIG.address);
+  } = useStaking(STAKING_CONFIG.MINIMUM_AMOUNT);
 
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;

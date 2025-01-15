@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Card,
   Button,
@@ -8,9 +8,10 @@ import {
   Typography
 } from '@mui/material';
 import { useStaking } from '../../hooks/useStaking';
+import { Address } from 'viem';
 
 interface StakingPoolProps {
-  tokenAddress: string;
+  tokenAddress: Address;
   tokenSymbol: string;
 }
 
@@ -53,11 +54,11 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
         </Typography>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Typography>Total Staked:</Typography>
-          <Typography>{stakingStats.totalStaked} {tokenSymbol}</Typography>
+          <Typography>{stakingStats?.totalStaked ?? 0} {tokenSymbol}</Typography>
         </Stack>
         <Stack direction="row" justifyContent="space-between" mb={2}>
-          <Typography>Reward Rate:</Typography>
-          <Typography>{stakingStats.rewardRate} {tokenSymbol}/day</Typography>
+          <Typography>APY:</Typography>
+          <Typography>{stakingStats?.apy ?? 0}%</Typography>
         </Stack>
       </Box>
 
