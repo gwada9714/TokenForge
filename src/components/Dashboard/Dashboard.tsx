@@ -73,9 +73,9 @@ interface TokenData {
 }
 
 interface TokenStats {
-  tokens: TokenData[];
-  isLoading: boolean;
-  error?: Error;
+  totalValue: bigint;
+  transactionVolume: bigint;
+  uniqueHolders: number;
 }
 
 interface StatCardProps {
@@ -147,15 +147,16 @@ const TokenList = memo<{ tokens: TokenData[] }>(({ tokens }) => (
 ));
 
 const useGlobalStats = () => {
-  const { tokens, isLoading, error } = useTokenStats();
+  const { stats, isLoading, error } = useTokenStats();
+  const { tokens: userTokens } = useUserTokens();
   
   return useMemo(() => {
     let totalTaxCollected = BigInt(0);
     let totalTransactions = 0;
-    let totalTokens = tokens?.length || 0;
+    let totalTokens = userTokens?.length || 0;
     let totalPremiumTokens = 0;
 
-    tokens?.forEach((token: TokenData) => {
+    userTokens?.forEach((token: TokenData) => {
       if (token.taxConfig?.taxStats) {
         totalTaxCollected += token.taxConfig.taxStats.totalTaxCollected;
         totalTransactions += token.taxConfig.taxStats.totalTransactions;
@@ -173,7 +174,7 @@ const useGlobalStats = () => {
       isLoading,
       error
     };
-  }, [tokens, isLoading, error]);
+  }, [userTokens, isLoading, error]);
 };
 
 const Dashboard: React.FC = () => {
@@ -184,7 +185,7 @@ const Dashboard: React.FC = () => {
   );
   
   const { 
-    tokens,
+    stats,
     isLoading: isStatsLoading 
   } = useTokenStats(selectedNetwork?.chain.id);
   
@@ -200,7 +201,7 @@ const Dashboard: React.FC = () => {
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Total Value Locked"
-          value={tokens ? formatEther(tokens.totalValue) : "0"}
+          value={stats ? formatEther(stats.totalValue) : "0"}
           icon={<AccountBalanceWalletIcon color="primary" />}
           isLoading={isStatsLoading}
         />
@@ -208,7 +209,7 @@ const Dashboard: React.FC = () => {
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Transaction Volume"
-          value={tokens ? formatEther(tokens.transactionVolume) : "0"}
+          value={stats ? formatEther(stats.transactionVolume) : "0"}
           icon={<ShowChartIcon color="primary" />}
           isLoading={isStatsLoading}
         />
@@ -224,49 +225,18 @@ const Dashboard: React.FC = () => {
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Unique Holders"
-          value={tokens ? tokens.uniqueHolders.toString() : "0"}
+          value={stats ? stats.uniqueHolders.toString() : "0"}
           icon={<GroupIcon color="primary" />}
           isLoading={isStatsLoading}
         />
       </Grid>
-      <Grid item xs={12} sm={6}>
-        <StatCard
-          title="Tokens Créés"
-          value={globalStats.totalTokens.toString()}
-          icon={<TokenIcon />}
-          subValue={`${globalStats.totalPremiumTokens} Premium`}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <StatCard
-          title="Taxes Collectées"
-          value={formatEther(globalStats.totalTaxCollected)}
-          icon={<AccountBalanceWalletIcon />}
-          subValue="Total depuis le lancement"
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <StatCard
-          title="Transactions"
-          value={globalStats.totalTransactions.toString()}
-          icon={<ShowChartIcon />}
-          subValue="Transactions totales"
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <StatCard
-          title="Réseau Actif"
-          value={chain?.name || 'Non connecté'}
-          icon={<GroupIcon />}
-        />
-      </Grid>
     </Grid>
-  ), [tokens, userTokens, isStatsLoading, isTokensLoading, globalStats]);
+  ), [stats, userTokens, isStatsLoading, isTokensLoading]);
 
-  const mappedTokens = userTokens.map(token => ({
+  const mappedTokens = userTokens?.map(token => ({
     ...token,
-    tier: token.features.premium ? 'premium' : 'basic'
-  }));
+    tier: token.features.premium ? ('premium' as const) : ('basic' as const)
+  })) || [];
 
   return (
     <Box sx={{ p: 2 }}>
