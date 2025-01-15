@@ -19,7 +19,7 @@ import { STAKING_CONFIG } from '@/constants/tokenforge';
 import TokenIcon from '@mui/icons-material/Token';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import { formatUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 
 const StatCard: React.FC<{
   title: string;
@@ -63,10 +63,8 @@ const StakingDashboard: React.FC = () => {
 
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
-    // Convert bigint to hex string with '0x' prefix
-    const hexValue = `0x${stakingStats.totalStaked.toString(16)}` as `0x${string}`;
     return {
-      totalStaked: formatUnits(hexValue, 18),
+      totalStaked: formatUnits(stakingStats.totalStaked, 18),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };
@@ -74,12 +72,14 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    await stake(stakeAmount.toString());
+    const amount = parseUnits(stakeAmount.toString(), 18);
+    await stake(amount);
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    await withdraw(withdrawAmount.toString());
+    const amount = parseUnits(withdrawAmount.toString(), 18);
+    await withdraw(amount);
   };
 
   const handleClaimRewards = async () => {
