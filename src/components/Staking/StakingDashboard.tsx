@@ -63,7 +63,7 @@ const StakingDashboard: React.FC = () => {
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
     return {
-      totalStaked: formatEther(stakingStats.totalStaked),
+      totalStaked: formatEther(BigInt(stakingStats.totalStaked)),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };

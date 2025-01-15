@@ -41,7 +41,6 @@ interface TokenData {
     hasMaxTransaction: boolean;
     hasAntiBot: boolean;
     hasBlacklist: boolean;
-    premium: boolean;
   };
   taxConfig: {
     enabled: boolean;
@@ -187,7 +186,7 @@ const Dashboard = memo(() => {
 
   const mappedTokens = tokens?.map(token => ({
     ...token,
-    tier: token.features.premium ? ('premium' as const) : ('basic' as const)
+    tier: token.features.isBurnable || token.features.isMintable || token.features.isPausable ? ('premium' as const) : ('basic' as const)
   })) || [];
 
   return (
