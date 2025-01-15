@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useContractRead, useAccount, usePublicClient } from 'wagmi';
 import { getNetwork } from '@/config/networks';
-import { TokenFactoryABI } from '@/contracts/abis/TokenFactory';
-import { TokenABI } from '@/contracts/abis/Token';
+import TokenFactoryABI from '@/contracts/abi/TokenFactory';
+import TokenABI from '@/contracts/abis';
 import { Address, formatUnits } from 'viem';
 
 export interface TokenData {
@@ -52,7 +52,7 @@ export const useUserTokens = (chainId?: number) => {
   const network = chainId ? getNetwork(chainId) : undefined;
   const publicClient = usePublicClient();
 
-  const { data: tokenAddresses, isError, isLoading: isLoadingAddresses } = useContractRead({
+  const { data: tokenAddresses, isLoading: isLoadingAddresses } = useContractRead({
     address: network?.factoryAddress,
     abi: TokenFactoryABI,
     functionName: 'getTokensByOwner',
