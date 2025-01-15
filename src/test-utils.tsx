@@ -1,9 +1,10 @@
 import React from 'react'
 import { render, RenderOptions } from '@testing-library/react'
-import { ThemeProvider } from '@mui/material/styles'
+import { createTheme, ThemeProvider } from '@mui/material/styles'
 import { BrowserRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
-import { theme } from './theme/mui'
+
+const theme = createTheme()
 
 const AllProviders = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider theme={theme}>
