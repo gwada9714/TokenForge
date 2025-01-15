@@ -18,6 +18,7 @@ contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl {
     // TokenForge tax configuration
     uint256 public constant FORGE_TAX_RATE = 100; // 1% = 100 basis points
     address public immutable FORGE_TREASURY;
+    address public immutable TAX_DISTRIBUTOR;
     
     // Statistics
     uint256 public totalTaxCollected;
@@ -33,15 +34,18 @@ contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl {
         bool mintable,
         bool burnable,
         bool pausable,
-        address forgeTreasury
+        address forgeTreasury,
+        address taxDistributor
     ) ERC20(name, symbol) {
         require(forgeTreasury != address(0), "TokenForge: treasury cannot be zero address");
+        require(taxDistributor != address(0), "TokenForge: tax distributor cannot be zero address");
         
         _decimals = decimalsArg;
         _mintable = mintable;
         _burnable = burnable;
         _pausable = pausable;
         FORGE_TREASURY = forgeTreasury;
+        TAX_DISTRIBUTOR = taxDistributor;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
@@ -91,9 +95,14 @@ contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl {
     ) internal virtual override(ERC20, ERC20Pausable) {
         super._beforeTokenTransfer(from, to, amount);
         
-        // Skip tax collection for minting and burning
-        if (from != address(0) && to != address(0)) {
+        // Skip tax collection for minting, burning, and transfers to/from tax distributor
+        if (from != address(0) && to != address(0) && 
+            from != TAX_DISTRIBUTOR && to != TAX_DISTRIBUTOR) {
             uint256 taxAmount = (amount * FORGE_TAX_RATE) / 10000; // Calculate 1% tax
+            
+            // Transfer tax to distributor
+            _transfer(from, TAX_DISTRIBUTOR, taxAmount);
+            
             totalTaxCollected += taxAmount;
             totalTransactions += 1;
             
