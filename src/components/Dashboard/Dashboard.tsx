@@ -1,4 +1,4 @@
-import React, { useState, memo, useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -54,7 +54,11 @@ interface TokenData {
     buyTax: number;
     sellTax: number;
     transferTax: number;
-    taxRecipient: Address;
+    taxRecipient: `0x${string}`;
+    taxStats?: {
+      totalTaxCollected: bigint;
+      totalTransactions: number;
+    };
   };
   stats: {
     holders: number;
@@ -130,15 +134,15 @@ const TokenList = memo<{ tokens: TokenData[] }>(({ tokens }) => (
 
 const useGlobalStats = () => {
   const { stats, isLoading, error } = useTokenStats();
-  const { tokens: userTokens } = useUserTokens();
+  const { tokens } = useUserTokens();
   
   return useMemo(() => {
     let totalTaxCollected = BigInt(0);
     let totalTransactions = 0;
-    let totalTokens = userTokens?.length || 0;
+    let totalTokens = tokens?.length || 0;
     let totalPremiumTokens = 0;
 
-    userTokens?.forEach((token: TokenData) => {
+    tokens?.forEach((token: TokenData) => {
       if (token.taxConfig?.taxStats) {
         totalTaxCollected += token.taxConfig.taxStats.totalTaxCollected;
         totalTransactions += token.taxConfig.taxStats.totalTransactions;
@@ -156,12 +160,12 @@ const useGlobalStats = () => {
       isLoading,
       error
     };
-  }, [userTokens, isLoading, error]);
+  }, [tokens, isLoading, error]);
 };
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { userTokens, isLoading } = useUserTokens();
+  const { tokens, isLoading } = useUserTokens();
   
   const statsCards = useMemo(() => (
     <Grid container spacing={2}>
@@ -182,7 +186,7 @@ const Dashboard: React.FC = () => {
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Total Tokens"
-          value={userTokens ? userTokens.length.toString() : "0"}
+          value={tokens ? tokens.length.toString() : "0"}
           icon={<TokenIcon color="primary" />}
           isLoading={isLoading}
         />
@@ -195,9 +199,9 @@ const Dashboard: React.FC = () => {
         />
       </Grid>
     </Grid>
-  ), [userTokens, isLoading]);
+  ), [tokens, isLoading]);
 
-  const mappedTokens = userTokens?.map(token => ({
+  const mappedTokens = tokens?.map(token => ({
     ...token,
     tier: token.features.premium ? ('premium' as const) : ('basic' as const)
   })) || [];
