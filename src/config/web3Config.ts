@@ -1,61 +1,65 @@
-import { sepolia } from 'viem/chains';
-import { http, type Chain } from 'viem';
-import { getDefaultWallets, connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { createConfig } from 'wagmi';
+import { http, createPublicClient } from 'viem';
+import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
+import { supportedChains } from './chains';
+import { type Chain } from 'viem';
 
 // Vérification des variables d'environnement requises
-if (!import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID) {
-  throw new Error('Missing VITE_WALLET_CONNECT_PROJECT_ID');
-}
-
-if (!import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA) {
-  throw new Error('Missing VITE_TOKEN_FACTORY_SEPOLIA address');
-}
-
-const tokenFactoryAddress = import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA;
-if (!tokenFactoryAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-  throw new Error('Invalid TokenFactory contract address format');
-}
-
-// Configuration des chaînes avec les adresses des contrats
-export const chains = [{
-  ...sepolia,
-  contracts: {
-    tokenFactory: {
-      address: tokenFactoryAddress as `0x${string}`,
-      blockCreated: 4728124
-    }
-  }
-}] as const satisfies readonly [Chain, ...Chain[]];
-
-const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID as string;
-
-const { wallets } = getDefaultWallets({
-  appName: 'Token Manager',
-  projectId,
-});
-
-const connectors = connectorsForWallets([...wallets], { 
-  projectId,
-  appName: 'Token Manager'
-});
-
-const transport = http();
-
-export const config = createConfig({
-  connectors,
-  chains,
-  transports: {
-    [sepolia.id]: transport
-  }
-});
-
-// Exports pour les composants de test
-export const defaultChain = chains[0];
-export const tokenFactoryConfig = {
-  address: tokenFactoryAddress as `0x${string}`,
-  chain: defaultChain
+const requiredEnvVars = {
+  VITE_WALLET_CONNECT_PROJECT_ID: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
+  VITE_MAINNET_RPC_URL: import.meta.env.VITE_MAINNET_RPC_URL,
+  VITE_SEPOLIA_RPC_URL: import.meta.env.VITE_SEPOLIA_RPC_URL
 };
 
-export const wagmiConfig = config;
+Object.entries(requiredEnvVars).forEach(([key, value]) => {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+});
+
+const projectId = requiredEnvVars.VITE_WALLET_CONNECT_PROJECT_ID as string;
+
+// Convert readonly chains to mutable array for RainbowKit
+const mutableChains: Chain[] = [...supportedChains].filter(chain => {
+  try {
+    // Vérifie si la chaîne a une URL RPC valide
+    const rpcUrl = chain.rpcUrls.default.http[0];
+    return !!rpcUrl && rpcUrl.startsWith('http');
+  } catch (error) {
+    console.warn(`Chain ${chain.name} skipped due to invalid RPC URL`);
+    return false;
+  }
+});
+
+if (mutableChains.length === 0) {
+  throw new Error('No valid chains configured. Please check your RPC URLs.');
+}
+
+const { connectors } = getDefaultWallets({
+  appName: 'TokenForge',
+  projectId,
+  chains: mutableChains
+});
+
+// Create public client with fallback
+const publicClient = createPublicClient({
+  chain: mutableChains[0],
+  transport: http(),
+  batch: {
+    multicall: true
+  },
+  pollingInterval: 4_000
+});
+
+// Configuration Wagmi avec gestion des erreurs
+export const wagmiConfig = createConfig({
+  connectors,
+  publicClient,
+  autoConnect: true
+});
+
+// Export des chaînes supportées pour RainbowKit
+export const chains = mutableChains;
+
+console.log(`Web3 configuration initialized with ${mutableChains.length} chains`);

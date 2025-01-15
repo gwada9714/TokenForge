@@ -8,7 +8,6 @@ import {
 } from "viem";
 import {
   TokenInfo,
-  TokenOperation,
   TokenHistory,
   TokenStatistics,
   TokenAllowance,
@@ -67,14 +66,6 @@ export async function executeTokenOperation(
     }
     throw error;
   }
-}
-
-interface Transfer {
-  from: Address;
-  to: Address;
-  value: string;
-  timestamp: number;
-  transactionHash: `0x${string}`;
 }
 
 export async function getTokenHistory(

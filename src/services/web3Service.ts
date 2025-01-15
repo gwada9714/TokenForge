@@ -1,4 +1,4 @@
-import { ethers, TransactionReceipt } from "ethers";
+import { ethers, ContractTransaction } from "ethers";
 import { TokenFactoryABI } from "../contracts/abi/TokenFactory";
 
 // Fonction pour obtenir le contrat TokenFactory
@@ -16,7 +16,7 @@ export const createToken = async (
   symbol: string,
   initialSupply: string,
   decimals: number,
-): Promise<TransactionReceipt> => {
+): Promise<ContractTransaction> => {
   try {
     const tx = await contract.createToken(
       name,

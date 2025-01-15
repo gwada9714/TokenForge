@@ -9,19 +9,14 @@ import {
   PublicClient,
   Log,
   decodeEventLog,
-  getEventSelector,
   Address,
   parseEther,
   encodeFunctionData,
   Abi,
-  Hex,
-  toHex,
 } from "viem";
 import { TokenFactoryABI } from "../contracts/abi/TokenFactory";
 import {
   TEST_WALLET_ADDRESS,
-  TX_POLLING_INTERVAL,
-  REQUIRED_CONFIRMATIONS,
   ZERO_ADDRESS,
 } from "../config/constants";
 import { getNetwork } from "../config/networks";
@@ -77,7 +72,6 @@ const prepareDeploymentArgs = (
   tokenType: TokenType,
   baseConfig: TokenBaseConfig,
   advancedConfig: TokenAdvancedConfig,
-  owner: Address = TEST_WALLET_ADDRESS as `0x${string}`,
 ): TokenDeploymentArgs => {
   return {
     tokenType: stringToHex(tokenType),
@@ -127,7 +121,6 @@ export const deployToken = async (
       tokenType,
       baseConfig,
       advancedConfig,
-      owner,
     );
 
     // Encode constructor arguments for proxy if needed
@@ -181,7 +174,7 @@ interface DecodedLog {
   };
 }
 
-const decodeLog = (log: Log, publicClient: PublicClient): DecodedLog | null => {
+const decodeLog = (log: Log): DecodedLog | null => {
   try {
     const eventFragment = TokenFactoryABI.find(
       (x) => x.type === "event" && x.name === "TokenCreated",
@@ -236,7 +229,7 @@ export const getDeploymentStatus = async (
     }
 
     const logs = receipt.logs;
-    const decodedLog = decodeLog(logs[logs.length - 1], publicClient);
+    const decodedLog = decodeLog(logs[logs.length - 1]);
     if (!decodedLog) {
       return {
         status: "failed",
