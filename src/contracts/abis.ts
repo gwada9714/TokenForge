@@ -196,3 +196,156 @@ export const LiquidityLockerABI = [
     "type": "function"
   }
 ] as const;
+
+// Staking Contract ABI
+export const stakingABI = [
+  {
+    "inputs": [{"internalType": "address","name": "_stakingToken","type": "address"}],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [{"internalType": "uint256","name": "_amount","type": "uint256"}],
+    "name": "stake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256","name": "_amount","type": "uint256"}],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claimRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address","name": "_user","type": "address"}],
+    "name": "calculateRewards",
+    "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address","name": "_user","type": "address"}],
+    "name": "getUserStake",
+    "outputs": [
+      {"internalType": "uint256","name": "amount","type": "uint256"},
+      {"internalType": "uint256","name": "since","type": "uint256"},
+      {"internalType": "uint256","name": "claimedRewards","type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPoolInfo",
+    "outputs": [
+      {"internalType": "uint256","name": "totalStaked","type": "uint256"},
+      {"internalType": "uint256","name": "rewardRate","type": "uint256"},
+      {"internalType": "uint256","name": "lastUpdateTime","type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
+
+// Launchpad Contract ABI
+export const launchpadABI = [
+  {
+    "inputs": [{"internalType": "address","name": "_platformToken","type": "address"}],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {"internalType": "address","name": "_token","type": "address"},
+      {"internalType": "uint256","name": "_tokenPrice","type": "uint256"},
+      {"internalType": "uint256","name": "_hardCap","type": "uint256"},
+      {"internalType": "uint256","name": "_softCap","type": "uint256"},
+      {"internalType": "uint256","name": "_minContribution","type": "uint256"},
+      {"internalType": "uint256","name": "_maxContribution","type": "uint256"},
+      {"internalType": "uint256","name": "_startTime","type": "uint256"},
+      {"internalType": "uint256","name": "_endTime","type": "uint256"}
+    ],
+    "name": "createPool",
+    "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256","name": "_poolId","type": "uint256"}],
+    "name": "contribute",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256","name": "_poolId","type": "uint256"}],
+    "name": "finalizePool",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256","name": "_poolId","type": "uint256"}],
+    "name": "cancelPool",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256","name": "_poolId","type": "uint256"}],
+    "name": "claimTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256","name": "_poolId","type": "uint256"}],
+    "name": "claimRefund",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256","name": "_poolId","type": "uint256"}],
+    "name": "getPoolInfo",
+    "outputs": [
+      {"internalType": "address","name": "token","type": "address"},
+      {"internalType": "uint256","name": "tokenPrice","type": "uint256"},
+      {"internalType": "uint256","name": "hardCap","type": "uint256"},
+      {"internalType": "uint256","name": "softCap","type": "uint256"},
+      {"internalType": "uint256","name": "totalRaised","type": "uint256"},
+      {"internalType": "uint256","name": "startTime","type": "uint256"},
+      {"internalType": "uint256","name": "endTime","type": "uint256"},
+      {"internalType": "bool","name": "finalized","type": "bool"},
+      {"internalType": "bool","name": "cancelled","type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256","name": "_poolId","type": "uint256"},
+      {"internalType": "address","name": "_contributor","type": "address"}
+    ],
+    "name": "getContribution",
+    "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "poolCount",
+    "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];

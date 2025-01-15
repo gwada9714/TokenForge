@@ -46,6 +46,12 @@ const Header = () => {
             <ChakraLink as={Link} to="/tokens/create">
               Créer un Token
             </ChakraLink>
+            <Link to="/staking" className="nav-link">
+              Staking
+            </Link>
+            <Link to="/launchpad" className="nav-link">
+              Launchpad
+            </Link>
           </HStack>
         </HStack>
 

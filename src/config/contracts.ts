@@ -9,6 +9,11 @@ export const CONTRACT_ADDRESSES = {
     mainnet: import.meta.env.VITE_TOKEN_FORGE_PLANS_MAINNET,
     local: '0x...' // À remplir après le déploiement local
   },
+  PLATFORM_TOKEN: {
+    sepolia: import.meta.env.VITE_PLATFORM_TOKEN_SEPOLIA,
+    mainnet: import.meta.env.VITE_PLATFORM_TOKEN_MAINNET,
+    local: '0x...' // To be filled after local deployment
+  },
   LIQUIDITY_LOCKER: {
     sepolia: import.meta.env.VITE_LIQUIDITY_LOCKER_SEPOLIA,
     mainnet: import.meta.env.VITE_LIQUIDITY_LOCKER_MAINNET,
@@ -20,6 +25,10 @@ export const CONTRACT_ADDRESSES = {
     local: '0x...' // Adresse locale
   }
 } as const;
+
+// DeFi contracts
+export const STAKING_CONTRACT_ADDRESS = '0x...'; // Replace with actual address after deployment
+export const LAUNCHPAD_CONTRACT_ADDRESS = '0x...'; // Replace with actual address after deployment
 
 export const SUPPORTED_NETWORKS = {
   LOCAL: Number(import.meta.env.VITE_LOCAL_CHAIN_ID) || 31337,
