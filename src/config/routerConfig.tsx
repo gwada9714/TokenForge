@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { RouteObject } from 'react-router-dom';
+import { RouteObject, Navigate } from 'react-router-dom';
 import LoadingComponent from '../components/common/LoadingComponent';
 
 // Configure future flags for React Router v7
@@ -14,6 +14,10 @@ const LaunchpadPage = lazy(() => import('../pages/Launchpad').then(module => ({ 
 
 // Define routes configuration
 export const routes: RouteObject[] = [
+  {
+    path: '/',
+    element: <Navigate to="/staking" replace />
+  },
   {
     path: '/staking',
     element: (
