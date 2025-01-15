@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import type { AppRoute, AppRouteObject } from '../types/router';
 import LoadingComponent from '../components/common/LoadingComponent';
 

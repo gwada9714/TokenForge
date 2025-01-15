@@ -18,9 +18,9 @@ interface PoolInfo {
 
 /**
  * Hook for interacting with the staking contract
- * @param tokenAddress The address of the token being staked (reserved for future multi-token staking support)
+ * @param _tokenAddress The address of the token being staked (reserved for future multi-token staking support)
  */
-export function useStaking(tokenAddress: string) {
+export function useStaking(_tokenAddress: string) {
   const { address } = useAccount();
   const [userStake, setUserStake] = useState<StakeInfo>({
     amount: '0',
