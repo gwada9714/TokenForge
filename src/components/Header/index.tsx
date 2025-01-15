@@ -4,9 +4,14 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 interface HeaderProps {
+  menuItems: {
+    text: string;
+    icon: React.ReactNode;
+    path: string;
+  }[];
 }
 
-const Header: React.FC<HeaderProps> = () => {
+const Header: React.FC<HeaderProps> = ({ menuItems }) => {
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -19,35 +24,27 @@ const Header: React.FC<HeaderProps> = () => {
             variant="h6"
             component={RouterLink}
             to="/"
-            sx={{ color: 'white', textDecoration: 'none', mr: 4 }}
+            sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}
           >
             TokenForge
           </Typography>
-          
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              component={RouterLink}
-              to="/dashboard"
-              color="inherit"
-              sx={{ 
-                backgroundColor: isActive('/dashboard') ? 'rgba(255,255,255,0.1)' : 'transparent'
-              }}
-            >
-              Dashboard
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/create"
-              color="inherit"
-              sx={{ 
-                backgroundColor: isActive('/create') ? 'rgba(255,255,255,0.1)' : 'transparent'
-              }}
-            >
-              Créer un Token
-            </Button>
+            {menuItems.map((item) => (
+              <Button
+                key={item.path}
+                component={RouterLink}
+                to={item.path}
+                color="inherit"
+                startIcon={item.icon}
+                sx={{
+                  backgroundColor: isActive(item.path) ? 'rgba(255, 255, 255, 0.1)' : 'transparent'
+                }}
+              >
+                {item.text}
+              </Button>
+            ))}
           </Box>
         </Box>
-
         <ConnectButton />
       </Toolbar>
     </AppBar>

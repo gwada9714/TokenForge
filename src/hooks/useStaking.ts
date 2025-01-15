@@ -4,130 +4,108 @@ import { TKN_TOKEN_ADDRESS, STAKING_CONFIG } from '@/constants/tokenforge';
 import { TKNTokenABI } from '@/contracts/abi/TKNToken';
 import { useNetwork, useAccount } from 'wagmi';
 
-export const useStaking = () => {
+export interface StakingInfo {
+  balance: bigint | undefined;
+  stakedAmount: bigint;
+  pendingRewards: bigint;
+  stakingStats: {
+    totalStaked: bigint;
+    apy: number;
+    stakersCount: number;
+  };
+  stakeAmount: string;
+  setStakeAmount: React.Dispatch<React.SetStateAction<string>>;
+  withdrawAmount: string;
+  setWithdrawAmount: React.Dispatch<React.SetStateAction<string>>;
+  stake: (amount: string) => void;
+  withdraw: (amount: string) => void;
+  claimRewards: () => void;
+  isLoading: boolean;
+  isStaking: boolean;
+  isWithdrawing: boolean;
+  isClaiming: boolean;
+}
+
+export const useStaking = (tokenAddress: string): StakingInfo => {
   const { chain } = useNetwork();
   const { address } = useAccount();
   const chainId = chain?.id || 1;
   const [stakeAmount, setStakeAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
 
   // Lecture du solde TKN
-  const { data: tokenBalance } = useBalance({
+  const { data: balance } = useBalance({
     address,
-    token: TKN_TOKEN_ADDRESS[chainId],
+    token: tokenAddress,
   });
 
   // Lecture des informations de staking
   const { data: stakeInfo } = useContractRead({
-    address: TKN_TOKEN_ADDRESS[chainId],
+    address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'getStakeInfo',
     args: [address],
   });
 
   // Statistiques globales de staking
-  const { data: totalStaked } = useContractRead({
-    address: TKN_TOKEN_ADDRESS[chainId],
+  const { data: stakingStats } = useContractRead({
+    address: tokenAddress,
     abi: TKNTokenABI,
-    functionName: 'totalStaked',
+    functionName: 'getStakingStats',
   });
 
   // Actions de staking
-  const { write: stakeTokens, data: stakeData } = useContractWrite({
-    address: TKN_TOKEN_ADDRESS[chainId],
+  const { write: stakeTokens, isLoading: isStaking, data: stakeData } = useContractWrite({
+    address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'stake',
   });
 
-  const { write: unstakeTokens, data: unstakeData } = useContractWrite({
-    address: TKN_TOKEN_ADDRESS[chainId],
+  const { write: unstakeTokens, isLoading: isWithdrawing, data: unstakeData } = useContractWrite({
+    address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'unstake',
   });
 
-  const { write: claimRewardsAction, data: claimData } = useContractWrite({
-    address: TKN_TOKEN_ADDRESS[chainId],
+  const { write: claim, isLoading: isClaiming, data: claimData } = useContractWrite({
+    address: tokenAddress,
     abi: TKNTokenABI,
-    functionName: 'claimReward',
+    functionName: 'claimRewards',
   });
 
-  // Attendre les confirmations des transactions
-  const { isLoading: isStaking } = useWaitForTransaction({
-    hash: stakeData?.hash,
-  });
-
-  const { isLoading: isUnstaking } = useWaitForTransaction({
-    hash: unstakeData?.hash,
-  });
-
-  const { isLoading: isClaiming } = useWaitForTransaction({
-    hash: claimData?.hash,
-  });
-
-  // Calcul du temps restant avant de pouvoir unstake
-  const timeUntilUnstake = useMemo(() => {
-    if (!stakeInfo?.timestamp) return 0;
-    const lockEnd = Number(stakeInfo.timestamp) + STAKING_CONFIG.LOCK_PERIOD;
-    const now = Math.floor(Date.now() / 1000);
-    return Math.max(0, lockEnd - now);
-  }, [stakeInfo?.timestamp]);
-
-  // Vérifier si l'unstake est possible
-  const canUnstake = useMemo(() => {
-    return timeUntilUnstake === 0;
-  }, [timeUntilUnstake]);
-
-  // Actions
-  const stake = async (amount: bigint) => {
-    try {
-      await stakeTokens({ args: [amount] });
-      return true;
-    } catch (error) {
-      console.error('Staking error:', error);
-      return false;
-    }
+  const stake = (amount: string) => {
+    if (!amount) return;
+    stakeTokens({ args: [BigInt(amount)] });
   };
 
-  const unstake = async () => {
-    try {
-      await unstakeTokens();
-      return true;
-    } catch (error) {
-      console.error('Unstaking error:', error);
-      return false;
-    }
+  const withdraw = (amount: string) => {
+    if (!amount) return;
+    unstakeTokens({ args: [BigInt(amount)] });
   };
 
-  const claimRewards = async () => {
-    try {
-      await claimRewardsAction();
-      return true;
-    } catch (error) {
-      console.error('Claim rewards error:', error);
-      return false;
-    }
+  const claimRewards = () => {
+    claim();
   };
 
   return {
-    // États
-    balance: tokenBalance?.value,
-    stakedAmount: stakeInfo?.amount,
-    pendingRewards: stakeInfo?.pendingReward,
+    balance: balance?.value,
+    stakedAmount: stakeInfo?.stakedAmount || BigInt(0),
+    pendingRewards: stakeInfo?.pendingRewards || BigInt(0),
     stakingStats: {
-      totalStaked: totalStaked || 0n,
-      apy: STAKING_CONFIG.APY,
-      stakersCount: 0, // À implémenter via un nouveau appel de contrat
+      totalStaked: stakingStats?.totalStaked || BigInt(0),
+      apy: stakingStats?.apy || 0,
+      stakersCount: stakingStats?.stakersCount || 0,
     },
     stakeAmount,
     setStakeAmount,
-    timeUntilUnstake,
-    canUnstake,
-
-    // Actions
+    withdrawAmount,
+    setWithdrawAmount,
     stake,
-    unstake,
+    withdraw,
     claimRewards,
-
-    // États de chargement
-    isLoading: isStaking || isUnstaking || isClaiming,
+    isLoading: false,
+    isStaking,
+    isWithdrawing,
+    isClaiming,
   };
 };

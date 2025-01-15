@@ -72,12 +72,24 @@ interface IToken {
   tier: 'basic' | 'premium';
 }
 
-const StatCard = memo<{
+interface TokenStats {
+  length?: number;
+  data?: TokenData[];
+}
+
+interface TokenData extends Omit<IToken, 'tier'> {
+  // Ajoutez ici d'autres propriétés spécifiques à TokenData si nécessaire
+}
+
+interface StatCardProps {
   title: string;
   value: string;
   icon: React.ReactNode;
+  isLoading?: boolean;
   subValue?: string;
-}>(({ title, value, icon, subValue }) => (
+}
+
+const StatCard = memo<StatCardProps>(({ title, value, icon, isLoading, subValue }) => (
   <Card>
     <CardContent>
       <Box display="flex" alignItems="center" gap={1} mb={1}>
@@ -162,16 +174,13 @@ const useGlobalStats = () => {
   return useMemo(() => {
     let totalTaxCollected = BigInt(0);
     let totalTransactions = 0;
-    let totalTokens = tokenStats?.length || 0;
+    let totalTokens = tokenStats?.data?.length || 0;
     let totalPremiumTokens = 0;
 
-    tokenStats?.forEach(token => {
+    tokenStats?.data?.forEach(token => {
       if (token.taxStats) {
         totalTaxCollected += token.taxStats.totalTaxCollected;
         totalTransactions += token.taxStats.totalTransactions;
-      }
-      if (token.tier === 'premium') {
-        totalPremiumTokens++;
       }
     });
 
