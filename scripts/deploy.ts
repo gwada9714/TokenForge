@@ -1,13 +1,12 @@
-const hre = require("hardhat");
 const ethers = require("ethers");
 
 async function main() {
-  const [deployer] = await hre.ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
 
   console.log("Déploiement des contrats avec le compte:", deployer.address);
 
   // Déploiement du TokenForgeToken
-  const TokenForgeFactory = await hre.ethers.getContractFactory("TokenForgeToken");
+  const TokenForgeFactory = await ethers.getContractFactory("TokenForgeToken");
   const tokenForge = await TokenForgeFactory.deploy(
     "TokenForge Token",        // nom
     "TFT",                     // symbole
@@ -23,14 +22,14 @@ async function main() {
   console.log("TokenForgeToken déployé à l'adresse:", tokenForge.address);
 
   // Déploiement du contrat de staking
-  const StakingFactory = await hre.ethers.getContractFactory("TokenForgeStaking");
+  const StakingFactory = await ethers.getContractFactory("TokenForgeStaking");
   const staking = await StakingFactory.deploy(tokenForge.address);
   
   await staking.deployed();
   console.log("TokenForgeStaking déployé à l'adresse:", staking.address);
 
   // Configuration initiale
-  const MINTER_ROLE = hre.ethers.utils.id("MINTER_ROLE");
+  const MINTER_ROLE = ethers.utils.id("MINTER_ROLE");
   await tokenForge.grantRole(MINTER_ROLE, staking.address);
   console.log("Rôle MINTER accordé au contrat de staking");
 
