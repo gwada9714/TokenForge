@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Button, Box, Container } from '@mui/material';
+import { Typography, Button, Box, Container, Stack } from '@mui/material';
 import { useWeb3 } from '../providers';
 
 const TokenList: React.FC = () => {
@@ -7,30 +7,28 @@ const TokenList: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
+      <Stack spacing={4} sx={{ py: 4 }}>
         <Typography 
           component="h1" 
           variant="h4" 
           gutterBottom
-          sx={{ mb: 4 }}
         >
           Mes Tokens
         </Typography>
 
         {error && (
-          <Box sx={{ mb: 2 }}>
+          <Stack spacing={2}>
             <Typography 
               color="error" 
               variant="body1"
-              sx={{ mb: 2 }}
             >
               {error}
             </Typography>
-          </Box>
+          </Stack>
         )}
 
         {!isConnected && (
-          <Box sx={{ mt: 2 }}>
+          <Box>
             <Button 
               variant="contained" 
               color="primary" 
@@ -41,7 +39,7 @@ const TokenList: React.FC = () => {
             </Button>
           </Box>
         )}
-      </Box>
+      </Stack>
     </Container>
   );
 };

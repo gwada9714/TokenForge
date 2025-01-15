@@ -1,7 +1,7 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
-const muiTheme = createTheme({
-  spacing: (factor: number) => `${0.25 * factor}rem`,
+// Create base theme
+const baseTheme = createTheme({
   palette: {
     primary: {
       main: '#006BFF',
@@ -48,5 +48,8 @@ const muiTheme = createTheme({
     },
   },
 });
+
+// Apply responsive font sizes and export
+const muiTheme = responsiveFontSizes(baseTheme);
 
 export default muiTheme;
