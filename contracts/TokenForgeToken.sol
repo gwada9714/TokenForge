@@ -339,20 +339,20 @@ contract TokenForgeToken is ITokenForgeToken {
         }
     }
     
-    function _approve(address owner, address spender, uint256 amount) internal {
-        require(owner != address(0), "Approve from zero");
+    function _approve(address tokenOwner, address spender, uint256 amount) internal {
+        require(tokenOwner != address(0), "Approve from zero");
         require(spender != address(0), "Approve to zero");
 
-        _allowances[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
+        _allowances[tokenOwner][spender] = amount;
+        emit Approval(tokenOwner, spender, amount);
     }
     
-    function _spendAllowance(address owner, address spender, uint256 amount) internal {
-        uint256 currentAllowance = _allowances[owner][spender];
+    function _spendAllowance(address tokenOwner, address spender, uint256 amount) internal {
+        uint256 currentAllowance = _allowances[tokenOwner][spender];
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "Insufficient allowance");
             unchecked {
-                _approve(owner, spender, currentAllowance - amount);
+                _approve(tokenOwner, spender, currentAllowance - amount);
             }
         }
     }
