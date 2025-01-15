@@ -8,23 +8,26 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Grid
+  Grid,
+  Divider,
+  Box,
 } from '@mui/material';
 import { TokenConfig } from '@/types/token';
+import { TaxConfiguration } from './TaxConfiguration';
+import { LiquidityLockConfiguration } from './LiquidityLockConfiguration';
+import { MaxLimitsConfiguration } from './MaxLimitsConfiguration';
+import { TaxConfig, LiquidityLock, MaxLimits } from '@/types/tokenFeatures';
 
 interface TokenConfigurationProps {
   tokenConfig: TokenConfig;
   setTokenConfig: React.Dispatch<React.SetStateAction<TokenConfig>>;
 }
 
-const features = [
+const basicFeatures = [
   'Mint',
   'Burn',
   'Pause',
   'Blacklist',
-  'Anti-Bot',
-  'Max Transaction',
-  'Max Wallet',
 ] as const;
 
 const TokenConfiguration: React.FC<TokenConfigurationProps> = React.memo(({
@@ -46,6 +49,27 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = React.memo(({
         : [...currentFeatures, feature];
       return { ...prev, features: newFeatures };
     });
+  }, [setTokenConfig]);
+
+  const handleTaxConfigChange = useCallback((taxConfig: TaxConfig) => {
+    setTokenConfig((prev) => ({
+      ...prev,
+      taxConfig,
+    }));
+  }, [setTokenConfig]);
+
+  const handleLiquidityLockChange = useCallback((liquidityLock: LiquidityLock) => {
+    setTokenConfig((prev) => ({
+      ...prev,
+      liquidityLock,
+    }));
+  }, [setTokenConfig]);
+
+  const handleMaxLimitsChange = useCallback((maxLimits: MaxLimits) => {
+    setTokenConfig((prev) => ({
+      ...prev,
+      maxLimits,
+    }));
   }, [setTokenConfig]);
 
   const formFields = useMemo(() => [
@@ -94,34 +118,92 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = React.memo(({
     </FormControl>
   )), [tokenConfig, handleChange, formFields]);
 
-  const renderFeatures = useMemo(() => (
-    <Grid container spacing={2}>
-      {features.map((feature) => (
-        <Grid item xs={12} sm={6} md={4} key={feature}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={tokenConfig.features?.includes(feature) || false}
-                onChange={() => handleFeatureChange(feature)}
-              />
-            }
-            label={feature}
-          />
-        </Grid>
-      ))}
-    </Grid>
-  ), [tokenConfig.features, handleFeatureChange]);
-
   return (
-    <Stack spacing={3}>
-      <Typography variant="h6" sx={{ mb: 2 }}>Configuration du Token</Typography>
-      {renderFormFields}
-      <FormControl component="fieldset">
-        <FormLabel component="legend">Fonctionnalités</FormLabel>
+    <Stack spacing={4}>
+      {/* Configuration de Base */}
+      <Box>
+        <Typography variant="h6" gutterBottom>Configuration de Base</Typography>
+        <Stack spacing={2}>
+          {renderFormFields}
+        </Stack>
+      </Box>
+
+      <Divider />
+
+      {/* Fonctionnalités de Base */}
+      <Box>
+        <Typography variant="h6" gutterBottom>Fonctionnalités de Base</Typography>
         <FormGroup>
-          {renderFeatures}
+          <Grid container spacing={2}>
+            {basicFeatures.map((feature) => (
+              <Grid item xs={12} sm={6} md={3} key={feature}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={tokenConfig.features?.includes(feature) || false}
+                      onChange={() => handleFeatureChange(feature)}
+                    />
+                  }
+                  label={feature}
+                />
+              </Grid>
+            ))}
+          </Grid>
         </FormGroup>
-      </FormControl>
+      </Box>
+
+      <Divider />
+
+      {/* Configuration des Taxes */}
+      <TaxConfiguration
+        taxConfig={tokenConfig.taxConfig || {
+          enabled: false,
+          buyTax: 5,
+          sellTax: 5,
+          transferTax: 2,
+          recipient: '',
+          forgeShare: 10,
+          redistributionShare: 30,
+          liquidityShare: 30,
+          burnShare: 30,
+        }}
+        onChange={handleTaxConfigChange}
+      />
+
+      <Divider />
+
+      {/* Configuration du Verrouillage de Liquidité */}
+      <LiquidityLockConfiguration
+        lockConfig={tokenConfig.liquidityLock || {
+          enabled: false,
+          amount: '50',
+          duration: 180 * 24 * 60 * 60,
+          unlockDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+          pair: '',
+          dex: 'uniswap',
+        }}
+        onChange={handleLiquidityLockChange}
+      />
+
+      <Divider />
+
+      {/* Configuration des Limites Maximum */}
+      <MaxLimitsConfiguration
+        maxLimits={tokenConfig.maxLimits || {
+          maxWallet: {
+            enabled: false,
+            amount: '0',
+            percentage: 2,
+          },
+          maxTransaction: {
+            enabled: false,
+            amount: '0',
+            percentage: 1,
+          },
+        }}
+        totalSupply={tokenConfig.supply || '0'}
+        onChange={handleMaxLimitsChange}
+      />
     </Stack>
   );
 });

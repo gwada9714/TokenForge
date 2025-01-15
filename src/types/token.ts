@@ -1,10 +1,46 @@
+import { TaxConfig, LiquidityLock, MaxLimits, TokenAudit, KYCVerification } from './tokenFeatures';
+import { NetworkConfig } from '@/config/networks';
+
 export interface TokenConfig {
-  plan: string;
+  // Configuration de base
   name: string;
   symbol: string;
   supply: string;
   decimals: number;
+  
+  // Réseau
+  network?: NetworkConfig;
+  
+  // Fonctionnalités de base
   features: string[];
+  
+  // Plan de service
+  plan: string;
+  
+  // Configurations avancées
+  taxConfig?: TaxConfig;
+  liquidityLock?: LiquidityLock;
+  maxLimits?: MaxLimits;
+  
+  // Vérification et Audit
+  audit?: TokenAudit;
+  kyc?: KYCVerification;
+  
+  // Métadonnées
+  description?: string;
+  website?: string;
+  telegram?: string;
+  twitter?: string;
+  github?: string;
+  
+  // État de déploiement
+  deploymentStatus?: {
+    status: 'pending' | 'deploying' | 'success' | 'failed';
+    txHash?: string;
+    error?: string;
+    contractAddress?: string;
+    deployedAt?: Date;
+  };
 }
 
 export interface TokenPlan {
