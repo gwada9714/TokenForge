@@ -42,4 +42,57 @@ export class ProviderService {
       throw error;
     }
   }
+
+  public async getTokenDetails(address: string) {
+    try {
+      const tokenContract = new ethers.Contract(
+        address,
+        ['function name() view returns (string)', 'function symbol() view returns (string)', 'function decimals() view returns (uint8)', 'function totalSupply() view returns (uint256)'],
+        this.provider
+      );
+
+      const [name, symbol, decimals, totalSupply] = await Promise.all([
+        tokenContract.name(),
+        tokenContract.symbol(),
+        tokenContract.decimals(),
+        tokenContract.totalSupply()
+      ]);
+
+      return {
+        address,
+        name,
+        symbol,
+        decimals,
+        totalSupply: totalSupply.toString()
+      };
+    } catch (error) {
+      logger.error('Error getting token details:', error);
+      throw error;
+    }
+  }
+
+  public async getUserTokens(address: string) {
+    try {
+      // Implémenter la logique pour récupérer les tokens d'un utilisateur
+      // Cette implémentation dépendra de votre contrat TokenForgeFactory
+      return [];
+    } catch (error) {
+      logger.error('Error getting user tokens:', error);
+      throw error;
+    }
+  }
+
+  public async deployToken(tokenData: any) {
+    try {
+      // Implémenter la logique pour déployer un nouveau token
+      // Cette implémentation dépendra de votre contrat TokenForgeFactory
+      return {
+        success: true,
+        tokenAddress: '0x...'
+      };
+    } catch (error) {
+      logger.error('Error deploying token:', error);
+      throw error;
+    }
+  }
 }
