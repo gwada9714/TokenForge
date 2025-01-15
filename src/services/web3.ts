@@ -45,7 +45,7 @@ export class Web3Service {
 
   async getFactoryContract(): Promise<FactoryContract> {
     const signer = await this.getSigner();
-    const address = getFactoryAddress();
+    const address = getFactoryAddress() || '';
     return new ethers.Contract(
       address,
       FACTORY_ABI,

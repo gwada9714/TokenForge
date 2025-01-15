@@ -4,7 +4,7 @@ import { StakingPool } from '../components/Staking/StakingPool';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
 
 const StakingPage: React.FC = () => {
-  const platformTokenAddress = CONTRACT_ADDRESSES.PLATFORM_TOKEN.sepolia;
+  const platformTokenAddress = CONTRACT_ADDRESSES.PLATFORM_TOKEN.sepolia || '';
   
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>

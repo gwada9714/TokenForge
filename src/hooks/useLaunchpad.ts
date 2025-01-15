@@ -20,7 +20,7 @@ export function useLaunchpad(poolId?: number) {
   const { address } = useAccount();
   const { chain } = useNetwork();
   const chainId = chain?.id || 11155111; // Default to Sepolia
-  const launchpadAddress = getContractAddress('LAUNCHPAD_CONTRACT', chainId);
+  const launchpadAddress = getContractAddress('LAUNCHPAD', chainId);
 
   const [poolInfo, setPoolInfo] = useState<PoolInfo>({
     token: '',
@@ -40,7 +40,7 @@ export function useLaunchpad(poolId?: number) {
   const enabled = Boolean(launchpadAddress && poolId !== undefined);
 
   // Read pool info
-  const { data: poolData, refetch: refetchPool } = useContractRead({
+  const { data: poolData } = useContractRead({
     address: launchpadAddress ?? undefined,
     abi: launchpadABI,
     functionName: 'getPoolInfo',
@@ -49,7 +49,7 @@ export function useLaunchpad(poolId?: number) {
   });
 
   // Read user contribution
-  const { data: userContributionData, refetch: refetchContribution } = useContractRead({
+  const { data: userContributionData } = useContractRead({
     address: launchpadAddress ?? undefined,
     abi: launchpadABI,
     functionName: 'getUserContribution',

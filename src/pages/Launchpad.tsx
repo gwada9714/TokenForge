@@ -20,7 +20,7 @@ const LaunchpadPage: React.FC = () => {
 
   // Get total number of pools
   const { data: poolCount } = useContractRead({
-    address: getContractAddress('LAUNCHPAD', chainId),
+    address: getContractAddress('LAUNCHPAD', chainId) || undefined,
     abi: launchpadABI,
     functionName: 'poolCount',
     watch: true,
@@ -29,7 +29,7 @@ const LaunchpadPage: React.FC = () => {
   // Create array of pool IDs
   const poolIds = poolCount ? Array.from({ length: Number(poolCount) }, (_, i) => i) : [];
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
   };
 
