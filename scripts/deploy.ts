@@ -1,4 +1,6 @@
-import { ethers } from "hardhat";
+const { ethers } = require("hardhat");
+const { HardhatEthersSigner } = require("@nomicfoundation/hardhat-ethers/signers");
+const { TokenForgeToken, TokenForgeToken__factory } = require("../typechain-types");
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -9,7 +11,7 @@ async function main() {
   const tokenForge = await TokenForge.deploy(
     "TokenForge Token", // nom
     "TFT",             // symbole
-    ethers.utils.parseEther("1000000"), // supply total
+    ethers.parseEther("1000000"), // supply total
     deployer.address,  // propriétaire
     true              // transferEnabled
   );

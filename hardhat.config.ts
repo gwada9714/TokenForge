@@ -1,8 +1,7 @@
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-ethers";
+require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-ethers");
 
-const config: HardhatUserConfig = {
+const config = {
   solidity: {
     version: "0.8.19",
     settings: {
