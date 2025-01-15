@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Stack,
   Button,
@@ -23,61 +23,72 @@ const deploymentSteps = [
   'Finalisation',
 ];
 
-const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
-  const [isDeploying, setIsDeploying] = useState(false);
-  const [deploymentStep, setDeploymentStep] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
+const TokenDeployment: React.FC<TokenDeploymentProps> = React.memo(({ tokenConfig }) => {
+  const [deploymentState, setDeploymentState] = useState({
+    isDeploying: false,
+    deploymentStep: 0,
+    error: null as string | null,
+    snackbarOpen: false,
+    snackbarMessage: ''
+  });
 
   const handleDeploy = useCallback(async () => {
-    setIsDeploying(true);
-    setError(null);
+    setDeploymentState(prev => ({ ...prev, isDeploying: true, error: null }));
 
     try {
       console.log('Deploying token with config:', tokenConfig);
       
       for (let i = 0; i < deploymentSteps.length; i++) {
-        setDeploymentStep(i);
+        setDeploymentState(prev => ({ ...prev, deploymentStep: i }));
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
-      setSnackbarMessage('Déploiement réussi!');
-      setSnackbarOpen(true);
+      setDeploymentState(prev => ({
+        ...prev,
+        snackbarMessage: 'Déploiement réussi!',
+        snackbarOpen: true
+      }));
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue lors du déploiement');
-      setSnackbarMessage('Erreur lors du déploiement');
-      setSnackbarOpen(true);
+      setDeploymentState(prev => ({
+        ...prev,
+        error: err instanceof Error ? err.message : 'Une erreur est survenue lors du déploiement',
+        snackbarMessage: 'Erreur lors du déploiement',
+        snackbarOpen: true
+      }));
     } finally {
-      setIsDeploying(false);
+      setDeploymentState(prev => ({ ...prev, isDeploying: false }));
     }
   }, [tokenConfig]);
 
   const handleCloseSnackbar = useCallback(() => {
-    setSnackbarOpen(false);
+    setDeploymentState(prev => ({ ...prev, snackbarOpen: false }));
   }, []);
+
+  const progress = useMemo(() => {
+    return (deploymentState.deploymentStep + 1) * (100 / deploymentSteps.length);
+  }, [deploymentState.deploymentStep]);
 
   return (
     <Stack spacing={3}>
       <Typography variant="h6" sx={{ mb: 2 }}>Déploiement du Token</Typography>
 
-      {error && (
+      {deploymentState.error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           <AlertTitle>Erreur</AlertTitle>
-          {error}
+          {deploymentState.error}
         </Alert>
       )}
 
       <Box sx={{ width: '100%', mb: 2 }}>
-        {isDeploying && (
+        {deploymentState.isDeploying && (
           <>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-              {deploymentSteps[deploymentStep]}
+              {deploymentSteps[deploymentState.deploymentStep]}
             </Typography>
             <LinearProgress 
               variant="determinate" 
-              value={(deploymentStep + 1) * (100 / deploymentSteps.length)}
+              value={progress}
             />
           </>
         )}
@@ -87,10 +98,10 @@ const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
         variant="contained"
         color="primary"
         onClick={handleDeploy}
-        disabled={isDeploying}
+        disabled={deploymentState.isDeploying}
         sx={{ mt: 2 }}
       >
-        {isDeploying ? 'Déploiement en cours...' : 'Déployer le Token'}
+        {deploymentState.isDeploying ? 'Déploiement en cours...' : 'Déployer le Token'}
       </Button>
 
       <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
@@ -98,13 +109,13 @@ const TokenDeployment: React.FC<TokenDeploymentProps> = ({ tokenConfig }) => {
       </Typography>
 
       <Snackbar
-        open={snackbarOpen}
+        open={deploymentState.snackbarOpen}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        message={snackbarMessage}
+        message={deploymentState.snackbarMessage}
       />
     </Stack>
   );
-};
+});
 
-export default React.memo(TokenDeployment);
+export default TokenDeployment;

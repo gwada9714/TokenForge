@@ -54,14 +54,34 @@ const CreateToken: React.FC = () => {
   };
 
   const renderStepContent = () => {
-    return (
-      <Suspense fallback={<LoadingFallback />}>
-        {activeStep === 0 && <PlanSelection setTokenConfig={setTokenConfig} />}
-        {activeStep === 1 && <TokenConfiguration tokenConfig={tokenConfig} setTokenConfig={setTokenConfig} />}
-        {activeStep === 2 && <TokenVerification tokenConfig={tokenConfig} />}
-        {activeStep === 3 && <TokenDeployment tokenConfig={tokenConfig} />}
-      </Suspense>
-    );
+    switch (activeStep) {
+      case 0:
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <PlanSelection setTokenConfig={setTokenConfig} />
+          </Suspense>
+        );
+      case 1:
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <TokenConfiguration tokenConfig={tokenConfig} setTokenConfig={setTokenConfig} />
+          </Suspense>
+        );
+      case 2:
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <TokenVerification tokenConfig={tokenConfig} />
+          </Suspense>
+        );
+      case 3:
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <TokenDeployment tokenConfig={tokenConfig} />
+          </Suspense>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
