@@ -58,8 +58,8 @@ const PlanCard: React.FC<PlanCardProps> = ({ level, isCurrentPlan, onSelect }) =
             {plan.name}
           </Typography>
           <Typography variant="h4" color="primary" gutterBottom>
-            {plan.price.bnb} BNB
-            <Typography as="span" variant="h6" color="text.secondary">
+            {plan.price.bnb === 0 ? 'Free' : `${plan.price.bnb} BNB`}
+            <Typography component="span" variant="h6" color="text.secondary">
               {' '}
               ou {plan.price.tkn} TKN
             </Typography>

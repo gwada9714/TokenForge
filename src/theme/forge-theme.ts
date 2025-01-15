@@ -8,8 +8,8 @@ declare module '@mui/material/Button' {
   }
 }
 
-declare module '@mui/material/Card' {
-  interface CardPropsVariantOverrides {
+declare module '@mui/material/Paper' {
+  interface PaperPropsVariantOverrides {
     forge: true;
     ember: true;
   }
@@ -20,26 +20,16 @@ const colors = {
     main: '#FF6B2B',
     dark: '#E65A1F',
     light: '#FF8C5A',
-    border: '#FFE0B2'
+    border: '#FFE0B2',
+    hover: '#FF7A40'
   },
   ember: {
     main: '#FF4B2B',
     dark: '#E63A1F',
     light: '#FF6C5A',
-    border: '#FFCDD2'
-  },
-  metal: {
-    50: '#fafafa',
-    100: '#f5f5f5',
-    200: '#eeeeee',
-    300: '#e0e0e0',
-    400: '#bdbdbd',
-    500: '#9e9e9e',
-    600: '#757575',
-    700: '#616161',
-    800: '#424242',
-    900: '#212121',
-  },
+    border: '#FFCDD2',
+    hover: '#FF5A40'
+  }
 };
 
 const components: Components<Omit<Theme, "components">> = {
@@ -58,10 +48,10 @@ const components: Components<Omit<Theme, "components">> = {
           backgroundColor: colors.forge.main,
           color: '#ffffff',
           '&:hover': {
-            backgroundColor: colors.forge.dark,
+            backgroundColor: colors.forge.hover,
           },
           '&:active': {
-            backgroundColor: colors.forge.light,
+            backgroundColor: colors.forge.dark,
           },
         },
       },
@@ -71,24 +61,20 @@ const components: Components<Omit<Theme, "components">> = {
           backgroundColor: colors.ember.main,
           color: '#ffffff',
           '&:hover': {
-            backgroundColor: colors.ember.dark,
+            backgroundColor: colors.ember.hover,
           },
           '&:active': {
-            backgroundColor: colors.ember.light,
+            backgroundColor: colors.ember.dark,
           },
         },
       },
     ],
   },
-  MuiCard: {
+  MuiPaper: {
     styleOverrides: {
       root: {
         borderRadius: '16px',
         boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
-        padding: '16px',
-        backgroundColor: 'white',
-        borderWidth: '1px',
-        borderColor: colors.metal[400],
       }
     },
     variants: [
@@ -106,72 +92,24 @@ const components: Components<Omit<Theme, "components">> = {
       },
     ],
   },
-  MuiInput: {
-    styleOverrides: {
-      root: {
-        borderColor: colors.forge[200],
-        '&:hover': {
-          borderColor: colors.forge[300],
-        },
-        '&:focus': {
-          borderColor: colors.forge.main,
-          boxShadow: `0 0 0 1px ${colors.forge.main}`,
-        },
-      }
-    }
-  },
-  MuiSelect: {
-    styleOverrides: {
-      root: {
-        borderColor: colors.forge[200],
-        '&:hover': {
-          borderColor: colors.forge[300],
-        },
-        '&:focus': {
-          borderColor: colors.forge.main,
-          boxShadow: `0 0 0 1px ${colors.forge.main}`,
-        },
-      }
-    }
-  },
   MuiTextField: {
     styleOverrides: {
       root: {
         '& .MuiOutlinedInput-root': {
           borderRadius: '8px',
-          borderColor: colors.forge.border,
-          '&:hover': {
-            borderColor: colors.forge.light,
+          '& fieldset': {
+            borderColor: colors.forge.border,
           },
-          '&.Mui-focused': {
+          '&:hover fieldset': {
+            borderColor: colors.forge.hover,
+          },
+          '&.Mui-focused fieldset': {
             borderColor: colors.forge.main,
-            boxShadow: `0 0 0 1px ${colors.forge.main}`,
           },
         }
       }
     }
   }
-};
-
-const fonts = {
-  fontFamily: [
-    '-apple-system',
-    'BlinkMacSystemFont',
-    '"Segoe UI"',
-    'Roboto',
-    '"Helvetica Neue"',
-    'Arial',
-    'sans-serif',
-  ].join(','),
-};
-
-const styles = {
-  global: {
-    body: {
-      backgroundColor: colors.metal[50],
-      color: colors.metal[800],
-    },
-  },
 };
 
 export const forgeTheme = createTheme({
@@ -187,7 +125,5 @@ export const forgeTheme = createTheme({
       light: colors.ember.light,
     }
   },
-  typography: fonts,
-  components,
-  styles,
+  components
 });
