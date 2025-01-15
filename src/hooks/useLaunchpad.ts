@@ -214,4 +214,4 @@ export function useLaunchpad(poolId?: number) {
     isClaiming,
     isRefunding,
   };
-};
+}
