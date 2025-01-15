@@ -1,114 +1,112 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./TokenForgeToken.sol";
+import "./interfaces/ITokenForgeToken.sol";
 
-contract TokenForgeFactory is Ownable, ReentrancyGuard {
-    // Frais de création en USDT/USDC
-    uint256 public creationFee;
-    // Adresse du stablecoin accepté (USDT/USDC)
-    address public stablecoinAddress;
-    
-    // Mapping des tokens créés par créateur
-    mapping(address => address[]) public tokensByCreator;
-    // Mapping des détails des tokens
-    mapping(address => TokenDetails) public tokenDetails;
-    
-    struct TokenDetails {
+interface IERC20 {
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address to, uint256 amount) external returns (bool);
+}
+
+contract TokenForgeFactory {
+    // Storage variables
+    address public immutable factory_owner;
+    address public immutable stablecoinAddress;
+    bool private initialized;
+
+    // Struct pour les paramètres de création de token
+    struct TokenParams {
         string name;
         string symbol;
-        uint8 decimals;
-        uint256 totalSupply;
-        address owner;
-        bool burnable;
-        bool mintable;
-        bool pausable;
-        uint256 creationTime;
+        address treasury;
+        address stakingPool;
+        uint256 initialTaxRate;  // en points de base (1% = 100)
     }
-    
+
+    // Events
     event TokenCreated(
-        address indexed tokenAddress,
-        address indexed owner,
+        address indexed token,
         string name,
         string symbol,
-        uint256 totalSupply
+        address treasury,
+        address stakingPool,
+        uint256 taxRate
     );
-    
-    constructor(address _stablecoinAddress, uint256 _creationFee) {
-        stablecoinAddress = _stablecoinAddress;
-        creationFee = _creationFee;
+    event TokenRescued(address indexed token, uint256 amount);
+
+    modifier onlyOwner() {
+        require(msg.sender == factory_owner, "Not owner");
+        _;
     }
-    
-    function createToken(
-        string memory name,
-        string memory symbol,
-        uint8 decimals,
-        uint256 totalSupply,
-        bool burnable,
-        bool mintable,
-        bool pausable
-    ) external nonReentrant returns (address) {
-        // Vérifier et transférer les frais
-        require(IERC20(stablecoinAddress).transferFrom(
-            msg.sender,
-            address(this),
-            creationFee
-        ), "Fee transfer failed");
+
+    constructor(address _stablecoinAddress) {
+        require(_stablecoinAddress != address(0), "Invalid address");
+        factory_owner = msg.sender;
+        stablecoinAddress = _stablecoinAddress;
+    }
+
+    function initialize() external onlyOwner {
+        require(!initialized, "Already initialized");
+        initialized = true;
+    }
+
+    function createToken(TokenParams calldata params) external returns (address) {
+        require(initialized, "Not initialized");
+        require(params.treasury != address(0), "Invalid treasury");
+        require(params.stakingPool != address(0), "Invalid staking pool");
+        require(params.initialTaxRate <= 100, "Tax rate too high"); // Max 1%
+        require(bytes(params.name).length > 0, "Empty name");
+        require(bytes(params.symbol).length > 0, "Empty symbol");
         
-        // Déployer le nouveau token
-        TokenForgeToken newToken = new TokenForgeToken(
-            name,
-            symbol,
-            decimals,
-            totalSupply,
-            msg.sender,
-            burnable,
-            mintable,
-            pausable
+        // Deploy new token
+        TokenForgeToken token = new TokenForgeToken(
+            params.treasury,
+            params.stakingPool
         );
-        
-        // Enregistrer les détails
-        tokensByCreator[msg.sender].push(address(newToken));
-        tokenDetails[address(newToken)] = TokenDetails({
-            name: name,
-            symbol: symbol,
-            decimals: decimals,
-            totalSupply: totalSupply,
-            owner: msg.sender,
-            burnable: burnable,
-            mintable: mintable,
-            pausable: pausable,
-            creationTime: block.timestamp
-        });
+
+        // Configure le taux de taxe initial
+        token.setTaxRate(params.initialTaxRate);
         
         emit TokenCreated(
-            address(newToken),
-            msg.sender,
-            name,
-            symbol,
-            totalSupply
+            address(token),
+            params.name,
+            params.symbol,
+            params.treasury,
+            params.stakingPool,
+            params.initialTaxRate
         );
         
-        return address(newToken);
+        return address(token);
     }
     
-    function getTokensByCreator(address creator) 
-        external 
-        view 
-        returns (address[] memory) 
-    {
-        return tokensByCreator[creator];
+    // Fonction d'urgence pour récupérer les tokens bloqués
+    function rescueTokens(address token) external onlyOwner {
+        uint256 tokenBalance = IERC20(token).balanceOf(address(this));
+        require(tokenBalance > 0, "No tokens to rescue");
+        require(IERC20(token).transfer(factory_owner, tokenBalance), "Transfer failed");
+        emit TokenRescued(token, tokenBalance);
     }
-    
-    function updateCreationFee(uint256 newFee) external onlyOwner {
-        creationFee = newFee;
+
+    // Getters utiles
+    function isInitialized() external view returns (bool) {
+        return initialized;
     }
-    
-    function withdrawFees() external onlyOwner {
-        uint256 balance = IERC20(stablecoinAddress).balanceOf(address(this));
-        require(IERC20(stablecoinAddress).transfer(owner(), balance), 
-            "Withdrawal failed");
+
+    function getTokenInfo(address tokenAddress) external view returns (
+        string memory name,
+        string memory symbol,
+        address treasury,
+        address stakingPool,
+        uint256 taxRate
+    ) {
+        ITokenForgeToken token = ITokenForgeToken(tokenAddress);
+        return (
+            token.name(),
+            token.symbol(),
+            token.treasury(),
+            token.stakingPool(),
+            token.taxRate()
+        );
     }
-} 
+}
