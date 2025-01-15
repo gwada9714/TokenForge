@@ -53,8 +53,21 @@ interface IToken {
     isPausable: boolean;
     hasMaxWallet: boolean;
     hasMaxTransaction: boolean;
-    hasFee: boolean;
-    hasLiquidityLock: boolean;
+    hasAntiBot: boolean;
+    hasBlacklist: boolean;
+  };
+  taxConfig?: {
+    enabled: boolean;
+    buyTax: number;
+    sellTax: number;
+    transferTax: number;
+    taxRecipient: Address;
+  };
+  stats?: {
+    holders: number;
+    transactions: number;
+    price: string;
+    marketCap: string;
   };
 }
 
