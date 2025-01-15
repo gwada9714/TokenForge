@@ -12,7 +12,8 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { formatEther, hexToBigInt, toHex } from 'ethers';
+import { formatEther } from 'ethers/lib/utils';
+import { BigNumber } from 'ethers';
 import { useStaking } from '@/hooks/useStaking';
 import { STAKING_CONFIG } from '@/constants/tokenforge';
 import TokenIcon from '@mui/icons-material/Token';
@@ -62,7 +63,7 @@ const StakingDashboard: React.FC = () => {
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
     return {
-      totalStaked: formatEther(toHex(stakingStats.totalStaked)),
+      totalStaked: formatEther(BigNumber.from(stakingStats.totalStaked)),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };
@@ -70,14 +71,14 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    const amount = toHex(stakeAmount);
-    await stake(`0x${amount}`);
+    const amount = BigNumber.from(stakeAmount);
+    await stake(amount);
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    const amount = toHex(withdrawAmount);
-    await withdraw(`0x${amount}`);
+    const amount = BigNumber.from(withdrawAmount);
+    await withdraw(amount);
   };
 
   const handleClaimRewards = async () => {
@@ -144,7 +145,7 @@ const StakingDashboard: React.FC = () => {
                 <Button
                   variant="contained"
                   onClick={handleStake}
-                  disabled={!stakeAmount || toHex(stakeAmount) > toHex(balance || 0n)}
+                  disabled={!stakeAmount || BigNumber.from(stakeAmount).gt(balance || 0n)}
                   fullWidth
                 >
                   Staker
