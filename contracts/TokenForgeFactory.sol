@@ -3,8 +3,11 @@ pragma solidity ^0.8.19;
 
 import "./TokenForgeToken.sol";
 import "./interfaces/ITokenForgeToken.sol";
+import "./TokenForgePlans.sol";
+import "./TokenForgeTKN.sol";
 
-interface IERC20 {
+// Interface simplifiée pour les tokens ERC20
+interface ITokenForgeERC20 {
     function balanceOf(address account) external view returns (uint256);
     function transfer(address to, uint256 amount) external returns (bool);
 }
@@ -12,7 +15,8 @@ interface IERC20 {
 contract TokenForgeFactory {
     // Storage variables
     address public immutable factory_owner;
-    address public immutable stablecoinAddress;
+    TokenForgePlans public immutable plans;
+    TokenForgeTKN public immutable tknToken;
     bool private initialized;
 
     // Struct pour les paramètres de création de token
@@ -22,6 +26,7 @@ contract TokenForgeFactory {
         address treasury;
         address stakingPool;
         uint256 initialTaxRate;  // en points de base (1% = 100)
+        bool enableForgeTax;     // Activer la taxe de la forge
     }
 
     // Events
@@ -31,7 +36,8 @@ contract TokenForgeFactory {
         string symbol,
         address treasury,
         address stakingPool,
-        uint256 taxRate
+        uint256 taxRate,
+        bool forgeTaxEnabled
     );
     event TokenRescued(address indexed token, uint256 amount);
 
@@ -40,10 +46,15 @@ contract TokenForgeFactory {
         _;
     }
 
-    constructor(address _stablecoinAddress) {
-        require(_stablecoinAddress != address(0), "Invalid address");
+    constructor(
+        address _plans,
+        address _tknToken
+    ) {
+        require(_plans != address(0), "Invalid plans address");
+        require(_tknToken != address(0), "Invalid TKN address");
         factory_owner = msg.sender;
-        stablecoinAddress = _stablecoinAddress;
+        plans = TokenForgePlans(_plans);
+        tknToken = TokenForgeTKN(_tknToken);
     }
 
     function initialize() external onlyOwner {
@@ -51,41 +62,52 @@ contract TokenForgeFactory {
         initialized = true;
     }
 
-    function createToken(TokenParams calldata params) external returns (address) {
+    function createToken(TokenParams memory params) external returns (address) {
         require(initialized, "Not initialized");
-        require(params.treasury != address(0), "Invalid treasury");
-        require(params.stakingPool != address(0), "Invalid staking pool");
-        require(params.initialTaxRate <= 100, "Tax rate too high"); // Max 1%
-        require(bytes(params.name).length > 0, "Empty name");
-        require(bytes(params.symbol).length > 0, "Empty symbol");
+        // Vérifier le plan de l'utilisateur
+        TokenForgePlans.PlanType userPlan = plans.getUserPlan(msg.sender);
         
-        // Deploy new token
-        TokenForgeToken token = new TokenForgeToken(
-            params.treasury,
-            params.stakingPool
-        );
+        // Vérifier les restrictions selon le plan
+        if (userPlan == TokenForgePlans.PlanType.Apprenti) {
+            require(params.initialTaxRate == 0, "Apprenti: No tax allowed");
+            require(!params.enableForgeTax, "Apprenti: No forge tax allowed");
+        }
+        
+        // Pour le plan Maître Forgeron, la taxe de la forge est activée par défaut
+        (bool includesAudit, bool defaultForgeTax) = plans.getPlanFeatures(userPlan);
+        if (defaultForgeTax) {
+            params.enableForgeTax = true;
+        }
 
-        // Configure le taux de taxe initial
-        token.setTaxRate(params.initialTaxRate);
-        
-        emit TokenCreated(
-            address(token),
+        // Créer le token avec les paramètres spécifiés
+        TokenForgeToken newToken = new TokenForgeToken(
             params.name,
             params.symbol,
             params.treasury,
             params.stakingPool,
-            params.initialTaxRate
+            params.initialTaxRate,
+            params.enableForgeTax ? address(tknToken) : address(0)
         );
-        
-        return address(token);
+
+        emit TokenCreated(
+            address(newToken),
+            params.name,
+            params.symbol,
+            params.treasury,
+            params.stakingPool,
+            params.initialTaxRate,
+            params.enableForgeTax
+        );
+
+        return address(newToken);
     }
-    
-    // Fonction d'urgence pour récupérer les tokens bloqués
+
     function rescueTokens(address token) external onlyOwner {
-        uint256 tokenBalance = IERC20(token).balanceOf(address(this));
-        require(tokenBalance > 0, "No tokens to rescue");
-        require(IERC20(token).transfer(factory_owner, tokenBalance), "Transfer failed");
-        emit TokenRescued(token, tokenBalance);
+        ITokenForgeERC20 tokenContract = ITokenForgeERC20(token);
+        uint256 balance = tokenContract.balanceOf(address(this));
+        require(balance > 0, "No tokens to rescue");
+        require(tokenContract.transfer(factory_owner, balance), "Transfer failed");
+        emit TokenRescued(token, balance);
     }
 
     // Getters utiles
