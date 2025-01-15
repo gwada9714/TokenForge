@@ -22,6 +22,7 @@ export interface TokenData {
     hasMaxTransaction: boolean;
     hasAntiBot: boolean;
     hasBlacklist: boolean;
+    premium: boolean;
   };
   taxConfig: {
     enabled: boolean;
@@ -138,6 +139,7 @@ export const useUserTokens = (chainId?: number) => {
               hasMaxTransaction: (features as any).hasMaxTransaction,
               hasAntiBot: (features as any).hasAntiBot,
               hasBlacklist: (features as any).hasBlacklist,
+              premium: (features as any).premium,
             },
             taxConfig: {
               enabled: (taxConfig as any).enabled,

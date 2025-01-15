@@ -7,7 +7,6 @@ import {
   CardContent,
   Typography,
   Grid,
-  CircularProgress,
   IconButton,
   Table,
   TableBody,
@@ -15,9 +14,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
-  Tooltip,
+  Paper
 } from '@mui/material';
 import { NetworkSelector } from '../NetworkSelector/NetworkSelector';
 import { NetworkConfig, getNetwork } from '@/config/networks';
@@ -71,12 +68,6 @@ interface TokenData {
   };
 }
 
-interface TokenStats {
-  totalValue: bigint;
-  transactionVolume: bigint;
-  uniqueHolders: number;
-}
-
 interface StatCardProps {
   title: string;
   value: string;
@@ -109,30 +100,26 @@ const TokenRow = memo<{ token: TokenData }>(({ token }) => (
     <TableCell>{token.name}</TableCell>
     <TableCell>{token.symbol}</TableCell>
     <TableCell>
-      <Chip 
-        label={token.network?.name || 'Unknown Network'}
-        size="small"
-        variant="outlined"
-      />
+      <Paper component="span" variant="outlined" square>
+        {token.network?.name || 'Unknown Network'}
+      </Paper>
     </TableCell>
     <TableCell>{formatEther(token.totalSupply)}</TableCell>
     <TableCell>
       {new Date(token.createdAt).toLocaleDateString()}
     </TableCell>
     <TableCell align="right">
-      <Tooltip title="View on Explorer">
-        <IconButton
-          size="small"
-          onClick={() => window.open(
-            token.network ? 
-              `${token.network.explorerUrl}/token/${token.address}` :
-              '#',
-            '_blank'
-          )}
-        >
-          <LaunchIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      <IconButton
+        size="small"
+        onClick={() => window.open(
+          token.network ? 
+            `${token.network.explorerUrl}/token/${token.address}` :
+            '#',
+          '_blank'
+        )}
+      >
+        <LaunchIcon fontSize="small" />
+      </IconButton>
     </TableCell>
   </TableRow>
 ));
@@ -178,39 +165,22 @@ const useGlobalStats = () => {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { chain } = useNetwork();
-  const [selectedNetwork, setSelectedNetwork] = useState<NetworkConfig | undefined>(
-    chain ? getNetwork(chain.id) : undefined
-  );
+  const { userTokens, isLoading } = useUserTokens();
   
-  const { 
-    stats,
-    isLoading: isStatsLoading 
-  } = useTokenStats(selectedNetwork?.chain.id);
-  
-  const {
-    tokens: userTokens,
-    isLoading: isTokensLoading
-  } = useUserTokens(selectedNetwork?.chain.id);
-
-  const globalStats = useGlobalStats();
-
   const statsCards = useMemo(() => (
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Total Value Locked"
-          value={stats ? formatEther(stats.totalValue) : "0"}
+          value="0"
           icon={<AccountBalanceWalletIcon color="primary" />}
-          isLoading={isStatsLoading}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Transaction Volume"
-          value={stats ? formatEther(stats.transactionVolume) : "0"}
+          value="0"
           icon={<ShowChartIcon color="primary" />}
-          isLoading={isStatsLoading}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -218,19 +188,18 @@ const Dashboard: React.FC = () => {
           title="Total Tokens"
           value={userTokens ? userTokens.length.toString() : "0"}
           icon={<TokenIcon color="primary" />}
-          isLoading={isTokensLoading}
+          isLoading={isLoading}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StatCard
           title="Unique Holders"
-          value={stats ? stats.uniqueHolders.toString() : "0"}
+          value="0"
           icon={<GroupIcon color="primary" />}
-          isLoading={isStatsLoading}
         />
       </Grid>
     </Grid>
-  ), [stats, userTokens, isStatsLoading, isTokensLoading]);
+  ), [userTokens, isLoading]);
 
   const mappedTokens = userTokens?.map(token => ({
     ...token,
@@ -240,17 +209,6 @@ const Dashboard: React.FC = () => {
   return (
     <Box sx={{ p: 2 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <NetworkSelector
-              selectedNetwork={selectedNetwork}
-              onNetworkSelect={setSelectedNetwork}
-              showTestnets
-              onShowTestnetsChange={() => {}}
-            />
-          </Paper>
-        </Grid>
-
         <Grid item xs={12} sm={4}>
           <Paper 
             elevation={1}
