@@ -2,7 +2,7 @@ import { createConfig } from 'wagmi';
 import { http, createPublicClient } from 'viem';
 import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
-import { supportedChains, defaultChain } from './chains';
+import { supportedChains, defaultChain, sepolia } from './chains';
 import { type Chain } from 'viem';
 import { getContractAddress } from './contracts';
 
@@ -39,15 +39,20 @@ const config = createConfig({
   connectors,
   publicClient: ({ chainId }) => {
     const chain = mutableChains.find(c => c.id === chainId) ?? defaultChain;
+    const rpcUrl = chain.id === sepolia.id 
+      ? requiredEnvVars.VITE_SEPOLIA_RPC_URL 
+      : requiredEnvVars.VITE_MAINNET_RPC_URL;
+
     return createPublicClient({
       chain,
-      transport: http()
+      transport: http(rpcUrl)
     });
   },
 });
 
 console.log(`Web3 configuration initialized with ${mutableChains.length} chains:`, 
   mutableChains.map(chain => chain.name).join(', '));
+console.log('Default chain:', defaultChain.name);
 
 // Export des chaînes supportées pour RainbowKit
 export const chains = mutableChains;

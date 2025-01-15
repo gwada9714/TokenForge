@@ -56,11 +56,17 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Web3 provider not available - Please install MetaMask');
       }
 
-      // Vérifier si MetaMask est connecté à un réseau
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      // Vérifier si MetaMask est connecté
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (!accounts || accounts.length === 0) {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+      }
+
+      // Vérifier le réseau actuel
+      const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const currentChain = chain?.id === Number(currentChainId);
       
-      // Si pas de chaîne sélectionnée, essayer de se connecter à Sepolia par défaut
-      if (!chainId || !chain) {
+      if (!currentChain) {
         try {
           // Sepolia chainId = '0xaa36a7'
           await window.ethereum.request({
@@ -68,7 +74,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
             params: [{ chainId: '0xaa36a7' }],
           });
         } catch (switchError: any) {
-          // Si le réseau n'est pas configuré, proposer de l'ajouter
           if (switchError.code === 4902) {
             await window.ethereum.request({
               method: 'wallet_addEthereumChain',
@@ -81,6 +86,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
               }],
             });
           } else {
+            console.error('Failed to switch network:', switchError);
             throw new Error('Please connect to Sepolia testnet or Ethereum mainnet');
           }
         }
