@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import LoadingComponent from '../components/common/LoadingComponent';
 
@@ -15,6 +15,7 @@ const TokensPage = lazy(() => import('../pages/Tokens'));
 const CreateTokenPage = lazy(() => import('../pages/CreateToken'));
 const TokenDetailsPage = lazy(() => import('../pages/TokenDetails'));
 const PlansPage = lazy(() => import('../pages/Plans'));
+const TokenListPage = lazy(() => import('../pages/TokenList'));
 
 // Define routes configuration
 export const routes: RouteObject[] = [
@@ -42,7 +43,7 @@ export const routes: RouteObject[] = [
     path: '/tokens',
     element: (
       <Suspense fallback={<LoadingComponent />}>
-        <TokensPage />
+        <TokenListPage />
       </Suspense>
     )
   },

@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography } from '@mui/material';
 import { useWeb3 } from '../providers';
 
-export const TokenList: React.FC = () => {
+const TokenList: React.FC = () => {
   const { isConnected, connect, error } = useWeb3();
 
   return (
@@ -22,4 +22,6 @@ export const TokenList: React.FC = () => {
       )}
     </div>
   );
-}; 
+};
+
+export default TokenList;
