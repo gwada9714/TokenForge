@@ -6,102 +6,155 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TokenForgeStaking is ReentrancyGuard, Ownable {
-    IERC20 public stakingToken;
+    IERC20 public immutable stakingToken; // immutable pour économiser du gas
     
     struct StakeInfo {
-        uint256 amount;
-        uint256 since;
-        uint256 claimedRewards;
+        uint128 amount;         // Réduit de uint256 à uint128
+        uint128 since;         // Réduit de uint256 à uint128
+        uint128 claimedRewards; // Réduit de uint256 à uint128
+        bool isStaking;        // Pour vérifier rapidement si l'utilisateur stake
     }
     
     struct Pool {
-        uint256 rewardRate; // Rewards per second per token
-        uint256 totalStaked;
-        uint256 lastUpdateTime;
+        uint128 rewardRate;    // Réduit à uint128
+        uint128 totalStaked;   // Réduit à uint128
+        uint128 lastUpdateTime;
         mapping(address => StakeInfo) stakes;
     }
     
     Pool public stakingPool;
-    uint256 public constant MINIMUM_STAKE_TIME = 1 days;
+    uint128 public constant MINIMUM_STAKE_TIME = 1 days;
+    uint128 private constant SCALE = 1e6; // Facteur d'échelle pour éviter les pertes de précision
     
-    event Staked(address indexed user, uint256 amount);
-    event Withdrawn(address indexed user, uint256 amount);
-    event RewardsClaimed(address indexed user, uint256 amount);
+    // Events optimisés
+    event Staked(address indexed user, uint128 amount);
+    event Withdrawn(address indexed user, uint128 amount);
+    event RewardsClaimed(address indexed user, uint128 amount);
+    event RewardRateUpdated(uint128 newRate);
+    
+    error InvalidAmount();
+    error StakingPeriodNotMet();
+    error TransferFailed();
+    error NoStakeFound();
     
     constructor(address _stakingToken) {
         stakingToken = IERC20(_stakingToken);
-        stakingPool.rewardRate = 1e15; // 0.001 tokens per second per staked token
-        stakingPool.lastUpdateTime = block.timestamp;
+        stakingPool.rewardRate = 1e3; // Ajusté pour le nouveau facteur d'échelle
+        stakingPool.lastUpdateTime = uint128(block.timestamp);
     }
     
-    function stake(uint256 _amount) external nonReentrant {
-        require(_amount > 0, "Cannot stake 0");
-        updatePool();
+    modifier updateRewards() {
+        _updatePool();
+        _;
+    }
+    
+    function stake(uint128 _amount) external nonReentrant updateRewards {
+        _stake(_amount);
+    }
+
+    function _stake(uint128 _amount) internal {
+        if (_amount == 0) revert InvalidAmount();
         
+        StakeInfo storage userStake = stakingPool.stakes[msg.sender];
+        
+        // Mise à jour du stake
         stakingPool.totalStaked += _amount;
-        stakingPool.stakes[msg.sender].amount += _amount;
-        if (stakingPool.stakes[msg.sender].since == 0) {
-            stakingPool.stakes[msg.sender].since = block.timestamp;
+        userStake.amount += _amount;
+        
+        if (!userStake.isStaking) {
+            userStake.since = uint128(block.timestamp);
+            userStake.isStaking = true;
         }
         
-        require(stakingToken.transferFrom(msg.sender, address(this), _amount), "Stake failed");
+        if (!stakingToken.transferFrom(msg.sender, address(this), _amount)) revert TransferFailed();
         emit Staked(msg.sender, _amount);
     }
     
-    function withdraw(uint256 _amount) external nonReentrant {
+    function withdraw(uint128 _amount) external nonReentrant updateRewards {
         StakeInfo storage userStake = stakingPool.stakes[msg.sender];
-        require(_amount > 0 && _amount <= userStake.amount, "Invalid amount");
-        require(block.timestamp >= userStake.since + MINIMUM_STAKE_TIME, "Staking period not met");
+        if (_amount == 0 || _amount > userStake.amount) revert InvalidAmount();
+        if (block.timestamp < userStake.since + MINIMUM_STAKE_TIME) revert StakingPeriodNotMet();
         
-        updatePool();
-        claimRewards();
+        // Réclamer les récompenses avant le retrait
+        _claimRewards();
         
+        // Mise à jour du stake
         stakingPool.totalStaked -= _amount;
         userStake.amount -= _amount;
+        
         if (userStake.amount == 0) {
+            userStake.isStaking = false;
             userStake.since = 0;
         }
         
-        require(stakingToken.transfer(msg.sender, _amount), "Withdraw failed");
+        if (!stakingToken.transfer(msg.sender, _amount)) revert TransferFailed();
         emit Withdrawn(msg.sender, _amount);
     }
     
-    function claimRewards() public nonReentrant {
-        updatePool();
-        uint256 rewards = calculateRewards(msg.sender);
-        if (rewards > 0) {
-            stakingPool.stakes[msg.sender].claimedRewards += rewards;
-            require(stakingToken.transfer(msg.sender, rewards), "Reward transfer failed");
-            emit RewardsClaimed(msg.sender, rewards);
-        }
+    function claimRewards() external nonReentrant updateRewards {
+        _claimRewards();
     }
     
-    function calculateRewards(address _user) public view returns (uint256) {
-        StakeInfo storage userStake = stakingPool.stakes[_user];
-        if (userStake.amount == 0) {
-            return 0;
-        }
+    function _claimRewards() internal {
+        uint128 rewards = uint128(_calculateRewards(msg.sender));
+        if (rewards == 0) return;
         
-        uint256 timeStaked = block.timestamp - userStake.since;
-        uint256 rewards = (userStake.amount * stakingPool.rewardRate * timeStaked) / 1e18;
+        stakingPool.stakes[msg.sender].claimedRewards += rewards;
+        if (!stakingToken.transfer(msg.sender, rewards)) revert TransferFailed();
+        emit RewardsClaimed(msg.sender, rewards);
+    }
+    
+    function _calculateRewards(address _user) internal view returns (uint128) {
+        StakeInfo storage userStake = stakingPool.stakes[_user];
+        if (!userStake.isStaking || userStake.amount == 0) return 0;
+        
+        uint128 timeStaked = uint128(block.timestamp) - userStake.since;
+        // Calcul optimisé avec SCALE
+        uint128 rewards = uint128((uint256(userStake.amount) * uint256(stakingPool.rewardRate) * uint256(timeStaked)) / SCALE);
         return rewards - userStake.claimedRewards;
     }
     
-    function updatePool() internal {
-        stakingPool.lastUpdateTime = block.timestamp;
+    function _updatePool() internal {
+        stakingPool.lastUpdateTime = uint128(block.timestamp);
     }
     
-    function setRewardRate(uint256 _newRate) external onlyOwner {
-        updatePool();
+    function setRewardRate(uint128 _newRate) external onlyOwner updateRewards {
         stakingPool.rewardRate = _newRate;
+        emit RewardRateUpdated(_newRate);
     }
     
-    function getUserStake(address _user) external view returns (uint256 amount, uint256 since, uint256 claimedRewards) {
+    // View functions optimisées
+    function getUserStake(address _user) external view returns (
+        uint128 amount,
+        uint128 since,
+        uint128 claimedRewards,
+        bool isStaking,
+        uint128 pendingRewards
+    ) {
         StakeInfo storage userStake = stakingPool.stakes[_user];
-        return (userStake.amount, userStake.since, userStake.claimedRewards);
+        return (
+            userStake.amount,
+            userStake.since,
+            userStake.claimedRewards,
+            userStake.isStaking,
+            _calculateRewards(_user)
+        );
     }
     
-    function getPoolInfo() external view returns (uint256 totalStaked, uint256 rewardRate, uint256 lastUpdateTime) {
-        return (stakingPool.totalStaked, stakingPool.rewardRate, stakingPool.lastUpdateTime);
+    // Fonction de batch staking pour économiser du gas sur les transactions multiples
+    function batchStake(uint128[] calldata _amounts) external nonReentrant updateRewards {
+        uint128 totalAmount = 0;
+        uint256 length = _amounts.length;
+        
+        // Calcul du montant total en une seule boucle
+        for(uint256 i = 0; i < length;) {
+            totalAmount += _amounts[i];
+            unchecked { ++i; } // Optimisation gas pour l'incrémentation
+        }
+        
+        if (totalAmount == 0) revert InvalidAmount();
+        
+        // Appel unique à stake avec le montant total
+        _stake(totalAmount);
     }
 }
