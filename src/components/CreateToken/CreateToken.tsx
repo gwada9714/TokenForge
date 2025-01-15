@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import {
   Box,
   Stepper,
@@ -11,12 +11,15 @@ import {
   Button,
   Stack,
   StepContent,
+  CircularProgress,
 } from '@mui/material';
 import { TokenConfig } from '@/types/token';
-import PlanSelection from './PlanSelection';
-import TokenConfiguration from './TokenConfiguration';
-import TokenVerification from './TokenVerification';
-import TokenDeployment from './TokenDeployment';
+
+// Lazy loading des composants
+const PlanSelection = lazy(() => import('./PlanSelection'));
+const TokenConfiguration = lazy(() => import('./TokenConfiguration'));
+const TokenVerification = lazy(() => import('./TokenVerification'));
+const TokenDeployment = lazy(() => import('./TokenDeployment'));
 
 const steps = [
   { title: 'Plan', description: 'Choisissez votre forge' },
@@ -24,6 +27,12 @@ const steps = [
   { title: 'Vérification', description: 'Vérifiez les détails' },
   { title: 'Déploiement', description: 'Déployez votre création' },
 ];
+
+const LoadingFallback = () => (
+  <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+    <CircularProgress />
+  </Box>
+);
 
 const CreateToken: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -45,18 +54,14 @@ const CreateToken: React.FC = () => {
   };
 
   const renderStepContent = () => {
-    switch (activeStep) {
-      case 0:
-        return <PlanSelection setTokenConfig={setTokenConfig} />;
-      case 1:
-        return <TokenConfiguration tokenConfig={tokenConfig} setTokenConfig={setTokenConfig} />;
-      case 2:
-        return <TokenVerification tokenConfig={tokenConfig} />;
-      case 3:
-        return <TokenDeployment tokenConfig={tokenConfig} />;
-      default:
-        return null;
-    }
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        {activeStep === 0 && <PlanSelection setTokenConfig={setTokenConfig} />}
+        {activeStep === 1 && <TokenConfiguration tokenConfig={tokenConfig} setTokenConfig={setTokenConfig} />}
+        {activeStep === 2 && <TokenVerification tokenConfig={tokenConfig} />}
+        {activeStep === 3 && <TokenDeployment tokenConfig={tokenConfig} />}
+      </Suspense>
+    );
   };
 
   return (
@@ -107,4 +112,4 @@ const CreateToken: React.FC = () => {
   );
 };
 
-export default CreateToken;
+export default React.memo(CreateToken);
