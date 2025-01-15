@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import LoadingComponent from '../components/common/LoadingComponent';
 
@@ -11,7 +11,6 @@ export const routerFutureConfig = {
 // Lazy load pages
 const StakingPage = lazy(() => import('../pages/Staking'));
 const LaunchpadPage = lazy(() => import('../pages/Launchpad'));
-const TokensPage = lazy(() => import('../pages/Tokens'));
 const CreateTokenPage = lazy(() => import('../pages/CreateToken'));
 const TokenDetailsPage = lazy(() => import('../pages/TokenDetails'));
 const PlansPage = lazy(() => import('../pages/Plans'));
