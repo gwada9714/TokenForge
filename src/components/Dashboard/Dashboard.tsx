@@ -18,9 +18,9 @@ import {
 } from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
 import { Virtuoso } from 'react-virtuoso';
-import { TokenIcon } from '../TokenDisplay/TokenIcon';
 import { useUserTokens } from '../../hooks/useUserTokens';
 import { useTokenStats } from '../../hooks/useTokenStats';
+import { TokenIcon } from '../TokenDisplay/TokenIcon';
 
 interface TokenData {
   address: string;
