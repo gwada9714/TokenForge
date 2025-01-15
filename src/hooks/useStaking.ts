@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { useContractRead, useContractWrite, useBalance } from 'wagmi';
-import { useNetwork, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
 
 // Temporary ABI until we generate it
@@ -12,15 +12,22 @@ const TKNTokenABI = [
   "function getStakingStats() external view returns (uint256 totalStaked, uint256 apy, uint256 stakersCount)"
 ] as const;
 
+interface StakeInfo {
+  stakedAmount: bigint;
+  pendingRewards: bigint;
+}
+
+interface StakingStats {
+  totalStaked: bigint;
+  apy: number;
+  stakersCount: number;
+}
+
 export interface StakingInfo {
   balance: bigint | undefined;
   stakedAmount: bigint;
   pendingRewards: bigint;
-  stakingStats: {
-    totalStaked: bigint;
-    apy: number;
-    stakersCount: number;
-  };
+  stakingStats: StakingStats;
   stakeAmount: string;
   setStakeAmount: React.Dispatch<React.SetStateAction<string>>;
   withdrawAmount: string;
@@ -29,87 +36,70 @@ export interface StakingInfo {
   withdraw: (amount: string) => void;
   claimRewards: () => void;
   isLoading: boolean;
-  isStaking: boolean;
-  isWithdrawing: boolean;
-  isClaiming: boolean;
+  canUnstake: boolean;
+  timeUntilUnstake: number;
 }
 
-export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
+export function useStaking(tokenAddress: `0x${string}`): StakingInfo {
   const { address } = useAccount();
-  
-  // Lecture du solde TKN
-  const { data: balance } = useBalance({
-    address,
-    token: tokenAddress,
-  });
+  const [stakeAmount, setStakeAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
-  // Lecture des informations de staking
   const { data: stakeInfo } = useContractRead({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'getStakeInfo',
     args: [address as `0x${string}`],
-  });
+  }) as { data: StakeInfo };
 
-  // Statistiques globales de staking
   const { data: stakingStats } = useContractRead({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'getStakingStats',
+  }) as { data: StakingStats };
+
+  const { data: balance } = useBalance({
+    address,
+    token: tokenAddress,
   });
 
-  // Actions de staking
-  const { write: stakeTokens, isLoading: isStaking } = useContractWrite({
+  // Contract writes
+  const { write: stake } = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'stake',
   });
 
-  const { write: unstakeTokens, isLoading: isWithdrawing } = useContractWrite({
+  const { write: withdraw } = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'unstake',
   });
 
-  const { write: claim, isLoading: isClaiming } = useContractWrite({
+  const { write: claimRewards } = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'claimRewards',
   });
 
-  const stake = (amount: string) => {
-    if (!amount) return;
-    stakeTokens({ args: [parseEther(amount)] });
-  };
-
-  const withdraw = (amount: string) => {
-    if (!amount) return;
-    unstakeTokens({ args: [parseEther(amount)] });
-  };
-
-  const claimRewards = () => {
-    claim();
-  };
-
   return {
     balance: balance?.value,
-    stakedAmount: stakeInfo?.[0] || BigInt(0),
-    pendingRewards: stakeInfo?.[1] || BigInt(0),
-    stakingStats: {
-      totalStaked: stakingStats?.[0] || BigInt(0),
-      apy: Number(stakingStats?.[1] || 0),
-      stakersCount: Number(stakingStats?.[2] || 0),
+    stakedAmount: stakeInfo?.stakedAmount ?? BigInt(0),
+    pendingRewards: stakeInfo?.pendingRewards ?? BigInt(0),
+    stakingStats: stakingStats ?? {
+      totalStaked: BigInt(0),
+      apy: 0,
+      stakersCount: 0,
     },
-    stakeAmount: '',
-    setStakeAmount: () => {},
-    withdrawAmount: '',
-    setWithdrawAmount: () => {},
-    stake,
-    withdraw,
-    claimRewards,
+    stakeAmount,
+    setStakeAmount,
+    withdrawAmount,
+    setWithdrawAmount,
+    stake: (amount: string) => stake({ args: [parseEther(amount)] }),
+    withdraw: (amount: string) => withdraw({ args: [parseEther(amount)] }),
+    claimRewards: () => claimRewards(),
     isLoading: false,
-    isStaking,
-    isWithdrawing,
-    isClaiming,
+    canUnstake: true,
+    timeUntilUnstake: 0,
   };
-};
+}
