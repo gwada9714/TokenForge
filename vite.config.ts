@@ -28,6 +28,11 @@ export default defineConfig(({ mode }) => {
         srcDir: 'src',
         filename: 'sw.ts',
         injectRegister: 'auto',
+        registerType: 'autoUpdate',
+        devOptions: {
+          enabled: true,
+          type: 'module'
+        },
         manifest: {
           name: 'TokenForge',
           short_name: 'TokenForge',
@@ -44,24 +49,23 @@ export default defineConfig(({ mode }) => {
             }
           ]
         },
-        devOptions: {
-          enabled: true,
-          type: 'module'
-        }
       })
     ],
     optimizeDeps: {
-      exclude: [
+      include: [
+        'react',
+        'react-dom',
+        '@mui/material',
+        '@emotion/react',
+        '@emotion/styled',
         'react-router-dom',
         'react-redux',
-        '@mui/material/styles'
+        '@rainbow-me/rainbowkit',
+        'wagmi',
+        '@tanstack/react-query'
       ],
-      force: false,
       esbuildOptions: {
-        target: 'esnext',
-        supported: {
-          'top-level-await': true
-        },
+        target: 'esnext'
       }
     },
     resolve: {
@@ -71,33 +75,19 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 3000,
-      strictPort: true,
       host: true,
       hmr: {
-        timeout: 300000,
-        protocol: 'ws',
-        host: 'localhost',
-        port: 24678,
-        clientPort: 24678
-      },
-      watch: {
-        usePolling: true,
-        interval: 1000,
-      },
-      fs: {
-        strict: false,
-        allow: ['..']
-      },
-      middlewareMode: false,
-      cors: true
+        timeout: 120000
+      }
     },
     build: {
-      target: 'esnext',
       sourcemap: true,
-      commonjsOptions: {
-        transformMixedEsModules: true
-      },
+      chunkSizeWarningLimit: 1600,
+      target: 'esnext',
+      minify: false,
+      cssMinify: false,
       rollupOptions: {
+        treeshake: false,
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {

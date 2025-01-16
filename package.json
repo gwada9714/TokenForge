@@ -2,7 +2,6 @@
   "name": "tokenforge-app",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "dependencies": {
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
@@ -62,6 +61,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
+    "dotenv": "^16.4.7",
     "eslint": "^9.18.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
