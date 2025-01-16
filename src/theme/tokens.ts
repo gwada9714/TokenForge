@@ -1,17 +1,17 @@
 export const tokens = {
   colors: {
     primary: {
-      main: '#182038', // Bleu foncé profond
+      main: '#182038',
       light: '#2A3352',
       dark: '#0F1525',
     },
     secondary: {
-      main: '#D97706', // Orange métallisé
+      main: '#D97706',
       light: '#F59E0B',
       dark: '#B45309',
     },
     background: {
-      default: '#F5F5F5', // Gris clair
+      default: '#F5F5F5',
       paper: '#FFFFFF',
       dark: '#121212',
     },
@@ -19,6 +19,10 @@ export const tokens = {
       primary: '#182038',
       secondary: '#4B5563',
       light: '#F5F5F5',
+    },
+    gradient: {
+      primary: 'linear-gradient(45deg, #182038 30%, #2A3352 90%)',
+      secondary: 'linear-gradient(45deg, #D97706 30%, #F59E0B 90%)',
     },
     action: {
       active: '#D97706',
@@ -96,6 +100,49 @@ export const tokens = {
     header: 800,
     dropdown: 700,
   },
+  breakpoints: {
+    xs: '320px',
+    sm: '640px',
+    md: '768px',
+    lg: '1024px',
+    xl: '1280px',
+    '2xl': '1536px',
+  },
 } as const;
 
 export type Tokens = typeof tokens;
+
+// Create a type-safe theme object that matches styled-components DefaultTheme
+const theme = {
+  colors: {
+    primary: tokens.colors.primary,
+    secondary: tokens.colors.secondary,
+    background: tokens.colors.background,
+    text: tokens.colors.text,
+    gradient: {
+      primary: 'linear-gradient(135deg, #182038 0%, #2A3352 100%)',
+      secondary: tokens.colors.gradient.secondary,
+    },
+    action: tokens.colors.action,
+    error: tokens.colors.error,
+    success: tokens.colors.success,
+    warning: tokens.colors.warning,
+  },
+  typography: tokens.typography,
+  spacing: tokens.spacing,
+  borderRadius: tokens.borderRadius,
+  shadows: tokens.shadows,
+  transitions: tokens.transitions,
+  zIndex: tokens.zIndex,
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
+};
+
+export default theme;

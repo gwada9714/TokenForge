@@ -1,6 +1,6 @@
 import { tokens } from './tokens';
 
-export const theme = {
+const theme = {
   ...tokens,
   components: {
     button: {
@@ -56,5 +56,6 @@ export const theme = {
   },
 } as const;
 
-export type Theme = typeof theme;
+export { theme };
 export default theme;
+export type Theme = typeof theme;
