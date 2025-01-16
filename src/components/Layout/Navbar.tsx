@@ -12,6 +12,8 @@ import {
   List,
   ListItem,
   ListItemText,
+  ListItemButton,
+  Divider,
   useMediaQuery,
 } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
@@ -20,7 +22,6 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 
 export const Navbar = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { address, isConnected } = useAccount();
   const { connectAsync } = useConnect();
@@ -46,86 +47,121 @@ export const Navbar = () => {
     }
   };
 
-  const menuItems = [
-    { text: "Create Token", path: "/tokens/create" },
+  const navItems = [
+    { text: "Dashboard", path: "/" },
+    { text: "Create Token", path: "/create-token" },
     { text: "My Tokens", path: "/tokens" },
-    { text: "Documentation", path: "/docs" },
+    { text: "Profit Stats", path: "/profit-dashboard" },
   ];
 
   const drawer = (
-    <List>
-      {menuItems.map((item) => (
-        <ListItem
-          key={item.text}
-          component={RouterLink}
-          to={item.path}
-          onClick={handleDrawerToggle}
-        >
-          <ListItemText primary={item.text} />
-        </ListItem>
-      ))}
-    </List>
+    <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
+      <Typography variant="h6" sx={{ my: 2 }}>
+        TokenForge
+      </Typography>
+      <Divider />
+      <List>
+        {navItems.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              component={RouterLink}
+              to={item.path}
+              sx={{ textAlign: "center" }}
+            >
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
   );
 
   return (
-    <AppBar position="static">
-      <Container maxWidth="xl">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            TokenForge
-          </Typography>
-          
-          {isMobile ? (
+    <Box sx={{ display: "flex" }}>
+      <AppBar component="nav">
+        <Container maxWidth="lg">
+          <Toolbar>
             <IconButton
               color="inherit"
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: "none" } }}
             >
               <MenuIcon />
             </IconButton>
-          ) : (
-            <Box sx={{ display: "flex", gap: 2 }}>
-              {menuItems.map((item) => (
+            <Typography
+              variant="h6"
+              component={RouterLink}
+              to="/"
+              sx={{
+                flexGrow: 1,
+                display: { xs: "none", sm: "block" },
+                textDecoration: "none",
+                color: "inherit",
+              }}
+            >
+              TokenForge
+            </Typography>
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+              {navItems.map((item) => (
                 <Button
                   key={item.text}
-                  color="inherit"
                   component={RouterLink}
                   to={item.path}
+                  sx={{ color: "#fff" }}
                 >
                   {item.text}
                 </Button>
               ))}
             </Box>
-          )}
-          <Button
-            variant="contained"
-            onClick={isConnected ? handleDisconnect : handleConnect}
-            sx={{
-              borderRadius: "20px",
-              textTransform: "none",
-              px: 3,
-            }}
-          >
-            {isConnected
-              ? `${address?.slice(0, 6)}...${address?.slice(-4)}`
-              : "Connect Wallet"}
-          </Button>
-        </Toolbar>
-      </Container>
-
-      <Drawer
-        variant="temporary"
-        anchor="right"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{
-          keepMounted: true,
-        }}
-      >
-        {drawer}
-      </Drawer>
-    </AppBar>
+            {isConnected ? (
+              <Box sx={{ ml: 2 }}>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  onClick={handleDisconnect}
+                >
+                  {address?.slice(0, 6)}...{address?.slice(-4)}
+                </Button>
+              </Box>
+            ) : (
+              <Box sx={{ ml: 2 }}>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  onClick={handleConnect}
+                >
+                  Connect Wallet
+                </Button>
+              </Box>
+            )}
+          </Toolbar>
+        </Container>
+      </AppBar>
+      <Box component="nav">
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: 240,
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+      <Box component="main" sx={{ p: 3 }}>
+        <Toolbar />
+      </Box>
+    </Box>
   );
 };
 

@@ -1,8 +1,9 @@
 import { createBrowserRouter, Outlet } from 'react-router-dom';
-import Layout from '../components/Layout';
-import { TokenList, TokenDetails, CreateToken } from '../pages';
+import Layout from '../components/Layout/Layout';
+import { TokenList, TokenDetails } from '../pages';
 import { Dashboard } from '../pages/Dashboard/Dashboard';
-import { getRouterOptions } from '../router/config';
+import CreateTokenWizard from '../pages/CreateToken/CreateTokenWizard';
+import ProfitDashboardPage from '../pages/Dashboard/ProfitDashboardPage';
 
 const routes = [
   {
@@ -24,11 +25,15 @@ const routes = [
         element: <TokenDetails />
       },
       {
-        path: 'create',
-        element: <CreateToken />
+        path: 'create-token',
+        element: <CreateTokenWizard />
+      },
+      {
+        path: 'profit-dashboard',
+        element: <ProfitDashboardPage />
       }
     ]
   }
 ];
 
-export const router = createBrowserRouter(routes, getRouterOptions());
+export const router = createBrowserRouter(routes);
