@@ -8,7 +8,7 @@ import { memo } from 'react';
 import { muiTheme } from '../theme/mui';
 import { Web3Provider } from './Web3Provider';
 import { ThemeProvider } from 'styled-components';
-import { theme } from '../styles/theme';
+import { styledTheme } from '../theme/forge-theme';
 import { StyleSheetManager } from 'styled-components';
 import isPropValid from '@emotion/is-prop-valid';
 
@@ -39,7 +39,7 @@ const Providers: React.FC<ProvidersProps> = memo(({ children }) => {
           <StyleSheetManager shouldForwardProp={isPropValid}>
             <StyledEngineProvider injectFirst>
               <MuiThemeProvider theme={muiTheme}>
-                <ThemeProvider theme={theme}>
+                <ThemeProvider theme={styledTheme}>
                   <CssBaseline />
                   <Web3Provider>
                     {children}

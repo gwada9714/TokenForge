@@ -29,15 +29,15 @@ const IconWrapper = styled.div`
     border-radius: 18px;
     padding: 2px;
     background: linear-gradient(
-      135deg,
-      ${(props) => props.theme.colors.secondary.main},
-      ${(props) => props.theme.colors.primary.light}
+      45deg,
+      ${(props) => props.theme.colors.forge.glow},
+      transparent
     );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask: linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
     mask-composite: exclude;
+    -webkit-mask-composite: destination-out;
   }
 
   svg {

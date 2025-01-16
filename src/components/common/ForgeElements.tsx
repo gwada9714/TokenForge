@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 export const ForgeContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 ${props => props.theme.spacing.xl};
+  padding: 0 ${props => props.theme.spacing(4)}rem;
 `;
 
 export const ForgeSection = styled.section`
-  padding: ${props => props.theme.spacing['3xl']} 0;
+  padding: ${props => props.theme.spacing(16)}rem 0;
   position: relative;
   overflow: hidden;
 `;
@@ -17,7 +17,7 @@ export const ForgeHeading = styled.h1`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.bold};
   color: ${props => props.theme.colors.text.primary};
-  margin-bottom: ${props => props.theme.spacing.lg};
+  margin-bottom: ${props => props.theme.spacing(4)}rem;
   text-align: center;
 `;
 
@@ -25,14 +25,14 @@ export const ForgeSubheading = styled.h2`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.semibold};
   color: ${props => props.theme.colors.text.secondary};
-  margin-bottom: ${props => props.theme.spacing.md};
+  margin-bottom: ${props => props.theme.spacing(2)}rem;
 `;
 
 export const ForgeText = styled.p`
   font-family: ${props => props.theme.typography.fontFamily.body};
   color: ${props => props.theme.colors.text.primary};
   line-height: 1.6;
-  margin-bottom: ${props => props.theme.spacing.md};
+  margin-bottom: ${props => props.theme.spacing(2)}rem;
 `;
 
 export const ForgeButton = styled(motion.button)`
@@ -40,8 +40,8 @@ export const ForgeButton = styled(motion.button)`
   color: ${props => props.theme.colors.text.light};
   font-family: ${props => props.theme.typography.fontFamily.body};
   font-weight: ${props => props.theme.typography.fontWeight.medium};
-  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
-  border-radius: ${props => props.theme.borderRadius.md};
+  padding: ${props => props.theme.spacing(1)}rem ${props => props.theme.spacing(4)}rem;
+  border-radius: ${props => props.theme.borderRadius.medium};
   border: none;
   cursor: pointer;
   transition: ${props => props.theme.transitions.default};
@@ -63,7 +63,7 @@ export const ForgeButton = styled(motion.button)`
 export const ForgeCard = styled(motion.div)`
   background: ${props => props.theme.colors.background.paper};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: ${props => props.theme.spacing.xl};
+  padding: ${props => props.theme.spacing(8)}rem;
   box-shadow: ${props => props.theme.shadows.md};
   transition: ${props => props.theme.transitions.default};
 
@@ -76,8 +76,8 @@ export const ForgeCard = styled(motion.div)`
 export const ForgeGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: ${props => props.theme.spacing.xl};
-  margin: ${props => props.theme.spacing.xl} 0;
+  gap: ${props => props.theme.spacing(8)}rem;
+  margin: ${props => props.theme.spacing(8)}rem 0;
 `;
 
 export const ForgeMetallicCard = styled(ForgeCard)`
