@@ -62,6 +62,28 @@ export interface KYCVerification {
   verificationId?: string;
 }
 
+export interface TokenConfig {
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSupply: string;
+  taxes: TaxConfig;
+  liquidityLock: LiquidityLock;
+  maxLimits: MaxLimits;
+  antiBot: AntiBot;
+  audit?: TokenAudit;
+  kyc?: KYCVerification;
+  features: {
+    burnable: boolean;
+    mintable: boolean;
+    pausable: boolean;
+    blacklist: boolean;
+    forceTransfer: boolean;
+    deflation: boolean;
+    reflection: boolean;
+  };
+}
+
 export interface TokenFeatures {
   taxes: TaxConfig;
   liquidityLock: LiquidityLock;
