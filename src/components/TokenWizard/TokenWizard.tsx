@@ -40,10 +40,11 @@ const TokenWizard: React.FC = () => {
       mint: false,
       burn: false
     },
-    serviceTier: 'basic'
+    serviceTier: 'basic',
+    paymentToken: ''
   });
   
-  const { createToken, isLoading } = useTokenForge();
+  const { createToken, isCreating } = useTokenForge();
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -84,11 +85,14 @@ const TokenWizard: React.FC = () => {
         name: tokenData.name,
         symbol: tokenData.symbol,
         decimals: parseInt(tokenData.decimals),
-        initialSupply: tokenData.supply,
-        mintable: tokenData.features.mint,
-        burnable: tokenData.features.burn,
-        pausable: true,
-        isPremium: tokenData.serviceTier === 'premium'
+        initialSupply: BigInt(tokenData.supply),
+        features: {
+          mintable: tokenData.features.mint,
+          burnable: tokenData.features.burn,
+          pausable: true
+        },
+        isPremium: tokenData.serviceTier === 'premium',
+        payWithTKN: tokenData.paymentToken === 'TKN'
       });
     } catch (error) {
       console.error('Error deploying token:', error);
@@ -116,7 +120,7 @@ const TokenWizard: React.FC = () => {
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
           <Button
-            disabled={activeStep === 0 || isLoading}
+            disabled={activeStep === 0 || isCreating}
             onClick={handleBack}
           >
             Back
@@ -126,9 +130,9 @@ const TokenWizard: React.FC = () => {
             <Button
               variant="contained"
               onClick={handleDeploy}
-              disabled={isLoading}
+              disabled={isCreating}
             >
-              {isLoading ? (
+              {isCreating ? (
                 <CircularProgress size={24} />
               ) : (
                 'Deploy Token'
@@ -138,7 +142,7 @@ const TokenWizard: React.FC = () => {
             <Button
               variant="contained"
               onClick={handleNext}
-              disabled={isLoading}
+              disabled={isCreating}
             >
               Next
             </Button>

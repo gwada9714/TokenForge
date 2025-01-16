@@ -17,7 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { formatEther } from 'ethers';
+import { utils } from 'ethers';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import PaidIcon from '@mui/icons-material/Paid';
@@ -61,14 +61,14 @@ const ProfitDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box display="flex" justifyContent="center" alignItems="center" height="400px">
         <CircularProgress />
       </Box>
     );
   }
 
-  const formattedTaxCollected = formatEther(totalTaxCollected || '0');
-  const formattedTVL = formatEther(totalValueLocked || '0');
+  const formattedTaxCollected = utils.formatEther(totalTaxCollected || '0');
+  const formattedTVL = utils.formatEther(totalValueLocked || '0');
 
   return (
     <Box p={3}>
@@ -132,16 +132,16 @@ const ProfitDashboard: React.FC = () => {
               </Typography>
               <Box mt={2}>
                 <Typography variant="body1">
-                  TokenForge Treasury: {formatEther(totalTaxToForge || '0')} TKN
+                  TokenForge Treasury: {utils.formatEther(totalTaxToForge || '0')} TKN
                 </Typography>
                 <Typography variant="body1">
-                  Development Fund: {formatEther(totalTaxToDevFund || '0')} TKN
+                  Development Fund: {utils.formatEther(totalTaxToDevFund || '0')} TKN
                 </Typography>
                 <Typography variant="body1">
-                  Buyback & Burn: {formatEther(totalTaxToBuyback || '0')} TKN
+                  Buyback & Burn: {utils.formatEther(totalTaxToBuyback || '0')} TKN
                 </Typography>
                 <Typography variant="body1">
-                  Staking Rewards: {formatEther(totalTaxToStaking || '0')} TKN
+                  Staking Rewards: {utils.formatEther(totalTaxToStaking || '0')} TKN
                 </Typography>
               </Box>
             </CardContent>
@@ -164,7 +164,7 @@ const ProfitDashboard: React.FC = () => {
                 </Typography>
                 <Typography variant="body1">
                   Treasury Growth Rate: {
-                    ((Number(formatEther(totalTaxToForge || '0')) / 
+                    ((Number(utils.formatEther(totalTaxToForge || '0')) / 
                     Number(formattedTaxCollected)) * 100).toFixed(2)
                   }%
                 </Typography>
