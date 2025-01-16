@@ -135,6 +135,36 @@ contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl {
         }
     }
 
+    function _update(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override(ERC20, ERC20Pausable) {
+        super._update(from, to, amount);
+
+        if (from != address(0) && to != address(0)) {
+            // Calculate and collect tax only for transfers between addresses
+            uint256 taxAmount = (amount * FORGE_TAX_RATE) / 10000;
+            
+            if (taxAmount > 0) {
+                // Update statistics
+                totalTaxCollected += taxAmount;
+                totalTransactions++;
+                
+                // Distribute tax according to shares
+                uint256 forgeShare = (taxAmount * FORGE_SHARE) / 100;
+                uint256 devShare = (taxAmount * DEV_FUND_SHARE) / 100;
+                uint256 buybackShare = (taxAmount * BUYBACK_SHARE) / 100;
+                uint256 stakingShare = (taxAmount * STAKING_SHARE) / 100;
+                
+                // Transfer shares to respective addresses through the tax distributor
+                _transfer(to, TAX_DISTRIBUTOR, taxAmount);
+                _transfer(TAX_DISTRIBUTOR, FORGE_TREASURY, forgeShare);
+                // Additional tax distribution logic handled by TAX_DISTRIBUTOR
+            }
+        }
+    }
+
     function supportsInterface(bytes4 interfaceId)
         public
         view

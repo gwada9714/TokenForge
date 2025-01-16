@@ -15,9 +15,7 @@ contract TokenFactory is Ownable {
     
     error InvalidParams();
     
-    constructor(address initialOwner) {
-        _transferOwnership(initialOwner);
-    }
+    constructor(address initialOwner) Ownable(initialOwner) {}
 
     function createToken(
         string calldata name,

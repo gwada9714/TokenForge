@@ -15,12 +15,11 @@ contract BaseERC20 is ERC20, Ownable {
         uint8 decimals_,
         uint256 initialSupply,
         address owner
-    ) ERC20(name, symbol) {
+    ) ERC20(name, symbol) Ownable(owner) {
         if(owner == address(0) || initialSupply == 0) revert InvalidParams();
         
         _decimals = decimals_;
-        _mint(owner, initialSupply * (10 ** decimals_));
-        _transferOwnership(owner);
+        _mint(owner, initialSupply);
     }
 
     function decimals() public view virtual override returns (uint8) {
