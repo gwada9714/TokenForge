@@ -45,21 +45,41 @@ export class Web3Service {
 
   async getFactoryContract(): Promise<FactoryContract> {
     const signer = await this.getSigner();
-    const address = getFactoryAddress() || '';
-    return new Contract(
-      address,
-      FACTORY_ABI,
-      signer
-    ) as FactoryContract;
+    const address = getFactoryAddress();
+    
+    if (!address) {
+      throw new Error('Adresse du contrat Factory non configurée pour ce réseau');
+    }
+
+    try {
+      return new Contract(
+        address,
+        FACTORY_ABI,
+        signer
+      ) as FactoryContract;
+    } catch (error) {
+      console.error('Erreur lors de la création du contrat Factory:', error);
+      throw new Error('Impossible de créer le contrat Factory. Vérifiez votre connexion et le réseau sélectionné.');
+    }
   }
 
   async getTokenContract(address: string): Promise<TokenContract> {
+    if (!ethers.isAddress(address)) {
+      throw new Error('Format d\'adresse invalide');
+    }
+
     const signer = await this.getSigner();
-    return new Contract(
-      address,
-      TOKEN_ABI,
-      signer
-    ) as TokenContract;
+    
+    try {
+      return new Contract(
+        address,
+        TOKEN_ABI,
+        signer
+      ) as TokenContract;
+    } catch (error) {
+      console.error('Erreur lors de la création du contrat Token:', error);
+      throw new Error('Impossible de créer le contrat Token. Vérifiez votre connexion et le réseau sélectionné.');
+    }
   }
 
   async getProvider(): Promise<BrowserProvider> {

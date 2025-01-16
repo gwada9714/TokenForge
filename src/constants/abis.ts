@@ -28,6 +28,7 @@ export const TOKEN_ABI = [
 export const FACTORY_ABI = [
   'function createToken(string name, string symbol, uint8 decimals, uint256 totalSupply, bool burnable, bool mintable, bool pausable) returns (address)',
   'function getTokensByCreator(address creator) view returns (address[])',
+  'function getAllTokens() view returns (address[])',
   'function tokenDetails(address token) view returns (tuple(string name, string symbol, uint8 decimals, uint256 totalSupply, address owner, bool burnable, bool mintable, bool pausable, uint256 creationTime))',
   'event TokenCreated(address indexed tokenAddress, address indexed owner, string name, string symbol, uint256 totalSupply)'
 ] as const;

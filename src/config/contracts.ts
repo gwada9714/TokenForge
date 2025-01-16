@@ -3,13 +3,28 @@ type Address = `0x${string}`;
 
 // Helper function to ensure address format
 const formatAddress = (address: string | undefined): Address | null => {
-  if (!address || address === '0x0000000000000000000000000000000000000000') {
+  if (!address) {
     return null;
   }
-  if (!address.startsWith('0x')) {
-    return `0x${address}` as Address;
+
+  // Nettoyer l'adresse
+  const cleanAddress = address.toLowerCase().trim();
+  
+  // Vérifier si c'est une adresse nulle
+  if (cleanAddress === '0x0000000000000000000000000000000000000000') {
+    return null;
   }
-  return address as Address;
+
+  // Vérifier le format de l'adresse
+  const addressRegex = /^(0x)?[0-9a-f]{40}$/i;
+  if (!addressRegex.test(cleanAddress)) {
+    console.warn(`Invalid address format: ${address}`);
+    return null;
+  }
+
+  // Ajouter le préfixe 0x si nécessaire
+  const formattedAddress = cleanAddress.startsWith('0x') ? cleanAddress : `0x${cleanAddress}`;
+  return formattedAddress as Address;
 };
 
 // Contract addresses configuration
@@ -63,32 +78,38 @@ export const CONTRACT_ADDRESSES = {
 
 export type ContractType = keyof typeof CONTRACT_ADDRESSES;
 
-export function getContractAddress(contract: ContractType, chainId: number): Address | null {
-  let network: 'mainnet' | 'sepolia' | 'local';
-  
-  switch (chainId) {
-    case SUPPORTED_NETWORKS.MAINNET:
-      network = 'mainnet';
-      break;
-    case SUPPORTED_NETWORKS.SEPOLIA:
-      network = 'sepolia';
-      break;
-    case SUPPORTED_NETWORKS.LOCAL:
-      network = 'local';
-      break;
-    default:
-      console.warn(`Chain ID ${chainId} not supported, defaulting to Sepolia`);
-      network = 'sepolia';
-  }
+// Helper function to get contract address
+export const getContractAddress = (contract: ContractType, chainId: number): Address | null => {
+  try {
+    let networkKey: keyof typeof CONTRACT_ADDRESSES[typeof contract];
 
-  const address = CONTRACT_ADDRESSES[contract][network];
-  if (!address) {
-    console.warn(`No contract address found for ${contract} on network ${network}`);
+    switch (chainId) {
+      case SUPPORTED_NETWORKS.SEPOLIA:
+        networkKey = 'sepolia';
+        break;
+      case SUPPORTED_NETWORKS.MAINNET:
+        networkKey = 'mainnet';
+        break;
+      case SUPPORTED_NETWORKS.LOCAL:
+        networkKey = 'local';
+        break;
+      default:
+        console.warn(`Unsupported chain ID: ${chainId}`);
+        return null;
+    }
+
+    const address = CONTRACT_ADDRESSES[contract][networkKey];
+    if (!address) {
+      console.warn(`No address configured for contract ${contract} on network ${networkKey}`);
+      return null;
+    }
+
+    return address;
+  } catch (error) {
+    console.error(`Error getting contract address for ${contract} on chain ${chainId}:`, error);
     return null;
   }
-
-  return address;
-}
+};
 
 export const SUPPORTED_NETWORKS = {
   LOCAL: Number(import.meta.env.VITE_LOCAL_CHAIN_ID) || 31337,
