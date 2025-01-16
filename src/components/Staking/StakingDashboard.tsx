@@ -12,14 +12,12 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { formatEther } from 'ethers/lib/utils';
-import { BigNumber } from '@ethersproject/bignumber';
+import { formatValue, parseValue, compareValues, toHexString } from '@/utils/web3Adapters';
 import { useStaking } from '@/hooks/useStaking';
 import { STAKING_CONFIG } from '@/constants/tokenforge';
 import TokenIcon from '@mui/icons-material/Token';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import { formatUnits, parseUnits } from 'viem';
 
 const StatCard: React.FC<{
   title: string;
@@ -63,9 +61,8 @@ const StakingDashboard: React.FC = () => {
 
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
-    const hexValue = `0x${stakingStats.totalStaked.toString(16)}` as `0x${string}`;
     return {
-      totalStaked: formatUnits(hexValue, 18),
+      totalStaked: formatValue(stakingStats.totalStaked),
       apy: (stakingStats.apy / 100).toFixed(2),
       stakersCount: stakingStats.stakersCount.toString(),
     };
@@ -73,14 +70,14 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    const amount = parseUnits(stakeAmount, 18).toString();
-    await stake(amount);
+    const parsedAmount = parseValue(stakeAmount);
+    await stake(toHexString(parsedAmount));
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    const amount = parseUnits(withdrawAmount, 18).toString();
-    await withdraw(amount);
+    const parsedAmount = parseValue(withdrawAmount);
+    await withdraw(toHexString(parsedAmount));
   };
 
   const handleClaimRewards = async () => {
@@ -121,7 +118,7 @@ const StakingDashboard: React.FC = () => {
         <Grid item xs={12} md={4}>
           <StatCard
             title="Vos Récompenses"
-            value={`${formatEther(pendingRewards || 0n)} TKN`}
+            value={`${formatValue(pendingRewards || 0n)} TKN`}
             icon={<AccountBalanceIcon />}
             subValue="Récompenses non réclamées"
           />
@@ -142,12 +139,12 @@ const StakingDashboard: React.FC = () => {
                   value={stakeAmount}
                   onChange={(e) => setStakeAmount(e.target.value)}
                   fullWidth
-                  helperText={`Balance disponible: ${formatEther(balance || 0n)} TKN`}
+                  helperText={`Balance disponible: ${formatValue(balance || 0n)} TKN`}
                 />
                 <Button
                   variant="contained"
                   onClick={handleStake}
-                  disabled={!stakeAmount || BigNumber.from(stakeAmount).gt(balance || 0n)}
+                  disabled={!stakeAmount || !balance || compareValues(parseValue(stakeAmount), balance)}
                   fullWidth
                 >
                   Staker
@@ -155,7 +152,7 @@ const StakingDashboard: React.FC = () => {
               </Stack>
               <Divider sx={{ my: 2 }} />
               <Alert severity="info">
-                Minimum de stake: {formatEther(STAKING_CONFIG.MINIMUM_AMOUNT)} TKN
+                Minimum de stake: {formatValue(STAKING_CONFIG.MINIMUM_AMOUNT)} TKN
                 <br />
                 Période de lock: {STAKING_CONFIG.LOCK_PERIOD / (24 * 3600)} jours
               </Alert>
@@ -171,7 +168,7 @@ const StakingDashboard: React.FC = () => {
               </Typography>
               <Stack spacing={2}>
                 <Typography>
-                  Montant staké: {formatEther(stakedAmount || 0n)} TKN
+                  Montant staké: {formatValue(stakedAmount || 0n)} TKN
                 </Typography>
                 {timeUntilUnstake > 0 && (
                   <Alert severity="warning">
