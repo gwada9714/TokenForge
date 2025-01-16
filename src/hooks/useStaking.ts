@@ -80,6 +80,10 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     address,
     token: tokenAddress,
     enabled: !!address,
+    onError: (error) => {
+      console.error('Error loading balance:', error);
+      setError('Failed to load token balance');
+    }
   });
 
   const { data: stakeInfo, isLoading: isStakeInfoLoading, error: stakeInfoError, refetch: refetchStakeInfo } = useContractRead({
@@ -88,6 +92,10 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     functionName: 'getStakeInfo',
     args: address ? [address] : undefined,
     enabled: !!address,
+    onError: (error) => {
+      console.error('Error loading stake info:', error);
+      setError('Failed to load staking information');
+    }
   });
 
   const { data: stakingStats, isLoading: isStatsLoading, error: statsError, refetch: refetchStats } = useContractRead({
@@ -95,6 +103,10 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     abi: TKNTokenABI,
     functionName: 'getStakingStats',
     enabled: !!tokenAddress,
+    onError: (error) => {
+      console.error('Error loading staking stats:', error);
+      setError('Failed to load staking statistics');
+    }
   });
 
   const stakeTokens = useContractWrite({
