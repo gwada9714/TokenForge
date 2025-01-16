@@ -2,7 +2,7 @@ require("@nomicfoundation/hardhat-ethers");
 require("@nomicfoundation/hardhat-toolbox");
 require("./tasks/deploy");
 
-const config = {
+module.exports = {
   solidity: {
     version: "0.8.19",
     settings: {
@@ -22,5 +22,3 @@ const config = {
     }
   }
 };
-
-module.exports = config;

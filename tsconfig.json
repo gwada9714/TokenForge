@@ -1,29 +1,31 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
+    "target": "es2022",
+    "module": "es2022",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "baseUrl": "src",
+    "allowJs": true,
+    "strict": true,
+    "jsx": "preserve",
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "outDir": "dist",
     "paths": {
-      "@/*": ["*"],
-      "@components/*": ["components/*"],
-      "@styles/*": ["styles/*"],
-      "@utils/*": ["utils/*"],
-      "@hooks/*": ["hooks/*"],
-      "@constants/*": ["constants/*"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
+  "include": ["src", "tasks", "test", "typechain-types"],
+  "exclude": [
+    "node_modules",
+    "scripts/*.js",
+    "scripts/*.cjs",
+    "dist",
+    "build"
+  ]
 }
