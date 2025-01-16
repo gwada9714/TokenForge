@@ -7,10 +7,13 @@ interface ParallaxContainerProps {
   direction?: 'up' | 'down';
 }
 
-const Container = styled.div<{ $transform: string }>`
+const Container = styled.div.attrs<{ $transform: string }>(props => ({
+  style: {
+    transform: props.$transform,
+  },
+}))`
   position: relative;
   will-change: transform;
-  transform: ${props => props.$transform};
   transition: transform 0.1s linear;
 `;
 
@@ -28,23 +31,23 @@ export const ParallaxContainer: React.FC<ParallaxContainerProps> = ({
 
       const rect = containerRef.current.getBoundingClientRect();
       const scrolled = window.scrollY;
+      const viewportHeight = window.innerHeight;
       
       // Ne déclencher l'effet que lorsque l'élément est visible
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        const scrollOffset = (scrolled * speed) * (direction === 'up' ? -1 : 1);
-        setOffset(scrollOffset);
+      if (rect.top < viewportHeight && rect.bottom > 0) {
+        const newOffset = ((scrolled - (rect.top + scrolled)) * speed) * (direction === 'up' ? -1 : 1);
+        setOffset(newOffset);
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial position
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, [speed, direction]);
 
   return (
-    <Container
-      ref={containerRef}
-      $transform={`translateY(${offset}px)`}
-    >
+    <Container ref={containerRef} $transform={`translateY(${offset}px)`}>
       {children}
     </Container>
   );

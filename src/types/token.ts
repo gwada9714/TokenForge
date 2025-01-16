@@ -14,15 +14,28 @@ export interface TokenConfig {
   // Réseau
   network?: NetworkConfig;
   
-  // Fonctionnalités de base
-  features: string[];
+  // Fonctionnalités
+  features: {
+    burnable: boolean;
+    mintable: boolean;
+    pausable: boolean;
+    blacklist: boolean;
+    forceTransfer: boolean;
+    deflation: boolean;
+    reflection: boolean;
+  };
   
   // Plan de service
   plan: string;
   
   // Configurations avancées
   taxConfig?: TaxConfig;
-  liquidityLock?: LiquidityLock;
+  liquidityLock?: {
+    enabled: boolean;
+    amount: string;
+    unlockDate: number;
+    beneficiary: string;
+  };
   maxLimits?: MaxLimits;
   
   // Vérification et Audit
