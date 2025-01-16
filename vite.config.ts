@@ -23,7 +23,47 @@ export default defineConfig(({ mode }) => {
           process: true,
         },
       }),
+      VitePWA({
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
+        injectRegister: 'auto',
+        manifest: {
+          name: 'TokenForge',
+          short_name: 'TokenForge',
+          description: 'TokenForge - Your Web3 Token Platform',
+          theme_color: '#ffffff',
+          start_url: '/',
+          display: 'standalone',
+          background_color: '#ffffff',
+          icons: [
+            {
+              src: '/favicon.ico',
+              sizes: '64x64 32x32 24x24 16x16',
+              type: 'image/x-icon'
+            }
+          ]
+        },
+        devOptions: {
+          enabled: true,
+          type: 'module'
+        }
+      })
     ],
+    optimizeDeps: {
+      exclude: [
+        'react-router-dom',
+        'react-redux',
+        '@mui/material/styles'
+      ],
+      force: false,
+      esbuildOptions: {
+        target: 'esnext',
+        supported: {
+          'top-level-await': true
+        },
+      }
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
@@ -50,15 +90,6 @@ export default defineConfig(({ mode }) => {
       },
       middlewareMode: false,
       cors: true
-    },
-    optimizeDeps: {
-      force: false,
-      esbuildOptions: {
-        target: 'esnext',
-        supported: {
-          'top-level-await': true
-        },
-      }
     },
     build: {
       target: 'esnext',
