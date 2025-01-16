@@ -1,2 +1,2 @@
 #!/bin/sh
-npx --no -- commitlint --edit ${1} -c commitlint.config.cjs
+npx --no -- commitlint --edit ${1} --config commitlint.config.cjs
