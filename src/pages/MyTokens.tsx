@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { fetchUserTokens } from '@/store/slices/userTokensSlice';
-import TokenCard from '@/components/TokenCard/TokenCard';
+import TokenCard from '@/components/TokenCard';
 import { Container, Typography, Grid, Box, CircularProgress } from '@mui/material';
 import { useAccount } from 'wagmi';
 
