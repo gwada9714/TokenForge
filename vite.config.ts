@@ -6,7 +6,14 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      babel: {
+        plugins: [
+          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
+          ['@babel/plugin-proposal-decorators', { legacy: true }]
+        ]
+      }
+    }),
     nodePolyfills({
       include: ['buffer', 'process', 'util', 'stream'],
       globals: {
@@ -27,13 +34,30 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'esnext',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
-          'lit-core': ['lit'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'web3-core': ['web3', 'ethers'],
+          'ui-core': ['@mui/material', '@mui/icons-material'],
+          'redux-core': ['@reduxjs/toolkit', 'react-redux'],
         },
       },
     },
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 1000,
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@mui/material'],
+    exclude: ['@web3-react/core'],
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
