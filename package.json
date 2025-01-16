@@ -2,6 +2,7 @@
   "name": "tokenforge-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -46,17 +47,24 @@
     "@types/jest": "^27.5.2",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.0",
     "postcss": "^8.5.1",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.17",
     "vite": "^5.0.8",
-    "vite-plugin-node-polyfills": "^0.22.0"
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-pwa": "^0.21.1"
   },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "clean": "rimraf node_modules/.vite dist .turbo",
+    "clean:all": "npm run clean && rimraf node_modules",
+    "dev:fast": "cross-env VITE_FAST_DEV=true vite"
   },
   "eslintConfig": {
     "extends": [

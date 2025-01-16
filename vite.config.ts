@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 // https://vitejs.dev/config/
@@ -22,6 +23,28 @@ export default defineConfig({
         process: true,
       },
     }),
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'service-worker.ts',
+      injectRegister: 'auto',
+      manifest: {
+        name: 'TokenForge',
+        short_name: 'TokenForge',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: '/favicon.ico',
+            sizes: '64x64 32x32 24x24 16x16',
+            type: 'image/x-icon'
+          }
+        ]
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      }
+    })
   ],
   resolve: {
     alias: {
@@ -29,36 +52,68 @@ export default defineConfig({
       '@components': path.resolve(__dirname, './src/components'),
       '@styles': path.resolve(__dirname, './src/styles'),
       '@utils': path.resolve(__dirname, './src/utils'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@constants': path.resolve(__dirname, './src/constants')
+    }
+  },
+  server: {
+    port: 3001,
+    strictPort: true,
+    headers: {
+      'Service-Worker-Allowed': '/'
     },
+    hmr: {
+      overlay: false // Désactive l'overlay d'erreur qui peut ralentir
+    },
+    watch: {
+      usePolling: false, // Désactive le polling qui peut être lent
+      interval: 100 // Réduit l'intervalle de vérification
+    }
   },
   build: {
-    target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    target: ['esnext'],
+    minify: 'esbuild', // Plus rapide que terser
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'web3-core': ['web3', 'ethers'],
-          'ui-core': ['@mui/material', '@mui/icons-material'],
-          'redux-core': ['@reduxjs/toolkit', 'react-redux'],
-        },
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-web3': ['wagmi', 'viem', 'ethers'],
+          'vendor-ui': ['@mui/material', '@mui/icons-material'],
+          'vendor-utils': ['@reduxjs/toolkit', 'react-redux']
+        }
       },
+      treeshake: true
     },
-    reportCompressedSize: true,
-    chunkSizeWarningLimit: 1000,
+    commonjsOptions: {
+      include: [/node_modules/],
+      extensions: ['.js', '.cjs'],
+      strictRequires: true,
+      transformMixedEsModules: true
+    }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@mui/material'],
-    exclude: ['@web3-react/core'],
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'wagmi',
+      'viem',
+      'ethers',
+      '@mui/material',
+      '@mui/icons-material',
+      '@reduxjs/toolkit',
+      'react-redux'
+    ],
+    exclude: ['@vite/client', '@vite/env'],
+    esbuildOptions: {
+      target: 'esnext'
+    }
   },
+  esbuild: {
+    jsxInject: `import React from 'react'`,
+    jsxFactory: 'React.createElement',
+    jsxFragment: 'React.Fragment'
+  },
+  cacheDir: '.vite',
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
   },
