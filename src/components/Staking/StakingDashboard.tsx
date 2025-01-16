@@ -11,6 +11,15 @@ import {
   Alert,
   Stack,
   Divider,
+  Tooltip,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material';
 import { formatValue, parseValue, compareValues } from '@/utils/web3Adapters';
 import { useStaking } from '@/hooks/useStaking';
@@ -18,18 +27,29 @@ import { TKN_TOKEN_ADDRESS, STAKING_CONFIG } from '@/constants/tokenforge';
 import TokenIcon from '@mui/icons-material/Token';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import InfoIcon from '@mui/icons-material/Info';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { toast } from 'react-hot-toast';
 
 const StatCard: React.FC<{
   title: string;
   value: string;
   icon: React.ReactNode;
   subValue?: string;
-}> = ({ title, value, icon, subValue }) => (
+  tooltip?: string;
+}> = ({ title, value, icon, subValue, tooltip }) => (
   <Card>
     <CardContent>
       <Box display="flex" alignItems="center" gap={1} mb={1}>
         {icon}
         <Typography variant="h6">{title}</Typography>
+        {tooltip && (
+          <Tooltip title={tooltip}>
+            <IconButton size="small">
+              <InfoIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
       <Typography variant="h4">{value}</Typography>
       {subValue && (
@@ -40,6 +60,63 @@ const StatCard: React.FC<{
     </CardContent>
   </Card>
 );
+
+const StakingHistory: React.FC<{
+  history: Array<{
+    timestamp: number;
+    action: 'stake' | 'unstake' | 'claim';
+    amount: bigint;
+  }>;
+}> = ({ history }) => (
+  <TableContainer component={Paper}>
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>Date</TableCell>
+          <TableCell>Action</TableCell>
+          <TableCell align="right">Montant</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {history.map((entry, index) => (
+          <TableRow key={index}>
+            <TableCell>{new Date(entry.timestamp * 1000).toLocaleString()}</TableCell>
+            <TableCell>
+              {entry.action === 'stake' && 'Stake'}
+              {entry.action === 'unstake' && 'Unstake'}
+              {entry.action === 'claim' && 'Récompenses réclamées'}
+            </TableCell>
+            <TableCell align="right">{formatValue(entry.amount)} TKN</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
+);
+
+const RewardsChart: React.FC<{
+  rewardsHistory: Array<{
+    timestamp: number;
+    rewards: bigint;
+  }>;
+}> = ({ rewardsHistory }) => {
+  const data = rewardsHistory.map(entry => ({
+    date: new Date(entry.timestamp * 1000).toLocaleDateString(),
+    rewards: Number(formatValue(entry.rewards)),
+  }));
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="date" />
+        <YAxis />
+        <RechartsTooltip />
+        <Line type="monotone" dataKey="rewards" stroke="#8884d8" />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
 
 const StakingDashboard: React.FC = () => {
   const {
@@ -57,7 +134,9 @@ const StakingDashboard: React.FC = () => {
     setWithdrawAmount,
     canUnstake,
     timeUntilUnstake,
-  } = useStaking(TKN_TOKEN_ADDRESS[1]); // Using Ethereum Mainnet address
+    rewardsHistory,
+    stakingHistory,
+  } = useStaking(TKN_TOKEN_ADDRESS[1]);
 
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
@@ -70,16 +149,42 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    await stake(stakeAmount);
+    try {
+      await toast.promise(stake(stakeAmount), {
+        loading: 'Staking en cours...',
+        success: 'Stake effectué avec succès !',
+        error: 'Erreur lors du stake',
+      });
+      setStakeAmount('');
+    } catch (error) {
+      console.error('Stake error:', error);
+    }
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    await withdraw(withdrawAmount);
+    try {
+      await toast.promise(withdraw(withdrawAmount), {
+        loading: 'Retrait en cours...',
+        success: 'Retrait effectué avec succès !',
+        error: 'Erreur lors du retrait',
+      });
+      setWithdrawAmount('');
+    } catch (error) {
+      console.error('Withdraw error:', error);
+    }
   };
 
   const handleClaimRewards = async () => {
-    await claimRewards();
+    try {
+      await toast.promise(claimRewards(), {
+        loading: 'Réclamation des récompenses...',
+        success: 'Récompenses réclamées avec succès !',
+        error: 'Erreur lors de la réclamation',
+      });
+    } catch (error) {
+      console.error('Claim error:', error);
+    }
   };
 
   if (isLoading) {
@@ -103,6 +208,7 @@ const StakingDashboard: React.FC = () => {
             value={`${formattedStats?.totalStaked || '0'} TKN`}
             icon={<TokenIcon />}
             subValue={`${formattedStats?.stakersCount || '0'} stakers actifs`}
+            tooltip="Montant total de TKN stakés sur la plateforme"
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -111,6 +217,7 @@ const StakingDashboard: React.FC = () => {
             value={`${formattedStats?.apy || '0'}%`}
             icon={<TimelineIcon />}
             subValue="Rendement annuel estimé"
+            tooltip="Taux de rendement annuel basé sur les récompenses actuelles"
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -119,7 +226,21 @@ const StakingDashboard: React.FC = () => {
             value={`${formatValue(pendingRewards || 0n)} TKN`}
             icon={<AccountBalanceIcon />}
             subValue="Récompenses non réclamées"
+            tooltip="Récompenses accumulées que vous pouvez réclamer"
           />
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3} mb={4}>
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Évolution de vos Récompenses
+              </Typography>
+              <RewardsChart rewardsHistory={rewardsHistory} />
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
@@ -197,6 +318,17 @@ const StakingDashboard: React.FC = () => {
                   Réclamer les Récompenses
                 </Button>
               </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Historique des Opérations
+              </Typography>
+              <StakingHistory history={stakingHistory} />
             </CardContent>
           </Card>
         </Grid>

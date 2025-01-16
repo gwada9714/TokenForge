@@ -1,8 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useWeb3Contract } from './useWeb3Contract';
+import { useWeb3Provider } from './useWeb3Provider';
 import { TKN_TOKEN_ADDRESS } from '@/constants/tokenforge';
 import { Contract, BigNumber } from 'ethers';
-import { TokenForgeTokenABI } from '@/contracts/abis';
+
+const TOKEN_FORGE_ABI = [
+  'function totalTaxCollected() view returns (uint256)',
+  'function totalTaxToForge() view returns (uint256)',
+  'function totalTaxToDevFund() view returns (uint256)',
+  'function totalTaxToBuyback() view returns (uint256)',
+  'function totalTaxToStaking() view returns (uint256)',
+  'function totalTransactions() view returns (uint256)',
+  'function totalValueLocked() view returns (uint256)',
+  'event TaxCollected(address indexed from, uint256 amount, uint256 timestamp)'
+] as const;
 
 interface TokenForgeStats {
   totalTaxCollected: BigNumber;
@@ -32,20 +42,20 @@ export const useTokenForgeStats = () => {
     taxHistory: []
   });
 
-  const web3Contract = useWeb3Contract();
+  const { provider } = useWeb3Provider();
   const [contract, setContract] = useState<Contract | null>(null);
 
   useEffect(() => {
-    if (!web3Contract || !web3Contract.provider) return;
+    if (!provider) return;
     
     const tokenContract = new Contract(
       TKN_TOKEN_ADDRESS[1],
-      TokenForgeTokenABI,
-      web3Contract.provider
+      TOKEN_FORGE_ABI,
+      provider
     );
     
     setContract(tokenContract);
-  }, [web3Contract]);
+  }, [provider]);
 
   useEffect(() => {
     if (!contract) return;
