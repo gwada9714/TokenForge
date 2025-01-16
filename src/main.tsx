@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import Providers from './providers/Providers'
 import './styles/index.css'
 import { routerFutureConfig } from './config/routerConfig'
-import { registerServiceWorker } from './utils/registerServiceWorker'
+import { registerServiceWorker } from './registerServiceWorker'
 
 // Enregistrement du service worker
 registerServiceWorker();
