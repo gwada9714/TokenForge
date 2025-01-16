@@ -2,133 +2,122 @@
 pragma solidity ^0.8.19;
 
 import "./TokenForgeToken.sol";
-import "./interfaces/ITokenForgeToken.sol";
-import "./TokenForgePlans.sol";
-import "./TokenForgeTKN.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Interface simplifiée pour les tokens ERC20
-interface ITokenForgeERC20 {
-    function balanceOf(address account) external view returns (uint256);
-    function transfer(address to, uint256 amount) external returns (bool);
-}
+contract TokenForgeFactory is Ownable {
+    address public immutable tknToken;
+    address public immutable treasury;
+    address public immutable taxDistributor;
+    
+    // Service tiers configuration
+    uint256 public constant BASIC_TIER_PRICE = 100 * 10**18; // 100 TKN
+    uint256 public constant PREMIUM_TIER_PRICE = 1000 * 10**18; // 1000 TKN
 
-contract TokenForgeFactory {
-    // Storage variables
-    address public immutable factory_owner;
-    TokenForgePlans public immutable plans;
-    TokenForgeTKN public immutable tknToken;
-    bool private initialized;
+    // Discount rates in basis points (1% = 100)
+    uint256 public constant TKN_PAYMENT_DISCOUNT = 2000; // 20% discount when paying with TKN
 
-    // Struct pour les paramètres de création de token
-    struct TokenParams {
+    struct TokenInfo {
+        address tokenAddress;
         string name;
         string symbol;
-        address treasury;
-        address stakingPool;
-        uint256 initialTaxRate;  // en points de base (1% = 100)
-        bool enableForgeTax;     // Activer la taxe de la forge
+        uint256 totalSupply;
+        address owner;
+        uint256 creationTime;
+        bool isPremium;
     }
 
-    // Events
+    // Mapping of created tokens
+    mapping(address => TokenInfo[]) public creatorTokens;
+    TokenInfo[] public allTokens;
+
     event TokenCreated(
-        address indexed token,
+        address indexed tokenAddress,
+        address indexed creator,
         string name,
         string symbol,
-        address treasury,
-        address stakingPool,
-        uint256 taxRate,
-        bool forgeTaxEnabled
+        uint256 totalSupply,
+        bool isPremium
     );
-    event TokenRescued(address indexed token, uint256 amount);
 
-    modifier onlyOwner() {
-        require(msg.sender == factory_owner, "Not owner");
-        _;
+    constructor(address _tknToken, address _treasury, address _taxDistributor) {
+        require(_tknToken != address(0), "TokenForge: TKN token address cannot be zero");
+        require(_treasury != address(0), "TokenForge: Treasury address cannot be zero");
+        require(_taxDistributor != address(0), "TokenForge: Tax distributor address cannot be zero");
+        tknToken = _tknToken;
+        treasury = _treasury;
+        taxDistributor = _taxDistributor;
     }
 
-    constructor(
-        address _plans,
-        address _tknToken
-    ) {
-        require(_plans != address(0), "Invalid plans address");
-        require(_tknToken != address(0), "Invalid TKN address");
-        factory_owner = msg.sender;
-        plans = TokenForgePlans(_plans);
-        tknToken = TokenForgeTKN(_tknToken);
-    }
-
-    function initialize() external onlyOwner {
-        require(!initialized, "Already initialized");
-        initialized = true;
-    }
-
-    function createToken(TokenParams memory params) external returns (address) {
-        require(initialized, "Not initialized");
-        // Vérifier le plan de l'utilisateur
-        TokenForgePlans.PlanType userPlan = plans.getUserPlan(msg.sender);
+    function createToken(
+        string memory name,
+        string memory symbol,
+        uint8 decimals,
+        uint256 initialSupply,
+        bool mintable,
+        bool burnable,
+        bool pausable,
+        bool isPremium
+    ) external {
+        uint256 price = isPremium ? PREMIUM_TIER_PRICE : BASIC_TIER_PRICE;
         
-        // Vérifier les restrictions selon le plan
-        if (userPlan == TokenForgePlans.PlanType.Apprenti) {
-            require(params.initialTaxRate == 0, "Apprenti: No tax allowed");
-            require(!params.enableForgeTax, "Apprenti: No forge tax allowed");
-        }
-        
-        // Pour le plan Maître Forgeron, la taxe de la forge est activée par défaut
-        (, bool defaultForgeTax) = plans.getPlanFeatures(userPlan);
-        if (defaultForgeTax) {
-            params.enableForgeTax = true;
-        }
+        // Handle payment
+        IERC20(tknToken).transferFrom(msg.sender, treasury, price);
 
-        // Créer le token avec les paramètres spécifiés
+        // Create new token
         TokenForgeToken newToken = new TokenForgeToken(
-            params.name,
-            params.symbol,
-            params.treasury,
-            params.stakingPool,
-            params.initialTaxRate,
-            params.enableForgeTax ? address(tknToken) : address(0)
+            name,
+            symbol,
+            decimals,
+            initialSupply,
+            mintable,
+            burnable,
+            pausable,
+            treasury,
+            taxDistributor
         );
+
+        // Store token info
+        TokenInfo memory tokenInfo = TokenInfo({
+            tokenAddress: address(newToken),
+            name: name,
+            symbol: symbol,
+            totalSupply: initialSupply,
+            owner: msg.sender,
+            creationTime: block.timestamp,
+            isPremium: isPremium
+        });
+
+        creatorTokens[msg.sender].push(tokenInfo);
+        allTokens.push(tokenInfo);
 
         emit TokenCreated(
             address(newToken),
-            params.name,
-            params.symbol,
-            params.treasury,
-            params.stakingPool,
-            params.initialTaxRate,
-            params.enableForgeTax
+            msg.sender,
+            name,
+            symbol,
+            initialSupply,
+            isPremium
         );
-
-        return address(newToken);
     }
 
-    function rescueTokens(address token) external onlyOwner {
-        ITokenForgeERC20 tokenContract = ITokenForgeERC20(token);
-        uint256 balance = tokenContract.balanceOf(address(this));
-        require(balance > 0, "No tokens to rescue");
-        require(tokenContract.transfer(factory_owner, balance), "Transfer failed");
-        emit TokenRescued(token, balance);
+    function getCreatorTokens(address creator) external view returns (TokenInfo[] memory) {
+        return creatorTokens[creator];
     }
 
-    // Getters utiles
-    function isInitialized() external view returns (bool) {
-        return initialized;
+    function getAllTokens() external view returns (TokenInfo[] memory) {
+        return allTokens;
     }
 
-    function getTokenInfo(address tokenAddress) external view returns (
-        string memory name,
-        string memory symbol,
-        address treasury,
-        address stakingPool,
-        uint256 taxRate
-    ) {
-        ITokenForgeToken token = ITokenForgeToken(tokenAddress);
-        return (
-            token.name(),
-            token.symbol(),
-            token.treasury(),
-            token.stakingPool(),
-            token.taxRate()
-        );
+    function getTokenCount() external view returns (uint256) {
+        return allTokens.length;
+    }
+
+    function calculatePrice(bool isPremium, bool payWithTKN) public pure returns (uint256) {
+        uint256 basePrice = isPremium ? PREMIUM_TIER_PRICE : BASIC_TIER_PRICE;
+        if (payWithTKN) {
+            return basePrice - (basePrice * TKN_PAYMENT_DISCOUNT / 10000);
+        }
+        return basePrice;
     }
 }

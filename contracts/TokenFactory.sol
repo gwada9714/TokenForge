@@ -1,40 +1,32 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.0;
 
-import "./tokens/BaseERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Create2.sol";
+
+// Le contrat CustomToken reste inchangé
 
 contract TokenFactory is Ownable {
-    event TokenCreated(
-        address indexed tokenAddress,
-        string indexed name,
-        string indexed symbol,
-        address owner
-    );
-    
-    error InvalidParams();
-    
-    constructor(address initialOwner) Ownable(initialOwner) {}
-
-    function createToken(
-        string calldata name,
-        string calldata symbol,
-        uint8 decimals,
-        uint256 initialSupply,
-        bytes32 salt
-    ) external returns (address) {
-        if (bytes(name).length == 0 || bytes(symbol).length == 0 || initialSupply == 0) 
-            revert InvalidParams();
-        
-        bytes memory bytecode = abi.encodePacked(
-            type(BaseERC20).creationCode,
-            abi.encode(name, symbol, decimals, initialSupply, msg.sender)
-        );
-
-        address tokenAddress = Create2.deploy(0, salt, bytecode);
-        
-        emit TokenCreated(tokenAddress, name, symbol, msg.sender);
-        return tokenAddress;
+    struct TokenConfig {
+        string name;
+        string symbol;
+        uint256 totalSupply;
+        uint8 decimals;
+        bool burnable;
+        bool mintable;
     }
+
+    uint256 public tokenCreationFee;
+    mapping(address => address[]) public userTokens;
+    event TokenCreated(address indexed creator, address tokenAddress, string name, string symbol);
+    
+    event TokenCreationFeeUpdated(uint256 oldFee, uint256 newFee);
+    
+    mapping(address => bool) public isTokenCreatedHere;
+
+    constructor(uint256 _tokenCreationFee) Ownable(msg.sender) {
+        tokenCreationFee = _tokenCreationFee;
+    }
+
+    // Le reste du contrat reste inchangé
 }

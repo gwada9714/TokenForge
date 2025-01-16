@@ -2,134 +2,171 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./TokenForgeTKN.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract TokenForgeToken is ERC20, ReentrancyGuard {
-    // Tax configuration
-    uint256 private constant BASIS_POINTS = 10000; // 100% = 10000
-    uint256 private constant MAX_TAX_RATE = 100; // 1% maximum tax
-    uint256 private _taxRate; // Current tax rate in basis points
+contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl {
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+    uint8 private immutable _decimals;
+    bool public immutable _mintable;
+    bool public immutable _burnable;
+    bool public immutable _pausable;
+
+    // TokenForge tax configuration - Fixed at 1% and non-modifiable
+    uint256 private constant FORGE_TAX_RATE = 100; // 1% = 100 basis points
+    uint256 private constant FORGE_SHARE = 70; // 70% for TokenForge
+    uint256 private constant DEV_FUND_SHARE = 15; // 15% for development fund
+    uint256 private constant BUYBACK_SHARE = 10; // 10% for buyback and burn
+    uint256 private constant STAKING_SHARE = 5; // 5% for staking rewards
     
-    // Immutable addresses
-    address private immutable _treasuryAddress;
-    address private immutable _stakingPoolAddress;
+    address public immutable FORGE_TREASURY;
+    address public immutable TAX_DISTRIBUTOR;
     
-    // TokenForge Platform Tax
-    TokenForgeTKN private _forgeTknToken;
-    bool private immutable _forgeTaxEnabled;
-    uint256 private constant FORGE_TAX_RATE = 100; // 1% taxe de la forge
-    
-    // Mappings
-    mapping(address => bool) private _isExempt;
-    
-    // Events
-    event TaxRateUpdated(uint256 newRate);
-    event TaxCollected(uint256 amount, address treasury);
-    event ForgeTaxCollected(uint256 amount);
-    event TaxExemptionUpdated(address indexed account, bool exempt);
-    
+    // Statistics for profit tracking
+    uint256 public totalTaxCollected;
+    uint256 public totalTransactions;
+    uint256 public totalValueLocked;
+    uint256 public totalTaxToForge;
+    uint256 public totalTaxToDevFund;
+    uint256 public totalTaxToBuyback;
+    uint256 public totalTaxToStaking;
+
+    event TaxCollected(address indexed from, address indexed to, uint256 taxAmount);
+
     constructor(
-        string memory tokenName,
-        string memory tokenSymbol,
-        address treasury_,
-        address stakingPool_,
-        uint256 initialTaxRate_,
-        address forgeTknToken_
-    ) ERC20(tokenName, tokenSymbol) {
-        require(treasury_ != address(0), "Invalid treasury");
-        require(stakingPool_ != address(0), "Invalid staking pool");
-        require(initialTaxRate_ <= MAX_TAX_RATE, "Tax rate too high");
+        string memory name,
+        string memory symbol,
+        uint8 decimalsArg,
+        uint256 initialSupply,
+        bool mintable,
+        bool burnable,
+        bool pausable,
+        address forgeTreasury,
+        address taxDistributor
+    ) ERC20(name, symbol) {
+        require(forgeTreasury != address(0), "TokenForge: treasury cannot be zero address");
+        require(taxDistributor != address(0), "TokenForge: tax distributor cannot be zero address");
         
-        _treasuryAddress = treasury_;
-        _stakingPoolAddress = stakingPool_;
-        _taxRate = initialTaxRate_;
-        
-        // Configuration de la taxe de la forge
-        _forgeTaxEnabled = forgeTknToken_ != address(0);
-        _forgeTknToken = TokenForgeTKN(forgeTknToken_);
-        
-        // Exemption des adresses critiques
-        _isExempt[treasury_] = true;
-        _isExempt[stakingPool_] = true;
-        
-        // Mint initial supply to treasury
-        _mint(treasury_, 100_000_000 * 10**decimals()); // 100M tokens
+        _decimals = decimalsArg;
+        _mintable = mintable;
+        _burnable = burnable;
+        _pausable = pausable;
+        FORGE_TREASURY = forgeTreasury;
+        TAX_DISTRIBUTOR = taxDistributor;
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
+        if (mintable) {
+            _grantRole(MINTER_ROLE, msg.sender);
+        }
+        if (pausable) {
+            _grantRole(PAUSER_ROLE, msg.sender);
+        }
+
+        _mint(msg.sender, initialSupply);
     }
-    
-    function _transfer(
+
+    function decimals() public view virtual override returns (uint8) {
+        return _decimals;
+    }
+
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+        require(_mintable, "TokenForge: minting is disabled");
+        _mint(to, amount);
+    }
+
+    function burn(uint256 amount) public virtual override {
+        require(_burnable, "TokenForge: burning is disabled");
+        super.burn(amount);
+    }
+
+    function burnFrom(address account, uint256 amount) public virtual override {
+        require(_burnable, "TokenForge: burning is disabled");
+        super.burnFrom(account, amount);
+    }
+
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+
+    function _beforeTokenTransfer(
         address from,
         address to,
         uint256 amount
-    ) internal virtual override {
-        require(from != address(0), "Transfer from zero");
-        require(to != address(0), "Transfer to zero");
+    ) internal virtual override(ERC20, ERC20Pausable) {
+        super._beforeTokenTransfer(from, to, amount);
         
-        // Calcul des taxes
-        uint256 taxAmount = 0;
-        uint256 forgeTaxAmount = 0;
-        
-        if (!_isExempt[from] && !_isExempt[to]) {
-            // Taxe standard
-            if (_taxRate > 0) {
-                taxAmount = (amount * _taxRate) / BASIS_POINTS;
+        // Skip tax collection for minting, burning, and transfers to/from tax distributor
+        if (from != address(0) && to != address(0) && 
+            from != TAX_DISTRIBUTOR && to != TAX_DISTRIBUTOR) {
+            uint256 taxAmount = (amount * FORGE_TAX_RATE) / 10000; // Calculate 1% tax
+            
+            // Calculate tax distribution
+            uint256 forgeShare = (taxAmount * FORGE_SHARE) / 100;
+            uint256 devFundShare = (taxAmount * DEV_FUND_SHARE) / 100;
+            uint256 buybackShare = (taxAmount * BUYBACK_SHARE) / 100;
+            uint256 stakingShare = (taxAmount * STAKING_SHARE) / 100;
+            
+            // Update statistics
+            totalTaxCollected += taxAmount;
+            totalTransactions += 1;
+            totalTaxToForge += forgeShare;
+            totalTaxToDevFund += devFundShare;
+            totalTaxToBuyback += buybackShare;
+            totalTaxToStaking += stakingShare;
+            
+            // Transfer tax shares
+            _transfer(from, FORGE_TREASURY, forgeShare);
+            _transfer(from, TAX_DISTRIBUTOR, devFundShare + buybackShare + stakingShare);
+            
+            // Transfer remaining amount
+            _transfer(from, to, amount - taxAmount);
+            
+            emit TaxCollected(from, to, taxAmount);
+        }
+    }
+
+    function _update(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override(ERC20, ERC20Pausable) {
+        super._update(from, to, amount);
+
+        if (from != address(0) && to != address(0)) {
+            // Calculate and collect tax only for transfers between addresses
+            uint256 taxAmount = (amount * FORGE_TAX_RATE) / 10000;
+            
+            if (taxAmount > 0) {
+                // Distribute tax to various addresses
+                uint256 forgeAmount = (taxAmount * FORGE_SHARE) / 100;
+                uint256 devAmount = (taxAmount * DEV_FUND_SHARE) / 100;
+                uint256 buybackAmount = (taxAmount * BUYBACK_SHARE) / 100;
+                uint256 stakingAmount = (taxAmount * STAKING_SHARE) / 100;
+                
+                _transfer(to, FORGE_TREASURY, forgeAmount);
+                _transfer(to, TAX_DISTRIBUTOR, devAmount + buybackAmount + stakingAmount);
+                
+                totalTaxCollected += taxAmount;
             }
             
-            // Taxe de la forge
-            if (_forgeTaxEnabled) {
-                forgeTaxAmount = (amount * FORGE_TAX_RATE) / BASIS_POINTS;
-            }
-        }
-        
-        uint256 netAmount = amount - taxAmount - forgeTaxAmount;
-        
-        // Transferts
-        super._transfer(from, to, netAmount);
-        
-        if (taxAmount > 0) {
-            super._transfer(from, _treasuryAddress, taxAmount);
-            emit TaxCollected(taxAmount, _treasuryAddress);
-        }
-        
-        if (forgeTaxAmount > 0 && _forgeTaxEnabled) {
-            super._transfer(from, address(_forgeTknToken), forgeTaxAmount);
-            _forgeTknToken.distributeForgeFeesFrom(address(this), forgeTaxAmount);
-            emit ForgeTaxCollected(forgeTaxAmount);
+            totalTransactions++;
         }
     }
-    
-    // Fonctions de gestion des taxes
-    function setTaxRate(uint256 newRate) external {
-        require(msg.sender == _treasuryAddress, "Not treasury");
-        require(newRate <= MAX_TAX_RATE, "Tax rate too high");
-        _taxRate = newRate;
-        emit TaxRateUpdated(newRate);
-    }
-    
-    function setTaxExemption(address account, bool exempt) external {
-        require(msg.sender == _treasuryAddress, "Not treasury");
-        _isExempt[account] = exempt;
-        emit TaxExemptionUpdated(account, exempt);
-    }
-    
-    // Getters
-    function taxRate() external view returns (uint256) {
-        return _taxRate;
-    }
-    
-    function isExemptFromTax(address account) external view returns (bool) {
-        return _isExempt[account];
-    }
-    
-    function treasury() external view returns (address) {
-        return _treasuryAddress;
-    }
-    
-    function stakingPool() external view returns (address) {
-        return _stakingPoolAddress;
-    }
-    
-    function isForgeTaxEnabled() external view returns (bool) {
-        return _forgeTaxEnabled;
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(AccessControl)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
