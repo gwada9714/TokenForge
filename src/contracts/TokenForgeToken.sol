@@ -98,39 +98,41 @@ contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl {
         _unpause();
     }
 
-    function _transfer(
+    function _beforeTokenTransfer(
         address from,
         address to,
         uint256 amount
-    ) internal virtual override {
-        require(from != address(0), "ERC20: transfer from the zero address");
-        require(to != address(0), "ERC20: transfer to the zero address");
+    ) internal virtual override(ERC20, ERC20Pausable) {
+        super._beforeTokenTransfer(from, to, amount);
         
-        // Calculate and collect tax
-        uint256 taxAmount = (amount * FORGE_TAX_RATE) / 10000;
-        
-        // Calculate tax distribution
-        uint256 forgeShare = (taxAmount * FORGE_SHARE) / 100;
-        uint256 devFundShare = (taxAmount * DEV_FUND_SHARE) / 100;
-        uint256 buybackShare = (taxAmount * BUYBACK_SHARE) / 100;
-        uint256 stakingShare = (taxAmount * STAKING_SHARE) / 100;
-        
-        // Update statistics
-        totalTaxCollected += taxAmount;
-        totalTransactions += 1;
-        totalTaxToForge += forgeShare;
-        totalTaxToDevFund += devFundShare;
-        totalTaxToBuyback += buybackShare;
-        totalTaxToStaking += stakingShare;
-        
-        // Transfer tax shares
-        super._transfer(from, FORGE_TREASURY, forgeShare);
-        super._transfer(from, TAX_DISTRIBUTOR, devFundShare + buybackShare + stakingShare);
-        
-        // Transfer remaining amount
-        super._transfer(from, to, amount - taxAmount);
-        
-        emit TaxCollected(from, to, taxAmount);
+        // Skip tax collection for minting, burning, and transfers to/from tax distributor
+        if (from != address(0) && to != address(0) && 
+            from != TAX_DISTRIBUTOR && to != TAX_DISTRIBUTOR) {
+            uint256 taxAmount = (amount * FORGE_TAX_RATE) / 10000; // Calculate 1% tax
+            
+            // Calculate tax distribution
+            uint256 forgeShare = (taxAmount * FORGE_SHARE) / 100;
+            uint256 devFundShare = (taxAmount * DEV_FUND_SHARE) / 100;
+            uint256 buybackShare = (taxAmount * BUYBACK_SHARE) / 100;
+            uint256 stakingShare = (taxAmount * STAKING_SHARE) / 100;
+            
+            // Update statistics
+            totalTaxCollected += taxAmount;
+            totalTransactions += 1;
+            totalTaxToForge += forgeShare;
+            totalTaxToDevFund += devFundShare;
+            totalTaxToBuyback += buybackShare;
+            totalTaxToStaking += stakingShare;
+            
+            // Transfer tax shares
+            _transfer(from, FORGE_TREASURY, forgeShare);
+            _transfer(from, TAX_DISTRIBUTOR, devFundShare + buybackShare + stakingShare);
+            
+            // Transfer remaining amount
+            _transfer(from, to, amount - taxAmount);
+            
+            emit TaxCollected(from, to, taxAmount);
+        }
     }
 
     function supportsInterface(bytes4 interfaceId)
