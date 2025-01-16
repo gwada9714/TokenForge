@@ -18,9 +18,27 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     >
       <CssBaseline />
       <Header />
-      <Container component="main" sx={{ mt: 4, mb: 4, flex: 1 }}>
-        {children}
-      </Container>
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          pt: { xs: 8, sm: 9, md: 10 }, 
+          pb: { xs: 4, sm: 6 },
+          px: { xs: 2, sm: 3, md: 4 },
+          width: "100%",
+          maxWidth: "100vw",
+          overflowX: "hidden",
+        }}
+      >
+        <Container
+          maxWidth="xl"
+          sx={{
+            height: "100%",
+          }}
+        >
+          {children}
+        </Container>
+      </Box>
       <Footer />
     </Box>
   );
