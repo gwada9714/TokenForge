@@ -30,4 +30,24 @@ export const FACTORY_ABI = [
   'function getTokensByCreator(address creator) view returns (address[])',
   'function tokenDetails(address token) view returns (tuple(string name, string symbol, uint8 decimals, uint256 totalSupply, address owner, bool burnable, bool mintable, bool pausable, uint256 creationTime))',
   'event TokenCreated(address indexed tokenAddress, address indexed owner, string name, string symbol, uint256 totalSupply)'
-] as const; 
+] as const;
+
+// Staking ABI
+export const STAKING_ABI = [
+  // View functions
+  'function stakedAmount(address account) view returns (uint256)',
+  'function pendingRewards(address account) view returns (uint256)',
+  'function totalStaked() view returns (uint256)',
+  'function rewardRate() view returns (uint256)',
+  'function lockPeriod() view returns (uint256)',
+  'function minStakeAmount() view returns (uint256)',
+  
+  // State-changing functions
+  'function stake(uint256 amount) returns (bool)',
+  'function unstake(uint256 amount) returns (bool)',
+  'function claimRewards() returns (bool)',
+  
+  // Events
+  'event StakingAction(address indexed user, string action, uint256 amount, uint256 timestamp)',
+  'event RewardsClaimed(address indexed user, uint256 amount, uint256 timestamp)'
+] as const;
