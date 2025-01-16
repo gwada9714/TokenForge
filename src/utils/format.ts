@@ -29,15 +29,44 @@ export const formatAmount = (amount: string, decimals: number): string => {
 };
 
 /**
+ * Formate un nombre
+ * @param value La valeur à formater
+ * @param decimals Le nombre de décimales (défaut: 2)
+ */
+export const formatNumber = (value: string | number, decimals = 2): string => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '0';
+  
+  if (num > 1000000000) {
+    return (num / 1000000000).toFixed(decimals) + 'B';
+  } else if (num > 1000000) {
+    return (num / 1000000).toFixed(decimals) + 'M';
+  } else if (num > 1000) {
+    return (num / 1000).toFixed(decimals) + 'K';
+  }
+  
+  return num.toFixed(decimals);
+};
+
+/**
  * Formate une date en format local
  * @param date La date à formater
  */
-export const formatDate = (date: string): string => {
-  return new Date(date).toLocaleDateString('fr-FR', {
+export const formatDate = (date: Date): string => {
+  return date.toLocaleDateString('fr-FR', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   });
-}; 
+};
+
+/**
+ * Raccourcit une adresse
+ * @param address L'adresse à raccourcir
+ */
+export const shortenAddress = (address: string): string => {
+  if (!address || address.length < 10) return address;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
