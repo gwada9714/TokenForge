@@ -89,10 +89,11 @@ export const useTokenForgeStats = () => {
         const taxEvent = contract.filters.TaxCollected();
         const events = await contract.queryFilter(taxEvent);
         const taxHistory = events.map((event) => {
-          const { amount, timestamp } = event as unknown as { args: TaxCollectedEvent };
+          const eventData = event as unknown as { args: [string, bigint, bigint] };
+          const [from, amount, timestamp] = eventData.args;
           return {
             timestamp: Number(timestamp),
-            amount: BigInt(amount.toString())
+            amount
           };
         });
 
