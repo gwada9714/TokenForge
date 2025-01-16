@@ -1,77 +1,169 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
-  Stack,
+  Card,
+  CardContent,
   Typography,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Chip,
-  Paper,
-  TableContainer
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Alert,
+  AlertTitle,
+  Stack,
+  Chip
 } from '@mui/material';
-import { TokenConfig } from '@/types/token';
+import { CheckCircle, Error, Warning } from '@mui/icons-material';
+import { useTokenCreation } from '@/store/hooks';
+import { TaxConfig } from '@/types/tokenFeatures';
+import { isAddress } from '@ethersproject/address';
 
-interface TokenVerificationProps {
-  tokenConfig: TokenConfig;
+interface ValidationResult {
+  isValid: boolean;
+  message: string;
+  severity: 'success' | 'error' | 'warning';
 }
 
-const TokenVerification: React.FC<TokenVerificationProps> = React.memo(({ tokenConfig }) => {
-  const tableRows = useMemo(() => [
-    { label: 'Plan', value: <Chip label={tokenConfig.plan} color="error" size="small" /> },
-    { label: 'Nom', value: tokenConfig.name },
-    { label: 'Symbole', value: tokenConfig.symbol },
-    { label: 'Offre Totale', value: tokenConfig.supply },
-    { label: 'Décimales', value: tokenConfig.decimals },
-    {
-      label: 'Fonctionnalités',
-      value: (
-        <Stack direction="row" spacing={1} flexWrap="wrap">
-          {tokenConfig.features?.map((feature) => (
-            <Chip
-              key={feature}
-              label={feature}
-              size="small"
-              color="primary"
-              variant="outlined"
-              sx={{ m: 0.5 }}
-            />
-          ))}
-        </Stack>
-      ),
-    },
-  ], [tokenConfig]);
+export const TokenVerification: React.FC = () => {
+  const { tokenConfig } = useTokenCreation();
+
+  const validateTaxConfig = (taxConfig: TaxConfig): ValidationResult[] => {
+    const results: ValidationResult[] = [];
+
+    if (taxConfig.enabled) {
+      // Vérification des taux
+      const totalTax = taxConfig.buyTax + taxConfig.sellTax + taxConfig.transferTax;
+      if (totalTax > 25) {
+        results.push({
+          isValid: false,
+          message: 'La somme des taxes ne doit pas dépasser 25%',
+          severity: 'error'
+        });
+      }
+
+      // Vérification de la distribution
+      const totalDistribution = 
+        taxConfig.forgeShare + 
+        taxConfig.redistributionShare + 
+        taxConfig.liquidityShare + 
+        taxConfig.burnShare;
+        
+      if (totalDistribution !== 100) {
+        results.push({
+          isValid: false,
+          message: 'La distribution des taxes doit totaliser 100%',
+          severity: 'error'
+        });
+      }
+
+      // Vérification de l'adresse du bénéficiaire
+      if (!isAddress(taxConfig.recipient)) {
+        results.push({
+          isValid: false,
+          message: 'Adresse du bénéficiaire invalide',
+          severity: 'error'
+        });
+      }
+    }
+
+    if (results.length === 0) {
+      results.push({
+        isValid: true,
+        message: 'Configuration des taxes valide',
+        severity: 'success'
+      });
+    }
+
+    return results;
+  };
+
+  const validateTokenConfig = (): ValidationResult[] => {
+    const results: ValidationResult[] = [];
+
+    // Vérification du nom
+    if (!tokenConfig.name || tokenConfig.name.length < 3) {
+      results.push({
+        isValid: false,
+        message: 'Le nom du token doit faire au moins 3 caractères',
+        severity: 'error'
+      });
+    }
+
+    // Vérification du symbole
+    if (!tokenConfig.symbol || tokenConfig.symbol.length < 2) {
+      results.push({
+        isValid: false,
+        message: 'Le symbole du token doit faire au moins 2 caractères',
+        severity: 'error'
+      });
+    }
+
+    // Vérification de la supply
+    if (!tokenConfig.supply || Number(tokenConfig.supply) <= 0) {
+      results.push({
+        isValid: false,
+        message: 'La supply initiale doit être supérieure à 0',
+        severity: 'error'
+      });
+    }
+
+    // Vérification du réseau
+    if (!tokenConfig.network) {
+      results.push({
+        isValid: false,
+        message: 'Veuillez sélectionner un réseau',
+        severity: 'error'
+      });
+    }
+
+    // Vérification de la taxe
+    if (tokenConfig.taxConfig) {
+      results.push(...validateTaxConfig(tokenConfig.taxConfig));
+    }
+
+    return results;
+  };
+
+  const validationResults = validateTokenConfig();
+  const hasErrors = validationResults.some(result => result.severity === 'error');
+  const hasWarnings = validationResults.some(result => result.severity === 'warning');
 
   return (
-    <Stack spacing={3}>
-      <Typography variant="h6" sx={{ mb: 2 }}>Vérification du Token</Typography>
+    <Card>
+      <CardContent>
+        <Stack spacing={3}>
+          <Typography variant="h6" gutterBottom>
+            Vérification du Token
+            <Chip 
+              label={hasErrors ? 'Invalide' : hasWarnings ? 'Avertissements' : 'Valide'} 
+              color={hasErrors ? 'error' : hasWarnings ? 'warning' : 'success'}
+              size="small"
+              sx={{ ml: 2 }}
+            />
+          </Typography>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Paramètre</TableCell>
-              <TableCell>Valeur</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {tableRows.map((row, index) => (
-              <TableRow key={index}>
-                <TableCell>{row.label}</TableCell>
-                <TableCell>{row.value}</TableCell>
-              </TableRow>
+          {hasErrors && (
+            <Alert severity="error">
+              <AlertTitle>Erreurs détectées</AlertTitle>
+              Veuillez corriger les erreurs avant de déployer le token
+            </Alert>
+          )}
+
+          <List>
+            {validationResults.map((result, index) => (
+              <ListItem key={index}>
+                <ListItemIcon>
+                  {result.severity === 'success' && <CheckCircle color="success" />}
+                  {result.severity === 'error' && <Error color="error" />}
+                  {result.severity === 'warning' && <Warning color="warning" />}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={result.message}
+                />
+              </ListItem>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-        Veuillez vérifier attentivement tous les paramètres avant le déploiement.
-        Une fois le token déployé, certains paramètres ne pourront plus être modifiés.
-      </Typography>
-    </Stack>
+          </List>
+        </Stack>
+      </CardContent>
+    </Card>
   );
-});
-
-export default TokenVerification;
+};

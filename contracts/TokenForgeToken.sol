@@ -7,38 +7,53 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/ITaxDistributor.sol";
+import "./TokenForgeTaxSystem.sol";
 
 contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable {
     using Math for uint256;
 
     uint8 private immutable _decimals;
-    ITaxDistributor public immutable taxDistributor;
-    uint256 public immutable taxFee;
-    uint256 public immutable maxTxAmount;
-    uint256 public immutable maxWalletSize;
+    uint256 public maxTxAmount;
+    uint256 public maxWalletSize;
+    address public immutable taxSystem;
+
+    event MaxTxAmountUpdated(uint256 newAmount);
+    event MaxWalletSizeUpdated(uint256 newSize);
+    
+    modifier onlyValidRecipient(address to) {
+        require(to != address(0), "Transfer to zero address");
+        _;
+    }
+    
+    modifier respectsMaxTxAmount(uint256 amount) {
+        require(amount <= maxTxAmount, "Transfer amount exceeds maxTxAmount");
+        _;
+    }
+    
+    modifier respectsMaxWalletSize(address to, uint256 amount) {
+        require(
+            balanceOf(to) + amount <= maxWalletSize,
+            "Transfer would exceed maxWalletSize"
+        );
+        _;
+    }
 
     constructor(
-        string memory name,
-        string memory symbol,
+        string memory name_,
+        string memory symbol_,
         uint8 decimals_,
-        uint256 initialSupply,
+        uint256 initialSupply_,
         uint256 maxTxAmount_,
         uint256 maxWalletSize_,
-        uint256 taxFee_,
-        address taxDistributor_
-    ) ERC20(name, symbol) {
-        require(taxFee_ <= 1000, "TokenForgeToken: tax fee cannot exceed 10%");
-        require(taxDistributor_ != address(0), "TokenForgeToken: tax distributor cannot be zero address");
-        require(maxTxAmount_ > 0, "TokenForgeToken: max tx amount must be greater than 0");
-        require(maxWalletSize_ > 0, "TokenForgeToken: max wallet size must be greater than 0");
-
+        address taxSystem_
+    ) ERC20(name_, symbol_) {
+        require(taxSystem_ != address(0), "Tax system cannot be zero address");
+        
         _decimals = decimals_;
-        taxFee = taxFee_;
+        _mint(msg.sender, initialSupply_);
         maxTxAmount = maxTxAmount_;
         maxWalletSize = maxWalletSize_;
-        taxDistributor = ITaxDistributor(taxDistributor_);
-
-        _mint(msg.sender, initialSupply);
+        taxSystem = taxSystem_;
     }
 
     function decimals() public view virtual override returns (uint8) {
@@ -59,39 +74,40 @@ contract TokenForgeToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable {
         uint256 amount
     ) internal virtual override(ERC20, ERC20Pausable) {
         super._beforeTokenTransfer(from, to, amount);
-
-        if (from != address(0) && to != address(0)) {
-            require(amount <= maxTxAmount, "TokenForgeToken: transfer amount exceeds maxTxAmount");
-            require(
-                balanceOf(to) + amount <= maxWalletSize,
-                "TokenForgeToken: recipient balance would exceed maxWalletSize"
-            );
-        }
     }
 
     function _transfer(
-        address from,
-        address to,
+        address sender,
+        address recipient,
         uint256 amount
-    ) internal virtual override {
-        require(from != address(0), "ERC20: transfer from the zero address");
-        require(to != address(0), "ERC20: transfer to the zero address");
+    ) internal virtual override 
+        onlyValidRecipient(recipient)
+        respectsMaxTxAmount(amount)
+        respectsMaxWalletSize(recipient, amount)
+    {
+        // Calculate taxes
+        (uint256 baseTax, uint256 additionalTax) = TokenForgeTaxSystem(taxSystem).calculateTaxAmounts(address(this), amount);
+        uint256 totalTax = baseTax + additionalTax;
+        uint256 transferAmount = amount - totalTax;
 
-        _beforeTokenTransfer(from, to, amount);
-
-        uint256 fromBalance = balanceOf(from);
-        require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
-
-        uint256 taxAmount = 0;
-        if (from != owner() && to != owner() && taxFee > 0) {
-            taxAmount = amount.mulDiv(taxFee, 10000);
-            super._transfer(from, address(taxDistributor), taxAmount);
-            taxDistributor.distributeTax(taxAmount);
+        // Process tax collection
+        if (totalTax > 0) {
+            super._transfer(sender, address(this), totalTax);
+            _approve(address(this), taxSystem, totalTax);
+            TokenForgeTaxSystem(taxSystem).processTax(address(this), totalTax, sender, recipient);
         }
 
-        uint256 transferAmount = amount - taxAmount;
-        super._transfer(from, to, transferAmount);
+        // Transfer remaining amount to recipient
+        super._transfer(sender, recipient, transferAmount);
+    }
 
-        _afterTokenTransfer(from, to, transferAmount);
+    function setMaxTxAmount(uint256 newMaxTxAmount) external onlyOwner {
+        maxTxAmount = newMaxTxAmount;
+        emit MaxTxAmountUpdated(newMaxTxAmount);
+    }
+
+    function setMaxWalletSize(uint256 newMaxWalletSize) external onlyOwner {
+        maxWalletSize = newMaxWalletSize;
+        emit MaxWalletSizeUpdated(newMaxWalletSize);
     }
 }

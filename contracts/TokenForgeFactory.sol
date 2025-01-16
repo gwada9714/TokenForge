@@ -2,17 +2,17 @@
 pragma solidity ^0.8.19;
 
 import "./TokenForgeToken.sol";
+import "./TokenForgeTaxSystem.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TokenForgeFactory is Ownable {
     address public immutable tknToken;
     address public immutable treasury;
-    address public immutable taxDistributor;
+    address public immutable taxSystem;
     
     // Service tiers configuration
     uint256 public constant BASIC_TIER_PRICE = 100 * 10**18; // 100 TKN
-    uint256 public constant PREMIUM_TIER_PRICE = 1000 * 10**18; // 1000 TKN
 
     // Discount rates in basis points (1% = 100)
     uint256 public constant TKN_PAYMENT_DISCOUNT = 2000; // 20% discount when paying with TKN
@@ -24,7 +24,7 @@ contract TokenForgeFactory is Ownable {
         uint256 totalSupply;
         address owner;
         uint256 creationTime;
-        bool isPremium;
+        uint256 additionalTaxRate;
     }
 
     // Mapping of created tokens
@@ -37,16 +37,16 @@ contract TokenForgeFactory is Ownable {
         string name,
         string symbol,
         uint256 totalSupply,
-        bool isPremium
+        uint256 additionalTaxRate
     );
 
-    constructor(address _tknToken, address _treasury, address _taxDistributor) {
+    constructor(address _tknToken, address _treasury, address _taxSystem) {
         require(_tknToken != address(0), "TokenForge: TKN token address cannot be zero");
         require(_treasury != address(0), "TokenForge: Treasury address cannot be zero");
-        require(_taxDistributor != address(0), "TokenForge: Tax distributor address cannot be zero");
+        require(_taxSystem != address(0), "TokenForge: Tax system address cannot be zero");
         tknToken = _tknToken;
         treasury = _treasury;
-        taxDistributor = _taxDistributor;
+        taxSystem = _taxSystem;
     }
 
     function createToken(
@@ -56,15 +56,14 @@ contract TokenForgeFactory is Ownable {
         uint256 initialSupply,
         uint256 maxTxAmount,
         uint256 maxWalletSize,
-        uint256 taxFee,
-        bool isPremium
+        uint256 additionalTaxRate
     ) external {
-        uint256 price = isPremium ? PREMIUM_TIER_PRICE : BASIC_TIER_PRICE;
+        uint256 price = BASIC_TIER_PRICE;
         
         // Handle payment
         IERC20(tknToken).transferFrom(msg.sender, treasury, price);
 
-        // Create new token
+        // Create new token with tax configuration
         TokenForgeToken newToken = new TokenForgeToken(
             name,
             symbol,
@@ -72,8 +71,14 @@ contract TokenForgeFactory is Ownable {
             initialSupply,
             maxTxAmount,
             maxWalletSize,
-            taxFee,
-            taxDistributor
+            taxSystem
+        );
+
+        // Configure tax for the new token
+        TokenForgeTaxSystem(taxSystem).configureTax(
+            address(newToken),
+            additionalTaxRate,
+            msg.sender
         );
 
         // Transfer ownership to the creator
@@ -87,7 +92,7 @@ contract TokenForgeFactory is Ownable {
             totalSupply: initialSupply,
             owner: msg.sender,
             creationTime: block.timestamp,
-            isPremium: isPremium
+            additionalTaxRate: additionalTaxRate
         });
 
         creatorTokens[msg.sender].push(tokenInfo);
@@ -99,7 +104,7 @@ contract TokenForgeFactory is Ownable {
             name,
             symbol,
             initialSupply,
-            isPremium
+            additionalTaxRate
         );
     }
 
@@ -113,14 +118,6 @@ contract TokenForgeFactory is Ownable {
 
     function getTokenCount() external view returns (uint256) {
         return allTokens.length;
-    }
-
-    function calculatePrice(bool isPremium, bool payWithTKN) public pure returns (uint256) {
-        uint256 basePrice = isPremium ? PREMIUM_TIER_PRICE : BASIC_TIER_PRICE;
-        if (payWithTKN) {
-            return basePrice - (basePrice * TKN_PAYMENT_DISCOUNT / 10000);
-        }
-        return basePrice;
     }
 
     function withdrawFees() external onlyOwner {

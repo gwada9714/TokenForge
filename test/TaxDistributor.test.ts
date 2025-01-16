@@ -15,8 +15,8 @@ describe("TaxDistributor", () => {
     let user1: SignerWithAddress;
     let user2: SignerWithAddress;
 
-    const INITIAL_SUPPLY = ethers.utils.parseEther("1000000");
-    const TEST_TRANSFER = ethers.utils.parseEther("1000");
+    const INITIAL_SUPPLY = ethers.BigNumber.from("1000000000000000000000000");
+    const TEST_TRANSFER = ethers.BigNumber.from("1000000000000000000000");
 
     beforeEach(async () => {
         [owner, treasury, development, buyback, staking, user1, user2] = await ethers.getSigners();

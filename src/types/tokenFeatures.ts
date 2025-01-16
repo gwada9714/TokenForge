@@ -8,6 +8,12 @@ export interface TaxConfig {
   redistributionShare: number;
   liquidityShare: number;
   burnShare: number;
+  distribution: {
+    treasury: number;
+    development: number;
+    buyback: number;
+    staking: number;
+  };
 }
 
 export interface LiquidityLock {

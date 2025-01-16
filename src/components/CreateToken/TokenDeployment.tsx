@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import {
   Stack,
   Button,
@@ -7,13 +7,13 @@ import {
   Alert,
   AlertTitle,
   Box,
-  Snackbar
+  Snackbar,
+  CircularProgress
 } from '@mui/material';
-import { TokenConfig } from '@/types/token';
-
-interface TokenDeploymentProps {
-  tokenConfig: TokenConfig;
-}
+import { useTokenCreation } from '@/store/hooks';
+import { startDeployment, deploymentSuccess, deploymentError, setDeploymentStatus } from '@/store/slices/tokenCreationSlice';
+import { useWallet } from '@/store/hooks';
+import { deployToken } from '@/services/tokenDeployment';
 
 const deploymentSteps = [
   'Préparation du contrat',
@@ -21,70 +21,87 @@ const deploymentSteps = [
   'Déploiement sur la blockchain',
   'Vérification du contrat',
   'Finalisation',
-];
+] as const;
 
-const TokenDeployment: React.FC<TokenDeploymentProps> = React.memo(({ tokenConfig }) => {
-  const [deploymentState, setDeploymentState] = useState({
-    isDeploying: false,
-    deploymentStep: 0,
-    error: null as string | null,
-    snackbarOpen: false,
-    snackbarMessage: ''
-  });
+export const TokenDeployment: React.FC = () => {
+  const { tokenConfig, isDeploying, deploymentError: error, deploymentStatus, dispatch } = useTokenCreation();
+  const { address, isConnected, chainId } = useWallet();
 
   const handleDeploy = useCallback(async () => {
-    setDeploymentState(prev => ({ ...prev, isDeploying: true, error: null }));
+    if (!isConnected || !address) {
+      dispatch(deploymentError('Veuillez connecter votre portefeuille'));
+      return;
+    }
+
+    if (!tokenConfig.network || tokenConfig.network.chain.id !== chainId) {
+      dispatch(deploymentError('Veuillez sélectionner le bon réseau'));
+      return;
+    }
+
+    dispatch(startDeployment());
 
     try {
-      console.log('Deploying token with config:', tokenConfig);
-      
       for (let i = 0; i < deploymentSteps.length; i++) {
-        setDeploymentState(prev => ({ ...prev, deploymentStep: i }));
+        dispatch(setDeploymentStatus({
+          step: i,
+          message: deploymentSteps[i]
+        }));
+
+        // Simulation du déploiement pour l'exemple
         await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Dans un cas réel, nous utiliserions le service de déploiement
+        // const result = await deployToken(tokenConfig, address);
       }
 
-      setDeploymentState(prev => ({
-        ...prev,
-        snackbarMessage: 'Déploiement réussi!',
-        snackbarOpen: true
-      }));
+      dispatch(deploymentSuccess());
       
     } catch (err) {
-      setDeploymentState(prev => ({
-        ...prev,
-        error: err instanceof Error ? err.message : 'Une erreur est survenue lors du déploiement',
-        snackbarMessage: 'Erreur lors du déploiement',
-        snackbarOpen: true
-      }));
-    } finally {
-      setDeploymentState(prev => ({ ...prev, isDeploying: false }));
+      dispatch(deploymentError(err instanceof Error ? err.message : 'Une erreur est survenue lors du déploiement'));
     }
-  }, [tokenConfig]);
+  }, [tokenConfig, dispatch, address, isConnected, chainId]);
 
-  const handleCloseSnackbar = useCallback(() => {
-    setDeploymentState(prev => ({ ...prev, snackbarOpen: false }));
-  }, []);
+  const progress = deploymentStatus 
+    ? ((deploymentStatus.step + 1) * (100 / deploymentSteps.length))
+    : 0;
 
-  const progress = useMemo(() => {
-    return (deploymentState.deploymentStep + 1) * (100 / deploymentSteps.length);
-  }, [deploymentState.deploymentStep]);
+  const canDeploy = isConnected && 
+    address && 
+    tokenConfig.network && 
+    tokenConfig.network.chain.id === chainId;
 
   return (
     <Stack spacing={3}>
-      <Typography variant="h6" sx={{ mb: 2 }}>Déploiement du Token</Typography>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Déploiement du Token
+      </Typography>
 
-      {deploymentState.error && (
+      {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           <AlertTitle>Erreur</AlertTitle>
-          {deploymentState.error}
+          {error}
+        </Alert>
+      )}
+
+      {!isConnected && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <AlertTitle>Attention</AlertTitle>
+          Veuillez connecter votre portefeuille pour déployer le token
+        </Alert>
+      )}
+
+      {isConnected && tokenConfig.network && tokenConfig.network.chain.id !== chainId && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <AlertTitle>Attention</AlertTitle>
+          Veuillez changer de réseau pour {tokenConfig.network.name}
         </Alert>
       )}
 
       <Box sx={{ width: '100%', mb: 2 }}>
-        {deploymentState.isDeploying && (
+        {isDeploying && (
           <>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-              {deploymentSteps[deploymentState.deploymentStep]}
+              {deploymentStatus?.message || 'Déploiement en cours...'}
             </Typography>
             <LinearProgress 
               variant="determinate" 
@@ -98,24 +115,17 @@ const TokenDeployment: React.FC<TokenDeploymentProps> = React.memo(({ tokenConfi
         variant="contained"
         color="primary"
         onClick={handleDeploy}
-        disabled={deploymentState.isDeploying}
-        sx={{ mt: 2 }}
+        disabled={isDeploying || !canDeploy}
+        startIcon={isDeploying ? <CircularProgress size={20} color="inherit" /> : null}
       >
-        {deploymentState.isDeploying ? 'Déploiement en cours...' : 'Déployer le Token'}
+        {isDeploying ? 'Déploiement en cours...' : 'Déployer le Token'}
       </Button>
 
-      <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
-        Le déploiement peut prendre quelques minutes. Veuillez ne pas fermer cette fenêtre.
-      </Typography>
-
-      <Snackbar
-        open={deploymentState.snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        message={deploymentState.snackbarMessage}
-      />
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="body2" color="textSecondary">
+          * Le déploiement nécessite des frais de gas sur le réseau sélectionné
+        </Typography>
+      </Box>
     </Stack>
   );
-});
-
-export default TokenDeployment;
+};
