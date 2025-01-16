@@ -64,19 +64,19 @@ const colors = {
     hover: "#FF5A40",
   },
   background: {
-    default: "#ffffff",
-    paper: "#f8fafc",
+    default: "#F5F5F5",
+    paper: "#FFFFFF",
     dark: "#1e293b",
   },
   text: {
-    primary: "#1e293b",
-    secondary: "#64748b",
+    primary: "#1F2937",
+    secondary: "#6B7280",
     light: "#f8fafc",
   },
   gradient: {
-    primary: "linear-gradient(45deg, #182038 30%, #2a3654 90%)",
-    secondary: "linear-gradient(45deg, #D97706 30%, #f59e0b 90%)",
-    forge: "linear-gradient(45deg, #FF6B2B 30%, #FF8C5A 90%)",
+    primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
+    secondary: "linear-gradient(135deg, #D97706 0%, #f59e0b 100%)",
+    forge: "linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%)",
   },
   warning: {
     main: "#f59e0b",
@@ -166,28 +166,23 @@ const components: Components<Omit<Theme, "components">> = {
 };
 
 const themeOptions: ThemeOptions = {
-  palette: {
-    primary: colors.primary,
-    secondary: colors.secondary,
-    success: colors.success,
-    warning: colors.warning,
-    background: colors.background,
-    text: colors.text,
-  },
   breakpoints: {
     values: {
       xs: 0,
       sm: 600,
-      md: 900,
-      lg: 1200,
-      xl: 1536,
+      md: 960,
+      lg: 1280,
+      xl: 1920,
     },
   },
-  gradient: {
-    primary: "linear-gradient(45deg, #182038 30%, #2a3654 90%)",
-    secondary: "linear-gradient(45deg, #D97706 30%, #f59e0b 90%)",
-    forge: "linear-gradient(45deg, #FF6B2B 30%, #FF8C5A 90%)",
+  palette: {
+    primary: colors.primary,
+    secondary: colors.secondary,
+    success: colors.success,
+    background: colors.background,
+    text: colors.text,
   },
+  gradient: colors.gradient,
   typography: {
     fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
     h1: {

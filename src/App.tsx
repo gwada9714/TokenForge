@@ -2,8 +2,8 @@ import React from "react";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "styled-components";
-import { theme } from "./theme/styledTheme";
+import { ThemeProvider } from "@mui/material/styles";
+import { forgeTheme } from "./theme/forge-theme";
 import { GlobalStyle } from "./styles/GlobalStyle";
 import HomePage from "./pages/Home";
 import TokenWizard from "./components/TokenWizard/TokenWizard";
@@ -16,7 +16,7 @@ import Pricing from "./pages/Pricing";
 const App: React.FC = () => {
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={forgeTheme}>
         <GlobalStyle />
         <Routes>
           <Route path="/" element={<HomePage />} />
