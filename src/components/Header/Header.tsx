@@ -28,6 +28,14 @@ const Header = () => {
     setAnchorEl(null);
   };
 
+  const menuItems = [
+    { to: '/', label: 'Accueil' },
+    { to: '/create', label: 'Créer un Token' },
+    { to: '/my-tokens', label: 'Mes Tokens' },
+    { to: '/pricing', label: 'Plans & Tarifs' },
+    { to: '/staking', label: 'Staking' },
+  ];
+
   const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => (
     <MuiLink
       component={Link}
@@ -78,30 +86,25 @@ const Header = () => {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
-              <MenuItem component={Link} to="/create" onClick={handleMenuClose}>
-                Forger un Token
-              </MenuItem>
-              <MenuItem component={Link} to="/tokens" onClick={handleMenuClose}>
-                Mes Tokens
-              </MenuItem>
-              <MenuItem component={Link} to="/plans" onClick={handleMenuClose}>
-                Plans & Tarifs
-              </MenuItem>
-              <MenuItem component={Link} to="/staking" onClick={handleMenuClose}>
-                Staking
-              </MenuItem>
-              <MenuItem component={Link} to="/launchpad" onClick={handleMenuClose}>
-                Launchpad
-              </MenuItem>
+              {menuItems.map((item) => (
+                <MenuItem
+                  key={item.to}
+                  component={Link}
+                  to={item.to}
+                  onClick={handleMenuClose}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
             </Menu>
           </>
         ) : (
           <Stack direction="row" spacing={4} alignItems="center">
-            <NavLink to="/create">Forger un Token</NavLink>
-            <NavLink to="/tokens">Mes Tokens</NavLink>
-            <NavLink to="/plans">Plans & Tarifs</NavLink>
-            <NavLink to="/staking">Staking</NavLink>
-            <NavLink to="/launchpad">Launchpad</NavLink>
+            {menuItems.map((item) => (
+              <NavLink key={item.to} to={item.to}>
+                {item.label}
+              </NavLink>
+            ))}
           </Stack>
         )}
 
