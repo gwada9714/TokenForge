@@ -1,2 +1,2 @@
 #!/bin/sh
-npx lint-staged -c .lintstagedrc.cjs --no-stash
+npx lint-staged -c .lintstagedrc.cjs
