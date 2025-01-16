@@ -17,7 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { utils } from 'ethers';
+import { formatEther } from 'ethers';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import PaidIcon from '@mui/icons-material/Paid';
@@ -67,8 +67,8 @@ const ProfitDashboard: React.FC = () => {
     );
   }
 
-  const formattedTaxCollected = utils.formatEther(totalTaxCollected || '0');
-  const formattedTVL = utils.formatEther(totalValueLocked || '0');
+  const formattedTaxCollected = formatEther(totalTaxCollected || 0n);
+  const formattedTVL = formatEther(totalValueLocked || 0n);
 
   return (
     <Box p={3}>
@@ -132,16 +132,16 @@ const ProfitDashboard: React.FC = () => {
               </Typography>
               <Box mt={2}>
                 <Typography variant="body1">
-                  TokenForge Treasury: {utils.formatEther(totalTaxToForge || '0')} TKN
+                  TokenForge Treasury: {formatEther(totalTaxToForge || 0n)} TKN
                 </Typography>
                 <Typography variant="body1">
-                  Development Fund: {utils.formatEther(totalTaxToDevFund || '0')} TKN
+                  Development Fund: {formatEther(totalTaxToDevFund || 0n)} TKN
                 </Typography>
                 <Typography variant="body1">
-                  Buyback & Burn: {utils.formatEther(totalTaxToBuyback || '0')} TKN
+                  Buyback & Burn: {formatEther(totalTaxToBuyback || 0n)} TKN
                 </Typography>
                 <Typography variant="body1">
-                  Staking Rewards: {utils.formatEther(totalTaxToStaking || '0')} TKN
+                  Staking Rewards: {formatEther(totalTaxToStaking || 0n)} TKN
                 </Typography>
               </Box>
             </CardContent>
@@ -164,7 +164,7 @@ const ProfitDashboard: React.FC = () => {
                 </Typography>
                 <Typography variant="body1">
                   Treasury Growth Rate: {
-                    ((Number(utils.formatEther(totalTaxToForge || '0')) / 
+                    ((Number(formatEther(totalTaxToForge || 0n)) / 
                     Number(formattedTaxCollected)) * 100).toFixed(2)
                   }%
                 </Typography>

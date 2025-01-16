@@ -39,8 +39,8 @@ export const compareValues = (
   operator: '>' | '<' | '>=' | '<=' | '==' = '>'
 ): boolean => {
   // Convertir les BigNumber en bigint si nécessaire
-  const v1 = typeof value1 === 'bigint' ? value1 : ethers.BigNumber.from(value1).toBigInt();
-  const v2 = typeof value2 === 'bigint' ? value2 : ethers.BigNumber.from(value2).toBigInt();
+  const v1 = typeof value1 === 'bigint' ? value1 : BigInt(value1.toString());
+  const v2 = typeof value2 === 'bigint' ? value2 : BigInt(value2.toString());
 
   switch (operator) {
     case '>':

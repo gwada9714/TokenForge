@@ -62,12 +62,10 @@ export const CreatePool: React.FC = () => {
 
     try {
       await createPool(
-        formData.token,
+        formData.token as `0x${string}`,
         formData.tokenPrice,
         formData.hardCap,
         formData.softCap,
-        formData.minContribution,
-        formData.maxContribution,
         startTimestamp,
         endTimestamp
       );

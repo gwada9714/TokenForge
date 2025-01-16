@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useWeb3Provider } from './useWeb3Provider';
 import { TKN_TOKEN_ADDRESS } from '@/constants/tokenforge';
-import { Contract, BigNumber } from 'ethers';
+import { Contract, type BigNumberish } from 'ethers';
 
 const TOKEN_FORGE_ABI = [
   'function totalTaxCollected() view returns (uint256)',
@@ -15,29 +15,29 @@ const TOKEN_FORGE_ABI = [
 ] as const;
 
 interface TokenForgeStats {
-  totalTaxCollected: BigNumber;
-  totalTaxToForge: BigNumber;
-  totalTaxToDevFund: BigNumber;
-  totalTaxToBuyback: BigNumber;
-  totalTaxToStaking: BigNumber;
+  totalTaxCollected: bigint;
+  totalTaxToForge: bigint;
+  totalTaxToDevFund: bigint;
+  totalTaxToBuyback: bigint;
+  totalTaxToStaking: bigint;
   totalTransactions: number;
-  totalValueLocked: BigNumber;
+  totalValueLocked: bigint;
   isLoading: boolean;
   taxHistory: Array<{
     timestamp: number;
-    amount: BigNumber;
+    amount: bigint;
   }>;
 }
 
 export const useTokenForgeStats = () => {
   const [stats, setStats] = useState<TokenForgeStats>({
-    totalTaxCollected: BigNumber.from(0),
-    totalTaxToForge: BigNumber.from(0),
-    totalTaxToDevFund: BigNumber.from(0),
-    totalTaxToBuyback: BigNumber.from(0),
-    totalTaxToStaking: BigNumber.from(0),
+    totalTaxCollected: 0n,
+    totalTaxToForge: 0n,
+    totalTaxToDevFund: 0n,
+    totalTaxToBuyback: 0n,
+    totalTaxToStaking: 0n,
     totalTransactions: 0,
-    totalValueLocked: BigNumber.from(0),
+    totalValueLocked: 0n,
     isLoading: true,
     taxHistory: []
   });
@@ -84,19 +84,22 @@ export const useTokenForgeStats = () => {
         const events = await contract.queryFilter(taxEvent);
         const taxHistory = events.map((event) => ({
           timestamp: event.args?.timestamp.toNumber(),
-          amount: event.args?.amount
+          amount: event.args?.amount.toString()
         }));
 
         setStats({
-          totalTaxCollected,
-          totalTaxToForge,
-          totalTaxToDevFund,
-          totalTaxToBuyback,
-          totalTaxToStaking,
+          totalTaxCollected: BigInt(totalTaxCollected.toString()),
+          totalTaxToForge: BigInt(totalTaxToForge.toString()),
+          totalTaxToDevFund: BigInt(totalTaxToDevFund.toString()),
+          totalTaxToBuyback: BigInt(totalTaxToBuyback.toString()),
+          totalTaxToStaking: BigInt(totalTaxToStaking.toString()),
           totalTransactions,
-          totalValueLocked,
+          totalValueLocked: BigInt(totalValueLocked.toString()),
           isLoading: false,
-          taxHistory
+          taxHistory: taxHistory.map((event) => ({
+            timestamp: event.timestamp,
+            amount: BigInt(event.amount)
+          }))
         });
       } catch (error) {
         console.error('Error fetching token stats:', error);
