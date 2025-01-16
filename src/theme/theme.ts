@@ -1,30 +1,24 @@
-import { extendTheme } from '@chakra-ui/react';
+import { createTheme } from '@mui/material/styles';
 
-const theme = extendTheme({
-  colors: {
+const theme = createTheme({
+  palette: {
     primary: {
-      DEFAULT: '#182038',
+      main: '#182038',
       light: '#2a3654',
       dark: '#0c1019',
     },
     secondary: {
-      DEFAULT: '#D97706',
+      main: '#D97706',
       light: '#f59e0b',
       dark: '#b45309',
     },
-    tertiary: {
-      DEFAULT: '#F5F5F5',
-      light: '#FFFFFF',
-      dark: '#E5E5E5',
+    background: {
+      default: '#F5F5F5',
+      paper: '#FFFFFF',
     },
     text: {
-      light: '#FFFFFF',
-      dark: '#1F2937',
-      muted: '#6B7280',
-    },
-    gradient: {
-      primary: 'linear-gradient(45deg, #182038 0%, #2a3654 100%)',
-      secondary: 'linear-gradient(45deg, #D97706 0%, #f59e0b 100%)',
+      primary: '#182038',
+      secondary: '#666666',
     },
     success: {
       main: '#22C55E',
@@ -32,62 +26,76 @@ const theme = extendTheme({
       dark: '#16A34A',
     },
   },
-  fonts: {
-    heading: 'Montserrat, system-ui, sans-serif',
-    body: 'Open Sans, system-ui, sans-serif',
+  typography: {
+    fontFamily: 'Open Sans, system-ui, sans-serif',
+    h1: {
+      fontFamily: 'Montserrat, system-ui, sans-serif',
+      fontWeight: 'bold',
+    },
+    h2: {
+      fontFamily: 'Montserrat, system-ui, sans-serif',
+      fontWeight: 'bold',
+    },
+    h3: {
+      fontFamily: 'Montserrat, system-ui, sans-serif',
+      fontWeight: 'bold',
+    },
+    h4: {
+      fontFamily: 'Montserrat, system-ui, sans-serif',
+      fontWeight: 'bold',
+    },
+    h5: {
+      fontFamily: 'Montserrat, system-ui, sans-serif',
+      fontWeight: 'bold',
+    },
+    h6: {
+      fontFamily: 'Montserrat, system-ui, sans-serif',
+      fontWeight: 'bold',
+    },
   },
   components: {
-    Button: {
-      baseStyle: {
-        fontWeight: 'semibold',
-        borderRadius: 'md',
-        transition: 'all 0.2s',
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontWeight: 'semibold',
+          borderRadius: '8px',
+          transition: 'all 0.2s',
+        },
       },
       variants: {
         primary: {
-          bg: 'primary.DEFAULT',
-          color: 'text.light',
-          _hover: {
-            bg: 'primary.dark',
-            transform: 'translateY(-1px)',
+          styleOverrides: {
+            root: {
+              backgroundColor: '#182038',
+              color: '#FFFFFF',
+              '&:hover': {
+                backgroundColor: '#0c1019',
+                transform: 'translateY(-1px)',
+              },
+            },
           },
         },
         secondary: {
-          bg: 'secondary.DEFAULT',
-          color: 'text.light',
-          _hover: {
-            bg: 'secondary.dark',
-            transform: 'translateY(-1px)',
+          styleOverrides: {
+            root: {
+              backgroundColor: '#D97706',
+              color: '#FFFFFF',
+              '&:hover': {
+                backgroundColor: '#b45309',
+                transform: 'translateY(-1px)',
+              },
+            },
           },
         },
       },
     },
-    Text: {
-      baseStyle: {
-        color: 'text.dark',
-        fontFamily: 'body',
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          color: '#1F2937',
+        },
       },
     },
-    Heading: {
-      baseStyle: {
-        color: 'text.dark',
-        fontFamily: 'heading',
-        fontWeight: 'bold',
-      },
-    },
-  },
-  styles: {
-    global: {
-      body: {
-        bg: 'tertiary.DEFAULT',
-        color: 'text.dark',
-        fontFamily: 'body',
-      },
-    },
-  },
-  config: {
-    initialColorMode: 'light',
-    useSystemColorMode: false,
   },
 });
 
