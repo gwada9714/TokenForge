@@ -63,16 +63,16 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
       </Box>
 
       <Box mb={6}>
-        <Typography variant="subtitle1" mb={2}>
-          Your Stake
-        </Typography>
-        <Stack direction="row" justifyContent="space-between" mb={2}>
-          <Typography>Staked Amount:</Typography>
-          <Typography>{stakedAmount} {tokenSymbol}</Typography>
-        </Stack>
-        <Stack direction="row" justifyContent="space-between" mb={2}>
-          <Typography>Pending Rewards:</Typography>
-          <Typography>{pendingRewards} {tokenSymbol}</Typography>
+        <Stack spacing={2}>
+          <Typography component="div" variant="body1">
+            Total Staked: {stakingStats?.totalStaked ?? '0'} {tokenSymbol}
+          </Typography>
+          <Typography component="div" variant="body1">
+            Your Stake: {stakedAmount ?? '0'} {tokenSymbol}
+          </Typography>
+          <Typography component="div" variant="body1">
+            Pending Rewards: {pendingRewards ?? '0'} {tokenSymbol}
+          </Typography>
         </Stack>
       </Box>
 

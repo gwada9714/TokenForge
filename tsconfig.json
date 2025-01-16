@@ -12,16 +12,18 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
+    "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "allowJs": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "types": ["vite/client", "node"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@utils/*": ["src/utils/*"],
+      "@constants/*": ["src/constants/*"],
+      "@theme/*": ["src/theme/*"]
     }
   },
   "include": ["src"],

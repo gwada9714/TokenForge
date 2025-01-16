@@ -16,6 +16,14 @@ export const TREASURY_ADDRESS: { [chainId: number]: Address } = {
   43114: '0x...' as Address,
 };
 
+// Adresses du contrat de gouvernance par réseau
+export const GOVERNANCE_ADDRESS: { [chainId: number]: Address } = {
+  1: '0x...' as Address,
+  56: '0x...' as Address,
+  137: '0x...' as Address,
+  43114: '0x...' as Address,
+};
+
 // Prix des niveaux de service (en TKN)
 export const BASIC_TIER_PRICE = BigInt(100 * 10**18); // 100 TKN
 export const PREMIUM_TIER_PRICE = BigInt(1000 * 10**18); // 1000 TKN
