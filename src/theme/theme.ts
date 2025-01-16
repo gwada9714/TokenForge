@@ -1,61 +1,94 @@
-import { tokens } from './tokens';
+import { extendTheme } from '@chakra-ui/react';
 
-const theme = {
-  ...tokens,
+const theme = extendTheme({
+  colors: {
+    primary: {
+      DEFAULT: '#182038',
+      light: '#2a3654',
+      dark: '#0c1019',
+    },
+    secondary: {
+      DEFAULT: '#D97706',
+      light: '#f59e0b',
+      dark: '#b45309',
+    },
+    tertiary: {
+      DEFAULT: '#F5F5F5',
+      light: '#FFFFFF',
+      dark: '#E5E5E5',
+    },
+    text: {
+      light: '#FFFFFF',
+      dark: '#1F2937',
+      muted: '#6B7280',
+    },
+    gradient: {
+      primary: 'linear-gradient(45deg, #182038 0%, #2a3654 100%)',
+      secondary: 'linear-gradient(45deg, #D97706 0%, #f59e0b 100%)',
+    },
+    success: {
+      main: '#22C55E',
+      light: '#4ADE80',
+      dark: '#16A34A',
+    },
+  },
+  fonts: {
+    heading: 'Montserrat, system-ui, sans-serif',
+    body: 'Open Sans, system-ui, sans-serif',
+  },
   components: {
-    button: {
-      primary: {
-        backgroundColor: tokens.colors.secondary.main,
-        color: tokens.colors.text.light,
-        '&:hover': {
-          backgroundColor: tokens.colors.secondary.light,
-        },
+    Button: {
+      baseStyle: {
+        fontWeight: 'semibold',
+        borderRadius: 'md',
+        transition: 'all 0.2s',
       },
-      secondary: {
-        backgroundColor: 'transparent',
-        border: `2px solid ${tokens.colors.secondary.main}`,
-        color: tokens.colors.secondary.main,
-        '&:hover': {
-          backgroundColor: tokens.colors.secondary.main,
-          color: tokens.colors.text.light,
+      variants: {
+        primary: {
+          bg: 'primary.DEFAULT',
+          color: 'text.light',
+          _hover: {
+            bg: 'primary.dark',
+            transform: 'translateY(-1px)',
+          },
+        },
+        secondary: {
+          bg: 'secondary.DEFAULT',
+          color: 'text.light',
+          _hover: {
+            bg: 'secondary.dark',
+            transform: 'translateY(-1px)',
+          },
         },
       },
     },
-    card: {
-      backgroundColor: tokens.colors.background.paper,
-      borderRadius: tokens.borderRadius.lg,
-      padding: tokens.spacing.lg,
-      boxShadow: tokens.shadows.md,
+    Text: {
+      baseStyle: {
+        color: 'text.dark',
+        fontFamily: 'body',
+      },
     },
-    input: {
-      backgroundColor: tokens.colors.background.default,
-      border: `1px solid ${tokens.colors.primary.light}`,
-      borderRadius: tokens.borderRadius.md,
-      padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
-      '&:focus': {
-        borderColor: tokens.colors.secondary.main,
-        outline: 'none',
+    Heading: {
+      baseStyle: {
+        color: 'text.dark',
+        fontFamily: 'heading',
+        fontWeight: 'bold',
       },
     },
   },
-  mixins: {
-    flexCenter: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    gradientText: {
-      background: `linear-gradient(135deg, ${tokens.colors.secondary.main}, ${tokens.colors.secondary.light})`,
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-    },
-    forgeEffect: {
-      background: `linear-gradient(135deg, ${tokens.colors.primary.dark}, ${tokens.colors.primary.main})`,
-      boxShadow: `0 0 15px ${tokens.colors.secondary.main}`,
+  styles: {
+    global: {
+      body: {
+        bg: 'tertiary.DEFAULT',
+        color: 'text.dark',
+        fontFamily: 'body',
+      },
     },
   },
-} as const;
+  config: {
+    initialColorMode: 'light',
+    useSystemColorMode: false,
+  },
+});
 
-export { theme };
 export default theme;
-export type Theme = typeof theme;
