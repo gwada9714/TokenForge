@@ -1,13 +1,5 @@
-declare const self: ServiceWorkerGlobalScope;
-
-interface ExtendableEvent extends Event {
-  waitUntil(fn: Promise<any>): void;
-}
-
-interface FetchEvent extends ExtendableEvent {
-  request: Request;
-  respondWith(response: Promise<Response> | Response): void;
-}
+/// <reference lib="webworker" />
+/// <reference lib="es2015" />
 
 const CACHE_NAME = 'tokenforge-cache-v1';
 const STATIC_ASSETS = [
@@ -18,7 +10,7 @@ const STATIC_ASSETS = [
 ];
 
 // Installation du Service Worker
-self.addEventListener('install', (event: ExtendableEvent) => {
+addEventListener('install', (event: ExtendableEvent) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
@@ -27,7 +19,7 @@ self.addEventListener('install', (event: ExtendableEvent) => {
 });
 
 // Activation et nettoyage des anciens caches
-self.addEventListener('activate', (event: ExtendableEvent) => {
+addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -40,7 +32,7 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
 });
 
 // Stratégie de cache : Cache First, puis Network
-self.addEventListener('fetch', (event: FetchEvent) => {
+addEventListener('fetch', (event: FetchEvent) => {
   // Ne pas mettre en cache les requêtes POST
   if (event.request.method !== 'GET') {
     return;
