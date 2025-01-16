@@ -12,9 +12,9 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { formatValue, parseValue, compareValues, toHexString } from '@/utils/web3Adapters';
+import { formatValue, parseValue, compareValues } from '@/utils/web3Adapters';
 import { useStaking } from '@/hooks/useStaking';
-import { STAKING_CONFIG } from '@/constants/tokenforge';
+import { TKN_TOKEN_ADDRESS, STAKING_CONFIG } from '@/constants/tokenforge';
 import TokenIcon from '@mui/icons-material/Token';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -57,7 +57,7 @@ const StakingDashboard: React.FC = () => {
     setWithdrawAmount,
     canUnstake,
     timeUntilUnstake,
-  } = useStaking(STAKING_CONFIG.MINIMUM_AMOUNT);
+  } = useStaking(TKN_TOKEN_ADDRESS[1]); // Using Ethereum Mainnet address
 
   const formattedStats = useMemo(() => {
     if (!stakingStats) return null;
@@ -70,14 +70,12 @@ const StakingDashboard: React.FC = () => {
 
   const handleStake = async () => {
     if (!stakeAmount) return;
-    const parsedAmount = parseValue(stakeAmount);
-    await stake(toHexString(parsedAmount));
+    await stake(stakeAmount);
   };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount) return;
-    const parsedAmount = parseValue(withdrawAmount);
-    await withdraw(toHexString(parsedAmount));
+    await withdraw(withdrawAmount);
   };
 
   const handleClaimRewards = async () => {
