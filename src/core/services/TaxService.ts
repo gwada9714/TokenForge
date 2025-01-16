@@ -3,31 +3,36 @@ import { getAddress, isAddress } from '@ethersproject/address';
 import { AddressZero } from '@ethersproject/constants';
 
 export class TaxService {
-  private static readonly DEFAULT_TAX_RATE = 5; // 5%
-  private static readonly DEFAULT_TRANSFER_TAX_RATE = 2; // 2%
+  private static readonly BASE_TAX_RATE = 0.5; // 0.5%
+  private static readonly MAX_ADDITIONAL_TAX_RATE = 1.5; // 1.5%
   
   private static readonly DEFAULT_DISTRIBUTION = {
-    forgeShare: 10,        // 10%
-    redistributionShare: 30, // 30%
-    liquidityShare: 30,     // 30%
-    burnShare: 30          // 30%
+    treasury: 60,     // 60%
+    development: 20,  // 20%
+    buyback: 15,      // 15%
+    staking: 5        // 5%
   };
 
   public static validateTaxConfig(config: TaxConfig): boolean {
     // Vérifier que la somme des parts est égale à 100%
     const totalShares = 
-      config.forgeShare + 
-      config.redistributionShare + 
-      config.liquidityShare + 
-      config.burnShare;
+      config.distribution.treasury + 
+      config.distribution.development + 
+      config.distribution.buyback + 
+      config.distribution.staking;
 
     if (totalShares !== 100) {
       throw new Error('La somme des parts de distribution doit être égale à 100%');
     }
 
-    // Vérifier l'adresse du destinataire
-    if (config.enabled && !isAddress(config.recipient)) {
-      throw new Error('Adresse de destinataire de taxe invalide');
+    // Vérifier que la taxe additionnelle ne dépasse pas le maximum
+    if (config.additionalTaxRate > this.MAX_ADDITIONAL_TAX_RATE) {
+      throw new Error(`La taxe additionnelle ne peut pas dépasser ${this.MAX_ADDITIONAL_TAX_RATE}%`);
+    }
+
+    // Vérifier l'adresse du créateur si la taxe additionnelle est activée
+    if (config.enabled && !isAddress(config.creatorWallet)) {
+      throw new Error('Adresse du créateur invalide');
     }
 
     return true;
@@ -36,15 +41,25 @@ export class TaxService {
   public static getDefaultTaxConfig(): TaxConfig {
     return {
       enabled: false,
-      buyTax: this.DEFAULT_TAX_RATE,
-      sellTax: this.DEFAULT_TAX_RATE,
-      transferTax: this.DEFAULT_TRANSFER_TAX_RATE,
-      recipient: AddressZero,
-      ...this.DEFAULT_DISTRIBUTION
+      baseTaxRate: this.BASE_TAX_RATE,
+      additionalTaxRate: 0,
+      creatorWallet: AddressZero,
+      distribution: this.DEFAULT_DISTRIBUTION
     };
   }
 
-  public static calculateEffectiveTax(amount: number, taxRate: number): number {
-    return amount * (taxRate / 100);
+  public static calculateTotalTax(amount: number, config: TaxConfig): {
+    baseTax: number;
+    additionalTax: number;
+    total: number;
+  } {
+    const baseTax = amount * (config.baseTaxRate / 100);
+    const additionalTax = config.enabled ? amount * (config.additionalTaxRate / 100) : 0;
+    
+    return {
+      baseTax,
+      additionalTax,
+      total: baseTax + additionalTax
+    };
   }
 }

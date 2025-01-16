@@ -23,9 +23,14 @@ import { TaxConfig } from '@/types/tokenFeatures';
 interface TaxConfigurationPanelProps {
   value?: TaxConfig;
   onChange?: (config: TaxConfig) => void;
+  maxAdditionalTaxRate: number;
 }
 
-export const TaxConfigurationPanel: React.FC<TaxConfigurationPanelProps> = ({ value, onChange }) => {
+export const TaxConfigurationPanel: React.FC<TaxConfigurationPanelProps> = ({
+  value,
+  onChange,
+  maxAdditionalTaxRate
+}) => {
   const defaultConfig: TaxConfig = {
     enabled: false,
     baseTaxRate: 0.5, // 0.5% taxe de base
@@ -79,7 +84,17 @@ export const TaxConfigurationPanel: React.FC<TaxConfigurationPanelProps> = ({ va
     <Card>
       <CardContent>
         <Stack spacing={3}>
-          <Box display="flex" alignItems="center">
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Configuration de la Taxe
+            </Typography>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Une taxe de base de {taxConfig.baseTaxRate}% est appliquée à chaque transaction.
+              Cette taxe est utilisée pour maintenir et développer la plateforme.
+            </Alert>
+          </Box>
+
+          <Box>
             <FormControlLabel
               control={
                 <Switch
@@ -87,9 +102,9 @@ export const TaxConfigurationPanel: React.FC<TaxConfigurationPanelProps> = ({ va
                   onChange={(e) => handleChange('enabled', e.target.checked)}
                 />
               }
-              label="Activer la taxe"
+              label="Activer la taxe additionnelle"
             />
-            {renderTooltip("La taxe de base de 0.5% est obligatoire. Vous pouvez configurer une taxe additionnelle jusqu'à 1.5%.")}
+            {renderTooltip(`Configurez une taxe additionnelle jusqu'à ${maxAdditionalTaxRate}% qui vous sera reversée`)}
           </Box>
 
           {taxConfig.enabled && (
@@ -97,79 +112,76 @@ export const TaxConfigurationPanel: React.FC<TaxConfigurationPanelProps> = ({ va
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <TextField
+                    fullWidth
                     label="Taxe Additionnelle (%)"
                     type="number"
                     value={taxConfig.additionalTaxRate}
-                    onChange={(e) => handleChange('additionalTaxRate', Math.min(1.5, Math.max(0, Number(e.target.value))))}
-                    fullWidth
-                    InputProps={{
-                      inputProps: { min: 0, max: 1.5, step: 0.1 }
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      if (value >= 0 && value <= maxAdditionalTaxRate) {
+                        handleChange('additionalTaxRate', value);
+                      }
                     }}
+                    inputProps={{
+                      min: 0,
+                      max: maxAdditionalTaxRate,
+                      step: 0.1
+                    }}
+                    helperText={`Maximum ${maxAdditionalTaxRate}%`}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    label="Adresse du Créateur"
+                    fullWidth
+                    label="Adresse de Réception"
                     value={taxConfig.creatorWallet}
                     onChange={(e) => handleChange('creatorWallet', e.target.value)}
                     error={!!taxConfig.creatorWallet && !isAddress(taxConfig.creatorWallet)}
-                    helperText={taxConfig.creatorWallet && !isAddress(taxConfig.creatorWallet) ? "Adresse invalide" : ""}
-                    fullWidth
+                    helperText={
+                      taxConfig.creatorWallet && !isAddress(taxConfig.creatorWallet)
+                        ? "Adresse invalide"
+                        : "Adresse qui recevra la taxe additionnelle"
+                    }
                   />
                 </Grid>
               </Grid>
 
               <Divider />
 
-              <Typography variant="subtitle2" gutterBottom>
-                Distribution de la Taxe de Base (0.5%)
-                {renderTooltip("La distribution de la taxe de base est fixe et non modifiable")}
-              </Typography>
-
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Treasury TokenForge"
-                    value={`${taxConfig.distribution.treasury}%`}
-                    disabled
-                    fullWidth
-                  />
+              <Box>
+                <Typography variant="subtitle1" gutterBottom>
+                  Distribution de la Taxe de Base ({taxConfig.baseTaxRate}%)
+                </Typography>
+                <Grid container spacing={2}>
+                  {Object.entries(taxConfig.distribution).map(([key, value]) => (
+                    <Grid item xs={12} sm={6} md={3} key={key}>
+                      <Card variant="outlined" sx={{ height: '100%' }}>
+                        <CardContent>
+                          <Typography variant="subtitle2" color="primary" gutterBottom>
+                            {key === 'treasury' ? 'TokenForge' :
+                             key === 'development' ? 'Développement' :
+                             key === 'buyback' ? 'Rachat & Burn' : 'Staking'}
+                          </Typography>
+                          <Typography variant="h4" component="div">
+                            {value}%
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {key === 'treasury' ? 'Maintenance et profits' :
+                             key === 'development' ? 'Nouvelles fonctionnalités' :
+                             key === 'buyback' ? 'Mécanisme déflationniste' : 'Récompenses staking'}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Développement"
-                    value={`${taxConfig.distribution.development}%`}
-                    disabled
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Rachat et Burn"
-                    value={`${taxConfig.distribution.buyback}%`}
-                    disabled
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Staking"
-                    value={`${taxConfig.distribution.staking}%`}
-                    disabled
-                    fullWidth
-                  />
-                </Grid>
-              </Grid>
+              </Box>
 
               {!isDistributionValid && (
                 <Alert severity="error">
                   La distribution totale doit être égale à 100%
                 </Alert>
               )}
-
-              <Alert severity="info">
-                La taxe additionnelle (jusqu'à 1.5%) est entièrement reversée à l'adresse du créateur.
-              </Alert>
             </>
           )}
         </Stack>
