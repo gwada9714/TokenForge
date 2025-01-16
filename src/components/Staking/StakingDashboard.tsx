@@ -21,9 +21,8 @@ import {
   TableRow,
   Paper,
 } from '@mui/material';
-import { formatValue, parseValue, compareValues } from '@/utils/web3Adapters';
-import { useStaking } from '@/hooks/useStaking';
-import { TKN_TOKEN_ADDRESS, STAKING_CONFIG } from '@/constants/tokenforge';
+import { formatValue } from '@/utils/web3Adapters';
+import { useStakingManager } from '@/hooks/useStakingManager';
 import TokenIcon from '@mui/icons-material/Token';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -120,72 +119,58 @@ const RewardsChart: React.FC<{
 
 const StakingDashboard: React.FC = () => {
   const {
-    balance,
     stakedAmount,
-    pendingRewards,
-    stakingStats,
+    rewards,
+    apr,
+    totalStaked,
+    stakingHistory,
     isLoading,
     stake,
-    withdraw,
-    claimRewards,
-    stakeAmount,
-    setStakeAmount,
-    withdrawAmount,
-    setWithdrawAmount,
-    canUnstake,
-    timeUntilUnstake,
-    rewardsHistory,
-    stakingHistory,
-  } = useStaking(TKN_TOKEN_ADDRESS[1]);
+    unstake,
+    claimRewards
+  } = useStakingManager();
 
-  const formattedStats = useMemo(() => {
-    if (!stakingStats) return null;
-    return {
-      totalStaked: formatValue(stakingStats.totalStaked),
-      apy: (stakingStats.apy / 100).toFixed(2),
-      stakersCount: stakingStats.stakersCount.toString(),
-    };
-  }, [stakingStats]);
+  const [stakeAmount, setStakeAmount] = React.useState('');
+  const [unstakeAmount, setUnstakeAmount] = React.useState('');
 
   const handleStake = async () => {
-    if (!stakeAmount) return;
     try {
-      await toast.promise(stake(stakeAmount), {
-        loading: 'Staking en cours...',
-        success: 'Stake effectué avec succès !',
-        error: 'Erreur lors du stake',
-      });
+      await stake(stakeAmount);
       setStakeAmount('');
+      toast.success('Stake successful!');
     } catch (error) {
       console.error('Stake error:', error);
+      toast.error('Failed to stake tokens');
     }
   };
 
-  const handleWithdraw = async () => {
-    if (!withdrawAmount) return;
+  const handleUnstake = async () => {
     try {
-      await toast.promise(withdraw(withdrawAmount), {
-        loading: 'Retrait en cours...',
-        success: 'Retrait effectué avec succès !',
-        error: 'Erreur lors du retrait',
-      });
-      setWithdrawAmount('');
+      await unstake(unstakeAmount);
+      setUnstakeAmount('');
+      toast.success('Unstake successful!');
     } catch (error) {
-      console.error('Withdraw error:', error);
+      console.error('Unstake error:', error);
+      toast.error('Failed to unstake tokens');
     }
   };
 
-  const handleClaimRewards = async () => {
+  const handleClaim = async () => {
     try {
-      await toast.promise(claimRewards(), {
-        loading: 'Réclamation des récompenses...',
-        success: 'Récompenses réclamées avec succès !',
-        error: 'Erreur lors de la réclamation',
-      });
+      await claimRewards();
+      toast.success('Rewards claimed successfully!');
     } catch (error) {
       console.error('Claim error:', error);
+      toast.error('Failed to claim rewards');
     }
   };
+
+  const chartData = useMemo(() => {
+    return stakingHistory.map(entry => ({
+      timestamp: new Date(entry.timestamp * 1000).toLocaleDateString(),
+      amount: Number(formatValue(entry.amount))
+    }));
+  }, [stakingHistory]);
 
   if (isLoading) {
     return (
@@ -196,128 +181,90 @@ const StakingDashboard: React.FC = () => {
   }
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Staking TKN
-      </Typography>
-
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} md={4}>
-          <StatCard
-            title="Total Staké"
-            value={`${formattedStats?.totalStaked || '0'} TKN`}
-            icon={<TokenIcon />}
-            subValue={`${formattedStats?.stakersCount || '0'} stakers actifs`}
-            tooltip="Montant total de TKN stakés sur la plateforme"
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <StatCard
-            title="APY"
-            value={`${formattedStats?.apy || '0'}%`}
-            icon={<TimelineIcon />}
-            subValue="Rendement annuel estimé"
-            tooltip="Taux de rendement annuel basé sur les récompenses actuelles"
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <StatCard
-            title="Vos Récompenses"
-            value={`${formatValue(pendingRewards || 0n)} TKN`}
-            icon={<AccountBalanceIcon />}
-            subValue="Récompenses non réclamées"
-            tooltip="Récompenses accumulées que vous pouvez réclamer"
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Évolution de vos Récompenses
-              </Typography>
-              <RewardsChart rewardsHistory={rewardsHistory} />
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
+    <Box p={3}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Staker vos TKN
-              </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  label="Montant à staker"
-                  type="number"
-                  value={stakeAmount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStakeAmount(e.target.value)}
-                  fullWidth
-                  helperText={`Balance disponible: ${formatValue(balance || 0n)} TKN`}
-                />
-                <Button
-                  variant="contained"
-                  onClick={handleStake}
-                  disabled={!stakeAmount || !balance || compareValues(parseValue(stakeAmount), balance)}
-                  fullWidth
-                >
-                  Staker
-                </Button>
-              </Stack>
-              <Divider sx={{ my: 2 }} />
-              <Alert severity="info">
-                Minimum de stake: {formatValue(STAKING_CONFIG.MINIMUM_AMOUNT)} TKN
-                <br />
-                Période de lock: {STAKING_CONFIG.LOCK_PERIOD / (24 * 3600)} jours
-              </Alert>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} md={4}>
+          <StatCard
+            title="Staked Amount"
+            value={`${formatValue(stakedAmount)} TKN`}
+            icon={<TokenIcon color="primary" />}
+            tooltip="Total amount of tokens you have staked"
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <StatCard
+            title="Pending Rewards"
+            value={`${formatValue(rewards)} TKN`}
+            icon={<TimelineIcon color="primary" />}
+            tooltip="Rewards available to claim"
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <StatCard
+            title="Current APR"
+            value={`${apr.toFixed(2)}%`}
+            icon={<AccountBalanceIcon color="primary" />}
+            tooltip="Annual Percentage Rate"
+          />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Vos Stakes
+                Staking Actions
               </Typography>
-              <Stack spacing={2}>
-                <Typography>
-                  Montant staké: {formatValue(stakedAmount || 0n)} TKN
-                </Typography>
-                {timeUntilUnstake > 0 && (
-                  <Alert severity="warning">
-                    Temps restant avant unstake: {Math.ceil(timeUntilUnstake / (24 * 3600))} jours
-                  </Alert>
-                )}
-                <TextField
-                  label="Montant à retirer"
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWithdrawAmount(e.target.value)}
-                  fullWidth
-                />
-                <Button
-                  variant="outlined"
-                  onClick={handleWithdraw}
-                  disabled={!canUnstake || !(stakedAmount > 0n)}
-                  fullWidth
-                >
-                  Retirer
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleClaimRewards}
-                  disabled={!(pendingRewards > 0n)}
-                  fullWidth
-                >
-                  Réclamer les Récompenses
-                </Button>
-              </Stack>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Stake Amount"
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(e.target.value)}
+                    type="number"
+                    InputProps={{ inputProps: { min: 0 } }}
+                  />
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={handleStake}
+                    disabled={!stakeAmount}
+                    sx={{ mt: 1 }}
+                  >
+                    Stake
+                  </Button>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Unstake Amount"
+                    value={unstakeAmount}
+                    onChange={(e) => setUnstakeAmount(e.target.value)}
+                    type="number"
+                    InputProps={{ inputProps: { min: 0 } }}
+                  />
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={handleUnstake}
+                    disabled={!unstakeAmount}
+                    sx={{ mt: 1 }}
+                  >
+                    Unstake
+                  </Button>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={handleClaim}
+                    disabled={rewards <= 0n}
+                    sx={{ mt: 4 }}
+                  >
+                    Claim Rewards
+                  </Button>
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Grid>
@@ -326,9 +273,19 @@ const StakingDashboard: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Historique des Opérations
+                Staking History
               </Typography>
-              <StakingHistory history={stakingHistory} />
+              <Box height={300}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="timestamp" />
+                    <YAxis />
+                    <RechartsTooltip />
+                    <Line type="monotone" dataKey="amount" stroke="#8884d8" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
