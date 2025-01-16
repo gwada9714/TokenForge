@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Button } from '@components/ui/Button';
-import { StyledProps } from '@components/ui/types';
+import { Button } from '@/components/ui/Button';
+import { StyledProps } from '@/components/ui/types';
 
 interface HeaderContainerProps {
   isScrolled: boolean;

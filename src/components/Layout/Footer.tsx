@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Button } from '@components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 const FooterContainer = styled.footer`
   background-color: #182038;
@@ -221,7 +221,7 @@ export const Footer: React.FC = () => {
 
         <BottomSection>
           <Copyright>
-            © {new Date().getFullYear()} TokenForge. Tous droits réservés.
+            &copy; {new Date().getFullYear()} TokenForge. Tous droits réservés.
           </Copyright>
 
           <SocialLinks>

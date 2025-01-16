@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Button } from '@components/ui/Button';
-import { Card } from '@components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 
 const SectionContainer = styled.section`
   padding: 6rem 2rem;

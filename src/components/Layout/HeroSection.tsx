@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Button } from '@components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 const HeroContainer = styled.section`
   min-height: 100vh;
