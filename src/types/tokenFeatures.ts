@@ -1,13 +1,18 @@
 export interface TaxConfig {
   enabled: boolean;
-  baseTaxRate: number; 
-  additionalTaxRate: number; 
-  creatorWallet: string; 
+  buyTax: number;
+  sellTax: number;
+  transferTax: number;
+  forgeShare: number;
+  redistributionShare: number;
+  liquidityShare: number;
+  burnShare: number;
+  recipient: string;
   distribution: {
-    treasury: number; 
-    development: number; 
-    buyback: number; 
-    staking: number; 
+    treasury: number;
+    development: number;
+    buyback: number;
+    staking: number;
   };
 }
 

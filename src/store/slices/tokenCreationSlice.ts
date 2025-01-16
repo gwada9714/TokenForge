@@ -32,9 +32,14 @@ const initialState: TokenConfig = {
   plan: 'basic',
   taxConfig: {
     enabled: false,
-    baseTaxRate: 0.5,
-    additionalTaxRate: 0,
-    creatorWallet: '',
+    buyTax: 0,
+    sellTax: 0,
+    transferTax: 0,
+    forgeShare: 0,
+    redistributionShare: 0,
+    liquidityShare: 0,
+    burnShare: 0,
+    recipient: '',
     distribution: {
       treasury: 60,
       development: 20,
@@ -45,14 +50,21 @@ const initialState: TokenConfig = {
   liquidityLock: {
     enabled: false,
     amount: '0',
-    unlockDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), // 180 days from now
+    unlockDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
     beneficiary: ''
   },
   audit: {
-    timestamp: null,
+    timestamp: undefined,
     status: 'pending',
     issues: [],
     score: 0
+  },
+  deploymentStatus: {
+    status: 'pending',
+    txHash: '',
+    contractAddress: '',
+    error: '',
+    deployedAt: undefined
   }
 };
 
@@ -60,25 +72,68 @@ const tokenCreationSlice = createSlice({
   name: 'tokenCreation',
   initialState,
   reducers: {
-    updateTokenConfig: (state, action: PayloadAction<Partial<TokenConfig>>) => {
+    updateTokenConfig(state, action: PayloadAction<Partial<TokenConfig>>) {
       Object.assign(state, action.payload);
     },
-    resetTokenConfig: () => initialState,
-    setNetwork: (state, action: PayloadAction<NetworkConfig>) => {
+    resetTokenConfig(state) {
+      Object.assign(state, initialState);
+    },
+    setNetwork(state, action: PayloadAction<NetworkConfig>) {
       const network = action.payload;
       
       // Créer une copie profonde de la configuration réseau avec des tableaux mutables
-      state.network = {
+      const mutableNetwork: NetworkConfig = {
         ...network,
         chain: {
           ...network.chain,
-          rpcUrls: deepCopyRpcUrls(network.chain.rpcUrls)
+          rpcUrls: {
+            ...network.chain.rpcUrls,
+            default: {
+              ...network.chain.rpcUrls.default,
+              http: [...network.chain.rpcUrls.default.http]
+            }
+          }
         }
       };
+      
+      state.network = mutableNetwork;
+    },
+    startDeployment(state) {
+      if (state.deploymentStatus) {
+        state.deploymentStatus.status = 'deploying';
+        state.deploymentStatus.error = undefined;
+      }
+    },
+    deploymentSuccess(state, action: PayloadAction<{ txHash: string; contractAddress: string }>) {
+      if (state.deploymentStatus) {
+        state.deploymentStatus.status = 'success';
+        state.deploymentStatus.txHash = action.payload.txHash;
+        state.deploymentStatus.contractAddress = action.payload.contractAddress;
+        state.deploymentStatus.deployedAt = new Date();
+      }
+    },
+    deploymentError(state, action: PayloadAction<string>) {
+      if (state.deploymentStatus) {
+        state.deploymentStatus.status = 'failed';
+        state.deploymentStatus.error = action.payload;
+      }
+    },
+    setDeploymentStatus(state, action: PayloadAction<'pending' | 'deploying' | 'success' | 'failed'>) {
+      if (state.deploymentStatus) {
+        state.deploymentStatus.status = action.payload;
+      }
     }
   }
 });
 
-export const { updateTokenConfig, resetTokenConfig, setNetwork } = tokenCreationSlice.actions;
+export const { 
+  updateTokenConfig, 
+  resetTokenConfig, 
+  setNetwork,
+  startDeployment,
+  deploymentSuccess,
+  deploymentError,
+  setDeploymentStatus
+} = tokenCreationSlice.actions;
 
 export default tokenCreationSlice.reducer;

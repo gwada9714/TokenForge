@@ -74,7 +74,6 @@ const TokenConfiguration: React.FC = () => {
         <IconButton size="small" sx={{ ml: 1 }}>
           <HelpOutlineIcon fontSize="small" />
         </IconButton>
-      </Tooltip>
     );
   };
 
@@ -215,10 +214,8 @@ const TokenConfiguration: React.FC = () => {
           lockConfig={tokenConfig.liquidityLock || {
             enabled: false,
             amount: '50',
-            duration: 180 * 24 * 60 * 60,
             unlockDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
-            pair: '',
-            dex: 'uniswap'
+            beneficiary: ''
           }}
           onChange={handleLiquidityLockChange}
           disabled={false}
