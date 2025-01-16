@@ -24,19 +24,20 @@ import { NetworkTaxInfo } from '@/features/token-creation/components/NetworkTaxI
 import { useNetworkTaxConfig } from '@/hooks/useNetworkTaxConfig';
 import { GasEstimationPanel } from '@/features/token-creation/components/GasEstimationPanel';
 
-const basicFeatures = [
-  'Mint',
-  'Burn',
-  'Pause',
-  'Blacklist',
-  'AntiWhale',
-] as const;
+const featureMap = {
+  'Mint': 'mintable',
+  'Burn': 'burnable',
+  'Pause': 'pausable',
+  'Blacklist': 'blacklist',
+  'AntiWhale': 'antiWhale'
+} as const;
 
-type BasicFeature = typeof basicFeatures[number];
+type FeatureKey = keyof typeof featureMap;
+type FeatureValue = typeof featureMap[FeatureKey];
 
 interface FormField {
   label: string;
-  field: 'name' | 'symbol' | 'decimals' | 'supply';
+  field: keyof Pick<TokenConfig, 'name' | 'symbol' | 'decimals' | 'totalSupply'>;
   type: 'text' | 'number';
   placeholder?: string;
   required?: boolean;
@@ -48,36 +49,36 @@ interface FormField {
 
 const TokenConfiguration: React.FC = () => {
   const { tokenConfig, dispatch } = useTokenCreation();
-  const { taxConfig } = useNetworkTaxConfig();
+  const { taxConfig: networkTaxConfig } = useNetworkTaxConfig();
 
-  const handleChange = useCallback((field: keyof Pick<TokenConfig, 'name' | 'symbol' | 'decimals' | 'supply'>, value: string | number) => {
+  const handleChange = useCallback((field: keyof TokenConfig, value: string | number) => {
     dispatch(updateTokenConfig({ [field]: value }));
   }, [dispatch]);
 
-  const handleFeatureChange = useCallback((feature: BasicFeature) => {
-    const currentFeatures = tokenConfig.features || [];
-    const newFeatures = currentFeatures.includes(feature)
-      ? currentFeatures.filter(f => f !== feature)
-      : [...currentFeatures, feature];
-    
-    dispatch(updateTokenConfig({ features: newFeatures }));
+  const handleFeatureToggle = useCallback((feature: FeatureKey) => {
+    const featureKey = featureMap[feature];
+    const features = { ...tokenConfig.features };
+    features[featureKey] = !features[featureKey];
+    dispatch(updateTokenConfig({ features }));
   }, [dispatch, tokenConfig.features]);
+
+  const handleTaxConfigChange = useCallback((newTaxConfig: TaxConfig) => {
+    dispatch(updateTokenConfig({ taxes: newTaxConfig }));
+  }, [dispatch]);
 
   const handleMaxLimitsChange = useCallback((maxLimits: MaxLimits) => {
     dispatch(updateTokenConfig({ maxLimits }));
   }, [dispatch]);
 
-  const handleTaxConfigChange = useCallback((newTaxConfig: TaxConfig) => {
-    const update: Partial<TokenConfig> = { taxConfig: newTaxConfig };
-    dispatch(updateTokenConfig(update));
+  const handleLiquidityLockChange = useCallback((liquidityLock: LiquidityLock) => {
+    if (liquidityLock.unlockDate instanceof Date) {
+      liquidityLock.unlockDate = Math.floor(liquidityLock.unlockDate.getTime() / 1000);
+    }
+    dispatch(updateTokenConfig({ liquidityLock }));
   }, [dispatch]);
 
-  const handleLiquidityLockChange = useCallback((lockConfig: LiquidityLock) => {
-    dispatch(updateTokenConfig({ liquidityLock: lockConfig }));
-  }, [dispatch]);
-
-  const renderFeatureTooltip = (feature: BasicFeature) => {
-    const tooltips: Record<BasicFeature, string> = {
+  const getFeatureDescription = (feature: FeatureKey) => {
+    const tooltips: Record<FeatureKey, string> = {
       Mint: "Permet de créer de nouveaux tokens après le déploiement",
       Burn: "Permet de détruire des tokens de manière permanente",
       Pause: "Permet de suspendre temporairement les transferts de tokens",
@@ -85,43 +86,41 @@ const TokenConfiguration: React.FC = () => {
       AntiWhale: "Limite la quantité maximale de tokens par portefeuille et par transaction"
     };
 
-    return (
-      <Tooltip title={tooltips[feature] || ""} arrow placement="top">
-        <IconButton size="small" sx={{ ml: 1 }}>
-          <HelpOutlineIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    );
+    return tooltips[feature] || "";
   };
 
-  const formFields: Array<FormField & { field: keyof Pick<TokenConfig, 'name' | 'symbol' | 'decimals' | 'supply'> }> = [
+  const formFields: FormField[] = [
     {
-      label: 'Nom',
+      label: 'Token Name',
       field: 'name',
       type: 'text',
-      placeholder: 'Ex: Mon Token',
+      placeholder: 'My Token',
       required: true,
     },
     {
-      label: 'Symbole',
+      label: 'Token Symbol',
       field: 'symbol',
       type: 'text',
-      placeholder: 'Ex: TKN',
+      placeholder: 'MTK',
       required: true,
     },
     {
-      label: 'Offre Totale',
-      field: 'supply',
-      type: 'number',
-      inputProps: { min: 1 },
+      label: 'Total Supply',
+      field: 'totalSupply',
+      type: 'text',
+      placeholder: '1000000',
       required: true,
     },
     {
-      label: 'Décimales',
+      label: 'Decimals',
       field: 'decimals',
       type: 'number',
-      inputProps: { min: 0, max: 18 },
+      placeholder: '18',
       required: true,
+      inputProps: {
+        min: 0,
+        max: 18,
+      },
     },
   ];
 
@@ -161,19 +160,23 @@ const TokenConfiguration: React.FC = () => {
         </Typography>
         <FormGroup>
           <Grid container spacing={2}>
-            {basicFeatures.map((feature) => (
+            {Object.keys(featureMap).map((feature) => (
               <Grid item xs={12} sm={6} key={feature}>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={tokenConfig.features?.includes(feature) ?? false}
-                      onChange={() => handleFeatureChange(feature)}
+                      checked={tokenConfig.features?.[featureMap[feature as FeatureKey]] ?? false}
+                      onChange={() => handleFeatureToggle(feature as FeatureKey)}
                     />
                   }
                   label={
-                    <Stack direction="row" alignItems="center">
-                      {feature}
-                      {renderFeatureTooltip(feature)}
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography>{feature}</Typography>
+                      <Tooltip title={getFeatureDescription(feature as FeatureKey)}>
+                        <IconButton size="small">
+                          <HelpOutlineIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Stack>
                   }
                 />
@@ -192,9 +195,9 @@ const TokenConfiguration: React.FC = () => {
           Configuration des Taxes
         </Typography>
         <TaxConfigurationPanel
-          value={tokenConfig.taxConfig}
-          onChange={(taxConfig) => handleChange('taxConfig', taxConfig)}
-          maxAdditionalTaxRate={taxConfig.maxAdditionalTaxRate}
+          value={tokenConfig.taxes}
+          onChange={(taxConfig) => handleTaxConfigChange(taxConfig)}
+          maxAdditionalTaxRate={networkTaxConfig.maxAdditionalTaxRate}
         />
       </div>
 
@@ -204,17 +207,17 @@ const TokenConfiguration: React.FC = () => {
 
       <Divider />
 
-      {tokenConfig.features?.includes('AntiWhale') && (
+      {tokenConfig.features?.antiWhale && (
         <div>
           <Typography variant="subtitle1" gutterBottom>
-            Configuration Anti-Whale
+            Anti-Whale Configuration
           </Typography>
           <MaxLimitsConfiguration
-            maxLimits={tokenConfig.maxLimits ?? {
+            maxLimits={{
               maxWallet: { enabled: false, amount: '0', percentage: 2 },
               maxTransaction: { enabled: false, amount: '0', percentage: 1 }
             }}
-            totalSupply={tokenConfig.supply ?? '0'}
+            totalSupply={tokenConfig.totalSupply}
             onChange={handleMaxLimitsChange}
             disabled={false}
           />
