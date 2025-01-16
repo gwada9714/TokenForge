@@ -1,82 +1,84 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { parseEther } from 'ethers';
 import * as hre from 'hardhat';
+import { parseEther } from 'ethers';
 
 // @ts-ignore: Hardhat Runtime Environment's members are not typed properly
 const ethers = hre.ethers;
 
 async function main() {
   const [deployer] = await ethers.getSigners();
+  const deployerAddress = await deployer.getAddress();
 
-  console.log("Déploiement des contrats avec le compte:", await deployer.getAddress());
+  console.log("Déploiement des contrats avec le compte:", deployerAddress);
 
-  // Déploiement du TokenForgeToken
-  const TokenForgeFactory = await ethers.getContractFactory("TokenForgeToken");
-  const tokenForge = await TokenForgeFactory.deploy(
-    "TokenForge Token",        // nom
-    "TFT",                     // symbole
-    18,                        // decimals
-    parseEther("1000000"),     // supply total
-    await deployer.getAddress(), // propriétaire
-    true,                      // burnable
-    true,                      // mintable
-    true                       // pausable
+  // Pour le moment, nous utilisons l'adresse du déployeur pour tous les rôles
+  const teamWallet = deployerAddress;
+  const marketingWallet = deployerAddress;
+  const ecosystemWallet = deployerAddress;
+
+  // Déploiement du TokenForgeTKN
+  console.log("Déploiement du TokenForgeTKN...");
+  const TokenForgeTKN = await ethers.getContractFactory("TokenForgeTKN");
+  const tknToken = await TokenForgeTKN.deploy(
+    teamWallet,
+    marketingWallet,
+    ecosystemWallet
+  );
+  await tknToken.waitForDeployment();
+  const tknTokenAddress = await tknToken.getAddress();
+  console.log("TokenForgeTKN déployé à:", tknTokenAddress);
+
+  // Déploiement du TokenForgeTaxSystem
+  console.log("Déploiement du TokenForgeTaxSystem...");
+  const TokenForgeTaxSystem = await ethers.getContractFactory("TokenForgeTaxSystem");
+  const taxSystem = await TokenForgeTaxSystem.deploy(deployerAddress);
+  await taxSystem.waitForDeployment();
+  const taxSystemAddress = await taxSystem.getAddress();
+  console.log("TokenForgeTaxSystem déployé à:", taxSystemAddress);
+
+  // Déploiement du TokenForgeFactory
+  console.log("Déploiement du TokenForgeFactory...");
+  const TokenForgeFactory = await ethers.getContractFactory("TokenForgeFactory");
+  const factory = await TokenForgeFactory.deploy(
+    tknTokenAddress,    // _tknToken
+    deployerAddress,    // _treasury (utilisons l'adresse du déployeur comme trésorerie pour le moment)
+    taxSystemAddress    // _taxSystem
   );
 
-  await tokenForge.waitForDeployment();
-  console.log("TokenForgeToken déployé à:", await tokenForge.getAddress());
+  await factory.waitForDeployment();
+  const factoryAddress = await factory.getAddress();
+  console.log("TokenForgeFactory déployé à:", factoryAddress);
 
-  // Déploiement du TokenForgePlans
-  const PlansFactory = await ethers.getContractFactory("TokenForgePlans");
-  const plans = await PlansFactory.deploy(
-    await tokenForge.getAddress(),
-    parseEther("100"),      // Prix du plan Basic
-    parseEther("500"),      // Prix du plan Pro
-    parseEther("1000"),     // Prix du plan Enterprise
-    await deployer.getAddress()
-  );
+  // Transférer des TKN à l'adresse du déployeur pour les tests
+  console.log("Transfert de TKN au déployeur pour les tests...");
+  const transferAmount = parseEther("1000"); // 1000 TKN pour les tests
+  const tx = await tknToken.transfer(deployerAddress, transferAmount);
+  await tx.wait();
+  console.log(`${transferAmount} TKN transférés à ${deployerAddress}`);
 
-  await plans.waitForDeployment();
-  console.log("TokenForgePlans déployé à:", await plans.getAddress());
-
-  // Déploiement du TokenForgeLaunchpad
-  const LaunchpadFactory = await ethers.getContractFactory("TokenForgeLaunchpad");
-  const launchpad = await LaunchpadFactory.deploy(
-    await tokenForge.getAddress(),
-    await plans.getAddress(),
-    parseEther("0.1"),     // Frais minimum
-    parseEther("10"),      // Frais maximum
-    500,                   // 5% de frais par défaut
-    await deployer.getAddress()
-  );
-
-  await launchpad.waitForDeployment();
-  console.log("TokenForgeLaunchpad déployé à:", await launchpad.getAddress());
-
-  // Configuration des rôles
-  const MINTER_ROLE = await tokenForge.MINTER_ROLE();
-  await tokenForge.grantRole(MINTER_ROLE, await plans.getAddress());
-  console.log("Rôle MINTER accordé à TokenForgePlans");
-
-  await tokenForge.grantRole(MINTER_ROLE, await launchpad.getAddress());
-  console.log("Rôle MINTER accordé à TokenForgeLaunchpad");
-
-  // Vérification des contrats
+  // Vérification des contrats sur Etherscan
   if (process.env.ETHERSCAN_API_KEY) {
     console.log("Vérification des contrats sur Etherscan...");
-    await verifyContract(await tokenForge.getAddress(), [
-      "TokenForge Token", "TFT", 18, parseEther("1000000"),
-      await deployer.getAddress(), true, true, true
-    ]);
-    await verifyContract(await plans.getAddress(), [
-      await tokenForge.getAddress(), parseEther("100"),
-      parseEther("500"), parseEther("1000"), await deployer.getAddress()
-    ]);
-    await verifyContract(await launchpad.getAddress(), [
-      await tokenForge.getAddress(), await plans.getAddress(),
-      parseEther("0.1"), parseEther("10"), 500, await deployer.getAddress()
-    ]);
+    
+    console.log("Vérification de TokenForgeTKN...");
+    await verifyContract(tknTokenAddress, [teamWallet, marketingWallet, ecosystemWallet]);
+    
+    console.log("Vérification de TokenForgeTaxSystem...");
+    await verifyContract(taxSystemAddress, [deployerAddress]);
+    
+    console.log("Vérification de TokenForgeFactory...");
+    await verifyContract(factoryAddress, [tknTokenAddress, deployerAddress, taxSystemAddress]);
+    
+    console.log("Tous les contrats ont été vérifiés sur Etherscan");
   }
+
+  // Afficher un résumé des déploiements
+  console.log("\nRésumé des déploiements:");
+  console.log("-------------------------");
+  console.log("TokenForgeTKN:", tknTokenAddress);
+  console.log("TokenForgeTaxSystem:", taxSystemAddress);
+  console.log("TokenForgeFactory:", factoryAddress);
+  console.log("-------------------------");
 }
 
 async function verifyContract(address: string, constructorArguments: any[]) {
@@ -85,9 +87,13 @@ async function verifyContract(address: string, constructorArguments: any[]) {
       address: address,
       constructorArguments: constructorArguments,
     });
-    console.log("Contrat vérifié:", address);
-  } catch (e) {
-    console.log("Erreur de vérification pour", address, e);
+  } catch (error: any) {
+    if (error.message.toLowerCase().includes("already verified")) {
+      console.log("Le contrat est déjà vérifié!");
+    } else {
+      console.error("Erreur lors de la vérification:", error);
+      throw error;
+    }
   }
 }
 
