@@ -17,30 +17,50 @@ const TokenCard = memo(({ token, onAction }: TokenCardProps) => {
     <Card 
       sx={{ 
         minWidth: 275,
-        transition: '0.3s',
+        backgroundColor: 'background.paper',
+        transition: 'all 0.3s ease-in-out',
+        borderRadius: 2,
+        boxShadow: 'forge-card',
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: (theme) => theme.shadows[4]
+          boxShadow: 'forge-hover'
         }
       }}
+      className="relative overflow-hidden"
     >
-      <CardContent>
-        <Typography variant="h5" component="h3" gutterBottom>
+      <div className="absolute inset-0 bg-gradient-forge opacity-5" />
+      <CardContent className="relative">
+        <Typography 
+          variant="h5" 
+          component="h3" 
+          gutterBottom
+          className="font-heading font-bold text-primary-main"
+        >
           {token.symbol}
         </Typography>
         <Box sx={{ mb: 1.5 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography 
+            variant="body2" 
+            className="text-text-secondary"
+          >
             Address: {truncateAddress(token.address)}
           </Typography>
-          <Typography variant="body1">
+          <Typography 
+            variant="body1"
+            className="font-semibold text-text-primary"
+          >
             Balance: {token.balance}
           </Typography>
         </Box>
         <Button 
           variant="contained" 
-          color="primary"
+          color="secondary"
           onClick={() => onAction(token.address)}
-          sx={{ mt: 2 }}
+          className="mt-4 bg-gradient-secondary hover:bg-gradient-secondary-hover shadow-forge"
+          sx={{ 
+            fontFamily: 'heading',
+            fontWeight: 'bold'
+          }}
         >
           Manage Token
         </Button>
@@ -51,4 +71,4 @@ const TokenCard = memo(({ token, onAction }: TokenCardProps) => {
 
 TokenCard.displayName = 'TokenCard';
 
-export default TokenCard;
+export { TokenCard as default };

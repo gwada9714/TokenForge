@@ -32,18 +32,19 @@ const Footer = () => {
   return (
     <Box
       component="footer"
+      className="bg-primary-main relative overflow-hidden"
       sx={{
-        bgcolor: isDarkMode ? 'grey.900' : 'grey.50',
-        color: isDarkMode ? 'grey.200' : 'grey.700',
         mt: 'auto',
+        color: 'text.light',
         borderTop: 1,
-        borderColor: isDarkMode ? 'grey.800' : 'grey.200'
+        borderColor: 'primary.light'
       }}
     >
+      <div className="absolute inset-0 bg-forge-pattern opacity-5" />
       <Container
         maxWidth="xl"
+        className="relative py-8 md:py-12"
         sx={{
-          py: { xs: 3, md: 4 },
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
           justifyContent: 'space-between',
@@ -51,75 +52,52 @@ const Footer = () => {
           gap: 2
         }}
       >
-        <Typography 
-          variant="body2"
-          sx={{ textAlign: { xs: 'center', md: 'left' } }}
-        >
-          2025 TokenForge. Tous droits rservs
-        </Typography>
+        <Stack spacing={2} alignItems={{ xs: 'center', md: 'flex-start' }}>
+          <Typography 
+            variant="h6" 
+            className="font-heading font-bold text-text-light"
+          >
+            TokenForge
+          </Typography>
+          <Typography 
+            variant="body2" 
+            className="text-text-light opacity-80 text-center md:text-left"
+          >
+            Forgez votre avenir crypto avec TokenForge
+          </Typography>
+        </Stack>
 
         <Stack 
           direction="row" 
-          spacing={{ xs: 2, md: 3 }}
-          sx={{
-            '& > a': {
-              color: 'inherit',
-              textDecoration: 'none',
-              position: 'relative',
-              '&:hover': {
-                color: theme.palette.primary.main
-              },
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                width: '100%',
-                height: '2px',
-                bottom: -2,
-                left: 0,
-                backgroundColor: theme.palette.primary.main,
-                transform: 'scaleX(0)',
-                transition: 'transform 0.3s ease'
-              },
-              '&:hover::after': {
-                transform: 'scaleX(1)'
-              }
-            }
-          }}
+          spacing={2}
+          className="mt-4 md:mt-0"
         >
-          <Link href="/" component={motion.a} whileHover={{ y: -2 }}>
-            Accueil
-          </Link>
-          <Link href="/docs" component={motion.a} whileHover={{ y: -2 }}>
-            Documentation
-          </Link>
-          <Link href="/contact" component={motion.a} whileHover={{ y: -2 }}>
-            Contact
-          </Link>
-        </Stack>
-
-        <Stack direction="row" spacing={1}>
           {socialLinks.map(({ icon, label, href }) => (
-            <Tooltip key={label} title={label} arrow>
+            <Tooltip 
+              key={label} 
+              title={label}
+              arrow
+            >
               <IconButton
-                component={motion.a}
+                component={Link}
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={label}
-                whileHover={{ 
-                  scale: 1.1,
-                  color: theme.palette.primary.main 
-                }}
-                sx={{ 
-                  color: 'inherit',
-                  transition: 'color 0.3s ease'
-                }}
+                className="text-text-light hover:text-secondary-main transition-colors"
+                size="large"
               >
                 {icon}
               </IconButton>
             </Tooltip>
           ))}
         </Stack>
+
+        <Typography 
+          variant="body2" 
+          className="mt-4 md:mt-0 text-text-light opacity-60"
+        >
+          {new Date().getFullYear()} TokenForge. Tous droits réservés.
+        </Typography>
       </Container>
     </Box>
   );
