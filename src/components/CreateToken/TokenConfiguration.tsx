@@ -118,7 +118,7 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = React.memo(({
     }
   };
 
-  const defaultLiquidityLock: LiquidityLock = {
+  const defaultLockConfig: LiquidityLock = {
     enabled: false,
     amount: '50',
     duration: 180 * 24 * 60 * 60,
@@ -178,11 +178,12 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = React.memo(({
       {/* Autres configurations */}
       <MaxLimitsConfiguration
         maxLimits={tokenConfig.maxLimits || defaultMaxLimits}
+        totalSupply={tokenConfig.supply || '0'}
         onChange={handleMaxLimitsChange}
       />
 
       <LiquidityLockConfiguration
-        liquidityLock={tokenConfig.liquidityLock || defaultLiquidityLock}
+        lockConfig={tokenConfig.liquidityLock || defaultLockConfig}
         onChange={handleLiquidityLockChange}
       />
     </Stack>

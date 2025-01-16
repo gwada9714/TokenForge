@@ -1,66 +1,50 @@
-import { TaxConfig, TaxCalculation } from '../types/tax';
+import { TaxConfig } from '@/types/tokenFeatures';
 import { getAddress, isAddress } from '@ethersproject/address';
 import { AddressZero } from '@ethersproject/constants';
 
 export class TaxService {
-  private static readonly BASE_TAX_RATE = 0.005; // 0.5%
-  private static readonly MAX_ADDITIONAL_TAX_RATE = 0.015; // 1.5%
+  private static readonly DEFAULT_TAX_RATE = 5; // 5%
+  private static readonly DEFAULT_TRANSFER_TAX_RATE = 2; // 2%
   
   private static readonly DEFAULT_DISTRIBUTION = {
-    tokenForge: 0.6,     // 60%
-    development: 0.2,    // 20%
-    burnAndBuyback: 0.15, // 15%
-    stakers: 0.05        // 5%
+    forgeShare: 10,        // 10%
+    redistributionShare: 30, // 30%
+    liquidityShare: 30,     // 30%
+    burnShare: 30          // 30%
   };
 
   public static validateTaxConfig(config: TaxConfig): boolean {
-    // Vérifier que la taxe additionnelle ne dépasse pas le maximum
-    if (config.additionalTax > this.MAX_ADDITIONAL_TAX_RATE) {
-      throw new Error(`La taxe additionnelle ne peut pas dépasser ${this.MAX_ADDITIONAL_TAX_RATE * 100}%`);
+    // Vérifier que la somme des parts est égale à 100%
+    const totalShares = 
+      config.forgeShare + 
+      config.redistributionShare + 
+      config.liquidityShare + 
+      config.burnShare;
+
+    if (totalShares !== 100) {
+      throw new Error('La somme des parts de distribution doit être égale à 100%');
     }
 
-    // Vérifier que la distribution totalise 100%
-    const totalDistribution = Object.values(config.distribution).reduce((a, b) => a + b, 0);
-    if (Math.abs(totalDistribution - 1) > 0.0001) {
-      throw new Error('La distribution de la taxe de base doit totaliser 100%');
-    }
-
-    // Vérifier l'adresse du destinataire de la taxe additionnelle
-    if (config.additionalTaxConfig.enabled && !isAddress(config.additionalTaxConfig.recipient)) {
-      throw new Error('Adresse de destinataire de taxe additionnelle invalide');
+    // Vérifier l'adresse du destinataire
+    if (config.enabled && !isAddress(config.recipient)) {
+      throw new Error('Adresse de destinataire de taxe invalide');
     }
 
     return true;
   }
 
-  public static calculateTax(amount: number, config: TaxConfig): TaxCalculation {
-    const baseTaxAmount = amount * this.BASE_TAX_RATE;
-    const additionalTaxAmount = config.additionalTaxConfig.enabled ? 
-      amount * config.additionalTax : 0;
-
+  public static getDefaultTaxConfig(): TaxConfig {
     return {
-      totalTaxAmount: baseTaxAmount + additionalTaxAmount,
-      baseTaxAmount,
-      additionalTaxAmount,
-      distribution: {
-        tokenForge: baseTaxAmount * config.distribution.tokenForge,
-        development: baseTaxAmount * config.distribution.development,
-        burnAndBuyback: baseTaxAmount * config.distribution.burnAndBuyback,
-        stakers: baseTaxAmount * config.distribution.stakers,
-        creator: additionalTaxAmount
-      }
+      enabled: false,
+      buyTax: this.DEFAULT_TAX_RATE,
+      sellTax: this.DEFAULT_TAX_RATE,
+      transferTax: this.DEFAULT_TRANSFER_TAX_RATE,
+      recipient: AddressZero,
+      ...this.DEFAULT_DISTRIBUTION
     };
   }
 
-  public static getDefaultTaxConfig(): TaxConfig {
-    return {
-      baseTax: this.BASE_TAX_RATE,
-      additionalTax: 0,
-      distribution: { ...this.DEFAULT_DISTRIBUTION },
-      additionalTaxConfig: {
-        enabled: false,
-        recipient: AddressZero
-      }
-    };
+  public static calculateEffectiveTax(amount: number, taxRate: number): number {
+    return amount * (taxRate / 100);
   }
 }
