@@ -60,9 +60,9 @@ export const CONTRACT_ADDRESSES = {
     local: formatAddress('0x5FbDB2315678afecb367f032d93F642f64180aa3')
   },
   USDT: {
-    sepolia: formatAddress('0x...'), // Ajouter l'adresse USDT sur Sepolia
+    sepolia: null, // Adresse USDT sur Sepolia à définir
     mainnet: formatAddress('0xdAC17F958D2ee523a2206206994597C13D831ec7'),
-    local: formatAddress('0x...') // Adresse locale
+    local: null // Adresse locale à définir
   },
   PREMIUM_SERVICES: {
     sepolia: formatAddress(import.meta.env.VITE_PREMIUM_SERVICES_SEPOLIA),
