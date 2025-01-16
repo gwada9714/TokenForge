@@ -1,8 +1,8 @@
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-toolbox";
-import { HardhatUserConfig } from "hardhat/config";
+require("@nomicfoundation/hardhat-ethers");
+require("@nomicfoundation/hardhat-toolbox");
+require("./tasks/deploy");
 
-const config: HardhatUserConfig = {
+const config = {
   solidity: {
     version: "0.8.19",
     settings: {
@@ -15,8 +15,12 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 1337
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545/",
+      chainId: 1337
     }
   }
 };
 
-export default config;
+module.exports = config;
