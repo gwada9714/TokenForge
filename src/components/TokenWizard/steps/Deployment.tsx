@@ -34,6 +34,13 @@ const Deployment: React.FC<DeploymentProps> = ({ data }) => {
     // Simulate deployment process
     const timer = setInterval(() => {
       setActiveStep((prevStep) => {
+        // Simuler une erreur aléatoire pour démonstration
+        if (prevStep === 1 && Math.random() < 0.1) {
+          setError('Une erreur est survenue lors du déploiement. Veuillez réessayer.');
+          clearInterval(timer);
+          return prevStep;
+        }
+        
         if (prevStep === deploymentSteps.length - 1) {
           clearInterval(timer);
           return prevStep;

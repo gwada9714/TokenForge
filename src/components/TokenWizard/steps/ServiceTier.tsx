@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import StarIcon from '@mui/icons-material/Star';
-import { TKN_TOKEN_ADDRESS } from '@/constants/tokenforge';
 
 interface ServiceTierProps {
   data: {
