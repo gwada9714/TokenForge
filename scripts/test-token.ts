@@ -1,4 +1,4 @@
-import { ethers } from "hardhat/ethers";
+import { ethers } from "hardhat";
 
 async function main() {
   const [owner, addr1, addr2] = await ethers.getSigners();
