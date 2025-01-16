@@ -67,21 +67,22 @@ export interface TokenConfig {
   symbol: string;
   decimals: number;
   totalSupply: string;
-  taxes: TaxConfig;
-  liquidityLock: LiquidityLock;
-  maxLimits: MaxLimits;
-  antiBot: AntiBot;
-  audit?: TokenAudit;
-  kyc?: KYCVerification;
   features: {
-    burnable: boolean;
     mintable: boolean;
+    burnable: boolean;
     pausable: boolean;
     blacklist: boolean;
+    antiWhale: boolean;
     forceTransfer: boolean;
     deflation: boolean;
     reflection: boolean;
   };
+  taxes?: TaxConfig;
+  maxLimits?: MaxLimits;
+  liquidityLock?: LiquidityLock;
+  antiBot?: AntiBot;
+  audit?: TokenAudit;
+  kyc?: KYCVerification;
 }
 
 export interface TokenFeatures {

@@ -23,6 +23,10 @@ declare module 'styled-components' {
         secondary: string;
         light: string;
       };
+      forge: {
+        glow: string;
+        metallic: string;
+      };
       gradient: {
         primary: string;
         secondary: string;
