@@ -20,27 +20,20 @@ contract CustomToken is ERC20, ERC20Burnable, ERC20Pausable, ERC20Permit, ERC20V
     constructor(
         string memory name,
         string memory symbol,
-        uint8 decimalsArg,
+        uint8 decimals_,
         uint256 initialSupply,
-        bool mintable,
-        bool burnable,
-        bool pausable,
-        bool /* permit */,
-        bool /* votes */
+        bool mintable_,
+        bool burnable_,
+        bool pausable_
     ) ERC20(name, symbol) ERC20Permit(name) {
-        _decimals = decimalsArg;
-        _mintable = mintable;
-        _burnable = burnable;
-        _pausable = pausable;
+        _decimals = decimals_;
+        _mintable = mintable_;
+        _burnable = burnable_;
+        _pausable = pausable_;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-
-        if (mintable) {
-            _grantRole(MINTER_ROLE, msg.sender);
-        }
-        if (pausable) {
-            _grantRole(PAUSER_ROLE, msg.sender);
-        }
+        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
 
         _mint(msg.sender, initialSupply);
     }
@@ -74,20 +67,33 @@ contract CustomToken is ERC20, ERC20Burnable, ERC20Pausable, ERC20Permit, ERC20V
         _unpause();
     }
 
-    // The following functions are overrides required by Solidity.
-    function _update(address from, address to, uint256 value)
-        internal
-        override(ERC20, ERC20Pausable, ERC20Votes)
-    {
-        super._update(from, to, value);
+    // The following functions are overrides required by Solidity
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Pausable) {
+        super._beforeTokenTransfer(from, to, amount);
     }
 
-    function nonces(address owner)
-        public
-        view
-        override(ERC20Permit)
-        returns (uint256)
-    {
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Votes) {
+        super._afterTokenTransfer(from, to, amount);
+    }
+
+    function _mint(address to, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._mint(to, amount);
+    }
+
+    function _burn(address account, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._burn(account, amount);
+    }
+
+    function nonces(address owner) public view override(ERC20Permit) returns (uint256) {
         return super.nonces(owner);
     }
 }

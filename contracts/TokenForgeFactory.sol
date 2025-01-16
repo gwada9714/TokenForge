@@ -54,9 +54,9 @@ contract TokenForgeFactory is Ownable {
         string memory symbol,
         uint8 decimals,
         uint256 initialSupply,
-        bool mintable,
-        bool burnable,
-        bool pausable,
+        uint256 maxTxAmount,
+        uint256 maxWalletSize,
+        uint256 taxFee,
         bool isPremium
     ) external {
         uint256 price = isPremium ? PREMIUM_TIER_PRICE : BASIC_TIER_PRICE;
@@ -70,12 +70,14 @@ contract TokenForgeFactory is Ownable {
             symbol,
             decimals,
             initialSupply,
-            mintable,
-            burnable,
-            pausable,
-            treasury,
+            maxTxAmount,
+            maxWalletSize,
+            taxFee,
             taxDistributor
         );
+
+        // Transfer ownership to the creator
+        newToken.transferOwnership(msg.sender);
 
         // Store token info
         TokenInfo memory tokenInfo = TokenInfo({
@@ -119,5 +121,11 @@ contract TokenForgeFactory is Ownable {
             return basePrice - (basePrice * TKN_PAYMENT_DISCOUNT / 10000);
         }
         return basePrice;
+    }
+
+    function withdrawFees() external onlyOwner {
+        uint256 balance = IERC20(tknToken).balanceOf(address(this));
+        require(balance > 0, "TokenForge: No fees to withdraw");
+        IERC20(tknToken).transfer(treasury, balance);
     }
 }

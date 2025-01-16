@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "declaration": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@openzeppelin/*": ["../node_modules/@openzeppelin/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.sol"],
+  "files": ["hardhat.config.ts"]
+}
