@@ -24,7 +24,7 @@ async function main() {
 
   // Ajuster le taux de taxe (0.3% au lieu de 0.5%)
   const newTaxRate = 30; // 0.3%
-  const setTaxRateTx = await token.connect(deployer).functions["setTaxRate"](newTaxRate);
+  const setTaxRateTx = await token.setTaxRate(newTaxRate);
   await setTaxRateTx.wait();
   console.log("Tax rate set to:", newTaxRate/100, "%");
 
@@ -37,7 +37,7 @@ async function main() {
   ];
 
   for (const address of exemptAddresses) {
-    const setExemptTx = await token.connect(deployer).functions["setExemptStatus"](address, true);
+    const setExemptTx = await token.connect(deployer).setExemptStatus(address, true);
     await setExemptTx.wait();
     console.log("Address exempted from taxes:", address);
   }

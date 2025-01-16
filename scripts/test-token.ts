@@ -28,28 +28,28 @@ async function main() {
   console.log("2. Supply et solde:");
   const totalSupply = await token.totalSupply();
   const ownerBalance = await token.balanceOf(await owner.getAddress());
-  console.log(`   Supply total: ${ethers.utils.formatEther(totalSupply)} ${symbol}`);
-  console.log(`   Solde du propriétaire: ${ethers.utils.formatEther(ownerBalance)} ${symbol}`);
+  console.log(`   Supply total: ${ethers.formatEther(totalSupply)} ${symbol}`);
+  console.log(`   Solde du propriétaire: ${ethers.formatEther(ownerBalance)} ${symbol}`);
   console.log();
 
   // Test 3: Tester le transfert
   console.log("3. Test du transfert:");
-  const transferAmount = ethers.utils.parseEther("1000");
-  console.log(`   Transfert de ${ethers.utils.formatEther(transferAmount)} ${symbol} à ${await addr1.getAddress()}`);
+  const transferAmount = ethers.parseEther("1000");
+  console.log(`   Transfert de ${ethers.formatEther(transferAmount)} ${symbol} à ${await addr1.getAddress()}`);
   await token.transfer(await addr1.getAddress(), transferAmount);
   
   const addr1Balance = await token.balanceOf(await addr1.getAddress());
-  console.log(`   Nouveau solde de addr1: ${ethers.utils.formatEther(addr1Balance)} ${symbol}`);
+  console.log(`   Nouveau solde de addr1: ${ethers.formatEther(addr1Balance)} ${symbol}`);
   console.log();
 
   // Test 4: Tester le mint (si activé)
   console.log("4. Test du mint:");
-  const mintAmount = ethers.utils.parseEther("500");
+  const mintAmount = ethers.parseEther("500");
   try {
     await token.mint(await addr1.getAddress(), mintAmount);
     const newAddr1Balance = await token.balanceOf(await addr1.getAddress());
-    console.log(`   Mint de ${ethers.utils.formatEther(mintAmount)} ${symbol} à addr1`);
-    console.log(`   Nouveau solde après mint: ${ethers.utils.formatEther(newAddr1Balance)} ${symbol}`);
+    console.log(`   Mint de ${ethers.formatEther(mintAmount)} ${symbol} à addr1`);
+    console.log(`   Nouveau solde après mint: ${ethers.formatEther(newAddr1Balance)} ${symbol}`);
   } catch (error) {
     console.log(`   Mint échoué: ${error.message}`);
   }
@@ -57,12 +57,12 @@ async function main() {
 
   // Test 5: Tester le burn
   console.log("5. Test du burn:");
-  const burnAmount = ethers.utils.parseEther("100");
+  const burnAmount = ethers.parseEther("100");
   try {
     await token.connect(addr1).burn(burnAmount);
     const finalAddr1Balance = await token.balanceOf(await addr1.getAddress());
-    console.log(`   Burn de ${ethers.utils.formatEther(burnAmount)} ${symbol} par addr1`);
-    console.log(`   Solde final de addr1: ${ethers.utils.formatEther(finalAddr1Balance)} ${symbol}`);
+    console.log(`   Burn de ${ethers.formatEther(burnAmount)} ${symbol} par addr1`);
+    console.log(`   Solde final de addr1: ${ethers.formatEther(finalAddr1Balance)} ${symbol}`);
   } catch (error) {
     console.log(`   Burn échoué: ${error.message}`);
   }
