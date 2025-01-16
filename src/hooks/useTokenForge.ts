@@ -13,6 +13,20 @@ import { useNetwork } from 'wagmi';
 export const TokenForgeFactoryABI = TokenForgeFactoryJSON.abi;
 export const TKNTokenABI = TKNTokenJSON.abi;
 
+interface TokenDeployParams {
+  name: string;
+  symbol: string;
+  decimals: number;
+  initialSupply: bigint;
+  features: {
+    mintable: boolean;
+    burnable: boolean;
+    pausable: boolean;
+  };
+  isPremium: boolean;
+  payWithTKN: boolean;
+}
+
 export const useTokenForge = () => {
   const { chain } = useNetwork();
   const chainId = chain?.id || 1;
@@ -56,32 +70,12 @@ export const useTokenForge = () => {
     return basePrice;
   };
 
-  const handleCreateToken = async ({
-    name,
-    symbol,
-    decimals,
-    initialSupply,
-    features,
-    isPremium,
-    payWithTKN,
-  }: {
-    name: string;
-    symbol: string;
-    decimals: number;
-    initialSupply: bigint;
-    features: {
-      mintable: boolean;
-      burnable: boolean;
-      pausable: boolean;
-    };
-    isPremium: boolean;
-    payWithTKN: boolean;
-  }) => {
+  const handleCreateToken = async (params: TokenDeployParams) => {
     try {
-      const price = calculatePrice(isPremium, payWithTKN);
+      const price = calculatePrice(params.isPremium, params.payWithTKN);
 
       // Approuver les tokens TKN si nécessaire
-      if (payWithTKN) {
+      if (params.payWithTKN) {
         await approveTokens({
           args: [factoryAddress, price],
         });
@@ -90,16 +84,16 @@ export const useTokenForge = () => {
       // Créer le token
       await createToken({
         args: [
-          name,
-          symbol,
-          decimals,
-          initialSupply,
-          features.mintable,
-          features.burnable,
-          features.pausable,
-          isPremium,
+          params.name,
+          params.symbol,
+          params.decimals,
+          params.initialSupply,
+          params.features.mintable,
+          params.features.burnable,
+          params.features.pausable,
+          params.isPremium,
         ],
-        value: payWithTKN ? 0n : price,
+        value: params.payWithTKN ? 0n : price,
       });
 
       return true;

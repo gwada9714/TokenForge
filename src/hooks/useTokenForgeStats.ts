@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useContract } from './useContract';
+import { useWeb3Contract } from './useWeb3Contract';
 import { TKN_TOKEN_ADDRESS } from '@/constants/tokenforge';
-import TokenForgeToken from '@/contracts/TokenForgeToken.json';
-import { BigNumber } from 'ethers';
+import { Contract, BigNumber } from 'ethers';
+import { TokenForgeTokenABI } from '@/contracts/abis';
 
 interface TokenForgeStats {
   totalTaxCollected: BigNumber;
@@ -14,8 +14,8 @@ interface TokenForgeStats {
   totalValueLocked: BigNumber;
   isLoading: boolean;
   taxHistory: Array<{
-    date: string;
-    taxAmount: number;
+    timestamp: number;
+    amount: BigNumber;
   }>;
 }
 
@@ -32,70 +32,78 @@ export const useTokenForgeStats = () => {
     taxHistory: []
   });
 
-  const contract = useContract(TKN_TOKEN_ADDRESS[1], TokenForgeToken.abi);
-
-  const fetchStats = async () => {
-    if (!contract) return;
-
-    try {
-      const [
-        totalTaxCollected,
-        totalTaxToForge,
-        totalTaxToDevFund,
-        totalTaxToBuyback,
-        totalTaxToStaking,
-        totalTransactions,
-        totalValueLocked
-      ] = await Promise.all([
-        contract.totalTaxCollected(),
-        contract.totalTaxToForge(),
-        contract.totalTaxToDevFund(),
-        contract.totalTaxToBuyback(),
-        contract.totalTaxToStaking(),
-        contract.totalTransactions(),
-        contract.totalValueLocked()
-      ]);
-
-      // Fetch tax collection events for history
-      const filter = contract.filters.TaxCollected();
-      const events = await contract.queryFilter(filter, -10000); // Last 10000 blocks
-      
-      const taxHistory = events.map(event => ({
-        date: new Date(event.blockTimestamp * 1000).toLocaleDateString(),
-        taxAmount: Number(event.args?.taxAmount.toString()) / 1e18
-      }));
-
-      setStats({
-        totalTaxCollected,
-        totalTaxToForge,
-        totalTaxToDevFund,
-        totalTaxToBuyback,
-        totalTaxToStaking,
-        totalTransactions: totalTransactions.toNumber(),
-        totalValueLocked,
-        isLoading: false,
-        taxHistory
-      });
-    } catch (error) {
-      console.error('Error fetching TokenForge stats:', error);
-      setStats(prev => ({ ...prev, isLoading: false }));
-    }
-  };
+  const web3Contract = useWeb3Contract();
+  const [contract, setContract] = useState<Contract | null>(null);
 
   useEffect(() => {
-    fetchStats();
+    if (!web3Contract || !web3Contract.provider) return;
     
-    // Set up event listeners for real-time updates
-    if (contract) {
-      const taxCollectedFilter = contract.filters.TaxCollected();
-      contract.on(taxCollectedFilter, () => {
-        fetchStats();
-      });
+    const tokenContract = new Contract(
+      TKN_TOKEN_ADDRESS[1],
+      TokenForgeTokenABI,
+      web3Contract.provider
+    );
+    
+    setContract(tokenContract);
+  }, [web3Contract]);
 
-      return () => {
-        contract.removeAllListeners(taxCollectedFilter);
-      };
-    }
+  useEffect(() => {
+    if (!contract) return;
+
+    const fetchStats = async () => {
+      try {
+        const [
+          totalTaxCollected,
+          totalTaxToForge,
+          totalTaxToDevFund,
+          totalTaxToBuyback,
+          totalTaxToStaking,
+          totalTransactions,
+          totalValueLocked
+        ] = await Promise.all([
+          contract.totalTaxCollected(),
+          contract.totalTaxToForge(),
+          contract.totalTaxToDevFund(),
+          contract.totalTaxToBuyback(),
+          contract.totalTaxToStaking(),
+          contract.totalTransactions(),
+          contract.totalValueLocked()
+        ]);
+
+        const taxEvent = contract.filters.TaxCollected();
+        const events = await contract.queryFilter(taxEvent);
+        const taxHistory = events.map((event) => ({
+          timestamp: event.args?.timestamp.toNumber(),
+          amount: event.args?.amount
+        }));
+
+        setStats({
+          totalTaxCollected,
+          totalTaxToForge,
+          totalTaxToDevFund,
+          totalTaxToBuyback,
+          totalTaxToStaking,
+          totalTransactions,
+          totalValueLocked,
+          isLoading: false,
+          taxHistory
+        });
+      } catch (error) {
+        console.error('Error fetching token stats:', error);
+        setStats(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    fetchStats();
+
+    const taxCollectedFilter = contract.filters.TaxCollected();
+    contract.on(taxCollectedFilter, () => {
+      fetchStats();
+    });
+
+    return () => {
+      contract.removeAllListeners();
+    };
   }, [contract]);
 
   return stats;
