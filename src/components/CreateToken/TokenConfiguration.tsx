@@ -10,6 +10,7 @@ import {
   TextField,
   Tooltip,
   IconButton,
+  Box,
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useTokenCreation } from '@/store/hooks';
@@ -18,6 +19,9 @@ import { TaxConfigurationPanel } from '../../features/token-creation/components/
 import { MaxLimitsConfiguration } from './MaxLimitsConfiguration';
 import { LiquidityLockConfiguration } from './LiquidityLockConfiguration';
 import { MaxLimits, LiquidityLock, TaxConfig } from '@/types/tokenFeatures';
+import { NetworkTaxInfo } from '@/features/token-creation/components/NetworkTaxInfo';
+import { useNetworkTaxConfig } from '@/hooks/useNetworkTaxConfig';
+import { GasEstimationPanel } from '@/features/token-creation/components/GasEstimationPanel';
 
 const basicFeatures = [
   'Mint',
@@ -29,6 +33,7 @@ const basicFeatures = [
 
 const TokenConfiguration: React.FC = () => {
   const { tokenConfig, dispatch } = useTokenCreation();
+  const { taxConfig } = useNetworkTaxConfig();
 
   const handleChange = useCallback((field: keyof typeof tokenConfig, value: any) => {
     dispatch(updateTokenConfig({ [field]: value }));
@@ -105,7 +110,7 @@ const TokenConfiguration: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={4}>
+    <Stack spacing={3}>
       <Typography variant="h6" gutterBottom>
         Configuration du Token
       </Typography>
@@ -164,15 +169,22 @@ const TokenConfiguration: React.FC = () => {
 
       <Divider />
 
+      <NetworkTaxInfo />
+
       <div>
         <Typography variant="subtitle1" gutterBottom>
           Configuration des Taxes
         </Typography>
         <TaxConfigurationPanel
           value={tokenConfig.taxConfig}
-          onChange={handleTaxConfigChange}
+          onChange={(taxConfig) => handleChange('taxConfig', taxConfig)}
+          maxAdditionalTaxRate={taxConfig.maxAdditionalTaxRate}
         />
       </div>
+
+      <Box mt={3}>
+        <GasEstimationPanel />
+      </Box>
 
       <Divider />
 

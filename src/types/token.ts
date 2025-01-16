@@ -1,6 +1,9 @@
 import { TaxConfig, LiquidityLock, MaxLimits, TokenAudit, KYCVerification } from './tokenFeatures';
 import { NetworkConfig } from '@/config/networks';
 
+// Réexporter les types pour les rendre disponibles
+export { TaxConfig, LiquidityLock, MaxLimits, TokenAudit, KYCVerification };
+
 export interface TokenConfig {
   // Configuration de base
   name: string;

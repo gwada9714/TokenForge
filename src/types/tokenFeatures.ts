@@ -1,28 +1,21 @@
 export interface TaxConfig {
   enabled: boolean;
-  buyTax: number;
-  sellTax: number;
-  transferTax: number;
-  recipient: string;
-  forgeShare: number;
-  redistributionShare: number;
-  liquidityShare: number;
-  burnShare: number;
+  baseTaxRate: number; 
+  additionalTaxRate: number; 
+  creatorWallet: string; 
   distribution: {
-    treasury: number;
-    development: number;
-    buyback: number;
-    staking: number;
+    treasury: number; 
+    development: number; 
+    buyback: number; 
+    staking: number; 
   };
 }
 
 export interface LiquidityLock {
   enabled: boolean;
   amount: string;
-  duration: number; // en secondes
   unlockDate: Date;
-  pair: string;
-  dex: string;
+  beneficiary: string;
 }
 
 export interface MaxLimits {
@@ -46,17 +39,14 @@ export interface AntiBot {
 }
 
 export interface TokenAudit {
+  timestamp: Date | null;
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
-  auditor: string;
-  date?: Date;
-  report?: string;
-  score?: number;
-  issues?: {
-    critical: number;
-    high: number;
-    medium: number;
-    low: number;
-  };
+  issues: Array<{
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    description: string;
+    recommendation: string;
+  }>;
+  score: number;
 }
 
 export interface KYCVerification {
