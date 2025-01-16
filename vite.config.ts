@@ -15,6 +15,28 @@ export default defineConfig({
         ]
       }
     }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+        cleanupOutdatedCaches: true
+      },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      manifest: {
+        name: 'TokenForge App',
+        short_name: 'TokenForge',
+        description: 'TokenForge - Create and manage tokens',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'favicon.ico',
+            sizes: '64x64 32x32 24x24 16x16',
+            type: 'image/x-icon'
+          }
+        ]
+      }
+    }),
     nodePolyfills({
       include: ['buffer', 'process', 'util', 'stream'],
       globals: {
@@ -23,28 +45,28 @@ export default defineConfig({
         process: true,
       },
     }),
-    VitePWA({
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'service-worker.ts',
-      injectRegister: 'auto',
-      manifest: {
-        name: 'TokenForge',
-        short_name: 'TokenForge',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: '/favicon.ico',
-            sizes: '64x64 32x32 24x24 16x16',
-            type: 'image/x-icon'
-          }
-        ]
-      },
-      devOptions: {
-        enabled: true,
-        type: 'module'
-      }
-    })
+    // VitePWA({
+    //   strategies: 'injectManifest',
+    //   srcDir: 'src',
+    //   filename: 'service-worker.ts',
+    //   injectRegister: 'auto',
+    //   manifest: {
+    //     name: 'TokenForge',
+    //     short_name: 'TokenForge',
+    //     theme_color: '#ffffff',
+    //     icons: [
+    //       {
+    //         src: '/favicon.ico',
+    //         sizes: '64x64 32x32 24x24 16x16',
+    //         type: 'image/x-icon'
+    //       }
+    //     ]
+    //   },
+    //   devOptions: {
+    //     enabled: true,
+    //     type: 'module'
+    //   }
+    // })
   ],
   resolve: {
     alias: {
@@ -55,12 +77,13 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3001,
-    strictPort: true,
+    port: 3002,
     headers: {
       'Service-Worker-Allowed': '/',
-      'Content-Type': 'application/javascript'
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
     },
+    middlewareMode: false,
     hmr: {
       overlay: false // Désactive l'overlay d'erreur qui peut ralentir
     },
