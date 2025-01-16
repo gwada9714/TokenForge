@@ -7,13 +7,13 @@ const StyledButton = styled.button<ButtonProps>`
     props.theme.typography.fontFamily.heading};
   font-weight: ${(props: StyledProps) =>
     props.theme.typography.fontWeight.semibold};
-  border-radius: ${(props: StyledProps) => props.theme.borderRadius.md};
+  border-radius: ${(props: StyledProps) => props.theme.borderRadius.medium};
   transition: ${(props: StyledProps) => props.theme.transitions.default};
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: ${(props: StyledProps) => props.theme.spacing.sm};
+  gap: ${(props: StyledProps) => props.theme.spacing(2)};
 
   ${(props: ButtonProps & StyledProps) =>
     props.$fullWidth &&
@@ -25,18 +25,18 @@ const StyledButton = styled.button<ButtonProps>`
     switch (props.size) {
       case "small":
         return css`
-          padding: ${props.theme.spacing.xs} ${props.theme.spacing.sm};
-          font-size: ${props.theme.typography.fontSize.sm};
+          padding: ${props.theme.spacing(1)} ${props.theme.spacing(2)};
+          font-size: ${props.theme.typography.fontSizes.small};
         `;
       case "large":
         return css`
-          padding: ${props.theme.spacing.md} ${props.theme.spacing.lg};
-          font-size: ${props.theme.typography.fontSize.lg};
+          padding: ${props.theme.spacing(3)} ${props.theme.spacing(4)};
+          font-size: ${props.theme.typography.fontSizes.large};
         `;
       default:
         return css`
-          padding: ${props.theme.spacing.sm} ${props.theme.spacing.md};
-          font-size: ${props.theme.typography.fontSize.base};
+          padding: ${props.theme.spacing(2)} ${props.theme.spacing(3)};
+          font-size: ${props.theme.typography.fontSizes.medium};
         `;
     }
   }}
@@ -59,7 +59,7 @@ const StyledButton = styled.button<ButtonProps>`
           background-color: transparent;
           border: none;
           color: ${props.theme.colors.secondary.main};
-          padding: ${props.theme.spacing.xs};
+          padding: ${props.theme.spacing(1)};
 
           &:hover:not(:disabled) {
             background-color: ${props.theme.colors.secondary.main}20;

@@ -87,8 +87,13 @@ declare module "styled-components" {
         semibold: number;
         bold: number;
       };
+      fontSizes: {
+        small: string;
+        medium: string;
+        large: string;
+      };
     };
-    spacing: (value: number) => number;
+    spacing: (value: number) => string;
     borderRadius: {
       small: string;
       medium: string;
@@ -202,8 +207,9 @@ const spacing = {
   '2xl': '3rem',
   '3xl': '4rem',
   '4xl': '6rem',
-  (value: number): string => `${value * 0.25}rem`
 };
+
+const spacingFunction = (value: number): string => `${value * 0.25}rem`;
 
 const components: Components<Omit<Theme, "components">> = {
   MuiButton: {
@@ -361,8 +367,13 @@ export const styledTheme = {
       semibold: 600,
       bold: 700,
     },
+    fontSizes: {
+      small: '0.875rem',
+      medium: '1rem',
+      large: '1.125rem',
+    },
   },
-  spacing,
+  spacing: spacingFunction,
   borderRadius: {
     small: '4px',
     medium: '8px',

@@ -62,14 +62,14 @@ export const ForgeButton = styled(motion.button)`
 
 export const ForgeCard = styled(motion.div)`
   background: ${props => props.theme.colors.background.paper};
-  border-radius: ${props => props.theme.borderRadius.lg};
+  border-radius: ${props => props.theme.borderRadius.large};
   padding: ${props => props.theme.spacing(8)}rem;
-  box-shadow: ${props => props.theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.medium};
   transition: ${props => props.theme.transitions.default};
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: ${props => props.theme.shadows.lg};
+    box-shadow: ${props => props.theme.shadows.large};
   }
 `;
 
