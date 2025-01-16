@@ -1,4 +1,12 @@
 import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react';
+import { DefaultTheme } from 'styled-components';
+import { Tokens } from '@/theme/tokens';
+
+declare module 'styled-components' {
+  export interface DefaultTheme extends Tokens {
+    // Add any additional theme properties here if needed
+  }
+}
 
 export interface BaseProps {
   className?: string;
@@ -7,15 +15,15 @@ export interface BaseProps {
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, BaseProps {
   variant?: 'primary' | 'secondary' | 'text';
   size?: 'small' | 'medium' | 'large';
-  fullWidth?: boolean;
+  $fullWidth?: boolean;
   isLoading?: boolean;
 }
 
 export interface CardProps extends BaseProps {
   variant?: 'default' | 'elevated' | 'outlined';
-  padding?: 'none' | 'small' | 'medium' | 'large';
+  $padding?: 'none' | 'small' | 'medium' | 'large';
   onClick?: () => void;
-  interactive?: boolean;
+  $interactive?: boolean;
   children: ReactNode;
 }
 
@@ -23,11 +31,12 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement>, BaseP
   label?: string;
   error?: string;
   helperText?: string;
-  fullWidth?: boolean;
+  $fullWidth?: boolean;
   startIcon?: ReactNode;
   endIcon?: ReactNode;
 }
 
+// This is used internally by styled-components
 export interface StyledProps {
-  theme: any;
+  theme: DefaultTheme;
 }

@@ -1,15 +1,14 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
-import { theme } from '@/theme/theme';
-import { CardProps, StyledProps } from './types';
+import { CardProps } from './types';
 
 const StyledCard = styled.div<CardProps>`
-  background-color: ${(props: StyledProps) => props.theme.colors.background.paper};
-  border-radius: ${(props: StyledProps) => props.theme.borderRadius.lg};
-  transition: all ${(props: StyledProps) => props.theme.transitions.default};
+  background-color: ${({ theme }) => theme.colors.background.paper};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  transition: all ${({ theme }) => theme.transitions.default};
 
-  ${(props: CardProps) => {
-    switch (props.padding) {
+  ${({ theme, $padding }) => {
+    switch ($padding) {
       case 'none':
         return css`padding: 0;`;
       case 'small':
@@ -21,31 +20,12 @@ const StyledCard = styled.div<CardProps>`
     }
   }}
 
-  ${(props: CardProps) => {
-    switch (props.variant) {
-      case 'elevated':
-        return css`
-          box-shadow: ${theme.shadows.lg};
-        `;
-      case 'outlined':
-        return css`
-          border: 1px solid ${theme.colors.primary.light};
-        `;
-      default:
-        return css`
-          box-shadow: ${theme.shadows.md};
-        `;
-    }
-  }}
-
-  ${(props: CardProps) => props.interactive && css`
+  ${({ theme, $interactive }) => $interactive && css`
     cursor: pointer;
-    
     &:hover {
       transform: translateY(-2px);
-      box-shadow: ${theme.shadows.lg};
+      box-shadow: ${theme.shadows.md};
     }
-    
     &:active {
       transform: translateY(-1px);
     }
@@ -53,28 +33,28 @@ const StyledCard = styled.div<CardProps>`
 `;
 
 const CardHeader = styled.div`
-  margin-bottom: ${(props: StyledProps) => props.theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
 `;
 
 const CardTitle = styled.h3`
-  font-family: ${(props: StyledProps) => props.theme.typography.fontFamily.heading};
-  font-weight: ${(props: StyledProps) => props.theme.typography.fontWeight.bold};
-  color: ${(props: StyledProps) => props.theme.colors.text.primary};
-  margin-bottom: ${(props: StyledProps) => props.theme.spacing.xs};
+  font-family: ${({ theme }) => theme.typography.fontFamily.heading};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
 `;
 
 const CardSubtitle = styled.p`
-  color: ${(props: StyledProps) => props.theme.colors.text.secondary};
-  font-size: ${(props: StyledProps) => props.theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
 `;
 
 const CardContent = styled.div``;
 
 const CardFooter = styled.div`
-  margin-top: ${(props: StyledProps) => props.theme.spacing.md};
+  margin-top: ${({ theme }) => theme.spacing.md};
   display: flex;
   justify-content: flex-end;
-  gap: ${(props: StyledProps) => props.theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.sm};
 `;
 
 export const Card: React.FC<CardProps> & {
@@ -85,20 +65,20 @@ export const Card: React.FC<CardProps> & {
   Footer: typeof CardFooter;
 } = ({
   variant = 'default',
-  padding = 'medium',
+  $padding = 'medium',
   className,
   onClick,
-  interactive = false,
+  $interactive = false,
   children,
   ...props
 }) => {
   return (
     <StyledCard
       variant={variant}
-      padding={padding}
+      $padding={$padding}
       className={className}
       onClick={onClick}
-      interactive={interactive || !!onClick}
+      $interactive={$interactive || !!onClick}
       {...props}
     >
       {children}
@@ -111,3 +91,5 @@ Card.Title = CardTitle;
 Card.Subtitle = CardSubtitle;
 Card.Content = CardContent;
 Card.Footer = CardFooter;
+
+export default Card;

@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
-import { theme } from '../../theme/theme';
+import theme from '../../theme/theme';
 import { ButtonProps, StyledProps } from './types';
 
 const StyledButton = styled.button<ButtonProps>`
@@ -14,7 +14,7 @@ const StyledButton = styled.button<ButtonProps>`
   justify-content: center;
   gap: ${(props: StyledProps) => props.theme.spacing.sm};
   
-  ${(props: ButtonProps) => props.fullWidth && css`
+  ${(props: ButtonProps) => props.$fullWidth && css`
     width: 100%;
   `}
 
@@ -109,7 +109,7 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',
   size = 'medium',
-  fullWidth = false,
+  $fullWidth = false,
   isLoading = false,
   ...props
 }) => {
@@ -117,7 +117,7 @@ export const Button: React.FC<ButtonProps> = ({
     <StyledButton
       variant={variant}
       size={size}
-      fullWidth={fullWidth}
+      $fullWidth={$fullWidth}
       isLoading={isLoading}
       {...props}
     >
