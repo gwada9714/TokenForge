@@ -22,10 +22,12 @@ const getFontSize = (level: number = 1) => {
   return sizes[level as keyof typeof sizes];
 };
 
-const StyledHeading = styled(({ level, ...props }: { level: ForgeHeadingProps['level'] } & Omit<ForgeHeadingProps, 'level'>) => {
-  const Tag = `h${level}` as keyof JSX.IntrinsicElements;
-  return <Tag {...props} />;
-})<ForgeHeadingProps>`
+const BaseHeading = ({ level = 1, ...props }: { level?: number } & React.HTMLAttributes<HTMLHeadingElement>) => {
+  const Component = `h${level}` as keyof JSX.IntrinsicElements;
+  return React.createElement(Component, props);
+};
+
+const StyledHeading = styled(BaseHeading)<ForgeHeadingProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.bold};
   line-height: 1.2;
