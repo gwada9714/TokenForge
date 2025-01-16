@@ -18,9 +18,9 @@ export const fetchTokens = async (address: string): Promise<TokenInfo[]> => {
   if (!validateAddress(address)) {
     throw new Error("Format d'adresse invalide");
   }
-
-  const checkedAddress = checksumAddress(address);
   
+  const checkedAddress = address;
+  // ... reste du code
   try {
     // Mock data avec toutes les propriétés requises
     return [{

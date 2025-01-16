@@ -119,7 +119,7 @@ export const useStakingManager = () => {
       
       const [stakedAmount, rewards, totalStaked] = await Promise.all([
         contract.stakedAmount(address),
-        contract.rewards(address),
+        contract.pendingRewards(address),
         contract.totalStaked()
       ]);
       
