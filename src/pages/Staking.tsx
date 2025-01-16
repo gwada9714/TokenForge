@@ -1,9 +1,43 @@
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box, Alert, CircularProgress } from '@mui/material';
 import { StakingPool } from '../components/Staking/StakingPool';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
+import { useNetwork, useAccount } from 'wagmi';
 
 const StakingPage = () => {
-  const platformTokenAddress = CONTRACT_ADDRESSES.PLATFORM_TOKEN.sepolia || "0x0000000000000000000000000000000000000000";
+  const { chain } = useNetwork();
+  const { isConnected } = useAccount();
+  
+  const platformTokenAddress = CONTRACT_ADDRESSES.PLATFORM_TOKEN[chain?.network as keyof typeof CONTRACT_ADDRESSES.PLATFORM_TOKEN] || null;
+
+  if (!isConnected) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Veuillez connecter votre wallet pour accéder au staking.
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (!chain) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Aucun réseau détecté. Veuillez vous connecter à un réseau compatible.
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (!platformTokenAddress) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Le staking n'est pas disponible sur ce réseau. Veuillez changer de réseau.
+        </Alert>
+      </Container>
+    );
+  }
   
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
