@@ -1,108 +1,93 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  /* Colors */
-  --color-primary: #182038;
-  --color-primary-light: #2A3352;
-  --color-primary-dark: #0F1525;
-  --color-secondary: #D97706;
-  --color-secondary-light: #F59E0B;
-  --color-secondary-dark: #B45309;
-  --color-background: #F5F5F5;
-  --color-background-paper: #FFFFFF;
-  --color-text: #182038;
-  --color-text-light: #F5F5F5;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  font-size: 16px;
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: 'Open Sans', sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-text);
-  line-height: 1.5;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes forgeGlow {
-  0% { box-shadow: 0 0 5px var(--color-secondary); }
-  50% { box-shadow: 0 0 15px var(--color-secondary); }
-  100% { box-shadow: 0 0 5px var(--color-secondary); }
-}
-
-/* Utility Classes */
-.fade-in {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.slide-up {
-  animation: slideUp 0.5s ease-out;
-}
-
-.forge-glow {
-  animation: forgeGlow 2s infinite;
-}
-
-/* Interactive Elements */
-button, .button {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-button:hover, .button:hover {
-  transform: translateY(-1px);
-}
-
-/* Cards and Containers */
-.card {
-  background-color: var(--color-background-paper);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease-in-out;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
+@layer base {
   html {
-    font-size: 14px;
+    @apply bg-background-default text-text-primary antialiased;
   }
-  
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  body {
+    @apply font-body text-base;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg transition-forge;
+  }
+
+  .btn-primary {
+    @apply bg-primary-main text-white hover:bg-primary-light active:bg-primary-dark;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary-main text-white hover:bg-secondary-light active:bg-secondary-dark;
+  }
+
   .card {
-    padding: 1rem;
+    @apply bg-background-paper rounded-xl shadow-md p-6;
   }
+
+  .card-forge {
+    @apply card metal-effect forge-highlight;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-primary-main focus:ring-2 focus:ring-primary-main/20 transition-forge;
+  }
+}
+
+/* Animation spécifique pour les éléments de forge */
+.forge-element {
+  @apply relative overflow-hidden;
+}
+
+.forge-element::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-forge opacity-0 transition-forge;
+}
+
+.forge-element:hover::before {
+  @apply opacity-10;
+}
+
+/* Effet métallique amélioré */
+.metal-surface {
+  @apply relative overflow-hidden bg-gradient-metal;
+  background-size: 200% 100%;
+  animation: metal-shine 3s linear infinite;
+}
+
+/* Dark mode adjustments */
+.dark {
+  @apply bg-background-dark text-text-light;
+}
+
+.dark .card {
+  @apply bg-background-dark border border-gray-800;
+}
+
+.dark .input {
+  @apply bg-background-dark border-gray-700 focus:border-primary-light;
 }
