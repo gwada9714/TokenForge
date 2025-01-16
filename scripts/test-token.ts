@@ -1,78 +1,58 @@
-import { ethers } from "hardhat";
-import * as hre from "hardhat";
+import { ethers } from "hardhat/ethers";
 
 async function main() {
-  // Get signers
   const [owner, addr1, addr2] = await ethers.getSigners();
-  console.log("Testing with the account:", await owner.getAddress());
+
+  // Get the TokenForgeToken contract
+  const TokenForgeToken = await ethers.getContractFactory("TokenForgeToken");
+  const token = await TokenForgeToken.attach("0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9");
+
+  // Test basic token functionality
+  console.log("Testing token functionality...");
   
-  // Récupérer le contrat déployé
-  const tokenAddress = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
-  const TokenForge = await ethers.getContractFactory("TokenForgeToken");
-  const token = TokenForge.attach(tokenAddress);
-
-  console.log("Test du TokenForgeToken déployé à l'adresse:", tokenAddress);
-  console.log("----------------------------------------------------");
-
-  // Test 1: Vérifier le nom, le symbole et les décimales
-  console.log("1. Informations de base du token:");
+  // Get token info
   const name = await token.name();
   const symbol = await token.symbol();
   const decimals = await token.decimals();
-  console.log(`   Nom: ${name}`);
-  console.log(`   Symbole: ${symbol}`);
-  console.log(`   Décimales: ${decimals}`);
-  console.log();
-
-  // Test 2: Vérifier le supply total et le solde du propriétaire
-  console.log("2. Supply et solde:");
   const totalSupply = await token.totalSupply();
-  const ownerBalance = await token.balanceOf(await owner.getAddress());
-  console.log(`   Supply total: ${ethers.formatEther(totalSupply)} ${symbol}`);
-  console.log(`   Solde du propriétaire: ${ethers.formatEther(ownerBalance)} ${symbol}`);
-  console.log();
-
-  // Test 3: Tester le transfert
-  console.log("3. Test du transfert:");
-  const transferAmount = ethers.parseEther("1000");
-  console.log(`   Transfert de ${ethers.formatEther(transferAmount)} ${symbol} à ${await addr1.getAddress()}`);
-  await token.transfer(await addr1.getAddress(), transferAmount);
   
-  const addr1Balance = await token.balanceOf(await addr1.getAddress());
-  console.log(`   Nouveau solde de addr1: ${ethers.formatEther(addr1Balance)} ${symbol}`);
-  console.log();
+  console.log(`
+    Token Info:
+    - Name: ${name}
+    - Symbol: ${symbol}
+    - Decimals: ${decimals}
+    - Total Supply: ${totalSupply}
+  `);
 
-  // Test 4: Tester le mint (si activé)
-  console.log("4. Test du mint:");
-  const mintAmount = ethers.parseEther("500");
-  try {
-    await token.mint(await addr1.getAddress(), mintAmount);
-    const newAddr1Balance = await token.balanceOf(await addr1.getAddress());
-    console.log(`   Mint de ${ethers.formatEther(mintAmount)} ${symbol} à addr1`);
-    console.log(`   Nouveau solde après mint: ${ethers.formatEther(newAddr1Balance)} ${symbol}`);
-  } catch (error) {
-    console.log(`   Mint échoué: ${error.message}`);
-  }
-  console.log();
+  // Test transfers
+  console.log("\nTesting transfers...");
+  const amount = ethers.parseUnits("100", decimals);
+  
+  await token.transfer(addr1.address, amount);
+  console.log(`Transferred ${amount} tokens to ${addr1.address}`);
+  
+  const addr1Balance = await token.balanceOf(addr1.address);
+  console.log(`Address 1 balance: ${addr1Balance}`);
 
-  // Test 5: Tester le burn
-  console.log("5. Test du burn:");
-  const burnAmount = ethers.parseEther("100");
-  try {
-    await token.connect(addr1).burn(burnAmount);
-    const finalAddr1Balance = await token.balanceOf(await addr1.getAddress());
-    console.log(`   Burn de ${ethers.formatEther(burnAmount)} ${symbol} par addr1`);
-    console.log(`   Solde final de addr1: ${ethers.formatEther(finalAddr1Balance)} ${symbol}`);
-  } catch (error) {
-    console.log(`   Burn échoué: ${error.message}`);
-  }
+  // Test allowances
+  console.log("\nTesting allowances...");
+  await token.connect(addr1).approve(addr2.address, amount);
+  console.log(`Address 1 approved Address 2 to spend ${amount} tokens`);
+  
+  const allowance = await token.allowance(addr1.address, addr2.address);
+  console.log(`Allowance: ${allowance}`);
+
+  // Test transferFrom
+  await token.connect(addr2).transferFrom(addr1.address, addr2.address, amount.div(2));
+  console.log(`Address 2 transferred ${amount.div(2)} tokens from Address 1`);
+  
+  const addr2Balance = await token.balanceOf(addr2.address);
+  console.log(`Address 2 balance: ${addr2Balance}`);
 }
 
-if (require.main === module) {
-  main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
-}
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

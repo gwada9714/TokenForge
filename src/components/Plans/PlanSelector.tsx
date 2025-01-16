@@ -112,7 +112,10 @@ const PlanSelector: React.FC = () => {
 
   const handlePlanSelect = async (selectedLevel: UserLevel) => {
     try {
-      await upgradePlan(selectedLevel);
+      await upgradePlan(selectedLevel, () => {
+        // Callback after successful upgrade
+        console.log('Plan upgraded successfully');
+      });
     } catch (error) {
       console.error('Erreur lors de la mise à niveau du plan:', error);
     }

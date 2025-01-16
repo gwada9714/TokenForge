@@ -16,7 +16,7 @@ interface UserPlanContextType {
   features: PlanFeatures;
   isLoading: boolean;
   error: Error | null;
-  upgradePlan: (newLevel: UserLevel) => Promise<void>;
+  upgradePlan: (newLevel: UserLevel, paymentMethod: "TKN" | "BNB") => Promise<void>;
   checkFeatureAccess: (feature: keyof TokenFeatures | keyof ServiceAccess) => boolean;
 }
 
@@ -24,7 +24,7 @@ const UserPlanContext = createContext<UserPlanContextType | undefined>(undefined
 
 export const UserPlanProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { address } = useAccount();
-  const { getUserPlan, upgradeToPlan } = useTokenForgePlans();
+  const { getUserPlan, buyPlan, isLoading: isLoadingPlan } = useTokenForgePlans();
   
   const [userLevel, setUserLevel] = useState<UserLevel>(UserLevel.APPRENTICE);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,31 +56,25 @@ export const UserPlanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     loadUserPlan();
   }, [address, getUserPlan]);
 
-  const upgradePlan = async (newLevel: UserLevel) => {
-    if (!address) throw new Error('Wallet not connected');
-    
+  const upgradePlan = async (newLevel: UserLevel, paymentMethod: "TKN" | "BNB") => {
+    if (!address) throw new Error('No wallet connected');
+    if (newLevel <= userLevel) throw new Error('Cannot downgrade plan');
+
     try {
-      setIsLoading(true);
-      await upgradeToPlan(newLevel);
+      await buyPlan(newLevel, paymentMethod);
       setUserLevel(newLevel);
-      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to upgrade plan'));
-      throw err;
-    } finally {
-      setIsLoading(false);
+      throw err instanceof Error ? err : new Error('Failed to upgrade plan');
     }
   };
 
   const checkFeatureAccess = (feature: keyof TokenFeatures | keyof ServiceAccess): boolean => {
-    const tokenFeatures = currentPlan.features.tokenFeatures;
-    const serviceAccess = currentPlan.features.serviceAccess;
-
-    if (feature in tokenFeatures) {
-      return tokenFeatures[feature as keyof TokenFeatures];
+    const planFeatures = currentPlan.features;
+    if (feature in planFeatures.tokenFeatures) {
+      return planFeatures.tokenFeatures[feature as keyof TokenFeatures];
     }
-    if (feature in serviceAccess) {
-      return serviceAccess[feature as keyof ServiceAccess];
+    if (feature in planFeatures.serviceAccess) {
+      return planFeatures.serviceAccess[feature as keyof ServiceAccess];
     }
     return false;
   };
@@ -89,7 +83,7 @@ export const UserPlanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     userLevel,
     currentPlan,
     features: currentPlan.features,
-    isLoading,
+    isLoading: isLoading || isLoadingPlan,
     error,
     upgradePlan,
     checkFeatureAccess,
@@ -112,9 +106,6 @@ export const useUserPlan = () => {
 
 // Hook personnalisé pour vérifier rapidement l'accès aux fonctionnalités
 export const useFeatureAccess = (feature: keyof TokenFeatures | keyof ServiceAccess) => {
-  const { checkFeatureAccess, isLoading } = useUserPlan();
-  return {
-    hasAccess: checkFeatureAccess(feature),
-    isLoading
-  };
+  const { checkFeatureAccess } = useUserPlan();
+  return checkFeatureAccess(feature);
 };

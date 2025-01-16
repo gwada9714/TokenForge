@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
-import { theme } from '../../theme/theme';
+import { theme } from '@/theme/theme';
 import { CardProps, StyledProps } from './types';
 
 const StyledCard = styled.div<CardProps>`

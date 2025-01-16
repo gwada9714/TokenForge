@@ -29,6 +29,12 @@ interface TokenForgeStats {
   }>;
 }
 
+interface TaxCollectedEvent {
+  from: string;
+  amount: bigint;
+  timestamp: bigint;
+}
+
 export const useTokenForgeStats = () => {
   const [stats, setStats] = useState<TokenForgeStats>({
     totalTaxCollected: 0n,
@@ -82,10 +88,13 @@ export const useTokenForgeStats = () => {
 
         const taxEvent = contract.filters.TaxCollected();
         const events = await contract.queryFilter(taxEvent);
-        const taxHistory = events.map((event) => ({
-          timestamp: event.args?.timestamp.toNumber(),
-          amount: event.args?.amount.toString()
-        }));
+        const taxHistory = events.map((event) => {
+          const { amount, timestamp } = event as unknown as { args: TaxCollectedEvent };
+          return {
+            timestamp: Number(timestamp),
+            amount: BigInt(amount.toString())
+          };
+        });
 
         setStats({
           totalTaxCollected: BigInt(totalTaxCollected.toString()),
@@ -93,29 +102,37 @@ export const useTokenForgeStats = () => {
           totalTaxToDevFund: BigInt(totalTaxToDevFund.toString()),
           totalTaxToBuyback: BigInt(totalTaxToBuyback.toString()),
           totalTaxToStaking: BigInt(totalTaxToStaking.toString()),
-          totalTransactions,
+          totalTransactions: Number(totalTransactions),
           totalValueLocked: BigInt(totalValueLocked.toString()),
           isLoading: false,
-          taxHistory: taxHistory.map((event) => ({
-            timestamp: event.timestamp,
-            amount: BigInt(event.amount)
-          }))
+          taxHistory
         });
       } catch (error) {
-        console.error('Error fetching token stats:', error);
+        console.error('Error fetching TokenForge stats:', error);
         setStats(prev => ({ ...prev, isLoading: false }));
       }
     };
 
     fetchStats();
 
-    const taxCollectedFilter = contract.filters.TaxCollected();
-    contract.on(taxCollectedFilter, () => {
-      fetchStats();
-    });
+    // Subscribe to TaxCollected events
+    const handleTaxCollected = (from: string, amount: bigint, timestamp: bigint) => {
+      setStats(prev => ({
+        ...prev,
+        taxHistory: [
+          ...prev.taxHistory,
+          {
+            timestamp: Number(timestamp),
+            amount: BigInt(amount.toString())
+          }
+        ]
+      }));
+    };
+
+    contract.on('TaxCollected', handleTaxCollected);
 
     return () => {
-      contract.removeAllListeners();
+      contract.off('TaxCollected', handleTaxCollected);
     };
   }, [contract]);
 
