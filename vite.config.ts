@@ -58,7 +58,8 @@ export default defineConfig({
     port: 3001,
     strictPort: true,
     headers: {
-      'Service-Worker-Allowed': '/'
+      'Service-Worker-Allowed': '/',
+      'Content-Type': 'application/javascript'
     },
     hmr: {
       overlay: false // Désactive l'overlay d'erreur qui peut ralentir

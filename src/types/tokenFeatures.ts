@@ -19,7 +19,7 @@ export interface TaxConfig {
 export interface LiquidityLock {
   enabled: boolean;
   amount: string;
-  unlockDate: Date;
+  unlockDate: number;
   beneficiary: string;
 }
 
@@ -44,7 +44,7 @@ export interface AntiBot {
 }
 
 export interface TokenAudit {
-  timestamp: Date | null;
+  timestamp: number | null;
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   issues: Array<{
     severity: 'critical' | 'high' | 'medium' | 'low';
@@ -57,8 +57,8 @@ export interface TokenAudit {
 export interface KYCVerification {
   status: 'pending' | 'verified' | 'rejected';
   provider: string;
-  date?: Date;
-  expiryDate?: Date;
+  date?: number;
+  expiryDate?: number;
   verificationId?: string;
 }
 

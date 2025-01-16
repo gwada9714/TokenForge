@@ -50,11 +50,11 @@ const initialState: TokenConfig = {
   liquidityLock: {
     enabled: false,
     amount: '0',
-    unlockDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+    unlockDate: Date.now() + 180 * 24 * 60 * 60 * 1000,
     beneficiary: ''
   },
   audit: {
-    timestamp: undefined,
+    timestamp: null,
     status: 'pending',
     issues: [],
     score: 0
@@ -81,8 +81,8 @@ const tokenCreationSlice = createSlice({
     setNetwork(state, action: PayloadAction<NetworkConfig>) {
       const network = action.payload;
       
-      // Créer une copie profonde de la configuration réseau avec des tableaux mutables
-      const mutableNetwork: NetworkConfig = {
+      // Create a deep copy of the network configuration with mutable arrays
+      const mutableNetwork = {
         ...network,
         chain: {
           ...network.chain,
@@ -90,7 +90,17 @@ const tokenCreationSlice = createSlice({
             ...network.chain.rpcUrls,
             default: {
               ...network.chain.rpcUrls.default,
-              http: [...network.chain.rpcUrls.default.http]
+              http: Array.from(network.chain.rpcUrls.default.http),
+              webSocket: network.chain.rpcUrls.default.webSocket 
+                ? Array.from(network.chain.rpcUrls.default.webSocket)
+                : undefined
+            },
+            public: {
+              ...network.chain.rpcUrls.public,
+              http: Array.from(network.chain.rpcUrls.public.http),
+              webSocket: network.chain.rpcUrls.public.webSocket
+                ? Array.from(network.chain.rpcUrls.public.webSocket)
+                : undefined
             }
           }
         }
@@ -109,7 +119,7 @@ const tokenCreationSlice = createSlice({
         state.deploymentStatus.status = 'success';
         state.deploymentStatus.txHash = action.payload.txHash;
         state.deploymentStatus.contractAddress = action.payload.contractAddress;
-        state.deploymentStatus.deployedAt = new Date();
+        state.deploymentStatus.deployedAt = Date.now();
       }
     },
     deploymentError(state, action: PayloadAction<string>) {

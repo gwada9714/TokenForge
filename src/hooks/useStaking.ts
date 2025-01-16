@@ -11,6 +11,7 @@ const TKNTokenABI = [
   "function claimRewards() external",
   "function getStakeInfo(address account) external view returns (uint256 stakedAmount, uint256 pendingRewards)",
   "function getStakingStats() external view returns (uint256 totalStaked, uint256 apy, uint256 stakersCount)",
+  "function totalStaked() external view returns (uint256)",
   "event Staked(address indexed user, uint256 amount)",
   "event Unstaked(address indexed user, uint256 amount)",
   "event RewardsClaimed(address indexed user, uint256 amount)",

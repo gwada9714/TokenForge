@@ -42,7 +42,7 @@ export interface TokenConfig {
     txHash?: string;
     error?: string;
     contractAddress?: string;
-    deployedAt?: Date;
+    deployedAt?: number;
   };
 }
 
