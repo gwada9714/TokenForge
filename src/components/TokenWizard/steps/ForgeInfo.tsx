@@ -7,92 +7,50 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Alert,
+  Divider
 } from '@mui/material';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import BuildIcon from '@mui/icons-material/Build';
-import LocalAtmIcon from '@mui/icons-material/LocalAtm';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
+import { Info, CheckCircle } from '@mui/icons-material';
+import { ForgeFeesService } from '@/services/forgeFeesService';
 
 const ForgeInfo: React.FC = () => {
+  const feesInfo = ForgeFeesService.getForgeFeesInfo();
+
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        TokenForge Tax Information
+    <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
+      <Typography variant="h5" gutterBottom>
+        Taxe de la Forge
       </Typography>
       
-      <Alert severity="info" sx={{ mb: 3 }}>
-        The TokenForge platform implements a fixed 1% tax on all token transactions to
-        support continuous development and ecosystem growth.
-      </Alert>
-
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Tax Distribution
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="body1" color="text.secondary">
+          {feesInfo.description}
         </Typography>
-        <List>
-          <ListItem>
-            <ListItemIcon>
-              <AccountBalanceIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="70% TokenForge Treasury"
-              secondary="Supports platform development and operations"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <BuildIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="15% Development Fund"
-              secondary="Funds new feature development and improvements"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <AutorenewIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="10% Buyback & Burn"
-              secondary="Maintains token value through regular buybacks"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <LocalAtmIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="5% Staking Rewards"
-              secondary="Rewards token holders who stake their tokens"
-            />
-          </ListItem>
-        </List>
-      </Paper>
+      </Box>
 
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Important Notes
+      <Typography variant="h6" gutterBottom>
+        Distribution des Taxes
+      </Typography>
+      
+      <List>
+        {feesInfo.benefits.map((benefit, index) => (
+          <ListItem key={index}>
+            <ListItemIcon>
+              <CheckCircle color="primary" />
+            </ListItemIcon>
+            <ListItemText primary={benefit} />
+          </ListItem>
+        ))}
+      </List>
+
+      <Divider sx={{ my: 2 }} />
+
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="body2" color="warning.main" sx={{ display: 'flex', alignItems: 'center' }}>
+          <Info sx={{ mr: 1 }} />
+          Cette taxe est une partie intégrante de l'écosystème TokenForge et ne peut pas être modifiée.
         </Typography>
-        <List>
-          <ListItem>
-            <ListItemText
-              primary="• The 1% tax is non-modifiable and applies to all transactions"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary="• Tax collection and distribution are fully automated"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary="• All tax operations are transparent and verifiable on-chain"
-            />
-          </ListItem>
-        </List>
-      </Paper>
-    </Box>
+      </Box>
+    </Paper>
   );
 };
 

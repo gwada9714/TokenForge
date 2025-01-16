@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useWeb3Provider } from './useWeb3Provider';
 import { TKN_TOKEN_ADDRESS } from '@/constants/tokenforge';
-import { Contract, type BigNumberish } from 'ethers';
+import { Contract } from 'ethers';
+import { TokenForgeStats, TaxCollectedEvent } from '@/types/tokenforge';
 
 const TOKEN_FORGE_ABI = [
   'function totalTaxCollected() view returns (uint256)',
@@ -13,27 +14,6 @@ const TOKEN_FORGE_ABI = [
   'function totalValueLocked() view returns (uint256)',
   'event TaxCollected(address indexed from, uint256 amount, uint256 timestamp)'
 ] as const;
-
-interface TokenForgeStats {
-  totalTaxCollected: bigint;
-  totalTaxToForge: bigint;
-  totalTaxToDevFund: bigint;
-  totalTaxToBuyback: bigint;
-  totalTaxToStaking: bigint;
-  totalTransactions: number;
-  totalValueLocked: bigint;
-  isLoading: boolean;
-  taxHistory: Array<{
-    timestamp: number;
-    amount: bigint;
-  }>;
-}
-
-interface TaxCollectedEvent {
-  from: string;
-  amount: bigint;
-  timestamp: bigint;
-}
 
 export const useTokenForgeStats = () => {
   const [stats, setStats] = useState<TokenForgeStats>({
@@ -90,7 +70,7 @@ export const useTokenForgeStats = () => {
         const events = await contract.queryFilter(taxEvent);
         const taxHistory = events.map((event) => {
           const eventData = event as unknown as { args: [string, bigint, bigint] };
-          const [from, amount, timestamp] = eventData.args;
+          const [, amount, timestamp] = eventData.args;
           return {
             timestamp: Number(timestamp),
             amount
@@ -116,16 +96,13 @@ export const useTokenForgeStats = () => {
 
     fetchStats();
 
-    // Subscribe to TaxCollected events
+    // Écouter les nouveaux événements
     const handleTaxCollected = (from: string, amount: bigint, timestamp: bigint) => {
       setStats(prev => ({
         ...prev,
         taxHistory: [
           ...prev.taxHistory,
-          {
-            timestamp: Number(timestamp),
-            amount: BigInt(amount.toString())
-          }
+          { timestamp: Number(timestamp), amount }
         ]
       }));
     };

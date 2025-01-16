@@ -48,6 +48,16 @@ export const CONTRACT_ADDRESSES = {
     sepolia: formatAddress('0x...'), // Ajouter l'adresse USDT sur Sepolia
     mainnet: formatAddress('0xdAC17F958D2ee523a2206206994597C13D831ec7'),
     local: formatAddress('0x...') // Adresse locale
+  },
+  PREMIUM_SERVICES: {
+    sepolia: formatAddress(import.meta.env.VITE_PREMIUM_SERVICES_SEPOLIA),
+    mainnet: formatAddress(import.meta.env.VITE_PREMIUM_SERVICES_MAINNET),
+    local: formatAddress('0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9')
+  },
+  TAX_MANAGER: {
+    sepolia: formatAddress(import.meta.env.VITE_TAX_MANAGER_SEPOLIA),
+    mainnet: formatAddress(import.meta.env.VITE_TAX_MANAGER_MAINNET),
+    local: formatAddress('0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9')
   }
 } as const;
 
