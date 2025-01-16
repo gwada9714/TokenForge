@@ -8,7 +8,8 @@ module.exports = {
       optimizer: {
         enabled: true,
         runs: 200
-      }
+      },
+      viaIR: true
     }
   },
   paths: {
@@ -20,7 +21,9 @@ module.exports = {
   // Add remappings for OpenZeppelin contracts
   solc: {
     remappings: [
-      '@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/'
+      '@openzeppelin/=node_modules/@openzeppelin/',
+      '@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/',
+      '@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/'
     ]
   }
 };
