@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
-import { ethers, BrowserProvider, Contract, Signer } from 'ethers';
+import { ethers, Contract, Interface, Signer, ContractInterface, Fragment } from 'ethers';
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { useWeb3React } from '@web3-react/core';
+import type { Web3Provider } from '@ethersproject/providers';
 
 interface StakingState {
   totalStaked: string;
@@ -14,7 +16,7 @@ interface StakingState {
 }
 
 export const useStakingManagerV2 = (stakingAddress: string, stakingABI: ethers.ContractInterface) => {
-  const { library, account } = useWeb3React();
+  const { provider: web3Provider, account } = useWeb3React<Web3Provider>();
   const [state, setState] = useState<StakingState>({
     totalStaked: '0',
     userStake: '0',
@@ -24,17 +26,16 @@ export const useStakingManagerV2 = (stakingAddress: string, stakingABI: ethers.C
   });
 
   const getNetworkInfo = useCallback(async () => {
-    if (!library) return null;
-    const provider = library as BrowserProvider;
-    const network = await provider.getNetwork();
+    if (!web3Provider) return null;
+    const network = await web3Provider.getNetwork();
     return {
       chainId: Number(network.chainId),
       name: network.name,
     };
-  }, [library]);
+  }, [web3Provider]);
 
   const loadStakingData = useCallback(async () => {
-    if (!library || !account || !stakingAddress) {
+    if (!web3Provider || !account || !stakingAddress) {
       setState(prev => ({ ...prev, isLoading: false }));
       return;
     }
@@ -42,7 +43,6 @@ export const useStakingManagerV2 = (stakingAddress: string, stakingABI: ethers.C
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const provider = library as BrowserProvider;
       const networkInfo = await getNetworkInfo();
       
       // eslint-disable-next-line no-console
@@ -52,11 +52,16 @@ export const useStakingManagerV2 = (stakingAddress: string, stakingABI: ethers.C
         account,
       });
 
-      const signer: Signer = await provider.getSigner();
+      const signer = await web3Provider.getSigner();
+      const abiInterface = Array.isArray(stakingABI) 
+        ? stakingABI 
+        : typeof stakingABI === 'string' 
+          ? [stakingABI]
+          : stakingABI;
       const stakingContract = new Contract(
         stakingAddress,
-        stakingABI,
-        signer
+        abiInterface as Interface | string[] | readonly (string | Fragment)[],
+        signer as unknown as Signer
       );
 
       let totalStaked = '0';
@@ -104,7 +109,7 @@ export const useStakingManagerV2 = (stakingAddress: string, stakingABI: ethers.C
         error: error instanceof Error ? error : new Error('Unknown error occurred'),
       }));
     }
-  }, [library, account, stakingAddress, stakingABI, getNetworkInfo]);
+  }, [web3Provider, account, stakingAddress, stakingABI, getNetworkInfo]);
 
   useEffect(() => {
     loadStakingData();
