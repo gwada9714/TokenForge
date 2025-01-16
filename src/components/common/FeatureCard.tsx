@@ -1,6 +1,6 @@
-import React from 'react';
-import styled, { keyframes } from 'styled-components';
-import { ForgeCard } from './ForgeCard';
+import React from "react";
+import styled, { keyframes } from "styled-components";
+import { ForgeCard } from "./ForgeCard";
 
 const iconFloat = keyframes`
   0%, 100% {
@@ -20,25 +20,22 @@ const IconWrapper = styled.div`
   align-items: center;
   justify-content: center;
   border-radius: 16px;
-  background: ${props => props.theme.colors.gradient.primary};
-  
+  background: ${(props) => props.theme.colors.forge.metallic};
+
   &:before {
-    content: '';
+    content: "";
     position: absolute;
     inset: -2px;
     border-radius: 18px;
     padding: 2px;
     background: linear-gradient(
       135deg,
-      ${props => props.theme.colors.secondary.main},
-      ${props => props.theme.colors.primary.light}
+      ${(props) => props.theme.colors.secondary.main},
+      ${(props) => props.theme.colors.primary.light}
     );
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
-    mask: 
-      linear-gradient(#fff 0 0) content-box, 
-      linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
   }
@@ -46,21 +43,21 @@ const IconWrapper = styled.div`
   svg {
     width: 32px;
     height: 32px;
-    color: ${props => props.theme.colors.text.light};
+    color: ${(props) => props.theme.colors.text.light};
     animation: ${iconFloat} 3s ease-in-out infinite;
   }
 `;
 
 const Title = styled.h3`
-  font-family: ${props => props.theme.typography.fontFamily.heading};
+  font-family: ${(props) => props.theme.typography.fontFamily.heading};
   font-size: 1.5rem;
-  font-weight: ${props => props.theme.typography.fontWeight.bold};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
   margin-bottom: 1rem;
-  color: ${props => props.theme.colors.text.primary};
+  color: ${(props) => props.theme.colors.text.primary};
 `;
 
 const Description = styled.p`
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${(props) => props.theme.colors.text.secondary};
   line-height: 1.6;
   margin-bottom: 1.5rem;
 `;
@@ -76,17 +73,11 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
   icon,
   title,
   description,
-  className
+  className,
 }) => {
   return (
-    <ForgeCard 
-      variant="elevated"
-      $hasShadow
-      className={className}
-    >
-      <IconWrapper>
-        {icon}
-      </IconWrapper>
+    <ForgeCard variant="elevated" $hasShadow className={className}>
+      <IconWrapper>{icon}</IconWrapper>
       <Title>{title}</Title>
       <Description>{description}</Description>
     </ForgeCard>
