@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { useContractRead, useContractWrite, useBalance, useContractEvent } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useContractRead, useContractWrite, useBalance, useContractEvent, useWaitForTransaction } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
+import type { Hash } from 'viem';
 
 // Temporary ABI until we generate it
 const TKNTokenABI = [
@@ -57,6 +58,7 @@ export interface StakingInfo {
   withdraw: (amount: string) => Promise<void>;
   claimRewards: () => Promise<void>;
   isLoading: boolean;
+  error: string | null;
   canUnstake: boolean;
   timeUntilUnstake: number;
   stakingHistory: StakingEvent[];
@@ -70,24 +72,27 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
   const [stakingHistory, setStakingHistory] = useState<StakingEvent[]>([]);
   const [rewardsHistory, setRewardsHistory] = useState<RewardHistory[]>([]);
   const [lastStakeTime, setLastStakeTime] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: balance } = useBalance({
+  const { data: balance, isLoading: isBalanceLoading } = useBalance({
     address,
     token: tokenAddress,
-  });
-
-  const { data: stakeInfo, refetch: refetchStakeInfo } = useContractRead({
-    address: tokenAddress,
-    abi: TKNTokenABI,
-    functionName: 'getStakeInfo',
-    args: [address!],
     enabled: !!address,
   });
 
-  const { data: stakingStats, refetch: refetchStats } = useContractRead({
+  const { data: stakeInfo, isLoading: isStakeInfoLoading, error: stakeInfoError, refetch: refetchStakeInfo } = useContractRead({
+    address: tokenAddress,
+    abi: TKNTokenABI,
+    functionName: 'getStakeInfo',
+    args: address ? [address] : undefined,
+    enabled: !!address,
+  });
+
+  const { data: stakingStats, isLoading: isStatsLoading, error: statsError, refetch: refetchStats } = useContractRead({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'getStakingStats',
+    enabled: !!tokenAddress,
   });
 
   const { writeAsync: stakeTokens, isLoading: isStaking } = useContractWrite({
@@ -102,11 +107,66 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     functionName: 'unstake',
   });
 
-  const { writeAsync: claim, isLoading: isClaiming } = useContractWrite({
+  const { writeAsync: claimTokens, isLoading: isClaiming } = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'claimRewards',
   });
+
+  const waitForTransaction = useWaitForTransaction();
+
+  useEffect(() => {
+    if (stakeInfoError || statsError) {
+      setError(stakeInfoError?.message || statsError?.message || 'Une erreur est survenue lors du chargement des données');
+    } else {
+      setError(null);
+    }
+  }, [stakeInfoError, statsError]);
+
+  const isLoading = isBalanceLoading || isStakeInfoLoading || isStatsLoading || isStaking || isUnstaking || isClaiming;
+
+  const stake = async (amount: string) => {
+    try {
+      if (!amount || parseFloat(amount) <= 0) {
+        throw new Error('Montant invalide');
+      }
+      const { hash } = await stakeTokens({ args: [parseEther(amount)] });
+      await waitForTransaction({ hash });
+      setStakeAmount('');
+      await refetchStakeInfo();
+      await refetchStats();
+    } catch (err: any) {
+      console.error('Erreur lors du stake:', err);
+      setError(err.message || 'Une erreur est survenue lors du stake');
+    }
+  };
+
+  const withdraw = async (amount: string) => {
+    try {
+      if (!amount || parseFloat(amount) <= 0) {
+        throw new Error('Montant invalide');
+      }
+      const { hash } = await unstakeTokens({ args: [parseEther(amount)] });
+      await waitForTransaction({ hash });
+      setWithdrawAmount('');
+      await refetchStakeInfo();
+      await refetchStats();
+    } catch (err: any) {
+      console.error('Erreur lors du unstake:', err);
+      setError(err.message || 'Une erreur est survenue lors du unstake');
+    }
+  };
+
+  const claimRewards = async () => {
+    try {
+      const { hash } = await claimTokens();
+      await waitForTransaction({ hash });
+      await refetchStakeInfo();
+    } catch (err: any) {
+      console.error('Erreur lors de la réclamation des récompenses:', err);
+      setError(err.message || 'Une erreur est survenue lors de la réclamation des récompenses');
+    }
+  };
 
   // Event listeners
   useContractEvent({
@@ -202,36 +262,14 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     },
   });
 
-  const stake = async (amount: string) => {
-    if (!amount) return;
-    await stakeTokens({ args: [parseEther(amount)] });
-  };
-
-  const withdraw = async (amount: string) => {
-    if (!amount) return;
-    await unstakeTokens({ args: [parseEther(amount)] });
-  };
-
-  const claimRewards = async () => {
-    await claim();
-  };
-
-  const canUnstake = lastStakeTime === 0 || 
-    Date.now() / 1000 - lastStakeTime >= STAKING_CONFIG.LOCK_PERIOD;
-
-  const timeUntilUnstake = Math.max(
-    0,
-    lastStakeTime + STAKING_CONFIG.LOCK_PERIOD - Date.now() / 1000
-  );
-
   return {
     balance: balance?.value,
-    stakedAmount: (stakeInfo as StakeInfo)?.stakedAmount ?? 0n,
-    pendingRewards: (stakeInfo as StakeInfo)?.pendingRewards ?? 0n,
-    stakingStats: stakingStats as StakingStats ?? {
-      totalStaked: 0n,
+    stakedAmount: (stakeInfo as StakeInfo)?.stakedAmount || BigInt(0),
+    pendingRewards: (stakeInfo as StakeInfo)?.pendingRewards || BigInt(0),
+    stakingStats: stakingStats as StakingStats || {
+      totalStaked: BigInt(0),
       apy: 0,
-      stakersCount: 0,
+      stakersCount: 0
     },
     stakeAmount,
     setStakeAmount,
@@ -240,9 +278,10 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     stake,
     withdraw,
     claimRewards,
-    isLoading: isStaking || isUnstaking || isClaiming,
-    canUnstake,
-    timeUntilUnstake,
+    isLoading,
+    error,
+    canUnstake: Date.now() / 1000 - lastStakeTime > STAKING_CONFIG.LOCK_PERIOD,
+    timeUntilUnstake: Math.max(0, STAKING_CONFIG.LOCK_PERIOD - (Date.now() / 1000 - lastStakeTime)),
     stakingHistory,
     rewardsHistory,
   };

@@ -53,6 +53,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       if (typeof window === 'undefined' || !window.ethereum) {
+        setIsInitializing(false);
         throw new Error('Web3 provider not available - Please install MetaMask');
       }
 
@@ -68,7 +69,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!currentChain) {
         try {
-          // Sepolia chainId = '0xaa36a7'
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: '0xaa36a7' }],
@@ -86,8 +86,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
               }],
             });
           } else {
+            setIsInitializing(false);
             console.error('Failed to switch network:', switchError);
-            throw new Error('Please connect to Sepolia testnet or Ethereum mainnet');
+            throw new Error('Please connect to Sepolia testnet');
           }
         }
       }
@@ -97,26 +98,15 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
     } catch (err: any) {
       console.error('Web3 connection error:', err);
-      if (err?.code === -32002 && isInitializing) {
-        return;
-      }
-      setError(err?.message || 'Failed to connect');
+      setError(err?.message || 'Failed to connect to Web3');
       setIsConnected(false);
+    } finally {
+      setIsInitializing(false);
     }
-  }, [isInitializing, chain]);
+  }, [chain?.id, isInitializing]);
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        await connect();
-      } catch (err) {
-        console.error('Web3 initialization error:', err);
-        setError('Failed to initialize Web3');
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-    init();
+    connect();
   }, [connect]);
 
   const contextValue = {
