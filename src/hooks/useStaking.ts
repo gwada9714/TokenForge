@@ -73,6 +73,7 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
   const [rewardsHistory, setRewardsHistory] = useState<RewardHistory[]>([]);
   const [lastStakeTime, setLastStakeTime] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
   const { data: balance, isLoading: isBalanceLoading } = useBalance({
     address,
@@ -95,46 +96,47 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     enabled: !!tokenAddress,
   });
 
-  const { writeAsync: stakeTokens, isLoading: isStaking } = useContractWrite({
+  const stakeTokens = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'stake',
   });
 
-  const { writeAsync: unstakeTokens, isLoading: isUnstaking } = useContractWrite({
+  const unstakeTokens = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'unstake',
   });
 
-  const { writeAsync: claimTokens, isLoading: isClaiming } = useContractWrite({
+  const claimTokens = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'claimRewards',
   });
 
-  const waitForTransaction = useWaitForTransaction();
-
-  useEffect(() => {
-    if (stakeInfoError || statsError) {
-      setError(stakeInfoError?.message || statsError?.message || 'Une erreur est survenue lors du chargement des données');
-    } else {
-      setError(null);
-    }
-  }, [stakeInfoError, statsError]);
-
-  const isLoading = isBalanceLoading || isStakeInfoLoading || isStatsLoading || isStaking || isUnstaking || isClaiming;
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransaction({
+    hash: txHash,
+    onSuccess: async () => {
+      await refetchStakeInfo();
+      await refetchStats();
+      setStakeAmount('');
+      setWithdrawAmount('');
+      setTxHash(undefined);
+    },
+  });
 
   const stake = async (amount: string) => {
     try {
       if (!amount || parseFloat(amount) <= 0) {
         throw new Error('Montant invalide');
       }
-      const { hash } = await stakeTokens({ args: [parseEther(amount)] });
-      await waitForTransaction({ hash });
-      setStakeAmount('');
-      await refetchStakeInfo();
-      await refetchStats();
+      if (!stakeTokens.writeAsync) throw new Error('Contract write not ready');
+      
+      const tx = await stakeTokens.writeAsync({
+        args: [parseEther(amount)]
+      });
+      
+      setTxHash(tx.hash);
     } catch (err: any) {
       console.error('Erreur lors du stake:', err);
       setError(err.message || 'Une erreur est survenue lors du stake');
@@ -146,11 +148,13 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
       if (!amount || parseFloat(amount) <= 0) {
         throw new Error('Montant invalide');
       }
-      const { hash } = await unstakeTokens({ args: [parseEther(amount)] });
-      await waitForTransaction({ hash });
-      setWithdrawAmount('');
-      await refetchStakeInfo();
-      await refetchStats();
+      if (!unstakeTokens.writeAsync) throw new Error('Contract write not ready');
+      
+      const tx = await unstakeTokens.writeAsync({
+        args: [parseEther(amount)]
+      });
+      
+      setTxHash(tx.hash);
     } catch (err: any) {
       console.error('Erreur lors du unstake:', err);
       setError(err.message || 'Une erreur est survenue lors du unstake');
@@ -159,14 +163,26 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
 
   const claimRewards = async () => {
     try {
-      const { hash } = await claimTokens();
-      await waitForTransaction({ hash });
-      await refetchStakeInfo();
+      if (!claimTokens.writeAsync) throw new Error('Contract write not ready');
+      
+      const tx = await claimTokens.writeAsync();
+      
+      setTxHash(tx.hash);
     } catch (err: any) {
       console.error('Erreur lors de la réclamation des récompenses:', err);
       setError(err.message || 'Une erreur est survenue lors de la réclamation des récompenses');
     }
   };
+
+  useEffect(() => {
+    if (stakeInfoError || statsError) {
+      setError(stakeInfoError?.message || statsError?.message || 'Une erreur est survenue lors du chargement des données');
+    } else {
+      setError(null);
+    }
+  }, [stakeInfoError, statsError]);
+
+  const isLoading = isBalanceLoading || isStakeInfoLoading || isStatsLoading || isConfirming;
 
   // Event listeners
   useContractEvent({

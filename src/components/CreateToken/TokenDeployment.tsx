@@ -23,6 +23,14 @@ const deploymentSteps = [
   'Finalisation',
 ] as const;
 
+type DeploymentStatus = 'pending' | 'success' | 'deploying' | 'failed';
+
+interface DeploymentState {
+  status: DeploymentStatus;
+  step: number;
+  message: string;
+}
+
 export const TokenDeployment: React.FC = () => {
   const { tokenConfig, isDeploying, deploymentError: error, deploymentStatus, dispatch } = useTokenCreation();
   const { address, isConnected, chainId } = useWallet();
@@ -38,25 +46,28 @@ export const TokenDeployment: React.FC = () => {
       return;
     }
 
-    dispatch(startDeployment());
+    dispatch({ type: 'SET_DEPLOYMENT_STATUS', payload: 'deploying' });
 
     try {
+      dispatch({ type: 'SET_DEPLOYMENT_STATUS', payload: 'deploying' });
+
       for (let i = 0; i < deploymentSteps.length; i++) {
-        dispatch(setDeploymentStatus({
-          step: i,
-          message: deploymentSteps[i]
-        }));
+        dispatch({ 
+          type: 'UPDATE_DEPLOYMENT_PROGRESS',
+          payload: {
+            step: i,
+            message: deploymentSteps[i]
+          }
+        });
 
         // Simulation du déploiement pour l'exemple
         await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Dans un cas réel, nous utiliserions le service de déploiement
-        // const result = await deployToken(tokenConfig, address);
       }
 
-      dispatch(deploymentSuccess());
+      dispatch({ type: 'SET_DEPLOYMENT_STATUS', payload: 'success' });
       
     } catch (err) {
+      dispatch({ type: 'SET_DEPLOYMENT_STATUS', payload: 'failed' });
       dispatch(deploymentError(err instanceof Error ? err.message : 'Une erreur est survenue lors du déploiement'));
     }
   }, [tokenConfig, dispatch, address, isConnected, chainId]);

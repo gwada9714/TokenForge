@@ -18,7 +18,8 @@ import { updateTokenConfig } from '@/store/slices/tokenCreationSlice';
 import { TaxConfigurationPanel } from '../../features/token-creation/components/TaxConfigurationPanel';
 import { MaxLimitsConfiguration } from './MaxLimitsConfiguration';
 import { LiquidityLockConfiguration } from './LiquidityLockConfiguration';
-import { MaxLimits, LiquidityLock, TaxConfig, TokenConfig } from '@/types/tokenFeatures';
+import { MaxLimits, LiquidityLock, TaxConfig } from '@/types/tokenFeatures';
+import type { TokenConfig } from '@/types/tokenFeatures';
 import { NetworkTaxInfo } from '@/features/token-creation/components/NetworkTaxInfo';
 import { useNetworkTaxConfig } from '@/hooks/useNetworkTaxConfig';
 import { GasEstimationPanel } from '@/features/token-creation/components/GasEstimationPanel';
@@ -35,8 +36,8 @@ type BasicFeature = typeof basicFeatures[number];
 
 interface FormField {
   label: string;
-  field: keyof TokenConfig;
-  type: string;
+  field: 'name' | 'symbol' | 'decimals' | 'supply';
+  type: 'text' | 'number';
   placeholder?: string;
   required?: boolean;
   inputProps?: {
@@ -49,7 +50,7 @@ const TokenConfiguration: React.FC = () => {
   const { tokenConfig, dispatch } = useTokenCreation();
   const { taxConfig } = useNetworkTaxConfig();
 
-  const handleChange = useCallback((field: keyof typeof tokenConfig, value: any) => {
+  const handleChange = useCallback((field: keyof Pick<TokenConfig, 'name' | 'symbol' | 'decimals' | 'supply'>, value: string | number) => {
     dispatch(updateTokenConfig({ [field]: value }));
   }, [dispatch]);
 
@@ -66,8 +67,9 @@ const TokenConfiguration: React.FC = () => {
     dispatch(updateTokenConfig({ maxLimits }));
   }, [dispatch]);
 
-  const handleTaxConfigChange = useCallback((taxConfig: TaxConfig) => {
-    dispatch(updateTokenConfig({ taxConfig }));
+  const handleTaxConfigChange = useCallback((newTaxConfig: TaxConfig) => {
+    const update: Partial<TokenConfig> = { taxConfig: newTaxConfig };
+    dispatch(updateTokenConfig(update));
   }, [dispatch]);
 
   const handleLiquidityLockChange = useCallback((lockConfig: LiquidityLock) => {
@@ -92,12 +94,12 @@ const TokenConfiguration: React.FC = () => {
     );
   };
 
-  const formFields: FormField[] = [
+  const formFields: Array<FormField & { field: keyof Pick<TokenConfig, 'name' | 'symbol' | 'decimals' | 'supply'> }> = [
     {
-      label: 'Nom du Token',
+      label: 'Nom',
       field: 'name',
       type: 'text',
-      placeholder: 'Ex: TokenForge Token',
+      placeholder: 'Ex: Mon Token',
       required: true,
     },
     {
@@ -142,7 +144,7 @@ const TokenConfiguration: React.FC = () => {
                 required={field.required}
                 placeholder={field.placeholder}
                 value={tokenConfig[field.field] ?? ''}
-                onChange={(e) => handleChange(field.field as keyof typeof tokenConfig, e.target.value)}
+                onChange={(e) => handleChange(field.field, e.target.value)}
                 fullWidth
                 inputProps={field.inputProps}
               />
