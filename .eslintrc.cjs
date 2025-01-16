@@ -1,27 +1,40 @@
+/* eslint-env node */
 module.exports = {
   root: true,
   env: {
     browser: true,
-    es2020: true,
+    es2021: true,
     node: true,
+    commonjs: true,
   },
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
-    'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',
-    'plugin:prettier/recommended',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint', 'react'],
-  rules: {
-    '@typescript-eslint/no-explicit-any': 'off',
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 12,
+    sourceType: 'module',
   },
+  plugins: ['react', '@typescript-eslint'],
   settings: {
     react: {
-      version: 'detect',
+      version: '18.2.0',
     },
+  },
+  rules: {
+    'no-console': 'off',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'react/react-in-jsx-scope': 'off',
+    'no-undef': 'off',
+  },
+  globals: {
+    console: 'readonly',
+    module: 'readonly',
   },
 };

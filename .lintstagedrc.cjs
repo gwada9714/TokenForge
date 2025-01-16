@@ -1,5 +1,5 @@
 module.exports = {
-  '*.{js,jsx,ts,tsx}': files => [
+  '*.{js,jsx,ts,tsx,cjs}': files => [
     `eslint --fix ${files.join(' ')}`,
     `prettier --write ${files.join(' ')}`
   ],
@@ -10,4 +10,4 @@ module.exports = {
   '*.{json,md,yml}': files => [
     `prettier --write ${files.join(' ')}`
   ]
-}
+};
