@@ -7,6 +7,7 @@ import HomePage from './pages/Home';
 import TokenWizard from './components/TokenWizard/TokenWizard';
 import StakingDashboard from './components/Staking/StakingDashboard';
 import ProfitDashboard from './components/Dashboard/ProfitDashboard';
+import LaunchpadPage from './pages/Launchpad';
 
 const App: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ const App: React.FC = () => {
         <Route path="/create" element={<TokenWizard />} />
         <Route path="/staking" element={<StakingDashboard />} />
         <Route path="/dashboard" element={<ProfitDashboard />} />
+        <Route path="/launchpad" element={<LaunchpadPage />} />
       </Routes>
     </ThemeProvider>
   );
