@@ -1,8 +1,8 @@
-const { HardhatRuntimeEnvironment } = require("hardhat/types");
-const { TokenForgeToken__factory, TokenForgeFactory__factory, TokenForgeLaunchpad__factory } = require("../typechain-types");
-require("@nomicfoundation/hardhat-ethers");
-const { task } = require("hardhat/config");
-const hre = require("hardhat");
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { TokenForgeToken__factory, TokenForgeFactory__factory, TokenForgeLaunchpad__factory } from "../typechain-types";
+import "@nomicfoundation/hardhat-ethers";
+import { task } from "hardhat/config";
+import * as hre from "hardhat";
 
 task("deploy", "Deploy the TokenForge contracts")
   .setAction(async (args: any, hre: HardhatRuntimeEnvironment) => {
