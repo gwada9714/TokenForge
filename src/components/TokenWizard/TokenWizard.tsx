@@ -30,6 +30,7 @@ const steps = [
 
 const TokenWizard: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const [showTestnets, setShowTestnets] = useState(true);
   const [tokenData, setTokenData] = useState({
     blockchain: '',
     name: '',
@@ -61,19 +62,32 @@ const TokenWizard: React.FC = () => {
   const getStepContent = (step: number) => {
     switch (step) {
       case 0:
-        return <BlockchainSelection data={tokenData} onUpdate={handleUpdateData} />;
+        return (
+          <BlockchainSelection
+            data={tokenData}
+            onUpdate={handleUpdateData}
+            showTestnets={showTestnets}
+          />
+        );
       case 1:
         return <TokenConfiguration data={tokenData} onUpdate={handleUpdateData} />;
       case 2:
         return <TokenFeatures data={tokenData} onUpdate={handleUpdateData} />;
       case 3:
-        return <ForgeInfo />;
+        return <ForgeInfo data={tokenData} onUpdate={handleUpdateData} />;
       case 4:
-        return <ServiceTier data={tokenData} onUpdate={handleUpdateData} />;
+        return <ServiceTier selectedTier={tokenData.serviceTier} onTierSelect={(tierId) => handleUpdateData({ serviceTier: tierId })} />;
       case 5:
         return <Summary data={tokenData} />;
       case 6:
-        return <Deployment data={tokenData} />;
+        return (
+          <Deployment
+            data={tokenData}
+            onRetry={() => {
+              setActiveStep(5); // Retour à l'étape de résumé
+            }}
+          />
+        );
       default:
         return 'Unknown step';
     }

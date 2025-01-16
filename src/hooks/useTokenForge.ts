@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { useContractWrite, useWaitForTransaction } from 'wagmi';
+import { keccak256, toUtf8Bytes, concat } from 'ethers';
 import { 
   TKN_TOKEN_ADDRESS,
   BASIC_TIER_PRICE,
@@ -8,7 +9,8 @@ import {
 } from '@/constants/tokenforge';
 import TokenForgeFactoryJSON from '../contracts/abi/TokenForgeFactory.json';
 import TKNTokenJSON from '../contracts/abi/TKNToken.json';
-import { useNetwork } from 'wagmi';
+import { useNetwork, useAccount } from 'wagmi';
+import { sepolia } from 'wagmi/chains';
 
 export const TokenForgeFactoryABI = TokenForgeFactoryJSON.abi;
 export const TKNTokenABI = TKNTokenJSON.abi;
@@ -29,86 +31,112 @@ interface TokenDeployParams {
 
 export const useTokenForge = () => {
   const { chain } = useNetwork();
-  const chainId = chain?.id || 1;
+  const { address, isConnected } = useAccount();
+  const chainId = chain?.id || sepolia.id;
 
   const factoryAddress = useMemo(() => {
-    // Retourner l'adresse de la factory pour le réseau actuel
-    return '0x...' as `0x${string}`; // À remplacer par l'adresse réelle
-  }, [chainId]);
+    const factoryAddresses: Record<number, `0x${string}`> = {
+      1: import.meta.env.VITE_TOKEN_FACTORY_MAINNET as `0x${string}`,
+      11155111: import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA as `0x${string}`,
+    };
+    
+    console.log('Chain ID:', chainId);
+    console.log('Network Status:', {
+      isConnected,
+      chainName: chain?.name,
+      chainId: chain?.id,
+      userAddress: address
+    });
+    
+    const selectedAddress = factoryAddresses[chainId];
+    console.log('Selected Factory Address:', selectedAddress);
+    
+    if (!selectedAddress || selectedAddress === '0x0000000000000000000000000000000000000000') {
+      console.error('Adresse de factory invalide pour le réseau:', chainId);
+      throw new Error(`Adresse de factory non configurée pour le réseau ${chain?.name || chainId}`);
+    }
+    
+    return selectedAddress;
+  }, [chainId, chain, isConnected, address]);
 
-  // Lecture des statistiques globales
-  const { data: globalStats } = useContractRead({
+  const { write: createERC20, data: createTokenData } = useContractWrite({
     address: factoryAddress,
     abi: TokenForgeFactoryABI,
-    functionName: 'getAllTokens',
+    functionName: 'createERC20',
+    onError: (error) => {
+      console.error('Erreur lors de la création du token:', error);
+    },
+    onSuccess: (data) => {
+      console.log('Token créé avec succès:', data);
+    },
   });
 
-  // Création d'un nouveau token
-  const { write: createToken, data: createTokenData } = useContractWrite({
-    address: factoryAddress,
-    abi: TokenForgeFactoryABI,
-    functionName: 'createToken',
-  });
-
-  // Attendre la confirmation de la création
   const { isLoading: isCreating, isSuccess: isCreated } = useWaitForTransaction({
     hash: createTokenData?.hash,
   });
 
-  // Approbation du token TKN pour le paiement
-  const { write: approveTokens } = useContractWrite({
-    address: TKN_TOKEN_ADDRESS[chainId],
-    abi: TKNTokenABI,
-    functionName: 'approve',
-  });
-
-  const calculatePrice = (isPremium: boolean, payWithTKN: boolean) => {
-    const basePrice = isPremium ? PREMIUM_TIER_PRICE : BASIC_TIER_PRICE;
-    if (payWithTKN) {
-      return basePrice - (basePrice * BigInt(TKN_PAYMENT_DISCOUNT) / 10000n);
-    }
-    return basePrice;
-  };
-
   const handleCreateToken = async (params: TokenDeployParams) => {
     try {
-      const price = calculatePrice(params.isPremium, params.payWithTKN);
-
-      // Approuver les tokens TKN si nécessaire
-      if (params.payWithTKN) {
-        await approveTokens({
-          args: [factoryAddress, price],
-        });
+      if (!isConnected) {
+        throw new Error('Wallet non connecté');
       }
 
-      // Créer le token
-      await createToken({
+      if (!address) {
+        throw new Error('Adresse utilisateur non disponible');
+      }
+
+      console.log('Déploiement du token avec les paramètres:', {
+        ...params,
+        network: chain?.name,
+        chainId: chain?.id,
+        factoryAddress
+      });
+      
+      // Générer un salt unique basé sur le timestamp et l'adresse
+      const saltData = concat([
+        toUtf8Bytes(Date.now().toString()),
+        toUtf8Bytes(address),
+        toUtf8Bytes(params.name)
+      ]);
+      const salt = keccak256(saltData);
+
+      // Définir maxSupply comme le double de l'initialSupply si mintable est true
+      const maxSupply = params.features.mintable ? params.initialSupply * BigInt(2) : params.initialSupply;
+      
+      console.log('Paramètres de création:', {
+        name: params.name,
+        symbol: params.symbol,
+        decimals: params.decimals,
+        initialSupply: params.initialSupply.toString(),
+        maxSupply: maxSupply.toString(),
+        mintable: params.features.mintable,
+        salt
+      });
+
+      await createERC20({
         args: [
           params.name,
           params.symbol,
           params.decimals,
           params.initialSupply,
+          maxSupply,
           params.features.mintable,
-          params.features.burnable,
-          params.features.pausable,
-          params.isPremium,
+          salt
         ],
-        value: params.payWithTKN ? 0n : price,
       });
 
       return true;
     } catch (error) {
-      console.error('Error creating token:', error);
-      return false;
+      console.error('Erreur dans handleCreateToken:', error);
+      throw error;
     }
   };
 
   return {
-    globalStats,
     createToken: handleCreateToken,
     isCreating,
     isCreated,
-    calculatePrice,
+    factoryAddress,
   };
 };
 

@@ -15,21 +15,31 @@ const SUPPORTED_CHAINS = [
     id: 'ethereum',
     name: 'Ethereum',
     description: 'Main Ethereum network (Mainnet)',
+    isTestnet: false,
+  },
+  {
+    id: 'sepolia',
+    name: 'Sepolia',
+    description: 'Ethereum Testnet (Sepolia)',
+    isTestnet: true,
   },
   {
     id: 'bsc',
     name: 'Binance Smart Chain',
     description: 'Binance Smart Chain (BSC)',
+    isTestnet: false,
   },
   {
     id: 'polygon',
     name: 'Polygon',
     description: 'Polygon (Matic) network',
+    isTestnet: false,
   },
   {
     id: 'avalanche',
     name: 'Avalanche',
     description: 'Avalanche C-Chain',
+    isTestnet: false,
   },
 ];
 
@@ -38,11 +48,13 @@ interface BlockchainSelectionProps {
     blockchain: string;
   };
   onUpdate: (data: { blockchain: string }) => void;
+  showTestnets?: boolean;
 }
 
 const BlockchainSelection: React.FC<BlockchainSelectionProps> = ({
   data,
   onUpdate,
+  showTestnets = true,
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({ blockchain: event.target.value });
@@ -63,30 +75,32 @@ const BlockchainSelection: React.FC<BlockchainSelectionProps> = ({
           value={data.blockchain}
           onChange={handleChange}
         >
-          {SUPPORTED_CHAINS.map((chain) => (
-            <Paper
-              key={chain.id}
-              sx={{
-                p: 2,
-                mb: 2,
-                border: '1px solid',
-                borderColor: data.blockchain === chain.id ? 'primary.main' : 'divider',
-              }}
-            >
-              <FormControlLabel
-                value={chain.id}
-                control={<Radio />}
-                label={
-                  <Box>
-                    <Typography variant="subtitle1">{chain.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {chain.description}
-                    </Typography>
-                  </Box>
-                }
-              />
-            </Paper>
-          ))}
+          {SUPPORTED_CHAINS
+            .filter((chain) => !chain.isTestnet || showTestnets)
+            .map((chain) => (
+              <Paper
+                key={chain.id}
+                sx={{
+                  p: 2,
+                  mb: 2,
+                  border: '1px solid',
+                  borderColor: data.blockchain === chain.id ? 'primary.main' : 'divider',
+                }}
+              >
+                <FormControlLabel
+                  value={chain.id}
+                  control={<Radio />}
+                  label={
+                    <Box>
+                      <Typography variant="subtitle1">{chain.name}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {chain.description}
+                      </Typography>
+                    </Box>
+                  }
+                />
+              </Paper>
+            ))}
         </RadioGroup>
       </FormControl>
     </Box>

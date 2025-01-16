@@ -12,7 +12,23 @@ import {
 import { Info, CheckCircle } from '@mui/icons-material';
 import { ForgeFeesService } from '@/services/forgeFeesService';
 
-const ForgeInfo: React.FC = () => {
+interface ForgeInfoProps {
+  data: {
+    blockchain: string;
+    name: string;
+    symbol: string;
+    supply: string;
+    decimals: string;
+    features: {
+      mint: boolean;
+      burn: boolean;
+    };
+    serviceTier: string;
+  };
+  onUpdate: (data: Partial<ForgeInfoProps['data']>) => void;
+}
+
+const ForgeInfo: React.FC<ForgeInfoProps> = ({ data, onUpdate }) => {
   const feesInfo = ForgeFeesService.getForgeFeesInfo();
 
   return (
