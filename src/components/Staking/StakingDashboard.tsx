@@ -256,7 +256,7 @@ const StakingDashboard: React.FC = () => {
                   label="Montant à staker"
                   type="number"
                   value={stakeAmount}
-                  onChange={(e) => setStakeAmount(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStakeAmount(e.target.value)}
                   fullWidth
                   helperText={`Balance disponible: ${formatValue(balance || 0n)} TKN`}
                 />
@@ -298,7 +298,7 @@ const StakingDashboard: React.FC = () => {
                   label="Montant à retirer"
                   type="number"
                   value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWithdrawAmount(e.target.value)}
                   fullWidth
                 />
                 <Button
