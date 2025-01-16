@@ -2,8 +2,8 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import Dashboard from '@/components/Dashboard/Dashboard';
 import CreateToken from '@/components/CreateToken/CreateToken';
-import StakingDashboard from '@/components/Staking/StakingDashboard';
-import Layout from '@/components/Layout/Layout';
+import StakingPage from '@/pages/Staking';
+import { Layout } from '@/components/Layout/Layout';
 
 const router = createBrowserRouter([
   {
@@ -20,7 +20,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/staking',
-        element: <StakingDashboard />,
+        element: <StakingPage />,
       },
     ],
   },
