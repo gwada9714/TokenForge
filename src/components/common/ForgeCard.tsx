@@ -7,6 +7,7 @@ interface ForgeCardProps {
   $isAnimated?: boolean;
   $hasShadow?: boolean;
   children: React.ReactNode;
+  className?: string;
 }
 
 const getVariantStyles = (variant: ForgeCardProps['variant'] = 'default') => {
@@ -72,6 +73,7 @@ export const ForgeCard: React.FC<ForgeCardProps> = ({
   variant = 'default',
   $isAnimated = true,
   $hasShadow = true,
+  className,
   ...props
 }) => {
   return (
@@ -79,6 +81,7 @@ export const ForgeCard: React.FC<ForgeCardProps> = ({
       variant={variant}
       $isAnimated={$isAnimated}
       $hasShadow={$hasShadow}
+      className={className}
       {...props}
     >
       {children}

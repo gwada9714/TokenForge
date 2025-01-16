@@ -1,175 +1,114 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Button } from '../ui/Button';
+import { Container, Box } from '@mui/material';
+import { ForgeButton } from '../common/ForgeButton';
+import { ForgeHeading } from '../common/ForgeHeading';
+import { ParallaxContainer } from '../common/ParallaxContainer';
+import { ForgeBackground } from '../common/ForgeBackground';
+import { useNavigate } from 'react-router-dom';
 
 const HeroContainer = styled.section`
-  min-height: 100vh;
+  position: relative;
+  min-height: calc(100vh - 64px);
   display: flex;
   align-items: center;
-  padding: 6rem 2rem;
-  position: relative;
-  background: ${({ theme }) => theme.colors.gradient.primary};
+  padding: 4rem 0;
   overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('/hero-pattern.svg') repeat;
-    opacity: 0.05;
-    z-index: 1;
-  }
 `;
 
 const Content = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
   position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  align-items: center;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-`;
-
-const HeroText = styled.div`
-  color: ${({ theme }) => theme.colors.text.light};
-`;
-
-const Title = styled.h1`
-  font-family: ${({ theme }) => theme.typography.fontFamily.heading};
-  font-size: ${({ theme }) => theme.typography.fontSize['5xl']};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  margin-bottom: 1.5rem;
-  line-height: 1.2;
-
-  span {
-    background: ${({ theme }) => theme.colors.gradient.secondary};
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-    font-size: ${({ theme }) => theme.typography.fontSize['4xl']};
-  }
+  z-index: 1;
+  text-align: center;
+  color: ${props => props.theme.colors.text.light};
 `;
 
 const Subtitle = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-size: 1.25rem;
   margin-bottom: 2rem;
   opacity: 0.9;
-  line-height: 1.6;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-    font-size: ${({ theme }) => theme.typography.fontSize.lg};
-  }
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
-const ButtonGroup = styled.div`
+const ButtonContainer = styled.div`
   display: flex;
   gap: 1rem;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
-    justify-content: center;
-  }
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
-    flex-direction: column;
-  }
+  justify-content: center;
+  margin-top: 2rem;
 `;
 
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  margin-top: 3rem;
+const FloatingElement = styled.div<{ $delay?: number }>`
+  animation: float 6s ease-in-out infinite;
+  animation-delay: ${props => props.$delay || 0}s;
 
-  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const StatItem = styled.div`
-  text-align: center;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  backdrop-filter: blur(10px);
-`;
-
-const StatValue = styled.div`
-  font-family: ${({ theme }) => theme.typography.fontFamily.heading};
-  font-size: ${({ theme }) => theme.typography.fontSize['3xl']};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  color: ${({ theme }) => theme.colors.secondary};
-  margin-bottom: 0.5rem;
-`;
-
-const StatLabel = styled.div`
-  font-size: ${({ theme }) => theme.typography.fontSize.base};
-  opacity: 0.9;
-`;
-
-const HeroImage = styled.div`
-  img {
-    width: 100%;
-    height: auto;
-    border-radius: ${({ theme }) => theme.borderRadius.lg};
-  }
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
-    display: none;
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
   }
 `;
-
-const stats = [
-  { value: '10K+', label: 'Tokens Créés' },
-  { value: '$500M+', label: 'Valeur Totale' },
-  { value: '50+', label: 'Blockchains' },
-  { value: '99.9%', label: 'Disponibilité' }
-];
 
 export const HeroSection: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <HeroContainer>
-      <Content>
-        <HeroText>
-          <Title>
-            Créez vos tokens en <span>quelques clics</span>
-          </Title>
-          <Subtitle>
-            TokenForge simplifie la création et le déploiement de tokens sur multiple blockchains. 
-            Sécurisé, rapide et professionnel.
-          </Subtitle>
-          <ButtonGroup>
-            <Button variant="primary" size="large">
-              Commencer
-            </Button>
-            <Button variant="secondary" size="large">
-              Voir la démo
-            </Button>
-          </ButtonGroup>
-          <StatsGrid>
-            {stats.map((stat, index) => (
-              <StatItem key={index}>
-                <StatValue>{stat.value}</StatValue>
-                <StatLabel>{stat.label}</StatLabel>
-              </StatItem>
-            ))}
-          </StatsGrid>
-        </HeroText>
-        <HeroImage>
-          <img src="/hero-image.png" alt="TokenForge Platform" />
-        </HeroImage>
-      </Content>
+      <ForgeBackground sparkleCount={20} />
+      
+      <Container maxWidth="lg">
+        <Content>
+          <ParallaxContainer speed={0.3}>
+            <FloatingElement>
+              <ForgeHeading 
+                level={1} 
+                $hasGradient 
+                $align="center"
+              >
+                TokenForge : Forgez votre Avenir Crypto
+              </ForgeHeading>
+            </FloatingElement>
+          </ParallaxContainer>
+
+          <ParallaxContainer speed={0.4}>
+            <FloatingElement $delay={0.2}>
+              <Subtitle>
+                Créez et déployez vos tokens en toute simplicité. Une plateforme complète
+                pour donner vie à vos projets blockchain avec des outils puissants et intuitifs.
+              </Subtitle>
+            </FloatingElement>
+          </ParallaxContainer>
+
+          <ParallaxContainer speed={0.5}>
+            <FloatingElement $delay={0.4}>
+              <ButtonContainer>
+                <ForgeButton 
+                  variant="secondary"
+                  size="large"
+                  $isGlowing
+                  onClick={() => navigate('/create')}
+                >
+                  Forge ton Token
+                </ForgeButton>
+                <ForgeButton 
+                  variant="outline"
+                  size="large"
+                  onClick={() => navigate('/about')}
+                >
+                  Découvrir la Forge
+                </ForgeButton>
+              </ButtonContainer>
+            </FloatingElement>
+          </ParallaxContainer>
+        </Content>
+      </Container>
     </HeroContainer>
   );
 };

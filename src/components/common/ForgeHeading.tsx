@@ -22,7 +22,7 @@ const getFontSize = (level: number = 1) => {
   return sizes[level as keyof typeof sizes];
 };
 
-const StyledHeading = styled(({ level, ...props }) => {
+const StyledHeading = styled(({ level, ...props }: { level: ForgeHeadingProps['level'] } & Omit<ForgeHeadingProps, 'level'>) => {
   const Tag = `h${level}` as keyof JSX.IntrinsicElements;
   return <Tag {...props} />;
 })<ForgeHeadingProps>`
