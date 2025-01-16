@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 import {
   Box,
   Button,
@@ -12,6 +13,26 @@ import {
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import { UserLevel, DEFAULT_PLANS } from '../../types/plans';
 import { useUserPlan } from '../../contexts/UserPlanContext';
+
+const StyledCard = styled(Paper)<{ $isCurrentPlan?: boolean }>`
+  padding: 24px;
+  border: ${props => props.$isCurrentPlan ? `2px solid ${props.theme.palette.primary.main}` : 'none'};
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 2px;
+`;
+
+const StyledButton = styled(Button)<{ $isCurrentPlan?: boolean }>`
+  background-color: ${props => props.$isCurrentPlan ? props.theme.palette.primary.main : props.theme.palette.primary.main};
+  color: ${props => props.$isCurrentPlan ? '#fff' : props.theme.palette.text.primary};
+  width: 100%;
+  margin-top: auto;
+
+  &:hover {
+    background-color: ${props => props.$isCurrentPlan ? props.theme.palette.primary.dark : props.theme.palette.action.hover};
+  }
+`;
 
 const PlanFeatureItem: React.FC<{ feature: string; isAvailable: boolean }> = ({
   feature,
@@ -41,17 +62,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ level, isCurrentPlan, onSelect }) =
   const theme = useTheme();
 
   return (
-    <Paper 
-      elevation={3}
-      sx={{
-        p: 6,
-        borderRadius: 2,
-        border: isCurrentPlan ? `2px solid ${theme.palette.primary.main}` : 'none',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
+    <StyledCard $isCurrentPlan={isCurrentPlan}>
       <Stack spacing={4}>
         <Box>
           <Typography variant="h5" gutterBottom>
@@ -93,17 +104,15 @@ const PlanCard: React.FC<PlanCardProps> = ({ level, isCurrentPlan, onSelect }) =
           />
         </Stack>
 
-        <Button
-          variant={isCurrentPlan ? "outlined" : "contained"}
-          color="primary"
+        <StyledButton
+          $isCurrentPlan={isCurrentPlan}
           onClick={onSelect}
           disabled={isCurrentPlan}
-          sx={{ mt: 'auto' }}
         >
           {isCurrentPlan ? 'Plan Actuel' : 'Sélectionner'}
-        </Button>
+        </StyledButton>
       </Stack>
-    </Paper>
+    </StyledCard>
   );
 };
 

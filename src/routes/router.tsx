@@ -1,9 +1,11 @@
 import { createBrowserRouter, Outlet } from 'react-router-dom';
-import Layout from '../components/Layout/Layout';
+import { Layout } from '../components/Layout/Layout';
 import { TokenList, TokenDetails } from '../pages';
 import { Dashboard } from '../pages/Dashboard/Dashboard';
 import CreateTokenWizard from '../pages/CreateToken/CreateTokenWizard';
 import ProfitDashboardPage from '../pages/Dashboard/ProfitDashboardPage';
+import Plans from '../pages/Plans';
+import LaunchpadPage from '../pages/Launchpad';
 
 const routes = [
   {
@@ -23,6 +25,14 @@ const routes = [
       {
         path: 'tokens/:address',
         element: <TokenDetails />
+      },
+      {
+        path: 'plans',
+        element: <Plans />
+      },
+      {
+        path: 'launchpad',
+        element: <LaunchpadPage />
       },
       {
         path: 'create-token',

@@ -2,11 +2,15 @@ import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
 import { WagmiConfig } from 'wagmi';
 import wagmiConfig, { chains } from '../config/web3Config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
+import { StyledEngineProvider, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { memo } from 'react';
 import { muiTheme } from '../theme/mui';
 import { Web3Provider } from './Web3Provider';
+import { ThemeProvider } from 'styled-components';
+import { theme } from '../styles/theme';
+import { StyleSheetManager } from 'styled-components';
+import isPropValid from '@emotion/is-prop-valid';
 
 // Configuration du client de requête avec mise en cache optimisée
 const queryClient = new QueryClient({
@@ -32,14 +36,18 @@ const Providers: React.FC<ProvidersProps> = memo(({ children }) => {
     <QueryClientProvider client={queryClient}>
       <WagmiConfig config={wagmiConfig}>
         <RainbowKitProvider chains={chains} theme={lightTheme()}>
-          <StyledEngineProvider injectFirst>
-            <ThemeProvider theme={muiTheme}>
-              <CssBaseline />
-              <Web3Provider>
-                {children}
-              </Web3Provider>
-            </ThemeProvider>
-          </StyledEngineProvider>
+          <StyleSheetManager shouldForwardProp={isPropValid}>
+            <StyledEngineProvider injectFirst>
+              <MuiThemeProvider theme={muiTheme}>
+                <ThemeProvider theme={theme}>
+                  <CssBaseline />
+                  <Web3Provider>
+                    {children}
+                  </Web3Provider>
+                </ThemeProvider>
+              </MuiThemeProvider>
+            </StyledEngineProvider>
+          </StyleSheetManager>
         </RainbowKitProvider>
       </WagmiConfig>
     </QueryClientProvider>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { theme } from './styles/theme';
 import { GlobalStyle } from './styles/GlobalStyle';
@@ -12,14 +12,12 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
-      <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/create" element={<TokenWizard />} />
-          <Route path="/staking" element={<StakingDashboard />} />
-          <Route path="/dashboard" element={<ProfitDashboard />} />
-        </Routes>
-      </Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/create" element={<TokenWizard />} />
+        <Route path="/staking" element={<StakingDashboard />} />
+        <Route path="/dashboard" element={<ProfitDashboard />} />
+      </Routes>
     </ThemeProvider>
   );
 };
