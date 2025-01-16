@@ -13,7 +13,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 30, // 30 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (remplace cacheTime)
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: false,
@@ -31,16 +31,13 @@ const Providers: React.FC<ProvidersProps> = memo(({ children }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiConfig config={wagmiConfig}>
-        <RainbowKitProvider
-          chains={chains}
-          theme={lightTheme({
-            accentColor: '#7b3fe4',
-          })}
-        >
+        <RainbowKitProvider chains={chains} theme={lightTheme()}>
           <StyledEngineProvider injectFirst>
             <ThemeProvider theme={muiTheme}>
               <CssBaseline />
-              <Web3Provider>{children}</Web3Provider>
+              <Web3Provider>
+                {children}
+              </Web3Provider>
             </ThemeProvider>
           </StyledEngineProvider>
         </RainbowKitProvider>
@@ -48,5 +45,7 @@ const Providers: React.FC<ProvidersProps> = memo(({ children }) => {
     </QueryClientProvider>
   );
 });
+
+Providers.displayName = 'Providers';
 
 export default Providers;

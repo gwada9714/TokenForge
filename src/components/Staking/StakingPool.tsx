@@ -8,7 +8,8 @@ import {
   Typography
 } from '@mui/material';
 import { useStaking } from '../../hooks/useStaking';
-import { Address } from 'viem';
+import { formatEther } from 'ethers';
+import type { Address } from 'viem';
 
 interface StakingPoolProps {
   tokenAddress: Address;
@@ -54,24 +55,26 @@ export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSym
         </Typography>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Typography>Total Staked:</Typography>
-          <Typography>{stakingStats?.totalStaked ?? 0} {tokenSymbol}</Typography>
+          <Typography>
+            {stakingStats?.totalStaked ? formatEther(stakingStats.totalStaked) : '0'} {tokenSymbol}
+          </Typography>
         </Stack>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Typography>APY:</Typography>
-          <Typography>{stakingStats?.apy ?? 0}%</Typography>
+          <Typography>{stakingStats?.apy ? Number(stakingStats.apy).toFixed(2) : '0'}%</Typography>
         </Stack>
       </Box>
 
       <Box mb={6}>
         <Stack spacing={2}>
           <Typography component="div" variant="body1">
-            Total Staked: {stakingStats?.totalStaked ?? '0'} {tokenSymbol}
+            Total Staked: {stakingStats?.totalStaked ? formatEther(stakingStats.totalStaked) : '0'} {tokenSymbol}
           </Typography>
           <Typography component="div" variant="body1">
-            Your Stake: {stakedAmount ?? '0'} {tokenSymbol}
+            Your Stake: {stakedAmount ? formatEther(stakedAmount) : '0'} {tokenSymbol}
           </Typography>
           <Typography component="div" variant="body1">
-            Pending Rewards: {pendingRewards ?? '0'} {tokenSymbol}
+            Pending Rewards: {pendingRewards ? formatEther(pendingRewards) : '0'} {tokenSymbol}
           </Typography>
         </Stack>
       </Box>

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useContractWrite, useContractRead, useAccount, useWaitForTransaction, useNetwork } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
+import { parseEther, formatEther, Address } from 'viem';
 import { getContractAddress } from '../config/contracts';
 import { launchpadABI } from '../contracts/abis';
 
 interface PoolInfo {
-  token: string;
+  token: Address;
   tokenPrice: string;
   hardCap: string;
   softCap: string;
@@ -16,44 +16,34 @@ interface PoolInfo {
   cancelled: boolean;
 }
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+
 export function useLaunchpad(poolId?: number) {
   const { address } = useAccount();
   const { chain } = useNetwork();
-  const chainId = chain?.id || 11155111; // Default to Sepolia
-  const launchpadAddress = getContractAddress('LAUNCHPAD', chainId);
+  const [enabled, setEnabled] = useState(false);
 
-  const [poolInfo, setPoolInfo] = useState<PoolInfo>({
-    token: '',
-    tokenPrice: '0',
-    hardCap: '0',
-    softCap: '0',
-    totalRaised: '0',
-    startTime: 0,
-    endTime: 0,
-    finalized: false,
-    cancelled: false,
-  });
+  const launchpadAddress = getContractAddress('LAUNCHPAD', chain?.id ?? 1) as Address;
 
-  const [userContribution, setUserContribution] = useState('0');
-
-  // Only proceed with contract interactions if we have a valid launchpad address and pool ID
-  const enabled = Boolean(launchpadAddress && poolId !== undefined);
+  useEffect(() => {
+    setEnabled(Boolean(poolId !== undefined && launchpadAddress));
+  }, [poolId, launchpadAddress]);
 
   // Read pool info
-  const { data: poolData } = useContractRead({
-    address: launchpadAddress ?? undefined,
+  const { data: poolInfo } = useContractRead({
+    address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getPoolInfo',
-    args: [poolId],
+    args: poolId !== undefined ? [poolId] : undefined,
     enabled,
-  });
+  }) as { data: PoolInfo | undefined };
 
   // Read user contribution
   const { data: userContributionData } = useContractRead({
-    address: launchpadAddress ?? undefined,
+    address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getUserContribution',
-    args: [poolId, address],
+    args: poolId !== undefined && address ? [poolId, address] : undefined,
     enabled: enabled && Boolean(address),
   });
 
@@ -99,6 +89,47 @@ export function useLaunchpad(poolId?: number) {
     functionName: 'claimRefund',
   });
 
+  const [poolInfoState, setPoolInfoState] = useState<PoolInfo>({
+    token: ZERO_ADDRESS,
+    tokenPrice: '0',
+    hardCap: '0',
+    softCap: '0',
+    totalRaised: '0',
+    startTime: 0,
+    endTime: 0,
+    finalized: false,
+    cancelled: false,
+  });
+
+  const [userContribution, setUserContribution] = useState('0');
+
+  const handleCreatePool = useCallback(async (
+    token: Address,
+    tokenPrice: string,
+    hardCap: string,
+    softCap: string,
+    startTime: number,
+    endTime: number
+  ) => {
+    if (!createPool) return;
+    
+    try {
+      await createPool({
+        args: [
+          token,
+          parseEther(tokenPrice),
+          parseEther(hardCap),
+          parseEther(softCap),
+          BigInt(startTime),
+          BigInt(endTime)
+        ],
+      });
+    } catch (error) {
+      console.error('Error creating pool:', error);
+      throw error;
+    }
+  }, [createPool]);
+
   // Wait for transactions
   const { isLoading: isCreating } = useWaitForTransaction({
     hash: createPoolData?.hash,
@@ -126,20 +157,20 @@ export function useLaunchpad(poolId?: number) {
 
   // Update state when data changes
   useEffect(() => {
-    if (poolData && Array.isArray(poolData)) {
-      setPoolInfo({
-        token: poolData[0] as string,
-        tokenPrice: formatEther(poolData[1] as bigint),
-        hardCap: formatEther(poolData[2] as bigint),
-        softCap: formatEther(poolData[3] as bigint),
-        totalRaised: formatEther(poolData[4] as bigint),
-        startTime: Number(poolData[5]),
-        endTime: Number(poolData[6]),
-        finalized: poolData[7] as boolean,
-        cancelled: poolData[8] as boolean,
+    if (poolInfo && Array.isArray(poolInfo)) {
+      setPoolInfoState({
+        token: poolInfo[0] as Address,
+        tokenPrice: formatEther(poolInfo[1] as bigint),
+        hardCap: formatEther(poolInfo[2] as bigint),
+        softCap: formatEther(poolInfo[3] as bigint),
+        totalRaised: formatEther(poolInfo[4] as bigint),
+        startTime: Number(poolInfo[5]),
+        endTime: Number(poolInfo[6]),
+        finalized: poolInfo[7] as boolean,
+        cancelled: poolInfo[8] as boolean,
       });
     }
-  }, [poolData]);
+  }, [poolInfo]);
 
   useEffect(() => {
     if (userContributionData) {
@@ -148,30 +179,6 @@ export function useLaunchpad(poolId?: number) {
   }, [userContributionData]);
 
   // Handlers
-  const handleCreatePool = useCallback((
-    token: string,
-    tokenPrice: string,
-    hardCap: string,
-    softCap: string,
-    minContribution: string,
-    maxContribution: string,
-    startTime: number,
-    endTime: number
-  ) => {
-    createPool({
-      args: [
-        token,
-        parseEther(tokenPrice),
-        parseEther(hardCap),
-        parseEther(softCap),
-        parseEther(minContribution),
-        parseEther(maxContribution),
-        BigInt(startTime),
-        BigInt(endTime),
-      ],
-    });
-  }, [createPool]);
-
   const handleContribute = useCallback((amount: string) => {
     if (poolId === undefined) return;
     contribute({
@@ -201,7 +208,7 @@ export function useLaunchpad(poolId?: number) {
   }, [claimRefund, poolId]);
 
   return {
-    poolInfo,
+    poolInfo: poolInfoState,
     userContribution,
     isCreating,
     isContributing,

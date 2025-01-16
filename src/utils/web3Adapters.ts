@@ -1,6 +1,6 @@
 import { formatUnits, parseUnits } from 'viem';
-import { formatEther } from 'ethers/lib/utils';
-import { BigNumber } from '@ethersproject/bignumber';
+import { ethers } from 'ethers';
+import type { BigNumberish } from 'ethers';
 
 /**
  * Adaptateurs pour la compatibilité entre les différentes bibliothèques Web3
@@ -9,13 +9,13 @@ import { BigNumber } from '@ethersproject/bignumber';
 /**
  * Convertit une valeur pour l'affichage
  */
-export const formatValue = (value: bigint | BigNumber): string => {
+export const formatValue = (value: bigint | BigNumberish): string => {
   if (typeof value === 'bigint') {
     // Utilisez directement formatUnits pour les bigint avec viem
     return formatUnits(value, 18);
   }
-  // Pour ethers BigNumber, utilisez formatEther
-  return formatEther(value);
+  // Pour ethers, utilisez formatUnits
+  return ethers.formatUnits(value, 18);
 };
 
 /**
@@ -34,13 +34,13 @@ export const parseValue = (value: string): bigint => {
  * @returns boolean Résultat de la comparaison
  */
 export const compareValues = (
-  value1: bigint | BigNumber,
-  value2: bigint | BigNumber,
+  value1: bigint | BigNumberish,
+  value2: bigint | BigNumberish,
   operator: '>' | '<' | '>=' | '<=' | '==' = '>'
 ): boolean => {
   // Convertir les BigNumber en bigint si nécessaire
-  const v1 = BigNumber.isBigNumber(value1) ? BigNumber.from(value1).toBigInt() : value1;
-  const v2 = BigNumber.isBigNumber(value2) ? BigNumber.from(value2).toBigInt() : value2;
+  const v1 = typeof value1 === 'bigint' ? value1 : ethers.BigNumber.from(value1).toBigInt();
+  const v2 = typeof value2 === 'bigint' ? value2 : ethers.BigNumber.from(value2).toBigInt();
 
   switch (operator) {
     case '>':

@@ -1,87 +1,94 @@
-import { ethers } from "ethers";
-import * as hre from "hardhat";
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { parseEther } from 'ethers';
+import * as hre from 'hardhat';
+
+// @ts-ignore: Hardhat Runtime Environment's members are not typed properly
+const ethers = hre.ethers;
 
 async function main() {
-  const [deployer] = await hre.ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
 
   console.log("Déploiement des contrats avec le compte:", await deployer.getAddress());
 
   // Déploiement du TokenForgeToken
-  const TokenForgeFactory = await hre.ethers.getContractFactory("TokenForgeToken");
+  const TokenForgeFactory = await ethers.getContractFactory("TokenForgeToken");
   const tokenForge = await TokenForgeFactory.deploy(
     "TokenForge Token",        // nom
     "TFT",                     // symbole
     18,                        // decimals
-    ethers.utils.parseEther("1000000"), // supply total
-    await deployer.getAddress(),          // propriétaire
+    parseEther("1000000"),     // supply total
+    await deployer.getAddress(), // propriétaire
     true,                      // burnable
     true,                      // mintable
     true                       // pausable
   );
 
-  await tokenForge.deployed();
-  console.log("TokenForgeToken déployé à l'adresse:", await tokenForge.getAddress());
+  await tokenForge.waitForDeployment();
+  console.log("TokenForgeToken déployé à:", await tokenForge.getAddress());
 
-  // Déploiement du contrat de staking
-  const StakingFactory = await hre.ethers.getContractFactory("TokenForgeStaking");
-  const staking = await StakingFactory.deploy(await tokenForge.getAddress());
-  
-  await staking.deployed();
-  console.log("TokenForgeStaking déployé à l'adresse:", await staking.getAddress());
+  // Déploiement du TokenForgePlans
+  const PlansFactory = await ethers.getContractFactory("TokenForgePlans");
+  const plans = await PlansFactory.deploy(
+    await tokenForge.getAddress(),
+    parseEther("100"),      // Prix du plan Basic
+    parseEther("500"),      // Prix du plan Pro
+    parseEther("1000"),     // Prix du plan Enterprise
+    await deployer.getAddress()
+  );
 
-  // Configuration initiale
-  const MINTER_ROLE = ethers.utils.id("MINTER_ROLE");
-  await tokenForge.grantRole(MINTER_ROLE, await staking.getAddress());
-  console.log("Rôle MINTER accordé au contrat de staking");
+  await plans.waitForDeployment();
+  console.log("TokenForgePlans déployé à:", await plans.getAddress());
 
-  // Désactiver la pause du contrat
-  await tokenForge.unpause();
-  console.log("Contrat TokenForgeToken déverrouillé");
+  // Déploiement du TokenForgeLaunchpad
+  const LaunchpadFactory = await ethers.getContractFactory("TokenForgeLaunchpad");
+  const launchpad = await LaunchpadFactory.deploy(
+    await tokenForge.getAddress(),
+    await plans.getAddress(),
+    parseEther("0.1"),     // Frais minimum
+    parseEther("10"),      // Frais maximum
+    500,                   // 5% de frais par défaut
+    await deployer.getAddress()
+  );
 
-  // Vérification des informations initiales
-  const poolInfo = await staking.getPoolInfo();
-  console.log("\nInformations du pool:", {
-    totalStaked: ethers.utils.formatEther(poolInfo[0]),
-    rewardRate: poolInfo[1].toString(),
-    lastUpdateTime: poolInfo[2].toString()
-  });
+  await launchpad.waitForDeployment();
+  console.log("TokenForgeLaunchpad déployé à:", await launchpad.getAddress());
 
-  const userStake = await staking.getUserStake(await deployer.getAddress());
-  console.log("User Stake initial:", {
-    amount: ethers.utils.formatEther(userStake[0]),
-    since: userStake[1].toString(),
-    claimedRewards: userStake[2].toString()
-  });
+  // Configuration des rôles
+  const MINTER_ROLE = await tokenForge.MINTER_ROLE();
+  await tokenForge.grantRole(MINTER_ROLE, await plans.getAddress());
+  console.log("Rôle MINTER accordé à TokenForgePlans");
 
-  // Calculer les récompenses potentielles
-  const rewards = await staking.calculateRewards(await deployer.getAddress());
-  console.log("Calculated Rewards:", rewards.toString());
+  await tokenForge.grantRole(MINTER_ROLE, await launchpad.getAddress());
+  console.log("Rôle MINTER accordé à TokenForgeLaunchpad");
 
-  // Effectuer un stake de test
-  const stakeAmount = ethers.utils.parseEther("100");
-  await tokenForge.approve(await staking.getAddress(), stakeAmount);
-  await staking.stake(stakeAmount);
-  console.log("\nStake de test effectué :", ethers.utils.formatEther(stakeAmount), "tokens");
+  // Vérification des contrats
+  if (process.env.ETHERSCAN_API_KEY) {
+    console.log("Vérification des contrats sur Etherscan...");
+    await verifyContract(await tokenForge.getAddress(), [
+      "TokenForge Token", "TFT", 18, parseEther("1000000"),
+      await deployer.getAddress(), true, true, true
+    ]);
+    await verifyContract(await plans.getAddress(), [
+      await tokenForge.getAddress(), parseEther("100"),
+      parseEther("500"), parseEther("1000"), await deployer.getAddress()
+    ]);
+    await verifyContract(await launchpad.getAddress(), [
+      await tokenForge.getAddress(), await plans.getAddress(),
+      parseEther("0.1"), parseEther("10"), 500, await deployer.getAddress()
+    ]);
+  }
+}
 
-  // Vérifier à nouveau les informations
-  const poolInfoAfter = await staking.getPoolInfo();
-  console.log("\nInformations du pool après stake:", {
-    totalStaked: ethers.utils.formatEther(poolInfoAfter[0]),
-    rewardRate: poolInfoAfter[1].toString(),
-    lastUpdateTime: poolInfoAfter[2].toString()
-  });
-
-  const userStakeAfter = await staking.getUserStake(await deployer.getAddress());
-  console.log("User Stake après stake:", {
-    amount: ethers.utils.formatEther(userStakeAfter[0]),
-    since: userStakeAfter[1].toString(),
-    claimedRewards: userStakeAfter[2].toString()
-  });
-
-  console.log("\nAdresses des contrats déployés :");
-  console.log("TokenForgeToken:", await tokenForge.getAddress());
-  console.log("TokenForgeStaking:", await staking.getAddress());
-  console.log("Deployer:", await deployer.getAddress());
+async function verifyContract(address: string, constructorArguments: any[]) {
+  try {
+    await hre.run("verify:verify", {
+      address: address,
+      constructorArguments: constructorArguments,
+    });
+    console.log("Contrat vérifié:", address);
+  } catch (e) {
+    console.log("Erreur de vérification pour", address, e);
+  }
 }
 
 main()

@@ -1,11 +1,11 @@
-import { ethers } from 'ethers';
+import { ethers, BrowserProvider, JsonRpcSigner, Contract } from 'ethers';
 import { TOKEN_ABI, FACTORY_ABI } from '../constants';
 import { getFactoryAddress } from '../config/web3Config';
 import type { TokenContract, FactoryContract } from '../types/contracts';
 
 export class Web3Service {
-  private provider: ethers.providers.Web3Provider | null = null;
-  private signer: ethers.providers.JsonRpcSigner | null = null;
+  private provider: BrowserProvider | null = null;
+  private signer: JsonRpcSigner | null = null;
   private connectionPromise: Promise<void> | null = null;
 
   async connect() {
@@ -19,7 +19,7 @@ export class Web3Service {
           throw new Error('Metamask non détecté');
         }
 
-        this.provider = new ethers.providers.Web3Provider(window.ethereum);
+        this.provider = new BrowserProvider(window.ethereum);
         
         // Attendre que la connexion soit établie
         await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -33,7 +33,7 @@ export class Web3Service {
     return this.connectionPromise;
   }
 
-  async getSigner(): Promise<ethers.providers.JsonRpcSigner> {
+  async getSigner(): Promise<JsonRpcSigner> {
     if (!this.signer) {
       await this.connect();
       if (!this.signer) {
@@ -46,7 +46,7 @@ export class Web3Service {
   async getFactoryContract(): Promise<FactoryContract> {
     const signer = await this.getSigner();
     const address = getFactoryAddress() || '';
-    return new ethers.Contract(
+    return new Contract(
       address,
       FACTORY_ABI,
       signer
@@ -55,14 +55,14 @@ export class Web3Service {
 
   async getTokenContract(address: string): Promise<TokenContract> {
     const signer = await this.getSigner();
-    return new ethers.Contract(
+    return new Contract(
       address,
       TOKEN_ABI,
       signer
     ) as TokenContract;
   }
 
-  async getProvider(): Promise<ethers.providers.Web3Provider> {
+  async getProvider(): Promise<BrowserProvider> {
     if (!this.provider) {
       await this.connect();
       if (!this.provider) {
