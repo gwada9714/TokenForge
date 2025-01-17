@@ -22,29 +22,57 @@ export function useLaunchpad(poolId?: number) {
   const { address } = useAccount();
   const { chain } = useNetwork();
   const [enabled, setEnabled] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const launchpadAddress = getContractAddress('LAUNCHPAD', chain?.id ?? 1) as Address;
+  // Vérification du réseau
+  useEffect(() => {
+    if (chain?.id !== 11155111) {
+      setError('Please connect to Sepolia network');
+      setEnabled(false);
+      return;
+    }
+    setError(null);
+  }, [chain?.id]);
+
+  const launchpadAddress = getContractAddress('TOKEN_FACTORY', chain?.id ?? 11155111) as Address;
 
   useEffect(() => {
+    if (error) return;
     setEnabled(Boolean(poolId !== undefined && launchpadAddress));
-  }, [poolId, launchpadAddress]);
+  }, [poolId, launchpadAddress, error]);
 
-  // Read pool info
-  const { data: poolInfo } = useContractRead({
+  // Read pool info with error handling
+  const { data: poolInfo, error: poolError } = useContractRead({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getPoolInfo',
     args: poolId !== undefined ? [BigInt(poolId)] : undefined,
     enabled,
-  }) as { data: PoolInfo | undefined };
+    onError: (error: unknown) => {
+      console.error('Pool info error:', error);
+      if (error instanceof Error) {
+        setError(`Failed to read pool info: ${error.message}`);
+      } else {
+        setError('Failed to read pool info: Unknown error');
+      }
+    }
+  }) as { data: PoolInfo | undefined; error: unknown };
 
-  // Read user contribution
-  const { data: userContributionData } = useContractRead({
+  // Read user contribution with error handling
+  const { data: userContributionData, error: userContributionError } = useContractRead({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getUserContribution',
     args: poolId !== undefined && address ? [BigInt(poolId), address] : undefined,
     enabled: enabled && Boolean(address),
+    onError: (error: unknown) => {
+      console.error('User contribution error:', error);
+      if (error instanceof Error) {
+        setError(`Failed to read user contribution: ${error.message}`);
+      } else {
+        setError('Failed to read user contribution: Unknown error');
+      }
+    }
   });
 
   // Create pool
@@ -105,6 +133,11 @@ export function useLaunchpad(poolId?: number) {
       });
     } catch (error) {
       console.error('Error creating pool:', error);
+      if (error instanceof Error) {
+        setError(`Failed to create pool: ${error.message}`);
+      } else {
+        setError('Failed to create pool: Unknown error');
+      }
       throw error;
     }
   }, [createPool]);
@@ -159,5 +192,8 @@ export function useLaunchpad(poolId?: number) {
     isCreating,
     isInvesting,
     isClaiming,
+
+    // Error state
+    error,
   };
 }

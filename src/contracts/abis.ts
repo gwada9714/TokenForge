@@ -165,6 +165,19 @@ export const TokenForgePlansABI = [
 export const launchpadABI = [
   {
     "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getPoolCount",
     "outputs": [
       {

@@ -1,133 +1,130 @@
-import { useAccount, useContractRead, useContractWrite, usePrepareContractWrite } from 'wagmi';
+import { useAccount, useContractRead, useContractWrite, usePrepareContractWrite, useNetwork } from 'wagmi';
 import { useState, useEffect } from 'react';
 import TokenForgeFactoryABI from '../contracts/abi/TokenForgeFactory.json';
 import { useContract } from '../providers/ContractProvider';
 
 export const useTokenForgeAdmin = () => {
   const { address } = useAccount();
+  const { chain } = useNetwork();
   const { contractAddress, isLoading: contractLoading } = useContract();
   const [newOwnerAddress, setNewOwnerAddress] = useState<`0x${string}` | undefined>();
   const [error, setError] = useState<string | null>(null);
+  const [isPauseAvailable, setIsPauseAvailable] = useState(false);
 
-  // Lecture du propriétaire du contrat
+  // Lecture du propriétaire du contrat avec gestion du réseau
   const { data: owner, isSuccess: ownerLoaded, isError: ownerError } = useContractRead({
     address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'owner',
-    watch: true,
-    enabled: !!contractAddress,
-  }) as { data: string; isSuccess: boolean; isError: boolean };
+    enabled: !!contractAddress && !!chain?.id,
+    chainId: chain?.id,
+  });
 
-  // Lecture de l'état de pause
+  // Lecture de l'état de pause avec gestion du réseau
   const { data: paused, isError: pausedError } = useContractRead({
     address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'paused',
-    watch: true,
-    enabled: !!contractAddress,
-  }) as { data: boolean; isError: boolean };
+    enabled: !!contractAddress && !!chain?.id && isPauseAvailable,
+    chainId: chain?.id,
+    onError(error) {
+      console.error('Error reading paused state:', error);
+      setIsPauseAvailable(false);
+    },
+    onSuccess() {
+      setIsPauseAvailable(true);
+    }
+  });
 
-  // Gestion des erreurs
+  // Vérification de la disponibilité des fonctions de pause
   useEffect(() => {
-    if (contractLoading) {
-      setError('Chargement du contrat...');
+    if (!contractAddress || !chain?.id) {
+      setIsPauseAvailable(false);
+      return;
+    }
+
+    // Vérifie si la fonction existe dans l'ABI
+    const hasPauseFunction = TokenForgeFactoryABI.abi.some(
+      (item) => item.type === 'function' && item.name === 'paused'
+    );
+
+    setIsPauseAvailable(hasPauseFunction);
+  }, [contractAddress, chain?.id]);
+
+  // Gestion des erreurs avec le réseau
+  useEffect(() => {
+    if (!chain?.id) {
+      setError('Please connect to a network');
+    } else if (contractLoading) {
+      setError('Loading contract...');
     } else if (!contractAddress) {
-      setError('Adresse du contrat non disponible. Veuillez vérifier votre connexion au réseau.');
-    } else if (ownerError) {
-      setError('Erreur lors de la lecture du propriétaire du contrat');
-    } else if (pausedError) {
-      setError('Erreur lors de la lecture de l\'état de pause');
+      setError('Contract address not found');
+    } else if (ownerError || pausedError) {
+      setError('Failed to read contract state');
+      setIsPauseAvailable(false);
     } else {
       setError(null);
     }
-  }, [contractLoading, contractAddress, ownerError, pausedError]);
+  }, [chain?.id, contractLoading, contractAddress, ownerError, pausedError]);
 
-  // Vérification directe si l'adresse correspond au propriétaire
-  const isAdmin = (() => {
-    if (!ownerLoaded || !owner || !address || !contractAddress) {
-      console.log('useTokenForgeAdmin - État actuel:', JSON.stringify({ 
-        ownerLoaded,
-        owner: owner || null, 
-        address: address || null, 
-        contractAddress: contractAddress || null,
-        error: error || 'Aucune erreur'
-      }, null, 2));
-      return false;
-    }
-
-    const ownerLower = owner.toLowerCase();
-    const addressLower = address.toLowerCase();
-    
-    const comparisonData = {
-      owner: ownerLower,
-      currentAddress: addressLower,
-      contractAddress,
-      isMatch: ownerLower === addressLower,
-      error: error || 'Aucune erreur'
-    };
-    
-    console.log('useTokenForgeAdmin - Vérification des adresses:', JSON.stringify(comparisonData, null, 2));
-    
-    return ownerLower === addressLower;
-  })();
-
-  // Préparation de la fonction de transfert de propriété
-  const { config: transferConfig } = usePrepareContractWrite({
-    address: contractAddress ?? undefined,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'transferOwnership',
-    args: newOwnerAddress ? [newOwnerAddress] : undefined,
-    enabled: !!contractAddress && !!newOwnerAddress,
-  });
-
-  // Préparation de la fonction pause
+  // Préparation de la fonction pause avec gestion du réseau
   const { config: pauseConfig } = usePrepareContractWrite({
     address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'pause',
-    enabled: !!contractAddress && !paused,
+    enabled: !!contractAddress && !!chain?.id && isPauseAvailable && !paused,
+    chainId: chain?.id,
   });
 
-  // Préparation de la fonction unpause
+  // Préparation de la fonction unpause avec gestion du réseau
   const { config: unpauseConfig } = usePrepareContractWrite({
     address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'unpause',
-    enabled: !!contractAddress && !!paused,
+    enabled: !!contractAddress && !!chain?.id && isPauseAvailable && !!paused,
+    chainId: chain?.id,
   });
 
-  // Fonction de transfert de propriété
-  const { write: transferOwnership, isLoading: isTransferring } = useContractWrite(transferConfig);
+  // Préparation de la fonction de transfert avec gestion du réseau
+  const { config: transferConfig } = usePrepareContractWrite({
+    address: contractAddress ?? undefined,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'transferOwnership',
+    args: [newOwnerAddress],
+    enabled: !!contractAddress && !!chain?.id && !!newOwnerAddress,
+    chainId: chain?.id,
+  });
 
-  // Fonction de pause
-  const { write: pause, isLoading: isPausing } = useContractWrite(pauseConfig);
-
-  // Fonction de reprise
-  const { write: unpause, isLoading: isUnpausing } = useContractWrite(unpauseConfig);
-
-  // Fonction de renonciation à la propriété
+  // Préparation de la fonction de renonciation avec gestion du réseau
   const { config: renounceConfig } = usePrepareContractWrite({
     address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'renounceOwnership',
-    enabled: !!contractAddress,
+    enabled: !!contractAddress && !!chain?.id,
+    chainId: chain?.id,
   });
 
+  const { write: transferOwnership, isLoading: isTransferring } = useContractWrite(transferConfig);
   const { write: renounceOwnership, isLoading: isRenouncing } = useContractWrite(renounceConfig);
+  const { write: pause, isLoading: isPausing } = useContractWrite(pauseConfig);
+  const { write: unpause, isLoading: isUnpausing } = useContractWrite(unpauseConfig);
 
   return {
-    isAdmin,
+    isAdmin: address === owner,
     owner,
-    paused,
+    paused: paused ?? false,
+    pauseAvailable: isPauseAvailable,
     transferOwnership,
     renounceOwnership,
-    pause,
-    unpause,
-    isTransferring,
-    isRenouncing,
+    pause: isPauseAvailable ? pause : undefined,
+    unpause: isPauseAvailable ? unpause : undefined,
     isPausing,
     isUnpausing,
-    setNewOwnerAddress,
+    isTransferring,
+    isRenouncing,
     error,
+    setNewOwnerAddress,
+    newOwnerAddress,
+    chainId: chain?.id
   };
 };
