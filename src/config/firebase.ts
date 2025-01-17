@@ -4,13 +4,13 @@ import { getAuth } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
-  apiKey: "AIzaSvAWCGLD1B4aTGRdasA-Xa-anx4E1E0ZAA0",
+  apiKey: "AIzaSyAWCGLD1B4aTGRdasA-Xa-anx4EjE0ZAA0",
   authDomain: "tokenforge-4028e.firebaseapp.com",
   projectId: "tokenforge-4028e",
   storageBucket: "tokenforge-4028e.firebasestorage.app",
   messagingSenderId: "351014652393",
-  appId: "1:351014652393:web:0a8b54b03a7293bf22e378",
-  measurementId: "G-E79XWLF0XC"
+  appId: "1:351014465239:web:ca7600eae9b1c32a22e378",
+  measurementId: "G-VDPGL09402"
 };
 
 // Initialize Firebase
