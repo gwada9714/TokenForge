@@ -87,16 +87,16 @@ interface ForgeBackgroundProps {
   sparkleCount?: number;
 }
 
-export const ForgeBackground: React.FC<ForgeBackgroundProps> = ({
+const ForgeBackground: React.FC<ForgeBackgroundProps> = ({
   sparkleCount = 15
 }) => {
   const sparkles = Array.from({ length: sparkleCount }).map((_, i) => ({
-    delay: Math.random() * 2,
+    id: i,
+    delay: Math.random() * 3,
     duration: 2 + Math.random() * 2,
     size: 10 + Math.random() * 20,
     top: Math.random() * 100,
-    left: Math.random() * 100,
-    key: i,
+    left: Math.random() * 100
   }));
 
   return (
@@ -104,7 +104,7 @@ export const ForgeBackground: React.FC<ForgeBackgroundProps> = ({
       <Overlay />
       {sparkles.map(sparkle => (
         <Sparkle
-          key={sparkle.key}
+          key={sparkle.id}
           $delay={sparkle.delay}
           $duration={sparkle.duration}
           $size={sparkle.size}
@@ -115,3 +115,5 @@ export const ForgeBackground: React.FC<ForgeBackgroundProps> = ({
     </Background>
   );
 };
+
+export default ForgeBackground;

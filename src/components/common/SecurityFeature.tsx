@@ -31,38 +31,28 @@ const Container = styled(ForgeCard)`
   padding: 2rem;
   position: relative;
   overflow: hidden;
-  height: 100%;
-
-  &:hover {
-    .security-icon {
-      animation: ${pulse} 2s infinite;
-    }
-    
-    .security-bg {
-      transform: scale(1.1);
-    }
-  }
 `;
 
-const IconWrapper = styled.div`
+interface IconWrapperProps {
+  $status: 'active' | 'completed' | 'pending';
+}
+
+const IconWrapper = styled.div<IconWrapperProps>`
   width: 64px;
   height: 64px;
-  border-radius: 16px;
-  background: ${props => props.theme.colors.gradient.primary};
+  margin-bottom: 1.5rem;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
-  position: relative;
-  z-index: 2;
-  transition: transform 0.3s ease;
+  border-radius: 16px;
+  background: ${props => props.theme.colors.forge.metallic};
+  animation: ${props => props.$status === 'active' ? pulse : 'none'} 2s infinite;
 
-  &.security-icon {
-    svg {
-      width: 32px;
-      height: 32px;
-      color: ${props => props.theme.colors.text.light};
-    }
+  svg {
+    width: 32px;
+    height: 32px;
+    color: ${props => props.theme.colors.text.light};
   }
 `;
 
@@ -71,64 +61,41 @@ const Title = styled.h3`
   font-size: 1.25rem;
   font-weight: ${props => props.theme.typography.fontWeight.bold};
   color: ${props => props.theme.colors.text.primary};
-  margin-bottom: 1rem;
-  position: relative;
-  z-index: 2;
+  margin-bottom: 0.75rem;
 `;
 
 const Description = styled.p`
+  font-family: ${props => props.theme.typography.fontFamily.body};
+  font-size: 1rem;
   color: ${props => props.theme.colors.text.secondary};
-  line-height: 1.6;
-  position: relative;
-  z-index: 2;
+  line-height: 1.5;
 `;
 
-const BackgroundIcon = styled.div`
-  position: absolute;
-  top: -20%;
-  right: -20%;
-  width: 200px;
-  height: 200px;
-  opacity: 0.03;
-  transform: rotate(-15deg);
-  transition: transform 0.3s ease;
+interface StatusBadgeProps {
+  $status: 'active' | 'completed' | 'pending';
+}
 
-  &.security-bg {
-    svg {
-      width: 100%;
-      height: 100%;
-    }
-  }
-`;
-
-const StatusBadge = styled.div<{ $status: 'active' | 'completed' | 'pending' }>`
+const StatusBadge = styled.div<StatusBadgeProps>`
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 12px;
-  height: 12px;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  z-index: 2;
-
-  ${props => {
+  background: ${props => {
     switch (props.$status) {
       case 'active':
-        return `
-          background-color: ${props.theme.colors.success.main};
-          animation: ${pulse} 2s infinite;
-        `;
+        return props.theme.colors.success.main;
       case 'completed':
-        return `
-          background-color: ${props.theme.colors.success.main};
-        `;
+        return props.theme.colors.primary.main;
       case 'pending':
-        return `
-          background-color: ${props.theme.colors.warning.main};
-        `;
+        return props.theme.colors.text.secondary;
       default:
-        return '';
+        return props.theme.colors.text.secondary;
     }
-  }}
+  }};
+  border: 2px solid ${props => props.theme.colors.background.paper};
+  animation: ${props => props.$status === 'active' ? rotate : 'none'} 2s linear infinite;
 `;
 
 interface SecurityFeatureProps {
@@ -139,7 +106,7 @@ interface SecurityFeatureProps {
   className?: string;
 }
 
-export const SecurityFeature: React.FC<SecurityFeatureProps> = ({
+const SecurityFeature: React.FC<SecurityFeatureProps> = ({
   icon,
   title,
   description,
@@ -148,15 +115,14 @@ export const SecurityFeature: React.FC<SecurityFeatureProps> = ({
 }) => {
   return (
     <Container className={className}>
-      <StatusBadge $status={status} />
-      <IconWrapper className="security-icon">
+      <IconWrapper $status={status}>
         {icon}
+        <StatusBadge $status={status} />
       </IconWrapper>
       <Title>{title}</Title>
       <Description>{description}</Description>
-      <BackgroundIcon className="security-bg">
-        {icon}
-      </BackgroundIcon>
     </Container>
   );
 };
+
+export default SecurityFeature;

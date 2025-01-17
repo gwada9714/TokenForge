@@ -95,14 +95,16 @@ const CustomizedLegend: React.FC<{ data: TokenChartProps['data'] }> = ({ data })
   </CustomLegend>
 );
 
-export const TokenChart: React.FC<TokenChartProps> = ({
+const TokenChart: React.FC<TokenChartProps> = ({
   data,
   title,
   type = 'donut',
   className
 }) => {
+  const innerRadius = type === 'donut' ? '60%' : '0';
+  
   return (
-    <ForgeCard variant="elevated" className={className}>
+    <ForgeCard className={className}>
       {title && <Title>{title}</Title>}
       <ChartContainer>
         <ResponsiveContainer width="100%" height="100%">
@@ -111,21 +113,22 @@ export const TokenChart: React.FC<TokenChartProps> = ({
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={type === 'donut' ? '60%' : 0}
+              innerRadius={innerRadius}
               outerRadius="80%"
-              fill="#8884d8"
-              paddingAngle={2}
               dataKey="value"
+              labelLine={false}
             >
               {data.map((entry, index) => (
-                <Cell key={index} fill={entry.color} />
+                <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
             <Tooltip content={<CustomizedTooltip />} />
+            <Legend content={<CustomizedLegend data={data} />} />
           </PieChart>
         </ResponsiveContainer>
       </ChartContainer>
-      <CustomizedLegend data={data} />
     </ForgeCard>
   );
 };
+
+export default TokenChart;

@@ -69,7 +69,7 @@ interface FeatureCardProps {
   className?: string;
 }
 
-export const FeatureCard: React.FC<FeatureCardProps> = ({
+const FeatureCard: React.FC<FeatureCardProps> = ({
   icon,
   title,
   description,
@@ -83,3 +83,5 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
     </ForgeCard>
   );
 };
+
+export default FeatureCard;
