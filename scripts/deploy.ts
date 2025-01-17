@@ -1,9 +1,5 @@
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import * as hre from 'hardhat';
-import { parseEther } from 'ethers';
-
-// @ts-ignore: Hardhat Runtime Environment's members are not typed properly
-const ethers = hre.ethers;
+const hre = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -51,49 +47,39 @@ async function main() {
 
   // Transférer des TKN à l'adresse du déployeur pour les tests
   console.log("Transfert de TKN au déployeur pour les tests...");
-  const transferAmount = parseEther("1000"); // 1000 TKN pour les tests
+  const transferAmount = "1000000000000000000000"; // 1000 TKN (18 décimales)
   const tx = await tknToken.transfer(deployerAddress, transferAmount);
   await tx.wait();
   console.log(`${transferAmount} TKN transférés à ${deployerAddress}`);
 
-  // Vérification des contrats sur Etherscan
-  if (process.env.ETHERSCAN_API_KEY) {
-    console.log("Vérification des contrats sur Etherscan...");
-    
-    console.log("Vérification de TokenForgeTKN...");
-    await verifyContract(tknTokenAddress, [teamWallet, marketingWallet, ecosystemWallet]);
-    
-    console.log("Vérification de TokenForgeTaxSystem...");
-    await verifyContract(taxSystemAddress, [deployerAddress]);
-    
-    console.log("Vérification de TokenForgeFactory...");
-    await verifyContract(factoryAddress, [tknTokenAddress, deployerAddress, taxSystemAddress]);
-    
-    console.log("Tous les contrats ont été vérifiés sur Etherscan");
-  }
-
-  // Afficher un résumé des déploiements
-  console.log("\nRésumé des déploiements:");
+  // Afficher les adresses des contrats déployés
+  console.log("-------------------------");
+  console.log("Contrats déployés :");
   console.log("-------------------------");
   console.log("TokenForgeTKN:", tknTokenAddress);
   console.log("TokenForgeTaxSystem:", taxSystemAddress);
   console.log("TokenForgeFactory:", factoryAddress);
   console.log("-------------------------");
+
+  // Vérification des contrats sur Etherscan
+  if (process.env.ETHERSCAN_API_KEY) {
+    console.log("Vérification des contrats sur Etherscan...");
+  
+    await verifyContract(tknTokenAddress, [teamWallet, marketingWallet, ecosystemWallet]);
+    await verifyContract(taxSystemAddress, [deployerAddress]);
+    await verifyContract(factoryAddress, [tknTokenAddress, deployerAddress, taxSystemAddress]);
+  }
 }
 
-async function verifyContract(address: string, constructorArguments: any[]) {
+async function verifyContract(address, constructorArguments) {
   try {
     await hre.run("verify:verify", {
       address: address,
       constructorArguments: constructorArguments,
     });
-  } catch (error: any) {
-    if (error.message.toLowerCase().includes("already verified")) {
-      console.log("Le contrat est déjà vérifié!");
-    } else {
-      console.error("Erreur lors de la vérification:", error);
-      throw error;
-    }
+    console.log(`Contrat vérifié avec succès à l'adresse ${address}`);
+  } catch (error) {
+    console.log(`Erreur lors de la vérification du contrat à l'adresse ${address}:`, error);
   }
 }
 

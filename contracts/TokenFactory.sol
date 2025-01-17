@@ -17,7 +17,9 @@ contract TokenFactory is Ownable, Pausable {
         string symbol
     );
 
-    constructor() Ownable() Pausable() {}
+    constructor() Ownable() Pausable() {
+        _transferOwnership(msg.sender);
+    }
 
     /**
      * @dev Crée un nouveau token ERC20
