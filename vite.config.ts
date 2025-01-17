@@ -17,10 +17,8 @@ export default defineConfig({
     nodePolyfills(),
     VitePWA({
       strategies: 'injectManifest',
-      srcDir: 'public',
+      srcDir: 'src',
       filename: 'sw.js',
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
       manifest: {
         name: 'TokenForge',
         short_name: 'TokenForge',
@@ -40,12 +38,11 @@ export default defineConfig({
       }
     })
   ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
   server: {
+    headers: {
+      'Service-Worker-Allowed': '/',
+      'Content-Type': 'application/javascript'
+    },
     port: 3000,
     host: true,
     strictPort: true,
@@ -56,6 +53,14 @@ export default defineConfig({
       usePolling: false,
       interval: 100
     },
+  },
+  worker: {
+    format: 'es'
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
   },
   optimizeDeps: {
     include: [
@@ -88,6 +93,7 @@ export default defineConfig({
         drop_debugger: true
       }
     },
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -98,7 +104,6 @@ export default defineConfig({
         }
       }
     },
-    sourcemap: false,
     chunkSizeWarningLimit: 1000
   }
 });
