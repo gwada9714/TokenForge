@@ -1,12 +1,12 @@
-import { useAccount, useNetwork, usePublicClient } from 'wagmi';
+import { useAccount, useNetwork, usePublicClient, usePrepareContractWrite, useContractWrite } from 'wagmi';
 import { Address } from 'viem';
 import { TokenForgeError, TokenForgeErrorCode } from '../utils/errors';
 import TokenForgeFactory from '../contracts/abi/TokenForgeFactory.json';
 import { useContract } from '../providers/ContractProvider';
-import { useContractCache } from './useContractCache';
+import { useContractCache, CacheConfig } from './useContractCache';
 import { auditLogger, AuditActionType, LogDetails } from '../services/auditLogger';
 import { alertService } from '../services/alertService';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 
 /**
  * Interface pour les retours du hook useTokenForgeAdmin
@@ -31,16 +31,47 @@ export interface TokenForgeAdminHookReturn {
   /** Si le contrat est valide */
   isValidContract: boolean;
   /** Si une transaction est en cours */
-  pendingTx: Record<string, boolean>;
+  pendingTx: Record<string, boolean | string>;
+  /** Si l'utilisateur est admin */
+  isAdmin: boolean;
+  /** Adresse du propriétaire */
+  owner: Address | undefined;
+  /** Si le contrat est en pause */
+  paused: boolean;
+  /** Si une pause est disponible */
+  pauseAvailable: boolean;
+  /** Si une pause est en cours */
+  isPausing: boolean;
+  /** Si une dépause est en cours */
+  isUnpausing: boolean;
+  /** Si un transfert est en cours */
+  isTransferring: boolean;
+  /** Fonction pour définir la nouvelle adresse du propriétaire */
+  setNewOwnerAddress: (address: string) => void;
+  /** Si le chargement est en cours */
+  isLoading: boolean;
+}
+
+function useNullableContractCache<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  config?: CacheConfig
+): { data: T | undefined; isLoading: boolean; error: Error | null } {
+  const result = useContractCache(key, fetcher, config);
+  return {
+    data: result.data ?? undefined,
+    isLoading: result.isLoading,
+    error: result.error
+  };
 }
 
 export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
   const { address } = useAccount();
   const { chain } = useNetwork();
   const publicClient = usePublicClient();
-  const [errorState, setErrorState] = useState<string | undefined>(null);
-  const [txHash, setTxHash] = useState<`0x${string}`>();
-  const [pendingTx, setPendingTx] = useState<Record<string, boolean>>({});
+  const [errorState, setErrorState] = useState<string | undefined>(undefined);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const [pendingTx, setPendingTx] = useState<Record<string, string | boolean>>({});
 
   const handleNotification = useCallback((message: string, type: 'success' | 'error') => {
     // TODO: implémenter la fonction de notification
@@ -49,9 +80,9 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
   const logAction = useCallback((
     action: AuditActionType,
     status: 'SUCCESS' | 'FAILED',
-    details: Omit<LogDetails, 'status' | 'networkInfo'>
+    details: Omit<LogDetails, 'status'>
   ) => {
-    if (!address) return;
+    if (!address || !chain) return;
 
     auditLogger.addLog({
       timestamp: new Date().toISOString(),
@@ -61,8 +92,8 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
         status,
         ...details,
         networkInfo: {
-          chainId: chain?.id ?? 0,
-          networkName: chain?.name ?? 'unknown'
+          chainId: chain.id,
+          networkName: chain.name
         }
       }
     });
@@ -99,7 +130,11 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     setErrorState(message);
     
     logAction(action, 'FAILED', {
-      error: message
+      error: message,
+      networkInfo: {
+        chainId: chain?.id || 0,
+        networkName: chain?.name || 'unknown'
+      }
     });
 
     // Vérifier les alertes
@@ -107,14 +142,14 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     matchingRules.forEach(rule => {
       handleNotification(rule.notificationMessage, 'error');
     });
-  }, [logAction, handleNotification]);
+  }, [chain, logAction, handleNotification]);
 
   const { contractAddress } = useContract();
-  const { data: ownerData, isLoading: ownerLoading } = useContractCache(
+  const { data: ownerData, isLoading: ownerLoading } = useNullableContractCache<Address>(
     `owner-${contractAddress}`,
     async () => {
       if (!contractAddress) {
-        return undefined;
+        throw new Error('No contract address');
       }
       const data = await publicClient.readContract({
         address: contractAddress as Address,
@@ -126,11 +161,11 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     { ttl: 60000 } // Cache pendant 1 minute
   );
 
-  const { data: pausedData, isLoading: pausedLoading } = useContractCache(
+  const { data: pausedData, isLoading: pausedLoading } = useNullableContractCache<boolean>(
     `paused-${contractAddress}`,
     async () => {
       if (!contractAddress) {
-        return undefined;
+        throw new Error('No contract address');
       }
       const data = await publicClient.readContract({
         address: contractAddress as Address,
@@ -238,13 +273,17 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
         );
       }
 
-      handleTransactionSuccess(tx, AuditActionType.PAUSE);
+      handleTransactionSuccess(tx, 'pause' as AuditActionType);
       
     } catch (err) {
-      logAction(AuditActionType.PAUSE, 'FAILED', { 
-        error: err instanceof Error ? err.message : 'Unknown error' 
+      logAction('pause' as AuditActionType, 'FAILED', { 
+        error: err instanceof Error ? err.message : 'Unknown error',
+        networkInfo: {
+          chainId: chain?.id || 0,
+          networkName: chain?.name || 'unknown'
+        }
       });
-      handleTransactionError(err, 'pause');
+      handleTransactionError(err, 'pause' as AuditActionType);
     } finally {
       setPendingTx(prev => ({ ...prev, pause: false }));
     }
@@ -297,13 +336,17 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
         );
       }
 
-      handleTransactionSuccess(tx, AuditActionType.UNPAUSE);
+      handleTransactionSuccess(tx, 'unpause' as AuditActionType);
       
     } catch (err) {
-      logAction(AuditActionType.UNPAUSE, 'FAILED', { 
-        error: err instanceof Error ? err.message : 'Unknown error' 
+      logAction('unpause' as AuditActionType, 'FAILED', { 
+        error: err instanceof Error ? err.message : 'Unknown error',
+        networkInfo: {
+          chainId: chain?.id || 0,
+          networkName: chain?.name || 'unknown'
+        }
       });
-      handleTransactionError(err, 'unpause');
+      handleTransactionError(err, 'unpause' as AuditActionType);
     } finally {
       setPendingTx(prev => ({ ...prev, unpause: false }));
     }
@@ -356,16 +399,24 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
         );
       }
 
-      handleTransactionSuccess(tx, AuditActionType.TRANSFER_OWNERSHIP);
+      handleTransactionSuccess(tx, 'transfer' as AuditActionType);
       
     } catch (err) {
-      logAction(AuditActionType.TRANSFER_OWNERSHIP, 'FAILED', { 
+      logAction('transfer' as AuditActionType, 'FAILED', { 
         error: err instanceof Error ? err.message : 'Unknown error',
-        targetAddress: newOwner as Address
+        targetAddress: newOwner as Address,
+        networkInfo: {
+          chainId: chain?.id || 0,
+          networkName: chain?.name || 'unknown'
+        }
       });
-      handleTransactionError(err, 'transfer');
+      handleTransactionError(err, 'transfer' as AuditActionType);
     } finally {
-      setPendingTx(prev => ({ ...prev, transfer: undefined }));
+      setPendingTx(prev => {
+        const newState = { ...prev };
+        delete newState.transfer;
+        return newState;
+      });
     }
   }, [transferContract, address, isCorrectNetwork, isValidContract, isOwner, pendingTx, handleTransactionSuccess, handleTransactionError, logAction]);
 
@@ -403,9 +454,18 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     transferOwnership,
     error: errorState,
     isCorrectNetwork,
-    isWaitingForTx: false,
+    isWaitingForTx: Boolean(txHash),
     isValidContract,
-    pendingTx
+    pendingTx,
+    isAdmin: isOwner,
+    owner: ownerData || undefined,
+    paused: pausedData ?? false,
+    pauseAvailable: !(pausedData ?? false),
+    isPausing: Boolean(pendingTx.pause),
+    isUnpausing: Boolean(pendingTx.unpause),
+    isTransferring: typeof pendingTx.transfer === 'string',
+    setNewOwnerAddress: (address: string) => setPendingTx(prev => ({ ...prev, transfer: address })),
+    isLoading: ownerLoading || pausedLoading
   };
 
   return hookReturn;

@@ -6,7 +6,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-interface CacheConfig {
+export interface CacheConfig {
   ttl: number; // Time to live in milliseconds
 }
 
