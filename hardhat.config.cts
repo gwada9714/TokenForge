@@ -1,42 +1,38 @@
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-chai-matchers";
-import * as dotenv from "dotenv";
-
-dotenv.config();
+require("@nomicfoundation/hardhat-toolbox");
+require("dotenv").config();
 
 // Vérification des variables d'environnement requises
-const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL;
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-
-if (!SEPOLIA_RPC_URL) {
-  throw new Error("SEPOLIA_RPC_URL non définie dans le fichier .env");
+if (!process.env.VITE_SEPOLIA_RPC_URL) {
+  throw new Error("VITE_SEPOLIA_RPC_URL manquante dans le fichier .env");
 }
 
-if (!PRIVATE_KEY) {
-  throw new Error("PRIVATE_KEY non définie dans le fichier .env");
-}
+const PRIVATE_KEY = "73790c98a515e800ddb5ab6f86f5d1b003a3c217765230b7bc48d134eaacde58";
 
-const config: HardhatUserConfig = {
+const config = {
   solidity: {
     version: "0.8.20",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
-      }
-    }
+        runs: 200,
+      },
+    },
   },
   networks: {
-    hardhat: {
-      chainId: 1337
-    },
     sepolia: {
-      url: SEPOLIA_RPC_URL,
-      accounts: [PRIVATE_KEY],
-      chainId: 11155111
-    }
+      url: process.env.VITE_SEPOLIA_RPC_URL,
+      accounts: [`0x${PRIVATE_KEY}`],
+      gasPrice: 3000000000, // 3 Gwei
+      maxPriorityFeePerGas: 3000000000, // 3 Gwei
+      maxFeePerGas: 3000000000 * 2, // 6 Gwei
+    },
+  },
+  etherscan: {
+    apiKey: "R7RM5MH93ADK3RUUZI193YXPTEHZ3WZH5V", // Votre clé API Etherscan
+  },
+  paths: {
+    sources: "./contracts",
   }
 };
 
-export default config;
+module.exports = config;
