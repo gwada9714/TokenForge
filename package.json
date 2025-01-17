@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "clean": "rm -rf node_modules/.vite dist"
+    "clean": "if exist node_modules\\.vite rd /s /q node_modules\\.vite && if exist dist rd /s /q dist"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
@@ -40,7 +40,8 @@
     "typescript": "^5.0.2",
     "viem": "^1.21.4",
     "wagmi": "^1.4.12",
-    "web3": "^4.3.0"
+    "web3": "^4.3.0",
+    "workbox-window": "^7.3.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
@@ -57,6 +58,7 @@
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "vite": "^5.0.11",
-    "vite-plugin-node-polyfills": "^0.22.0"
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-pwa": "^0.21.1"
   }
 }

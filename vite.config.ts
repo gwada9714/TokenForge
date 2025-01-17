@@ -1,15 +1,41 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { VitePWA } from 'vite-plugin-pwa';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react({
-      // Configuration du plugin React
       babel: {
         plugins: [
           ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
+        ]
+      }
+    }),
+    nodePolyfills(),
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'public',
+      filename: 'sw.js',
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      manifest: {
+        name: 'TokenForge',
+        short_name: 'TokenForge',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: '/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
         ]
       }
     })
@@ -24,10 +50,10 @@ export default defineConfig({
     host: true,
     strictPort: true,
     hmr: {
-      overlay: false // Désactive l'overlay d'erreur qui peut ralentir
+      overlay: false
     },
     watch: {
-      usePolling: false, // Désactive le polling qui peut ralentir
+      usePolling: false,
       interval: 100
     },
   },
@@ -41,31 +67,38 @@ export default defineConfig({
       '@emotion/styled',
       'wagmi',
       'viem',
-      '@rainbow-me/rainbowkit'
+      '@rainbow-me/rainbowkit',
+      'styled-components',
+      'framer-motion',
+      'recharts'
     ],
-    exclude: ['@openzeppelin/contracts'], // Exclure les dépendances non nécessaires au démarrage
+    exclude: ['@openzeppelin/contracts'],
     esbuildOptions: {
-      target: 'es2020'
+      target: 'es2020',
+      minify: true,
+      treeShaking: true
     }
   },
   build: {
     target: 'es2020',
-    outDir: 'dist',
-    sourcemap: false, // Désactive les sourcemaps en dev pour plus de rapidité
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    },
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'mui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled'],
-          'web3-vendor': ['wagmi', 'viem', '@rainbow-me/rainbowkit']
+          'web3-vendor': ['wagmi', 'viem', '@rainbow-me/rainbowkit'],
+          'ui-vendor': ['styled-components', 'framer-motion', 'recharts']
         }
       }
     },
-    commonjsOptions: {
-      include: [],
-    },
-  },
-  esbuild: {
-    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000
   }
 });
