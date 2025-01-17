@@ -1,10 +1,10 @@
 import React from 'react';
 import { Container, Tab, Tabs, Box } from '@mui/material';
-import { RevenueDashboard } from '@/components/admin/RevenueDashboard';
-import { ServiceManagement } from '@/components/admin/ServiceManagement';
-import { TaxConfiguration } from '@/components/admin/TaxConfiguration';
-import { RequirePlan } from '@/components/auth/RequirePlan';
-import { PlanType } from '@/types/premium';
+import { RevenueDashboard } from '../components/admin/RevenueDashboard';
+import { ServiceManagement } from '../components/admin/ServiceManagement';
+import { TaxConfiguration } from '../components/admin/TaxConfiguration';
+import { RequirePlan } from '../components/auth/RequirePlan';
+import { PlanType } from '../types/premium';
 
 interface TabPanelProps {
   children?: React.ReactNode;
