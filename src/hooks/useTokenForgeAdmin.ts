@@ -324,7 +324,7 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHook => {
   // Fonction transferOwnership
   const { writeAsync: transferOwnershipContract } = useContractWrite(transferConfig);
 
-  const transferOwnership = useCallback(async () => {
+  const transferOwnership = useCallback(async (address: string) => {
     if (!isCorrectNetwork) {
       const errorMessage = `Please connect to Sepolia network (current: ${chain?.name})`;
       console.error(errorMessage);
@@ -339,18 +339,12 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHook => {
     }
     if (!isOwner) {
       const errorMessage = 'Only owner can transfer ownership';
-      console.error(errorMessage, { address, owner });
+      console.error(errorMessage, { address: address, owner });
       setError(errorMessage);
       return;
     }
-    if (!newOwnerAddress) {
-      const errorMessage = 'New owner address is required';
-      console.error(errorMessage);
-      setError(errorMessage);
-      return;
-    }
-    if (!transferOwnershipContract) {
-      const errorMessage = 'Transfer ownership function not available';
+    if (!address || !isAddress(address)) {
+      const errorMessage = 'Valid new owner address is required';
       console.error(errorMessage);
       setError(errorMessage);
       return;
@@ -358,13 +352,20 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHook => {
 
     try {
       setError(null);
+      const formattedAddress = getAddress(address);
+      setNewOwnerAddress(formattedAddress);
+      
+      if (!transferOwnershipContract) {
+        throw new Error('Transfer ownership function not available');
+      }
+
       const tx = await transferOwnershipContract();
       setTxHash(tx.hash);
       console.log('Transfer ownership transaction sent:', { 
         hash: tx.hash,
         from: address,
         to: contractAddress,
-        newOwner: newOwnerAddress
+        newOwner: formattedAddress
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -372,13 +373,12 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHook => {
         error: err, 
         message: errorMessage,
         contractAddress,
-        from: address,
-        newOwner: newOwnerAddress
+        from: address 
       });
       setError(`Failed to transfer ownership: ${errorMessage}`);
       throw err;
     }
-  }, [transferOwnershipContract, isOwner, isCorrectNetwork, isValidContract, chain?.name, contractAddress, address, owner, newOwnerAddress]);
+  }, [transferOwnershipContract, isOwner, isCorrectNetwork, isValidContract, chain?.name, contractAddress, owner]);
 
   // Gestion des erreurs
   useEffect(() => {

@@ -58,12 +58,20 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleTransferOwnership = (newAddress: string) => {
-    setIsTransferring(true);
-    setNewOwnerAddress(newAddress as `0x${string}`);
-    transferOwnership?.();
-    setIsTransferModalOpen(false);
-    setIsTransferring(false);
+  const handleTransferOwnership = async (newAddress: string) => {
+    if (!newAddress || !transferOwnership) {
+      return;
+    }
+    
+    try {
+      setIsTransferring(true);
+      await transferOwnership(newAddress);
+      setIsTransferModalOpen(false);
+    } catch (error) {
+      console.error('Erreur lors du transfert:', error);
+    } finally {
+      setIsTransferring(false);
+    }
   };
 
   return (

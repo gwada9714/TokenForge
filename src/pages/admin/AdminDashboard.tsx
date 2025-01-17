@@ -81,7 +81,7 @@ export const AdminDashboard = () => {
   // États pour les onglets et les dialogues
   const [tabValue, setTabValue] = useState(0);
   const [openTransferDialog, setOpenTransferDialog] = useState(false);
-  const [newOwnerAddressInput, setNewOwnerAddressInput] = useState('');
+  const [newOwnerAddressInput, setNewOwnerAddressInput] = useState<string>('');
   const [errorState, setErrorState] = useState<string | null>(null);
 
   // Si le contrat est en cours de chargement, afficher un indicateur
@@ -108,22 +108,43 @@ export const AdminDashboard = () => {
     setOpenTransferDialog(true);
   };
 
+  // Gestionnaire de changement d'adresse
+  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value.trim();
+    setNewOwnerAddressInput(value);
+    setErrorState(null);
+  };
+
   const handleCloseTransferDialog = () => {
     setOpenTransferDialog(false);
     setNewOwnerAddressInput('');
-    setNewOwnerAddress(undefined);
+    setErrorState(null);
   };
 
   const handleOwnershipTransfer = async () => {
+    if (!transferOwnership) {
+      setErrorState("La fonction de transfert n'est pas disponible");
+      return;
+    }
+
+    const address = newOwnerAddressInput.trim();
+    
     try {
-      setErrorState(null);
-      setNewOwnerAddress(newOwnerAddressInput as `0x${string}`);
-      if (transferOwnership) {
-        await transferOwnership();
-        handleCloseTransferDialog();
+      if (!address) {
+        throw new Error("L'adresse du nouveau propriétaire est requise");
       }
+
+      if (!address.startsWith('0x') || address.length !== 42) {
+        throw new Error("L'adresse doit être une adresse Ethereum valide");
+      }
+
+      setErrorState(null);
+      await transferOwnership(address);
+      handleCloseTransferDialog();
     } catch (err) {
-      setErrorState(err instanceof Error ? err.message : 'Une erreur est survenue');
+      const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+      setErrorState(message);
+      console.error('Erreur lors du transfert:', err);
     }
   };
 
@@ -255,7 +276,7 @@ export const AdminDashboard = () => {
               fullWidth
               label="Nouvelle adresse du propriétaire"
               value={newOwnerAddressInput}
-              onChange={(e) => setNewOwnerAddressInput(e.target.value)}
+              onChange={handleAddressChange}
               error={!!errorState}
               helperText={errorState}
             />
