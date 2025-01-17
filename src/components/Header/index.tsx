@@ -2,6 +2,8 @@ import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
+import { useAccount } from 'wagmi';
 
 interface HeaderProps {
   menuItems: {
@@ -13,6 +15,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ menuItems }) => {
   const location = useLocation();
+  const { isAdmin } = useTokenForgeAdmin();
+  const { isConnected } = useAccount();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -53,40 +57,47 @@ const Header: React.FC<HeaderProps> = ({ menuItems }) => {
           >
             TokenForge
           </Typography>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              gap: { xs: 0.5, sm: 1, md: 2 },
-              overflow: 'auto',
-              '&::-webkit-scrollbar': { display: 'none' },
-              msOverflowStyle: 'none',
-              scrollbarWidth: 'none',
-            }}
-          >
-            {menuItems.map((item) => (
-              <Button
-                key={item.path}
-                component={RouterLink}
-                to={item.path}
-                color="inherit"
-                startIcon={item.icon}
-                size="small"
-                sx={{
-                  px: { xs: 1, sm: 2 },
-                  minWidth: 'auto',
-                  whiteSpace: 'nowrap',
-                  backgroundColor: isActive(item.path) ? 'action.selected' : 'transparent',
-                  '&:hover': {
-                    backgroundColor: 'action.hover'
-                  }
-                }}
-              >
-                {item.text}
-              </Button>
-            ))}
-          </Box>
+
+          {isConnected && (
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {menuItems.map((item) => (
+                <Button
+                  key={item.path}
+                  component={RouterLink}
+                  to={item.path}
+                  startIcon={item.icon}
+                  sx={{
+                    color: isActive(item.path) ? 'primary.main' : 'text.primary',
+                    '&:hover': {
+                      color: 'primary.main',
+                    },
+                  }}
+                >
+                  {item.text}
+                </Button>
+              ))}
+              
+              {isAdmin && (
+                <Button
+                  component={RouterLink}
+                  to="/admin"
+                  sx={{
+                    color: isActive('/admin') ? 'primary.main' : 'text.primary',
+                    '&:hover': {
+                      color: 'primary.main',
+                    },
+                  }}
+                >
+                  Admin
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
-        <ConnectButton />
+
+        <Box>
+          <ConnectButton />
+        </Box>
       </Toolbar>
     </AppBar>
   );
