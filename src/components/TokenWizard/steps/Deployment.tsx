@@ -125,15 +125,8 @@ const Deployment: React.FC<DeploymentProps> = ({ data, onRetry, onBack }) => {
       const tokenParams = {
         name: data.name,
         symbol: data.symbol,
-        decimals: decimals,
-        initialSupply,
-        features: {
-          mintable: data.features.mint,
-          burnable: data.features.burn,
-          pausable: data.features.pausable || false,
-        },
-        isPremium: data.serviceTier === 'premium',
-        payWithTKN: false,
+        initialSupply: data.supply,
+        isMintable: data.features.mint
       };
 
       console.log('Paramètres du token:', tokenParams);

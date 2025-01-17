@@ -135,6 +135,29 @@ export const TokenForgePlansABI = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum TokenForgePlans.PlanType",
+        "name": "planType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newBnbPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newTknPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "updatePlanPrices",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ] as const;
 
