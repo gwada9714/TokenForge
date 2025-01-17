@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useAccount } from 'wagmi';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
@@ -6,18 +6,16 @@ import { Link as RouterLink } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const Navigation: React.FC = () => {
-  const { isConnected, address } = useAccount();
-  const { isAdmin } = useTokenForgeAdmin();
+  const { isConnected } = useAccount();
+  const { isOwner } = useTokenForgeAdmin();
 
-  // Calcul de l'affichage du bouton admin
-  const shouldShowAdminButton = isConnected && isAdmin;
-
-  console.log('Navigation - Component State:', JSON.stringify({
-    isConnected,
-    address: address || null,
-    isAdmin,
-    shouldShowAdminButton
-  }, null, 2));
+  useEffect(() => {
+    console.log('Navigation state:', {
+      isConnected,
+      isOwner,
+      timestamp: new Date().toISOString()
+    });
+  }, [isConnected, isOwner]);
 
   return (
     <AppBar 
@@ -59,7 +57,7 @@ const Navigation: React.FC = () => {
               </Button>
             </>
           )}
-          {shouldShowAdminButton && (
+          {isOwner && (
             <Button 
               color="error"
               variant="contained"

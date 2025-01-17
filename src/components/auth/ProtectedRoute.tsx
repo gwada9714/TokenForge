@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Alert } from '@mui/material';
 import { useContract } from '../../providers/ContractProvider';
 
 interface ProtectedRouteProps {
@@ -12,12 +12,12 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isLoading: adminLoading, error: adminError } = useTokenForgeAdmin();
-  const { isLoading: contractLoading, error: contractError, contractAddress } = useContract();
+  const { isOwner, error: adminError, isCorrectNetwork } = useTokenForgeAdmin();
+  const { isLoading: contractLoading, error: contractError } = useContract();
   const location = useLocation();
 
   // Afficher un indicateur de chargement pendant que les données sont chargées
-  if (authLoading || (requireAdmin && (adminLoading || contractLoading))) {
+  if (authLoading || (requireAdmin && contractLoading)) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
@@ -30,36 +30,57 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     return <Navigate to="/login" state={{ from: location }} />;
   }
 
-  // Gérer les erreurs de contrat pour les routes admin
-  if (requireAdmin && (contractError || adminError)) {
-    console.error('Admin access error:', { contractError, adminError });
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        gap: 2,
-        padding: 2,
-        textAlign: 'center'
-      }}>
-        <div>Error: {contractError || adminError}</div>
-        <div>Please make sure you are:</div>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li>✓ Connected to the Sepolia network (Chain ID: 11155111)</li>
-          <li>✓ Using the correct wallet address</li>
-          <li>✓ Have admin rights on the contract</li>
-        </ul>
-        <div>Contract Address: {contractAddress || 'Not loaded'}</div>
-      </Box>
-    );
-  }
+  // Vérifier les conditions pour l'accès admin
+  if (requireAdmin) {
+    if (!isCorrectNetwork || contractError || adminError) {
+      return (
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          gap: 2,
+          padding: 2,
+          textAlign: 'center'
+        }}>
+          {!isCorrectNetwork && (
+            <Alert severity="error">
+              Please connect to the Sepolia network (Chain ID: 11155111)
+            </Alert>
+          )}
+          {(contractError || adminError) && (
+            <Alert severity="error">
+              {contractError || adminError || 'Error accessing admin features'}
+            </Alert>
+          )}
+          <div>Please make sure you are:</div>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            <li>✓ Connected to the Sepolia network</li>
+            <li>✓ Using the correct wallet address</li>
+            <li>✓ The contract owner</li>
+          </ul>
+        </Box>
+      );
+    }
 
-  // Vérifier les droits d'admin si nécessaire
-  if (requireAdmin && !isAdmin) {
-    console.error('Access denied: User is not an admin');
-    return <Navigate to="/" />;
+    if (!isOwner) {
+      return (
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          gap: 2,
+          padding: 2
+        }}>
+          <Alert severity="error">
+            Access Denied: Only the contract owner can access this page
+          </Alert>
+        </Box>
+      );
+    }
   }
 
   return <>{children}</>;
