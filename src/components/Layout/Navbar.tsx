@@ -19,38 +19,22 @@ import {
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export const Navbar = () => {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { address, isConnected } = useAccount();
-  const { connectAsync } = useConnect();
-  const { disconnectAsync } = useDisconnect();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
-  };
-
-  const handleConnect = async () => {
-    try {
-      await connectAsync();
-    } catch (error) {
-      console.error("Failed to connect:", error);
-    }
-  };
-
-  const handleDisconnect = async () => {
-    try {
-      await disconnectAsync();
-    } catch (error) {
-      console.error("Failed to disconnect:", error);
-    }
   };
 
   const navItems = [
     { text: "Dashboard", path: "/" },
     { text: "Create Token", path: "/create-token" },
     { text: "My Tokens", path: "/tokens" },
+    { text: "Plans", path: "/plans" }, // Nouveau lien vers les plans
     { text: "Profit Stats", path: "/profit-dashboard" },
   ];
 
@@ -78,7 +62,7 @@ export const Navbar = () => {
 
   return (
     <Box sx={{ display: "flex" }}>
-      <AppBar component="nav">
+      <AppBar component="nav" position="static">
         <Container maxWidth="lg">
           <Toolbar>
             <IconButton
@@ -115,27 +99,9 @@ export const Navbar = () => {
                 </Button>
               ))}
             </Box>
-            {isConnected ? (
-              <Box sx={{ ml: 2 }}>
-                <Button
-                  variant="outlined"
-                  color="inherit"
-                  onClick={handleDisconnect}
-                >
-                  {address?.slice(0, 6)}...{address?.slice(-4)}
-                </Button>
-              </Box>
-            ) : (
-              <Box sx={{ ml: 2 }}>
-                <Button
-                  variant="outlined"
-                  color="inherit"
-                  onClick={handleConnect}
-                >
-                  Connect Wallet
-                </Button>
-              </Box>
-            )}
+            <Box sx={{ ml: 2 }}>
+              <ConnectButton />
+            </Box>
           </Toolbar>
         </Container>
       </AppBar>
@@ -157,9 +123,6 @@ export const Navbar = () => {
         >
           {drawer}
         </Drawer>
-      </Box>
-      <Box component="main" sx={{ p: 3 }}>
-        <Toolbar />
       </Box>
     </Box>
   );
