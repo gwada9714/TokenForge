@@ -23,12 +23,14 @@ import {
   Alert,
   IconButton,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
 import { Edit as EditIcon, Delete as DeleteIcon, Pause as PauseIcon, PlayArrow as PlayArrowIcon } from '@mui/icons-material';
+import { useContract } from '../../providers/ContractProvider';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -65,22 +67,38 @@ export const AdminDashboard = () => {
     transferOwnership,
     pause,
     unpause,
-    error
+    error: adminError,
+    pauseAvailable,
+    isPausing,
+    isUnpausing,
+    isTransferring,
+    setNewOwnerAddress,
+    isLoading,
   } = useTokenForgeAdmin();
   const { address } = useAccount();
+  const { contractAddress } = useContract();
   
   // États pour les onglets et les dialogues
   const [tabValue, setTabValue] = useState(0);
   const [openTransferDialog, setOpenTransferDialog] = useState(false);
-  const [newOwnerAddress, setNewOwnerAddress] = useState('');
+  const [newOwnerAddressInput, setNewOwnerAddressInput] = useState('');
   const [errorState, setErrorState] = useState<string | null>(null);
+
+  // Si le contrat est en cours de chargement, afficher un indicateur
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   // Redirection si l'utilisateur n'est pas admin
   React.useEffect(() => {
-    if (!isAdmin) {
+    if (!isAdmin && owner !== undefined) {
       navigate('/');
     }
-  }, [isAdmin, navigate]);
+  }, [isAdmin, navigate, owner]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -92,20 +110,30 @@ export const AdminDashboard = () => {
 
   const handleCloseTransferDialog = () => {
     setOpenTransferDialog(false);
-    setNewOwnerAddress('');
+    setNewOwnerAddressInput('');
+    setNewOwnerAddress(undefined);
   };
 
   const handleOwnershipTransfer = async () => {
     try {
       setErrorState(null);
+      setNewOwnerAddress(newOwnerAddressInput as `0x${string}`);
       if (transferOwnership) {
         await transferOwnership();
+        handleCloseTransferDialog();
       }
-      handleCloseTransferDialog();
     } catch (err) {
       setErrorState(err instanceof Error ? err.message : 'Une erreur est survenue');
     }
   };
+
+  if (adminError) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">{adminError}</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -144,21 +172,35 @@ export const AdminDashboard = () => {
                 Contrôles du Contrat
               </Typography>
               <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={paused ? unpause : pause}
-                  startIcon={paused ? <PlayArrowIcon /> : <PauseIcon />}
-                >
-                  {paused ? 'Reprendre' : 'Mettre en Pause'}
-                </Button>
+                {pauseAvailable && (
+                  <Button
+                    variant="contained"
+                    color={paused ? "success" : "warning"}
+                    onClick={paused ? unpause : pause}
+                    startIcon={paused ? <PlayArrowIcon /> : <PauseIcon />}
+                    disabled={isPausing || isUnpausing}
+                  >
+                    {isPausing || isUnpausing ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : paused ? (
+                      'Reprendre'
+                    ) : (
+                      'Mettre en Pause'
+                    )}
+                  </Button>
+                )}
                 <Button
                   variant="contained"
                   color="secondary"
                   onClick={handleOpenTransferDialog}
                   startIcon={<EditIcon />}
+                  disabled={isTransferring}
                 >
-                  Transférer la Propriété
+                  {isTransferring ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    'Transférer la Propriété'
+                  )}
                 </Button>
               </Box>
             </Paper>
@@ -177,7 +219,7 @@ export const AdminDashboard = () => {
                         Adresse du Contrat
                       </TableCell>
                       <TableCell>
-                        {process.env.VITE_CONTRACT_ADDRESS}
+                        {contractAddress}
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -185,7 +227,15 @@ export const AdminDashboard = () => {
                         Adresse de l'Administrateur
                       </TableCell>
                       <TableCell>
-                        {address}
+                        {owner}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell component="th" scope="row">
+                        État du Contrat
+                      </TableCell>
+                      <TableCell>
+                        {paused ? 'En Pause' : 'Actif'}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -200,25 +250,29 @@ export const AdminDashboard = () => {
       <Dialog open={openTransferDialog} onClose={handleCloseTransferDialog}>
         <DialogTitle>Transférer la Propriété du Contrat</DialogTitle>
         <DialogContent>
-          {errorState && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {errorState}
-            </Alert>
-          )}
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Nouvelle Adresse Propriétaire"
-            type="text"
-            fullWidth
-            value={newOwnerAddress}
-            onChange={(e) => setNewOwnerAddress(e.target.value)}
-          />
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Nouvelle adresse du propriétaire"
+              value={newOwnerAddressInput}
+              onChange={(e) => setNewOwnerAddressInput(e.target.value)}
+              error={!!errorState}
+              helperText={errorState}
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseTransferDialog}>Annuler</Button>
-          <Button onClick={handleOwnershipTransfer} variant="contained" color="warning">
-            Transférer
+          <Button 
+            onClick={handleOwnershipTransfer}
+            disabled={!newOwnerAddressInput || isTransferring}
+            color="primary"
+          >
+            {isTransferring ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Transférer'
+            )}
           </Button>
         </DialogActions>
       </Dialog>

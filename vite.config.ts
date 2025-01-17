@@ -16,12 +16,19 @@ export default defineConfig({
     }),
     nodePolyfills(),
     VitePWA({
-      strategies: 'generateSW',
-      registerType: 'prompt',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
         cleanupOutdatedCaches: true,
         sourcemap: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/eth-.*\.g\.alchemy\.com\/v2\/.*/i,
@@ -59,10 +66,6 @@ export default defineConfig({
           }
         ]
       },
-      devOptions: {
-        enabled: true,
-        type: 'module'
-      }
     })
   ],
   resolve: {
