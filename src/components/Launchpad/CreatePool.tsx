@@ -26,8 +26,6 @@ export const CreatePool: React.FC = () => {
     tokenPrice: '',
     hardCap: '',
     softCap: '',
-    minContribution: '',
-    maxContribution: '',
     startTime: '',
     endTime: '',
   });
@@ -39,7 +37,7 @@ export const CreatePool: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.token || !formData.tokenPrice || !formData.softCap || !formData.hardCap || !formData.maxContribution) {
+    if (!formData.token || !formData.tokenPrice || !formData.softCap || !formData.hardCap) {
       setSnackbar({
         open: true,
         message: 'Please fill in all fields',
@@ -149,32 +147,6 @@ export const CreatePool: React.FC = () => {
             </FormControl>
 
             <FormControl>
-              <FormLabel>Minimum Contribution</FormLabel>
-              <TextField
-                fullWidth
-                name="minContribution"
-                type="number"
-                value={formData.minContribution}
-                onChange={handleInputChange}
-                placeholder="Minimum contribution amount"
-                required
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Maximum Contribution</FormLabel>
-              <TextField
-                fullWidth
-                name="maxContribution"
-                type="number"
-                value={formData.maxContribution}
-                onChange={handleInputChange}
-                placeholder="Maximum contribution amount"
-                required
-              />
-            </FormControl>
-
-            <FormControl>
               <FormLabel>Start Time</FormLabel>
               <TextField
                 fullWidth
@@ -201,22 +173,22 @@ export const CreatePool: React.FC = () => {
             <Button
               type="submit"
               variant="contained"
+              color="primary"
               disabled={isCreating}
-              sx={{ mt: 2 }}
             >
-              {isCreating ? 'Creating...' : 'Create Pool'}
+              {isCreating ? 'Creating Pool...' : 'Create Pool'}
             </Button>
           </Stack>
         </form>
 
-        <Snackbar 
-          open={snackbar.open} 
-          autoHideDuration={6000} 
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert 
-            onClose={handleCloseSnackbar} 
+          <Alert
+            onClose={handleCloseSnackbar}
             severity={snackbar.severity}
             sx={{ width: '100%' }}
           >

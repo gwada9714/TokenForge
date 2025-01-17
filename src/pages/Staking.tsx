@@ -1,13 +1,13 @@
 import { Container, Typography, Box, Alert, CircularProgress } from '@mui/material';
 import { StakingPool } from '../components/Staking/StakingPool';
-import { CONTRACT_ADDRESSES } from '../config/contracts';
+import { getContractAddress } from '../config/contracts';
 import { useNetwork, useAccount } from 'wagmi';
 
 const StakingPage = () => {
   const { chain } = useNetwork();
   const { isConnected } = useAccount();
   
-  const platformTokenAddress = CONTRACT_ADDRESSES.PLATFORM_TOKEN[chain?.network as keyof typeof CONTRACT_ADDRESSES.PLATFORM_TOKEN] || null;
+  const platformTokenAddress = chain?.id ? getContractAddress('PLATFORM_TOKEN', chain.id) : null;
 
   if (!isConnected) {
     return (

@@ -6,12 +6,12 @@ import { launchpadABI } from '../contracts/abis';
 
 interface PoolInfo {
   token: Address;
-  tokenPrice: string;
-  hardCap: string;
-  softCap: string;
-  totalRaised: string;
-  startTime: number;
-  endTime: number;
+  tokenPrice: bigint;
+  hardCap: bigint;
+  softCap: bigint;
+  totalRaised: bigint;
+  startTime: bigint;
+  endTime: bigint;
   finalized: boolean;
   cancelled: boolean;
 }
@@ -34,7 +34,7 @@ export function useLaunchpad(poolId?: number) {
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getPoolInfo',
-    args: poolId !== undefined ? [poolId] : undefined,
+    args: poolId !== undefined ? [BigInt(poolId)] : undefined,
     enabled,
   }) as { data: PoolInfo | undefined };
 
@@ -43,7 +43,7 @@ export function useLaunchpad(poolId?: number) {
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getUserContribution',
-    args: poolId !== undefined && address ? [poolId, address] : undefined,
+    args: poolId !== undefined && address ? [BigInt(poolId), address] : undefined,
     enabled: enabled && Boolean(address),
   });
 
@@ -54,57 +54,36 @@ export function useLaunchpad(poolId?: number) {
     functionName: 'createPool',
   });
 
-  // Contribute to pool
-  const { write: contribute, data: contributeData } = useContractWrite({
+  // Invest in pool
+  const { write: invest, data: investData } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
-    functionName: 'contribute',
+    functionName: 'invest',
   });
 
-  // Finalize pool
-  const { write: finalizePool, data: finalizeData } = useContractWrite({
+  // Claim
+  const { write: claim, data: claimData } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
-    functionName: 'finalizePool',
-  });
-
-  // Cancel pool
-  const { write: cancelPool, data: cancelData } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'cancelPool',
-  });
-
-  // Claim tokens
-  const { write: claimTokens, data: claimData } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'claimTokens',
-  });
-
-  // Claim refund
-  const { write: claimRefund, data: refundData } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'claimRefund',
+    functionName: 'claim',
   });
 
   const [poolInfoState, setPoolInfoState] = useState<PoolInfo>({
     token: ZERO_ADDRESS,
-    tokenPrice: '0',
-    hardCap: '0',
-    softCap: '0',
-    totalRaised: '0',
-    startTime: 0,
-    endTime: 0,
+    tokenPrice: 0n,
+    hardCap: 0n,
+    softCap: 0n,
+    totalRaised: 0n,
+    startTime: 0n,
+    endTime: 0n,
     finalized: false,
     cancelled: false,
   });
 
-  const [userContribution, setUserContribution] = useState('0');
+  const [userContribution, setUserContribution] = useState<bigint>(0n);
 
   const handleCreatePool = useCallback(async (
-    token: Address,
+    token: `0x${string}`,
     tokenPrice: string,
     hardCap: string,
     softCap: string,
@@ -117,9 +96,9 @@ export function useLaunchpad(poolId?: number) {
       await createPool({
         args: [
           token,
-          parseEther(tokenPrice),
-          parseEther(hardCap),
-          parseEther(softCap),
+          BigInt(parseEther(tokenPrice)),
+          BigInt(parseEther(hardCap)),
+          BigInt(parseEther(softCap)),
           BigInt(startTime),
           BigInt(endTime)
         ],
@@ -135,92 +114,50 @@ export function useLaunchpad(poolId?: number) {
     hash: createPoolData?.hash,
   });
 
-  const { isLoading: isContributing } = useWaitForTransaction({
-    hash: contributeData?.hash,
-  });
-
-  const { isLoading: isFinalizing } = useWaitForTransaction({
-    hash: finalizeData?.hash,
-  });
-
-  const { isLoading: isCancelling } = useWaitForTransaction({
-    hash: cancelData?.hash,
+  const { isLoading: isInvesting } = useWaitForTransaction({
+    hash: investData?.hash,
   });
 
   const { isLoading: isClaiming } = useWaitForTransaction({
     hash: claimData?.hash,
   });
 
-  const { isLoading: isRefunding } = useWaitForTransaction({
-    hash: refundData?.hash,
-  });
-
-  // Update state when data changes
+  // Update states when data changes
   useEffect(() => {
-    if (poolInfo && Array.isArray(poolInfo)) {
+    if (poolInfo) {
       setPoolInfoState({
-        token: poolInfo[0] as Address,
-        tokenPrice: formatEther(poolInfo[1] as bigint),
-        hardCap: formatEther(poolInfo[2] as bigint),
-        softCap: formatEther(poolInfo[3] as bigint),
-        totalRaised: formatEther(poolInfo[4] as bigint),
-        startTime: Number(poolInfo[5]),
-        endTime: Number(poolInfo[6]),
-        finalized: poolInfo[7] as boolean,
-        cancelled: poolInfo[8] as boolean,
+        token: poolInfo.token,
+        tokenPrice: poolInfo.tokenPrice,
+        hardCap: poolInfo.hardCap,
+        softCap: poolInfo.softCap,
+        totalRaised: poolInfo.totalRaised,
+        startTime: poolInfo.startTime,
+        endTime: poolInfo.endTime,
+        finalized: poolInfo.finalized,
+        cancelled: poolInfo.cancelled,
       });
     }
   }, [poolInfo]);
 
   useEffect(() => {
     if (userContributionData) {
-      setUserContribution(formatEther(userContributionData as bigint));
+      setUserContribution(userContributionData as bigint);
     }
   }, [userContributionData]);
 
-  // Handlers
-  const handleContribute = useCallback((amount: string) => {
-    if (poolId === undefined) return;
-    contribute({
-      args: [poolId],
-      value: parseEther(amount),
-    });
-  }, [contribute, poolId]);
-
-  const handleFinalizePool = useCallback(() => {
-    if (poolId === undefined) return;
-    finalizePool({ args: [poolId] });
-  }, [finalizePool, poolId]);
-
-  const handleCancelPool = useCallback(() => {
-    if (poolId === undefined) return;
-    cancelPool({ args: [poolId] });
-  }, [cancelPool, poolId]);
-
-  const handleClaimTokens = useCallback(() => {
-    if (poolId === undefined) return;
-    claimTokens({ args: [poolId] });
-  }, [claimTokens, poolId]);
-
-  const handleClaimRefund = useCallback(() => {
-    if (poolId === undefined) return;
-    claimRefund({ args: [poolId] });
-  }, [claimRefund, poolId]);
-
   return {
+    // Pool info
     poolInfo: poolInfoState,
     userContribution,
-    isCreating,
-    isContributing,
-    isFinalizing,
-    isCancelling,
-    isClaiming,
-    isRefunding,
+
+    // Actions
     createPool: handleCreatePool,
-    contribute: handleContribute,
-    finalizePool: handleFinalizePool,
-    cancelPool: handleCancelPool,
-    claimTokens: handleClaimTokens,
-    claimRefund: handleClaimRefund,
+    invest,
+    claim,
+
+    // Loading states
+    isCreating,
+    isInvesting,
+    isClaiming,
   };
 }

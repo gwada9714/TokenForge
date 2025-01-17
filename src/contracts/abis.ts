@@ -164,6 +164,19 @@ export const TokenForgePlansABI = [
 // ABI du contrat Launchpad
 export const launchpadABI = [
   {
+    "inputs": [],
+    "name": "getPoolCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -197,12 +210,7 @@ export const launchpadABI = [
           },
           {
             "internalType": "uint256",
-            "name": "minBuy",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxBuy",
+            "name": "totalRaised",
             "type": "uint256"
           },
           {
@@ -217,7 +225,12 @@ export const launchpadABI = [
           },
           {
             "internalType": "bool",
-            "name": "isActive",
+            "name": "finalized",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
             "type": "bool"
           }
         ],
@@ -277,22 +290,12 @@ export const launchpadABI = [
       },
       {
         "internalType": "uint256",
-        "name": "minBuy",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxBuy",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "startTime",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "duration",
+        "name": "endTime",
         "type": "uint256"
       }
     ],
@@ -323,6 +326,37 @@ export const launchpadABI = [
       }
     ],
     "name": "claim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+] as const;
+
+// ABI du contrat TokenForgeFactory
+export const tokenForgeFactoryABI = [
+  {
+    "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unpause",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

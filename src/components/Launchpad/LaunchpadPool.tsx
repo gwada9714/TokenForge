@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useLaunchpad } from '../../hooks/useLaunchpad';
+import { formatEther } from 'viem';
 
 interface LaunchpadPoolProps {
   poolId: number;
@@ -21,30 +22,32 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
   const {
     poolInfo,
     userContribution,
-    contribute,
-    finalizePool,
-    cancelPool,
-    claimTokens,
-    claimRefund,
-    isContributing,
-    isFinalizing,
-    isCancelling,
+    invest,
+    claim,
+    isInvesting,
     isClaiming,
-    isRefunding,
   } = useLaunchpad(poolId);
 
   if (!poolInfo) return null;
 
-  const progress = (Number(poolInfo.totalRaised) / Number(poolInfo.hardCap)) * 100;
-  const now = Date.now() / 1000;
+  const progress = (Number(formatEther(poolInfo.totalRaised)) / Number(formatEther(poolInfo.hardCap))) * 100;
+  const now = BigInt(Math.floor(Date.now() / 1000));
   const isLive = now >= poolInfo.startTime && now <= poolInfo.endTime;
   const isEnded = now > poolInfo.endTime;
-  const isSoftCapReached = Number(poolInfo.totalRaised) >= Number(poolInfo.softCap);
+  const isSoftCapReached = poolInfo.totalRaised >= poolInfo.softCap;
 
-  const handleContribute = () => {
+  const handleInvest = () => {
     if (!contributionAmount) return;
-    contribute(contributionAmount);
+    invest?.({
+      args: [BigInt(poolId)],
+      value: BigInt(Math.floor(Number(contributionAmount) * 1e18)),
+    });
     setContributionAmount('');
+  };
+
+  const handleClaim = () => {
+    if (poolId === undefined) return;
+    claim?.({ args: [BigInt(poolId)] });
   };
 
   const getPoolStatus = () => {
@@ -72,12 +75,12 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
         </Stack>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Box>Token Price:</Box>
-          <Box>{poolInfo.tokenPrice} ETH</Box>
+          <Box>{formatEther(poolInfo.tokenPrice)} ETH</Box>
         </Stack>
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Box>Progress:</Box>
           <Box>
-            {poolInfo.totalRaised} / {poolInfo.hardCap} ETH
+            {formatEther(poolInfo.totalRaised)} / {formatEther(poolInfo.hardCap)} ETH
           </Box>
         </Stack>
         <LinearProgress variant="determinate" value={progress} sx={{ mt: 2 }} />
@@ -87,7 +90,7 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
         <Typography variant="subtitle1" mb={2}>
           Your Contribution
         </Typography>
-        <Box>{userContribution} ETH</Box>
+        <Box>{formatEther(userContribution)} ETH</Box>
       </Box>
 
       {isLive && !poolInfo.finalized && !poolInfo.cancelled && (
@@ -104,56 +107,23 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
             />
             <Button
               color="primary"
-              onClick={handleContribute}
-              disabled={isContributing}
+              onClick={handleInvest}
+              disabled={isInvesting}
             >
-              {isContributing ? 'Contributing' : 'Contribute'}
+              {isInvesting ? 'Contributing' : 'Contribute'}
             </Button>
           </Stack>
         </Box>
       )}
 
-      {isEnded && !poolInfo.finalized && !poolInfo.cancelled && isSoftCapReached && (
+      {poolInfo.finalized && Number(formatEther(userContribution)) > 0 && (
         <Button
           color="success"
-          onClick={finalizePool}
-          disabled={isFinalizing}
-          sx={{ mb: 4, width: '100%' }}
-        >
-          {isFinalizing ? 'Finalizing' : 'Finalize Pool'}
-        </Button>
-      )}
-
-      {!poolInfo.finalized && !poolInfo.cancelled && (
-        <Button
-          color="error"
-          onClick={cancelPool}
-          disabled={isCancelling}
-          sx={{ mb: 4, width: '100%' }}
-        >
-          {isCancelling ? 'Cancelling' : 'Cancel Pool'}
-        </Button>
-      )}
-
-      {poolInfo.finalized && Number(userContribution) > 0 && (
-        <Button
-          color="success"
-          onClick={claimTokens}
+          onClick={handleClaim}
           disabled={isClaiming}
           sx={{ mb: 4, width: '100%' }}
         >
           {isClaiming ? 'Claiming' : 'Claim Tokens'}
-        </Button>
-      )}
-
-      {(poolInfo.cancelled || (isEnded && !isSoftCapReached)) && Number(userContribution) > 0 && (
-        <Button
-          color="warning"
-          onClick={claimRefund}
-          disabled={isRefunding}
-          sx={{ width: '100%' }}
-        >
-          {isRefunding ? 'Claiming Refund' : 'Claim Refund'}
         </Button>
       )}
     </Card>

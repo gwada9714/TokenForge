@@ -22,7 +22,7 @@ const LaunchpadPage: React.FC = () => {
   const { data: poolCount } = useContractRead({
     address: getContractAddress('LAUNCHPAD', chainId) || undefined,
     abi: launchpadABI,
-    functionName: 'poolCount',
+    functionName: 'getPoolCount',
     watch: true,
   });
 
