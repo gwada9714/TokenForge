@@ -13,7 +13,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isLoading: adminLoading, error: adminError } = useTokenForgeAdmin();
-  const { isLoading: contractLoading, error: contractError } = useContract();
+  const { isLoading: contractLoading, error: contractError, contractAddress } = useContract();
   const location = useLocation();
 
   // Afficher un indicateur de chargement pendant que les données sont chargées
@@ -46,17 +46,19 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
       }}>
         <div>Error: {contractError || adminError}</div>
         <div>Please make sure you are:</div>
-        <ul>
-          <li>Connected to the Sepolia network</li>
-          <li>Using the correct wallet address</li>
-          <li>Have the necessary admin permissions</li>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          <li>✓ Connected to the Sepolia network (Chain ID: 11155111)</li>
+          <li>✓ Using the correct wallet address</li>
+          <li>✓ Have admin rights on the contract</li>
         </ul>
+        <div>Contract Address: {contractAddress || 'Not loaded'}</div>
       </Box>
     );
   }
 
-  // Rediriger si l'utilisateur n'a pas les droits admin nécessaires
-  if (requireAdmin && !isAdmin && location.pathname === '/admin') {
+  // Vérifier les droits d'admin si nécessaire
+  if (requireAdmin && !isAdmin) {
+    console.error('Access denied: User is not an admin');
     return <Navigate to="/" />;
   }
 

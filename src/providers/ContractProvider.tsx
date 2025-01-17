@@ -30,6 +30,12 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setError(null);
       
       try {
+        console.log('Loading contract address:', {
+          chain,
+          isConnected,
+          currentState: { contractAddress, isLoading, error }
+        });
+
         if (!chain) {
           setError('Please connect to a network');
           setContractAddress(null);
@@ -42,25 +48,34 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return;
         }
 
-        const address = getContractAddress('TOKEN_FACTORY', chain.id);
-        console.log('Contract address loaded:', {
-          chainId: chain.id,
-          chainName: chain.name,
-          address,
-          isConnected
-        });
-
-        if (!address || address === '0x0000000000000000000000000000000000000000') {
-          setError(`Contract not deployed on ${chain.name}`);
+        if (chain.id !== 11155111) {
+          setError(`Please connect to Sepolia network. Current network: ${chain.name}`);
           setContractAddress(null);
           return;
         }
 
-        setContractAddress(address as `0x${string}`);
+        const address = getContractAddress('TOKEN_FACTORY', chain.id);
+        console.log('Contract configuration:', {
+          chainId: chain.id,
+          address,
+          rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL,
+          deploymentOwner: import.meta.env.VITE_DEPLOYMENT_OWNER
+        });
+
+        if (!address) {
+          throw new Error('Contract address is undefined');
+        }
+
+        // Vérifie si l'adresse est valide
+        if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+          throw new Error('Invalid contract address format');
+        }
+
+        setContractAddress(address);
         setError(null);
-      } catch (error) {
-        console.error('Error loading contract address:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load contract address');
+      } catch (err) {
+        console.error('Error loading contract address:', err);
+        setError('Failed to load contract address');
         setContractAddress(null);
       } finally {
         setIsLoading(false);

@@ -28,14 +28,23 @@ export const useTokenForgeAdmin = () => {
     address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'owner',
-    enabled: !!contractAddress && !!chain?.id && !contractLoading,
+    enabled: !!contractAddress && !!chain?.id && !contractLoading && chain?.id === 11155111,
     chainId: chain?.id,
     watch: true,
     onError(error) {
       console.error('Error reading owner:', error);
+      setError('Failed to read contract state. Please verify your network connection and contract deployment.');
     },
     onSuccess(data) {
-      console.log('Owner read success:', data);
+      console.log('Owner read success:', {
+        owner: data,
+        currentAddress: address,
+        contractAddress,
+        chainId: chain?.id,
+        isAdmin: data === address,
+        network: chain?.network,
+      });
+      setError(null);
     }
   });
 
@@ -44,38 +53,83 @@ export const useTokenForgeAdmin = () => {
     address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'paused',
-    enabled: !!contractAddress && !!chain?.id && !contractLoading && isPauseAvailable,
+    enabled: !!contractAddress && !!chain?.id && !contractLoading && chain?.id === 11155111 && isPauseAvailable,
     chainId: chain?.id,
     watch: true,
     onError(error) {
       console.error('Error reading paused state:', error);
       setIsPauseAvailable(false);
+      setError('Failed to read contract pause state. The contract may not be properly initialized.');
     },
     onSuccess(data) {
-      console.log('Paused state read success:', data);
+      console.log('Paused state read success:', {
+        paused: data,
+        contractAddress,
+        chainId: chain?.id,
+        network: chain?.network,
+      });
       setIsPauseAvailable(true);
+      setError(null);
     }
   });
 
-  // Vérification de la disponibilité des fonctions de pause et admin
+  // Vérification de l'état du contrat et du réseau
+  useEffect(() => {
+    if (!chain) {
+      setError('Please connect to a network');
+      return;
+    }
+
+    if (chain.id !== 11155111) {
+      setError(`Please switch to Sepolia network. Current network: ${chain.name}`);
+      return;
+    }
+
+    const expectedOwner = import.meta.env.VITE_DEPLOYMENT_OWNER;
+    if (!expectedOwner) {
+      console.error('VITE_DEPLOYMENT_OWNER not configured in environment');
+      setError('Contract owner configuration missing');
+      return;
+    }
+
+    if (owner && typeof owner === 'string' && owner.toLowerCase() !== expectedOwner.toLowerCase()) {
+      console.error('Contract owner mismatch:', {
+        currentOwner: owner,
+        expectedOwner,
+        contractAddress
+      });
+      setError('Contract owner verification failed');
+      return;
+    }
+
+    setError(null);
+  }, [chain, owner, contractAddress]);
+
+  // Vérification des fonctions de pause
   useEffect(() => {
     if (!contractAddress || !chain?.id || contractLoading) {
       setIsPauseAvailable(false);
       return;
     }
 
-    // Vérifie si les fonctions existent dans l'ABI
-    const hasPauseFunction = TokenForgeFactoryABI.abi.some(
-      (item) => item.type === 'function' && (item.name === 'paused' || item.name === 'pause' || item.name === 'unpause')
+    const pauseFunctions = TokenForgeFactoryABI.abi.filter(
+      (item) => item.type === 'function' && ['paused', 'pause', 'unpause'].includes(item.name || '')
     );
 
-    console.log('Pause function availability check:', {
-      hasPauseFunction,
+    console.log('Contract functions check:', {
       contractAddress,
-      chainId: chain.id
+      chainId: chain.id,
+      pauseFunctions: pauseFunctions.map(f => f.name),
+      rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL,
+      owner: import.meta.env.VITE_DEPLOYMENT_OWNER
     });
 
+    const hasPauseFunction = pauseFunctions.length === 3;
     setIsPauseAvailable(hasPauseFunction);
+
+    if (!hasPauseFunction) {
+      setError('Contract pause functions not available');
+    }
   }, [contractAddress, chain?.id, contractLoading]);
 
   // Vérification de l'adresse admin
@@ -85,7 +139,9 @@ export const useTokenForgeAdmin = () => {
       console.log('Admin check:', {
         userAddress: address,
         ownerAddress: owner,
-        isOwner
+        isOwner,
+        contractAddress,
+        chainId: chain?.id
       });
       if (!isOwner) {
         setError('You are not the contract owner');
@@ -93,7 +149,7 @@ export const useTokenForgeAdmin = () => {
         setError(null);
       }
     }
-  }, [address, owner]);
+  }, [address, owner, chain?.id]);
 
   // Gestion des erreurs avec le réseau
   useEffect(() => {
