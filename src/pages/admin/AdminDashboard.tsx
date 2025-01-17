@@ -60,8 +60,12 @@ export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { 
     isAdmin,
-    handleTogglePause,
-    handleTransferOwnership
+    owner,
+    paused,
+    transferOwnership,
+    pause,
+    unpause,
+    error
   } = useTokenForgeAdmin();
   const { address } = useAccount();
   
@@ -69,7 +73,7 @@ export const AdminDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
   const [openTransferDialog, setOpenTransferDialog] = useState(false);
   const [newOwnerAddress, setNewOwnerAddress] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   // Redirection si l'utilisateur n'est pas admin
   React.useEffect(() => {
@@ -93,11 +97,13 @@ export const AdminDashboard = () => {
 
   const handleOwnershipTransfer = async () => {
     try {
-      setError(null);
-      await handleTransferOwnership(newOwnerAddress as `0x${string}`);
+      setErrorState(null);
+      if (transferOwnership) {
+        await transferOwnership();
+      }
       handleCloseTransferDialog();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      setErrorState(err instanceof Error ? err.message : 'Une erreur est survenue');
     }
   };
 
@@ -141,10 +147,10 @@ export const AdminDashboard = () => {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={handleTogglePause}
-                  startIcon={<PauseIcon />}
+                  onClick={paused ? unpause : pause}
+                  startIcon={paused ? <PlayArrowIcon /> : <PauseIcon />}
                 >
-                  Mettre en Pause / Reprendre
+                  {paused ? 'Reprendre' : 'Mettre en Pause'}
                 </Button>
                 <Button
                   variant="contained"
@@ -194,9 +200,9 @@ export const AdminDashboard = () => {
       <Dialog open={openTransferDialog} onClose={handleCloseTransferDialog}>
         <DialogTitle>Transférer la Propriété du Contrat</DialogTitle>
         <DialogContent>
-          {error && (
+          {errorState && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
+              {errorState}
             </Alert>
           )}
           <TextField
