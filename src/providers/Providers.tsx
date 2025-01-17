@@ -11,6 +11,7 @@ import { ThemeProvider } from 'styled-components';
 import { styledTheme } from '../theme/forge-theme';
 import { StyleSheetManager } from 'styled-components';
 import isPropValid from '@emotion/is-prop-valid';
+import { AuthProvider } from '../contexts/AuthContext';
 
 // Configuration du client de requête avec mise en cache optimisée
 const queryClient = new QueryClient({
@@ -30,24 +31,25 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
-// Utilisation de memo pour éviter les re-rendus inutiles
-const Providers: React.FC<ProvidersProps> = memo(({ children }) => {
+const Providers = memo<ProvidersProps>(({ children }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiConfig config={wagmiConfig}>
         <RainbowKitProvider chains={chains} theme={lightTheme()}>
-          <StyleSheetManager shouldForwardProp={isPropValid}>
-            <StyledEngineProvider injectFirst>
-              <MuiThemeProvider theme={muiTheme}>
-                <ThemeProvider theme={styledTheme}>
+          <StyledEngineProvider injectFirst>
+            <MuiThemeProvider theme={muiTheme}>
+              <ThemeProvider theme={styledTheme}>
+                <StyleSheetManager enableVendorPrefixes shouldForwardProp={isPropValid}>
                   <CssBaseline />
                   <Web3Provider>
-                    {children}
+                    <AuthProvider>
+                      {children}
+                    </AuthProvider>
                   </Web3Provider>
-                </ThemeProvider>
-              </MuiThemeProvider>
-            </StyledEngineProvider>
-          </StyleSheetManager>
+                </StyleSheetManager>
+              </ThemeProvider>
+            </MuiThemeProvider>
+          </StyledEngineProvider>
         </RainbowKitProvider>
       </WagmiConfig>
     </QueryClientProvider>

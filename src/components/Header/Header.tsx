@@ -8,17 +8,25 @@ import {
   Menu,
   MenuItem,
   Link as MuiLink,
-  useMediaQuery
+  useMediaQuery,
+  Button
 } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DarkMode, LightMode, Menu as MenuIcon } from '@mui/icons-material';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
+import { useAccount } from 'wagmi';
 
 const Header = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { user, logout } = useAuth();
+  const { isAdmin } = useTokenForgeAdmin();
+  const { isConnected } = useAccount();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -28,12 +36,22 @@ const Header = () => {
     setAnchorEl(null);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to logout:', error);
+    }
+  };
+
   const menuItems = [
     { to: '/', label: 'Accueil' },
     { to: '/create', label: 'Créer un Token' },
     { to: '/my-tokens', label: 'Mes Tokens' },
     { to: '/pricing', label: 'Plans & Tarifs' },
     { to: '/staking', label: 'Staking' },
+    ...(isConnected && isAdmin ? [{ to: '/admin', label: 'Admin' }] : []),
   ];
 
   const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => (
@@ -54,6 +72,39 @@ const Header = () => {
       {children}
     </MuiLink>
   );
+
+  const AuthButtons = () => {
+    if (user) {
+      return (
+        <Button
+          variant="text"
+          color="inherit"
+          onClick={handleLogout}
+        >
+          Déconnexion
+        </Button>
+      );
+    }
+
+    return (
+      <Stack direction="row" spacing={2}>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => navigate('/login')}
+        >
+          Connexion
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate('/signup')}
+        >
+          Inscription
+        </Button>
+      </Stack>
+    );
+  };
 
   return (
     <AppBar 
@@ -96,6 +147,9 @@ const Header = () => {
                   {item.label}
                 </MenuItem>
               ))}
+              <MenuItem onClick={handleMenuClose}>
+                <AuthButtons />
+              </MenuItem>
             </Menu>
           </>
         ) : (
@@ -109,10 +163,10 @@ const Header = () => {
         )}
 
         <Stack direction="row" spacing={2} alignItems="center">
+          <AuthButtons />
           <ConnectButton />
           <IconButton 
             onClick={() => {
-              // You'll need to implement dark mode toggle with MUI
               document.documentElement.setAttribute('data-theme', theme.palette.mode === 'dark' ? 'light' : 'dark');
             }}
             color="inherit"

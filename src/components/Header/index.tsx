@@ -1,28 +1,28 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { AppBar, Toolbar, Typography, Button, Box, Container, useTheme, useMediaQuery } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { useAccount } from 'wagmi';
+import { AuthButtons } from "../../components/auth/AuthButtons";
 
-interface HeaderProps {
-  menuItems: {
-    text: string;
-    icon: React.ReactNode;
-    path: string;
-  }[];
-}
-
-const Header: React.FC<HeaderProps> = ({ menuItems }) => {
-  const location = useLocation();
+const Header: React.FC = () => {
+  const theme = useTheme();
   const { isAdmin } = useTokenForgeAdmin();
   const { isConnected } = useAccount();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-  const isActive = (path: string) => location.pathname === path;
+  const menuItems = [
+    { text: "Accueil", path: "/" },
+    { text: "Créer un Token", path: "/create" },
+    { text: "Mes Tokens", path: "/my-tokens" },
+    { text: "Plans & Tarifs", path: "/pricing" },
+    { text: "Staking", path: "/staking" },
+  ];
 
   return (
     <AppBar 
-      position="fixed" 
+      position="sticky" 
       sx={{ 
         backgroundColor: 'background.paper',
         borderBottom: 1,
@@ -30,75 +30,42 @@ const Header: React.FC<HeaderProps> = ({ menuItems }) => {
         boxShadow: 1,
       }}
     >
-      <Toolbar 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          px: { xs: 2, sm: 3, md: 4 },
-          minHeight: { xs: '64px', sm: '70px' }
-        }}
-      >
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            gap: { xs: 1, sm: 2, md: 4 }
-          }}
-        >
+      <Container maxWidth="xl">
+        <Toolbar disableGutters>
           <Typography
             variant="h6"
             component={RouterLink}
             to="/"
-            sx={{ 
-              textDecoration: 'none', 
-              color: 'inherit',
-              whiteSpace: 'nowrap'
+            sx={{
+              flexGrow: { xs: 1, md: 0 },
+              mr: { md: 5 },
+              color: 'text.primary',
+              textDecoration: 'none',
+              fontWeight: 700,
             }}
           >
             TokenForge
           </Typography>
 
-          {isConnected && (
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {menuItems.map((item) => (
-                <Button
-                  key={item.path}
-                  component={RouterLink}
-                  to={item.path}
-                  startIcon={item.icon}
-                  sx={{
-                    color: isActive(item.path) ? 'primary.main' : 'text.primary',
-                    '&:hover': {
-                      color: 'primary.main',
-                    },
-                  }}
-                >
-                  {item.text}
-                </Button>
-              ))}
-              
-              {isAdmin && (
-                <Button
-                  component={RouterLink}
-                  to="/admin"
-                  sx={{
-                    color: isActive('/admin') ? 'primary.main' : 'text.primary',
-                    '&:hover': {
-                      color: 'primary.main',
-                    },
-                  }}
-                >
-                  Admin
-                </Button>
-              )}
-            </Box>
-          )}
-        </Box>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, flexGrow: 1, gap: 2 }}>
+            {menuItems.map((item) => (
+              <Button
+                key={item.text}
+                component={RouterLink}
+                to={item.path}
+                color="inherit"
+              >
+                {item.text}
+              </Button>
+            ))}
+          </Box>
 
-        <Box>
-          <ConnectButton />
-        </Box>
-      </Toolbar>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <AuthButtons />
+            <ConnectButton />
+          </Box>
+        </Toolbar>
+      </Container>
     </AppBar>
   );
 };

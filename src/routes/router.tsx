@@ -6,6 +6,7 @@ import CreateTokenWizard from '../pages/CreateToken/CreateTokenWizard';
 import ProfitDashboardPage from '../pages/Dashboard/ProfitDashboardPage';
 import Plans from '../pages/Plans';
 import LaunchpadPage from '../pages/Launchpad';
+import AdminDashboard from '../pages/admin/AdminDashboard';
 
 const routes = [
   {
@@ -41,6 +42,10 @@ const routes = [
       {
         path: 'profit-dashboard',
         element: <ProfitDashboardPage />
+      },
+      {
+        path: 'admin',
+        element: <AdminDashboard />
       }
     ]
   }

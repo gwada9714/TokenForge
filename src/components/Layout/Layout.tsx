@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Container, CssBaseline } from "@mui/material";
-import { Header } from "../Header";
+import { Navbar } from "./Navbar";
 import { Footer } from "../Footer";
 
 interface LayoutProps {
@@ -17,7 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       }}
     >
       <CssBaseline />
-      <Header />
+      <Navbar />
       <Box
         component="main"
         sx={{
