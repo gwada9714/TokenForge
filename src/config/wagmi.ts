@@ -1,34 +1,31 @@
-import { http } from "wagmi";
-import { sepolia } from "wagmi/chains";
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { configureChains, createConfig } from 'wagmi';
+import { sepolia } from 'wagmi/chains';
+import { alchemyProvider } from 'wagmi/providers/alchemy';
+import { publicProvider } from 'wagmi/providers/public';
+import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 
-const projectId = process.env.VITE_WALLET_CONNECT_PROJECT_ID;
-const alchemyId = process.env.VITE_ALCHEMY_API_KEY;
+const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY as string;
 
-if (!projectId) {
-  throw new Error("Missing VITE_WALLET_CONNECT_PROJECT_ID");
-}
+// Configure les chaînes avec Alchemy comme provider principal
+export const { chains, publicClient, webSocketPublicClient } = configureChains(
+  [sepolia],
+  [
+    alchemyProvider({ apiKey: ALCHEMY_API_KEY }),
+    publicProvider(),
+  ],
+);
 
-if (!alchemyId) {
-  throw new Error("Missing VITE_ALCHEMY_API_KEY");
-}
-
-const metadata = {
-  name: "TokenForge",
-  description: "Create and manage your own tokens",
-  url: "https://tokenforge.app",
-  icons: ["https://tokenforge.app/logo.png"],
-};
-
-export const chains = [sepolia] as const;
-
-export const config = getDefaultConfig({
-  appName: "TokenForge",
-  projectId: projectId as string,
+// Configure RainbowKit
+const { connectors } = getDefaultWallets({
+  appName: 'TokenForge',
+  projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID as string,
   chains,
-  transports: {
-    [sepolia.id]: http(`https://eth-sepolia.g.alchemy.com/v2/${alchemyId}`),
-  },
 });
 
-export { sepolia };
+// Crée la configuration Wagmi
+export const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors,
+  publicClient,
+  webSocketPublicClient,
+});
