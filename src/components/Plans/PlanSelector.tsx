@@ -1,128 +1,142 @@
 import React, { useState } from 'react';
-import { Box, Button, Card, CardContent, Typography, CircularProgress } from '@mui/material';
-import { useTokenApproval } from '../../hooks/useTokenApproval';
+import { Box, Button, Card, CardContent, Typography, CircularProgress, Alert } from '@mui/material';
 import { useTokenForgePlans } from '../../hooks/useTokenForgePlans';
-import { BASIC_TIER_PRICE, PREMIUM_TIER_PRICE } from '../../constants/tokenforge';
-import { formatEther, Address } from 'viem';
-import { UserLevel } from '../../types/plans';
-
-const FACTORY_ADDRESS = '0xB0B6ED3e12f9Bb24b1bBC3413E3bb374A6e8B2E5' as const;
+import { PlanType, DEFAULT_PLANS, type PlanDetails } from '../../types/plans';
+import { toast } from 'react-hot-toast';
+import { useAccount, useNetwork } from 'wagmi';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 export const PlanSelector: React.FC = () => {
-  const [selectedPlan, setSelectedPlan] = useState<UserLevel>(UserLevel.BASIC);
-  const planPrice = selectedPlan === UserLevel.BASIC ? BASIC_TIER_PRICE : PREMIUM_TIER_PRICE;
-  
-  const {
-    approveTokens,
-    allowance,
-    balance,
-    isApproving,
-    refetchAllowance
-  } = useTokenApproval(FACTORY_ADDRESS as Address);
+  const { isConnected, address } = useAccount();
+  const { chain } = useNetwork();
+  const { buyPlan, isLoading: isContractLoading } = useTokenForgePlans();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { buyPlan } = useTokenForgePlans();
+  const handlePlanSelection = async (planType: PlanType) => {
+    console.log('Sélection du plan:', planType);
+    
+    if (!isConnected) {
+      toast.error('Veuillez connecter votre wallet');
+      return;
+    }
 
-  const handleApprove = async () => {
+    if (!address) {
+      toast.error('Adresse wallet non trouvée');
+      return;
+    }
+
+    if (!chain) {
+      toast.error('Réseau non supporté');
+      return;
+    }
+
     try {
-      await approveTokens(formatEther(planPrice));
+      setIsLoading(true);
+      setError(null);
+
+      const plan = DEFAULT_PLANS[planType];
+      console.log('Plan sélectionné:', {
+        plan,
+        chainId: chain.id,
+        userAddress: address
+      });
+
+      const tx = await buyPlan(planType);
+      console.log('Transaction envoyée:', tx);
+      
+      toast.success('Transaction envoyée ! Attendez la confirmation...');
     } catch (error) {
-      console.error('Erreur lors de l\'approbation:', error);
+      console.error('Erreur lors de la sélection du plan:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la sélection du plan';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleBuyPlan = async () => {
-    try {
-      await buyPlan(selectedPlan, 'TKN');
-    } catch (error) {
-      console.error('Erreur lors de l\'achat du plan:', error);
-    }
-  };
+  const loading = isLoading || isContractLoading;
 
-  const needsApproval = Number(allowance) < Number(formatEther(planPrice));
-  const hasEnoughBalance = Number(balance) >= Number(formatEther(planPrice));
+  // Créer un tableau des plans avec les types corrects
+  const planEntries = Object.entries(DEFAULT_PLANS).map(([key, value]) => ({
+    type: Number(key) as PlanType,
+    plan: value
+  }));
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', p: 2 }}>
-      <Typography variant="h4" gutterBottom>
-        Sélectionnez votre plan
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 4 }}>
+      <Typography variant="h3" align="center" sx={{ mb: 1 }}>
+        Plans & Tarifs
+      </Typography>
+      
+      <Typography variant="h6" align="center" sx={{ mb: 6, color: 'text.secondary' }}>
+        Choisissez le plan qui correspond à vos besoins
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-        <Card 
-          sx={{ 
-            flex: 1, 
-            cursor: 'pointer',
-            border: selectedPlan === UserLevel.BASIC ? '2px solid primary.main' : 'none'
-          }}
-          onClick={() => setSelectedPlan(UserLevel.BASIC)}
-        >
-          <CardContent>
-            <Typography variant="h5">Basic</Typography>
-            <Typography>100 TKN</Typography>
-            <Typography variant="body2" color="text.secondary">
-              • Création de token illimitée
-              • Fonctionnalités standard
-              • Support basique
-            </Typography>
-          </CardContent>
-        </Card>
-
-        <Card 
-          sx={{ 
-            flex: 1, 
-            cursor: 'pointer',
-            border: selectedPlan === UserLevel.PREMIUM ? '2px solid primary.main' : 'none'
-          }}
-          onClick={() => setSelectedPlan(UserLevel.PREMIUM)}
-        >
-          <CardContent>
-            <Typography variant="h5">Premium</Typography>
-            <Typography>1000 TKN</Typography>
-            <Typography variant="body2" color="text.secondary">
-              • Toutes les fonctionnalités
-              • Support prioritaire
-              • Personnalisation avancée
-              • Accès anticipé aux nouvelles fonctionnalités
-            </Typography>
-          </CardContent>
-        </Card>
-      </Box>
-
-      <Box sx={{ mb: 2 }}>
-        <Typography>
-          Votre solde: {balance} TKN
-        </Typography>
-        <Typography>
-          Montant approuvé: {allowance} TKN
-        </Typography>
-      </Box>
-
-      {!hasEnoughBalance ? (
-        <Typography color="error">
-          Solde TKN insuffisant pour ce plan
-        </Typography>
-      ) : needsApproval ? (
-        <Button
-          variant="contained"
-          onClick={handleApprove}
-          disabled={isApproving}
-          fullWidth
-        >
-          {isApproving ? (
-            <CircularProgress size={24} />
-          ) : (
-            'Approuver les TKN'
-          )}
-        </Button>
-      ) : (
-        <Button
-          variant="contained"
-          onClick={handleBuyPlan}
-          fullWidth
-        >
-          Acheter le plan
-        </Button>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
       )}
+
+      {!isConnected && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Connectez votre wallet pour choisir un plan
+        </Alert>
+      )}
+
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 3,
+        flexWrap: 'wrap',
+        justifyContent: 'center'
+      }}>
+        {planEntries.map(({ type, plan }) => (
+          <Card key={type} sx={{ 
+            flex: '1 1 300px',
+            maxWidth: 350,
+            borderRadius: 2,
+            bgcolor: '#fff',
+            boxShadow: '0 0 10px rgba(0,0,0,0.1)'
+          }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h5" align="center" sx={{ fontWeight: 'bold', mb: 2 }}>
+                {plan.name}
+              </Typography>
+              <Typography variant="h4" align="center" sx={{ mb: 3 }}>
+                {plan.bnbPrice} BNB
+              </Typography>
+              <Box sx={{ mb: 4 }}>
+                {plan.features.map((feature: string, index: number) => (
+                  <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <CheckCircleIcon sx={{ mr: 1, color: 'primary.main' }} />
+                    <Typography>{feature}</Typography>
+                  </Box>
+                ))}
+              </Box>
+              <Button
+                variant={type === PlanType.Forgeron ? "contained" : "outlined"}
+                fullWidth
+                onClick={() => handlePlanSelection(type)}
+                disabled={loading || !isConnected}
+                sx={type === PlanType.Forgeron ? {
+                  bgcolor: '#ff9800',
+                  '&:hover': {
+                    bgcolor: '#f57c00'
+                  }
+                } : {}}
+              >
+                {loading ? <CircularProgress size={24} /> : 
+                  type === PlanType.Apprenti ? 'Commencer' :
+                  type === PlanType.MaitreForgeron ? 'Contacter' :
+                  'Choisir'
+                }
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
     </Box>
   );
 };

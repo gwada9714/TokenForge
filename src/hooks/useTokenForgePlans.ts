@@ -1,18 +1,19 @@
-import { useCallback } from 'react';
-import { useContractWrite, useContractRead, useAccount, useNetwork } from 'wagmi';
+import { useCallback, useEffect } from 'react';
+import { useContractWrite, useContractRead, useAccount, useNetwork, useWaitForTransaction, useContractEvent } from 'wagmi';
 import { TokenForgePlansABI } from '../contracts/abis';
-import { UserLevel, DEFAULT_PLANS } from '../types/plans';
-import { parseEther, type Address } from 'viem';
+import { PlanType, DEFAULT_PLANS, getPlanPriceInWei } from '../types/plans';
+import { type Address } from 'viem';
 import { toast } from 'react-hot-toast';
 import { getContractAddress } from '../config/contracts';
 
 export const useTokenForgePlans = () => {
   const { address } = useAccount();
   const { chain } = useNetwork();
-  const plansAddress = getContractAddress('TOKEN_FORGE_PLANS', chain?.id ?? 1) as Address;
+  const chainId = chain?.id ?? 11155111; // Default to Sepolia
+  const plansAddress = getContractAddress('TOKEN_FORGE_PLANS', chainId);
 
   // Lecture du plan actuel de l'utilisateur
-  const { data: userPlanData, isError, isLoading } = useContractRead({
+  const { data: userPlanData, isError, isLoading: isReadLoading, refetch: refetchUserPlan } = useContractRead({
     address: plansAddress,
     abi: TokenForgePlansABI,
     functionName: 'getUserPlan',
@@ -20,78 +21,107 @@ export const useTokenForgePlans = () => {
     enabled: !!address,
   });
 
+  // Lecture des features du plan
+  const { data: planFeaturesData } = useContractRead({
+    address: plansAddress,
+    abi: TokenForgePlansABI,
+    functionName: 'getPlanFeatures',
+    args: userPlanData !== undefined ? [userPlanData] : undefined,
+    enabled: userPlanData !== undefined,
+  });
+
   // Achat avec BNB
-  const { writeAsync: purchasePlan } = useContractWrite({
+  const { 
+    writeAsync: purchasePlanWithBNB,
+    data: purchaseData,
+    isLoading: isPurchaseLoading,
+    error: purchaseError
+  } = useContractWrite({
     address: plansAddress,
     abi: TokenForgePlansABI,
-    functionName: 'purchasePlan',
+    functionName: 'purchasePlanWithBNB',
   });
 
-  // Achat avec TKN
-  const { writeAsync: purchaseWithToken } = useContractWrite({
+  // Attendre la confirmation de la transaction
+  const { isLoading: isWaitingTransaction } = useWaitForTransaction({
+    hash: purchaseData?.hash,
+    onSuccess: () => {
+      refetchUserPlan();
+      toast.success('Plan acheté avec succès !');
+    },
+    onError: (error) => {
+      console.error('Erreur lors de la confirmation:', error);
+      toast.error('Erreur lors de la confirmation de la transaction');
+    }
+  });
+
+  // Écouter l'événement PlanPurchased
+  useContractEvent({
     address: plansAddress,
     abi: TokenForgePlansABI,
-    functionName: 'purchasePlanWithToken',
+    eventName: 'PlanPurchased',
+    listener(log) {
+      console.log('Plan acheté:', log);
+    },
   });
 
-  const getUserPlan = useCallback(async (userAddress: string): Promise<UserLevel> => {
-    if (!userAddress) return UserLevel.APPRENTICE;
+  const getUserPlan = useCallback(async (userAddress: string): Promise<PlanType> => {
+    if (!userAddress) return PlanType.Apprenti;
     
     try {
       if (isError) throw new Error('Failed to fetch user plan');
-      if (isLoading) return UserLevel.APPRENTICE;
+      if (isReadLoading) return PlanType.Apprenti;
       
-      const plan = Number(userPlanData);
-      switch (plan) {
-        case 1:
-          return UserLevel.BASIC;
-        case 2:
-          return UserLevel.PREMIUM;
-        default:
-          return UserLevel.APPRENTICE;
-      }
+      return userPlanData as PlanType;
     } catch (error) {
       console.error('Error fetching user plan:', error);
-      return UserLevel.APPRENTICE;
+      return PlanType.Apprenti;
     }
-  }, [userPlanData, isError, isLoading]);
+  }, [userPlanData, isError, isReadLoading]);
 
-  const buyPlan = useCallback(async (level: UserLevel, paymentMethod: 'BNB' | 'TKN') => {
+  const buyPlan = useCallback(async (planType: PlanType) => {
     try {
-      const plan = DEFAULT_PLANS[level];
-      if (!plan) throw new Error('Invalid plan level');
-
-      let planIndex: bigint;
-      switch (level) {
-        case UserLevel.BASIC:
-          planIndex = BigInt(1);
-          break;
-        case UserLevel.PREMIUM:
-          planIndex = BigInt(2);
-          break;
-        default:
-          throw new Error('Invalid plan level');
-      }
+      if (!address) throw new Error('Wallet non connecté');
+      if (!chain) throw new Error('Réseau non supporté');
       
-      if (paymentMethod === 'BNB') {
-        const value = parseEther(plan.price.bnb.toString());
-        await purchasePlan({ args: [planIndex], value });
-        toast.success('Plan acheté avec succès !');
-      } else {
-        await purchaseWithToken({ args: [planIndex] });
-        toast.success('Plan acheté avec TKN avec succès !');
-      }
+      console.log('Achat du plan...', {
+        planType,
+        chainId,
+        plansAddress,
+        userAddress: address
+      });
+
+      // Convertir le prix en wei
+      const priceInWei = getPlanPriceInWei(planType);
+      
+      console.log('Prix du plan:', {
+        planType,
+        priceInWei: priceInWei.toString()
+      });
+
+      const tx = await purchasePlanWithBNB({ 
+        args: [planType],
+        value: priceInWei
+      });
+
+      console.log('Transaction envoyée:', tx);
+      
+      return tx;
     } catch (error) {
       console.error('Error purchasing plan:', error);
-      toast.error('Échec de l\'achat du plan');
+      if (purchaseError) {
+        console.error('Contract error:', purchaseError);
+      }
       throw error;
     }
-  }, [purchasePlan, purchaseWithToken]);
+  }, [address, chain, chainId, purchasePlanWithBNB, purchaseError]);
 
   return {
     getUserPlan,
     buyPlan,
-    isLoading,
-    isError
+    isLoading: isReadLoading || isPurchaseLoading || isWaitingTransaction,
+    isError,
+    planFeatures: planFeaturesData,
+    currentPlan: userPlanData as PlanType
   };
 };
