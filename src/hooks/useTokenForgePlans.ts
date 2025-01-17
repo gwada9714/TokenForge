@@ -31,7 +31,7 @@ export const useTokenForgePlans = () => {
   const { writeAsync: purchaseWithToken } = useContractWrite({
     address: plansAddress,
     abi: TokenForgePlansABI,
-    functionName: 'purchasePlan',
+    functionName: 'purchasePlanWithToken',
   });
 
   const getUserPlan = useCallback(async (userAddress: string): Promise<UserLevel> => {
@@ -44,11 +44,9 @@ export const useTokenForgePlans = () => {
       const plan = Number(userPlanData);
       switch (plan) {
         case 1:
-          return UserLevel.FORGE;
+          return UserLevel.BASIC;
         case 2:
-          return UserLevel.MASTER;
-        case 3:
-          return UserLevel.DEVELOPER;
+          return UserLevel.PREMIUM;
         default:
           return UserLevel.APPRENTICE;
       }
@@ -63,19 +61,29 @@ export const useTokenForgePlans = () => {
       const plan = DEFAULT_PLANS[level];
       if (!plan) throw new Error('Invalid plan level');
 
-      const planIndex = Object.values(UserLevel).indexOf(level) + 1;
+      let planIndex: bigint;
+      switch (level) {
+        case UserLevel.BASIC:
+          planIndex = BigInt(1);
+          break;
+        case UserLevel.PREMIUM:
+          planIndex = BigInt(2);
+          break;
+        default:
+          throw new Error('Invalid plan level');
+      }
       
       if (paymentMethod === 'BNB') {
         const value = parseEther(plan.price.bnb.toString());
         await purchasePlan({ args: [planIndex], value });
+        toast.success('Plan acheté avec succès !');
       } else {
         await purchaseWithToken({ args: [planIndex] });
+        toast.success('Plan acheté avec TKN avec succès !');
       }
-
-      toast.success('Plan purchased successfully!');
     } catch (error) {
       console.error('Error purchasing plan:', error);
-      toast.error('Failed to purchase plan');
+      toast.error('Échec de l\'achat du plan');
       throw error;
     }
   }, [purchasePlan, purchaseWithToken]);
