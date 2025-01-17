@@ -16,7 +16,7 @@ import ProfitDashboard from "./components/Dashboard/ProfitDashboard";
 import LaunchpadPage from "./pages/Launchpad";
 import MyTokens from "./pages/MyTokens";
 import Pricing from "./pages/Pricing";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const App: React.FC = () => {
   return (
@@ -34,7 +34,7 @@ const App: React.FC = () => {
             <Route path="/launchpad" element={<LaunchpadPage />} />
             <Route path="/my-tokens" element={<ProtectedRoute><MyTokens /></ProtectedRoute>} />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
           </Routes>
         </AuthProvider>
       </ThemeProvider>

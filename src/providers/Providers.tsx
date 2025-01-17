@@ -12,6 +12,7 @@ import { styledTheme } from '../theme/forge-theme';
 import { StyleSheetManager } from 'styled-components';
 import isPropValid from '@emotion/is-prop-valid';
 import { AuthProvider } from '../contexts/AuthContext';
+import { ContractProvider } from './ContractProvider';
 
 // Configuration du client de requête avec mise en cache optimisée
 const queryClient = new QueryClient({
@@ -42,9 +43,11 @@ const Providers = memo<ProvidersProps>(({ children }) => {
                 <StyleSheetManager enableVendorPrefixes shouldForwardProp={isPropValid}>
                   <CssBaseline />
                   <Web3Provider>
-                    <AuthProvider>
-                      {children}
-                    </AuthProvider>
+                    <ContractProvider>
+                      <AuthProvider>
+                        {children}
+                      </AuthProvider>
+                    </ContractProvider>
                   </Web3Provider>
                 </StyleSheetManager>
               </ThemeProvider>
