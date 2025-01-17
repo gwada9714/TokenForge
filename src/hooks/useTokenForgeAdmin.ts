@@ -4,7 +4,28 @@ import TokenForgeFactory from '../contracts/abi/TokenForgeFactory.json';
 import { useContract } from '../providers/ContractProvider';
 import { Address, getAddress, isAddress } from 'viem';
 
-export const useTokenForgeAdmin = () => {
+interface TokenForgeAdminHook {
+  isOwner: boolean;
+  isPaused: unknown;
+  pause: () => Promise<void>;
+  unpause: () => Promise<void>;
+  error: string | null;
+  isCorrectNetwork: boolean;
+  isWaitingForTx: boolean;
+  isValidContract: boolean;
+  isAdmin: boolean;
+  owner: Address | undefined;
+  paused: unknown;
+  transferOwnership: ((address: string) => Promise<void>) | null;
+  isPausing: boolean;
+  isUnpausing: boolean;
+  isTransferring: boolean;
+  setNewOwnerAddress: ((address: string) => void) | null;
+  isLoading: boolean;
+  pauseAvailable: boolean;
+}
+
+export const useTokenForgeAdmin = (): TokenForgeAdminHook => {
   const { address } = useAccount();
   const { chain } = useNetwork();
   const { contractAddress } = useContract();
@@ -276,19 +297,102 @@ export const useTokenForgeAdmin = () => {
     }
   }, [unpauseContract, isOwner, isCorrectNetwork, isValidContract, chain?.name, contractAddress, address, owner]);
 
+  // État pour la nouvelle adresse du propriétaire
+  const [newOwnerAddress, setNewOwnerAddress] = useState<Address>();
+
+  // Préparation de la fonction transferOwnership
+  const { config: transferConfig, error: transferPrepError } = usePrepareContractWrite({
+    address: contractAddress as Address,
+    abi: TokenForgeFactory.abi,
+    functionName: 'transferOwnership',
+    args: newOwnerAddress ? [newOwnerAddress] : undefined,
+    enabled: isValidContract && isOwner && isCorrectNetwork && !!newOwnerAddress,
+    onError: (err) => {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Error preparing transfer ownership:', { 
+        error: err, 
+        message: errorMessage,
+        contractAddress,
+        isOwner,
+        isCorrectNetwork,
+        newOwnerAddress
+      });
+      setError(`Failed to prepare transfer ownership: ${errorMessage}`);
+    }
+  });
+
+  // Fonction transferOwnership
+  const { writeAsync: transferOwnershipContract } = useContractWrite(transferConfig);
+
+  const transferOwnership = useCallback(async () => {
+    if (!isCorrectNetwork) {
+      const errorMessage = `Please connect to Sepolia network (current: ${chain?.name})`;
+      console.error(errorMessage);
+      setError(errorMessage);
+      return;
+    }
+    if (!isValidContract) {
+      const errorMessage = `Invalid contract address: ${contractAddress}`;
+      console.error(errorMessage);
+      setError(errorMessage);
+      return;
+    }
+    if (!isOwner) {
+      const errorMessage = 'Only owner can transfer ownership';
+      console.error(errorMessage, { address, owner });
+      setError(errorMessage);
+      return;
+    }
+    if (!newOwnerAddress) {
+      const errorMessage = 'New owner address is required';
+      console.error(errorMessage);
+      setError(errorMessage);
+      return;
+    }
+    if (!transferOwnershipContract) {
+      const errorMessage = 'Transfer ownership function not available';
+      console.error(errorMessage);
+      setError(errorMessage);
+      return;
+    }
+
+    try {
+      setError(null);
+      const tx = await transferOwnershipContract();
+      setTxHash(tx.hash);
+      console.log('Transfer ownership transaction sent:', { 
+        hash: tx.hash,
+        from: address,
+        to: contractAddress,
+        newOwner: newOwnerAddress
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Error in transfer ownership:', { 
+        error: err, 
+        message: errorMessage,
+        contractAddress,
+        from: address,
+        newOwner: newOwnerAddress
+      });
+      setError(`Failed to transfer ownership: ${errorMessage}`);
+      throw err;
+    }
+  }, [transferOwnershipContract, isOwner, isCorrectNetwork, isValidContract, chain?.name, contractAddress, address, owner, newOwnerAddress]);
+
   // Gestion des erreurs
   useEffect(() => {
     if (!isCorrectNetwork) {
       setError(`Please connect to Sepolia network (current: ${chain?.name})`);
     } else if (!isValidContract) {
       setError(`Invalid contract address: ${contractAddress}`);
-    } else if (ownerError || pausedError || pausePrepError || unpausePrepError) {
-      const errorMessage = pausePrepError?.message || unpausePrepError?.message || 'Error interacting with contract';
+    } else if (ownerError || pausedError || pausePrepError || unpausePrepError || transferPrepError) {
+      const errorMessage = pausePrepError?.message || unpausePrepError?.message || transferPrepError?.message || 'Error interacting with contract';
       setError(errorMessage);
     } else {
       setError(null);
     }
-  }, [isCorrectNetwork, isValidContract, ownerError, pausedError, pausePrepError, unpausePrepError, chain?.name, contractAddress]);
+  }, [isCorrectNetwork, isValidContract, ownerError, pausedError, pausePrepError, unpausePrepError, transferPrepError, chain?.name, contractAddress]);
 
   return {
     isOwner,
@@ -298,6 +402,32 @@ export const useTokenForgeAdmin = () => {
     error,
     isCorrectNetwork,
     isWaitingForTx,
-    isValidContract
+    isValidContract,
+    isAdmin: isOwner,
+    owner,
+    paused: isPaused,
+    transferOwnership,
+    isPausing: isWaitingForTx && txHash !== undefined,
+    isUnpausing: isWaitingForTx && txHash !== undefined,
+    isTransferring: isWaitingForTx && txHash !== undefined,
+    setNewOwnerAddress: (address: string) => {
+      try {
+        if (!isAddress(address)) {
+          throw new Error('Invalid address format');
+        }
+        setNewOwnerAddress(address as Address);
+        setError(null);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Invalid address';
+        console.error('Error setting new owner address:', {
+          error: err,
+          message: errorMessage,
+          address
+        });
+        setError(`Invalid address: ${errorMessage}`);
+      }
+    },
+    isLoading: isWaitingForTx,
+    pauseAvailable: isOwner && !isPaused && isCorrectNetwork && isValidContract
   };
 };

@@ -28,77 +28,58 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
         sourcemap: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/eth-.*\.g\.alchemy\.com\/v2\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'alchemy-requests',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 // 1 hour
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
-      },
-      manifest: {
-        name: 'TokenForge',
-        short_name: 'TokenForge',
-        description: 'Create and manage your own tokens',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
-        display: 'standalone',
-        icons: [
-          {
-            src: '/icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      },
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}']
+      }
     })
   ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+  // Optimisations de build
   build: {
-    sourcemap: true,
+    target: 'esnext',
+    minify: 'esbuild',
+    cssMinify: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
-          web3: ['ethers', 'wagmi', '@rainbow-me/rainbowkit'],
-        },
-      },
-    },
+          'react-vendor': ['react', 'react-dom'],
+          'mui-vendor': ['@mui/material', '@mui/icons-material'],
+          'web3-vendor': ['@rainbow-me/rainbowkit', 'wagmi', 'viem']
+        }
+      }
+    }
   },
+  // Optimisations du serveur de développement
   server: {
-    port: 3000,
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+    hmr: {
+      overlay: true
     },
+    fs: {
+      strict: true
+    },
+    watch: {
+      usePolling: false,
+      interval: 100
+    }
   },
+  // Optimisations de performance
   optimizeDeps: {
-    esbuildOptions: {
-      target: 'es2020',
-      supported: { 
-        bigint: true 
-      },
-    },
+    include: [
+      'react',
+      'react-dom',
+      '@mui/material',
+      '@mui/icons-material',
+      '@rainbow-me/rainbowkit',
+      'wagmi',
+      'viem'
+    ],
+    exclude: ['@vite/client', '@vite/env']
   },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    }
+  },
+  // Activer le cache en développement
+  cacheDir: '.vite',
   define: {
     'process.env': {}
   }
