@@ -1,6 +1,6 @@
 import { WagmiConfig } from 'wagmi';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { wagmiConfig, chains } from '../config/wagmi';
+import { wagmiConfig, chains } from '../config/wagmiConfig';
 import '@rainbow-me/rainbowkit/styles.css';
 
 interface Web3ProviderProps {

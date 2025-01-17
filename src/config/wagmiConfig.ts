@@ -23,7 +23,7 @@ const metadata = {
 };
 
 // Configuration des chaînes avec leurs providers
-const { chains, publicClient, webSocketPublicClient } = configureChains(
+export const { chains, publicClient, webSocketPublicClient } = configureChains(
   [mainnet, sepolia],
   [
     alchemyProvider({ apiKey: alchemyId }),
@@ -39,11 +39,9 @@ const { connectors } = getDefaultWallets({
 });
 
 // Configuration wagmi
-export const config = createConfig({
+export const wagmiConfig = createConfig({
   autoConnect: true,
   connectors,
   publicClient,
   webSocketPublicClient,
 });
-
-export { chains, mainnet, sepolia };
