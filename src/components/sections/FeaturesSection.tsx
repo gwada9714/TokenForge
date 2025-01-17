@@ -8,7 +8,7 @@ import BoltIcon from '@mui/icons-material/Bolt';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { ForgeHeading } from '../common/ForgeHeading';
-import { FeatureCard } from '../common/FeatureCard';
+import FeatureCard from '../common/FeatureCard';
 import { ParallaxContainer } from '../common/ParallaxContainer';
 
 const SectionContainer = styled.section`

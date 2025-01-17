@@ -4,7 +4,7 @@ import { Container, Box } from '@mui/material';
 import { ForgeButton } from '../common/ForgeButton';
 import { ForgeHeading } from '../common/ForgeHeading';
 import { ParallaxContainer } from '../common/ParallaxContainer';
-import { ForgeBackground } from '../common/ForgeBackground';
+import ForgeBackground from '../common/ForgeBackground';
 import { useNavigate } from 'react-router-dom';
 
 const HeroContainer = styled.section`

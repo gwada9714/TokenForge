@@ -1,8 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Container, Grid } from '@mui/material';
+import { motion } from 'framer-motion';
+import TokenChart from '../common/TokenChart';
 import { ForgeHeading } from '../common/ForgeHeading';
-import { TokenChart } from '../common/TokenChart';
 import { ParallaxContainer } from '../common/ParallaxContainer';
 import { ForgeCard } from '../common/ForgeCard';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';

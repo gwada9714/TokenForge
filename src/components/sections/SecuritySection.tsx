@@ -1,12 +1,15 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import styled from 'styled-components';
 import { Container, Grid } from '@mui/material';
-import ShieldCheckIcon from '@mui/icons-material/VerifiedUser';
-import LockIcon from '@mui/icons-material/Lock';
+import { motion } from 'framer-motion';
 import SecurityIcon from '@mui/icons-material/Security';
+import LockIcon from '@mui/icons-material/Lock';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CodeIcon from '@mui/icons-material/Code';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import GroupsIcon from '@mui/icons-material/Groups';
+import SecurityFeature from '../common/SecurityFeature';
+import { ForgeHeading } from '../common/ForgeHeading';
 
 const SecuritySection: React.FC = () => {
   const containerVariants = {
@@ -27,7 +30,7 @@ const SecuritySection: React.FC = () => {
 
   const securityFeatures = [
     {
-      icon: <ShieldCheckIcon sx={{ fontSize: 40 }} />,
+      icon: <VerifiedUserIcon sx={{ fontSize: 40 }} />,
       title: "Audits de Sécurité",
       description: "Audité par CertiK et Hacken pour garantir la sécurité maximale",
       link: "/audit-reports"
