@@ -1,18 +1,24 @@
-export function registerServiceWorker() {
-  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/sw.ts')
-        .then((registration) => {
-          console.log('ServiceWorker registration successful');
-          
-          registration.addEventListener('statechange', (e) => {
-            console.log('ServiceWorker state changed:', e);
-          });
-        })
-        .catch((error) => {
-          console.error('ServiceWorker registration failed:', error);
-        });
-    });
+export const registerServiceWorker = async () => {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        import.meta.env.MODE === 'production' 
+          ? '/sw.js'
+          : '/dev-sw.js?dev-sw',
+        {
+          type: import.meta.env.MODE === 'production' ? 'classic' : 'module',
+        }
+      );
+
+      if (registration.installing) {
+        console.log('Service worker installing');
+      } else if (registration.waiting) {
+        console.log('Service worker installed');
+      } else if (registration.active) {
+        console.log('Service worker active');
+      }
+    } catch (error) {
+      console.error('Service worker registration failed:', error);
+    }
   }
-}
+};

@@ -1,33 +1,70 @@
 /// <reference lib="webworker" />
-/// <reference lib="es2017" />
 
-// @ts-ignore
-import { precacheAndRoute } from 'workbox-precaching/precacheAndRoute';
-// @ts-ignore
-import { registerRoute } from 'workbox-routing/registerRoute';
-// @ts-ignore
-import { StaleWhileRevalidate } from 'workbox-strategies/StaleWhileRevalidate';
+import { precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
+import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
-declare const self: ServiceWorkerGlobalScope;
-declare const __WB_MANIFEST: Array<{
-  revision: string | null;
-  url: string;
-}>;
+declare let self: ServiceWorkerGlobalScope;
 
-// Précache tous les assets générés par Vite
-precacheAndRoute(__WB_MANIFEST);
+// Précache tous les assets listés par Vite
+precacheAndRoute(self.__WB_MANIFEST);
 
-// Cache les requêtes d'API avec une stratégie StaleWhileRevalidate
+// Cache les pages HTML avec Network First
+registerRoute(
+  ({ request }) => request.mode === 'navigate',
+  new NetworkFirst({
+    cacheName: 'pages',
+    plugins: [
+      new CacheableResponsePlugin({
+        statuses: [200],
+      }),
+    ],
+  }),
+);
+
+// Cache les assets statiques avec Cache First
+registerRoute(
+  ({ request }) =>
+    request.destination === 'style' ||
+    request.destination === 'script' ||
+    request.destination === 'image',
+  new CacheFirst({
+    cacheName: 'assets',
+    plugins: [
+      new CacheableResponsePlugin({
+        statuses: [200],
+      }),
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 jours
+      }),
+    ],
+  }),
+);
+
+// Cache les requêtes API avec Stale While Revalidate
 registerRoute(
   ({ url }) => url.pathname.startsWith('/api/'),
   new StaleWhileRevalidate({
-    cacheName: 'api-cache'
-  })
+    cacheName: 'api-cache',
+    plugins: [
+      new CacheableResponsePlugin({
+        statuses: [200],
+      }),
+      new ExpirationPlugin({
+        maxEntries: 100,
+        maxAgeSeconds: 24 * 60 * 60, // 24 heures
+      }),
+    ],
+  }),
 );
 
-// Gestion des mises à jour du service worker
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+self.addEventListener('install', (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
 });

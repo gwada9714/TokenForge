@@ -16,13 +16,36 @@ export default defineConfig({
     }),
     nodePolyfills(),
     VitePWA({
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.js',
+      strategies: 'generateSW',
+      registerType: 'prompt',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
+        cleanupOutdatedCaches: true,
+        sourcemap: true,
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/eth-.*\.g\.alchemy\.com\/v2\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'alchemy-requests',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 // 1 hour
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
+      },
       manifest: {
         name: 'TokenForge',
         short_name: 'TokenForge',
+        description: 'Create and manage your own tokens',
         theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
         icons: [
           {
             src: '/icon-192x192.png',
@@ -35,75 +58,45 @@ export default defineConfig({
             type: 'image/png'
           }
         ]
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module'
       }
     })
   ],
-  server: {
-    headers: {
-      'Service-Worker-Allowed': '/',
-      'Content-Type': 'application/javascript'
-    },
-    port: 3000,
-    host: true,
-    strictPort: true,
-    hmr: {
-      overlay: false
-    },
-    watch: {
-      usePolling: false,
-      interval: 100
-    },
-  },
-  worker: {
-    format: 'es'
-  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  },
-  optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'react-router-dom',
-      '@mui/material',
-      '@emotion/react',
-      '@emotion/styled',
-      'wagmi',
-      'viem',
-      '@rainbow-me/rainbowkit',
-      'styled-components',
-      'framer-motion',
-      'recharts'
-    ],
-    exclude: ['@openzeppelin/contracts'],
-    esbuildOptions: {
-      target: 'es2020',
-      minify: true,
-      treeShaking: true
-    }
+      '@': path.resolve(__dirname, './src'),
+    },
   },
   build: {
-    target: 'es2020',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    },
     sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'mui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled'],
-          'web3-vendor': ['wagmi', 'viem', '@rainbow-me/rainbowkit'],
-          'ui-vendor': ['styled-components', 'framer-motion', 'recharts']
-        }
-      }
+          vendor: ['react', 'react-dom'],
+          web3: ['ethers', 'wagmi', '@rainbow-me/rainbowkit'],
+        },
+      },
     },
-    chunkSizeWarningLimit: 1000
+  },
+  server: {
+    port: 3000,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020',
+      supported: { 
+        bigint: true 
+      },
+    },
+  },
+  define: {
+    'process.env': {}
   }
 });
