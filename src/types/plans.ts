@@ -6,6 +6,12 @@ export enum PlanType {
   MaitreForgeron = 2
 }
 
+export enum UserLevel {
+  APPRENTICE = 0,
+  BLACKSMITH = 1,
+  MASTER_BLACKSMITH = 2
+}
+
 export interface PlanDetails {
   name: string;
   description: string;
