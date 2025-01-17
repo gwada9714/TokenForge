@@ -1,4 +1,4 @@
-import { parseEther } from 'viem';
+import { parseEther, formatEther } from 'viem';
 
 export enum PlanType {
   Apprenti = 0,
@@ -9,20 +9,41 @@ export enum PlanType {
 export interface PlanDetails {
   name: string;
   description: string;
-  bnbPrice: string;
-  tknPrice: string;
   features: string[];
   includesAudit: boolean;
   defaultForgeTax: boolean;
 }
+
+export interface PlanPricing {
+  bnbPrice: string;
+  priceInWei: bigint;
+}
+
+// Fonction utilitaire pour créer un prix avec validation
+const createPrice = (bnbPrice: string): PlanPricing => {
+  try {
+    const priceInWei = parseEther(bnbPrice);
+    return {
+      bnbPrice,
+      priceInWei
+    };
+  } catch (error) {
+    throw new Error(`Prix invalide: ${bnbPrice} BNB`);
+  }
+};
+
+// Prix en BNB avec conversion Wei pré-calculée
+export const PLAN_PRICES: Record<PlanType, PlanPricing> = {
+  [PlanType.Apprenti]: createPrice('0'),
+  [PlanType.Forgeron]: createPrice('0.3'),
+  [PlanType.MaitreForgeron]: createPrice('1')
+};
 
 // Prix en BNB (sera converti en wei pour le contrat)
 export const DEFAULT_PLANS: Record<PlanType, PlanDetails> = {
   [PlanType.Apprenti]: {
     name: "Apprenti Forgeron",
     description: "Commencez votre voyage dans la forge de tokens",
-    bnbPrice: "0",
-    tknPrice: "0",
     features: [
       'Création de token ERC20 basique',
       'Support communautaire',
@@ -35,8 +56,6 @@ export const DEFAULT_PLANS: Record<PlanType, PlanDetails> = {
   [PlanType.Forgeron]: {
     name: "Forgeron",
     description: "Forgez des tokens avancés avec plus de fonctionnalités",
-    bnbPrice: "0.3",
-    tknPrice: "1000",
     features: [
       'Toutes les fonctionnalités Apprenti',
       'Fonctions avancées (Mint, Burn, Pause)',
@@ -50,8 +69,6 @@ export const DEFAULT_PLANS: Record<PlanType, PlanDetails> = {
   [PlanType.MaitreForgeron]: {
     name: "Maître Forgeron",
     description: "Devenez un maître dans l'art de la forge de tokens",
-    bnbPrice: "1",
-    tknPrice: "3000",
     features: [
       'Toutes les fonctionnalités Forgeron',
       'Tokenomics personnalisée',
@@ -65,8 +82,23 @@ export const DEFAULT_PLANS: Record<PlanType, PlanDetails> = {
   }
 };
 
-// Convertit les prix en wei pour le contrat
+// Obtenir le prix en Wei avec validation
 export const getPlanPriceInWei = (planType: PlanType): bigint => {
-  const plan = DEFAULT_PLANS[planType];
-  return parseEther(plan.bnbPrice);
+  const pricing = PLAN_PRICES[planType];
+  if (!pricing) {
+    throw new Error(`Plan type invalide: ${planType}`);
+  }
+  return pricing.priceInWei;
+};
+
+// Vérifier si le prix correspond au prix attendu
+export const validatePlanPrice = (planType: PlanType, price: bigint): boolean => {
+  const expectedPrice = getPlanPriceInWei(planType);
+  return price === expectedPrice;
+};
+
+// Formatter le prix en BNB lisible
+export const formatPlanPrice = (planType: PlanType): string => {
+  const pricing = PLAN_PRICES[planType];
+  return `${pricing.bnbPrice} BNB`;
 };
