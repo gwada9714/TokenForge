@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
-import { Card, Container, Typography, Box, Button, TextField, Alert, Grid, Divider } from '@mui/material';
-import { DataGrid, GridColDef, GridValueFormatter } from '@mui/x-data-grid';
+import { Card, Container, Typography, Box, Button, TextField, Alert, Grid, Divider, Snackbar } from '@mui/material';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { parseEther, formatEther, type Address } from 'viem';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -26,6 +26,8 @@ const AdminDashboard: React.FC = () => {
     isPausing,
     isUnpausing,
     contractAddress,
+    error,
+    successMessage,
   } = useTokenForgeAdmin();
 
   const [newOwnerAddress, setNewOwnerAddress] = useState('');
@@ -47,11 +49,6 @@ const AdminDashboard: React.FC = () => {
     price: BigInt(plan.price.toString()),
   }));
 
-  const priceFormatter: GridValueFormatter = (params) => {
-    const value = params.value as bigint;
-    return `${formatEther(value)} ETH`;
-  };
-
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 70 },
     { field: 'name', headerName: 'Nom', width: 130 },
@@ -59,13 +56,15 @@ const AdminDashboard: React.FC = () => {
       field: 'price', 
       headerName: 'Prix', 
       width: 130,
-      valueFormatter: priceFormatter
+      renderCell: (params: GridRenderCellParams<PlanData>) => {
+        return formatEther(params.row.price) + ' ETH';
+      }
     },
     {
       field: 'actions',
       headerName: 'Actions',
       width: 200,
-      renderCell: (params) => (
+      renderCell: (params: GridRenderCellParams<PlanData>) => (
         <Box>
           <TextField
             size="small"
@@ -78,7 +77,7 @@ const AdminDashboard: React.FC = () => {
             startIcon={<EditIcon />}
             onClick={() => {
               if (newPlanPrice) {
-                handleUpdatePlanPrice(Number(params.row.id), parseEther(newPlanPrice));
+                handleUpdatePlanPrice(params.row.id, parseEther(newPlanPrice));
               }
             }}
           >
@@ -91,6 +90,27 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
+      {/* Notifications */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={5000}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert severity="error" sx={{ width: '100%' }}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={5000}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
       <Typography variant="h4" gutterBottom>
         Dashboard Administrateur
       </Typography>
@@ -129,11 +149,11 @@ const AdminDashboard: React.FC = () => {
             </Typography>
             <Box sx={{ mb: 3 }}>
               <LoadingButton
-                component="button"
                 variant="contained"
                 color={isPaused ? "success" : "warning"}
                 onClick={handleTogglePause}
                 loading={isPausing || isUnpausing}
+                loadingPosition="start"
                 startIcon={isPaused ? <PlayArrowIcon /> : <PauseIcon />}
                 fullWidth
               >
