@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { Theme } from '../../styles/styled';
+import { DefaultTheme } from '../../styles/styled';
 
 export const ForgeContainer = styled.div`
   max-width: 1200px;
