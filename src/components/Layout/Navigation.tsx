@@ -2,7 +2,7 @@ import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, CircularProgress } from '@mui/material';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { Link as RouterLink } from 'react-router-dom';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { CustomConnectButton } from '../ConnectWallet/CustomConnectButton';
 
 const Navigation: React.FC = () => {
   const { 
@@ -84,7 +84,7 @@ const Navigation: React.FC = () => {
               {error}
             </Typography>
           )}
-          <ConnectButton />
+          <CustomConnectButton />
         </Box>
       </Toolbar>
     </AppBar>

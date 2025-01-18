@@ -9,57 +9,32 @@ import {
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 
-// Récupération des variables d'environnement avec valeurs par défaut pour le développement
-function getEnvVariable(key: string, required: boolean = true): string {
-  const value = import.meta.env[key];
-  if (!value && required) {
-    throw new Error(`Error: ${key} is required but not defined in environment variables`);
-  }
-  return value || '';
-}
-
 // Configuration des fournisseurs
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [sepolia, mainnet], // Mettre Sepolia en premier car c'est notre réseau principal
+const { chains, publicClient } = configureChains(
+  [sepolia, mainnet],
   [
-    alchemyProvider({
-      apiKey: getEnvVariable('VITE_ALCHEMY_API_KEY', true),
-    }),
-    publicProvider()
-  ],
-  {
-    batch: {
-      multicall: {
-        wait: 16,
-        batchSize: 1024 * 1024,
-      },
-    },
-    pollingInterval: 4_000,
-    retryCount: 3,
-    retryDelay: 3_000,
-  }
+    alchemyProvider({ apiKey: import.meta.env.VITE_ALCHEMY_API_KEY }),
+    publicProvider(),
+  ]
 );
 
-// Configuration des wallets supportés
-const projectId = getEnvVariable('VITE_WALLET_CONNECT_PROJECT_ID', true);
-
+// Configuration des portefeuilles disponibles
 const connectors = connectorsForWallets([
   {
     groupName: 'Recommandé',
     wallets: [
+      metaMaskWallet({ projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID, chains }),
       injectedWallet({ chains }),
-      metaMaskWallet({ projectId, chains }),
-      walletConnectWallet({ projectId, chains }),
+      walletConnectWallet({ projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID, chains }),
     ],
   },
 ]);
 
-// Création de la configuration wagmi
-const wagmiConfig = createConfig({
+// Configuration de wagmi
+export const wagmiConfig = createConfig({
   autoConnect: true,
   connectors,
   publicClient,
-  webSocketPublicClient,
 });
 
-export { wagmiConfig, chains };
+export { chains };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { WagmiConfig } from 'wagmi';
 import { wagmiConfig, chains } from '../config/wagmiConfig';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -40,11 +40,7 @@ const Providers = memo<ProvidersProps>(({ children }) => {
       <WagmiConfig config={wagmiConfig}>
         <RainbowKitProvider 
           chains={chains}
-          theme={darkTheme({
-            accentColor: '#7b3fe4',
-            borderRadius: 'medium',
-          })}
-          showRecentTransactions={true}
+          modalSize="compact"
         >
           <StyledEngineProvider injectFirst>
             <MuiThemeProvider theme={muiTheme}>
