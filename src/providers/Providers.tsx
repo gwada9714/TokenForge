@@ -1,19 +1,20 @@
 import React from 'react';
-import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { WagmiConfig } from 'wagmi';
-import wagmiConfig, { chains } from '../config/web3Config';
+import { wagmiConfig, chains } from '../config/wagmiConfig';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StyledEngineProvider, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { memo } from 'react';
 import { muiTheme } from '../theme/mui';
-import { Web3Provider } from './Web3Provider';
 import { ThemeProvider } from 'styled-components';
 import { styledTheme } from '../theme/forge-theme';
 import { StyleSheetManager } from 'styled-components';
 import isPropValid from '@emotion/is-prop-valid';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ContractProvider } from './ContractProvider';
+import { Web3Provider } from '../contexts/Web3Provider';
+import '@rainbow-me/rainbowkit/styles.css';
 
 // Configuration du client de requête avec mise en cache optimisée
 const queryClient = new QueryClient({
@@ -37,7 +38,14 @@ const Providers = memo<ProvidersProps>(({ children }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiConfig config={wagmiConfig}>
-        <RainbowKitProvider chains={chains} theme={lightTheme()}>
+        <RainbowKitProvider 
+          chains={chains}
+          theme={darkTheme({
+            accentColor: '#7b3fe4',
+            borderRadius: 'medium',
+          })}
+          showRecentTransactions={true}
+        >
           <StyledEngineProvider injectFirst>
             <MuiThemeProvider theme={muiTheme}>
               <ThemeProvider theme={styledTheme}>
