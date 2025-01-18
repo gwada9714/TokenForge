@@ -59,15 +59,15 @@ interface TokenForgeAdminHookReturn {
   lastActivity: Date | null;
   handleRetryCheck: () => void;
   isLoading: boolean;
-  paused: boolean;
-  transferOwnership: (newOwner: string) => Promise<void>;
-  pause: () => Promise<void>;
-  unpause: () => Promise<void>;
+  isPaused: boolean;
+  handleTransferOwnership: (newOwner: string) => Promise<void>;
+  handleTogglePause: () => Promise<void>;
   isPausing: boolean;
   isUnpausing: boolean;
   isTransferring: boolean;
   setNewOwnerAddress: (address: string) => void;
   pauseAvailable: boolean;
+  contract: any; // Ajout pour AlertsManagement et AuditLogs
 }
 
 const REQUIRED_NETWORK_ID = 11155111; // Sepolia network ID
@@ -423,14 +423,14 @@ ${DEBUG_SEPARATOR}`);
     lastActivity: state.lastActivity,
     handleRetryCheck,
     isLoading: state.isLoading,
-    paused: paused || false,
-    transferOwnership,
-    pause,
-    unpause,
+    isPaused: paused || false,
+    handleTransferOwnership: transferOwnership,
+    handleTogglePause: paused ? unpause : pause,
     isPausing,
     isUnpausing,
     isTransferring,
     setNewOwnerAddress: (address: string) => setNewOwnerAddress(address),
     pauseAvailable: isAdmin && !state.isLoading,
+    contract: TokenForgeFactoryABI.abi, // Ajout pour AlertsManagement et AuditLogs
   };
 }

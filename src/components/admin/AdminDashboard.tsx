@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
-import { Card, Container, Typography, Box, Button, TextField, Alert, Grid, Divider, Snackbar } from '@mui/material';
-import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { parseEther, formatEther, type Address } from 'viem';
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import EditIcon from '@mui/icons-material/Edit';
-import LoadingButton from '@mui/lab/LoadingButton';
+import {
+  Container,
+  Alert,
+  Box,
+  Snackbar,
+  Tabs,
+  Tab
+} from '@mui/material';
+import { TabPanel, a11yProps } from '../common/TabPanel';
+import { AlertsManagement } from './AlertsManagement';
+import { AuditLogs } from './AuditLogs';
+import { ContractControls } from './ContractControls';
+import { OwnershipManagement } from './OwnershipManagement';
 
 interface PlanData {
   id: number;
@@ -17,21 +23,10 @@ interface PlanData {
 const AdminDashboard: React.FC = () => {
   const {
     isAdmin,
-    tokenCount,
-    planStats,
-    handleUpdatePlanPrice,
-    handleTogglePause,
-    handleTransferOwnership,
-    isPaused,
-    isPausing,
-    isUnpausing,
-    contractAddress,
     error,
-    successMessage,
   } = useTokenForgeAdmin();
 
-  const [newOwnerAddress, setNewOwnerAddress] = useState('');
-  const [newPlanPrice, setNewPlanPrice] = useState('');
+  const [tabValue, setTabValue] = useState(0);
 
   if (!isAdmin) {
     return (
@@ -43,162 +38,42 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  const rows: PlanData[] = Object.values(planStats || {}).map(plan => ({
-    id: plan.id,
-    name: plan.name,
-    price: BigInt(plan.price.toString()),
-  }));
-
-  const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'name', headerName: 'Nom', width: 130 },
-    { 
-      field: 'price', 
-      headerName: 'Prix', 
-      width: 130,
-      renderCell: (params: GridRenderCellParams<PlanData>) => {
-        return formatEther(params.row.price) + ' ETH';
-      }
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 200,
-      renderCell: (params: GridRenderCellParams<PlanData>) => (
-        <Box>
-          <TextField
-            size="small"
-            placeholder="Nouveau prix (ETH)"
-            sx={{ width: 120, mr: 1 }}
-            onChange={(e) => setNewPlanPrice(e.target.value)}
-          />
-          <Button
-            size="small"
-            startIcon={<EditIcon />}
-            onClick={() => {
-              if (newPlanPrice) {
-                handleUpdatePlanPrice(params.row.id, parseEther(newPlanPrice));
-              }
-            }}
-          >
-            Modifier
-          </Button>
-        </Box>
-      )
-    }
-  ];
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      {/* Notifications */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={5000}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tabValue} onChange={handleTabChange} aria-label="admin tabs">
+          <Tab label="Contrôle du Contrat" {...a11yProps(0)} />
+          <Tab label="Gestion de la Propriété" {...a11yProps(1)} />
+          <Tab label="Alertes" {...a11yProps(2)} />
+          <Tab label="Logs d'Audit" {...a11yProps(3)} />
+        </Tabs>
+      </Box>
 
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={5000}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert severity="success" sx={{ width: '100%' }}>
-          {successMessage}
-        </Alert>
-      </Snackbar>
+      <TabPanel value={tabValue} index={0}>
+        <ContractControls />
+      </TabPanel>
 
-      <Typography variant="h4" gutterBottom>
-        Dashboard Administrateur
-      </Typography>
+      <TabPanel value={tabValue} index={1}>
+        <OwnershipManagement />
+      </TabPanel>
 
-      <Grid container spacing={3}>
-        {/* État du Contrat */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              État du Contrat
-            </Typography>
-            <Box sx={{ mb: 2 }}>
-              <Typography color="text.secondary">Adresse du contrat</Typography>
-              <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
-                {contractAddress}
-              </Typography>
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Typography color="text.secondary">État</Typography>
-              <Typography color={isPaused ? 'error' : 'success.main'}>
-                {isPaused ? 'En pause' : 'Actif'}
-              </Typography>
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Typography color="text.secondary">Nombre total de tokens</Typography>
-              <Typography>{tokenCount?.toString() || '0'}</Typography>
-            </Box>
-          </Card>
-        </Grid>
+      <TabPanel value={tabValue} index={2}>
+        <AlertsManagement />
+      </TabPanel>
 
-        {/* Actions */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Actions
-            </Typography>
-            <Box sx={{ mb: 3 }}>
-              <LoadingButton
-                variant="contained"
-                color={isPaused ? "success" : "warning"}
-                onClick={handleTogglePause}
-                loading={isPausing || isUnpausing}
-                loadingPosition="start"
-                startIcon={isPaused ? <PlayArrowIcon /> : <PauseIcon />}
-                fullWidth
-              >
-                {isPaused ? 'Réactiver le contrat' : 'Mettre en pause le contrat'}
-              </LoadingButton>
-            </Box>
-            <Divider sx={{ my: 2 }} />
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Transférer la propriété
-              </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Nouvelle adresse du propriétaire"
-                value={newOwnerAddress}
-                onChange={(e) => setNewOwnerAddress(e.target.value)}
-                sx={{ mb: 1 }}
-              />
-              <Button
-                variant="outlined"
-                onClick={() => handleTransferOwnership(newOwnerAddress)}
-                fullWidth
-              >
-                Transférer la propriété
-              </Button>
-            </Box>
-          </Card>
-        </Grid>
+      <TabPanel value={tabValue} index={3}>
+        <AuditLogs />
+      </TabPanel>
 
-        {/* Plans */}
-        <Grid item xs={12}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Gestion des Plans
-            </Typography>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              autoHeight
-              disableRowSelectionOnClick
-            />
-          </Card>
-        </Grid>
-      </Grid>
+      {error && (
+        <Snackbar open={!!error} autoHideDuration={6000}>
+          <Alert severity="error">{error}</Alert>
+        </Snackbar>
+      )}
     </Container>
   );
 };
