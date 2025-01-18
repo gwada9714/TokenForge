@@ -47,5 +47,34 @@ export interface TokenData extends TokenConfig {
   burned: boolean;
 }
 
+export interface AlertRule {
+  id: bigint;
+  name: string;
+  condition: string;
+  enabled: boolean;
+}
+
+export interface AuditLog {
+  id: bigint;
+  timestamp: bigint;
+  action: string;
+  details: string;
+  address: string;
+}
+
+export interface TokenForgeAdminMethods {
+  getAlertRules: () => Promise<AlertRule[]>;
+  addAlertRule: (name: string, condition: string) => Promise<ContractTransaction>;
+  toggleAlertRule: (id: bigint) => Promise<ContractTransaction>;
+  deleteAlertRule: (id: bigint) => Promise<ContractTransaction>;
+  getAuditLogs: () => Promise<AuditLog[]>;
+  purgeAuditLogs: () => Promise<ContractTransaction>;
+  owner: () => Promise<string>;
+  paused: () => Promise<boolean>;
+  renounceOwnership: () => Promise<ContractTransaction>;
+  transferOwnership: (newOwner: string) => Promise<ContractTransaction>;
+}
+
 export type TokenContract = ethers.Contract & TokenContractMethods;
 export type FactoryContract = ethers.Contract & FactoryContractMethods;
+export type TokenForgeContract = ethers.Contract & TokenForgeAdminMethods;
