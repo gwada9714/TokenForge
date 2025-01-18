@@ -1,7 +1,7 @@
 import { useAccount, useNetwork, usePublicClient, usePrepareContractWrite, useContractWrite, useContractRead } from 'wagmi';
 import { Address } from 'viem';
 import { TokenForgeError, TokenForgeErrorCode } from '../utils/errors';
-import TokenForgeFactory from '../contracts/abi/TokenForgeFactory.json';
+import TokenForgeFactoryABI from '../contracts/abi/TokenFactoryABI.json';
 import { useContract } from '../contexts/ContractContext';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { TOKEN_FORGE_ADDRESS } from '../constants/addresses';
@@ -105,26 +105,24 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
   const { address, isConnected } = useAccount();
   const { chain } = useNetwork();
   const publicClient = usePublicClient();
-  const { contractAddress } = useContract();
+  const { contractAddress: contextContractAddress } = useContract();
 
-  // Vérifier si le contrat est valide
-  const targetAddress = useMemo(() => {
-    if (!contractAddress && !TOKEN_FORGE_ADDRESS) {
-      console.error("Erreur d'adresse du contrat:", {
-        contractAddress,
-        TOKEN_FORGE_ADDRESS,
-        chain: chain?.id
-      });
-      setError("Adresse du contrat non disponible");
+  // Vérification et initialisation de l'adresse du contrat
+  const contractAddress = useMemo(() => {
+    const address = contextContractAddress || TOKEN_FORGE_ADDRESS;
+    console.log('Initialisation adresse du contrat:', {
+      contextContractAddress,
+      TOKEN_FORGE_ADDRESS,
+      finalAddress: address
+    });
+    
+    if (!address) {
+      console.error('Adresse du contrat non définie');
       return undefined;
     }
-    const address = (contractAddress || TOKEN_FORGE_ADDRESS) as `0x${string}`;
-    console.log("Adresse du contrat utilisée:", {
-      address,
-      source: contractAddress ? "ContractContext" : "TOKEN_FORGE_ADDRESS"
-    });
-    return address;
-  }, [contractAddress, chain]);
+
+    return address as `0x${string}`;
+  }, [contextContractAddress]);
 
   // Constantes du contrat (hardcodées car ce sont des constantes Solidity)
   const BASIC_TIER_PRICE = 100n * BigInt(10 ** 18); // 100 TKN
@@ -142,19 +140,18 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     isLoading: isOwnerLoading,
     error: ownerError
   } = useContractRead({
-    address: targetAddress,
-    abi: TokenForgeFactory.abi,
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
     functionName: 'owner',
-    enabled: Boolean(targetAddress) && isConnected && isCorrectNetwork,
+    enabled: Boolean(contractAddress) && isConnected && isCorrectNetwork,
     onError: (error) => {
-      console.error('Erreur lors de la lecture du propriétaire:', {
+      console.error('Erreur lecture propriétaire:', {
         error,
-        targetAddress,
+        contractAddress,
         isConnected,
         isCorrectNetwork,
         chainId: chain?.id
       });
-      handleError(error, "lecture du propriétaire");
     }
   }) as { data: Address | undefined; isLoading: boolean; error: Error | null };
 
@@ -163,128 +160,194 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     isLoading: isPausedLoading,
     error: pausedError
   } = useContractRead({
-    address: targetAddress,
-    abi: TokenForgeFactory.abi,
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
     functionName: 'paused',
-    enabled: Boolean(targetAddress) && isConnected && isCorrectNetwork && !ownerError,
+    enabled: Boolean(contractAddress) && isConnected && isCorrectNetwork,
     onError: (error) => {
-      console.error('Erreur lors de la lecture du statut pause:', {
+      console.error('Erreur lecture pause:', {
         error,
-        targetAddress,
+        contractAddress,
         isConnected,
-        isCorrectNetwork,
-        chainId: chain?.id,
-        ownerError
+        chainId: chain?.id
       });
-      handleError(error, "lecture du statut pause");
     }
   }) as { data: boolean | undefined; isLoading: boolean; error: Error | null };
 
   const {
+    data: tokenCountData,
+    isLoading: isTokenCountLoading,
+    error: tokenCountError,
+    refetch: refetchTokenCount
+  } = useContractRead({
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'getTokenCount',
+    enabled: Boolean(contractAddress) && isConnected && isCorrectNetwork,
+    onError: (error) => {
+      console.error('Erreur lecture nombre de tokens:', {
+        error,
+        contractAddress,
+        isConnected,
+        isCorrectNetwork,
+        chainId: chain?.id
+      });
+    }
+  }) as { data: bigint | undefined; isLoading: boolean; error: Error | null; refetch: () => Promise<any> };
+
+  const {
     data: allTokensData,
     isLoading: isAllTokensLoading,
-    error: allTokensError
+    error: allTokensError,
+    refetch: refetchAllTokens
   } = useContractRead({
-    address: targetAddress,
-    abi: TokenForgeFactory.abi,
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
     functionName: 'getAllTokens',
-    enabled: Boolean(targetAddress) && isConnected && isCorrectNetwork && !ownerError && !pausedError && pausedData === false,
+    enabled: Boolean(contractAddress) && isConnected && isCorrectNetwork && !tokenCountError && tokenCountData !== undefined && tokenCountData > 0n,
     onError: (error) => {
-      console.error('Erreur lors de la lecture des tokens:', error);
-      handleError(error, "lecture des tokens");
+      console.error('Erreur lecture tous les tokens:', {
+        error,
+        contractAddress,
+        isConnected,
+        isCorrectNetwork,
+        chainId: chain?.id,
+        tokenCount: tokenCountData
+      });
     }
-  }) as { data: TokenInfo[] | undefined; isLoading: boolean; error: Error | null };
+  }) as { data: TokenInfo[] | undefined; isLoading: boolean; error: Error | null; refetch: () => Promise<any> };
 
-  // Vérifications de l'accès admin
-  const checkAdminAccess = useCallback(async () => {
-    if (!isConnected) {
-      throw new Error("Wallet non connecté");
-    }
-
-    if (!isCorrectNetwork) {
-      throw new Error("Veuillez vous connecter au réseau Sepolia");
-    }
-
-    if (!targetAddress) {
-      throw new Error("Adresse du contrat non disponible");
-    }
-
-    if (!ownerData) {
-      throw new Error("Impossible de récupérer l'adresse du propriétaire");
+  // Vérification de base de la connexion et du réseau
+  const checkBaseRequirements = useCallback(() => {
+    if (!contractAddress || !isConnected || !isCorrectNetwork) {
+      throw new TokenForgeError(
+        'Vérifiez votre connexion et le réseau',
+        TokenForgeErrorCode.NOT_CONNECTED
+      );
     }
 
     if (!address) {
-      throw new Error("Adresse du wallet non disponible");
+      throw new TokenForgeError(
+        'Wallet non connecté',
+        TokenForgeErrorCode.WALLET_NOT_CONNECTED
+      );
     }
 
-    if (address.toLowerCase() !== ownerData.toLowerCase()) {
-      throw new Error("Vous n'avez pas les droits d'administrateur");
-    }
+    return true;
+  }, [contractAddress, isConnected, isCorrectNetwork, address]);
 
-    // Vérifier si le contrat est en pause
-    if (pausedData) {
-      throw new Error("Le contrat est en pause");
-    }
-  }, [isConnected, isCorrectNetwork, targetAddress, ownerData, address, pausedData]);
-
-  // Valeurs dérivées avec gestion des erreurs
+  // Vérification des droits admin avec plus de détails
   const isAdmin = useMemo(() => {
-    if (!address || !ownerData || !isConnected || !isCorrectNetwork) return false;
-    return address.toLowerCase() === ownerData.toLowerCase();
-  }, [address, ownerData, isConnected, isCorrectNetwork]);
+    console.log('Vérification des droits admin:', {
+      address: address,
+      ownerData: ownerData,
+      isConnected: isConnected,
+      isCorrectNetwork: isCorrectNetwork,
+      targetAddress: contractAddress
+    });
 
-  const isValidContract = useMemo(() => {
-    if (!targetAddress || !isConnected || !isCorrectNetwork) return false;
-    if (ownerError) return false;
-    return Boolean(ownerData); // Le contrat est valide si on a pu lire le propriétaire
-  }, [targetAddress, isConnected, isCorrectNetwork, ownerError, ownerData]);
+    if (!address || !ownerData || !isConnected || !isCorrectNetwork) {
+      console.log('Conditions non remplies pour les droits admin:', {
+        hasAddress: !!address,
+        hasOwnerData: !!ownerData,
+        isConnected: isConnected,
+        isCorrectNetwork: isCorrectNetwork
+      });
+      return false;
+    }
+
+    const hasAdminRights = address.toLowerCase() === ownerData.toLowerCase();
+    console.log('Résultat vérification admin:', {
+      hasAdminRights,
+      userAddress: address.toLowerCase(),
+      ownerAddress: ownerData.toLowerCase()
+    });
+
+    return hasAdminRights;
+  }, [address, ownerData, isConnected, isCorrectNetwork, contractAddress]);
+
+  // Vérification des droits admin
+  const checkAdminAccess = useCallback(async () => {
+    try {
+      // Vérifie d'abord les prérequis de base
+      checkBaseRequirements();
+
+      // Vérifie si l'utilisateur est admin
+      if (!isAdmin) {
+        throw new TokenForgeError(
+          'Droits administrateur requis',
+          TokenForgeErrorCode.NOT_ADMIN
+        );
+      }
+
+      // Vérifie si le contrat est en pause
+      if (pausedData) {
+        throw new TokenForgeError(
+          'Le contrat est en pause',
+          TokenForgeErrorCode.CONTRACT_PAUSED
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erreur vérification accès admin:', error);
+      throw error;
+    }
+  }, [checkBaseRequirements, isAdmin, pausedData]);
+
+  // Vérification de l'accès aux tokens (utilise les fonctions communes)
+  const canAccessTokens = useMemo(() => {
+    try {
+      checkBaseRequirements();
+      return isAdmin;
+    } catch (error) {
+      console.log('Échec vérification accès tokens:', error);
+      return false;
+    }
+  }, [checkBaseRequirements, isAdmin]);
 
   // Contract writes avec enabled
   const { writeAsync: writePause } = useContractWrite({
-    address: targetAddress,
-    abi: TokenForgeFactory.abi,
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
     functionName: 'pause',
     onError: (error) => {
       console.error('Erreur lors de la pause:', error);
-      handleError(error, "pause");
     }
   });
 
   const { writeAsync: writeUnpause } = useContractWrite({
-    address: targetAddress,
-    abi: TokenForgeFactory.abi,
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
     functionName: 'unpause',
     onError: (error) => {
       console.error('Erreur lors de la reprise:', error);
-      handleError(error, "reprise");
     }
   });
 
   const { writeAsync: writeWithdrawFees } = useContractWrite({
-    address: targetAddress,
-    abi: TokenForgeFactory.abi,
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
     functionName: 'withdrawFees',
     onError: (error) => {
       console.error('Erreur lors du retrait:', error);
-      handleError(error, "retrait");
     }
   });
 
   const { writeAsync: writeTransferOwnership } = useContractWrite({
-    address: targetAddress,
-    abi: TokenForgeFactory.abi,
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
     functionName: 'transferOwnership',
     onError: (error) => {
       console.error('Erreur lors du transfert:', error);
-      handleError(error, "transfert");
     }
   });
 
   // Effet pour gérer l'état de chargement global
   useEffect(() => {
-    const loading = isOwnerLoading || isPausedLoading || isAllTokensLoading;
+    const loading = isOwnerLoading || isPausedLoading || isAllTokensLoading || isTokenCountLoading;
     setIsLoading(loading);
-  }, [isOwnerLoading, isPausedLoading, isAllTokensLoading]);
+  }, [isOwnerLoading, isPausedLoading, isAllTokensLoading, isTokenCountLoading]);
 
   // Effet pour gérer les erreurs
   useEffect(() => {
@@ -298,7 +361,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
       return;
     }
 
-    if (!targetAddress) {
+    if (!contractAddress) {
       setError("Adresse du contrat non disponible");
       return;
     }
@@ -312,7 +375,8 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     const errors = [
       ownerError,
       pausedError,
-      allTokensError
+      allTokensError,
+      tokenCountError
     ].filter(Boolean);
 
     if (errors.length > 0) {
@@ -325,11 +389,12 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
   }, [
     isConnected, 
     isCorrectNetwork, 
-    targetAddress,
+    contractAddress,
     contractCheck.isDeployed,
     ownerError,
     pausedError,
-    allTokensError
+    allTokensError,
+    tokenCountError
   ]);
 
   // Effet pour vérifier le réseau
@@ -345,7 +410,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
   // Effet pour vérifier le contrat
   useEffect(() => {
     const checkContract = async () => {
-      if (!targetAddress) {
+      if (!contractAddress) {
         setContractCheck({
           isValid: false,
           address: undefined,
@@ -357,14 +422,14 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
       }
 
       try {
-        console.log("Vérification du contrat à l'adresse:", targetAddress);
-        const code = await publicClient.getBytecode({ address: targetAddress });
+        console.log("Vérification du contrat à l'adresse:", contractAddress);
+        const code = await publicClient.getBytecode({ address: contractAddress });
         
         if (!code) {
-          console.error("Le contrat n'est pas déployé à l'adresse:", targetAddress);
+          console.error("Le contrat n'est pas déployé à l'adresse:", contractAddress);
           setContractCheck({
             isValid: false,
-            address: targetAddress,
+            address: contractAddress,
             isDeployed: false,
             version: undefined,
             error: "Le contrat n'est pas déployé à cette adresse"
@@ -375,12 +440,12 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
         // Vérifier que le code correspond au bon contrat (bytecode non vide)
         if (code.length < 4) {
           console.error("Le contrat à l'adresse ne semble pas être un TokenForgeFactory:", {
-            address: targetAddress,
+            address: contractAddress,
             codeLength: code.length
           });
           setContractCheck({
             isValid: false,
-            address: targetAddress,
+            address: contractAddress,
             isDeployed: true,
             version: undefined,
             error: "Le contrat à cette adresse n'est pas un TokenForgeFactory"
@@ -390,7 +455,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
         
         setContractCheck({
           isValid: true,
-          address: targetAddress,
+          address: contractAddress,
           isDeployed: true,
           version: '1.0',
           error: undefined
@@ -398,7 +463,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
       } catch (err) {
         console.error("Erreur lors de la vérification du contrat:", {
           error: err,
-          address: targetAddress,
+          address: contractAddress,
           chainId: chain?.id
         });
         setContractCheck({
@@ -411,16 +476,16 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
       }
     };
 
-    if (isConnected && targetAddress) {
+    if (isConnected && contractAddress) {
       checkContract();
     }
-  }, [targetAddress, publicClient, isConnected, chain]);
+  }, [contractAddress, publicClient, isConnected, chain]);
 
   // Fonctions de gestion des actions
   const handleError = useCallback((error: unknown, action: string) => {
     console.error(`Erreur lors de ${action}:`, {
       error,
-      targetAddress,
+      contractAddress,
       chainId: chain?.id,
       isConnected,
       isAdmin
@@ -442,7 +507,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     }
 
     setError(message);
-  }, [targetAddress, chain, isConnected, isAdmin]);
+  }, [contractAddress, chain, isConnected, isAdmin]);
 
   const handleSuccess = useCallback((message: string) => {
     setError(null);
@@ -543,10 +608,10 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     isPausing,
     isUnpausing,
     isTransferring,
-    isValidContract,
+    isValidContract: contractCheck.isValid,
     isCorrectNetwork,
     isAdmin,
-    contractAddress: targetAddress || null,
+    contractAddress: contractAddress || null,
     networkCheck: {
       isConnected: !!isConnected,
       isCorrectNetwork: chain?.id === 11155111,
@@ -554,8 +619,8 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
       requiredNetwork: 'Sepolia'
     },
     contractCheck: {
-      isValid: isValidContract,
-      address: targetAddress,
+      isValid: contractCheck.isValid,
+      address: contractAddress,
       isDeployed: contractCheck.isDeployed,
       version: contractCheck.version,
       error: contractCheck.error
