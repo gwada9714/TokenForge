@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useContractRead, useContractWrite, useBalance, useContractEvent, useWaitForTransaction } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
-import type { Hash } from 'viem';
 
 // Temporary ABI until we generate it
 const TKNTokenABI = [
@@ -66,27 +65,23 @@ export interface StakingInfo {
   rewardsHistory: RewardHistory[];
 }
 
-export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
+export function useStaking(tokenAddress: `0x${string}`): StakingInfo {
   const { address } = useAccount();
+  const [error, setError] = useState<string | null>(null);
   const [stakeAmount, setStakeAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [stakingHistory, setStakingHistory] = useState<StakingEvent[]>([]);
   const [rewardsHistory, setRewardsHistory] = useState<RewardHistory[]>([]);
-  const [lastStakeTime, setLastStakeTime] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const [txHash, setTxHash] = useState<`0x${string}`>();
+  const [lastStakeTime, setLastStakeTime] = useState<number>(0);
+  const [timeUntilUnstake, setTimeUntilUnstake] = useState<number>(0);
 
-  const { data: balance, isLoading: isBalanceLoading } = useBalance({
+  const { data: balance } = useBalance({
     address,
     token: tokenAddress,
-    enabled: !!address,
-    onError: (error) => {
-      console.error('Error loading balance:', error);
-      setError('Failed to load token balance');
-    }
   });
 
-  const { data: stakeInfo, isLoading: isStakeInfoLoading, error: stakeInfoError, refetch: refetchStakeInfo } = useContractRead({
+  const { data: stakeInfo, refetch: refetchStakeInfo } = useContractRead({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'getStakeInfo',
@@ -98,7 +93,7 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     }
   });
 
-  const { data: stakingStats, isLoading: isStatsLoading, error: statsError, refetch: refetchStats } = useContractRead({
+  const { data: stakingStats, refetch: refetchStats } = useContractRead({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'getStakingStats',
@@ -127,7 +122,7 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     functionName: 'claimRewards',
   });
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransaction({
+  const { isLoading: isConfirming } = useWaitForTransaction({
     hash: txHash,
     onSuccess: async () => {
       await refetchStakeInfo();
@@ -150,9 +145,15 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
       });
       
       setTxHash(tx.hash);
-    } catch (err: any) {
-      console.error('Erreur lors du stake:', err);
-      setError(err.message || 'Une erreur est survenue lors du stake');
+      setLastStakeTime(Date.now());
+    } catch (error) {
+      console.error('Error staking:', error);
+      if (error instanceof Error) {
+        setError(`Failed to stake: ${error.message}`);
+      } else {
+        setError('Failed to stake: Unknown error');
+      }
+      throw error;
     }
   };
 
@@ -162,64 +163,50 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
         throw new Error('Montant invalide');
       }
       if (!unstakeTokens.writeAsync) throw new Error('Contract write not ready');
-      
+
       const tx = await unstakeTokens.writeAsync({
         args: [parseEther(amount)]
       });
       
       setTxHash(tx.hash);
-    } catch (err: any) {
-      console.error('Erreur lors du unstake:', err);
-      setError(err.message || 'Une erreur est survenue lors du unstake');
+    } catch (error) {
+      console.error('Error unstaking:', error);
+      if (error instanceof Error) {
+        setError(`Failed to unstake: ${error.message}`);
+      } else {
+        setError('Failed to unstake: Unknown error');
+      }
+      throw error;
     }
   };
 
   const claimRewards = async () => {
     try {
       if (!claimTokens.writeAsync) throw new Error('Contract write not ready');
-      
+
       const tx = await claimTokens.writeAsync();
-      
       setTxHash(tx.hash);
-    } catch (err: any) {
-      console.error('Erreur lors de la réclamation des récompenses:', err);
-      setError(err.message || 'Une erreur est survenue lors de la réclamation des récompenses');
+    } catch (error) {
+      console.error('Error claiming rewards:', error);
+      if (error instanceof Error) {
+        setError(`Failed to claim rewards: ${error.message}`);
+      } else {
+        setError('Failed to claim rewards: Unknown error');
+      }
+      throw error;
     }
   };
 
-  useEffect(() => {
-    if (stakeInfoError || statsError) {
-      setError(stakeInfoError?.message || statsError?.message || 'Une erreur est survenue lors du chargement des données');
-    } else {
-      setError(null);
-    }
-  }, [stakeInfoError, statsError]);
-
-  const isLoading = isBalanceLoading || isStakeInfoLoading || isStatsLoading || isConfirming;
-
-  // Event listeners
   useContractEvent({
     address: tokenAddress,
     abi: TKNTokenABI,
     eventName: 'Staked',
-    listener(logs) {
-      const log = Array.isArray(logs) ? logs[0] : logs;
-      const args = (log as unknown as { args: { user: string; amount: bigint } }).args;
-      const blockTimestamp = (log as unknown as { blockTimestamp?: bigint }).blockTimestamp ?? BigInt(Date.now() / 1000);
-      
-      if (args.user === address) {
-        setStakingHistory(prev => [
-          {
-            timestamp: Number(blockTimestamp),
-            action: 'stake',
-            amount: args.amount,
-          },
-          ...prev,
-        ]);
-        setLastStakeTime(Number(blockTimestamp));
-        refetchStakeInfo();
-        refetchStats();
-      }
+    listener(log) {
+      setStakingHistory(prev => [...prev, {
+        timestamp: Date.now(),
+        action: 'stake',
+        amount: log[0].args.amount as bigint
+      }]);
     },
   });
 
@@ -227,23 +214,12 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     address: tokenAddress,
     abi: TKNTokenABI,
     eventName: 'Unstaked',
-    listener(logs) {
-      const log = Array.isArray(logs) ? logs[0] : logs;
-      const args = (log as unknown as { args: { user: string; amount: bigint } }).args;
-      const blockTimestamp = (log as unknown as { blockTimestamp?: bigint }).blockTimestamp ?? BigInt(Date.now() / 1000);
-      
-      if (args.user === address) {
-        setStakingHistory(prev => [
-          {
-            timestamp: Number(blockTimestamp),
-            action: 'unstake',
-            amount: args.amount,
-          },
-          ...prev,
-        ]);
-        refetchStakeInfo();
-        refetchStats();
-      }
+    listener(log) {
+      setStakingHistory(prev => [...prev, {
+        timestamp: Date.now(),
+        action: 'unstake',
+        amount: log[0].args.amount as bigint
+      }]);
     },
   });
 
@@ -251,22 +227,12 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     address: tokenAddress,
     abi: TKNTokenABI,
     eventName: 'RewardsClaimed',
-    listener(logs) {
-      const log = Array.isArray(logs) ? logs[0] : logs;
-      const args = (log as unknown as { args: { user: string; amount: bigint } }).args;
-      const blockTimestamp = (log as unknown as { blockTimestamp?: bigint }).blockTimestamp ?? BigInt(Date.now() / 1000);
-      
-      if (args.user === address) {
-        setStakingHistory(prev => [
-          {
-            timestamp: Number(blockTimestamp),
-            action: 'claim',
-            amount: args.amount,
-          },
-          ...prev,
-        ]);
-        refetchStakeInfo();
-      }
+    listener(log) {
+      setStakingHistory(prev => [...prev, {
+        timestamp: Date.now(),
+        action: 'claim',
+        amount: log[0].args.amount as bigint
+      }]);
     },
   });
 
@@ -274,31 +240,37 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     address: tokenAddress,
     abi: TKNTokenABI,
     eventName: 'RewardsUpdated',
-    listener(logs) {
-      const log = Array.isArray(logs) ? logs[0] : logs;
-      const args = (log as unknown as { args: { user: string; newRewards: bigint } }).args;
-      const blockTimestamp = (log as unknown as { blockTimestamp?: bigint }).blockTimestamp ?? BigInt(Date.now() / 1000);
-      
-      if (args.user === address) {
-        setRewardsHistory(prev => [
-          {
-            timestamp: Number(blockTimestamp),
-            rewards: args.newRewards,
-          },
-          ...prev,
-        ]);
-      }
+    listener(log) {
+      setRewardsHistory(prev => [...prev, {
+        timestamp: Date.now(),
+        rewards: log[0].args.newRewards as bigint
+      }]);
     },
   });
 
+  // Update time until unstake
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (lastStakeTime > 0) {
+        const timeElapsed = Date.now() - lastStakeTime;
+        const remaining = Math.max(0, STAKING_CONFIG.LOCK_PERIOD * 1000 - timeElapsed);
+        setTimeUntilUnstake(Math.ceil(remaining / 1000));
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastStakeTime]);
+
+  const canUnstake = timeUntilUnstake === 0;
+
   return {
     balance: balance?.value,
-    stakedAmount: (stakeInfo as StakeInfo)?.stakedAmount || BigInt(0),
-    pendingRewards: (stakeInfo as StakeInfo)?.pendingRewards || BigInt(0),
-    stakingStats: stakingStats as StakingStats || {
-      totalStaked: BigInt(0),
-      apy: 0,
-      stakersCount: 0
+    stakedAmount: (stakeInfo as any)?.[0] ?? 0n,
+    pendingRewards: (stakeInfo as any)?.[1] ?? 0n,
+    stakingStats: {
+      totalStaked: (stakingStats as any)?.[0] ?? 0n,
+      apy: Number((stakingStats as any)?.[1] ?? 0n) / 100,
+      stakersCount: Number((stakingStats as any)?.[2] ?? 0),
     },
     stakeAmount,
     setStakeAmount,
@@ -307,11 +279,11 @@ export const useStaking = (tokenAddress: `0x${string}`): StakingInfo => {
     stake,
     withdraw,
     claimRewards,
-    isLoading,
+    isLoading: isConfirming,
     error,
-    canUnstake: Date.now() / 1000 - lastStakeTime > STAKING_CONFIG.LOCK_PERIOD,
-    timeUntilUnstake: Math.max(0, STAKING_CONFIG.LOCK_PERIOD - (Date.now() / 1000 - lastStakeTime)),
+    canUnstake,
+    timeUntilUnstake,
     stakingHistory,
     rewardsHistory,
   };
-};
+}

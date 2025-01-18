@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useContractWrite, useContractRead, useAccount, useWaitForTransaction, useNetwork } from 'wagmi';
-import { parseEther, formatEther, Address } from 'viem';
+import { parseEther, Address } from 'viem';
 import { getContractAddress } from '../config/contracts';
 import { launchpadABI } from '../contracts/abis';
 
@@ -24,7 +24,6 @@ export function useLaunchpad(poolId?: number) {
   const [enabled, setEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Vérification du réseau
   useEffect(() => {
     if (chain?.id !== 11155111) {
       setError('Please connect to Sepolia network');
@@ -41,8 +40,7 @@ export function useLaunchpad(poolId?: number) {
     setEnabled(Boolean(poolId !== undefined && launchpadAddress));
   }, [poolId, launchpadAddress, error]);
 
-  // Read pool info with error handling
-  const { data: poolInfo, error: poolError } = useContractRead({
+  const { data: poolInfo } = useContractRead({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getPoolInfo',
@@ -56,10 +54,9 @@ export function useLaunchpad(poolId?: number) {
         setError('Failed to read pool info: Unknown error');
       }
     }
-  }) as { data: PoolInfo | undefined; error: unknown };
+  }) as { data: PoolInfo | undefined };
 
-  // Read user contribution with error handling
-  const { data: userContributionData, error: userContributionError } = useContractRead({
+  const { data: userContributionData } = useContractRead({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getUserContribution',
@@ -75,21 +72,18 @@ export function useLaunchpad(poolId?: number) {
     }
   });
 
-  // Create pool
   const { write: createPool, data: createPoolData } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'createPool',
   });
 
-  // Invest in pool
   const { write: invest, data: investData } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'invest',
   });
 
-  // Claim
   const { write: claim, data: claimData } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
@@ -142,7 +136,6 @@ export function useLaunchpad(poolId?: number) {
     }
   }, [createPool]);
 
-  // Wait for transactions
   const { isLoading: isCreating } = useWaitForTransaction({
     hash: createPoolData?.hash,
   });
@@ -155,7 +148,6 @@ export function useLaunchpad(poolId?: number) {
     hash: claimData?.hash,
   });
 
-  // Update states when data changes
   useEffect(() => {
     if (poolInfo) {
       setPoolInfoState({
@@ -179,21 +171,17 @@ export function useLaunchpad(poolId?: number) {
   }, [userContributionData]);
 
   return {
-    // Pool info
     poolInfo: poolInfoState,
     userContribution,
 
-    // Actions
     createPool: handleCreatePool,
     invest,
     claim,
 
-    // Loading states
     isCreating,
     isInvesting,
     isClaiming,
 
-    // Error state
     error,
   };
 }
