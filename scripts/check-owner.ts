@@ -15,7 +15,7 @@ const ABI = [
   }
 ];
 
-async function main() {
+async function checkOwner() {
   const client = createPublicClient({
     chain: sepolia,
     transport: http(ALCHEMY_URL)
@@ -40,4 +40,4 @@ async function main() {
   }
 }
 
-main();
+checkOwner();

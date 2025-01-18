@@ -3,7 +3,7 @@ const nodeFetch = require('node-fetch');
 
 dotenv.config({ path: '.env' });
 
-async function main() {
+async function testConnection() {
   try {
     console.log('Testing contract connection...');
     
@@ -90,4 +90,4 @@ async function main() {
   }
 }
 
-main();
+testConnection();
