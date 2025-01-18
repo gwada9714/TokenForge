@@ -1,23 +1,62 @@
-import { createConfig, configureChains } from 'wagmi';
+import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 import { mainnet, sepolia } from 'wagmi/chains';
+import { configureChains, createConfig } from 'wagmi';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
-import { getDefaultWallets } from '@rainbow-me/rainbowkit';
 
+// Récupération des variables d'environnement
 const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
 const alchemyId = import.meta.env.VITE_ALCHEMY_API_KEY;
-const supportedChains = (import.meta.env.VITE_SUPPORTED_CHAINS || '1,11155111')
-  .split(',')
-  .map(Number);
+const mainnetRpcUrl = import.meta.env.VITE_MAINNET_RPC_URL;
+const sepoliaRpcUrl = import.meta.env.VITE_SEPOLIA_RPC_URL;
 
-if (!projectId) {
-  throw new Error("Missing VITE_WALLET_CONNECT_PROJECT_ID");
-}
+if (!projectId) throw new Error('Missing VITE_WALLET_CONNECT_PROJECT_ID');
+if (!alchemyId) throw new Error('Missing VITE_ALCHEMY_API_KEY');
+if (!sepoliaRpcUrl) throw new Error('Missing VITE_SEPOLIA_RPC_URL');
+if (!mainnetRpcUrl) throw new Error('Missing VITE_MAINNET_RPC_URL');
 
-if (!alchemyId) {
-  throw new Error("Missing VITE_ALCHEMY_API_KEY");
-}
+// Configuration des chaînes et des providers
+const configuredMainnet = {
+  ...mainnet,
+  rpcUrls: {
+    ...mainnet.rpcUrls,
+    default: { http: [mainnetRpcUrl, `https://eth-mainnet.g.alchemy.com/v2/${alchemyId}`] },
+    public: { http: [mainnetRpcUrl, `https://eth-mainnet.g.alchemy.com/v2/${alchemyId}`] },
+  },
+};
 
+const configuredSepolia = {
+  ...sepolia,
+  rpcUrls: {
+    ...sepolia.rpcUrls,
+    default: { http: [sepoliaRpcUrl, `https://eth-sepolia.g.alchemy.com/v2/${alchemyId}`] },
+    public: { http: [sepoliaRpcUrl, `https://eth-sepolia.g.alchemy.com/v2/${alchemyId}`] },
+  },
+};
+
+const { chains, publicClient } = configureChains(
+  [configuredSepolia, configuredMainnet], 
+  [
+    alchemyProvider({ apiKey: alchemyId }),
+    publicProvider(),
+  ]
+);
+
+// Configuration des wallets supportés
+const { connectors } = getDefaultWallets({
+  appName: 'TokenForge',
+  projectId: projectId,
+  chains,
+});
+
+// Configuration wagmi principale
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors,
+  publicClient,
+});
+
+// Configuration RainbowKit
 const metadata = {
   name: "TokenForge",
   description: "Create and manage your own tokens",
@@ -25,58 +64,17 @@ const metadata = {
   icons: ["https://tokenforge.app/logo.png"],
 };
 
-// Sélection des chaînes supportées
-const availableChains = [
-  {
-    ...mainnet,
-    rpcUrls: {
-      ...mainnet.rpcUrls,
-      default: {
-        http: [import.meta.env.VITE_MAINNET_RPC_URL],
-      },
-      public: {
-        http: [import.meta.env.VITE_MAINNET_RPC_URL],
-      },
-    },
+const rainbowKitConfig = getDefaultConfig({
+  appName: 'TokenForge',
+  projectId: projectId,
+  chains: [configuredSepolia, configuredMainnet],
+  transports: {
+    [configuredMainnet.id]: http(mainnetRpcUrl),
+    [configuredSepolia.id]: http(sepoliaRpcUrl),
   },
-  {
-    ...sepolia,
-    rpcUrls: {
-      ...sepolia.rpcUrls,
-      default: {
-        http: [import.meta.env.VITE_SEPOLIA_RPC_URL],
-      },
-      public: {
-        http: [import.meta.env.VITE_SEPOLIA_RPC_URL],
-      },
-    },
-  },
-];
-
-const selectedChains = availableChains.filter(chain => 
-  supportedChains.includes(chain.id)
-);
-
-// Configuration des chaînes avec leurs providers
-export const { chains, publicClient, webSocketPublicClient } = configureChains(
-  selectedChains,
-  [
-    alchemyProvider({ apiKey: alchemyId }),
-    publicProvider(),
-  ],
-);
-
-// Configuration des wallets
-const { connectors } = getDefaultWallets({
-  appName: metadata.name,
-  projectId: projectId as string,
-  chains,
 });
 
-// Configuration wagmi
-export const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient,
-  webSocketPublicClient,
-});
+// Export des chaînes configurées
+export const chains = [configuredSepolia, configuredMainnet];
+export { wagmiConfig, rainbowKitConfig };
+export default wagmiConfig;

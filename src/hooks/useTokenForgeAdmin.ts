@@ -20,24 +20,34 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
   const { contractAddress: contextContractAddress } = useContract();
   const publicClient = usePublicClient();
 
+  // Résolution de l'adresse du contrat
   const contractAddress = useMemo(() => {
     if (!chain?.id) {
       console.warn('No chain ID available');
       return undefined;
     }
 
-    const addressFromContext = contextContractAddress;
-    const addressFromConfig = CONTRACT_ADDRESSES[chain.id]?.tokenForge;
+    // Priorité à l'adresse du contexte si elle existe
+    if (contextContractAddress) {
+      console.log('Using contract address from context:', contextContractAddress);
+      return contextContractAddress as Address;
+    }
 
-    console.log('Contract address resolution:', {
+    // Sinon, utiliser l'adresse de la configuration
+    const configAddress = CONTRACT_ADDRESSES[chain.id]?.tokenForge;
+    if (!configAddress) {
+      console.warn(`No contract address configured for chain ID ${chain.id}`);
+      return undefined;
+    }
+
+    console.log('Using contract address from config:', {
       chainId: chain.id,
-      contextAddress: addressFromContext,
-      configAddress: addressFromConfig,
-      final: addressFromContext || addressFromConfig
+      address: configAddress,
+      chainName: CONTRACT_ADDRESSES[chain.id]?.chainName
     });
 
-    return (addressFromContext || addressFromConfig) as Address | undefined;
-  }, [contextContractAddress, chain?.id]);
+    return configAddress;
+  }, [chain?.id, contextContractAddress]);
 
   // Lecture du statut de pause
   const { 
@@ -111,14 +121,14 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
   useEffect(() => {
     const networkCheck = chain?.id && CONTRACT_ADDRESSES[chain.id] 
       ? { isValid: true, message: '' }
-      : { isValid: false, message: 'Réseau non supporté' };
+      : { isValid: false, message: `Réseau non supporté (${chain?.name || 'non connecté'})` };
 
     const walletCheck = address
       ? { isValid: true, message: '' }
       : { isValid: false, message: 'Wallet non connecté' };
 
     dispatch({ type: 'SET_CHECKS', payload: { networkCheck, walletCheck } });
-  }, [chain?.id, address]);
+  }, [chain?.id, chain?.name, address]);
 
   // Fonctions d'interaction avec le contrat
   const pauseContract = async () => {
