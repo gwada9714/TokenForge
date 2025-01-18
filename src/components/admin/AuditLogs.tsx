@@ -12,83 +12,77 @@ import {
   Typography,
   Paper,
   Button,
+  CircularProgress,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { monitor } from '../../utils/monitoring';
+import { useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { TokenForgeFactoryABI } from '../../abi/TokenForgeFactory';
+import { TOKEN_FORGE_ADDRESS } from '../../constants/addresses';
+import { AuditLog } from '../../types/contracts';
 
-/**
- * Interface représentant un log d'audit
- * @interface AuditLog
- * @property {string} id - Identifiant unique du log
- * @property {string} timestamp - Horodatage de l'événement
- * @property {string} action - Type d'action effectuée
- * @property {string} details - Détails de l'action
- * @property {string} address - Adresse Ethereum ayant effectué l'action
- */
-interface AuditLog {
-  id: string;
-  timestamp: string;
-  action: string;
-  details: string;
-  address: string;
-}
-
-/**
- * Composant d'affichage et de gestion des logs d'audit
- * 
- * Permet de visualiser l'historique des actions effectuées sur le contrat,
- * d'exporter les logs en CSV et de les purger si nécessaire.
- * 
- * Fonctionnalités :
- * - Chargement automatique des logs au montage
- * - Export au format CSV
- * - Purge des logs avec confirmation
- * - Gestion des états de chargement
- * 
- * @component
- * @example
- * ```tsx
- * <AuditLogs />
- * ```
- */
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { contract, isProcessing } = useTokenForgeAdmin();
+  const { isProcessing } = useTokenForgeAdmin();
+  const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>();
 
-  const fetchLogs = useCallback(async () => {
-    if (!contract) return;
-    
-    try {
-      setIsLoading(true);
-      monitor.info('AuditLogs', 'Fetching audit logs');
-      const auditLogs = await contract.getAuditLogs();
+  // Lecture des logs
+  const { data: auditLogs, refetch: refetchLogs } = useContractRead({
+    address: TOKEN_FORGE_ADDRESS,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'getAuditLogs',
+    watch: true,
+  }) as { data: AuditLog[] | undefined, refetch: () => void };
+
+  // Écriture pour la purge
+  const { writeAsync: purgeLogs } = useContractWrite({
+    address: TOKEN_FORGE_ADDRESS,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'purgeAuditLogs',
+  });
+
+  // Attente des transactions
+  const { isLoading: isWaiting } = useWaitForTransaction({
+    hash: pendingTx,
+    onSuccess: () => {
+      refetchLogs();
+      setPendingTx(undefined);
+    },
+  });
+
+  // Mise à jour des logs quand les données changent
+  useEffect(() => {
+    if (auditLogs) {
       setLogs(auditLogs);
-      monitor.info('AuditLogs', 'Audit logs fetched successfully', { count: auditLogs.length });
-    } catch (error) {
-      monitor.error('AuditLogs', 'Error fetching audit logs', { error });
-      console.error('Erreur lors de la récupération des logs:', error);
-    } finally {
-      setIsLoading(false);
+      monitor.info('AuditLogs', 'Audit logs updated', { count: auditLogs.length });
     }
-  }, [contract]);
+  }, [auditLogs]);
 
   const handleExportLogs = useCallback(() => {
     monitor.info('AuditLogs', 'Exporting logs to CSV');
-    const csvContent = logs.map(log => 
-      `${log.timestamp},${log.action},${log.details},${log.address}`
-    ).join('\n');
     
     try {
-      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const headers = ['Date', 'Action', 'Détails', 'Adresse'];
+      const csvContent = [
+        headers.join(','),
+        ...logs.map(log => {
+          const date = new Date(Number(log.timestamp) * 1000).toISOString();
+          return `${date},${log.action},${log.details},${log.address}`;
+        })
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `audit-logs-${new Date().toISOString()}.csv`;
-      a.click();
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `audit-logs-${new Date().toISOString()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
       monitor.info('AuditLogs', 'Logs exported successfully', { count: logs.length });
     } catch (error) {
       monitor.error('AuditLogs', 'Error exporting logs', { error });
@@ -97,30 +91,28 @@ export const AuditLogs: React.FC = () => {
   }, [logs]);
 
   const handlePurgeLogs = useCallback(async () => {
-    if (!contract) return;
+    if (!purgeLogs) return;
 
-    if (window.confirm('Êtes-vous sûr de vouloir purger tous les logs ?')) {
-      try {
-        monitor.warn('AuditLogs', 'Purging all audit logs');
-        await contract.purgeAuditLogs();
-        setLogs([]);
-        monitor.info('AuditLogs', 'Audit logs purged successfully');
-      } catch (error) {
-        monitor.error('AuditLogs', 'Error purging audit logs', { error });
-        console.error('Erreur lors de la purge des logs:', error);
-      }
+    try {
+      monitor.info('AuditLogs', 'Purging audit logs');
+      
+      const tx = await purgeLogs();
+      setPendingTx(tx.hash);
+      
+      monitor.info('AuditLogs', 'Audit logs purge initiated');
+    } catch (error) {
+      monitor.error('AuditLogs', 'Error purging audit logs', { error });
+      console.error('Erreur lors de la purge des logs:', error);
     }
-  }, [contract]);
+  }, [purgeLogs]);
 
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+  const isActionDisabled = isProcessing || isWaiting;
 
   return (
     <Card>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h6">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5">
             Logs d'Audit
           </Typography>
           <Box>
@@ -128,52 +120,51 @@ export const AuditLogs: React.FC = () => {
               variant="outlined"
               startIcon={<FileDownloadIcon />}
               onClick={handleExportLogs}
+              disabled={isActionDisabled || logs.length === 0}
               sx={{ mr: 1 }}
-              disabled={isLoading || isProcessing || logs.length === 0}
             >
               Exporter
             </Button>
             <Button
               variant="outlined"
               color="error"
-              startIcon={<DeleteIcon />}
+              startIcon={isActionDisabled ? <CircularProgress size={20} /> : <DeleteIcon />}
               onClick={handlePurgeLogs}
-              disabled={isLoading || isProcessing || logs.length === 0}
+              disabled={isActionDisabled || logs.length === 0}
             >
               Purger
             </Button>
           </Box>
         </Box>
 
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Timestamp</TableCell>
-                <TableCell>Action</TableCell>
-                <TableCell>Détails</TableCell>
-                <TableCell>Adresse</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell>{log.details}</TableCell>
-                  <TableCell>{log.address}</TableCell>
-                </TableRow>
-              ))}
-              {logs.length === 0 && (
+        {isWaiting ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={4} align="center">
-                    {isLoading ? 'Chargement des logs...' : 'Aucun log disponible'}
-                  </TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Action</TableCell>
+                  <TableCell>Détails</TableCell>
+                  <TableCell>Adresse</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {logs.map((log) => (
+                  <TableRow key={log.id.toString()}>
+                    <TableCell>{new Date(Number(log.timestamp) * 1000).toLocaleString()}</TableCell>
+                    <TableCell>{log.action}</TableCell>
+                    <TableCell>{log.details}</TableCell>
+                    <TableCell>{log.address}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </CardContent>
     </Card>
   );
