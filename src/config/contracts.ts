@@ -1,5 +1,4 @@
 import { Address } from 'viem';
-import { TOKEN_FORGE_ADDRESS } from '../constants/addresses';
 
 interface ContractAddresses {
   [key: string]: {
@@ -10,7 +9,7 @@ interface ContractAddresses {
 const contractAddresses: ContractAddresses = {
   TOKEN_FACTORY: {
     1: '0x0000000000000000000000000000000000000000' as Address, // Mainnet - pas encore déployé
-    11155111: TOKEN_FORGE_ADDRESS, // Utilise l'adresse depuis addresses.ts
+    11155111: '0xE2b29a1D3021027aF7AC8dAe5e230922F3247a0A' as Address, // Sepolia
   },
   TOKEN_FORGE_PLANS: {
     1: '0x0000000000000000000000000000000000000000' as Address, // Mainnet

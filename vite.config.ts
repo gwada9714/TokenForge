@@ -50,21 +50,24 @@ export default defineConfig({
   // Optimisations du serveur de développement
   server: {
     port: 3000,
-    host: true,
+    host: '127.0.0.1',
     cors: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
     },
     hmr: {
-      overlay: true
+      overlay: true,
+      clientPort: 3000
     },
     fs: {
-      strict: true
+      strict: false,
+      allow: ['..']
     },
     watch: {
-      usePolling: true
+      usePolling: true,
+      interval: 1000
     }
   },
   // Optimisations de performance
