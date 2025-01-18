@@ -1,10 +1,9 @@
 import { useAccount, useNetwork, usePublicClient, useContractWrite, useContractRead } from 'wagmi';
 import { Address } from 'viem';
-import TokenForgeFactoryABI from '../abi/TokenFactoryABI.json';
+import { TokenForgeFactoryABI } from '../abi/TokenForgeFactory';
 import { useContract } from '../contexts/ContractContext';
-import { useState, useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
 import { TOKEN_FORGE_ADDRESS } from '../constants/addresses';
-import { debounce } from '../utils/helpers';
 
 // Types
 interface NetworkCheckResult {
@@ -12,6 +11,7 @@ interface NetworkCheckResult {
   readonly isCorrectNetwork: boolean;
   readonly requiredNetwork: string;
   readonly networkName?: string;
+  readonly error?: string;
 }
 
 interface ContractCheckResult {
@@ -25,55 +25,46 @@ interface WalletCheckResult {
   readonly currentAddress?: string;
 }
 
-type AdminAction =
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'SET_SUCCESS'; payload: string | null }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_NETWORK_CHECK'; payload: NetworkCheckResult }
-  | { type: 'SET_CONTRACT_CHECK'; payload: ContractCheckResult }
-  | { type: 'SET_WALLET_CHECK'; payload: WalletCheckResult }
-  | { type: 'SET_LAST_ACTIVITY'; payload: Date | null };
-
 interface TokenForgeAdminState {
   error: string | null;
   successMessage: string | null;
-  isLoading: boolean;
   networkCheck: NetworkCheckResult;
   contractCheck: ContractCheckResult;
   walletCheck: WalletCheckResult;
-  lastActivity: Date | null;
 }
 
 interface TokenForgeAdminHookReturn {
   error: string | null;
   success: string | null;
   isAdmin: boolean;
-  contractAddress: Address;
+  contractAddress: `0x${string}`;
   owner: Address | undefined;
   isProcessing: boolean;
   networkCheck: NetworkCheckResult;
   contractCheck: ContractCheckResult;
   walletCheck: WalletCheckResult;
-  lastActivity: Date | null;
-  handleRetryCheck: () => void;
-  isLoading: boolean;
-  isPaused: boolean;
-  handleTransferOwnership: (newOwner: string) => Promise<void>;
   handleTogglePause: () => Promise<void>;
+  transferOwnership: (newOwner: string) => Promise<void>;
+  isPaused: boolean;
   isPausing: boolean;
   isUnpausing: boolean;
   isTransferring: boolean;
-  setNewOwnerAddress: (address: string) => void;
   pauseAvailable: boolean;
-  contract: any;
 }
+
+// Types d'actions pour le reducer
+type AdminAction =
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_SUCCESS'; payload: string | null }
+  | { type: 'SET_NETWORK_CHECK'; payload: NetworkCheckResult }
+  | { type: 'SET_CONTRACT_CHECK'; payload: ContractCheckResult }
+  | { type: 'SET_WALLET_CHECK'; payload: WalletCheckResult };
 
 const REQUIRED_NETWORK_ID = 11155111; // Sepolia network ID
 
 const initialState: TokenForgeAdminState = {
   error: null,
   successMessage: null,
-  isLoading: true,
   networkCheck: {
     isConnected: false,
     isCorrectNetwork: false,
@@ -86,7 +77,6 @@ const initialState: TokenForgeAdminState = {
   walletCheck: {
     isConnected: false,
   },
-  lastActivity: null,
 };
 
 function adminReducer(state: TokenForgeAdminState, action: AdminAction): TokenForgeAdminState {
@@ -95,16 +85,12 @@ function adminReducer(state: TokenForgeAdminState, action: AdminAction): TokenFo
       return { ...state, error: action.payload };
     case 'SET_SUCCESS':
       return { ...state, successMessage: action.payload };
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
     case 'SET_NETWORK_CHECK':
       return { ...state, networkCheck: action.payload };
     case 'SET_CONTRACT_CHECK':
       return { ...state, contractCheck: action.payload };
     case 'SET_WALLET_CHECK':
       return { ...state, walletCheck: action.payload };
-    case 'SET_LAST_ACTIVITY':
-      return { ...state, lastActivity: action.payload };
     default:
       return state;
   }
@@ -112,9 +98,8 @@ function adminReducer(state: TokenForgeAdminState, action: AdminAction): TokenFo
 
 export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
   const [state, dispatch] = useReducer(adminReducer, initialState);
-  const [newOwnerAddress, setNewOwnerAddress] = useState<string>('');
 
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
   const { chain } = useNetwork();
   const { contractAddress: contextContractAddress } = useContract();
   const publicClient = usePublicClient();
@@ -137,78 +122,142 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     [contextContractAddress]
   );
 
-  // Lecture du propriétaire du contrat
-  const { data: owner } = useContractRead({
-    address: contractAddress,
+  // Configuration du contrat avec meilleure gestion des erreurs
+  const { data: ownerData } = useContractRead({
+    address: TOKEN_FORGE_ADDRESS,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'owner',
-  }) as { data: Address | undefined };
+    chainId: REQUIRED_NETWORK_ID,
+    watch: true,
+    cacheTime: 5000,
+    staleTime: 2000,
+    onError: (error) => {
+      console.error('Erreur lors de la lecture du propriétaire:', error);
+      if (error.message.includes('timeout')) {
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: "Timeout lors de la connexion à Sepolia. Veuillez vérifier votre connexion réseau et réessayer." 
+        });
+      } else if (error.message.includes('contract not deployed')) {
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: "Le contrat n'est pas déployé à l'adresse configurée. Veuillez vérifier la configuration." 
+        });
+      } else {
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: `Erreur lors de la lecture du propriétaire: ${error.message}` 
+        });
+      }
+    },
+  });
 
-  // Vérification du réseau
-  const checkNetwork = useCallback(() => {
-    const networkCheck: NetworkCheckResult = {
-      isConnected: isConnected,
-      isCorrectNetwork: chain?.id === REQUIRED_NETWORK_ID,
-      requiredNetwork: 'Sepolia',
-      networkName: chain?.name,
-    };
-    dispatch({ type: 'SET_NETWORK_CHECK', payload: networkCheck });
-  }, [chain?.id, chain?.name, isConnected]);
+  // Vérification plus précise du réseau
+  useEffect(() => {
+    if (!chain) {
+      dispatch({ 
+        type: 'SET_NETWORK_CHECK', 
+        payload: {
+          isConnected: false,
+          isCorrectNetwork: false,
+          requiredNetwork: 'Sepolia',
+          error: 'Veuillez connecter votre wallet'
+        }
+      });
+      return;
+    }
 
-  // Vérification du contrat
+    if (chain.id !== REQUIRED_NETWORK_ID) {
+      dispatch({
+        type: 'SET_NETWORK_CHECK',
+        payload: {
+          isConnected: true,
+          isCorrectNetwork: false,
+          requiredNetwork: 'Sepolia',
+          networkName: chain.name,
+          error: `Veuillez changer de réseau pour Sepolia (Chain ID: ${REQUIRED_NETWORK_ID})`
+        }
+      });
+      return;
+    }
+
+    dispatch({
+      type: 'SET_NETWORK_CHECK',
+      payload: {
+        isConnected: true,
+        isCorrectNetwork: true,
+        requiredNetwork: 'Sepolia',
+        networkName: chain.name,
+      }
+    });
+  }, [chain]);
+
+  // Vérification plus précise du wallet
+  useEffect(() => {
+    dispatch({
+      type: 'SET_WALLET_CHECK',
+      payload: {
+        isConnected: !!address,
+        currentAddress: address,
+      }
+    });
+  }, [address]);
+
+  // Vérification du contrat avec meilleure gestion d'erreur
   const checkContract = useCallback(async () => {
-    if (!contractAddress) {
+    if (!publicClient || !contractAddress) {
       dispatch({
         type: 'SET_CONTRACT_CHECK',
-        payload: {
-          isValid: false,
+        payload: { 
+          isValid: false, 
           isDeployed: false,
-          error: 'Adresse du contrat non définie',
+          error: 'Client ou adresse de contrat non disponible' 
         },
       });
       return;
     }
 
     try {
-      const code = await publicClient.getBytecode({ address: contractAddress });
-      const isDeployed = code !== undefined && code !== '0x';
+      const code = await publicClient.getBytecode({
+        address: contractAddress as `0x${string}`,
+      });
+
+      if (!code || code === '0x') {
+        dispatch({
+          type: 'SET_CONTRACT_CHECK',
+          payload: { 
+            isValid: false,
+            isDeployed: false,
+            error: 'Le contrat n\'existe pas à cette adresse sur Sepolia' 
+          },
+        });
+        return;
+      }
+
       dispatch({
         type: 'SET_CONTRACT_CHECK',
-        payload: {
+        payload: { 
           isValid: true,
-          isDeployed,
-          error: isDeployed ? undefined : 'Contrat non déployé',
+          isDeployed: true
         },
       });
     } catch (error) {
+      console.error('Erreur lors de la vérification du contrat:', error);
       dispatch({
         type: 'SET_CONTRACT_CHECK',
-        payload: {
+        payload: { 
           isValid: false,
           isDeployed: false,
-          error: 'Erreur lors de la vérification du contrat',
+          error: 'Erreur lors de la vérification du contrat. Veuillez réessayer.' 
         },
       });
     }
-  }, [contractAddress, publicClient]);
-
-  // Vérification du portefeuille
-  const checkWallet = useCallback(() => {
-    dispatch({
-      type: 'SET_WALLET_CHECK',
-      payload: {
-        isConnected,
-        currentAddress: address,
-      },
-    });
-  }, [address, isConnected]);
+  }, [publicClient, contractAddress]);
 
   // Fonction principale de vérification
   const performChecks = useCallback(() => {
-    checkNetwork();
-    checkWallet();
     checkContract();
-  }, [checkNetwork, checkWallet, checkContract]);
+  }, [checkContract]);
 
   // Effet pour les vérifications initiales et les mises à jour
   useEffect(() => {
@@ -222,133 +271,101 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     }
   }, [address, chain?.id, performChecks]);
 
-  // Fonction de retry avec debounce
-  const handleRetryCheck = useCallback(
-    debounce(() => {
-      if (mountedRef.current) {
-        performChecks();
-      }
-    }, 500),
-    [performChecks]
-  );
-
-  // Vérification des droits d'administration
+  // Vérifier si l'utilisateur est admin
   const isAdmin = useMemo(() => {
-    if (!address || !owner) return false;
+    return address?.toLowerCase() === ownerData?.toLowerCase();
+  }, [address, ownerData]);
 
-    return Boolean(
-      address &&
-      owner &&
-      address === owner &&
-      state.networkCheck.isCorrectNetwork &&
-      state.contractCheck.isValid &&
-      state.walletCheck.isConnected
-    );
-  }, [address, owner, state.networkCheck.isCorrectNetwork, state.contractCheck.isValid, state.walletCheck.isConnected]);
-
-  // Lecture de l'état pause
-  const { data: paused } = useContractRead({
-    address: contractAddress,
+  // Vérifier si le contrat est en pause
+  const { data: isPausedData } = useContractRead<typeof TokenForgeFactoryABI.abi, 'paused', boolean>({
+    address: TOKEN_FORGE_ADDRESS,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'paused',
-  }) as { data: boolean };
-
-  // Fonction pause
-  const { writeAsync: pauseContract } = useContractWrite({
-    address: contractAddress,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'pause',
   });
 
-  // Fonction unpause
-  const { writeAsync: unpauseContract } = useContractWrite({
-    address: contractAddress,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'unpause',
-  });
+  // Convertir la donnée en booléen
+  const isPaused = Boolean(isPausedData);
 
-  // Fonction transferOwnership
-  const { writeAsync: transferOwnershipContract } = useContractWrite({
-    address: contractAddress,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'transferOwnership',
-  });
+  // Vérifier si la fonction de pause est disponible
+  const pauseAvailable = useMemo(() => {
+    return isAdmin && typeof isPaused === 'boolean';
+  }, [isAdmin, isPaused]);
 
-  // Implémentation de pause
-  const pause = async () => {
-    if (!isAdmin) {
-      dispatch({ type: 'SET_ERROR', payload: "Vous n'avez pas les droits d'administration" });
-      return;
-    }
-    
-    try {
-      await pauseContract();
-      dispatch({ type: 'SET_SUCCESS', payload: 'Contrat mis en pause avec succès' });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors de la mise en pause du contrat' });
-      console.error('Pause error:', error);
-    }
+  // Lecture de l'état pause
+  const handleTogglePause = async (): Promise<void> => {
+    // Cette fonctionnalité n'est pas disponible dans le contrat actuel
+    dispatch({ type: 'SET_ERROR', payload: 'La fonction de pause n\'est pas disponible dans ce contrat' });
+    return Promise.reject(new Error('Fonction non disponible'));
   };
 
-  // Implémentation de unpause
-  const unpause = async () => {
-    if (!isAdmin) {
-      dispatch({ type: 'SET_ERROR', payload: "Vous n'avez pas les droits d'administration" });
-      return;
-    }
-    
-    try {
-      await unpauseContract();
-      dispatch({ type: 'SET_SUCCESS', payload: 'Contrat réactivé avec succès' });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors de la réactivation du contrat' });
-      console.error('Unpause error:', error);
-    }
-  };
+  // Fonction de transfert de propriété
+  const transferOwnership = useCallback(
+    async (newOwnerAddress: string) => {
+      if (!newOwnerAddress) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Veuillez fournir une adresse valide',
+        });
+        return;
+      }
 
-  // Implémentation de transferOwnership
-  const transferOwnership = async (newOwner: string) => {
-    if (!isAdmin) {
-      dispatch({ type: 'SET_ERROR', payload: "Vous n'avez pas les droits d'administration" });
-      return;
-    }
+      const { write } = useContractWrite({
+        address: TOKEN_FORGE_ADDRESS,
+        abi: TokenForgeFactoryABI.abi,
+        functionName: 'transferOwnership',
+        args: [newOwnerAddress as `0x${string}`],
+        onError: (error) => {
+          console.error('Erreur lors du transfert de propriété:', error);
+          dispatch({
+            type: 'SET_ERROR',
+            payload: `Erreur lors du transfert de propriété: ${error.message}`,
+          });
+        },
+        onSuccess: () => {
+          dispatch({
+            type: 'SET_SUCCESS',
+            payload: 'Transfert de propriété effectué avec succès',
+          });
+        },
+      });
 
-    if (!newOwner || !newOwner.match(/^0x[a-fA-F0-9]{40}$/)) {
-      dispatch({ type: 'SET_ERROR', payload: 'Adresse invalide' });
-      return;
-    }
-    
-    try {
-      await transferOwnershipContract({ args: [newOwnerAddress] });
-      dispatch({ type: 'SET_SUCCESS', payload: 'Propriété transférée avec succès' });
-      setNewOwnerAddress(''); // Reset après succès
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors du transfert de propriété' });
-      console.error('Transfer ownership error:', error);
-    }
-  };
+      if (!write) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Impossible d\'effectuer le transfert de propriété',
+        });
+        return;
+      }
+
+      try {
+        await write();
+      } catch (error) {
+        console.error('Erreur lors du transfert de propriété:', error);
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Erreur lors du transfert de propriété',
+        });
+      }
+    },
+    [TOKEN_FORGE_ADDRESS]
+  );
 
   return {
     error: state.error,
     success: state.successMessage,
-    isAdmin,
-    contractAddress,
-    owner,
-    isProcessing: state.isLoading,
+    isAdmin: isAdmin,
+    contractAddress: TOKEN_FORGE_ADDRESS,
+    owner: ownerData as Address | undefined,
+    isProcessing: false,
     networkCheck: state.networkCheck,
     contractCheck: state.contractCheck,
     walletCheck: state.walletCheck,
-    lastActivity: state.lastActivity,
-    handleRetryCheck,
-    isLoading: state.isLoading,
-    isPaused: paused || false,
-    handleTransferOwnership: transferOwnership,
-    handleTogglePause: paused ? unpause : pause,
+    handleTogglePause,
+    transferOwnership,
+    isPaused: isPaused,
     isPausing: false,
     isUnpausing: false,
     isTransferring: false,
-    setNewOwnerAddress,
-    pauseAvailable: isAdmin && !state.isLoading,
-    contract: TokenForgeFactoryABI.abi,
+    pauseAvailable,
   };
 }

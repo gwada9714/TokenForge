@@ -24,9 +24,9 @@ export const CONTRACT_ADDRESSES: NetworkAddresses = {
   },
   11155111: {
     // Sepolia testnet (réseau de test actif)
-    tokenForge: '0x4007d5731b8C4659404dEAa0e1cEE6e7481a6Edf' as Address, // TokenForgeFactory vérifié sur Etherscan
-    staking: '0x0000000000000000000000000000000000000000' as Address, // À déployer plus tard
-    treasury: '0x0000000000000000000000000000000000000000' as Address, // À déployer plus tard
+    tokenForge: '0xE2b29a1D3021027aF7AC8dAe5e230922F3247a0A' as Address, // TokenForgeFactory vérifié sur Etherscan
+    staking: '0xF8ee9A71f42a35A6d18677629Ef6B4A7dE9d4Cb7' as Address,
+    treasury: '0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A' as Address,
   }
 };
 
