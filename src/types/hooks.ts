@@ -18,28 +18,29 @@ export interface ContractCheckResult {
 export interface WalletCheckResult {
   readonly isConnected: boolean;
   readonly currentAddress?: string;
+  readonly message?: string;
+}
+
+export interface NetworkStatus {
+  isConnected: boolean;
+  isCorrectNetwork: boolean;
+  requiredNetwork: string;
+  networkName?: string;
+  error?: string;
 }
 
 // Type pour le hook useTokenForgeAdmin
 export interface TokenForgeAdminHookReturn {
   error: string | null;
-  success: string | null;
-  isAdmin: boolean;
-  contractAddress: `0x${string}`;
-  owner: Address | undefined;
-  isProcessing: boolean;
-  networkCheck: NetworkCheckResult;
-  contractCheck: ContractCheckResult;
-  walletCheck: WalletCheckResult;
-  handleTogglePause: () => Promise<void>;
-  transferOwnership: () => Promise<void>;
-  handleTransferOwnership: () => Promise<void>;
   isPaused: boolean;
+  isOwner: boolean;
+  owner: Address | undefined;
+  networkStatus: NetworkStatus;
+  isLoading: boolean;
+  pauseContract: () => Promise<void>;
+  unpauseContract: () => Promise<void>;
+  transferOwnership: (newOwner: Address) => Promise<void>;
   isPausing: boolean;
   isUnpausing: boolean;
   isTransferring: boolean;
-  pauseAvailable: boolean;
-  isLoading: boolean;
-  handleRetryCheck: () => Promise<void>;
-  contract: any | null;
 }

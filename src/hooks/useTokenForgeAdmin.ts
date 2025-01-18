@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import { useAccount, useNetwork, usePublicClient, useContractRead } from 'wagmi';
-import { getContract } from 'viem';
+import { getContract, type Address } from 'viem';
 import { TokenForgeFactoryABI } from '../abi/TokenForgeFactory';
-import { REQUIRED_NETWORK_ID, TOKEN_FORGE_ADDRESS } from '../constants/addresses';
+import { CONTRACT_ADDRESSES } from '../constants/addresses';
 import { useContract } from '../contexts/ContractContext';
 import { adminReducer, initialState } from '../reducers/adminReducer';
-import type { TokenForgeAdminHookReturn } from '../types/hooks';
+import type { TokenForgeAdminHookReturn, NetworkStatus } from '../types/hooks';
 
 export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
   const [state, dispatch] = useReducer(adminReducer, initialState);
@@ -21,160 +21,71 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
   const publicClient = usePublicClient();
 
   const contractAddress = useMemo(() => {
-    console.log('Contract address setup:', {
-      contextContractAddress,
-      defaultAddress: TOKEN_FORGE_ADDRESS,
-      final: contextContractAddress || TOKEN_FORGE_ADDRESS
+    if (!chain?.id) {
+      console.warn('No chain ID available');
+      return undefined;
+    }
+
+    const addressFromContext = contextContractAddress;
+    const addressFromConfig = CONTRACT_ADDRESSES[chain.id]?.tokenForge;
+
+    console.log('Contract address resolution:', {
+      chainId: chain.id,
+      contextAddress: addressFromContext,
+      configAddress: addressFromConfig,
+      final: addressFromContext || addressFromConfig
     });
-    return contextContractAddress || TOKEN_FORGE_ADDRESS;
-  }, [contextContractAddress]);
+
+    return (addressFromContext || addressFromConfig) as Address | undefined;
+  }, [contextContractAddress, chain?.id]);
 
   // Lecture du statut de pause
   const { 
     data: isPaused,
     isLoading: isLoadingPaused,
-    error: pausedError,
-    refetch: refetchPaused
   } = useContractRead({
     address: contractAddress,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'paused',
-    chainId: REQUIRED_NETWORK_ID,
+    chainId: chain?.id,
     watch: true,
-    cacheTime: 2000, // Réduit pour une mise à jour plus fréquente
-    staleTime: 1000, // Réduit pour forcer plus de rafraîchissements
-    enabled: !!contractAddress && !!chain?.id, // N'active l'appel que si nous avons une adresse et une chaîne valide
+    cacheTime: 2000,
+    staleTime: 1000,
+    enabled: !!contractAddress && !!chain?.id,
     onSuccess: (data) => {
-      console.log('Paused status details:', { 
+      console.log('Paused status:', { 
         isPaused: data,
         contractAddress,
         chainId: chain?.id,
-        currentNetwork: chain?.name,
-        requiredNetwork: REQUIRED_NETWORK_ID,
-        isConnected: !!address,
-        currentAddress: address,
-        contractInterface: TokenForgeFactoryABI.abi.filter(item => 'name' in item).map(item => item.name)
       });
-      if (pausedError) {
-        dispatch({ 
-          type: 'SET_ERROR', 
-          payload: null 
-        });
-      }
     },
     onError: (error) => {
-      console.error('Detailed paused() error:', {
-        error,
-        errorName: error.name,
-        errorMessage: error.message,
-        chainId: chain?.id,
-        contractAddress,
-        isConnected: !!address,
-        currentAddress: address,
-        abi: TokenForgeFactoryABI.abi.find(item => 
-          'name' in item && item.name === 'paused'
-        ),
-        network: {
-          current: chain?.name,
-          required: REQUIRED_NETWORK_ID,
-          isCorrect: chain?.id === REQUIRED_NETWORK_ID
-        }
-      });
-      dispatch({ 
-        type: 'SET_ERROR', 
-        payload: `Erreur lors de la lecture du statut pause: ${error.message}` 
-      });
-    },
+      console.error('Error fetching pause status:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+    }
   });
 
-  // Lecture du propriétaire optimisée
+  // Lecture du propriétaire
   const { 
-    data: ownerData, 
-    refetch: refetchOwner,
+    data: owner,
     isLoading: isLoadingOwner,
-    error: ownerError 
   } = useContractRead({
     address: contractAddress,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'owner',
-    chainId: REQUIRED_NETWORK_ID,
+    chainId: chain?.id,
     watch: true,
     cacheTime: 5000,
     staleTime: 2000,
-    onSuccess: (data) => {
-      console.log('Owner data fetched:', {
-        owner: data,
-        currentAddress: address,
-        isMatch: address?.toLowerCase() === data?.toLowerCase()
-      });
-    },
+    enabled: !!contractAddress && !!chain?.id,
     onError: (error) => {
-      console.error('Error fetching owner:', {
-        error,
-        errorMessage: error.message,
-        chainId: chain?.id,
-        contractAddress
-      });
-      setTransactionState({
-        isPausing: false,
-        isUnpausing: false,
-        isTransferring: false
-      });
-    },
+      console.error('Error fetching owner:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+    }
   });
 
-  // Vérification du statut admin
-  const isAdmin = useMemo(() => {
-    console.log('Admin check details:', {
-      address,
-      ownerData,
-      isLoadingOwner,
-      ownerError,
-      chainId: chain?.id,
-      requiredChainId: REQUIRED_NETWORK_ID,
-      contractAddress,
-      networkCheck: state.networkCheck,
-      walletCheck: state.walletCheck
-    });
-
-    if (isLoadingOwner) {
-      console.log('Still loading owner data');
-      return false;
-    }
-
-    if (ownerError) {
-      console.error('Owner check error:', ownerError);
-      return false;
-    }
-
-    if (address && ownerData) {
-      const isOwner = address.toLowerCase() === ownerData.toLowerCase();
-      console.log('Owner comparison:', {
-        currentAddress: address.toLowerCase(),
-        ownerAddress: ownerData.toLowerCase(),
-        isOwner
-      });
-      
-      if (!state.adminCheckCompleted) {
-        dispatch({ type: 'SET_ADMIN_CHECK_COMPLETED', payload: true });
-      }
-      
-      return isOwner;
-    }
-
-    console.log('Missing address or owner data');
-    return false;
-  }, [address, ownerData, isLoadingOwner, ownerError, chain?.id, state.adminCheckCompleted, state.networkCheck, state.walletCheck]);
-
-  // Vérification initiale du réseau
-  const networkStatus = useMemo(() => {
-    console.log('Network status check:', {
-      chain,
-      requiredNetwork: REQUIRED_NETWORK_ID,
-      isConnected: !!chain,
-      isCorrectNetwork: chain?.id === REQUIRED_NETWORK_ID
-    });
-
+  // État du réseau
+  const networkStatus: NetworkStatus = useMemo(() => {
     if (!chain) {
       return {
         isConnected: false,
@@ -184,149 +95,118 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
       };
     }
 
+    const networkConfig = CONTRACT_ADDRESSES[chain.id];
+    const isCorrectNetwork = !!networkConfig;
+
     return {
       isConnected: true,
-      isCorrectNetwork: chain.id === REQUIRED_NETWORK_ID,
+      isCorrectNetwork,
       requiredNetwork: 'Sepolia',
       networkName: chain.name,
-      error: chain.id !== REQUIRED_NETWORK_ID ? 'Veuillez vous connecter au réseau Sepolia' : undefined,
+      error: !isCorrectNetwork ? 'Veuillez vous connecter au réseau Sepolia' : undefined,
     };
   }, [chain]);
 
-  // Mise à jour du statut réseau
+  // Vérification du réseau et du wallet
   useEffect(() => {
-    dispatch({ type: 'SET_NETWORK_CHECK', payload: networkStatus });
-  }, [networkStatus]);
+    const networkCheck = chain?.id && CONTRACT_ADDRESSES[chain.id] 
+      ? { isValid: true, message: '' }
+      : { isValid: false, message: 'Réseau non supporté' };
 
-  // Mise à jour du statut wallet
-  useEffect(() => {
-    console.log('Wallet status update:', {
-      address,
-      isConnected: !!address
-    });
+    const walletCheck = address
+      ? { isValid: true, message: '' }
+      : { isValid: false, message: 'Wallet non connecté' };
 
-    dispatch({
-      type: 'SET_WALLET_CHECK',
-      payload: {
-        isConnected: !!address,
-        currentAddress: address,
-      },
-    });
-  }, [address]);
+    dispatch({ type: 'SET_CHECKS', payload: { networkCheck, walletCheck } });
+  }, [chain?.id, address]);
 
-  // Vérification du contrat
-  useEffect(() => {
-    const checkContract = async () => {
-      if (!contractAddress || !chain?.id || !publicClient) {
-        console.log('Conditions non remplies:', {
-          hasContractAddress: !!contractAddress,
-          hasChainId: !!chain?.id,
-          hasPublicClient: !!publicClient
-        });
-        return;
-      }
+  // Fonctions d'interaction avec le contrat
+  const pauseContract = async () => {
+    if (!contractAddress || !address) return;
 
-      try {
-        // Vérifier si le code du contrat existe à l'adresse
-        const code = await publicClient.getBytecode({
-          address: contractAddress,
-        });
+    try {
+      setTransactionState(prev => ({ ...prev, isPausing: true }));
+      const contract = getContract({
+        address: contractAddress,
+        abi: TokenForgeFactoryABI.abi,
+        publicClient,
+      });
 
-        console.log('Contract verification:', {
-          address: contractAddress,
-          hasCode: !!code,
-          networkId: chain.id,
-          networkName: chain.name
-        });
+      console.log('Pausing contract:', {
+        contract,
+        address: contractAddress,
+        caller: address
+      });
 
-        if (!code) {
-          dispatch({
-            type: 'SET_ERROR',
-            payload: 'Aucun contrat trouvé à cette adresse'
-          });
-          return;
-        }
+      setTransactionState(prev => ({ ...prev, isPausing: false }));
+    } catch (error) {
+      console.error('Error pausing contract:', error);
+      setTransactionState(prev => ({ ...prev, isPausing: false }));
+      throw error;
+    }
+  };
 
-        // Vérifier si le contrat a les fonctions requises
-        const contractFunctions = TokenForgeFactoryABI.abi
-          .filter(item => 'name' in item)
-          .map(item => item.name);
+  const unpauseContract = async () => {
+    if (!contractAddress || !address) return;
 
-        console.log('Contract interface:', {
-          functions: contractFunctions,
-          hasOwnerFunction: contractFunctions.includes('owner'),
-          hasPausedFunction: contractFunctions.includes('paused')
-        });
+    try {
+      setTransactionState(prev => ({ ...prev, isUnpausing: true }));
+      const contract = getContract({
+        address: contractAddress,
+        abi: TokenForgeFactoryABI.abi,
+        publicClient,
+      });
 
-      } catch (error) {
-        console.error('Contract verification error:', error);
-        dispatch({
-          type: 'SET_ERROR',
-          payload: `Erreur de vérification du contrat: ${error instanceof Error ? error.message : 'Erreur inconnue'}`
-        });
-      }
-    };
+      console.log('Unpausing contract:', {
+        contract,
+        address: contractAddress,
+        caller: address
+      });
 
-    checkContract();
-  }, [contractAddress, chain?.id, publicClient]);
+      setTransactionState(prev => ({ ...prev, isUnpausing: false }));
+    } catch (error) {
+      console.error('Error unpausing contract:', error);
+      setTransactionState(prev => ({ ...prev, isUnpausing: false }));
+      throw error;
+    }
+  };
 
-  // Création du contrat
-  const contract = useMemo(() => {
-    if (!publicClient || !contractAddress) {
-      console.log('Cannot create contract - missing dependencies:', {
-        hasPublicClient: !!publicClient,
+  const transferOwnership = async (newOwner: Address) => {
+    if (!contractAddress || !address) return;
+
+    try {
+      setTransactionState(prev => ({ ...prev, isTransferring: true }));
+      const contract = getContract({
+        address: contractAddress,
+        abi: TokenForgeFactoryABI.abi,
+        publicClient,
+      });
+
+      console.log('Transferring ownership:', {
+        contract,
+        currentOwner: address,
+        newOwner,
         contractAddress
       });
-      return null;
+
+      setTransactionState(prev => ({ ...prev, isTransferring: false }));
+    } catch (error) {
+      console.error('Error transferring ownership:', error);
+      setTransactionState(prev => ({ ...prev, isTransferring: false }));
+      throw error;
     }
-
-    console.log('Creating contract instance:', {
-      contractAddress,
-      chainId: chain?.id
-    });
-
-    return getContract({
-      address: contractAddress,
-      abi: TokenForgeFactoryABI.abi,
-      publicClient,
-    });
-  }, [publicClient, contractAddress, chain?.id]);
+  };
 
   return {
     error: state.error,
-    success: state.successMessage,
-    isAdmin,
-    contractAddress,
-    owner: ownerData,
-    isProcessing: isLoadingOwner || isLoadingPaused,
-    networkCheck: state.networkCheck,
-    contractCheck: state.contractCheck,
-    walletCheck: state.walletCheck,
-    handleTogglePause: async () => {
-      setTransactionState(prev => ({ ...prev, isPausing: true }));
-      console.warn("handleTogglePause n'est pas encore implémenté");
-      setTransactionState(prev => ({ ...prev, isPausing: false }));
-    },
-    transferOwnership: async () => {
-      setTransactionState(prev => ({ ...prev, isTransferring: true }));
-      console.warn("transferOwnership n'est pas encore implémenté");
-      setTransactionState(prev => ({ ...prev, isTransferring: false }));
-    },
-    handleTransferOwnership: async () => {
-      setTransactionState(prev => ({ ...prev, isTransferring: true }));
-      console.warn("handleTransferOwnership n'est pas encore implémenté");
-      setTransactionState(prev => ({ ...prev, isTransferring: false }));
-    },
     isPaused: isPaused || false,
-    isPausing: transactionState.isPausing,
-    isUnpausing: transactionState.isUnpausing,
-    isTransferring: transactionState.isTransferring,
-    pauseAvailable: isAdmin && !isLoadingPaused,
-    isLoading: isLoadingOwner || isLoadingPaused,
-    handleRetryCheck: async () => {
-      console.log('Retrying checks...');
-      await Promise.all([refetchOwner(), refetchPaused()]);
-    },
-    contract,
+    isOwner: address?.toLowerCase() === owner?.toLowerCase(),
+    owner,
+    networkStatus,
+    isLoading: isLoadingPaused || isLoadingOwner,
+    pauseContract,
+    unpauseContract,
+    transferOwnership,
+    ...transactionState,
   };
 };
