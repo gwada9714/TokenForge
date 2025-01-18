@@ -28,7 +28,7 @@ export const AlertsManagement: React.FC = () => {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [newRuleName, setNewRuleName] = useState('');
   const [newRuleCondition, setNewRuleCondition] = useState('');
-  const { contract } = useTokenForgeAdmin();
+  const { } = useTokenForgeAdmin(); 
 
   const handleAddRule = useCallback(() => {
     if (newRuleName && newRuleCondition) {

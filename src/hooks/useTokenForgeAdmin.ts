@@ -315,7 +315,6 @@ ${DEBUG_SEPARATOR}`);
   }, [address, owner, state.networkCheck.isCorrectNetwork, state.contractCheck.isValid, state.walletCheck.isConnected]);
 
   // État local pour les fonctionnalités d'administration
-  const [newOwnerAddress, setNewOwnerAddress] = useState<string>('');
   const [isPausing, setIsPausing] = useState(false);
   const [isUnpausing, setIsUnpausing] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
@@ -429,7 +428,6 @@ ${DEBUG_SEPARATOR}`);
     isPausing,
     isUnpausing,
     isTransferring,
-    setNewOwnerAddress: (address: string) => setNewOwnerAddress(address),
     pauseAvailable: isAdmin && !state.isLoading,
     contract: TokenForgeFactoryABI.abi, // Ajout pour AlertsManagement et AuditLogs
   };
