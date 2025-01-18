@@ -24,21 +24,8 @@ declare module 'styled-components' {
         light: string;
       };
       forge: {
-        main: string;
-        dark: string;
-        light: string;
         metallic: string;
         glow: string;
-      };
-      action: {
-        active: string;
-        hover: string;
-        disabled: string;
-      };
-      error: {
-        main: string;
-        light: string;
-        dark: string;
       };
       warning: {
         main: string;
@@ -108,3 +95,5 @@ declare module 'styled-components' {
     };
   }
 }
+
+export interface Theme extends DefaultTheme {}
