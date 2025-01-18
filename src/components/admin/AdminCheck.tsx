@@ -1,129 +1,28 @@
-import React, { memo, useCallback, useEffect } from 'react';
-import { Box, Typography, Alert, Chip, Stack, Button, CircularProgress, Divider } from '@mui/material';
+import React from 'react';
+import { Alert, Box, CircularProgress, Typography, Stack, Button } from '@mui/material';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import WarningIcon from '@mui/icons-material/Warning';
+import { NetworkStatus } from './NetworkStatus';
+import { WalletStatus } from './WalletStatus';
+import { ContractStatus } from './ContractStatus';
 import { ContractPauseStatus } from './ContractPauseStatus';
+import { AdminRights } from './AdminRights';
 
-// Composants memoizés pour éviter les re-renders inutiles
-const StatusIcon = memo(({ isValid, hasError }: { isValid: boolean; hasError?: boolean }) => {
-  if (isValid) return <CheckCircleIcon color="success" />;
-  if (hasError) return <ErrorIcon color="error" />;
-  return <WarningIcon color="warning" />;
-});
-
-const ContractStatus = memo(({ contractCheck }: { contractCheck: any }) => (
-  <Box>
-    <Typography variant="subtitle1" gutterBottom>
-      État du contrat :
-    </Typography>
-    <Stack spacing={1}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <StatusIcon isValid={contractCheck.isValid} hasError={!!contractCheck.error} />
-        <Typography>
-          Contrat {contractCheck.isDeployed ? 'déployé' : 'non déployé'}
-          {contractCheck.version && ` (version ${contractCheck.version})`}
-        </Typography>
-      </Box>
-      {contractCheck.address && (
-        <Typography variant="body2" color="textSecondary">
-          Adresse : {contractCheck.address}
-        </Typography>
-      )}
-      {contractCheck.error && (
-        <Typography color="error" variant="body2">
-          {contractCheck.error}
-        </Typography>
-      )}
-    </Stack>
-  </Box>
-));
-
-const NetworkStatus = memo(({ networkCheck }: { networkCheck: any }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-    <StatusIcon isValid={networkCheck.isCorrectNetwork} />
-    <Typography>
-      Connexion au réseau {networkCheck.requiredNetwork}
-      {networkCheck.networkName && ` (actuellement sur ${networkCheck.networkName})`}
-    </Typography>
-  </Box>
-));
-
-const WalletStatus = memo(({ walletCheck }: { walletCheck: any }) => (
-  <>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <StatusIcon isValid={walletCheck.isConnected} />
-      <Typography>
-        Wallet connecté
-      </Typography>
-    </Box>
-    {walletCheck.currentAddress && (
-      <Typography variant="body2" color="textSecondary" sx={{ pl: 4 }}>
-        {walletCheck.currentAddress}
-      </Typography>
-    )}
-  </>
-));
-
-const AdminRights = memo(({ rights, lastActivity }: { rights: string[]; lastActivity: Date | null }) => (
-  <Box>
-    <Typography variant="subtitle1" gutterBottom>
-      Droits accordés :
-    </Typography>
-    <Stack direction="row" spacing={1}>
-      {rights.map((right) => (
-        <Chip 
-          key={right}
-          label={right}
-          color="primary"
-          variant="outlined"
-        />
-      ))}
-    </Stack>
-    {lastActivity && (
-      <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
-        Dernière vérification : {new Date(lastActivity).toLocaleString()}
-      </Typography>
-    )}
-  </Box>
-));
-
-export const AdminCheck = memo(() => {
-  const { 
-    isOwner,
-    isLoading,
+export const AdminCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const {
+    isAdmin,
     error,
-    owner,
-    checkAdminRights,
-    adminRights,
-    lastActivity,
+    isLoading,
     networkCheck,
     walletCheck,
     contractCheck,
-    checkConfiguration,
-    verifyContract
+    handleRetryCheck,
+    adminRights,
+    lastActivity
   } = useTokenForgeAdmin();
-
-  const handleRetryCheck = useCallback(async () => {
-    await verifyContract();
-    await checkConfiguration();
-  }, [verifyContract, checkConfiguration]);
-
-  useEffect(() => {
-    const checkRights = async () => {
-      try {
-        await checkAdminRights();
-      } catch (err) {
-        console.error('Erreur lors de la vérification des droits:', err);
-      }
-    };
-    checkRights();
-  }, [checkAdminRights]);
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
         <CircularProgress />
       </Box>
     );
@@ -131,21 +30,39 @@ export const AdminCheck = memo(() => {
 
   if (error) {
     return (
-      <Alert 
-        severity="error" 
-        sx={{ mb: 2 }}
-        action={
-          <Button 
-            color="inherit" 
-            size="small"
-            onClick={handleRetryCheck}
-          >
-            Réessayer
-          </Button>
-        }
-      >
-        {error}
-      </Alert>
+      <Box sx={{ width: '100%', p: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={handleRetryCheck}>
+              Réessayer
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+        <Box sx={{ mt: 2 }}>
+          <h3>État des vérifications :</h3>
+          <ul>
+            <li>Réseau : {networkCheck.isCorrectNetwork ? '✅' : '❌'} {networkCheck.networkName || 'Non connecté'}</li>
+            <li>Wallet : {walletCheck.isConnected ? '✅' : '❌'} {walletCheck.currentAddress || 'Non connecté'}</li>
+            <li>Contrat : {contractCheck.isValid ? '✅' : '❌'} {contractCheck.error || ''}</li>
+            <li>Droits : {adminRights.length > 0 ? '✅' : '❌'} {adminRights.join(', ') || 'Aucun droit'}</li>
+            <li>Dernière activité : {lastActivity ? lastActivity.toLocaleString() : 'Jamais'}</li>
+          </ul>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <Box sx={{ width: '100%', p: 2 }}>
+        <Alert severity="warning">
+          Vous n'avez pas les droits d'administration nécessaires pour accéder à cette section.
+        </Alert>
+      </Box>
     );
   }
 
@@ -159,15 +76,17 @@ export const AdminCheck = memo(() => {
         <NetworkStatus networkCheck={networkCheck} />
         <WalletStatus walletCheck={walletCheck} />
         <ContractStatus contractCheck={contractCheck} />
-        <ContractPauseStatus />
-
-        {walletCheck.isContractOwner && (
-          <AdminRights 
-            rights={adminRights} 
-            lastActivity={lastActivity} 
-          />
+        
+        {isAdmin && (
+          <>
+            <ContractPauseStatus />
+            <AdminRights 
+              rights={adminRights} 
+              lastActivity={lastActivity}
+            />
+          </>
         )}
       </Stack>
     </Box>
   );
-});
+};

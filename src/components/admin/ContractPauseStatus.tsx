@@ -1,5 +1,6 @@
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
+import { useState } from 'react';
 
 export const ContractPauseStatus = () => {
   const { 
@@ -9,22 +10,28 @@ export const ContractPauseStatus = () => {
     isPausing, 
     isUnpausing,
     isOwner,
-    error
+    error: contractError
   } = useTokenForgeAdmin();
+
+  const [error, setError] = useState<string | null>(null);
 
   const handlePause = async () => {
     try {
+      setError(null);
       await pause();
     } catch (err) {
       console.error('Erreur lors de la mise en pause:', err);
+      setError('Impossible de mettre le contrat en pause. Veuillez réessayer.');
     }
   };
 
   const handleUnpause = async () => {
     try {
+      setError(null);
       await unpause();
     } catch (err) {
       console.error('Erreur lors de la reprise:', err);
+      setError('Impossible de réactiver le contrat. Veuillez réessayer.');
     }
   };
 
@@ -38,9 +45,15 @@ export const ContractPauseStatus = () => {
         État du contrat
       </Typography>
       
-      {error ? (
-        <Alert severity="error" sx={{ mb: 2 }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
+        </Alert>
+      )}
+
+      {contractError ? (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Impossible de déterminer l'état du contrat. Certaines fonctionnalités peuvent être limitées.
         </Alert>
       ) : (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -55,6 +68,7 @@ export const ContractPauseStatus = () => {
               variant="contained"
               onClick={isPaused ? handleUnpause : handlePause}
               color={isPaused ? "success" : "warning"}
+              disabled={!!contractError}
             >
               {isPaused ? 'Réactiver' : 'Mettre en pause'}
             </Button>

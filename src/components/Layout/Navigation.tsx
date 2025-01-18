@@ -1,27 +1,24 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, CircularProgress } from '@mui/material';
-import { useAccount } from 'wagmi';
+import { useAccount, useNetwork } from 'wagmi';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { Link as RouterLink } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const Navigation: React.FC = () => {
   const { isConnected } = useAccount();
+  const { chain } = useNetwork();
   const { 
     isOwner, 
     isPaused,
     isLoading,
-    error 
+    error,
+    networkCheck,
+    walletCheck,
+    contractCheck 
   } = useTokenForgeAdmin();
 
-  useEffect(() => {
-    console.log('Navigation state:', {
-      isConnected,
-      isOwner,
-      timestamp: new Date().toISOString()
-    });
-  }, [isConnected, isOwner]);
-
+  // Afficher toujours la barre de navigation
   return (
     <AppBar 
       position="static" 
@@ -34,23 +31,22 @@ const Navigation: React.FC = () => {
         <Typography 
           variant="h6" 
           component={RouterLink} 
-          to="/" 
+          to="/"
           sx={{ 
-            flexGrow: 1, 
-            color: 'inherit', 
+            flexGrow: 1,
             textDecoration: 'none',
-            fontWeight: 'bold'
+            color: 'inherit'
           }}
         >
           TokenForge
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {isConnected && (
+          {isLoading ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : (
             <>
-              {isLoading ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
+              {networkCheck.isConnected && networkCheck.isCorrectNetwork && (
                 <>
                   <Button color="inherit" component={RouterLink} to="/create">
                     Créer un Token
@@ -64,50 +60,51 @@ const Navigation: React.FC = () => {
                   <Button color="inherit" component={RouterLink} to="/pricing">
                     Plans
                   </Button>
-                </>
-              )}
-              {isOwner && (
-                <>
-                  <Button 
-                    color="error"
-                    variant="contained"
-                    component={RouterLink} 
-                    to="/admin"
-                    sx={{ 
-                      fontWeight: 'bold',
-                      '&:hover': {
-                        backgroundColor: 'error.dark',
-                      }
-                    }}
-                  >
-                    Admin
-                  </Button>
-                  {isPaused && (
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        bgcolor: 'warning.main',
-                        color: 'warning.contrastText',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1
-                      }}
-                    >
-                      CONTRAT EN PAUSE
-                    </Typography>
+                  {isOwner && (
+                    <>
+                      <Button 
+                        color="error"
+                        variant="contained"
+                        component={RouterLink} 
+                        to="/admin"
+                        sx={{ 
+                          fontWeight: 'bold',
+                          '&:hover': {
+                            backgroundColor: 'error.dark',
+                          }
+                        }}
+                      >
+                        Admin
+                      </Button>
+                      {isPaused && (
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            bgcolor: 'warning.main',
+                            color: 'warning.contrastText',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1
+                          }}
+                        >
+                          CONTRAT EN PAUSE
+                        </Typography>
+                      )}
+                    </>
                   )}
                 </>
               )}
-              {error && (
-                <Typography 
-                  variant="caption" 
-                  color="error"
-                  sx={{ ml: 2 }}
-                >
-                  Erreur de connexion
-                </Typography>
-              )}
             </>
+          )}
+          
+          {error && (
+            <Typography 
+              variant="caption" 
+              color="error"
+              sx={{ ml: 2 }}
+            >
+              {error}
+            </Typography>
           )}
           <ConnectButton />
         </Box>

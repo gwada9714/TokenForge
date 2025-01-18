@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAccount, useNetwork } from 'wagmi';
 import { getContractAddress } from '../config/contracts';
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Alert } from '@mui/material';
 
 interface ContractContextType {
   contractAddress: `0x${string}` | null;
@@ -26,30 +26,31 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const loadContractAddress = async () => {
-      setIsLoading(true);
-      setError(null);
-      
       try {
+        setIsLoading(true);
         console.log('Loading contract address:', {
           chain,
           isConnected,
           currentState: { contractAddress, isLoading, error }
         });
 
-        if (!chain) {
-          setError('Please connect to a network');
-          setContractAddress(null);
-          return;
-        }
-
+        // Si pas connecté, on affiche un message
         if (!isConnected) {
-          setError('Please connect your wallet');
+          setError("Veuillez connecter votre wallet");
           setContractAddress(null);
           return;
         }
 
+        // Si pas de chaîne, on affiche un message
+        if (!chain) {
+          setError("Réseau non détecté");
+          setContractAddress(null);
+          return;
+        }
+
+        // Vérification du réseau Sepolia
         if (chain.id !== 11155111) {
-          setError(`Please connect to Sepolia network. Current network: ${chain.name}`);
+          setError(`Veuillez vous connecter au réseau Sepolia. Réseau actuel : ${chain.name}`);
           setContractAddress(null);
           return;
         }
@@ -63,19 +64,19 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
 
         if (!address) {
-          throw new Error('Contract address is undefined');
+          throw new Error('Adresse du contrat non définie');
         }
 
         // Vérifie si l'adresse est valide
         if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-          throw new Error('Invalid contract address format');
+          throw new Error('Format d\'adresse de contrat invalide');
         }
 
-        setContractAddress(address);
+        setContractAddress(address as `0x${string}`);
         setError(null);
       } catch (err) {
         console.error('Error loading contract address:', err);
-        setError('Failed to load contract address');
+        setError(err instanceof Error ? err.message : 'Erreur lors du chargement de l\'adresse du contrat');
         setContractAddress(null);
       } finally {
         setIsLoading(false);
@@ -85,10 +86,9 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     loadContractAddress();
   }, [chain, isConnected]);
 
-  // Afficher un indicateur de chargement pendant l'initialisation
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100px">
         <CircularProgress />
       </Box>
     );
@@ -96,7 +96,16 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <ContractContext.Provider value={{ contractAddress, isLoading, error }}>
-      {children}
+      {error ? (
+        <Box sx={{ width: '100%', mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+          {children}
+        </Box>
+      ) : (
+        children
+      )}
     </ContractContext.Provider>
   );
 };
