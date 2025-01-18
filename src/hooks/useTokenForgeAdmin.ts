@@ -25,6 +25,13 @@ export interface TokenForgeAdminHookReturn {
   tknPaymentDiscount: bigint;
   adminRights: string[];
   lastActivity: Date | null;
+  owner: Address | null;
+  paused: boolean;
+  pauseAvailable: boolean;
+  transferOwnership: (newOwner: Address) => Promise<void>;
+  pause: () => Promise<void>;
+  unpause: () => Promise<void>;
+  setNewOwnerAddress: (address: string) => void;
   handlePause: () => Promise<void>;
   handleUnpause: () => Promise<void>;
   handleWithdrawFees: () => Promise<void>;
@@ -561,6 +568,15 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     tknPaymentDiscount: TKN_PAYMENT_DISCOUNT,
     adminRights: [], // TODO: Implémenter les droits d'admin
     lastActivity: null, // TODO: Implémenter le suivi d'activité
+    owner: ownerData || null,
+    paused: pausedData || false,
+    pauseAvailable: Boolean(writePause),
+    transferOwnership: handleTransferOwnership,
+    pause: handlePause,
+    unpause: handleUnpause,
+    setNewOwnerAddress: (address: string) => {
+      // TODO: Implémenter la mise à jour de l'adresse du propriétaire
+    },
     handlePause,
     handleUnpause,
     handleWithdrawFees,
