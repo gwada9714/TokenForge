@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createContext, useContext, ReactNode, useEffect, useState } from "react";
-import { WagmiConfig, useAccount, useNetwork } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { wagmiConfig, chains } from "../config/wagmiConfig";
-import '@rainbow-me/rainbowkit/styles.css';
+import { useAccount, useNetwork } from "wagmi";
 
 interface Web3ProviderProps {
   children: ReactNode;
@@ -18,7 +15,7 @@ interface Web3ContextType {
 
 const Web3Context = createContext<Web3ContextType | null>(null);
 
-function Web3StateProvider({ children }: Web3ProviderProps) {
+export function Web3Provider({ children }: Web3ProviderProps) {
   const { address, isConnected } = useAccount();
   const { chain } = useNetwork();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -39,22 +36,10 @@ function Web3StateProvider({ children }: Web3ProviderProps) {
   );
 }
 
-export function Web3Provider({ children }: Web3ProviderProps) {
-  return (
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains}>
-        <Web3StateProvider>
-          {children}
-        </Web3StateProvider>
-      </RainbowKitProvider>
-    </WagmiConfig>
-  );
-}
-
 export function useWeb3() {
   const context = useContext(Web3Context);
-  if (context === null) {
-    throw new Error('useWeb3 must be used within a Web3Provider');
+  if (!context) {
+    throw new Error("useWeb3 must be used within a Web3Provider");
   }
   return context;
 }

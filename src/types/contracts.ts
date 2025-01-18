@@ -48,29 +48,50 @@ export interface TokenData extends TokenConfig {
   burned: boolean;
 }
 
+export type TokenForgeWriteFunction = 
+  | 'renounceOwnership'
+  | 'transferOwnership'
+  | 'addAlertRule'
+  | 'toggleAlertRule'
+  | 'deleteAlertRule'
+  | 'purgeAuditLogs';
+
+export type TokenForgeReadFunction =
+  | 'paused'
+  | 'owner'
+  | 'getAlertRules'
+  | 'getAuditLogs';
+
+export interface TokenForgeReadFunctionReturns {
+  paused: boolean;
+  owner: Address;
+  getAlertRules: AlertRule[];
+  getAuditLogs: AuditLog[];
+}
+
 export interface AlertRule {
-  id: bigint;
+  id: number;
   name: string;
   condition: string;
   enabled: boolean;
 }
 
 export interface AuditLog {
-  id: bigint;
-  timestamp: bigint;
+  id: number;
+  timestamp: number;
   action: string;
   details: string;
-  address: string;
+  address: Address;
 }
 
 export interface TokenForgeAdminMethods {
   getAlertRules: () => Promise<AlertRule[]>;
   addAlertRule: (name: string, condition: string) => Promise<ContractTransaction>;
-  toggleAlertRule: (id: bigint) => Promise<ContractTransaction>;
-  deleteAlertRule: (id: bigint) => Promise<ContractTransaction>;
+  toggleAlertRule: (id: number) => Promise<ContractTransaction>;
+  deleteAlertRule: (id: number) => Promise<ContractTransaction>;
   getAuditLogs: () => Promise<AuditLog[]>;
   purgeAuditLogs: () => Promise<ContractTransaction>;
-  owner: () => Promise<string>;
+  owner: () => Promise<Address>;
   paused: () => Promise<boolean>;
   renounceOwnership: () => Promise<ContractTransaction>;
   transferOwnership: (newOwner: string) => Promise<ContractTransaction>;

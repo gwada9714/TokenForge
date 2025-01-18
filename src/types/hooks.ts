@@ -37,10 +37,6 @@ export interface TokenForgeAdminHookReturn {
   owner: Address | undefined;
   networkStatus: NetworkStatus;
   isLoading: boolean;
-  pauseContract: () => Promise<void>;
-  unpauseContract: () => Promise<void>;
   transferOwnership: (newOwner: Address) => Promise<void>;
-  isPausing: boolean;
-  isUnpausing: boolean;
   isTransferring: boolean;
 }
