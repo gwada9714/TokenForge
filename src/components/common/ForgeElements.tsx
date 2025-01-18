@@ -9,11 +9,11 @@ interface StyledProps {
 export const ForgeContainer = styled.div<StyledProps>`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 ${({ theme }) => theme.spacing(4)}rem;
+  padding: 0 ${({ theme }) => theme.spacing.md};
 `;
 
 export const ForgeSection = styled.section<StyledProps>`
-  padding: ${({ theme }) => theme.spacing(16)}rem 0;
+  padding: ${({ theme }) => theme.spacing.xl} 0;
   position: relative;
   overflow: hidden;
 `;
@@ -22,7 +22,7 @@ export const ForgeHeading = styled.h1<StyledProps>`
   font-family: ${({ theme }) => theme.typography.fontFamily.heading};
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: ${({ theme }) => theme.spacing(4)}rem;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
   text-align: center;
 `;
 
@@ -30,14 +30,14 @@ export const ForgeSubheading = styled.h2<StyledProps>`
   font-family: ${({ theme }) => theme.typography.fontFamily.heading};
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.secondary};
-  margin-bottom: ${({ theme }) => theme.spacing(2)}rem;
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
 
 export const ForgeText = styled.p<StyledProps>`
   font-family: ${({ theme }) => theme.typography.fontFamily.body};
   color: ${({ theme }) => theme.colors.text.primary};
   line-height: 1.6;
-  margin-bottom: ${({ theme }) => theme.spacing(2)}rem;
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
 
 export const ForgeButton = styled(motion.button)<StyledProps>`
@@ -45,8 +45,8 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
   color: ${({ theme }) => theme.colors.text.light};
   font-family: ${({ theme }) => theme.typography.fontFamily.body};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  padding: ${({ theme }) => theme.spacing(1)}rem ${({ theme }) => theme.spacing(4)}rem;
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
   border: none;
   cursor: pointer;
   transition: ${({ theme }) => theme.transitions.default};
@@ -67,22 +67,22 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
 
 export const ForgeCard = styled(motion.div)<StyledProps>`
   background: ${({ theme }) => theme.colors.background.paper};
-  border-radius: ${({ theme }) => theme.borderRadius.large};
-  padding: ${({ theme }) => theme.spacing(8)}rem;
-  box-shadow: ${({ theme }) => theme.shadows.medium};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: ${({ theme }) => theme.spacing.xl};
+  box-shadow: ${({ theme }) => theme.shadows.md};
   transition: ${({ theme }) => theme.transitions.default};
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: ${({ theme }) => theme.shadows.large};
+    box-shadow: ${({ theme }) => theme.shadows.lg};
   }
 `;
 
 export const ForgeGrid = styled.div<StyledProps>`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: ${({ theme }) => theme.spacing(8)}rem;
-  margin: ${({ theme }) => theme.spacing(8)}rem 0;
+  gap: ${({ theme }) => theme.spacing.xl};
+  margin: ${({ theme }) => theme.spacing.xl} 0;
 `;
 
 export const ForgeMetallicCard = styled(ForgeCard)<StyledProps>`
