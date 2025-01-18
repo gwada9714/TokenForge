@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
-import { Card, Container, Typography, Box, Button, TextField, Alert } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { Card, Container, Typography, Box, Button, TextField, Alert, Grid, Divider } from '@mui/material';
+import { DataGrid, GridColDef, GridValueFormatter } from '@mui/x-data-grid';
 import { parseEther, formatEther, type Address } from 'viem';
-import type { PlanStats, PlanStatsMap } from '../../hooks/useTokenForgeAdmin';
+import PauseIcon from '@mui/icons-material/Pause';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import EditIcon from '@mui/icons-material/Edit';
+import LoadingButton from '@mui/lab/LoadingButton';
 
-// Types pour les plans
-export enum PlanType {
-  FREE = 0,
-  BASIC = 1,
-  PRO = 2,
-  ENTERPRISE = 3
+interface PlanData {
+  id: number;
+  name: string;
+  price: bigint;
 }
 
 const AdminDashboard: React.FC = () => {
@@ -21,11 +22,14 @@ const AdminDashboard: React.FC = () => {
     handleUpdatePlanPrice,
     handleTogglePause,
     handleTransferOwnership,
+    isPaused,
+    isPausing,
+    isUnpausing,
+    contractAddress,
   } = useTokenForgeAdmin();
 
   const [newOwnerAddress, setNewOwnerAddress] = useState('');
   const [newPlanPrice, setNewPlanPrice] = useState('');
-  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
 
   if (!isAdmin) {
     return (
@@ -37,44 +41,53 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  const handlePriceUpdate = () => {
-    if (selectedPlanId === null) return;
-    try {
-      const priceInWei = parseEther(newPlanPrice);
-      handleUpdatePlanPrice(selectedPlanId, priceInWei);
-    } catch (error) {
-      console.error('Erreur de format du prix:', error);
-    }
-  };
+  const rows: PlanData[] = Object.values(planStats || {}).map(plan => ({
+    id: plan.id,
+    name: plan.name,
+    price: BigInt(plan.price.toString()),
+  }));
 
-  const handleOwnershipTransfer = () => {
-    if (newOwnerAddress) {
-      handleTransferOwnership(newOwnerAddress as Address);
-    }
+  const priceFormatter: GridValueFormatter = (params) => {
+    const value = params.value as bigint;
+    return `${formatEther(value)} ETH`;
   };
 
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 90 },
+    { field: 'id', headerName: 'ID', width: 70 },
     { field: 'name', headerName: 'Nom', width: 130 },
-    { field: 'price', headerName: 'Prix (ETH)', width: 130 },
-    { field: 'subscribers', headerName: 'Abonnés', width: 130 },
-    { field: 'revenue', headerName: 'Revenus (ETH)', width: 130 },
+    { 
+      field: 'price', 
+      headerName: 'Prix', 
+      width: 130,
+      valueFormatter: priceFormatter
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 200,
+      renderCell: (params) => (
+        <Box>
+          <TextField
+            size="small"
+            placeholder="Nouveau prix (ETH)"
+            sx={{ width: 120, mr: 1 }}
+            onChange={(e) => setNewPlanPrice(e.target.value)}
+          />
+          <Button
+            size="small"
+            startIcon={<EditIcon />}
+            onClick={() => {
+              if (newPlanPrice) {
+                handleUpdatePlanPrice(Number(params.row.id), parseEther(newPlanPrice));
+              }
+            }}
+          >
+            Modifier
+          </Button>
+        </Box>
+      )
+    }
   ];
-
-  const rows = Object.entries(PlanType)
-    .filter(([key]) => isNaN(Number(key)))
-    .map(([key, value]) => {
-      const planId = Number(value);
-      const stats = planStats[planId] as PlanStats | undefined;
-      
-      return {
-        id: planId,
-        name: key,
-        price: stats ? formatEther(stats.price) : '0',
-        subscribers: stats ? stats.subscribers : 0,
-        revenue: stats ? formatEther(stats.revenue) : '0',
-      };
-    });
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -82,105 +95,90 @@ const AdminDashboard: React.FC = () => {
         Dashboard Administrateur
       </Typography>
 
-      {/* Statistiques générales */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2, mb: 4 }}>
-        <Card sx={{ p: 2 }}>
-          <Typography variant="h6">Nombre total de tokens</Typography>
-          <Typography variant="h4">{tokenCount}</Typography>
-        </Card>
-      </Box>
+      <Grid container spacing={3}>
+        {/* État du Contrat */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              État du Contrat
+            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <Typography color="text.secondary">Adresse du contrat</Typography>
+              <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                {contractAddress}
+              </Typography>
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography color="text.secondary">État</Typography>
+              <Typography color={isPaused ? 'error' : 'success.main'}>
+                {isPaused ? 'En pause' : 'Actif'}
+              </Typography>
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography color="text.secondary">Nombre total de tokens</Typography>
+              <Typography>{tokenCount?.toString() || '0'}</Typography>
+            </Box>
+          </Card>
+        </Grid>
 
-      {/* Tableau des plans */}
-      <Card sx={{ mb: 4, p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Statistiques des plans
-        </Typography>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          autoHeight
-          initialState={{
-            pagination: { paginationModel: { pageSize: 5 } },
-          }}
-          pageSizeOptions={[5, 10, 25]}
-        />
-      </Card>
+        {/* Actions */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Actions
+            </Typography>
+            <Box sx={{ mb: 3 }}>
+              <LoadingButton
+                component="button"
+                variant="contained"
+                color={isPaused ? "success" : "warning"}
+                onClick={handleTogglePause}
+                loading={isPausing || isUnpausing}
+                startIcon={isPaused ? <PlayArrowIcon /> : <PauseIcon />}
+                fullWidth
+              >
+                {isPaused ? 'Réactiver le contrat' : 'Mettre en pause le contrat'}
+              </LoadingButton>
+            </Box>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Transférer la propriété
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Nouvelle adresse du propriétaire"
+                value={newOwnerAddress}
+                onChange={(e) => setNewOwnerAddress(e.target.value)}
+                sx={{ mb: 1 }}
+              />
+              <Button
+                variant="outlined"
+                onClick={() => handleTransferOwnership(newOwnerAddress)}
+                fullWidth
+              >
+                Transférer la propriété
+              </Button>
+            </Box>
+          </Card>
+        </Grid>
 
-      {/* Actions administratives */}
-      <Card sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Actions administratives
-        </Typography>
-
-        <Box sx={{ display: 'grid', gap: 2, maxWidth: 400 }}>
-          {/* Mise à jour du prix d'un plan */}
-          <Box>
-            <TextField
-              select
-              label="Plan"
-              fullWidth
-              value={selectedPlanId ?? ''}
-              onChange={(e) => setSelectedPlanId(Number(e.target.value))}
-              SelectProps={{
-                native: true,
-              }}
-            >
-              <option value="">Sélectionner un plan</option>
-              {Object.entries(PlanType)
-                .filter(([key]) => isNaN(Number(key)))
-                .map(([key, value]) => (
-                  <option key={value} value={value}>
-                    {key}
-                  </option>
-                ))}
-            </TextField>
-            <TextField
-              label="Nouveau prix (ETH)"
-              type="number"
-              value={newPlanPrice}
-              onChange={(e) => setNewPlanPrice(e.target.value)}
-              fullWidth
-              sx={{ mt: 1 }}
+        {/* Plans */}
+        <Grid item xs={12}>
+          <Card sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Gestion des Plans
+            </Typography>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              autoHeight
+              disableRowSelectionOnClick
             />
-            <Button
-              variant="contained"
-              onClick={handlePriceUpdate}
-              disabled={!selectedPlanId || !newPlanPrice}
-              sx={{ mt: 1 }}
-            >
-              Mettre à jour le prix
-            </Button>
-          </Box>
-
-          {/* Transfert de propriété */}
-          <Box sx={{ mt: 2 }}>
-            <TextField
-              label="Nouvelle adresse propriétaire"
-              value={newOwnerAddress}
-              onChange={(e) => setNewOwnerAddress(e.target.value)}
-              fullWidth
-            />
-            <Button
-              variant="contained"
-              onClick={handleOwnershipTransfer}
-              disabled={!newOwnerAddress}
-              sx={{ mt: 1 }}
-            >
-              Transférer la propriété
-            </Button>
-          </Box>
-
-          {/* Bouton pause/reprise */}
-          <Button
-            variant="contained"
-            color="warning"
-            onClick={handleTogglePause}
-            sx={{ mt: 2 }}
-          >
-            Pause/Reprise du contrat
-          </Button>
-        </Box>
-      </Card>
+          </Card>
+        </Grid>
+      </Grid>
     </Container>
   );
 };

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert, Box, CircularProgress, Typography, Stack, Button } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { NetworkStatus } from './NetworkStatus';
 import { WalletStatus } from './WalletStatus';
@@ -71,6 +72,14 @@ export const AdminCheck: React.FC<{ children?: React.ReactNode }> = ({ children 
       <Stack spacing={2}>
         <Typography variant="h6" gutterBottom>
           Vérification de l'accès administrateur
+          <Button 
+            onClick={handleRetryCheck}
+            size="small"
+            sx={{ ml: 2 }}
+            startIcon={<RefreshIcon />}
+          >
+            Rafraîchir
+          </Button>
         </Typography>
 
         <NetworkStatus networkCheck={networkCheck} />

@@ -11,7 +11,7 @@ export interface TokenForgeAdminHookReturn {
   isPaused: boolean;
   pause: () => Promise<void>;
   unpause: () => Promise<void>;
-  transferOwnership: (newOwner: string) => Promise<void>;
+  handleTransferOwnership: (newOwner: string) => Promise<void>;
   error: string | undefined;
   isCorrectNetwork: boolean;
   isWaitingForTx: boolean;
@@ -33,6 +33,11 @@ export interface TokenForgeAdminHookReturn {
   contractCheck: ContractCheckResult;
   checkAdminRights: () => Promise<void>;
   handleRetryCheck: () => Promise<void>;
+  tokenCount: number;
+  planStats: PlanStatsMap;
+  handleUpdatePlanPrice: (planId: number, newPrice: bigint) => Promise<void>;
+  handleTogglePause: () => Promise<void>;
+  contractAddress: Address | null;
 }
 
 interface NetworkCheckResult {
@@ -55,6 +60,15 @@ interface ContractCheckResult {
   isDeployed: boolean;
   version: string | undefined;
   error?: string;
+}
+
+interface PlanStatsMap {
+  [key: number]: {
+    id: number;
+    name: string;
+    price: bigint;
+    // Autres propriétés...
+  };
 }
 
 const RETRY_DELAY = 1000;
@@ -149,6 +163,85 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
       handleError(error, 'unpause');
     },
   });
+
+  // Configuration pour le transfert de propriété
+  const [transferToAddress, setTransferToAddress] = useState<string | null>(null);
+
+  const { config: transferOwnershipConfig } = usePrepareContractWrite({
+    address: contractAddress as Address,
+    abi: TokenForgeFactory.abi,
+    functionName: 'transferOwnership',
+    args: transferToAddress ? [transferToAddress as Address] : undefined,
+    enabled: isOwner && !!contractAddress && isValidContract && isCorrectNetwork && !!transferToAddress,
+  });
+
+  const { write: writeTransferOwnership } = useContractWrite(transferOwnershipConfig);
+
+  // Lecture du propriétaire avec rafraîchissement automatique
+  const { data: owner, refetch: refetchOwner } = useContractRead({
+    address: contractAddress as Address,
+    abi: TokenForgeFactory.abi,
+    functionName: 'owner',
+    watch: true,
+    cacheTime: 0,
+  });
+
+  useEffect(() => {
+    const checkOwnership = async () => {
+      try {
+        await refetchOwner();
+        const ownerAddress = owner as Address;
+        if (ownerAddress && address && 
+            ownerAddress.toLowerCase() === address.toLowerCase()) {
+          setAdminRights(prev => [...prev, 'owner']);
+          setWalletCheck(prev => ({ ...prev, isContractOwner: true }));
+        }
+      } catch (error) {
+        console.error('Error checking ownership:', error);
+      }
+    };
+
+    checkOwnership();
+  }, [owner, address, refetchOwner]);
+
+  // Lecture du nombre total de tokens
+  const { data: tokenCount } = useContractRead({
+    address: contractAddress as Address,
+    abi: TokenForgeFactory.abi,
+    functionName: 'allTokensLength',
+    watch: true,
+    enabled: !!contractAddress && isValidContract && isCorrectNetwork,
+  });
+
+  // Lecture des statistiques des plans
+  const { data: planStatsData } = useContractRead({
+    address: contractAddress as Address,
+    abi: TokenForgeFactory.abi,
+    functionName: 'getPlanStats',
+    watch: true,
+    enabled: !!contractAddress && isValidContract && isCorrectNetwork,
+  });
+
+  // Préparation de la mise à jour du prix des plans
+  const { config: updatePlanPriceConfig } = usePrepareContractWrite({
+    address: contractAddress as Address,
+    abi: TokenForgeFactory.abi,
+    functionName: 'updatePlanPrice',
+    enabled: isOwner && !!contractAddress && isValidContract && isCorrectNetwork,
+  });
+
+  const { write: writeUpdatePlanPrice } = useContractWrite(updatePlanPriceConfig);
+
+  const handleUpdatePlanPrice = async (planId: number, newPrice: bigint) => {
+    try {
+      await writeUpdatePlanPrice?.({
+        args: [BigInt(planId), newPrice],
+      });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du prix:', error);
+      throw error;
+    }
+  };
 
   // Fonctions utilitaires
   const handleError = useCallback((error: unknown, source: string) => {
@@ -260,30 +353,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
       if (!isContractValid) return;
 
       // Vérification du propriétaire
-      const ownerAddress = await publicClient.readContract({
-        address: contractAddress as `0x${string}`,
-        abi: TokenForgeFactory.abi,
-        functionName: 'owner'
-      });
-
-      console.log('Vérification des droits:', {
-        ownerAddress,
-        currentAddress: address,
-        isOwner: ownerAddress === address
-      });
-
-      setWalletCheck(prev => ({
-        ...prev,
-        isContractOwner: ownerAddress === address
-      }));
-
-      if (ownerAddress === address) {
-        setAdminRights(['OWNER']);
-        setError(undefined);
-      } else {
-        setAdminRights([]);
-        setError("Vous n'êtes pas le propriétaire de ce contrat");
-      }
+      await refetchOwner();
 
       setLastActivity(new Date());
 
@@ -293,7 +363,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [address, contractAddress, publicClient, chain, checkNetwork, checkWallet, handleError, checkContract]);
+  }, [address, contractAddress, publicClient, chain, checkNetwork, checkWallet, handleError, checkContract, refetchOwner]);
 
   // Fonction pour réessayer les vérifications
   const handleRetryCheck = useCallback(async () => {
@@ -337,6 +407,29 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     }
   };
 
+  // Fonction pour gérer la pause/reprise
+  const handleTogglePause = useCallback(async () => {
+    if (isPaused) {
+      await writeUnpause?.();
+    } else {
+      await writePause?.();
+    }
+  }, [isPaused, writePause, writeUnpause]);
+
+  // Fonction pour transférer la propriété
+  const handleTransferOwnership = useCallback(async (newOwner: string) => {
+    if (!isOwner || !contractAddress || !isValidContract || !isCorrectNetwork) return;
+    try {
+      setTransferToAddress(newOwner);
+      await writeTransferOwnership?.();
+    } catch (error) {
+      console.error('Erreur lors du transfert de propriété:', error);
+      throw error;
+    } finally {
+      setTransferToAddress(null);
+    }
+  }, [isOwner, contractAddress, isValidContract, isCorrectNetwork, writeTransferOwnership]);
+
   // Effet pour la vérification initiale
   useEffect(() => {
     checkAdminRights();
@@ -347,7 +440,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     isPaused,
     pause,
     unpause,
-    transferOwnership: async () => {},
+    handleTransferOwnership,
     error: error || pausedError?.message,
     isCorrectNetwork,
     isWaitingForTx: isPausing || isUnpausing,
@@ -368,6 +461,11 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     walletCheck,
     contractCheck,
     checkAdminRights,
-    handleRetryCheck
+    handleRetryCheck,
+    tokenCount: tokenCount as number,
+    planStats: planStatsData as PlanStatsMap,
+    handleUpdatePlanPrice,
+    handleTogglePause,
+    contractAddress,
   };
 }

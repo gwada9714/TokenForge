@@ -12,7 +12,7 @@ const TOKEN_FACTORY_SEPOLIA = import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA as stri
 const contractAddresses: ContractAddresses = {
   TOKEN_FACTORY: {
     1: TOKEN_FACTORY_MAINNET as Address,
-    11155111: '0x5FbDB2315678afecb367f032d93F642f64180aa3' as Address, // Sepolia - Nouvelle adresse
+    11155111: '0x4007d5731b8C4659404dEAa0e1cEE6e7481a6Edf' as Address, // Sepolia
   },
   TOKEN_FORGE_PLANS: {
     1: '0x0000000000000000000000000000000000000000' as Address, // Mainnet
