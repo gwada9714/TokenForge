@@ -41,10 +41,20 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     functionName: 'paused',
     chainId: REQUIRED_NETWORK_ID,
     watch: true,
-    cacheTime: 5000,
-    staleTime: 2000,
+    cacheTime: 2000, // Réduit pour une mise à jour plus fréquente
+    staleTime: 1000, // Réduit pour forcer plus de rafraîchissements
+    enabled: !!contractAddress && !!chain?.id, // N'active l'appel que si nous avons une adresse et une chaîne valide
     onSuccess: (data) => {
-      console.log('Paused status fetched:', { isPaused: data });
+      console.log('Paused status details:', { 
+        isPaused: data,
+        contractAddress,
+        chainId: chain?.id,
+        currentNetwork: chain?.name,
+        requiredNetwork: REQUIRED_NETWORK_ID,
+        isConnected: !!address,
+        currentAddress: address,
+        contractInterface: TokenForgeFactoryABI.abi.filter(item => 'name' in item).map(item => item.name)
+      });
       if (pausedError) {
         dispatch({ 
           type: 'SET_ERROR', 
@@ -53,11 +63,22 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
       }
     },
     onError: (error) => {
-      console.error('Error fetching paused status:', {
+      console.error('Detailed paused() error:', {
         error,
+        errorName: error.name,
         errorMessage: error.message,
         chainId: chain?.id,
-        contractAddress
+        contractAddress,
+        isConnected: !!address,
+        currentAddress: address,
+        abi: TokenForgeFactoryABI.abi.find(item => 
+          'name' in item && item.name === 'paused'
+        ),
+        network: {
+          current: chain?.name,
+          required: REQUIRED_NETWORK_ID,
+          isCorrect: chain?.id === REQUIRED_NETWORK_ID
+        }
       });
       dispatch({ 
         type: 'SET_ERROR', 
@@ -192,6 +213,62 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
       },
     });
   }, [address]);
+
+  // Vérification du contrat
+  useEffect(() => {
+    const checkContract = async () => {
+      if (!contractAddress || !chain?.id || !publicClient) {
+        console.log('Conditions non remplies:', {
+          hasContractAddress: !!contractAddress,
+          hasChainId: !!chain?.id,
+          hasPublicClient: !!publicClient
+        });
+        return;
+      }
+
+      try {
+        // Vérifier si le code du contrat existe à l'adresse
+        const code = await publicClient.getBytecode({
+          address: contractAddress,
+        });
+
+        console.log('Contract verification:', {
+          address: contractAddress,
+          hasCode: !!code,
+          networkId: chain.id,
+          networkName: chain.name
+        });
+
+        if (!code) {
+          dispatch({
+            type: 'SET_ERROR',
+            payload: 'Aucun contrat trouvé à cette adresse'
+          });
+          return;
+        }
+
+        // Vérifier si le contrat a les fonctions requises
+        const contractFunctions = TokenForgeFactoryABI.abi
+          .filter(item => 'name' in item)
+          .map(item => item.name);
+
+        console.log('Contract interface:', {
+          functions: contractFunctions,
+          hasOwnerFunction: contractFunctions.includes('owner'),
+          hasPausedFunction: contractFunctions.includes('paused')
+        });
+
+      } catch (error) {
+        console.error('Contract verification error:', error);
+        dispatch({
+          type: 'SET_ERROR',
+          payload: `Erreur de vérification du contrat: ${error instanceof Error ? error.message : 'Erreur inconnue'}`
+        });
+      }
+    };
+
+    checkContract();
+  }, [contractAddress, chain?.id, publicClient]);
 
   // Création du contrat
   const contract = useMemo(() => {
