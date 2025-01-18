@@ -50,7 +50,6 @@ declare module 'styled-components' {
         '5xl': string;
       };
       fontWeight: {
-        light: number;
         normal: number;
         medium: number;
         semibold: number;
