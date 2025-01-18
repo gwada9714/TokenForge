@@ -92,12 +92,79 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
   const publicClient = usePublicClient();
   const { contractAddress, error: contractContextError } = useContract();
 
+  // Valeurs dérivées de base
+  const isOwner = useMemo(() => walletCheck.isContractOwner, [walletCheck.isContractOwner]);
+  const isValidContract = useMemo(() => contractCheck.isValid, [contractCheck.isValid]);
+  const isCorrectNetwork = useMemo(() => networkCheck.isCorrectNetwork, [networkCheck.isCorrectNetwork]);
+
+  // Lecture de l'état de pause avec gestion d'erreur
+  const { data: pausedState, error: pausedError, isError: isPausedError, isLoading: isPausedLoading } = useContractRead({
+    address: contractAddress as `0x${string}`,
+    abi: TokenForgeFactory.abi,
+    functionName: 'paused',
+    watch: true,
+    enabled: !!contractAddress && isValidContract && isCorrectNetwork,
+    onError: (error) => {
+      console.warn('Erreur lors de la lecture de l\'état de pause:', error);
+      if (error instanceof Error && error.message.includes("execution reverted")) {
+        setError("Le contrat n'est pas correctement initialisé. Veuillez réessayer plus tard.");
+      } else {
+        setError(error instanceof Error ? error.message : 'Erreur lors de la lecture de l\'état de pause');
+      }
+    }
+  });
+
+  // État de pause dérivé
+  const isPaused = useMemo(() => {
+    if (isPausedLoading) return false;
+    if (isPausedError || !isValidContract || !isCorrectNetwork) return false;
+    return !!pausedState;
+  }, [pausedState, isPausedError, isValidContract, isCorrectNetwork, isPausedLoading]);
+
+  // Hooks pour les interactions avec le contrat
+  const { config: pauseConfig } = usePrepareContractWrite({
+    address: contractAddress as `0x${string}`,
+    abi: TokenForgeFactory.abi,
+    functionName: 'pause',
+    enabled: isOwner && contractAddress !== null && !isPaused && isValidContract && isCorrectNetwork,
+  });
+
+  const { config: unpauseConfig } = usePrepareContractWrite({
+    address: contractAddress as `0x${string}`,
+    abi: TokenForgeFactory.abi,
+    functionName: 'unpause',
+    enabled: isOwner && contractAddress !== null && isPaused && isValidContract && isCorrectNetwork,
+  });
+
+  const { write: writePause, isLoading: isPausing } = useContractWrite({
+    ...pauseConfig,
+    onError: (error) => {
+      handleError(error, 'pause');
+    },
+  });
+
+  const { write: writeUnpause, isLoading: isUnpausing } = useContractWrite({
+    ...unpauseConfig,
+    onError: (error) => {
+      handleError(error, 'unpause');
+    },
+  });
+
   // Fonctions utilitaires
   const handleError = useCallback((error: unknown, source: string) => {
     console.error(`Erreur dans ${source}:`, error);
-    const message = error instanceof Error ? error.message : "Une erreur est survenue";
-    setError(message);
-  }, []);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+    
+    if (errorMessage.includes('execution reverted')) {
+      setError("L'opération a échoué. Vérifiez que le contrat est correctement initialisé et que vous avez les droits nécessaires.");
+    } else if (errorMessage.includes('network')) {
+      setError("Erreur réseau. Vérifiez votre connexion et que vous êtes sur le bon réseau (Sepolia).");
+    } else if (errorMessage.includes('user rejected')) {
+      setError("L'opération a été annulée par l'utilisateur.");
+    } else {
+      setError(errorMessage);
+    }
+  }, [setError]);
 
   // Vérification du réseau
   const checkNetwork = useCallback(() => {
@@ -130,81 +197,67 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
 
   // Vérification du contrat
   const checkContract = useCallback(async () => {
-    try {
-      if (!contractAddress) {
-        setContractCheck(prev => ({
-          ...prev,
-          isValid: false,
-          error: 'Adresse du contrat non disponible'
-        }));
-        return false;
-      }
+    if (!contractAddress) {
+      setContractCheck({
+        isValid: false,
+        address: undefined,
+        isDeployed: false,
+        version: undefined,
+        error: "Adresse du contrat non disponible"
+      });
+      return false;
+    }
 
+    try {
       const code = await publicClient.getBytecode({
         address: contractAddress as `0x${string}`
       });
 
-      const isDeployed = !!code;
-      
-      setContractCheck({
-        isValid: isDeployed,
-        address: contractAddress,
-        isDeployed,
-        version: '1.0',
-        error: isDeployed ? undefined : 'Contrat non déployé'
-      });
+      if (!code) {
+        setContractCheck({
+          isValid: false,
+          address: contractAddress,
+          isDeployed: false,
+          version: undefined,
+          error: "Le contrat n'est pas déployé sur ce réseau"
+        });
+        return false;
+      }
 
-      return isDeployed;
+      setContractCheck({
+        isValid: true,
+        address: contractAddress,
+        isDeployed: true,
+        version: '1.0'
+      });
+      return true;
     } catch (error) {
       console.error('Erreur lors de la vérification du contrat:', error);
-      setContractCheck(prev => ({
-        ...prev,
+      setContractCheck({
         isValid: false,
-        error: 'Erreur lors de la vérification du contrat'
-      }));
+        address: contractAddress,
+        isDeployed: false,
+        version: undefined,
+        error: error instanceof Error ? error.message : "Erreur lors de la vérification du contrat"
+      });
       return false;
     }
   }, [contractAddress, publicClient]);
 
   // Vérification des droits d'administration
   const checkAdminRights = useCallback(async () => {
-    setIsLoading(true);
-    setError(undefined);
-
     try {
-      // Vérification du réseau
+      setIsLoading(true);
+      setError(undefined);
+
       const { isConnected, isCorrectNetwork } = checkNetwork();
-      if (!isConnected) {
-        setError("Veuillez connecter votre wallet");
-        return;
-      }
-      if (!isCorrectNetwork) {
-        setError(`Veuillez vous connecter au réseau Sepolia (réseau actuel : ${chain?.name})`);
-        return;
-      }
+      if (!isConnected || !isCorrectNetwork) return;
 
-      // Vérification du wallet
-      const { isConnected: isWalletConnected } = checkWallet();
-      if (!isWalletConnected) {
-        setError("Wallet non connecté");
-        return;
-      }
+      const walletStatus = checkWallet();
+      if (!walletStatus.isConnected) return;
 
-      // Vérification du contrat
-      if (!contractAddress) {
-        setError("Adresse du contrat non disponible");
-        return;
-      }
-
-      // Vérification du code du contrat
-      const code = await publicClient.getBytecode({
-        address: contractAddress as `0x${string}`
-      });
-
-      if (!code) {
-        setError("Le contrat n'est pas déployé sur ce réseau");
-        return;
-      }
+      const isContractValid = await checkContract();
+      if (!isContractValid) return;
 
       // Vérification du propriétaire
       const ownerAddress = await publicClient.readContract({
@@ -233,12 +286,6 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
       }
 
       setLastActivity(new Date());
-      setContractCheck({
-        isValid: true,
-        address: contractAddress,
-        isDeployed: true,
-        version: '1.0'
-      });
 
     } catch (error) {
       console.error('Erreur lors de la vérification des droits:', error);
@@ -246,7 +293,7 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [address, contractAddress, publicClient, chain, checkNetwork, checkWallet, handleError]);
+  }, [address, contractAddress, publicClient, chain, checkNetwork, checkWallet, handleError, checkContract]);
 
   // Fonction pour réessayer les vérifications
   const handleRetryCheck = useCallback(async () => {
@@ -254,33 +301,64 @@ export function useTokenForgeAdmin(): TokenForgeAdminHookReturn {
     await checkAdminRights();
   }, [checkAdminRights]);
 
+  // Fonction pour mettre en pause avec vérifications
+  const pause = async () => {
+    try {
+      if (!isCorrectNetwork) throw new Error("Veuillez vous connecter au bon réseau");
+      if (!isValidContract) throw new Error("Le contrat n'est pas valide");
+      if (!isOwner) throw new Error("Vous n'avez pas les droits pour mettre en pause le contrat");
+      if (!writePause) throw new Error("La fonction de pause n'est pas disponible");
+      if (isPausedError) throw new Error("Impossible de vérifier l'état de pause du contrat");
+      if (isPaused) throw new Error("Le contrat est déjà en pause");
+      
+      await writePause();
+      setLastActivity(new Date());
+    } catch (error) {
+      handleError(error, 'pause');
+      throw error;
+    }
+  };
+
+  // Fonction pour désactiver la pause avec vérifications
+  const unpause = async () => {
+    try {
+      if (!isCorrectNetwork) throw new Error("Veuillez vous connecter au bon réseau");
+      if (!isValidContract) throw new Error("Le contrat n'est pas valide");
+      if (!isOwner) throw new Error("Vous n'avez pas les droits pour désactiver la pause");
+      if (!writeUnpause) throw new Error("La fonction de désactivation de pause n'est pas disponible");
+      if (isPausedError) throw new Error("Impossible de vérifier l'état de pause du contrat");
+      if (!isPaused) throw new Error("Le contrat n'est pas en pause");
+      
+      await writeUnpause();
+      setLastActivity(new Date());
+    } catch (error) {
+      handleError(error, 'unpause');
+      throw error;
+    }
+  };
+
   // Effet pour la vérification initiale
   useEffect(() => {
     checkAdminRights();
   }, [checkAdminRights]);
 
-  // Valeurs dérivées
-  const isOwner = useMemo(() => walletCheck.isContractOwner, [walletCheck.isContractOwner]);
-  const isValidContract = useMemo(() => contractCheck.isValid, [contractCheck.isValid]);
-  const isCorrectNetwork = useMemo(() => networkCheck.isCorrectNetwork, [networkCheck.isCorrectNetwork]);
-
   return {
     isOwner,
-    isPaused: false,
-    pause: async () => {},
-    unpause: async () => {},
+    isPaused,
+    pause,
+    unpause,
     transferOwnership: async () => {},
-    error,
+    error: error || pausedError?.message,
     isCorrectNetwork,
-    isWaitingForTx: false,
+    isWaitingForTx: isPausing || isUnpausing,
     isValidContract,
     pendingTx,
     isAdmin: isOwner,
     owner: undefined,
-    paused: false,
-    pauseAvailable: false,
-    isPausing: false,
-    isUnpausing: false,
+    paused: isPaused,
+    pauseAvailable: isOwner && !isPaused,
+    isPausing,
+    isUnpausing,
     isTransferring: false,
     setNewOwnerAddress: () => {},
     isLoading,

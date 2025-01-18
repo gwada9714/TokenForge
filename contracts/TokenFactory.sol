@@ -17,7 +17,7 @@ contract TokenFactory is Ownable, Pausable {
         string symbol
     );
 
-    constructor() Ownable() Pausable() {
+    constructor() {
         _transferOwnership(msg.sender);
     }
 

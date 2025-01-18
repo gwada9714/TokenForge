@@ -55,25 +55,37 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return;
         }
 
-        const address = getContractAddress('TOKEN_FACTORY', chain.id);
-        console.log('Contract configuration:', {
-          chainId: chain.id,
-          address,
-          rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL,
-          deploymentOwner: import.meta.env.VITE_DEPLOYMENT_OWNER
-        });
+        try {
+          const address = getContractAddress('TOKEN_FACTORY', chain.id);
+          console.log('Contract configuration:', {
+            chainId: chain.id,
+            address,
+            rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL,
+            deploymentOwner: import.meta.env.VITE_DEPLOYMENT_OWNER
+          });
 
-        if (!address) {
-          throw new Error('Adresse du contrat non définie');
+          if (!address) {
+            setError('Adresse du contrat non définie');
+            setContractAddress(null);
+            return;
+          }
+
+          // Vérifie si l'adresse est valide
+          if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+            setError('Format d\'adresse du contrat invalide');
+            setContractAddress(null);
+            return;
+          }
+
+          setContractAddress(address);
+          setError(null);
+        } catch (err) {
+          console.error('Erreur lors du chargement du contrat:', err);
+          setError(err instanceof Error ? err.message : 'Erreur lors du chargement du contrat');
+          setContractAddress(null);
+        } finally {
+          setIsLoading(false);
         }
-
-        // Vérifie si l'adresse est valide
-        if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-          throw new Error('Format d\'adresse de contrat invalide');
-        }
-
-        setContractAddress(address as `0x${string}`);
-        setError(null);
       } catch (err) {
         console.error('Error loading contract address:', err);
         setError(err instanceof Error ? err.message : 'Erreur lors du chargement de l\'adresse du contrat');

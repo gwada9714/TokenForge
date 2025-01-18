@@ -5,7 +5,7 @@ import { FeaturesSection } from '../components/sections/FeaturesSection';
 import { PricingSection } from '../components/sections/PricingSection';
 import TokenSection from '../components/sections/TokenSection';
 import { CommunitySection } from '../components/sections/CommunitySection';
-import AdminCheck from '../components/admin/AdminCheck';
+import { AdminCheck } from '../components/admin/AdminCheck';
 import { Container } from '@mui/material';
 
 const Home: React.FC = () => {

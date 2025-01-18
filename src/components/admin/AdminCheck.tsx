@@ -7,7 +7,7 @@ import { ContractStatus } from './ContractStatus';
 import { ContractPauseStatus } from './ContractPauseStatus';
 import { AdminRights } from './AdminRights';
 
-export const AdminCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AdminCheck: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const {
     isAdmin,
     error,
