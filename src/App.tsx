@@ -1,9 +1,9 @@
 import React from "react";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
-import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import { forgeTheme } from "./theme/forge-theme";
+import { Routes, Route } from "react-router-dom";
 import { GlobalStyle } from "./styles/GlobalStyle";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { LoginForm } from "./components/auth/LoginForm";

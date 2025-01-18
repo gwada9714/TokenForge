@@ -1,9 +1,8 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { CircularProgress, Box, Alert } from '@mui/material';
-import { useContract } from '../../providers/ContractProvider';
+import { useAccount, useNetwork } from 'wagmi';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,13 +10,12 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
-  const { user, loading: authLoading } = useAuth();
-  const { isOwner, error: adminError, isCorrectNetwork } = useTokenForgeAdmin();
-  const { isLoading: contractLoading, error: contractError } = useContract();
-  const location = useLocation();
+  const { address, isConnecting } = useAccount();
+  const { chain } = useNetwork();
+  const { isOwner, isLoading: adminLoading } = useTokenForgeAdmin();
 
-  // Afficher un indicateur de chargement pendant que les données sont chargées
-  if (authLoading || (requireAdmin && contractLoading)) {
+  // Afficher un indicateur de chargement pendant la connexion
+  if (isConnecting || (requireAdmin && adminLoading)) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
@@ -25,14 +23,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     );
   }
 
-  // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} />;
+  // Rediriger vers la page d'accueil si l'utilisateur n'est pas connecté
+  if (!address) {
+    return <Navigate to="/" />;
   }
+
+  // Vérifier le réseau
+  const isCorrectNetwork = chain?.id === 11155111; // Sepolia
 
   // Vérifier les conditions pour l'accès admin
   if (requireAdmin) {
-    if (!isCorrectNetwork || contractError || adminError) {
+    if (!isCorrectNetwork) {
       return (
         <Box sx={{ 
           display: 'flex', 
@@ -44,22 +45,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
           padding: 2,
           textAlign: 'center'
         }}>
-          {!isCorrectNetwork && (
-            <Alert severity="error">
-              Please connect to the Sepolia network (Chain ID: 11155111)
-            </Alert>
-          )}
-          {(contractError || adminError) && (
-            <Alert severity="error">
-              {contractError || adminError || 'Error accessing admin features'}
-            </Alert>
-          )}
-          <div>Please make sure you are:</div>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li>✓ Connected to the Sepolia network</li>
-            <li>✓ Using the correct wallet address</li>
-            <li>✓ The contract owner</li>
-          </ul>
+          <Alert severity="error">
+            Veuillez vous connecter au réseau Sepolia (Chain ID: 11155111)
+          </Alert>
         </Box>
       );
     }
@@ -73,10 +61,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
           alignItems: 'center', 
           height: '100vh',
           gap: 2,
-          padding: 2
+          padding: 2,
+          textAlign: 'center'
         }}>
           <Alert severity="error">
-            Access Denied: Only the contract owner can access this page
+            Vous n'avez pas les droits d'administration
           </Alert>
         </Box>
       );
@@ -85,3 +74,5 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
 
   return <>{children}</>;
 };
+
+export default ProtectedRoute;

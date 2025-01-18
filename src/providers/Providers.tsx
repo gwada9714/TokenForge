@@ -1,6 +1,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StyledEngineProvider, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import { StyledEngineProvider } from '@mui/material/styles';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { memo } from 'react';
 import { muiTheme } from '../theme/mui';
@@ -8,9 +9,11 @@ import { ThemeProvider } from 'styled-components';
 import { styledTheme } from '../theme/forge-theme';
 import { StyleSheetManager } from 'styled-components';
 import isPropValid from '@emotion/is-prop-valid';
-import { AuthProvider } from '../contexts/AuthContext';
-import { ContractProvider } from './ContractProvider';
+import { Provider as ReduxProvider } from 'react-redux';
+import { store } from '../store/store';
 import { Web3Providers } from './Web3Providers';
+import { ContractProvider } from './ContractProvider';
+import { AuthProvider } from '../contexts/AuthContext';
 
 // Configuration du client de requête avec mise en cache optimisée
 const queryClient = new QueryClient({
@@ -33,22 +36,24 @@ interface ProvidersProps {
 const Providers = memo<ProvidersProps>(({ children }) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <Web3Providers>
-        <StyledEngineProvider injectFirst>
-          <MuiThemeProvider theme={muiTheme}>
-            <ThemeProvider theme={styledTheme}>
-              <StyleSheetManager enableVendorPrefixes shouldForwardProp={isPropValid}>
-                <CssBaseline />
-                <ContractProvider>
-                  <AuthProvider>
-                    {children}
-                  </AuthProvider>
-                </ContractProvider>
-              </StyleSheetManager>
-            </ThemeProvider>
-          </MuiThemeProvider>
-        </StyledEngineProvider>
-      </Web3Providers>
+      <ReduxProvider store={store}>
+        <Web3Providers>
+          <ContractProvider>
+            <AuthProvider>
+              <StyledEngineProvider injectFirst>
+                <MuiThemeProvider theme={muiTheme}>
+                  <ThemeProvider theme={styledTheme}>
+                    <StyleSheetManager enableVendorPrefixes shouldForwardProp={isPropValid}>
+                      <CssBaseline />
+                      {children}
+                    </StyleSheetManager>
+                  </ThemeProvider>
+                </MuiThemeProvider>
+              </StyledEngineProvider>
+            </AuthProvider>
+          </ContractProvider>
+        </Web3Providers>
+      </ReduxProvider>
     </QueryClientProvider>
   );
 });

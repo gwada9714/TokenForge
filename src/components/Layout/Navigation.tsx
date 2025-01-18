@@ -12,7 +12,6 @@ const Navigation: React.FC = () => {
     isLoading
   } = useTokenForgeAdmin();
 
-  // Afficher toujours la barre de navigation
   return (
     <AppBar 
       position="static" 
@@ -36,45 +35,45 @@ const Navigation: React.FC = () => {
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {isLoading ? (
-            <CircularProgress size={20} color="inherit" />
-          ) : (
+          {/* Toujours afficher le bouton de connexion */}
+          <CustomConnectButton />
+
+          {/* Afficher les autres boutons seulement si connecté */}
+          {networkStatus.isConnected && networkStatus.isCorrectNetwork && !isLoading && (
             <>
-              {networkStatus.isConnected && networkStatus.isCorrectNetwork && (
-                <>
-                  <Button color="inherit" component={RouterLink} to="/create">
-                    Créer un Token
-                  </Button>
-                  <Button color="inherit" component={RouterLink} to="/my-tokens">
-                    Mes Tokens
-                  </Button>
-                  <Button color="inherit" component={RouterLink} to="/staking">
-                    Staking
-                  </Button>
-                  <Button color="inherit" component={RouterLink} to="/pricing">
-                    Plans
-                  </Button>
-                  {isOwner && (
-                    <Button 
-                      color="error"
-                      variant="contained"
-                      component={RouterLink} 
-                      to="/admin"
-                      sx={{ 
-                        fontWeight: 'bold',
-                        '&:hover': {
-                          backgroundColor: 'error.dark',
-                        }
-                      }}
-                    >
-                      Admin
-                    </Button>
-                  )}
-                </>
+              <Button color="inherit" component={RouterLink} to="/create">
+                Créer un Token
+              </Button>
+              <Button color="inherit" component={RouterLink} to="/my-tokens">
+                Mes Tokens
+              </Button>
+              <Button color="inherit" component={RouterLink} to="/staking">
+                Staking
+              </Button>
+              <Button color="inherit" component={RouterLink} to="/pricing">
+                Plans
+              </Button>
+              {isOwner && (
+                <Button 
+                  color="error"
+                  variant="contained"
+                  component={RouterLink} 
+                  to="/admin"
+                  sx={{ 
+                    fontWeight: 'bold',
+                    '&:hover': {
+                      backgroundColor: 'error.dark',
+                    }
+                  }}
+                >
+                  Admin
+                </Button>
               )}
             </>
           )}
-          
+          {isLoading && (
+            <CircularProgress size={20} color="inherit" />
+          )}
           {error && (
             <Typography 
               variant="caption" 
@@ -84,7 +83,6 @@ const Navigation: React.FC = () => {
               {error}
             </Typography>
           )}
-          <CustomConnectButton />
         </Box>
       </Toolbar>
     </AppBar>
