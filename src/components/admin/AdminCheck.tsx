@@ -4,6 +4,7 @@ import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import WarningIcon from '@mui/icons-material/Warning';
+import { ContractPauseStatus } from './ContractPauseStatus';
 
 // Composants memoizés pour éviter les re-renders inutiles
 const StatusIcon = memo(({ isValid, hasError }: { isValid: boolean; hasError?: boolean }) => {
@@ -130,7 +131,19 @@ export const AdminCheck = memo(() => {
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ mb: 2 }}>
+      <Alert 
+        severity="error" 
+        sx={{ mb: 2 }}
+        action={
+          <Button 
+            color="inherit" 
+            size="small"
+            onClick={handleRetryCheck}
+          >
+            Réessayer
+          </Button>
+        }
+      >
         {error}
       </Alert>
     );
@@ -143,60 +156,17 @@ export const AdminCheck = memo(() => {
           Vérification de l'accès administrateur
         </Typography>
 
-        <Box sx={{ mt: 2 }}>
-          <Typography>
-            Propriétaire du contrat: {owner || 'Non disponible'}
-          </Typography>
-          <Typography>
-            Droits d'administration: {isOwner ? 'Oui' : 'Non'}
-          </Typography>
-          {adminRights && (
-            <Typography>
-              Dernière activité: {lastActivity ? new Date(lastActivity).toLocaleString() : 'Aucune'}
-            </Typography>
-          )}
-        </Box>
-
+        <NetworkStatus networkCheck={networkCheck} />
+        <WalletStatus walletCheck={walletCheck} />
         <ContractStatus contractCheck={contractCheck} />
-        
-        <Divider />
+        <ContractPauseStatus />
 
-        <Box>
-          <Typography variant="subtitle1" gutterBottom>
-            Prérequis :
-          </Typography>
-          <Stack spacing={1}>
-            <NetworkStatus networkCheck={networkCheck} />
-            <WalletStatus walletCheck={walletCheck} />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <StatusIcon isValid={walletCheck.isContractOwner} />
-              <Typography>
-                Propriétaire du contrat
-              </Typography>
-            </Box>
-          </Stack>
-        </Box>
-
-        {walletCheck.isContractOwner && networkCheck.isCorrectNetwork && contractCheck.isValid && (
-          <>
-            <Divider />
-            <AdminRights rights={adminRights} lastActivity={lastActivity} />
-          </>
+        {walletCheck.isContractOwner && (
+          <AdminRights 
+            rights={adminRights} 
+            lastActivity={lastActivity} 
+          />
         )}
-
-        {!isOwner && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Vous n'avez pas les droits d'administration nécessaires.
-          </Alert>
-        )}
-
-        <Button 
-          variant="outlined" 
-          onClick={handleRetryCheck}
-          sx={{ mt: 2 }}
-        >
-          Revérifier l'accès
-        </Button>
       </Stack>
     </Box>
   );

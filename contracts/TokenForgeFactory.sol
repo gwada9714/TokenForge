@@ -72,6 +72,14 @@ contract TokenForgeFactory is Ownable, Pausable {
         _unpause();
     }
 
+    /**
+     * @dev Returns the current paused state.
+     * @return bool True if the contract is paused, false otherwise.
+     */
+    function paused() public view virtual override returns (bool) {
+        return super.paused();
+    }
+
     function createToken(
         string memory name,
         string memory symbol,

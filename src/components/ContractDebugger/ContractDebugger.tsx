@@ -1,8 +1,10 @@
 import React from 'react';
-import { Box, Typography, Button, Alert } from '@mui/material';
+import { Box, Typography, Button, Alert, CircularProgress, Paper } from '@mui/material';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
+import { useAccount } from 'wagmi';
 
-const ContractDebugger: React.FC = () => {
+export const ContractDebugger: React.FC = () => {
+  const { address } = useAccount();
   const {
     isOwner,
     isPaused,
@@ -10,8 +12,23 @@ const ContractDebugger: React.FC = () => {
     unpause,
     isLoading,
     error,
-    owner
+    owner,
+    contractCheck,
+    checkAdminRights
   } = useTokenForgeAdmin();
+
+  const [checking, setChecking] = React.useState(false);
+
+  const handleCheckPermissions = async () => {
+    try {
+      setChecking(true);
+      await checkAdminRights();
+    } catch (err) {
+      console.error('Erreur lors de la vérification:', err);
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const handlePause = async () => {
     try {
@@ -41,16 +58,37 @@ const ContractDebugger: React.FC = () => {
         </Alert>
       )}
 
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="body1">
-          Propriétaire: {owner || 'Non disponible'}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          Informations du Contrat
         </Typography>
-        <Typography variant="body1">
-          Statut: {isPaused ? 'En pause' : 'Actif'}
-        </Typography>
-        <Typography variant="body1">
-          Droits d'administration: {isOwner ? 'Oui' : 'Non'}
-        </Typography>
+        <Box sx={{ ml: 2 }}>
+          <Typography variant="body2">
+            Adresse du contrat: {contractCheck?.address || 'Non définie'}
+          </Typography>
+          <Typography variant="body2">
+            Propriétaire: {owner || 'Non disponible'}
+          </Typography>
+          <Typography variant="body2">
+            Votre adresse: {address || 'Non connecté'}
+          </Typography>
+          <Typography variant="body2">
+            Statut: {isPaused ? 'En pause' : 'Actif'}
+          </Typography>
+          <Typography variant="body2">
+            Droits d'administration: {isOwner ? 'Oui' : 'Non'}
+          </Typography>
+        </Box>
+      </Paper>
+
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={handleCheckPermissions}
+          disabled={checking}
+        >
+          {checking ? 'Vérification...' : 'Vérifier les permissions'}
+        </Button>
       </Box>
 
       {isOwner && (
@@ -68,5 +106,3 @@ const ContractDebugger: React.FC = () => {
     </Box>
   );
 };
-
-export default ContractDebugger;
