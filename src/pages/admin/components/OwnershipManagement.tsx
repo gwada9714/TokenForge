@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTokenForgeAdmin } from '../../../hooks/useTokenForgeAdmin';
-import { ForgeCard } from '../../../components/common/ForgeCard';
+import { TitledForgeCard } from '../../../components/common/TitledForgeCard';
 import { ERROR_MESSAGES } from '../../../constants/errors';
 
 interface OwnershipManagementProps {
@@ -82,7 +82,7 @@ export const OwnershipManagement: React.FC<OwnershipManagementProps> = ({ onActi
 
   return (
     <>
-      <ForgeCard title="Gestion de la Propriété">
+      <TitledForgeCard title="Gestion de la Propriété">
         <Box display="flex" flexDirection="column" gap={2}>
           <Typography variant="body1">
             Propriétaire actuel : {owner}
@@ -95,7 +95,7 @@ export const OwnershipManagement: React.FC<OwnershipManagementProps> = ({ onActi
             Transférer la Propriété
           </Button>
         </Box>
-      </ForgeCard>
+      </TitledForgeCard>
 
       <Dialog open={openTransferDialog} onClose={handleCloseTransferDialog}>
         <DialogTitle>Transfert de Propriété</DialogTitle>
