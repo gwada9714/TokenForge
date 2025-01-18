@@ -2,22 +2,16 @@ import React, { useState } from 'react';
 import { Box, Typography, Button, Card, CardContent } from '@mui/material';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { useAccount } from 'wagmi';
-import { PauseCircle, SwapHoriz } from '@mui/icons-material';
+import { SwapHoriz } from '@mui/icons-material';
 import { Tabs, Tab } from '@mui/material';
-import TransferOwnershipModal from '../../components/Modals/TransferOwnershipModal';
+import TransferOwnershipModal from '../../components/modals/TransferOwnershipModal';
 
 const Admin: React.FC = () => {
   const { address } = useAccount();
   const { 
     isAdmin, 
     owner,
-    paused,
     transferOwnership,
-    pause,
-    unpause,
-    isPausing,
-    isUnpausing,
-    setNewOwnerAddress,
     error 
   } = useTokenForgeAdmin();
   const [activeTab, setActiveTab] = useState(0);
@@ -46,16 +40,8 @@ const Admin: React.FC = () => {
     );
   }
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-  };
-
-  const handlePauseToggle = () => {
-    if (paused) {
-      unpause?.();
-    } else {
-      pause?.();
-    }
   };
 
   const handleTransferOwnership = async (newAddress: string) => {
@@ -116,23 +102,6 @@ const Admin: React.FC = () => {
                 Contrôles du Contrat
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                {/* Temporairement masqué car la fonction n'existe pas dans le contrat
-                <Button
-                  variant="contained"
-                  color={paused ? "primary" : "primary"}
-                  onClick={handlePauseToggle}
-                  disabled={isPausing || isUnpausing}
-                  startIcon={<PauseCircle />}
-                  sx={{ 
-                    bgcolor: '#1a237e',
-                    '&:hover': {
-                      bgcolor: '#0d47a1'
-                    }
-                  }}
-                >
-                  Mettre en Pause / Reprendre
-                </Button>
-                */}
                 <Button
                   variant="contained"
                   color="warning"
