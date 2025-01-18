@@ -50,7 +50,8 @@ declare module 'styled-components' {
         '5xl': string;
       };
       fontWeight: {
-        regular: number;
+        light: number;
+        normal: number;
         medium: number;
         semibold: number;
         bold: number;
@@ -63,16 +64,11 @@ declare module 'styled-components' {
       lg: string;
       xl: string;
       '2xl': string;
-      '3xl': string;
     };
     borderRadius: {
-      none: string;
       sm: string;
-      base: string;
       md: string;
       lg: string;
-      xl: string;
-      '2xl': string;
       full: string;
     };
     shadows: {
@@ -82,16 +78,8 @@ declare module 'styled-components' {
     };
     transitions: {
       default: string;
-      slow: string;
       fast: string;
-    };
-    zIndex: {
-      navbar: number;
-      modal: number;
-      popup: number;
-      header: number;
-      dropdown: number;
-      tooltip: number;
+      slow: string;
     };
   }
 }
