@@ -9,9 +9,8 @@ const Navigation: React.FC = () => {
   const { isConnected } = useAccount();
   const { chain } = useNetwork();
   const { 
-    isOwner, 
-    isPaused,
-    isLoading,
+    isAdmin, 
+    isProcessing,
     error,
     networkCheck,
     walletCheck,
@@ -42,7 +41,7 @@ const Navigation: React.FC = () => {
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {isLoading ? (
+          {isProcessing ? (
             <CircularProgress size={20} color="inherit" />
           ) : (
             <>
@@ -60,37 +59,21 @@ const Navigation: React.FC = () => {
                   <Button color="inherit" component={RouterLink} to="/pricing">
                     Plans
                   </Button>
-                  {isOwner && (
-                    <>
-                      <Button 
-                        color="error"
-                        variant="contained"
-                        component={RouterLink} 
-                        to="/admin"
-                        sx={{ 
-                          fontWeight: 'bold',
-                          '&:hover': {
-                            backgroundColor: 'error.dark',
-                          }
-                        }}
-                      >
-                        Admin
-                      </Button>
-                      {isPaused && (
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            bgcolor: 'warning.main',
-                            color: 'warning.contrastText',
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1
-                          }}
-                        >
-                          CONTRAT EN PAUSE
-                        </Typography>
-                      )}
-                    </>
+                  {isAdmin && (
+                    <Button 
+                      color="error"
+                      variant="contained"
+                      component={RouterLink} 
+                      to="/admin"
+                      sx={{ 
+                        fontWeight: 'bold',
+                        '&:hover': {
+                          backgroundColor: 'error.dark',
+                        }
+                      }}
+                    >
+                      Admin
+                    </Button>
                   )}
                 </>
               )}
