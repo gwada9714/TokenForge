@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
-import { useAccount, useNetwork, usePublicClient, useContractRead } from 'wagmi';
-import { getContract, type Address } from 'viem';
+import { useAccount, useNetwork, useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi';
+import type { Address } from 'viem';
 import { TokenForgeFactoryABI } from '../abi/TokenForgeFactory';
 import { CONTRACT_ADDRESSES } from '../constants/addresses';
 import { useContract } from '../contexts/ContractContext';
@@ -9,48 +9,43 @@ import type { TokenForgeAdminHookReturn, NetworkStatus } from '../types/hooks';
 
 export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
   const [state, dispatch] = useReducer(adminReducer, initialState);
+  const [isOwner, setIsOwner] = useState(false);
   const [transactionState, setTransactionState] = useState({
     isPausing: false,
     isUnpausing: false,
     isTransferring: false,
   });
+  const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>(undefined);
+  const [newOwnerAddress, setNewOwnerAddress] = useState<Address>();
 
   const { address } = useAccount();
   const { chain } = useNetwork();
   const { contractAddress: contextContractAddress } = useContract();
-  const publicClient = usePublicClient();
 
   // Résolution de l'adresse du contrat
   const contractAddress = useMemo(() => {
     if (!chain?.id) {
-      console.warn('No chain ID available');
+      dispatch({ type: 'SET_ERROR', payload: 'Aucun réseau détecté' });
       return undefined;
     }
 
     // Priorité à l'adresse du contexte si elle existe
     if (contextContractAddress) {
-      console.log('Using contract address from context:', contextContractAddress);
       return contextContractAddress as Address;
     }
 
     // Sinon, utiliser l'adresse de la configuration
     const networkConfig = CONTRACT_ADDRESSES[chain.id];
     if (!networkConfig) {
-      console.warn(`No network configuration for chain ID ${chain.id}`);
+      dispatch({ type: 'SET_ERROR', payload: `Configuration non trouvée pour le réseau ${chain.id}` });
       return undefined;
     }
 
     const configAddress = networkConfig.tokenForge;
     if (!configAddress || configAddress === '0x0000000000000000000000000000000000000000') {
-      console.warn(`Invalid contract address for chain ID ${chain.id} (${networkConfig.chainName})`);
+      dispatch({ type: 'SET_ERROR', payload: `Adresse du contrat invalide pour le réseau ${chain.name}` });
       return undefined;
     }
-
-    console.log('Using contract address from config:', {
-      chainId: chain.id,
-      address: configAddress,
-      chainName: networkConfig.chainName
-    });
 
     return configAddress;
   }, [chain?.id, contextContractAddress]);
@@ -68,16 +63,9 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     cacheTime: 2000,
     staleTime: 1000,
     enabled: !!contractAddress && !!chain?.id,
-    onSuccess: (data) => {
-      console.log('Paused status:', { 
-        isPaused: data,
-        contractAddress,
-        chainId: chain?.id,
-      });
-    },
     onError: (error) => {
       console.error('Error fetching pause status:', error);
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors de la lecture du statut de pause' });
     }
   });
 
@@ -96,9 +84,26 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     enabled: !!contractAddress && !!chain?.id,
     onError: (error) => {
       console.error('Error fetching owner:', error);
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors de la lecture du propriétaire' });
     }
   });
+
+  // Vérification du propriétaire
+  useEffect(() => {
+    if (!address || !owner) return;
+
+    const ownerStatus = address.toLowerCase() === owner.toLowerCase();
+    setIsOwner(ownerStatus);
+
+    if (!ownerStatus) {
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: 'Vous devez être le propriétaire du contrat pour accéder au dashboard' 
+      });
+    } else {
+      dispatch({ type: 'SET_ERROR', payload: null });
+    }
+  }, [address, owner]);
 
   // État du réseau
   const networkStatus: NetworkStatus = useMemo(() => {
@@ -107,125 +112,129 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
         isConnected: false,
         isCorrectNetwork: false,
         requiredNetwork: 'Sepolia',
-        error: 'Veuillez connecter votre wallet',
+        error: 'Aucun réseau détecté'
       };
     }
 
-    const networkConfig = CONTRACT_ADDRESSES[chain.id];
-    const isCorrectNetwork = !!networkConfig && 
-      networkConfig.tokenForge !== '0x0000000000000000000000000000000000000000';
-
+    const isCorrectNetwork = chain.id === 11155111;
     return {
       isConnected: true,
       isCorrectNetwork,
       requiredNetwork: 'Sepolia',
       networkName: chain.name,
-      error: !isCorrectNetwork 
-        ? `Réseau non supporté (${chain.name}). Veuillez vous connecter au réseau Sepolia.`
-        : undefined,
+      error: !isCorrectNetwork ? 'Veuillez vous connecter au réseau Sepolia' : undefined
     };
   }, [chain]);
 
-  // Vérification du réseau et du wallet
-  useEffect(() => {
-    const networkCheck = chain?.id && CONTRACT_ADDRESSES[chain.id] 
-      ? { isValid: true, message: '' }
-      : { isValid: false, message: `Réseau non supporté (${chain?.name || 'non connecté'})` };
+  // Attente de la transaction
+  const { isLoading: isWaitingTx } = useWaitForTransaction({
+    hash: pendingTx,
+    onSuccess: () => {
+      setPendingTx(undefined);
+      dispatch({ type: 'SET_ERROR', payload: null });
+    },
+    onError: (error) => {
+      console.error('Transaction failed:', error);
+      setPendingTx(undefined);
+      dispatch({ type: 'SET_ERROR', payload: 'La transaction a échoué' });
+    }
+  });
 
-    const walletCheck = address
-      ? { isValid: true, message: '' }
-      : { isValid: false, message: 'Wallet non connecté' };
+  // Configuration des transactions
+  const { config: pauseConfig } = usePrepareContractWrite({
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'setPaused',
+    args: [true],
+    enabled: !!contractAddress && isOwner && !isPaused,
+  });
 
-    dispatch({ type: 'SET_CHECKS', payload: { networkCheck, walletCheck } });
-  }, [chain?.id, chain?.name, address]);
+  const { config: unpauseConfig } = usePrepareContractWrite({
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'setPaused',
+    args: [false],
+    enabled: !!contractAddress && isOwner && isPaused,
+  });
 
-  // Fonctions d'interaction avec le contrat
+  const { writeAsync: pauseAsync } = useContractWrite(pauseConfig);
+  const { writeAsync: unpauseAsync } = useContractWrite(unpauseConfig);
+
+  // Fonctions de transaction
   const pauseContract = async () => {
-    if (!contractAddress || !address) return;
-
+    if (!contractAddress || !address || !pauseAsync) return;
+    setTransactionState(prev => ({ ...prev, isPausing: true }));
     try {
-      setTransactionState(prev => ({ ...prev, isPausing: true }));
-      const contract = getContract({
-        address: contractAddress,
-        abi: TokenForgeFactoryABI.abi,
-        publicClient,
-      });
-
-      console.log('Pausing contract:', {
-        contract,
-        address: contractAddress,
-        caller: address
-      });
-
-      setTransactionState(prev => ({ ...prev, isPausing: false }));
+      const result = await pauseAsync();
+      setPendingTx(result.hash);
     } catch (error) {
       console.error('Error pausing contract:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors de la mise en pause du contrat' });
+    } finally {
       setTransactionState(prev => ({ ...prev, isPausing: false }));
-      throw error;
     }
   };
 
   const unpauseContract = async () => {
-    if (!contractAddress || !address) return;
-
+    if (!contractAddress || !address || !unpauseAsync) return;
+    setTransactionState(prev => ({ ...prev, isUnpausing: true }));
     try {
-      setTransactionState(prev => ({ ...prev, isUnpausing: true }));
-      const contract = getContract({
-        address: contractAddress,
-        abi: TokenForgeFactoryABI.abi,
-        publicClient,
-      });
-
-      console.log('Unpausing contract:', {
-        contract,
-        address: contractAddress,
-        caller: address
-      });
-
-      setTransactionState(prev => ({ ...prev, isUnpausing: false }));
+      const result = await unpauseAsync();
+      setPendingTx(result.hash);
     } catch (error) {
       console.error('Error unpausing contract:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors de la reprise du contrat' });
+    } finally {
       setTransactionState(prev => ({ ...prev, isUnpausing: false }));
-      throw error;
     }
   };
 
+  // Configuration du transfert de propriété
+  useEffect(() => {
+    if (newOwnerAddress) {
+      setNewOwnerAddress(undefined);
+    }
+  }, [contractAddress]);
+
+  const { config: transferConfig } = usePrepareContractWrite({
+    address: contractAddress,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'transferOwnership',
+    args: newOwnerAddress ? [newOwnerAddress] : undefined,
+    enabled: !!contractAddress && isOwner && !!newOwnerAddress,
+  });
+
+  const { writeAsync: transferAsync } = useContractWrite(transferConfig);
+
   const transferOwnership = async (newOwner: Address) => {
     if (!contractAddress || !address) return;
-
+    setTransactionState(prev => ({ ...prev, isTransferring: true }));
     try {
-      setTransactionState(prev => ({ ...prev, isTransferring: true }));
-      const contract = getContract({
-        address: contractAddress,
-        abi: TokenForgeFactoryABI.abi,
-        publicClient,
-      });
-
-      console.log('Transferring ownership:', {
-        contract,
-        currentOwner: address,
-        newOwner,
-        contractAddress
-      });
-
-      setTransactionState(prev => ({ ...prev, isTransferring: false }));
+      setNewOwnerAddress(newOwner);
+      if (!transferAsync) {
+        throw new Error('Transaction non disponible');
+      }
+      const result = await transferAsync();
+      setPendingTx(result.hash);
     } catch (error) {
       console.error('Error transferring ownership:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors du transfert de propriété' });
+    } finally {
       setTransactionState(prev => ({ ...prev, isTransferring: false }));
-      throw error;
+      setNewOwnerAddress(undefined);
     }
   };
 
   return {
     error: state.error,
     isPaused: isPaused || false,
-    isOwner: address?.toLowerCase() === owner?.toLowerCase(),
-    owner,
+    isOwner,
+    owner: owner || undefined,
     networkStatus,
-    isLoading: isLoadingPaused || isLoadingOwner,
+    isLoading: isLoadingPaused || isLoadingOwner || isWaitingTx,
     pauseContract,
     unpauseContract,
     transferOwnership,
-    ...transactionState,
+    ...transactionState
   };
 };

@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAccount, useNetwork } from 'wagmi';
+import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi';
 import { getContractAddress } from '../config/contracts';
-import { CircularProgress, Box, Alert } from '@mui/material';
+import { CircularProgress, Box, Alert, Button } from '@mui/material';
+import { sepolia } from 'wagmi/chains';
 
 interface ContractContextType {
   contractAddress: `0x${string}` | null;
   isLoading: boolean;
   error: string | null;
+  switchToSepolia?: () => Promise<void>;
 }
 
 const ContractContext = createContext<ContractContextType>({
@@ -20,19 +22,28 @@ export const useContract = () => useContext(ContractContext);
 export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { chain } = useNetwork();
   const { isConnected } = useAccount();
+  const { switchNetwork } = useSwitchNetwork();
   const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Fonction pour basculer vers Sepolia
+  const switchToSepolia = async () => {
+    try {
+      if (switchNetwork) {
+        await switchNetwork(sepolia.id);
+      }
+    } catch (err) {
+      console.error('Erreur lors du changement de réseau:', err);
+      setError('Impossible de changer de réseau. Veuillez le faire manuellement.');
+    }
+  };
 
   useEffect(() => {
     const loadContractAddress = async () => {
       try {
         setIsLoading(true);
-        console.log('Loading contract address:', {
-          chain,
-          isConnected,
-          currentState: { contractAddress, isLoading, error }
-        });
+        setError(null);
 
         // Si pas connecté, on affiche un message
         if (!isConnected) {
@@ -49,8 +60,8 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         // Vérification du réseau Sepolia
-        if (chain.id !== 11155111) {
-          setError(`Veuillez vous connecter au réseau Sepolia. Réseau actuel : ${chain.name}`);
+        if (chain.id !== sepolia.id) {
+          setError(`Veuillez vous connecter au réseau Sepolia`);
           setContractAddress(null);
           return;
         }
@@ -60,8 +71,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           console.log('Contract configuration:', {
             chainId: chain.id,
             address,
-            rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL,
-            deploymentOwner: import.meta.env.VITE_DEPLOYMENT_OWNER
+            chainName: chain.name,
           });
 
           if (!address) {
@@ -83,8 +93,6 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           console.error('Erreur lors du chargement du contrat:', err);
           setError(err instanceof Error ? err.message : 'Erreur lors du chargement du contrat');
           setContractAddress(null);
-        } finally {
-          setIsLoading(false);
         }
       } catch (err) {
         console.error('Error loading contract address:', err);
@@ -100,24 +108,34 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100px">
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
         <CircularProgress />
       </Box>
     );
   }
 
+  if (error) {
+    return (
+      <Box p={2}>
+        <Alert 
+          severity="error" 
+          action={
+            chain?.id !== sepolia.id && switchNetwork ? (
+              <Button color="inherit" size="small" onClick={switchToSepolia}>
+                Changer pour Sepolia
+              </Button>
+            ) : undefined
+          }
+        >
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
-    <ContractContext.Provider value={{ contractAddress, isLoading, error }}>
-      {error ? (
-        <Box sx={{ width: '100%', mb: 2 }}>
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-          {children}
-        </Box>
-      ) : (
-        children
-      )}
+    <ContractContext.Provider value={{ contractAddress, isLoading, error, switchToSepolia }}>
+      {children}
     </ContractContext.Provider>
   );
 };
