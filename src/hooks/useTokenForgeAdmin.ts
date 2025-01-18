@@ -34,16 +34,22 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     }
 
     // Sinon, utiliser l'adresse de la configuration
-    const configAddress = CONTRACT_ADDRESSES[chain.id]?.tokenForge;
-    if (!configAddress) {
-      console.warn(`No contract address configured for chain ID ${chain.id}`);
+    const networkConfig = CONTRACT_ADDRESSES[chain.id];
+    if (!networkConfig) {
+      console.warn(`No network configuration for chain ID ${chain.id}`);
+      return undefined;
+    }
+
+    const configAddress = networkConfig.tokenForge;
+    if (!configAddress || configAddress === '0x0000000000000000000000000000000000000000') {
+      console.warn(`Invalid contract address for chain ID ${chain.id} (${networkConfig.chainName})`);
       return undefined;
     }
 
     console.log('Using contract address from config:', {
       chainId: chain.id,
       address: configAddress,
-      chainName: CONTRACT_ADDRESSES[chain.id]?.chainName
+      chainName: networkConfig.chainName
     });
 
     return configAddress;
@@ -106,14 +112,17 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     }
 
     const networkConfig = CONTRACT_ADDRESSES[chain.id];
-    const isCorrectNetwork = !!networkConfig;
+    const isCorrectNetwork = !!networkConfig && 
+      networkConfig.tokenForge !== '0x0000000000000000000000000000000000000000';
 
     return {
       isConnected: true,
       isCorrectNetwork,
       requiredNetwork: 'Sepolia',
       networkName: chain.name,
-      error: !isCorrectNetwork ? 'Veuillez vous connecter au réseau Sepolia' : undefined,
+      error: !isCorrectNetwork 
+        ? `Réseau non supporté (${chain.name}). Veuillez vous connecter au réseau Sepolia.`
+        : undefined,
     };
   }, [chain]);
 

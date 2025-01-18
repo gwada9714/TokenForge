@@ -1,20 +1,15 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, CircularProgress } from '@mui/material';
-import { useAccount, useNetwork } from 'wagmi';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { Link as RouterLink } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const Navigation: React.FC = () => {
-  const { isConnected } = useAccount();
-  const { chain } = useNetwork();
   const { 
-    isAdmin, 
-    isProcessing,
     error,
-    networkCheck,
-    walletCheck,
-    contractCheck 
+    isOwner,
+    networkStatus,
+    isLoading
   } = useTokenForgeAdmin();
 
   // Afficher toujours la barre de navigation
@@ -41,11 +36,11 @@ const Navigation: React.FC = () => {
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {isProcessing ? (
+          {isLoading ? (
             <CircularProgress size={20} color="inherit" />
           ) : (
             <>
-              {networkCheck.isConnected && networkCheck.isCorrectNetwork && (
+              {networkStatus.isConnected && networkStatus.isCorrectNetwork && (
                 <>
                   <Button color="inherit" component={RouterLink} to="/create">
                     Créer un Token
@@ -59,7 +54,7 @@ const Navigation: React.FC = () => {
                   <Button color="inherit" component={RouterLink} to="/pricing">
                     Plans
                   </Button>
-                  {isAdmin && (
+                  {isOwner && (
                     <Button 
                       color="error"
                       variant="contained"

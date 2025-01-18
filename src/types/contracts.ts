@@ -1,4 +1,5 @@
 import { ethers, ContractTransaction } from 'ethers';
+import { type Address } from 'viem';
 
 export interface TokenContractMethods {
   transfer: (to: string, amount: bigint) => Promise<ContractTransaction>;
@@ -73,6 +74,34 @@ export interface TokenForgeAdminMethods {
   paused: () => Promise<boolean>;
   renounceOwnership: () => Promise<ContractTransaction>;
   transferOwnership: (newOwner: string) => Promise<ContractTransaction>;
+}
+
+// Types pour la configuration des contrats
+export interface ChainContract {
+  address: Address;
+  blockCreated?: number;
+}
+
+export interface NetworkContract {
+  tokenFactory: ChainContract;
+  platformToken: ChainContract;
+  plans: ChainContract;
+  liquidityLocker: ChainContract;
+  staking: ChainContract;
+  launchpad: ChainContract;
+}
+
+export interface ContractAddresses {
+  mainnet: NetworkContract;
+  sepolia: NetworkContract;
+}
+
+// Type pour la configuration des chaînes
+export interface ExtendedChain {
+  id: number;
+  name: string;
+  network: string;
+  contracts?: NetworkContract;
 }
 
 export type TokenContract = ethers.Contract & TokenContractMethods;

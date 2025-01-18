@@ -20,14 +20,6 @@ export const CONTRACT_ADDRESSES: NetworkAddresses = {
     chainName: 'Ethereum Mainnet',
     chainId: 1
   },
-  5: {
-    // Goerli testnet (déprécié)
-    tokenForge: '0x0000000000000000000000000000000000000000' as Address,
-    staking: '0x0000000000000000000000000000000000000000' as Address,
-    treasury: '0x0000000000000000000000000000000000000000' as Address,
-    chainName: 'Goerli',
-    chainId: 5
-  },
   11155111: {
     // Sepolia testnet (réseau de test actif)
     tokenForge: '0xE2b29a1D3021027aF7AC8dAe5e230922F3247a0A' as Address, // TokenForgeFactory vérifié sur Etherscan
@@ -49,4 +41,4 @@ export const SEPOLIA_STAKING_CONTRACT_ADDRESS = STAKING_CONTRACT_ADDRESS;
 export const SEPOLIA_TREASURY_ADDRESS = TREASURY_ADDRESS;
 
 // ID du réseau Sepolia
-export const REQUIRED_NETWORK_ID = 11155111;
+export const SEPOLIA_CHAIN_ID = 11155111;
