@@ -6,6 +6,11 @@ import Providers from './providers/Providers'
 import './styles/index.css'
 import { routerFutureConfig } from './config/routerConfig'
 import { registerServiceWorker } from './utils/serviceWorker'
+import { checkEnvVariables } from './utils/env'
+
+// Vérification des variables d'environnement
+const envVars = checkEnvVariables();
+console.log('Environment variables loaded:', envVars);
 
 // Enregistrement du service worker
 registerServiceWorker();

@@ -3,78 +3,136 @@ import { mainnet, sepolia } from 'wagmi/chains';
 import { configureChains, createConfig } from 'wagmi';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
+import { type Chain } from 'wagmi';
 
-// Récupération des variables d'environnement
-const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
-const alchemyId = import.meta.env.VITE_ALCHEMY_API_KEY;
-const mainnetRpcUrl = import.meta.env.VITE_MAINNET_RPC_URL;
-const sepoliaRpcUrl = import.meta.env.VITE_SEPOLIA_RPC_URL;
-
-if (!projectId) throw new Error('Missing VITE_WALLET_CONNECT_PROJECT_ID');
-if (!alchemyId) throw new Error('Missing VITE_ALCHEMY_API_KEY');
-if (!sepoliaRpcUrl) throw new Error('Missing VITE_SEPOLIA_RPC_URL');
-if (!mainnetRpcUrl) throw new Error('Missing VITE_MAINNET_RPC_URL');
-
-// Configuration des chaînes et des providers
-const configuredMainnet = {
-  ...mainnet,
-  rpcUrls: {
-    ...mainnet.rpcUrls,
-    default: { http: [mainnetRpcUrl, `https://eth-mainnet.g.alchemy.com/v2/${alchemyId}`] },
-    public: { http: [mainnetRpcUrl, `https://eth-mainnet.g.alchemy.com/v2/${alchemyId}`] },
-  },
+// Récupération des variables d'environnement avec valeurs par défaut pour le développement
+const getEnvVariable = (key: string, required: boolean = true): string => {
+  const value = import.meta.env[key];
+  if (!value && required) {
+    throw new Error(`Error: ${key} is required but not defined in environment variables`);
+  }
+  return value || '';
 };
 
-const configuredSepolia = {
-  ...sepolia,
-  rpcUrls: {
-    ...sepolia.rpcUrls,
-    default: { http: [sepoliaRpcUrl, `https://eth-sepolia.g.alchemy.com/v2/${alchemyId}`] },
-    public: { http: [sepoliaRpcUrl, `https://eth-sepolia.g.alchemy.com/v2/${alchemyId}`] },
-  },
+// Validation des adresses des contrats
+const validateContractAddress = (address: string | undefined, chainName: string): `0x${string}` | null => {
+  if (!address) {
+    console.warn(`Adresse TokenFactory manquante pour ${chainName} - cette chaîne sera désactivée`);
+    return null;
+  }
+  if (!address.match(/^0x[a-fA-F0-9]{40}$/)) {
+    console.warn(`Format d'adresse TokenFactory invalide pour ${chainName} - cette chaîne sera désactivée`);
+    return null;
+  }
+  return address as `0x${string}`;
 };
 
-const { chains, publicClient } = configureChains(
-  [configuredSepolia, configuredMainnet], 
+// Récupération des variables d'environnement requises
+const projectId = getEnvVariable('VITE_WALLET_CONNECT_PROJECT_ID', true);
+const alchemyId = getEnvVariable('VITE_ALCHEMY_API_KEY', true);
+
+// Récupération des adresses des contrats
+const contractAddresses = {
+  mainnet: validateContractAddress(
+    import.meta.env.VITE_TOKEN_FACTORY_MAINNET,
+    'Ethereum Mainnet'
+  ),
+  sepolia: validateContractAddress(
+    import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA,
+    'Sepolia'
+  )
+};
+
+// Log des variables d'environnement chargées (sans les valeurs sensibles)
+console.log('Environment variables loaded:', {
+  VITE_WALLET_CONNECT_PROJECT_ID: !!projectId,
+  VITE_ALCHEMY_API_KEY: !!alchemyId,
+  VITE_TOKEN_FACTORY_MAINNET: !!contractAddresses.mainnet,
+  VITE_TOKEN_FACTORY_SEPOLIA: !!contractAddresses.sepolia
+});
+
+// Configuration des chaînes avec leurs contrats
+interface ExtendedChain extends Chain {
+  contracts?: {
+    tokenFactory: {
+      address: `0x${string}`;
+      blockCreated: number;
+    };
+  };
+}
+
+const createChainConfig = (
+  baseChain: Chain,
+  contractAddress: `0x${string}` | null,
+  blockCreated: number
+): ExtendedChain | null => {
+  if (!contractAddress) return null;
+  
+  return {
+    ...baseChain,
+    contracts: {
+      tokenFactory: {
+        address: contractAddress,
+        blockCreated
+      }
+    }
+  };
+};
+
+const mainnetChain = createChainConfig(
+  mainnet,
+  contractAddresses.mainnet,
+  Number(import.meta.env.VITE_TOKEN_FACTORY_MAINNET_BLOCK || '0')
+);
+
+const sepoliaChain = createChainConfig(
+  sepolia,
+  contractAddresses.sepolia,
+  Number(import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA_BLOCK || '0')
+);
+
+// Filtrer les chaînes non configurées
+const availableChains: ExtendedChain[] = [
+  mainnetChain,
+  sepoliaChain
+].filter((chain): chain is ExtendedChain => chain !== null);
+
+if (availableChains.length === 0) {
+  throw new Error('No valid chains configured. Please check your contract addresses in environment variables.');
+}
+
+// Configuration des chaînes avec providers
+const { chains: configuredChainsList, publicClient } = configureChains(
+  availableChains,
   [
     alchemyProvider({ apiKey: alchemyId }),
     publicProvider(),
   ]
 );
 
-// Configuration des wallets supportés
+// Configuration des wallets
 const { connectors } = getDefaultWallets({
   appName: 'TokenForge',
   projectId: projectId,
-  chains,
+  chains: configuredChainsList,
 });
 
-// Configuration wagmi principale
+// Configuration wagmi
 const wagmiConfig = createConfig({
   autoConnect: true,
   connectors,
   publicClient,
 });
 
-// Configuration RainbowKit
-const metadata = {
-  name: "TokenForge",
+// Configuration de l'application
+export const appConfig = {
+  appName: 'TokenForge',
   description: "Create and manage your own tokens",
   url: "https://tokenforge.app",
   icons: ["https://tokenforge.app/logo.png"],
 };
 
-const rainbowKitConfig = getDefaultConfig({
-  appName: 'TokenForge',
-  projectId: projectId,
-  chains: [configuredSepolia, configuredMainnet],
-  transports: {
-    [configuredMainnet.id]: http(mainnetRpcUrl),
-    [configuredSepolia.id]: http(sepoliaRpcUrl),
-  },
-});
-
-// Export des chaînes configurées
-export const chains = [configuredSepolia, configuredMainnet];
-export { wagmiConfig, rainbowKitConfig };
+// Export des configurations
+export { configuredChainsList as chains };
+export { wagmiConfig };
 export default wagmiConfig;
