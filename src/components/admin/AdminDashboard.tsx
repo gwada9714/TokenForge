@@ -14,12 +14,6 @@ import { AuditLogs } from './AuditLogs';
 import { ContractControls } from './ContractControls';
 import { OwnershipManagement } from './OwnershipManagement';
 
-interface PlanData {
-  id: number;
-  name: string;
-  price: bigint;
-}
-
 const AdminDashboard: React.FC = () => {
   const {
     isAdmin,

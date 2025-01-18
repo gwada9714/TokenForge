@@ -5,8 +5,6 @@ import { TextEncoder, TextDecoder } from "util";
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as any;
 
-import React from "react";
-
 // Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -22,19 +20,19 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
-// Mock Web3Modal
-jest.mock("@web3modal/wagmi/react", () => ({
-  createWeb3Modal: jest.fn(),
+// Mock modules
+jest.mock("@web3modal/wagmi", () => ({
   useWeb3Modal: () => ({
     open: jest.fn(),
     close: jest.fn(),
     isOpen: false,
   }),
+  createWeb3Modal: jest.fn(),
 }));
 
 // Mock wagmi
 const MockProvider = ({ children }: { children: React.ReactNode }) => {
-  return React.createElement(React.Fragment, null, children);
+  return children;
 };
 
 jest.mock("wagmi", () => ({
