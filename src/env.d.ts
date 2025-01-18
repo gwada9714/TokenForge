@@ -1,6 +1,53 @@
 interface ImportMetaEnv {
-  VITE_INFURA_PROJECT_ID: string;
+  // API Keys
+  VITE_WALLET_CONNECT_PROJECT_ID: string;
   VITE_ETHERSCAN_API_KEY: string;
+  VITE_MOONPAY_API_KEY: string;
+  VITE_ALCHEMY_API_KEY: string;
+
+  // Contract Addresses
+  VITE_TOKEN_FACTORY_ADDRESS: string;
+  VITE_TOKEN_FACTORY_SEPOLIA: string;
+  VITE_TOKEN_FACTORY_MAINNET: string;
+  VITE_TOKEN_FACTORY_BSC: string;
+  VITE_TOKEN_FACTORY_BSC_TESTNET: string;
+  VITE_TOKEN_FACTORY_POLYGON: string;
+  VITE_TOKEN_FACTORY_POLYGON_MUMBAI: string;
+  VITE_TOKEN_FACTORY_AVALANCHE: string;
+  VITE_TOKEN_FACTORY_AVALANCHE_FUJI: string;
+
+  // Launchpad Contracts
+  VITE_LAUNCHPAD_CONTRACT_SEPOLIA: string;
+  VITE_LAUNCHPAD_CONTRACT_MAINNET: string;
+  VITE_LAUNCHPAD_CONTRACT_LOCAL: string;
+
+  // Liquidity Locker Contracts
+  VITE_LIQUIDITY_LOCKER_SEPOLIA: string;
+  VITE_LIQUIDITY_LOCKER_MAINNET: string;
+  VITE_LIQUIDITY_LOCKER_BSC: string;
+  VITE_LIQUIDITY_LOCKER_BSC_TESTNET: string;
+  VITE_LIQUIDITY_LOCKER_POLYGON: string;
+  VITE_LIQUIDITY_LOCKER_POLYGON_MUMBAI: string;
+  VITE_LIQUIDITY_LOCKER_AVALANCHE: string;
+  VITE_LIQUIDITY_LOCKER_AVALANCHE_FUJI: string;
+
+  // RPC URLs
+  VITE_SEPOLIA_RPC_URL: string;
+  VITE_MAINNET_RPC_URL: string;
+  VITE_BSC_RPC_URL: string;
+  VITE_BSC_TESTNET_RPC_URL: string;
+  VITE_POLYGON_RPC_URL: string;
+  VITE_POLYGON_MUMBAI_RPC_URL: string;
+  VITE_AVALANCHE_RPC_URL: string;
+  VITE_AVALANCHE_FUJI_RPC_URL: string;
+
+  // MoonPay Configuration
+  VITE_MOONPAY_BASE_URL: string;
+
+  // Other Configuration
+  VITE_DEPLOYMENT_OWNER: string;
+  MODE: 'development' | 'production';
+
   [key: string]: string | undefined;
 }
 
