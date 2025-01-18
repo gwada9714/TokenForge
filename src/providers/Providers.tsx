@@ -1,3 +1,4 @@
+import React from 'react';
 import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
 import { WagmiConfig } from 'wagmi';
 import wagmiConfig, { chains } from '../config/web3Config';

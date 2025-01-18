@@ -4,7 +4,7 @@ import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { useAccount } from 'wagmi';
 import { PauseCircle, SwapHoriz } from '@mui/icons-material';
 import { Tabs, Tab } from '@mui/material';
-import TransferOwnershipModal from '../../components/modals/TransferOwnershipModal';
+import TransferOwnershipModal from '../../components/Modals/TransferOwnershipModal';
 
 const Admin: React.FC = () => {
   const { address } = useAccount();

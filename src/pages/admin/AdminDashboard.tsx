@@ -69,7 +69,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import jsPDF from 'jspdf';
+import jsPDF, { jsPDF as JSPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 interface TabPanelProps {
