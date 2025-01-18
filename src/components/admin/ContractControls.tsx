@@ -7,6 +7,7 @@ import {
   Grid,
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
+import type { ButtonProps } from '@mui/material';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
@@ -19,6 +20,16 @@ export const ContractControls: React.FC = () => {
     handleTogglePause,
     contractAddress,
   } = useTokenForgeAdmin();
+
+  const buttonProps: ButtonProps & { loading?: boolean; loadingPosition?: 'start' | 'end' | 'center' } = {
+    variant: "contained",
+    color: isPaused ? "success" : "warning",
+    onClick: handleTogglePause,
+    loading: isPausing || isUnpausing,
+    loadingPosition: "start",
+    startIcon: isPaused ? <PlayArrowIcon /> : <PauseIcon />,
+    fullWidth: true,
+  };
 
   return (
     <Grid container spacing={3}>
@@ -44,15 +55,7 @@ export const ContractControls: React.FC = () => {
             </Box>
 
             <Box sx={{ mt: 3 }}>
-              <LoadingButton
-                variant="contained"
-                color={isPaused ? "success" : "warning"}
-                onClick={handleTogglePause}
-                loading={isPausing || isUnpausing}
-                loadingPosition="start"
-                startIcon={isPaused ? <PlayArrowIcon /> : <PauseIcon />}
-                fullWidth
-              >
+              <LoadingButton {...buttonProps}>
                 {isPaused ? 'Réactiver le contrat' : 'Mettre en pause le contrat'}
               </LoadingButton>
             </Box>
