@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 import { AppLayout } from '../components/common/Layout/AppLayout';
-import ProtectedRoute from '../routes/guards/ProtectedRoute';
+import ProtectedRoute from './guards/ProtectedRoute';
 import { adminRoutes } from './adminRoutes';
 import LoadingFallback from '../components/common/LoadingFallback';
 
