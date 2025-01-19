@@ -1,75 +1,98 @@
 import React, { useState } from 'react';
-import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import {
-  Container,
-  Alert,
   Box,
-  Snackbar,
+  Container,
+  Tab,
   Tabs,
-  Tab
+  Paper,
+  Typography,
 } from '@mui/material';
-import { TabPanel, a11yProps } from '../common/TabPanel';
-import { AlertsManagement } from './AlertsManagement';
-import { AuditLogs } from './AuditLogs';
+import {
+  Security as SecurityIcon,
+  Settings as SettingsIcon,
+  Notifications as AlertsIcon,
+  Assessment as StatsIcon,
+} from '@mui/icons-material';
+import { TabPanel } from '../common/TabPanel';
 import { ContractControls } from './ContractControls';
 import { OwnershipManagement } from './OwnershipManagement';
+import { AlertsManagement } from '../Alerts/AlertsManagement';
+import { AuditLogs } from '../Audit/AuditLogs';
+import { AuditStats } from '../Audit/AuditStats';
 
-const AdminDashboard: React.FC = () => {
-  const {
-    isAdmin,
-    error,
-  } = useTokenForgeAdmin();
-
+export const AdminDashboard: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
-
-  if (!isAdmin) {
-    return (
-      <Container maxWidth="sm" sx={{ mt: 4 }}>
-        <Alert severity="error">
-          Vous n'avez pas les droits d'administration nécessaires.
-        </Alert>
-      </Container>
-    );
-  }
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange} aria-label="admin tabs">
-          <Tab label="Contrôle du Contrat" {...a11yProps(0)} />
-          <Tab label="Gestion de la Propriété" {...a11yProps(1)} />
-          <Tab label="Alertes" {...a11yProps(2)} />
-          <Tab label="Logs d'Audit" {...a11yProps(3)} />
-        </Tabs>
+    <Container maxWidth="xl">
+      <Box sx={{ width: '100%', mt: 3 }}>
+        <Paper sx={{ mb: 2, p: 2 }}>
+          <Typography variant="h5" component="h1" gutterBottom>
+            Tableau de bord administrateur
+          </Typography>
+          <Typography color="textSecondary" paragraph>
+            Gérez les paramètres du contrat, les alertes et consultez les logs d'audit.
+          </Typography>
+        </Paper>
+
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            aria-label="Admin dashboard tabs"
+          >
+            <Tab
+              icon={<SecurityIcon />}
+              label="Contrôle du contrat"
+              id="tab-0"
+              aria-controls="tabpanel-0"
+            />
+            <Tab
+              icon={<SettingsIcon />}
+              label="Gestion de la propriété"
+              id="tab-1"
+              aria-controls="tabpanel-1"
+            />
+            <Tab
+              icon={<AlertsIcon />}
+              label="Alertes"
+              id="tab-2"
+              aria-controls="tabpanel-2"
+            />
+            <Tab
+              icon={<StatsIcon />}
+              label="Logs & Statistiques"
+              id="tab-3"
+              aria-controls="tabpanel-3"
+            />
+          </Tabs>
+        </Box>
+
+        <TabPanel value={tabValue} index={0}>
+          <ContractControls />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={1}>
+          <OwnershipManagement />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={2}>
+          <AlertsManagement />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={3}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <AuditStats />
+            <AuditLogs />
+          </Box>
+        </TabPanel>
       </Box>
-
-      <TabPanel value={tabValue} index={0}>
-        <ContractControls />
-      </TabPanel>
-
-      <TabPanel value={tabValue} index={1}>
-        <OwnershipManagement />
-      </TabPanel>
-
-      <TabPanel value={tabValue} index={2}>
-        <AlertsManagement />
-      </TabPanel>
-
-      <TabPanel value={tabValue} index={3}>
-        <AuditLogs />
-      </TabPanel>
-
-      {error && (
-        <Snackbar open={!!error} autoHideDuration={6000}>
-          <Alert severity="error">{error}</Alert>
-        </Snackbar>
-      )}
     </Container>
   );
 };
-
-export default AdminDashboard;
