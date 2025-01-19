@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, AppBar, Toolbar, Container, Button, IconButton, Typography } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import { CustomConnectButton } from '../ConnectWallet/CustomConnectButton';
-import { useWeb3 } from '../../contexts/Web3Context';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 import { GlobalFeedback } from '../Feedback/GlobalFeedback';
 import { useGlobalLoading } from '../../hooks/useGlobalLoading';
@@ -10,7 +9,6 @@ import { Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 export const Layout: React.FC = () => {
-  const { isConnected, network } = useWeb3();
   const { navigateTo, canAccess } = useAppNavigation();
   const { isLoading, message } = useGlobalLoading();
 

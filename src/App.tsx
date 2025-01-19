@@ -1,9 +1,9 @@
-import React, { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { ThemeProvider } from "@mui/material/styles";
 import { forgeTheme } from "./theme/forge-theme";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { GlobalStyle } from "./styles/GlobalStyle";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Layout } from "./components/Layout";
@@ -11,20 +11,31 @@ import { CircularProgress, Box } from "@mui/material";
 import { Web3Provider } from "./contexts/Web3Context";
 import { ContractProvider } from "./contexts/ContractContext";
 
-// Lazy loading des composants
-const HomePage = React.lazy(() => import("./pages/Home"));
-const LoginForm = React.lazy(() => import("./components/auth/LoginForm"));
-const SignUpForm = React.lazy(() => import("./components/auth/SignUpForm"));
-const TokenWizard = React.lazy(() => import("./components/TokenWizard/TokenWizard"));
-const StakingDashboard = React.lazy(() => import("./components/Staking/StakingDashboard"));
-const ProfitDashboard = React.lazy(() => import("./components/Dashboard/ProfitDashboard"));
-const LaunchpadPage = React.lazy(() => import("./pages/Launchpad"));
-const MyTokens = React.lazy(() => import("./pages/MyTokens"));
-const Pricing = React.lazy(() => import("./pages/Pricing"));
-const AdminDashboard = React.lazy(() => import("./pages/admin/AdminDashboard"));
+// Lazy loading avec preload pour les composants critiques
+const HomePage = lazy(() => import("./pages/Home" /* webpackPrefetch: true */));
+const LoginForm = lazy(() => import("./components/auth/LoginForm"));
+const SignUpForm = lazy(() => import("./components/auth/SignUpForm"));
 
+// Lazy loading pour les composants secondaires
+const TokenWizard = lazy(() => import("./components/TokenWizard/TokenWizard"));
+const StakingDashboard = lazy(() => import("./components/Staking/StakingDashboard"));
+const ProfitDashboard = lazy(() => import("./components/Dashboard/ProfitDashboard"));
+const LaunchpadPage = lazy(() => import("./pages/Launchpad"));
+const MyTokens = lazy(() => import("./pages/MyTokens"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+
+// Composant de chargement optimisé
 const LoadingFallback = () => (
-  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+  <Box 
+    sx={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh',
+      bgcolor: 'background.default' 
+    }}
+  >
     <CircularProgress />
   </Box>
 );
@@ -33,56 +44,99 @@ const App = () => {
   return (
     <Provider store={store}>
       <ThemeProvider theme={forgeTheme}>
-        <Web3Provider>
-          <ContractProvider>
-            <GlobalStyle />
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                {/* Routes publiques sans Layout */}
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/signup" element={<SignUpForm />} />
+        <GlobalStyle />
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            {/* Routes publiques sans Layout */}
+            <Route path="/login" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <LoginForm />
+              </Suspense>
+            } />
+            <Route path="/signup" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <SignUpForm />
+              </Suspense>
+            } />
 
-                {/* Routes avec Layout */}
-                <Route path="/" element={<Layout />}>
-                  {/* Routes publiques */}
-                  <Route index element={<HomePage />} />
-                  <Route path="pricing" element={<Pricing />} />
-                  <Route path="launchpad" element={<LaunchpadPage />} />
+            {/* Routes avec Layout */}
+            <Route path="/" element={<Layout />}>
+              {/* Routes publiques */}
+              <Route index element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <HomePage />
+                </Suspense>
+              } />
+              <Route path="pricing" element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <Pricing />
+                </Suspense>
+              } />
+              <Route path="launchpad" element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <LaunchpadPage />
+                </Suspense>
+              } />
 
-                  {/* Routes protégées */}
-                  <Route path="create" element={
-                    <ProtectedRoute>
-                      <TokenWizard />
+              {/* Routes protégées nécessitant Web3 */}
+              <Route path="create" element={
+                <Web3Provider>
+                  <ContractProvider>
+                    <ProtectedRoute requireWeb3>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <TokenWizard />
+                      </Suspense>
                     </ProtectedRoute>
-                  } />
-                  <Route path="staking" element={
-                    <ProtectedRoute>
-                      <StakingDashboard />
+                  </ContractProvider>
+                </Web3Provider>
+              } />
+              <Route path="staking" element={
+                <Web3Provider>
+                  <ContractProvider>
+                    <ProtectedRoute requireWeb3>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <StakingDashboard />
+                      </Suspense>
                     </ProtectedRoute>
-                  } />
-                  <Route path="profit" element={
-                    <ProtectedRoute>
-                      <ProfitDashboard />
+                  </ContractProvider>
+                </Web3Provider>
+              } />
+              <Route path="profit" element={
+                <Web3Provider>
+                  <ContractProvider>
+                    <ProtectedRoute requireWeb3>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <ProfitDashboard />
+                      </Suspense>
                     </ProtectedRoute>
-                  } />
-                  <Route path="my-tokens" element={
-                    <ProtectedRoute>
-                      <MyTokens />
+                  </ContractProvider>
+                </Web3Provider>
+              } />
+              <Route path="my-tokens" element={
+                <Web3Provider>
+                  <ContractProvider>
+                    <ProtectedRoute requireWeb3>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <MyTokens />
+                      </Suspense>
                     </ProtectedRoute>
-                  } />
-                  <Route path="admin" element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminDashboard />
+                  </ContractProvider>
+                </Web3Provider>
+              } />
+              <Route path="admin" element={
+                <Web3Provider>
+                  <ContractProvider>
+                    <ProtectedRoute requireWeb3 requireAdmin>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <AdminDashboard />
+                      </Suspense>
                     </ProtectedRoute>
-                  } />
-
-                  {/* Redirection des routes inconnues */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-              </Routes>
-            </Suspense>
-          </ContractProvider>
-        </Web3Provider>
+                  </ContractProvider>
+                </Web3Provider>
+              } />
+            </Route>
+          </Routes>
+        </Suspense>
       </ThemeProvider>
     </Provider>
   );
