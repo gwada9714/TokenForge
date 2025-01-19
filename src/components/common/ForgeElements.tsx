@@ -9,20 +9,20 @@ interface StyledProps {
 export const ForgeContainer = styled.div<StyledProps>`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 ${props => props.theme.spacing(4)};
+  padding: 0 ${props => props.theme.spacing.md};
 
   ${props => props.theme.breakpoints.up('md')} {
-    padding: 0 ${props => props.theme.spacing(8)};
+    padding: 0 ${props => props.theme.spacing.lg};
   }
 `;
 
 export const ForgeSection = styled.section<StyledProps>`
-  padding: ${props => props.theme.spacing(8)} 0;
+  padding: ${props => props.theme.spacing.lg} 0;
   position: relative;
   overflow: hidden;
 
   ${props => props.theme.breakpoints.up('md')} {
-    padding: ${props => props.theme.spacing(12)} 0;
+    padding: ${props => props.theme.spacing.xl} 0;
   }
 `;
 
@@ -30,7 +30,7 @@ export const ForgeHeading = styled.h1<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.bold};
   color: ${props => props.theme.colors.text.primary};
-  margin-bottom: ${props => props.theme.spacing(4)};
+  margin-bottom: ${props => props.theme.spacing.md};
   text-align: center;
   font-size: ${props => props.theme.typography.fontSizes['3xl']};
 
@@ -47,7 +47,7 @@ export const ForgeSubheading = styled.h2<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.semibold};
   color: ${props => props.theme.colors.text.secondary};
-  margin-bottom: ${props => props.theme.spacing(2)};
+  margin-bottom: ${props => props.theme.spacing.sm};
   font-size: ${props => props.theme.typography.fontSizes['2xl']};
 
   ${props => props.theme.breakpoints.up('md')} {
@@ -59,7 +59,7 @@ export const ForgeText = styled.p<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.body};
   color: ${props => props.theme.colors.text.primary};
   line-height: 1.6;
-  margin-bottom: ${props => props.theme.spacing(2)};
+  margin-bottom: ${props => props.theme.spacing.sm};
   font-size: ${props => props.theme.typography.fontSizes.sm};
 
   ${props => props.theme.breakpoints.up('md')} {
@@ -72,7 +72,7 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
   color: ${props => props.theme.colors.text.light};
   font-family: ${props => props.theme.typography.fontFamily.body};
   font-weight: ${props => props.theme.typography.fontWeight.medium};
-  padding: ${props => `${props.theme.spacing(2)} ${props.theme.spacing(4)}`};
+  padding: ${props => `${props.theme.spacing.sm} ${props.theme.spacing.md}`};
   border-radius: ${props => props.theme.borderRadius.md};
   border: none;
   cursor: pointer;
@@ -97,14 +97,14 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
   }
 
   ${props => props.theme.breakpoints.up('md')} {
-    padding: ${props => `${props.theme.spacing(4)} ${props.theme.spacing(8)}`};
+    padding: ${props => `${props.theme.spacing.md} ${props.theme.spacing.lg}`};
   }
 `;
 
 export const ForgeCard = styled(motion.div)<StyledProps>`
   background: ${props => props.theme.colors.background.paper};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: ${props => props.theme.spacing(8)};
+  padding: ${props => props.theme.spacing.lg};
   box-shadow: ${props => props.theme.shadows.md};
   transition: ${props => props.theme.transitions.default};
 
@@ -114,24 +114,24 @@ export const ForgeCard = styled(motion.div)<StyledProps>`
   }
 
   ${props => props.theme.breakpoints.up('md')} {
-    padding: ${props => props.theme.spacing(12)};
+    padding: ${props => props.theme.spacing.xl};
   }
 `;
 
 export const ForgeGrid = styled.div<StyledProps>`
   display: grid;
   grid-template-columns: 1fr;
-  gap: ${props => props.theme.spacing(4)};
-  margin: ${props => props.theme.spacing(8)} 0;
+  gap: ${props => props.theme.spacing.md};
+  margin: ${props => props.theme.spacing.lg} 0;
 
   ${props => props.theme.breakpoints.up('sm')} {
     grid-template-columns: repeat(2, 1fr);
-    gap: ${props => props.theme.spacing(6)};
+    gap: ${props => props.theme.spacing.md};
   }
 
   ${props => props.theme.breakpoints.up('md')} {
     grid-template-columns: repeat(3, 1fr);
-    gap: ${props => props.theme.spacing(8)};
+    gap: ${props => props.theme.spacing.lg};
   }
 
   ${props => props.theme.breakpoints.up('lg')} {
