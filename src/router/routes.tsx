@@ -1,8 +1,15 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 import { AppLayout } from '../components/common/Layout/AppLayout';
 import ProtectedRoute from '../routes/guards/ProtectedRoute';
 import { adminRoutes } from './adminRoutes';
+import LoadingFallback from '../components/common/LoadingFallback';
+
+// Configure future flags for React Router v7
+export const routerFutureConfig = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true
+} as const;
 
 // Lazy loading des composants
 const HomePage = lazy(() => import('../pages/Home'));
@@ -17,51 +24,58 @@ const Pricing = lazy(() => import('../pages/Pricing'));
 const NotFound = lazy(() => import('../pages/errors/NotFound'));
 const Unauthorized = lazy(() => import('../pages/errors/Unauthorized'));
 
+// Wrapper pour les composants lazy-loadés
+const LazyWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<LoadingFallback />}>
+    {children}
+  </Suspense>
+);
+
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout><Outlet /></AppLayout>,
-    errorElement: <NotFound />,
+    errorElement: <LazyWrapper><NotFound /></LazyWrapper>,
     children: [
       {
         index: true,
-        element: <HomePage />
+        element: <LazyWrapper><HomePage /></LazyWrapper>
       },
       {
         path: 'login',
-        element: <LoginForm />
+        element: <LazyWrapper><LoginForm /></LazyWrapper>
       },
       {
         path: 'signup',
-        element: <SignUpForm />
+        element: <LazyWrapper><SignUpForm /></LazyWrapper>
       },
       {
         path: 'unauthorized',
-        element: <Unauthorized />
+        element: <LazyWrapper><Unauthorized /></LazyWrapper>
       },
       {
         path: 'create',
-        element: <ProtectedRoute><TokenWizard /></ProtectedRoute>
+        element: <ProtectedRoute><LazyWrapper><TokenWizard /></LazyWrapper></ProtectedRoute>
       },
       {
         path: 'staking',
-        element: <ProtectedRoute><StakingDashboard /></ProtectedRoute>
+        element: <ProtectedRoute><LazyWrapper><StakingDashboard /></LazyWrapper></ProtectedRoute>
       },
       {
         path: 'profit',
-        element: <ProtectedRoute><ProfitDashboard /></ProtectedRoute>
+        element: <ProtectedRoute><LazyWrapper><ProfitDashboard /></LazyWrapper></ProtectedRoute>
       },
       {
         path: 'launchpad',
-        element: <LaunchpadPage />
+        element: <LazyWrapper><LaunchpadPage /></LazyWrapper>
       },
       {
         path: 'my-tokens',
-        element: <ProtectedRoute><MyTokens /></ProtectedRoute>
+        element: <ProtectedRoute><LazyWrapper><MyTokens /></LazyWrapper></ProtectedRoute>
       },
       {
         path: 'pricing',
-        element: <Pricing />
+        element: <LazyWrapper><Pricing /></LazyWrapper>
       },
       adminRoutes
     ]

@@ -1,6 +1,7 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminRoute from '../routes/guards/AdminRoute';
+import LoadingFallback from '../components/common/LoadingFallback';
 
 // Admin components
 const AdminDashboard = lazy(() => import('../components/features/admin/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
@@ -9,29 +10,36 @@ const OwnershipManagement = lazy(() => import('../components/features/admin/owne
 const AlertsManagement = lazy(() => import('../components/features/admin/alerts/AlertsManagement').then(module => ({ default: module.AlertsManagement })));
 const AuditLogs = lazy(() => import('../components/features/admin/audit/AuditLogs').then(module => ({ default: module.AuditLogs })));
 
+// Wrapper pour les composants lazy-loadés
+const LazyWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<LoadingFallback />}>
+    {children}
+  </Suspense>
+);
+
 export const adminRoutes = {
   path: 'admin',
-  element: <AdminRoute><Outlet /></AdminRoute>,
+  element: <AdminRoute><LazyWrapper><Outlet /></LazyWrapper></AdminRoute>,
   children: [
     {
       index: true,
-      element: <AdminDashboard />
+      element: <LazyWrapper><AdminDashboard /></LazyWrapper>
     },
     {
       path: 'contract',
-      element: <ContractControls />
+      element: <LazyWrapper><ContractControls /></LazyWrapper>
     },
     {
       path: 'ownership',
-      element: <OwnershipManagement />
+      element: <LazyWrapper><OwnershipManagement /></LazyWrapper>
     },
     {
       path: 'alerts',
-      element: <AlertsManagement />
+      element: <LazyWrapper><AlertsManagement /></LazyWrapper>
     },
     {
       path: 'audit',
-      element: <AuditLogs />
+      element: <LazyWrapper><AuditLogs /></LazyWrapper>
     }
   ]
 };

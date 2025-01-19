@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
@@ -43,7 +42,17 @@ describe('Admin Routes Configuration', () => {
       <Provider store={store}>
         <MemoryRouter initialEntries={[initialEntry]}>
           <Routes>
-            <Route path="/admin/*" element={adminRoutes} />
+            <Route path={adminRoutes.path} element={adminRoutes.element}>
+              {adminRoutes.children.map((route) => (
+                route.index ? (
+                  <Route key="index" index element={route.element} />
+                ) : (
+                  <Route key={route.path} path={route.path} element={route.element} />
+                )
+              ))}
+            </Route>
+            <Route path="/login" element={<div>Login Page</div>} />
+            <Route path="/unauthorized" element={<div>Unauthorized Page</div>} />
           </Routes>
         </MemoryRouter>
       </Provider>
