@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export type LogLevel = 'info' | 'warning' | 'error' | 'critical';
 export type LogCategory = 'security' | 'transaction' | 'network' | 'contract' | 'system';
@@ -29,9 +29,13 @@ interface AuditState {
   filters: LogFilter;
 }
 
+interface UseAuditLogsProps {
+  onError?: (message: string) => void;
+}
+
 const MAX_LOGS = 1000; // Limite de stockage des logs
 
-export const useAuditLogs = () => {
+export const useAuditLogs = ({ onError }: UseAuditLogsProps = {}) => {
   const [state, setState] = useState<AuditState>({
     logs: [],
     filters: {},
@@ -147,6 +151,23 @@ export const useAuditLogs = () => {
       logs: prev.logs.filter(log => log.timestamp >= cutoffDate),
     }));
   }, []);
+
+  useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        // Simuler le chargement des logs
+        const auditLogs: AuditLog[] = [];
+        setState(prev => ({
+          ...prev,
+          logs: auditLogs,
+        }));
+      } catch (error) {
+        onError?.(error instanceof Error ? error.message : 'Failed to load audit logs');
+      }
+    };
+
+    loadLogs();
+  }, [onError]);
 
   return {
     logs: state.logs,
