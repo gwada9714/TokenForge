@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Grid,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import { TokenContract } from '@/providers/contract/ContractProvider';
-import { ChartPeriod } from '@/hooks/analytics/useTokenChartData';
-import TokenVolumeChart from './TokenVolumeChart';
-import TokenHoldersChart from './TokenHoldersChart';
-import TokenTransactionsChart from './TokenTransactionsChart';
+import TokenVolumeChart from './charts/TokenVolumeChart';
+import TokenHoldersChart from './charts/TokenHoldersChart';
+import TokenTransactionsChart from './charts/TokenTransactionsChart';
+import { PeriodSelector } from './controls/PeriodSelector';
+import { ChartPeriod } from '@/types/analytics';
 
 interface TokenAnalyticsDashboardProps {
   token?: TokenContract;
@@ -21,48 +16,23 @@ export const TokenAnalyticsDashboard: React.FC<TokenAnalyticsDashboardProps> = (
 }) => {
   const [period, setPeriod] = useState<ChartPeriod>('daily');
 
-  const handlePeriodChange = (
-    _event: React.MouseEvent<HTMLElement>,
-    newPeriod: ChartPeriod | null
-  ) => {
-    if (newPeriod) {
-      setPeriod(newPeriod);
-    }
-  };
-
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" component="h2">
           Analyses du Token
         </Typography>
-        <ToggleButtonGroup
-          value={period}
-          exclusive
-          onChange={handlePeriodChange}
-          aria-label="période d'analyse"
-          size="small"
-        >
-          <ToggleButton value="daily" aria-label="journalier">
-            Journalier
-          </ToggleButton>
-          <ToggleButton value="weekly" aria-label="hebdomadaire">
-            Hebdomadaire
-          </ToggleButton>
-          <ToggleButton value="monthly" aria-label="mensuel">
-            Mensuel
-          </ToggleButton>
-        </ToggleButtonGroup>
+        <PeriodSelector period={period} onChange={setPeriod} />
       </Box>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12}>
           <TokenVolumeChart token={token} period={period} />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <TokenHoldersChart token={token} />
+        <Grid item xs={12} md={6}>
+          <TokenHoldersChart token={token} period={period} />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} md={6}>
           <TokenTransactionsChart token={token} period={period} />
         </Grid>
       </Grid>
