@@ -1,34 +1,32 @@
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { AdminDashboard } from '../AdminDashboard';
+import { AdminDashboard } from '../../features/admin/AdminDashboard';
 
 // Mock des composants enfants
-jest.mock('../ContractControls', () => ({
-  ContractControls: () => <div data-testid="contract-controls">Contract Controls</div>,
+jest.mock('../../features/admin/contract', () => ({
+  ContractControls: (): React.ReactElement => <div data-testid="contract-controls">Contract Controls</div>,
 }));
 
-jest.mock('../OwnershipManagement', () => ({
-  OwnershipManagement: () => <div data-testid="ownership-management">Ownership Management</div>,
+jest.mock('../../features/admin/ownership', () => ({
+  OwnershipManagement: (): React.ReactElement => <div data-testid="ownership-management">Ownership Management</div>,
 }));
 
-jest.mock('../AlertsManagement', () => ({
-  AlertsManagement: () => <div data-testid="alerts-management">Alerts Management</div>,
+jest.mock('../../features/admin/alerts', () => ({
+  AlertsManagement: (): React.ReactElement => <div data-testid="alerts-management">Alerts Management</div>,
 }));
 
-jest.mock('../AuditStats', () => ({
-  AuditStats: () => <div data-testid="audit-stats">Audit Stats</div>,
+jest.mock('../../features/admin/audit', () => ({
+  AuditStats: (): React.ReactElement => <div data-testid="audit-stats">Audit Stats</div>,
+  AuditLogs: (): React.ReactElement => <div data-testid="audit-logs">Audit Logs</div>,
 }));
 
-jest.mock('../AuditLogs', () => ({
-  AuditLogs: () => <div data-testid="audit-logs">Audit Logs</div>,
+jest.mock('../../features/admin/AdminHeader', () => ({
+  AdminHeader: (): React.ReactElement => <div data-testid="admin-header">Admin Header</div>,
 }));
 
-jest.mock('../AdminHeader', () => ({
-  AdminHeader: () => <div data-testid="admin-header">Admin Header</div>,
-}));
-
-jest.mock('../AdminTabs', () => ({
-  AdminTabs: ({ value, onChange }: { value: number; onChange: (event: any, value: number) => void }) => (
+jest.mock('../../features/admin/AdminTabs', () => ({
+  AdminTabs: ({ value, onChange }: { value: number; onChange: (event: React.SyntheticEvent, value: number) => void }): React.ReactElement => (
     <div data-testid="admin-tabs" onClick={(e) => onChange(e, value + 1)}>
       Admin Tabs
     </div>
