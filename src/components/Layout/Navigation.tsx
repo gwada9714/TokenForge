@@ -3,10 +3,11 @@ import { AppBar, Toolbar, Typography, Button, Box, CircularProgress } from '@mui
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { Link as RouterLink } from 'react-router-dom';
 import { CustomConnectButton } from '../ConnectWallet/CustomConnectButton';
+import { NetworkStatus } from '../Network/NetworkStatus';
+import { SUPPORTED_NETWORKS } from '../../config/networks';
 
 const Navigation: React.FC = () => {
   const { 
-    error,
     isOwner,
     networkStatus,
     isLoading
@@ -35,7 +36,8 @@ const Navigation: React.FC = () => {
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {/* Toujours afficher le bouton de connexion */}
+          {/* Statut du réseau et bouton de connexion */}
+          <NetworkStatus preferredNetwork={SUPPORTED_NETWORKS.SEPOLIA} />
           <CustomConnectButton />
 
           {/* Afficher les autres boutons seulement si connecté */}
@@ -50,19 +52,18 @@ const Navigation: React.FC = () => {
               <Button color="inherit" component={RouterLink} to="/staking">
                 Staking
               </Button>
-              <Button color="inherit" component={RouterLink} to="/pricing">
-                Plans
+              <Button color="inherit" component={RouterLink} to="/profit">
+                Profits
               </Button>
               {isOwner && (
                 <Button 
-                  color="error"
-                  variant="contained"
+                  color="inherit" 
                   component={RouterLink} 
                   to="/admin"
                   sx={{ 
-                    fontWeight: 'bold',
+                    backgroundColor: 'warning.main',
                     '&:hover': {
-                      backgroundColor: 'error.dark',
+                      backgroundColor: 'warning.dark'
                     }
                   }}
                 >
@@ -71,17 +72,13 @@ const Navigation: React.FC = () => {
               )}
             </>
           )}
+
+          {/* Afficher le loader pendant le chargement */}
           {isLoading && (
-            <CircularProgress size={20} color="inherit" />
-          )}
-          {error && (
-            <Typography 
-              variant="caption" 
-              color="error"
-              sx={{ ml: 2 }}
-            >
-              {error}
-            </Typography>
+            <CircularProgress 
+              size={24} 
+              sx={{ color: 'common.white' }} 
+            />
           )}
         </Box>
       </Toolbar>

@@ -146,6 +146,17 @@ export const networks: Record<number, NetworkConfig> = {
   }
 };
 
+export const SUPPORTED_NETWORKS = {
+  MAINNET: mainnet.id,
+  SEPOLIA: sepolia.id,
+  BSC: bsc.id,
+  BSC_TESTNET: bscTestnet.id,
+  POLYGON: polygon.id,
+  POLYGON_MUMBAI: polygonMumbai.id,
+  AVALANCHE: avalanche.id,
+  AVALANCHE_FUJI: avalancheFuji.id
+} as const;
+
 export const getNetwork = (chainId: number): NetworkConfig | undefined => {
   return networks[chainId];
 };

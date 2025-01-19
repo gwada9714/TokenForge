@@ -1,169 +1,57 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
-import { useAccount, useNetwork, useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi';
-import type { Address } from 'viem';
+import { useMemo } from 'react';
+import { useAccount, useContractRead } from 'wagmi';
+import { type Address } from 'viem';
 import { TokenForgeFactoryABI } from '../abi/TokenForgeFactory';
-import { CONTRACT_ADDRESSES } from '../constants/addresses';
 import { useContract } from '../contexts/ContractContext';
-import { adminReducer, initialState } from '../reducers/adminReducer';
 import type { TokenForgeAdminHookReturn, NetworkStatus } from '../types/hooks';
-import type { TokenForgeWriteFunction } from '../types/contracts';
 
 export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
-  const [state, dispatch] = useReducer(adminReducer, initialState);
-  const [isOwner, setIsOwner] = useState(false);
-  const [transactionState, setTransactionState] = useState({
-    isTransferring: false,
-  });
-  const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>(undefined);
-  const [targetOwnerAddress, setTargetOwnerAddress] = useState<Address>();
-
   const { address } = useAccount();
-  const { chain } = useNetwork();
-  const { contractAddress: contextContractAddress } = useContract();
+  const { contractAddress, networkStatus: contextNetworkStatus } = useContract();
 
-  // Résolution de l'adresse du contrat
-  const contractAddress = useMemo(() => {
-    console.log('Resolving contract address...', {
-      chainId: chain?.id,
-      contextContractAddress,
-      userAddress: address
-    });
-
-    if (!chain?.id) {
-      console.warn('No chain detected in useTokenForgeAdmin');
-      dispatch({ type: 'SET_ERROR', payload: 'Aucun réseau détecté' });
-      return undefined;
-    }
-
-    // Priorité à l'adresse du contexte si elle existe
-    if (contextContractAddress) {
-      console.log('Using context contract address:', contextContractAddress);
-      return contextContractAddress as Address;
-    }
-
-    // Sinon, utiliser l'adresse de la configuration
-    const networkConfig = CONTRACT_ADDRESSES[chain.id];
-    if (!networkConfig) {
-      console.error('No network config found for chain:', chain.id);
-      dispatch({ type: 'SET_ERROR', payload: `Configuration non trouvée pour le réseau ${chain.id}` });
-      return undefined;
-    }
-
-    const configAddress = networkConfig.tokenForge;
-    if (!configAddress || configAddress === '0x0000000000000000000000000000000000000000') {
-      console.error('Invalid contract address for chain:', chain.name);
-      dispatch({ type: 'SET_ERROR', payload: `Adresse du contrat invalide pour le réseau ${chain.name}` });
-      return undefined;
-    }
-
-    console.log('Using config contract address:', configAddress);
-    return configAddress as Address;
-  }, [chain?.id, contextContractAddress]);
-
-  // Lecture de l'état de pause
-  const { data: isPausedData } = useContractRead({
-    address: contractAddress,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'paused',
-    watch: true,
-  });
-
-  // Lecture du propriétaire
-  const { 
-    data: ownerData,
-    isLoading: isLoadingOwner
-  } = useContractRead({
-    address: contractAddress,
+  // Lecture du propriétaire du contrat
+  const { data: ownerAddress, isLoading: ownerLoading } = useContractRead({
+    address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'owner',
-    enabled: !!contractAddress,
+    enabled: contextNetworkStatus === 'connected' && !!contractAddress,
   });
 
-  // Mise à jour du statut de propriétaire
-  useEffect(() => {
-    console.log('Checking owner status...', {
-      ownerData,
-      userAddress: address,
-      contractAddress
-    });
-
-    if (ownerData && address) {
-      const ownerAddress = ownerData as Address;
-      const isOwnerResult = ownerAddress.toLowerCase() === address.toLowerCase();
-      console.log('Owner check result:', {
-        ownerAddress,
-        userAddress: address,
-        isOwner: isOwnerResult
-      });
-      setIsOwner(isOwnerResult);
-    } else {
-      console.warn('Missing owner data or user address');
-      setIsOwner(false);
-    }
-  }, [ownerData, address]);
-
-  // Configuration du transfert de propriété
-  const { config: transferConfig } = usePrepareContractWrite({
-    address: contractAddress,
+  // Lecture de l'état de pause
+  const { data: isPaused = false } = useContractRead({
+    address: contractAddress ?? undefined,
     abi: TokenForgeFactoryABI.abi,
-    functionName: 'transferOwnership' as TokenForgeWriteFunction,
-    args: targetOwnerAddress ? [targetOwnerAddress] : undefined,
-    enabled: !!contractAddress && isOwner && !!targetOwnerAddress,
+    functionName: 'paused',
+    enabled: contextNetworkStatus === 'connected' && !!contractAddress,
   });
 
-  const { writeAsync: transferAsync } = useContractWrite(transferConfig);
+  // Vérification si l'utilisateur connecté est le propriétaire
+  const isOwner = useMemo(() => {
+    if (!address || !ownerAddress || typeof ownerAddress !== 'string') return false;
+    return address.toLowerCase() === ownerAddress.toLowerCase();
+  }, [address, ownerAddress]);
 
-  // Fonction de transfert de propriété
-  const transferOwnership = async (newOwnerAddress: Address) => {
-    if (!contractAddress || !address) return;
-    
-    setTransactionState(prev => ({ ...prev, isTransferring: true }));
-    setTargetOwnerAddress(newOwnerAddress);
-
-    try {
-      if (!transferAsync) throw new Error('Transaction non disponible');
-      const result = await transferAsync();
-      setPendingTx(result.hash);
-    } catch (error) {
-      console.error('Error transferring ownership:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors du transfert de propriété' });
-    } finally {
-      setTransactionState(prev => ({ ...prev, isTransferring: false }));
-      setTargetOwnerAddress(undefined);
-    }
+  // Construction du statut réseau pour la compatibilité avec le type
+  const networkStatus: NetworkStatus = {
+    isConnected: contextNetworkStatus === 'connected',
+    isCorrectNetwork: contextNetworkStatus === 'connected',
+    requiredNetwork: 'Sepolia',
+    networkName: 'Sepolia',
   };
 
-  // Suivi des transactions
-  const { isLoading: isWaitingTx } = useWaitForTransaction({
-    hash: pendingTx,
-    onSuccess: () => {
-      setPendingTx(undefined);
-      dispatch({ type: 'SET_ERROR', payload: null });
-    },
-    onError: (error) => {
-      console.error('Transaction error:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors de la transaction' });
-      setPendingTx(undefined);
-    },
-  });
-
-  // Construction du statut réseau
-  const networkStatus: NetworkStatus = {
-    isConnected: !!address,
-    isCorrectNetwork: !!chain?.id && !!CONTRACT_ADDRESSES[chain.id],
-    requiredNetwork: Object.keys(CONTRACT_ADDRESSES)[0] || '',
-    networkName: chain?.name,
-    error: state.error || undefined,
+  // Fonction de transfert de propriété (stub pour compatibilité type)
+  const transferOwnership = async (_newOwner: Address) => {
+    throw new Error('Fonction non implémentée');
   };
 
   return {
-    error: state.error,
-    isPaused: !!isPausedData,
+    error: null,
+    isPaused: !!isPaused,
     isOwner,
-    owner: ownerData as Address | undefined,
+    owner: (ownerAddress as Address) || undefined,
     networkStatus,
-    isLoading: isLoadingOwner || isWaitingTx,
+    isLoading: ownerLoading,
     transferOwnership,
-    isTransferring: transactionState.isTransferring
+    isTransferring: false
   };
 };
