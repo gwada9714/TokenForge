@@ -11,7 +11,7 @@ export interface RouteConfig {
 }
 
 // Lazy loading des composants
-const HomePage = lazy(() => import('../pages/Home').then(module => ({ default: module.default || module.Home })));
+const HomePage = lazy(() => import('../pages/Home'));
 const LoginForm = lazy(() => import('../components/auth/LoginForm').then(module => ({ default: module.default || module.LoginForm })));
 const SignUpForm = lazy(() => import('../components/auth/SignUpForm').then(module => ({ default: module.default || module.SignUpForm })));
 const TokenWizard = lazy(() => import('../components/TokenWizard/TokenWizard'));

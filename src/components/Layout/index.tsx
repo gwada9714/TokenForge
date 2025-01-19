@@ -4,6 +4,8 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import { CustomConnectButton } from '../ConnectWallet/CustomConnectButton';
 import { useWeb3 } from '../../contexts/Web3Context';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
+import { GlobalFeedback } from '../Feedback/GlobalFeedback';
+import { useGlobalLoading } from '../../hooks/useGlobalLoading';
 import { Toaster } from 'react-hot-toast';
 
 interface LayoutProps {
@@ -13,6 +15,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isConnected, network } = useWeb3();
   const { navigateTo, canAccess } = useAppNavigation();
+  const { isLoading, message } = useGlobalLoading();
 
   const menuItems = [
     { label: 'Créer', path: '/create' },
@@ -70,6 +73,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </Container>
 
+      <GlobalFeedback loading={isLoading} loadingMessage={message} />
       <Toaster
         position="top-right"
         toastOptions={{

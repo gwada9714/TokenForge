@@ -9,10 +9,20 @@ import {
   Grid,
 } from '@mui/material';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
+import { type Address } from 'viem';
 
 export const OwnershipManagement: React.FC = () => {
   const [newOwnerAddress, setNewOwnerAddress] = useState('');
-  const { handleTransferOwnership } = useTokenForgeAdmin();
+  const { transferOwnership, isTransferring, owner } = useTokenForgeAdmin();
+
+  const handleTransfer = async () => {
+    try {
+      await transferOwnership(newOwnerAddress as Address);
+      setNewOwnerAddress('');
+    } catch (error) {
+      console.error('Error transferring ownership:', error);
+    }
+  };
 
   return (
     <Grid container spacing={3}>
@@ -20,31 +30,28 @@ export const OwnershipManagement: React.FC = () => {
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Transfert de Propriété
+              Gestion de la propriété
             </Typography>
-            
+            <Typography variant="body2" color="textSecondary" gutterBottom>
+              Propriétaire actuel : {owner || 'Chargement...'}
+            </Typography>
             <Box sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label="Nouvelle adresse du propriétaire"
                 value={newOwnerAddress}
                 onChange={(e) => setNewOwnerAddress(e.target.value)}
-                sx={{ mb: 2 }}
-                placeholder="0x..."
+                disabled={isTransferring}
+                margin="normal"
               />
-              
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => {
-                  if (newOwnerAddress) {
-                    handleTransferOwnership(newOwnerAddress);
-                    setNewOwnerAddress('');
-                  }
-                }}
-                fullWidth
+                onClick={handleTransfer}
+                disabled={isTransferring || !newOwnerAddress}
+                sx={{ mt: 2 }}
               >
-                Transférer la propriété
+                {isTransferring ? 'Transfert en cours...' : 'Transférer la propriété'}
               </Button>
             </Box>
           </CardContent>
