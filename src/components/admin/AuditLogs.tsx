@@ -1,24 +1,23 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
+  Button,
   Card,
   CardContent,
+  Typography,
+  CircularProgress,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
   Paper,
-  Button,
-  CircularProgress,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import DownloadIcon from '@mui/icons-material/Download';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
-import { monitor } from '../../utils/monitoring';
-import { useContractRead, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useContractRead, useWriteContract } from 'wagmi';
 import { TokenForgeFactoryABI } from '../../abi/TokenForgeFactory';
 import { TOKEN_FORGE_ADDRESS } from '../../constants/addresses';
 import { AuditLog } from '../../types/contracts';
@@ -26,7 +25,7 @@ import { AuditLog } from '../../types/contracts';
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const { contract } = useTokenForgeAdmin();
-  const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>();
+  const { writeContractAsync } = useWriteContract();
   const [isLoading, setIsLoading] = useState(false);
 
   // Lecture des logs
@@ -34,85 +33,76 @@ export const AuditLogs: React.FC = () => {
     address: TOKEN_FORGE_ADDRESS,
     abi: TokenForgeFactoryABI.abi,
     functionName: 'getAuditLogs',
-    watch: true,
-  }) as { data: AuditLog[] | undefined, refetch: () => void };
-
-  // Écriture pour la purge
-  const { writeContract } = useWriteContract();
-  const { waitForTransactionReceipt } = useWaitForTransactionReceipt();
+    query: {
+      enabled: true,
+    }
+  });
 
   // Mise à jour des logs quand les données changent
   useEffect(() => {
     if (auditLogs) {
       setLogs(auditLogs);
-      monitor.info('AuditLogs', 'Audit logs updated', { count: auditLogs.length });
     }
   }, [auditLogs]);
 
-  const handleExportLogs = useCallback(() => {
-    monitor.info('AuditLogs', 'Exporting logs to CSV');
-    
+  const handleExportLogs = () => {
     try {
       const headers = ['Date', 'Action', 'Détails', 'Adresse'];
       const csvContent = [
         headers.join(','),
-        ...logs.map(log => {
-          const date = new Date(Number(log.timestamp) * 1000).toISOString();
-          return `${date},${log.action},${log.details},${log.address}`;
-        })
+        ...logs.map(log => [
+          new Date(log.timestamp * 1000).toLocaleString(),
+          log.action,
+          log.details,
+          log.address
+        ].join(','))
       ].join('\n');
-      
+
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = `audit-logs-${new Date().toISOString()}.csv`;
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'audit_logs.csv');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      monitor.info('AuditLogs', 'Logs exported successfully', { count: logs.length });
+      URL.revokeObjectURL(url);
     } catch (error) {
-      monitor.error('AuditLogs', 'Error exporting logs', { error });
-      console.error('Erreur lors de l\'export des logs:', error);
+      console.error('Error exporting logs:', error);
     }
-  }, [logs]);
+  };
 
-  const handlePurgeLogs = useCallback(async () => {
+  const handlePurgeLogs = async () => {
     if (!contract) return;
     
     try {
       setIsLoading(true);
-      const { hash } = await writeContract({
-        ...contract,
+      const hash = await writeContractAsync({
+        abi: TokenForgeFactoryABI.abi,
+        address: TOKEN_FORGE_ADDRESS,
         functionName: 'purgeAuditLogs',
       });
 
-      await waitForTransactionReceipt({ hash });
-      refetchLogs();
+      await refetchLogs();
       setIsLoading(false);
     } catch (error) {
-      monitor.error('AuditLogs', 'Error purging audit logs', { error });
-      console.error('Erreur lors de la purge des logs:', error);
+      console.error('Error purging logs:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [contract, writeContract, waitForTransactionReceipt, refetchLogs]);
-
-  const isActionDisabled = isLoading;
+  };
 
   return (
     <Card>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5">
-            Logs d'Audit
-          </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+          <Typography variant="h6">Logs d'Audit</Typography>
           <Box>
             <Button
               variant="outlined"
-              startIcon={<FileDownloadIcon />}
+              startIcon={<DownloadIcon />}
               onClick={handleExportLogs}
-              disabled={isActionDisabled || logs.length === 0}
+              disabled={isLoading || logs.length === 0}
               sx={{ mr: 1 }}
             >
               Exporter
@@ -120,9 +110,9 @@ export const AuditLogs: React.FC = () => {
             <Button
               variant="outlined"
               color="error"
-              startIcon={isActionDisabled ? <CircularProgress size={20} /> : <DeleteIcon />}
+              startIcon={<DeleteIcon />}
               onClick={handlePurgeLogs}
-              disabled={isActionDisabled || logs.length === 0}
+              disabled={isLoading || logs.length === 0}
             >
               Purger
             </Button>
@@ -130,9 +120,11 @@ export const AuditLogs: React.FC = () => {
         </Box>
 
         {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
             <CircularProgress />
           </Box>
+        ) : logs.length === 0 ? (
+          <Typography>Aucun log d'audit disponible</Typography>
         ) : (
           <TableContainer component={Paper}>
             <Table>
@@ -145,9 +137,9 @@ export const AuditLogs: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {logs.map((log) => (
-                  <TableRow key={log.id.toString()}>
-                    <TableCell>{new Date(Number(log.timestamp) * 1000).toLocaleString()}</TableCell>
+                {logs.map((log, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{new Date(log.timestamp * 1000).toLocaleString()}</TableCell>
                     <TableCell>{log.action}</TableCell>
                     <TableCell>{log.details}</TableCell>
                     <TableCell>{log.address}</TableCell>
