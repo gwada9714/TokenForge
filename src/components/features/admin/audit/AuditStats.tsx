@@ -20,7 +20,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { useAuditLogs, LogLevel, LogCategory } from '../../../hooks/useAuditLogs';
+import { useAuditLogs, LogLevel, LogCategory } from '../../../../hooks/useAuditLogs';
 
 interface LogStats {
   byLevel: Record<LogLevel, number>;

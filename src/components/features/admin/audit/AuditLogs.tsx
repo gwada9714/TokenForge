@@ -1,141 +1,125 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
-  Card,
-  CardContent,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Button,
+  CircularProgress,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
-import { useTokenForgeAdmin } from '../../../hooks/useTokenForgeAdmin';
-import { AuditLog } from '../../../types/contracts';
+import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
+import type { AuditLog } from '../../../../types/contracts';
 
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const { contract } = useTokenForgeAdmin();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Lecture des logs
-  const { data: auditLogs, refetch: refetchLogs } = useTokenForgeAdmin(contract, 'getAuditLogs');
+  // Chargement initial des logs
+  useEffect(() => {
+    loadLogs();
+  }, [contract]);
 
-  // Mise à jour des logs quand les données changent
-  React.useEffect(() => {
-    if (auditLogs) {
-      setLogs(auditLogs);
-    }
-  }, [auditLogs]);
-
-  const handleExportLogs = () => {
+  // Chargement des logs
+  const loadLogs = async () => {
+    if (!contract) return;
     try {
-      const headers = ['Date', 'Action', 'Détails', 'Adresse'];
-      const csvContent = [
-        headers.join(','),
-        ...logs.map(log => [
-          new Date(log.timestamp * 1000).toLocaleString(),
-          log.action,
-          log.details,
-          log.address
-        ].join(','))
-      ].join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'audit_logs.csv');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setIsLoading(true);
+      const auditLogs = await contract.getAuditLogs();
+      setLogs(auditLogs);
     } catch (error) {
-      console.error('Error exporting logs:', error);
+      console.error('Erreur lors du chargement des logs:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePurgeLogs = async () => {
+  // Export des logs
+  const handleExport = async () => {
+    if (!logs.length) return;
+
+    const csvContent = logs.map(log => {
+      const date = new Date(log.timestamp * 1000).toLocaleString();
+      return `${date},${log.action},${log.data},${log.address}`;
+    }).join('\n');
+
+    const blob = new Blob([`Date,Action,Data,Address\n${csvContent}`], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'audit_logs.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Suppression des logs
+  const handlePurge = async () => {
     if (!contract) return;
-    
     try {
       setIsLoading(true);
-      const hash = await contract.purgeAuditLogs();
-
-      await refetchLogs();
-      setIsLoading(false);
+      await contract.purgeAuditLogs();
+      await loadLogs();
     } catch (error) {
-      console.error('Error purging logs:', error);
+      console.error('Erreur lors de la purge des logs:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h6">Logs d'Audit</Typography>
-          <Box>
-            <Button
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              onClick={handleExportLogs}
-              disabled={isLoading || logs.length === 0}
-              sx={{ mr: 1 }}
-            >
-              Exporter
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handlePurgeLogs}
-              disabled={isLoading || logs.length === 0}
-            >
-              Purger
-            </Button>
-          </Box>
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h6" component="h2">
+          Logs d'Audit
+        </Typography>
+        <Box>
+          <Button
+            startIcon={<DownloadIcon />}
+            onClick={handleExport}
+            disabled={isLoading || !logs.length}
+            sx={{ mr: 1 }}
+          >
+            Exporter
+          </Button>
+          <Button
+            startIcon={<DeleteIcon />}
+            color="error"
+            onClick={handlePurge}
+            disabled={isLoading || !logs.length}
+          >
+            Purger
+          </Button>
         </Box>
+      </Box>
 
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-            <CircularProgress />
-          </Box>
-        ) : logs.length === 0 ? (
-          <Typography>Aucun log d'audit disponible</Typography>
-        ) : (
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Action</TableCell>
-                  <TableCell>Détails</TableCell>
-                  <TableCell>Adresse</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {logs.map((log, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{new Date(log.timestamp * 1000).toLocaleString()}</TableCell>
-                    <TableCell>{log.action}</TableCell>
-                    <TableCell>{log.details}</TableCell>
-                    <TableCell>{log.address}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </CardContent>
-    </Card>
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <List>
+          {logs.map((log) => (
+            <ListItem key={log.id}>
+              <ListItemText
+                primary={log.action}
+                secondary={`${new Date(log.timestamp * 1000).toLocaleString()} - ${log.data}`}
+              />
+              <ListItemSecondaryAction>
+                <Typography variant="caption" color="textSecondary">
+                  {log.address}
+                </Typography>
+              </ListItemSecondaryAction>
+            </ListItem>
+          ))}
+        </List>
+      )}
+    </Box>
   );
 };
-
-export default AuditLogs;

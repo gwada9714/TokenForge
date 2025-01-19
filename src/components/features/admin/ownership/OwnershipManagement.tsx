@@ -8,7 +8,7 @@ import {
   Button,
   Grid,
 } from '@mui/material';
-import { useTokenForgeAdmin } from '../../../hooks/useTokenForgeAdmin';
+import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
 import { type Address } from 'viem';
 
 export const OwnershipManagement: React.FC = () => {

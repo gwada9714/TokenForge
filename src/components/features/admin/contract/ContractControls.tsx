@@ -10,7 +10,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import type { ButtonProps } from '@mui/material';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { useTokenForgeAdmin } from '../../../hooks/useTokenForgeAdmin';
+import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
 
 export const ContractControls: React.FC = () => {
   const {

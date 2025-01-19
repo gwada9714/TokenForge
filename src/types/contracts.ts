@@ -70,7 +70,7 @@ export interface TokenForgeReadFunctionReturns {
 }
 
 export interface AlertRule {
-  id: bigint;
+  id: number;
   name: string;
   condition: string;
   enabled: boolean;
@@ -80,7 +80,7 @@ export interface AuditLog {
   id: number;
   timestamp: number;
   action: string;
-  details: string;
+  data: string;
   address: Address;
 }
 
