@@ -57,55 +57,44 @@ export const ForgeSubheading = styled.h2<StyledProps>`
 
 export const ForgeText = styled.p<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.body};
-  color: ${props => props.theme.colors.text.primary};
-  line-height: 1.6;
+  font-weight: ${props => props.theme.typography.fontWeight.normal};
+  color: ${props => props.theme.colors.text.secondary};
   margin-bottom: ${props => props.theme.spacing(2)};
-  font-size: ${props => props.theme.typography.fontSizes.small};
-
-  ${props => props.theme.breakpoints.up('md')} {
-    font-size: ${props => props.theme.typography.fontSizes.medium};
-  }
+  font-size: ${props => props.theme.typography.fontSizes.md};
+  line-height: 1.6;
 `;
 
 export const ForgeButton = styled(motion.button)<StyledProps>`
-  background: ${props => props.theme.colors.primary.main};
-  color: ${props => props.theme.colors.text.light};
   font-family: ${props => props.theme.typography.fontFamily.body};
   font-weight: ${props => props.theme.typography.fontWeight.medium};
-  padding: ${props => `${props.theme.spacing(2)} ${props.theme.spacing(4)}`};
-  border-radius: 0.375rem;
+  background-color: ${props => props.theme.colors.text.primary};
+  color: ${props => props.theme.colors.background.primary};
+  padding: ${props => props.theme.spacing(2)} ${props => props.theme.spacing(4)};
   border: none;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  font-size: ${props => props.theme.typography.fontSizes.small};
-
-  ${props => props.theme.breakpoints.up('md')} {
-    font-size: ${props => props.theme.typography.fontSizes.medium};
-  }
+  font-size: ${props => props.theme.typography.fontSizes.sm};
 
   &:hover {
-    background: ${props => props.theme.colors.primary.dark};
+    background-color: ${props => props.theme.colors.text.secondary};
     transform: translateY(-2px);
   }
 
-  &.secondary {
-    background: ${props => props.theme.colors.secondary.main};
-
-    &:hover {
-      background: ${props => props.theme.colors.secondary.dark};
-    }
+  ${props => props.theme.breakpoints.up('md')} {
+    font-size: ${props => props.theme.typography.fontSizes.md};
   }
 `;
 
 export const ForgeCard = styled(motion.div)<StyledProps>`
-  background: ${props => props.theme.colors.background.paper};
-  border-radius: 0.5rem;
+  background: ${props => props.theme.colors.background.primary};
   padding: ${props => props.theme.spacing(4)};
-  margin-bottom: ${props => props.theme.spacing(4)};
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
 
-  ${props => props.theme.breakpoints.up('md')} {
-    padding: ${props => props.theme.spacing(6)};
+  &:hover {
+    transform: translateY(-4px);
   }
 `;
 
@@ -116,7 +105,6 @@ export const ForgeGrid = styled.div<StyledProps>`
 
   ${props => props.theme.breakpoints.up('md')} {
     grid-template-columns: repeat(2, 1fr);
-    gap: ${props => props.theme.spacing(6)};
   }
 
   ${props => props.theme.breakpoints.up('lg')} {
@@ -124,16 +112,21 @@ export const ForgeGrid = styled.div<StyledProps>`
   }
 `;
 
-export const ForgeMetallicCard = styled(ForgeCard)`
-  background: ${props => props.theme.colors.forge.metallic};
-  color: ${props => props.theme.colors.text.light};
+export const ForgeMetallicCard = styled.div<StyledProps>`
+  background: ${props => props.theme.colors.forge};
+  color: ${props => props.theme.colors.text.primary};
   font-family: ${props => props.theme.typography.fontFamily.body};
   font-weight: ${props => props.theme.typography.fontWeight.medium};
-  font-size: ${props => props.theme.typography.fontSizes.small};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  border-radius: ${props => props.theme.borderRadius.medium};
+  padding: ${props => props.theme.spacing(3)};
+  box-shadow: ${props => props.theme.shadows.medium};
+  transition: ${props => props.theme.transitions.default};
 
   ${props => props.theme.breakpoints.up('md')} {
-    font-size: ${props => props.theme.typography.fontSizes.medium};
+    font-size: ${props => props.theme.typography.fontSizes.md};
   }
+
   position: relative;
   overflow: hidden;
 
@@ -159,7 +152,7 @@ export const ForgeGlowingBorder = styled.div<StyledProps>`
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: ${props => props.theme.colors.forge.glow};
+    background: ${props => props.theme.colors.forge};
     z-index: -1;
     filter: blur(8px);
     opacity: 0.5;

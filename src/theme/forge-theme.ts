@@ -75,7 +75,22 @@ declare module "@mui/material/styles" {
 // Extend styled-components theme
 declare module "styled-components" {
   export interface DefaultTheme {
-    colors: typeof colors;
+    colors: {
+      text: {
+        primary: string;
+        secondary: string;
+      };
+      background: {
+        primary: string;
+        secondary: string;
+      };
+      primary: string;
+      secondary: string;
+      success: string;
+      warning: string;
+      forge: string;
+      ember: string;
+    };
     typography: {
       fontFamily: {
         heading: string;
@@ -88,12 +103,30 @@ declare module "styled-components" {
         bold: number;
       };
       fontSizes: {
-        small: string;
-        medium: string;
-        large: string;
+        xs: string;
+        sm: string;
+        md: string;
+        lg: string;
+        xl: string;
+        '2xl': string;
+        '3xl': string;
+        '4xl': string;
+        '5xl': string;
       };
     };
     spacing: (value: number) => string;
+    breakpoints: {
+      values: {
+        xs: number;
+        sm: number;
+        md: number;
+        lg: number;
+        xl: number;
+      };
+      up: (key: string) => string;
+      down: (key: string) => string;
+      between: (start: string, end: string) => string;
+    };
     borderRadius: {
       small: string;
       medium: string;
@@ -116,18 +149,6 @@ declare module "styled-components" {
       snackbar: number;
       tooltip: number;
     };
-    breakpoints: {
-      values: {
-        xs: number;
-        sm: number;
-        md: number;
-        lg: number;
-        xl: number;
-      };
-      up: (key: string) => string;
-      down: (key: string) => string;
-      between: (start: string, end: string) => string;
-    };
   }
 }
 
@@ -146,70 +167,86 @@ declare module "@mui/material/Paper" {
 }
 
 const colors = {
-  primary: {
-    main: "#182038",
-    light: "#2a3654",
-    dark: "#0c1019",
-  },
-  secondary: {
-    main: "#D97706",
-    light: "#f59e0b",
-    dark: "#b45309",
-  },
-  success: {
-    main: "#059669",
-    light: "#34d399",
-    dark: "#047857",
-  },
-  forge: {
-    main: "#FF6B2B",
-    dark: "#E65A1F",
-    light: "#FF8C5A",
-    border: "#FFE0B2",
-    hover: "#FF7A40",
-    metallic: "#FFC107",
-    glow: "#FFD700",
-  },
-  ember: {
-    main: "#FF4B2B",
-    dark: "#E63A1F",
-    light: "#FF6C5A",
-    border: "#FFCDD2",
-    hover: "#FF5A40",
+  text: {
+    primary: '#1A1A1A',
+    secondary: '#4A4A4A'
   },
   background: {
-    default: "#F5F5F5",
-    paper: "#FFFFFF",
-    dark: "#1e293b",
+    primary: '#FFFFFF',
+    secondary: '#F5F5F5'
   },
-  text: {
-    primary: "#1F2937",
-    secondary: "#6B7280",
-    light: "#f8fafc",
-  },
-  gradient: {
-    primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
-    secondary: "linear-gradient(135deg, #D97706 0%, #f59e0b 100%)",
-    forge: "linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%)",
-  },
-  warning: {
-    main: "#f59e0b",
-    light: "#fbbf24",
-    dark: "#d97706",
-  },
+  primary: '#3B82F6',
+  secondary: '#10B981',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  forge: '#6366F1',
+  ember: '#EF4444'
 };
 
-const spacing = {
-  sm: '0.5rem',
-  md: '1rem',
-  lg: '1.5rem',
-  xl: '2rem',
-  '2xl': '3rem',
-  '3xl': '4rem',
-  '4xl': '6rem',
+const typography = {
+  fontFamily: {
+    heading: '"Inter", sans-serif',
+    body: '"Inter", sans-serif'
+  },
+  fontWeight: {
+    normal: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700
+  },
+  fontSizes: {
+    xs: '0.75rem',
+    sm: '0.875rem',
+    md: '1rem',
+    lg: '1.125rem',
+    xl: '1.25rem',
+    '2xl': '1.5rem',
+    '3xl': '1.875rem',
+    '4xl': '2.25rem',
+    '5xl': '3rem'
+  }
 };
 
-const spacingFunction = (value: number): string => `${value * 0.25}rem`;
+const breakpoints = {
+  values: {
+    xs: 0,
+    sm: 600,
+    md: 960,
+    lg: 1280,
+    xl: 1920
+  },
+  up: (key: string) => `@media (min-width: ${breakpoints.values[key as keyof typeof breakpoints.values]}px)`,
+  down: (key: string) => `@media (max-width: ${breakpoints.values[key as keyof typeof breakpoints.values] - 0.05}px)`,
+  between: (start: string, end: string) => `@media (min-width: ${breakpoints.values[start as keyof typeof breakpoints.values]}px) and (max-width: ${breakpoints.values[end as keyof typeof breakpoints.values] - 0.05}px)`
+};
+
+const spacing = (value: number) => `${value * 0.25}rem`;
+
+const borderRadius = {
+  small: '0.25rem',
+  medium: '0.5rem',
+  large: '1rem'
+};
+
+const shadows = {
+  small: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+  medium: '0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12)',
+  large: '0 10px 20px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.10)'
+};
+
+const transitions = {
+  default: '0.3s ease-in-out',
+  fast: '0.15s ease-in-out',
+  slow: '0.5s ease-in-out'
+};
+
+const zIndex = {
+  appBar: 1100,
+  drawer: 1200,
+  modal: 1300,
+  snackbar: 1400,
+  tooltip: 1500
+};
 
 const components: Components<Omit<Theme, "components">> = {
   MuiButton: {
@@ -224,26 +261,26 @@ const components: Components<Omit<Theme, "components">> = {
       {
         props: { variant: "forge" },
         style: {
-          backgroundColor: colors.forge.main,
+          backgroundColor: colors.forge,
           color: "#ffffff",
           "&:hover": {
-            backgroundColor: colors.forge.hover,
+            backgroundColor: colors.forge,
           },
           "&:active": {
-            backgroundColor: colors.forge.dark,
+            backgroundColor: colors.forge,
           },
         },
       },
       {
         props: { variant: "ember" },
         style: {
-          backgroundColor: colors.ember.main,
+          backgroundColor: colors.ember,
           color: "#ffffff",
           "&:hover": {
-            backgroundColor: colors.ember.hover,
+            backgroundColor: colors.ember,
           },
           "&:active": {
-            backgroundColor: colors.ember.dark,
+            backgroundColor: colors.ember,
           },
         },
       },
@@ -260,13 +297,13 @@ const components: Components<Omit<Theme, "components">> = {
       {
         props: { variant: "forge" },
         style: {
-          borderLeft: `4px solid ${colors.forge.main}`,
+          borderLeft: `4px solid ${colors.forge}`,
         },
       },
       {
         props: { variant: "ember" },
         style: {
-          borderLeft: `4px solid ${colors.ember.main}`,
+          borderLeft: `4px solid ${colors.ember}`,
         },
       },
     ],
@@ -277,13 +314,13 @@ const components: Components<Omit<Theme, "components">> = {
         "& .MuiOutlinedInput-root": {
           borderRadius: "8px",
           "& fieldset": {
-            borderColor: colors.forge.border,
+            borderColor: colors.forge,
           },
           "&:hover fieldset": {
-            borderColor: colors.forge.hover,
+            borderColor: colors.forge,
           },
           "&.Mui-focused fieldset": {
-            borderColor: colors.forge.main,
+            borderColor: colors.forge,
           },
         },
       },
@@ -308,7 +345,11 @@ const themeOptions: ThemeOptions = {
     background: colors.background,
     text: colors.text,
     warning: colors.warning,
-    gradient: colors.gradient,
+    gradient: {
+      primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
+      secondary: "linear-gradient(135deg, #D97706 0%, #f59e0b 100%)",
+      forge: "linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%)",
+    },
     forge: colors.forge,
   },
   typography: {
@@ -356,64 +397,11 @@ export const forgeTheme = createTheme(themeOptions);
 
 export const styledTheme = {
   colors,
-  typography: {
-    fontFamily: {
-      heading: '"Inter", "Helvetica", "Arial", sans-serif',
-      body: '"Inter", "Helvetica", "Arial", sans-serif',
-    },
-    fontWeight: {
-      normal: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
-    },
-    fontSizes: {
-      small: '0.875rem',
-      medium: '1rem',
-      large: '1.125rem',
-    },
-  },
-  spacing: spacingFunction,
-  borderRadius: {
-    small: '4px',
-    medium: '8px',
-    large: '12px',
-  },
-  shadows: {
-    small: '0 2px 4px rgba(0,0,0,0.1)',
-    medium: '0 4px 8px rgba(0,0,0,0.1)',
-    large: '0 8px 16px rgba(0,0,0,0.1)',
-  },
-  transitions: {
-    default: '0.3s ease-in-out',
-    fast: '0.15s ease-in-out',
-    slow: '0.5s ease-in-out',
-  },
-  zIndex: {
-    appBar: 1100,
-    drawer: 1200,
-    modal: 1300,
-    snackbar: 1400,
-    tooltip: 1500,
-  },
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 960,
-      lg: 1280,
-      xl: 1920,
-    },
-    up: (key: string) => `@media (min-width: ${
-      key === 'xs' ? 0 : key === 'sm' ? 600 : key === 'md' ? 960 : key === 'lg' ? 1280 : 1920
-    }px)`,
-    down: (key: string) => `@media (max-width: ${
-      key === 'xs' ? 599 : key === 'sm' ? 959 : key === 'md' ? 1279 : key === 'lg' ? 1919 : 9999
-    }px)`,
-    between: (start: string, end: string) => {
-      const min = start === 'xs' ? 0 : start === 'sm' ? 600 : start === 'md' ? 960 : start === 'lg' ? 1280 : 1920;
-      const max = end === 'xs' ? 599 : end === 'sm' ? 959 : end === 'md' ? 1279 : end === 'lg' ? 1919 : 9999;
-      return `@media (min-width: ${min}px) and (max-width: ${max}px)`;
-    },
-  },
+  typography,
+  spacing,
+  breakpoints,
+  borderRadius,
+  shadows,
+  transitions,
+  zIndex
 };

@@ -12,25 +12,28 @@ interface ForgeButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 const getVariantStyles = (variant: ForgeButtonProps['variant'] = 'primary') => {
   const variants = {
     primary: css`
-      background: ${props => props.theme.colors.primary.main};
-      color: ${props => props.theme.colors.text.light};
+      background: ${props => props.theme.colors.primary};
+      color: ${props => props.theme.colors.text.primary};
       &:hover {
-        background: ${props => props.theme.colors.primary.dark};
+        background: ${props => props.theme.colors.primary};
+        opacity: 0.9;
       }
     `,
     secondary: css`
-      background: ${props => props.theme.colors.secondary.main};
-      color: ${props => props.theme.colors.text.light};
+      background: ${props => props.theme.colors.secondary};
+      color: ${props => props.theme.colors.text.primary};
       &:hover {
-        background: ${props => props.theme.colors.secondary.dark};
+        background: ${props => props.theme.colors.secondary};
+        opacity: 0.9;
       }
     `,
     outline: css`
       background: transparent;
-      color: ${props => props.theme.colors.primary.main};
-      border: 2px solid ${props => props.theme.colors.primary.main};
+      color: ${props => props.theme.colors.primary};
+      border: 2px solid ${props => props.theme.colors.primary};
       &:hover {
-        background: ${props => props.theme.colors.primary.main}10;
+        background: ${props => props.theme.colors.primary};
+        color: ${props => props.theme.colors.text.primary};
       }
     `
   };
@@ -40,16 +43,16 @@ const getVariantStyles = (variant: ForgeButtonProps['variant'] = 'primary') => {
 const getSizeStyles = (size: ForgeButtonProps['size'] = 'medium') => {
   const sizes = {
     small: css`
-      padding: 8px 16px;
-      font-size: 14px;
+      padding: ${props => props.theme.spacing(1)} ${props => props.theme.spacing(2)};
+      font-size: ${props => props.theme.typography.fontSizes.sm};
     `,
     medium: css`
-      padding: 12px 24px;
-      font-size: 16px;
+      padding: ${props => props.theme.spacing(2)} ${props => props.theme.spacing(4)};
+      font-size: ${props => props.theme.typography.fontSizes.md};
     `,
     large: css`
-      padding: 16px 32px;
-      font-size: 18px;
+      padding: ${props => props.theme.spacing(3)} ${props => props.theme.spacing(6)};
+      font-size: ${props => props.theme.typography.fontSizes.lg};
     `
   };
   return sizes[size];
@@ -59,53 +62,43 @@ const StyledButton = styled.button<ForgeButtonProps>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: ${props => props.theme.spacing(1)};
   border: none;
-  border-radius: 8px;
-  font-family: ${props => props.theme.typography.fontFamily.heading};
-  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  border-radius: ${props => props.theme.borderRadius.medium};
+  font-family: ${props => props.theme.typography.fontFamily.body};
+  font-weight: ${props => props.theme.typography.fontWeight.medium};
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: ${props => props.theme.transitions.default};
   position: relative;
   overflow: hidden;
-
-  ${props => getVariantStyles(props.variant)}
-  ${props => getSizeStyles(props.size)}
-
-  ${props => props.$isGlowing && css`
-    animation: ${forgeGlow} 2s infinite;
-  `}
-
-  ${props => props.$isAnimated && css`
-    &:hover {
-      animation: ${hover} 1s infinite;
-      transform: translateY(-2px);
-    }
-  `}
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
 
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      120deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: 0.5s;
-  }
-
-  &:hover:before {
-    left: 100%;
-  }
+  ${props => getVariantStyles(props.variant)}
+  ${props => getSizeStyles(props.size)}
+  ${props => props.$isGlowing && css`
+    &:before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: ${props.theme.colors.primary};
+      z-index: -1;
+      filter: blur(8px);
+      opacity: 0.5;
+    }
+  `}
+  ${props => props.$isAnimated && css`
+    &:hover {
+      transform: translateY(-2px);
+      ${hover}
+    }
+  `}
 `;
 
 export const ForgeButton: React.FC<ForgeButtonProps> = ({
