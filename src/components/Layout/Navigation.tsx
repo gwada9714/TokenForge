@@ -4,7 +4,7 @@ import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { Link as RouterLink } from 'react-router-dom';
 import { CustomConnectButton } from '../ConnectWallet/CustomConnectButton';
 import { NetworkStatus } from '../Network/NetworkStatus';
-import { SUPPORTED_NETWORKS } from '../../config/networks';
+import { sepolia } from 'viem/chains';
 
 const Navigation: React.FC = () => {
   const { 
@@ -37,7 +37,7 @@ const Navigation: React.FC = () => {
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {/* Statut du réseau et bouton de connexion */}
-          <NetworkStatus preferredNetwork={SUPPORTED_NETWORKS.SEPOLIA} />
+          <NetworkStatus preferredChain={sepolia} />
           <CustomConnectButton />
 
           {/* Afficher les autres boutons seulement si connecté */}

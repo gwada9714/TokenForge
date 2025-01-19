@@ -13,6 +13,11 @@ interface Web3ContextType {
   isCorrectNetwork: boolean;
   isLoading: boolean;
   error: Error | null;
+  hasError: boolean;
+  errorMessage: string | null;
+  retryConnection: () => Promise<void>;
+  connect: () => Promise<void>;
+  disconnect: () => void;
   network: {
     isSupported: boolean;
     isMainnet: boolean;
@@ -33,7 +38,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     isInitialized,
     hasError,
     errorMessage,
-    connect
+    connect,
+    disconnect
   } = useWalletConnection();
   const networkStatus = useNetworkStatus();
 
@@ -89,6 +95,15 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAdminStatus();
   }, [address, isConnected]);
 
+  const retryConnection = async () => {
+    try {
+      await connect();
+    } catch (err) {
+      console.error('Erreur lors de la reconnexion:', err);
+      setError(err instanceof Error ? err : new Error('Erreur inconnue'));
+    }
+  };
+
   const value: Web3ContextType = {
     isConnected,
     isInitialized,
@@ -98,6 +113,11 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     isCorrectNetwork: networkStatus.isSupported,
     isLoading: isLoading || networkStatus.isSwitching,
     error: error || (hasError ? new Error(errorMessage || 'Erreur de connexion') : null),
+    hasError,
+    errorMessage,
+    retryConnection,
+    connect,
+    disconnect,
     network: {
       isSupported: networkStatus.isSupported,
       isMainnet: networkStatus.isMainnet,
