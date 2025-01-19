@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { useTokenForgeContract } from '../../../hooks/useTokenForgeContract';
-import { isAddress, type Address, zeroAddress } from 'viem';
+import { isAddress, type Address } from 'viem';
 
 interface OwnershipManagementProps {
   onError: (message: string) => void;
