@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { useTokenForgeContract } from '../../../hooks/useTokenForgeContract';
-import { isAddress } from 'viem';
+import { isAddress, type Address, zeroAddress } from 'viem';
 
 interface OwnershipManagementProps {
   onError: (message: string) => void;
@@ -9,7 +9,7 @@ interface OwnershipManagementProps {
 
 const OwnershipManagement: React.FC<OwnershipManagementProps> = ({ onError }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newOwnerAddress, setNewOwnerAddress] = useState('');
+  const [newOwnerAddress, setNewOwnerAddress] = useState<string>('');
   const { transferOwnership } = useTokenForgeContract();
 
   const handleTransfer = async () => {
@@ -19,7 +19,7 @@ const OwnershipManagement: React.FC<OwnershipManagementProps> = ({ onError }) =>
     }
 
     try {
-      await transferOwnership(newOwnerAddress);
+      await transferOwnership(newOwnerAddress as Address);
       setIsDialogOpen(false);
       setNewOwnerAddress('');
     } catch (error) {
@@ -43,11 +43,24 @@ const OwnershipManagement: React.FC<OwnershipManagementProps> = ({ onError }) =>
             fullWidth
             value={newOwnerAddress}
             onChange={(e) => setNewOwnerAddress(e.target.value)}
+            error={newOwnerAddress !== '' && !isAddress(newOwnerAddress)}
+            helperText={newOwnerAddress !== '' && !isAddress(newOwnerAddress) ? 'Invalid Ethereum address' : ''}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleTransfer} variant="contained">Transfer</Button>
+          <Button onClick={() => {
+            setIsDialogOpen(false);
+            setNewOwnerAddress('');
+          }}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleTransfer} 
+            variant="contained"
+            disabled={!isAddress(newOwnerAddress)}
+          >
+            Transfer
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

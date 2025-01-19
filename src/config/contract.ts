@@ -1,4 +1,6 @@
-export const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS || '';
+import { Address } from 'viem';
+
+export const CONTRACT_ADDRESS = (process.env.REACT_APP_CONTRACT_ADDRESS || '0x0') as Address;
 
 export const CONTRACT_ABI = [
   // Pausable
