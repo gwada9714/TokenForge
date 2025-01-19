@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createContext, useContext, ReactNode, useEffect, useState } from "react";
-import { useAccount, useNetwork } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
 
 interface Web3ProviderProps {
   children: ReactNode;
@@ -17,23 +17,23 @@ const Web3Context = createContext<Web3ContextType | null>(null);
 
 export function Web3Provider({ children }: Web3ProviderProps) {
   const { address, isConnected } = useAccount();
-  const { chain } = useNetwork();
+  const chainId = useChainId();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    setIsInitialized(true);
-  }, []);
+    if (isConnected) {
+      setIsInitialized(true);
+    }
+  }, [isConnected]);
 
-  return (
-    <Web3Context.Provider value={{
-      isInitialized,
-      isConnected,
-      chainId: chain?.id,
-      address
-    }}>
-      {children}
-    </Web3Context.Provider>
-  );
+  const value = {
+    isInitialized,
+    isConnected,
+    chainId,
+    address,
+  };
+
+  return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
 }
 
 export function useWeb3() {

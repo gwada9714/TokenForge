@@ -10,9 +10,6 @@ import { Layout } from "./components/Layout";
 import { CircularProgress, Box } from "@mui/material";
 import { ContractProvider } from "./contexts/ContractContext";
 import { Web3Providers } from "./providers/Web3Providers";
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { WagmiConfig } from 'wagmi';
-import { wagmiConfig } from "./config/wagmiConfig";
 import '@rainbow-me/rainbowkit/styles.css';
 
 // Lazy loading avec preload pour les composants critiques
@@ -44,70 +41,33 @@ const LoadingFallback = () => (
 
 export function App() {
   return (
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider>
-        <Provider store={store}>
-          <ThemeProvider theme={forgeTheme}>
-            <Web3Providers>
-              <ContractProvider>
-                <GlobalStyle />
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route element={<Layout />}>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/login" element={<LoginForm />} />
-                      <Route path="/signup" element={<SignUpForm />} />
-                      <Route path="/pricing" element={<Pricing />} />
-                      <Route
-                        path="/create"
-                        element={
-                          <ProtectedRoute>
-                            <TokenWizard />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/staking"
-                        element={
-                          <ProtectedRoute>
-                            <StakingDashboard />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/dashboard"
-                        element={
-                          <ProtectedRoute>
-                            <ProfitDashboard />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route path="/launchpad" element={<LaunchpadPage />} />
-                      <Route
-                        path="/tokens"
-                        element={
-                          <ProtectedRoute>
-                            <MyTokens />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/admin"
-                        element={
-                          <ProtectedRoute>
-                            <AdminDashboard />
-                          </ProtectedRoute>
-                        }
-                      />
-                    </Route>
-                  </Routes>
-                </Suspense>
-              </ContractProvider>
-            </Web3Providers>
-          </ThemeProvider>
-        </Provider>
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <Provider store={store}>
+      <ThemeProvider theme={forgeTheme}>
+        <Web3Providers>
+          <ContractProvider>
+            <GlobalStyle />
+            <Suspense fallback={<LoadingFallback />}>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/login" element={<LoginForm />} />
+                  <Route path="/signup" element={<SignUpForm />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  
+                  {/* Routes protégées */}
+                  <Route path="/create" element={<ProtectedRoute requireWeb3><TokenWizard /></ProtectedRoute>} />
+                  <Route path="/staking" element={<ProtectedRoute requireWeb3><StakingDashboard /></ProtectedRoute>} />
+                  <Route path="/profit" element={<ProtectedRoute requireWeb3><ProfitDashboard /></ProtectedRoute>} />
+                  <Route path="/launchpad" element={<ProtectedRoute requireWeb3><LaunchpadPage /></ProtectedRoute>} />
+                  <Route path="/mytokens" element={<ProtectedRoute requireWeb3><MyTokens /></ProtectedRoute>} />
+                  <Route path="/admin" element={<ProtectedRoute requireWeb3 requireAdmin><AdminDashboard /></ProtectedRoute>} />
+                </Routes>
+              </Layout>
+            </Suspense>
+          </ContractProvider>
+        </Web3Providers>
+      </ThemeProvider>
+    </Provider>
   );
 }
 
