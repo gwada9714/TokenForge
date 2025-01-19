@@ -8,6 +8,8 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@mui/material$': '<rootDir>/src/components/admin/__tests__/__mocks__/mui.ts',
+    '^@mui/icons-material/(.*)$': '<rootDir>/src/components/admin/__tests__/__mocks__/mui.ts'
   },
   testMatch: [
     '<rootDir>/src/**/*.{spec,test}.{ts,tsx}'
@@ -17,4 +19,4 @@ module.exports = {
       tsconfig: 'tsconfig.json'
     }]
   }
-} 
+}

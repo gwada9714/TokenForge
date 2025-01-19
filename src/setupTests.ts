@@ -31,21 +31,33 @@ jest.mock("@web3modal/wagmi", () => ({
 }));
 
 // Mock wagmi
-const MockProvider = ({ children }: { children: React.ReactNode }) => {
-  return children;
-};
-
-jest.mock("wagmi", () => ({
-  WagmiProvider: MockProvider,
-  useAccount: () => ({
-    address: null,
-    isConnecting: false,
-    isDisconnected: true,
-  }),
-}));
+jest.mock("wagmi", () => {
+  const originalModule = jest.requireActual("wagmi");
+  return {
+    ...originalModule,
+    WagmiProvider: ({ children }: { children: React.ReactNode }) => children,
+    useAccount: () => ({
+      address: "0x1234567890123456789012345678901234567890",
+      isConnecting: false,
+      isDisconnected: false,
+    }),
+    useContractRead: jest.fn(),
+    useWriteContract: jest.fn(),
+    createConfig: jest.fn(),
+    http: jest.fn(),
+  };
+});
 
 // Mock ethers
 jest.mock("ethers", () => ({
   ...jest.requireActual("ethers"),
   JsonRpcProvider: jest.fn(),
+}));
+
+// Mock react-query
+jest.mock("@tanstack/react-query", () => ({
+  QueryClient: jest.fn(() => ({
+    setDefaultOptions: jest.fn(),
+  })),
+  QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
