@@ -1,8 +1,6 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { mainnet, sepolia } from 'wagmi/chains';
-import { configureChains, createConfig } from 'wagmi';
-import { alchemyProvider } from 'wagmi/providers/alchemy';
-import { publicProvider } from 'wagmi/providers/public';
+import { createConfig, http } from 'wagmi';
 import { 
   injectedWallet,
   metaMaskWallet,
@@ -16,16 +14,8 @@ const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
 if (!alchemyKey) throw new Error('VITE_ALCHEMY_API_KEY is not defined');
 if (!projectId) throw new Error('VITE_WALLET_CONNECT_PROJECT_ID is not defined');
 
-// Configuration des chaînes
-export const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [sepolia, mainnet],
-  [
-    alchemyProvider({ 
-      apiKey: alchemyKey,
-    }),
-    publicProvider(), // Fallback sur le provider public
-  ],
-);
+// Configuration des chaînes supportées
+export const chains = [sepolia, mainnet];
 
 // Configuration des portefeuilles
 const connectors = connectorsForWallets([
@@ -33,17 +23,13 @@ const connectors = connectorsForWallets([
     groupName: 'Recommandé',
     wallets: [
       metaMaskWallet({ 
-        projectId, 
-        chains,
-        shimDisconnect: true
+        projectId
       }),
-      injectedWallet({ 
-        chains,
+      injectedWallet({
         shimDisconnect: true
       }),
       walletConnectWallet({ 
-        projectId, 
-        chains
+        projectId
       }),
     ],
   },
@@ -51,8 +37,10 @@ const connectors = connectorsForWallets([
 
 // Configuration wagmi
 export const wagmiConfig = createConfig({
-  autoConnect: true,
+  chains,
   connectors,
-  publicClient,
-  webSocketPublicClient,
+  transports: {
+    [mainnet.id]: http(`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`),
+    [sepolia.id]: http(`https://eth-sepolia.alchemyapi.io/v2/${alchemyKey}`),
+  },
 });

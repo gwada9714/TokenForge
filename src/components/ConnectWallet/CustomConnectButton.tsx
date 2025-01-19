@@ -3,7 +3,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { CircularProgress, Box, Alert, Typography, Button, Stack } from '@mui/material';
 import { SwapHoriz as SwapIcon } from '@mui/icons-material';
 import { useWeb3 } from '../../contexts/Web3Context';
-import { useWalletConnection } from '../../hooks/useWalletConnection';
 
 export const CustomConnectButton: React.FC = () => {
   const { 
@@ -16,16 +15,11 @@ export const CustomConnectButton: React.FC = () => {
       switchToMainnet,
       isMainnet,
       isTestnet
-    }
-  } = useWeb3();
-
-  const {
+    },
     hasError,
     errorMessage,
-    retryCount,
-    retry,
-    resetError
-  } = useWalletConnection();
+    retryConnection
+  } = useWeb3();
 
   // Afficher un loader pendant la connexion ou le changement de réseau
   if (isLoading || isSwitching) {
@@ -49,66 +43,68 @@ export const CustomConnectButton: React.FC = () => {
             <Button
               color="inherit"
               size="small"
-              onClick={() => {
-                resetError();
-                retry();
-              }}
-              disabled={retryCount >= 3}
-              startIcon={<SwapIcon />}
+              onClick={retryConnection}
             >
               Réessayer
             </Button>
           }
         >
-          {errorMessage || 'Erreur de connexion au wallet'}
+          {errorMessage || 'Erreur de connexion'}
         </Alert>
-        <ConnectButton />
       </Box>
     );
   }
 
-  // Afficher un avertissement si le réseau n'est pas supporté
-  if (!isSupported) {
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Alert severity="warning">
-          Réseau non supporté : {currentNetwork || 'Inconnu'}
-        </Alert>
-        <Stack direction="row" spacing={2} justifyContent="center">
-          <Button
-            variant="outlined"
-            onClick={switchToMainnet}
-            disabled={isSwitching}
-          >
-            Passer sur Ethereum
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={switchToTestnet}
-            disabled={isSwitching}
-          >
-            Passer sur Sepolia
-          </Button>
-        </Stack>
-        <ConnectButton />
-      </Box>
-    );
-  }
-
-  // Afficher le bouton de connexion avec option de changer de réseau
+  // Afficher le bouton de connexion standard
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <ConnectButton />
-      {(isMainnet || isTestnet) && (
-        <Button
-          size="small"
-          startIcon={<SwapIcon />}
-          onClick={isMainnet ? switchToTestnet : switchToMainnet}
-          sx={{ mt: 1 }}
-        >
-          Passer sur {isMainnet ? 'Sepolia' : 'Ethereum'}
-        </Button>
-      )}
+    <Box>
+      <ConnectButton.Custom>
+        {({
+          account,
+          chain,
+          openAccountModal,
+          openChainModal,
+          openConnectModal,
+          mounted,
+        }) => {
+          const ready = mounted;
+          const connected = ready && account && chain;
+
+          return (
+            <Box
+              {...(!ready && {
+                'aria-hidden': true,
+                'style': {
+                  opacity: 0,
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                },
+              })}
+            >
+              {(() => {
+                if (!connected) {
+                  return (
+                    <Button onClick={openConnectModal} variant="contained" color="primary">
+                      Se connecter
+                    </Button>
+                  );
+                }
+
+                return (
+                  <Stack direction="row" spacing={1}>
+                    <Button onClick={openChainModal} variant="outlined" startIcon={<SwapIcon />}>
+                      {chain.name}
+                    </Button>
+                    <Button onClick={openAccountModal} variant="contained">
+                      {account.displayName}
+                    </Button>
+                  </Stack>
+                );
+              })()}
+            </Box>
+          );
+        }}
+      </ConnectButton.Custom>
     </Box>
   );
 };
