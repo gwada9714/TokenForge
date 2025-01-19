@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, RouteObject } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import { publicRoutes } from './routes/public.routes';
 import { tokenRoutes } from './routes/token.routes';

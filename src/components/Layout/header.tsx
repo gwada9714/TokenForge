@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { StyledProps } from '@/components/ui/types';
+import { useAuth } from '@/features/auth';
+import { useAccount } from 'wagmi';
 
 interface HeaderContainerProps {
   isScrolled: boolean;
@@ -55,15 +58,15 @@ const Nav = styled.nav`
   }
 `;
 
-const NavLink = styled.a`
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 500;
+const NavLink = styled(Link)`
   color: #182038;
   text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
   transition: color 0.2s ease-in-out;
 
   &:hover {
-    color: #D97706;
+    color: #4F46E5;
   }
 `;
 
@@ -110,6 +113,9 @@ const MobileNav = styled.nav`
 export const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated, user, signOut } = useAuth();
+  const { isConnected } = useAccount();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -120,22 +126,64 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleAuthClick = () => {
+    if (isAuthenticated) {
+      signOut();
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleWalletClick = () => {
+    if (!isConnected) {
+      navigate('/connect-wallet');
+    }
+  };
+
   return (
     <HeaderContainer isScrolled={isScrolled}>
       <HeaderContent>
         <Logo>
-          <img src="/logo.svg" alt="TokenForge" />
-          TokenForge
+          <Link to="/">
+            <img src="/logo.svg" alt="TokenForge" />
+            TokenForge
+          </Link>
         </Logo>
 
         <Nav>
-          <NavLink href="#create">Créer un Token</NavLink>
-          <NavLink href="#services">Services</NavLink>
-          <NavLink href="#token">Token $TKN</NavLink>
-          <NavLink href="#community">Communauté</NavLink>
-          <Button variant="primary" size="medium">
-            Forge ton Token
+          {isAuthenticated && (
+            <>
+              <NavLink to="/dashboard">Dashboard</NavLink>
+              <NavLink to="/tokens">Mes Tokens</NavLink>
+              {user?.isAdmin && <NavLink to="/admin">Admin</NavLink>}
+            </>
+          )}
+          <NavLink to="/marketplace">Marketplace</NavLink>
+          
+          {!isAuthenticated && (
+            <>
+              <NavLink to="/about">À propos</NavLink>
+              <NavLink to="/contact">Contact</NavLink>
+            </>
+          )}
+          
+          <Button 
+            variant="secondary" 
+            size="medium" 
+            onClick={handleAuthClick}
+          >
+            {isAuthenticated ? 'Déconnexion' : 'Connexion'}
           </Button>
+          
+          {!isConnected && (
+            <Button 
+              variant="primary" 
+              size="medium"
+              onClick={handleWalletClick}
+            >
+              Connecter Wallet
+            </Button>
+          )}
         </Nav>
 
         <MobileMenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -145,13 +193,41 @@ export const Header: React.FC = () => {
 
       <MobileMenu isOpen={isMobileMenuOpen}>
         <MobileNav>
-          <NavLink href="#create">Créer un Token</NavLink>
-          <NavLink href="#services">Services</NavLink>
-          <NavLink href="#token">Token $TKN</NavLink>
-          <NavLink href="#community">Communauté</NavLink>
-          <Button variant="primary" size="medium" fullWidth>
-            Forge ton Token
+          {isAuthenticated && (
+            <>
+              <NavLink to="/dashboard">Dashboard</NavLink>
+              <NavLink to="/tokens">Mes Tokens</NavLink>
+              {user?.isAdmin && <NavLink to="/admin">Admin</NavLink>}
+            </>
+          )}
+          <NavLink to="/marketplace">Marketplace</NavLink>
+          
+          {!isAuthenticated && (
+            <>
+              <NavLink to="/about">À propos</NavLink>
+              <NavLink to="/contact">Contact</NavLink>
+            </>
+          )}
+          
+          <Button 
+            variant="secondary" 
+            size="medium" 
+            fullWidth
+            onClick={handleAuthClick}
+          >
+            {isAuthenticated ? 'Déconnexion' : 'Connexion'}
           </Button>
+          
+          {!isConnected && (
+            <Button 
+              variant="primary" 
+              size="medium"
+              fullWidth
+              onClick={handleWalletClick}
+            >
+              Connecter Wallet
+            </Button>
+          )}
         </MobileNav>
       </MobileMenu>
     </HeaderContainer>
