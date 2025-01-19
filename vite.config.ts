@@ -15,7 +15,14 @@ export default defineConfig({
         ]
       }
     }),
-    nodePolyfills(),
+    nodePolyfills({
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+      protocolImports: true,
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
@@ -62,9 +69,37 @@ export default defineConfig({
       '@reducers': path.resolve(__dirname, './src/reducers'),
       '@styles': path.resolve(__dirname, './src/styles'),
       '@types': path.resolve(__dirname, './src/types'),
-      '@utils': path.resolve(__dirname, './src/utils')
+      '@utils': path.resolve(__dirname, './src/utils'),
+      'process': 'process/browser',
+      'stream': 'stream-browserify',
+      'zlib': 'browserify-zlib',
+      'util': 'util',
+      'buffer': 'buffer'
     },
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020',
+      supported: { 
+        bigint: true 
+      },
+      define: {
+        global: 'globalThis'
+      }
+    },
+    include: [
+      '@rainbow-me/rainbowkit',
+      '@rainbow-me/rainbowkit/wallets',
+      'wagmi',
+      'wagmi/providers/alchemy',
+      'wagmi/providers/public',
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query'
+    ],
+    exclude: []
   },
   build: {
     target: 'esnext',
@@ -76,7 +111,9 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'web3-vendor': ['wagmi', 'viem', '@rainbow-me/rainbowkit'],
-          'ui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled']
+          'ui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled'],
+          'rainbow': ['@rainbow-me/rainbowkit'],
+          'wagmi': ['wagmi', 'wagmi/providers/alchemy', 'wagmi/providers/public']
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
@@ -117,17 +154,6 @@ export default defineConfig({
     strictPort: true,
     host: true,
     cors: true
-  },
-  optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'react-router-dom',
-      'wagmi',
-      '@rainbow-me/rainbowkit',
-      '@tanstack/react-query'
-    ],
-    exclude: []
   },
   cacheDir: '.vite',
   define: {

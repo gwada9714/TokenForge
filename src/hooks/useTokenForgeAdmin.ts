@@ -23,29 +23,40 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
 
   // Résolution de l'adresse du contrat
   const contractAddress = useMemo(() => {
+    console.log('Resolving contract address...', {
+      chainId: chain?.id,
+      contextContractAddress,
+      userAddress: address
+    });
+
     if (!chain?.id) {
+      console.warn('No chain detected in useTokenForgeAdmin');
       dispatch({ type: 'SET_ERROR', payload: 'Aucun réseau détecté' });
       return undefined;
     }
 
     // Priorité à l'adresse du contexte si elle existe
     if (contextContractAddress) {
+      console.log('Using context contract address:', contextContractAddress);
       return contextContractAddress as Address;
     }
 
     // Sinon, utiliser l'adresse de la configuration
     const networkConfig = CONTRACT_ADDRESSES[chain.id];
     if (!networkConfig) {
+      console.error('No network config found for chain:', chain.id);
       dispatch({ type: 'SET_ERROR', payload: `Configuration non trouvée pour le réseau ${chain.id}` });
       return undefined;
     }
 
     const configAddress = networkConfig.tokenForge;
     if (!configAddress || configAddress === '0x0000000000000000000000000000000000000000') {
+      console.error('Invalid contract address for chain:', chain.name);
       dispatch({ type: 'SET_ERROR', payload: `Adresse du contrat invalide pour le réseau ${chain.name}` });
       return undefined;
     }
 
+    console.log('Using config contract address:', configAddress);
     return configAddress as Address;
   }, [chain?.id, contextContractAddress]);
 
@@ -70,10 +81,23 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
 
   // Mise à jour du statut de propriétaire
   useEffect(() => {
+    console.log('Checking owner status...', {
+      ownerData,
+      userAddress: address,
+      contractAddress
+    });
+
     if (ownerData && address) {
       const ownerAddress = ownerData as Address;
-      setIsOwner(ownerAddress.toLowerCase() === address.toLowerCase());
+      const isOwnerResult = ownerAddress.toLowerCase() === address.toLowerCase();
+      console.log('Owner check result:', {
+        ownerAddress,
+        userAddress: address,
+        isOwner: isOwnerResult
+      });
+      setIsOwner(isOwnerResult);
     } else {
+      console.warn('Missing owner data or user address');
       setIsOwner(false);
     }
   }, [ownerData, address]);

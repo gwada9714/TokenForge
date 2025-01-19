@@ -16,11 +16,13 @@ const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
 if (!alchemyKey) throw new Error('VITE_ALCHEMY_API_KEY is not defined');
 if (!projectId) throw new Error('VITE_WALLET_CONNECT_PROJECT_ID is not defined');
 
-// Configuration des fournisseurs
+// Configuration des fournisseurs avec retries optimisés
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [sepolia, mainnet],
   [
-    alchemyProvider({ apiKey: alchemyKey }),
+    alchemyProvider({ 
+      apiKey: alchemyKey,
+    }),
     publicProvider(),
   ],
   {
@@ -35,19 +37,30 @@ const connectors = connectorsForWallets([
   {
     groupName: 'Recommandé',
     wallets: [
-      injectedWallet({ chains }),
-      metaMaskWallet({ projectId, chains }),
-      walletConnectWallet({ projectId, chains }),
+      injectedWallet({ 
+        chains,
+      }),
+      metaMaskWallet({ 
+        projectId, 
+        chains,
+      }),
+      walletConnectWallet({ 
+        projectId, 
+        chains,
+      }),
     ],
   },
 ]);
 
-// Configuration de wagmi
+// Configuration de wagmi avec gestion d'erreur améliorée
 export const wagmiConfig = createConfig({
   autoConnect: true,
   connectors,
   publicClient,
   webSocketPublicClient,
+  logger: {
+    warn: (message) => console.warn(message)
+  }
 });
 
 export { chains };

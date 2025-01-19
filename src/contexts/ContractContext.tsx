@@ -31,33 +31,47 @@ export const ContractProvider = ({ children }: ContractProviderProps) => {
 
   useEffect(() => {
     const loadContract = async () => {
+      console.log('Loading contract...', { chain });
       try {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
         if (!chain) {
+          console.warn('No chain detected');
           setState(prev => ({
             ...prev,
             contractAddress: null,
-            error: "Réseau non détecté",
+            error: "Réseau non détecté. Veuillez vous connecter à Sepolia.",
             isLoading: false
           }));
           return;
         }
 
+        console.log('Getting contract address for chain:', chain.id);
         const address = getContractAddress('TOKEN_FACTORY', chain.id);
+        console.log('Contract address:', address);
         
+        if (!address || address === '0x0000000000000000000000000000000000000000') {
+          console.error('Invalid contract address');
+          setState({
+            contractAddress: null,
+            error: `Adresse du contrat invalide pour le réseau ${chain.name}`,
+            isLoading: false
+          });
+          return;
+        }
+
         setState({
-          contractAddress: address,
+          contractAddress: address as `0x${string}`,
           isLoading: false,
           error: null
         });
       } catch (error) {
-        console.error('Erreur lors du chargement du contrat:', error);
-        setState({
-          contractAddress: null,
-          isLoading: false,
-          error: error instanceof Error ? error.message : "Erreur lors du chargement du contrat"
-        });
+        console.error('Error loading contract:', error);
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error.message : "Erreur lors du chargement du contrat",
+          isLoading: false
+        }));
       }
     };
 
