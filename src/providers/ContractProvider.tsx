@@ -5,10 +5,18 @@ import { CircularProgress, Box, Alert, Button } from '@mui/material';
 import { sepolia } from 'wagmi/chains';
 import { useNetwork } from '../hooks/useNetwork';
 
+// Types spécifiques pour la gestion des erreurs
+type ContractError = 
+  | 'WALLET_DISCONNECTED'
+  | 'NETWORK_NOT_DETECTED'
+  | 'WRONG_NETWORK'
+  | 'CONTRACT_LOAD_ERROR'
+  | 'NETWORK_SWITCH_ERROR';
+
 interface ContractContextType {
   contractAddress: `0x${string}` | null;
   isLoading: boolean;
-  error: string | null;
+  error: ContractError | null;
   switchToSepolia?: () => Promise<void>;
 }
 
@@ -26,7 +34,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { switchChain } = useSwitchChain();
   const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ContractError | null>(null);
 
   // Fonction pour basculer vers Sepolia
   const switchToSepolia = async () => {
@@ -34,7 +42,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await switchChain({ chainId: sepolia.id });
     } catch (error) {
       console.error('Failed to switch to Sepolia:', error);
-      setError('Failed to switch network. Please try again.');
+      setError('NETWORK_SWITCH_ERROR');
     }
   };
 
@@ -45,25 +53,28 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setError(null);
 
         if (!isConnected) {
-          setError('Please connect your wallet');
+          setError('WALLET_DISCONNECTED');
           return;
         }
 
         if (!chain) {
-          setError('Network not detected');
+          setError('NETWORK_NOT_DETECTED');
           return;
         }
 
         if (chain.id !== sepolia.id) {
-          setError('Please switch to Sepolia network');
+          setError('WRONG_NETWORK');
           return;
         }
 
         const address = getContractAddress('TOKEN_FACTORY', chain.id);
-        setContractAddress(address);
+        if (!address || !address.startsWith('0x')) {
+          throw new Error('Invalid contract address format');
+        }
+        setContractAddress(address as `0x${string}`);
       } catch (err) {
         console.error('Error loading contract:', err);
-        setError('Failed to load contract. Please try again.');
+        setError('CONTRACT_LOAD_ERROR');
       } finally {
         setIsLoading(false);
       }

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Address, Hash } from 'viem';
-import { useNetworkManagement } from '@/components/Network';
+import { sepolia } from 'viem/chains';
+import { useNetworkManagement } from '@/hooks/useNetworkManagement';
 
 export interface TokenContract {
   address: Address;
@@ -40,7 +41,7 @@ const ContractContext = createContext<ContractContextType | undefined>(undefined
 export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [contracts, setContracts] = useState<TokenContract[]>([]);
   const [deploymentStatus, setDeploymentStatus] = useState<ContractContextType['deploymentStatus']>({});
-  const { currentNetwork } = useNetworkManagement();
+  const { currentChainId } = useNetworkManagement(sepolia);
 
   // Charger les contrats depuis le stockage local au démarrage
   useEffect(() => {
@@ -66,10 +67,10 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Réinitialiser le statut de déploiement lors du changement de réseau
   useEffect(() => {
-    if (currentNetwork) {
+    if (currentChainId) {
       setDeploymentStatus({});
     }
-  }, [currentNetwork]);
+  }, [currentChainId]);
 
   const addContract = (contract: TokenContract) => {
     setContracts(prev => [...prev, contract]);

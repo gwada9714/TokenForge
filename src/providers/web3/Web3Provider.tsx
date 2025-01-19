@@ -1,8 +1,7 @@
 import React from 'react';
-import { WagmiConfig, createConfig, configureChains } from 'wagmi';
+import { WagmiConfig, http } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
-import { publicProvider } from 'wagmi/providers/public';
-import { getDefaultWallets, RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
+import { getDefaultConfig, RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 
 interface Web3ProviderProps {
@@ -10,31 +9,20 @@ interface Web3ProviderProps {
 }
 
 export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
-  const { chains, publicClient } = configureChains(
-    [mainnet, sepolia],
-    [publicProvider()]
-  );
-
-  const { connectors } = getDefaultWallets({
+  const config = getDefaultConfig({
     appName: 'TokenForge',
     projectId: 'tokenforge',
-    chains
-  });
-
-  const config = createConfig({
-    autoConnect: true,
-    connectors,
-    publicClient
+    chains: [mainnet, sepolia],
+    transports: {
+      [mainnet.id]: http(),
+      [sepolia.id]: http(),
+    },
   });
 
   return (
     <WagmiConfig config={config}>
       <RainbowKitProvider 
-        chains={chains}
         theme={darkTheme()}
-        appInfo={{
-          appName: 'TokenForge',
-        }}
       >
         {children}
       </RainbowKitProvider>
