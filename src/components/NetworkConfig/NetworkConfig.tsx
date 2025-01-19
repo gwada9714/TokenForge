@@ -10,7 +10,7 @@ import {
   styled,
   Theme
 } from '@mui/material';
-import { useNetwork, useSwitchNetwork } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { mainnet, sepolia } from 'viem/chains';
 
 interface StyledCardProps {

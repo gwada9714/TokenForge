@@ -8,7 +8,11 @@ import { useGlobalLoading } from '../../hooks/useGlobalLoading';
 import { Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-export const Layout: React.FC = () => {
+interface LayoutProps {
+  children?: React.ReactNode;
+}
+
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { navigateTo, canAccess } = useAppNavigation();
   const { isLoading, message } = useGlobalLoading();
 
@@ -64,7 +68,8 @@ export const Layout: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      <Container component="main" sx={{ flexGrow: 1, py: 4 }}>
+      <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
+        {children}
         <Outlet />
       </Container>
 

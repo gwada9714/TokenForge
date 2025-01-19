@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import { CreatePool } from '../components/Launchpad/CreatePool';
 import { LaunchpadPool } from '../components/Launchpad/LaunchpadPool';
-import { useContractRead, useNetwork } from 'wagmi';
+import { useContractRead } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { getContractAddress } from '../config/contracts';
 import { launchpadABI } from '../contracts/abis';
 

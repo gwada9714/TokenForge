@@ -4,7 +4,8 @@ import { useTokenForgePlans } from '../../hooks/useTokenForgePlans';
 import { PlanType, DEFAULT_PLANS, PLAN_PRICES, formatPlanPrice } from '../../types/plans';
 import { getContractAddress } from '../../config/contracts';
 import { toast } from 'react-hot-toast';
-import { useAccount, useNetwork } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 export const PlanSelector: React.FC = () => {

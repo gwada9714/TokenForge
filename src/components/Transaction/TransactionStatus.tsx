@@ -8,7 +8,7 @@ import {
   Typography,
   Paper
 } from '@mui/material';
-import { useNetwork } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { getNetwork } from '../../config/networks';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 

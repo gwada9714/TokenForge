@@ -12,7 +12,8 @@ import {
   CircularProgress,
   Divider
 } from '@mui/material';
-import { useContractWrite, useContractRead, useNetwork } from 'wagmi';
+import { useContractWrite, useContractRead } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { parseEther, formatEther } from 'ethers';
 import { CONTRACT_ADDRESSES, getContractAddress } from '@/config/contracts';
 import TokenForgeTaxManagerABI from '@/abi/TokenForgeTaxManager.json';

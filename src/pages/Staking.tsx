@@ -3,7 +3,8 @@ import React from 'react';
 import { Container, Typography, Box, Alert } from '@mui/material';
 import { StakingPool } from '../components/Staking/StakingPool';
 import { getContractAddress } from '../config/contracts';
-import { useNetwork, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 
 const StakingPage = () => {
   const { chain } = useNetwork();

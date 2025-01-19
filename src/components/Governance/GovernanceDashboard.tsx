@@ -25,7 +25,7 @@ import {
 import { useGovernance, ProposalType } from '@/hooks/useGovernance';
 import { GOVERNANCE_ADDRESS } from '@/constants/tokenforge';
 import { formatValue } from '@/utils/web3Adapters';
-import { useNetwork } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 
 const ProposalTypeLabels = {
   [ProposalType.ADD_BLOCKCHAIN]: 'Ajouter une blockchain',

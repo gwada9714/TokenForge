@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, Box, Container, Typography } from '@mui/material';
-import { useNetwork } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { getContractAddress } from '../../utils/contracts';
 import { NetworkNotSupported } from '../shared/NetworkNotSupported';
 import { LaunchpadForm } from './LaunchpadForm';

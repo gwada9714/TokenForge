@@ -21,6 +21,7 @@ const config: Config = {
       fontFamily: {
         heading: tokens.typography.fontFamily.heading.split(',').map(font => font.trim()),
         body: tokens.typography.fontFamily.body.split(',').map(font => font.trim()),
+        sans: ['Inter', 'sans-serif'],
       },
       fontSize: tokens.typography.fontSize,
       fontWeight: {
@@ -82,8 +83,8 @@ const config: Config = {
     }
   },
   plugins: [
-    require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
     require('@tailwindcss/aspect-ratio'),
   ],
 }

@@ -10,7 +10,8 @@ import {
   Button,
 } from '@mui/material';
 import { useTokenForge } from '@/hooks/useTokenForge';
-import { useNetwork, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { sepolia } from 'wagmi/chains';
 
 interface DeploymentProps {

@@ -14,7 +14,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { TokenConfig } from '@/types/token';
-import { useNetwork, useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { TKN_TOKEN_ADDRESS, PREMIUM_TIER_PRICE, BASIC_TIER_PRICE, TKN_PAYMENT_DISCOUNT } from '@/constants';
 
 // Lazy loading des composants
