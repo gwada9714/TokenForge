@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -17,7 +17,6 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
-import { monitor } from '../../utils/monitoring';
 import { useContractRead, useWriteContract } from 'wagmi';
 import { TokenForgeFactoryABI } from '../../abi/TokenForgeFactory';
 import { TOKEN_FORGE_ADDRESS } from '../../constants/addresses';
@@ -29,7 +28,6 @@ export const AlertsManagement: React.FC = () => {
   const [newRuleCondition, setNewRuleCondition] = useState('');
   const { contract } = useTokenForgeAdmin();
   const { writeContractAsync } = useWriteContract();
-  const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
   // Lecture des règles
@@ -45,7 +43,7 @@ export const AlertsManagement: React.FC = () => {
   // Mise à jour des règles quand les données changent
   useEffect(() => {
     if (rules) {
-      setAlertRules(rules);
+      setAlertRules([...rules] as AlertRule[]);
     }
   }, [rules]);
 
@@ -55,14 +53,13 @@ export const AlertsManagement: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const hash = await writeContractAsync({
+      await writeContractAsync({
         abi: TokenForgeFactoryABI.abi,
         address: TOKEN_FORGE_ADDRESS,
         functionName: 'addAlertRule',
         args: [newRuleName, newRuleCondition],
       });
       
-      setPendingTx(hash);
       await refetchRules();
       setNewRuleName('');
       setNewRuleCondition('');
@@ -74,19 +71,18 @@ export const AlertsManagement: React.FC = () => {
   };
 
   // Basculement d'une règle
-  const handleToggleRule = async (ruleId: number) => {
+  const handleToggleRule = async (ruleId: bigint) => {
     if (!contract) return;
 
     try {
       setIsLoading(true);
-      const hash = await writeContractAsync({
+      await writeContractAsync({
         abi: TokenForgeFactoryABI.abi,
         address: TOKEN_FORGE_ADDRESS,
         functionName: 'toggleAlertRule',
         args: [ruleId],
       });
       
-      setPendingTx(hash);
       await refetchRules();
     } catch (error) {
       console.error('Error toggling rule:', error);
@@ -96,19 +92,18 @@ export const AlertsManagement: React.FC = () => {
   };
 
   // Suppression d'une règle
-  const handleDeleteRule = async (ruleId: number) => {
+  const handleDeleteRule = async (ruleId: bigint) => {
     if (!contract) return;
 
     try {
       setIsLoading(true);
-      const hash = await writeContractAsync({
+      await writeContractAsync({
         abi: TokenForgeFactoryABI.abi,
         address: TOKEN_FORGE_ADDRESS,
         functionName: 'deleteAlertRule',
         args: [ruleId],
       });
       
-      setPendingTx(hash);
       await refetchRules();
     } catch (error) {
       console.error('Error deleting rule:', error);
@@ -116,8 +111,6 @@ export const AlertsManagement: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  const isActionDisabled = isLoading;
 
   return (
     <Card>
@@ -133,7 +126,7 @@ export const AlertsManagement: React.FC = () => {
             onChange={(e) => setNewRuleName(e.target.value)}
             fullWidth
             margin="normal"
-            disabled={isActionDisabled}
+            disabled={isLoading}
           />
           <TextField
             label="Condition"
@@ -141,14 +134,14 @@ export const AlertsManagement: React.FC = () => {
             onChange={(e) => setNewRuleCondition(e.target.value)}
             fullWidth
             margin="normal"
-            disabled={isActionDisabled}
+            disabled={isLoading}
           />
           <Button
             variant="contained"
             color="primary"
-            startIcon={isActionDisabled ? <CircularProgress size={20} /> : <AddIcon />}
+            startIcon={isLoading ? <CircularProgress size={20} /> : <AddIcon />}
             onClick={handleAddRule}
-            disabled={!newRuleName || !newRuleCondition || isActionDisabled}
+            disabled={!newRuleName || !newRuleCondition || isLoading}
             sx={{ mt: 1 }}
           >
             Ajouter une règle
@@ -156,7 +149,7 @@ export const AlertsManagement: React.FC = () => {
         </Box>
 
         <List>
-          {alertRules.map((rule, index) => (
+          {alertRules.map((rule) => (
             <ListItem key={rule.id.toString()}>
               <ListItemText
                 primary={rule.name}
@@ -167,13 +160,13 @@ export const AlertsManagement: React.FC = () => {
                   edge="end"
                   onChange={() => handleToggleRule(rule.id)}
                   checked={rule.enabled}
-                  disabled={isActionDisabled}
+                  disabled={isLoading}
                 />
                 <IconButton
                   edge="end"
                   aria-label="delete"
                   onClick={() => handleDeleteRule(rule.id)}
-                  disabled={isActionDisabled}
+                  disabled={isLoading}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -185,5 +178,3 @@ export const AlertsManagement: React.FC = () => {
     </Card>
   );
 };
-
-export default AlertsManagement;
