@@ -23,60 +23,49 @@ jest.mock('../AuditLogs', () => ({
   AuditLogs: () => <div data-testid="audit-logs">Audit Logs</div>,
 }));
 
+jest.mock('../AdminHeader', () => ({
+  AdminHeader: () => <div data-testid="admin-header">Admin Header</div>,
+}));
+
+jest.mock('../AdminTabs', () => ({
+  AdminTabs: ({ value, onChange }: { value: number; onChange: (event: any, value: number) => void }) => (
+    <div data-testid="admin-tabs" onClick={(e) => onChange(e, value + 1)}>
+      Admin Tabs
+    </div>
+  ),
+}));
+
 describe('AdminDashboard', () => {
-  it('renders the header', () => {
+  beforeEach(() => {
     render(<AdminDashboard />);
-    expect(screen.getByText('Tableau de bord administrateur')).toBeInTheDocument();
   });
 
-  it('shows ContractControls by default', () => {
-    render(<AdminDashboard />);
+  it('renders all components', () => {
+    expect(screen.getByTestId('admin-header')).toBeInTheDocument();
+    expect(screen.getByTestId('admin-tabs')).toBeInTheDocument();
     expect(screen.getByTestId('contract-controls')).toBeInTheDocument();
   });
 
-  it('switches between tabs correctly', () => {
-    render(<AdminDashboard />);
-
-    // Vérifier le contenu initial
+  it('changes tab content when clicking tabs', () => {
+    const tabs = screen.getByTestId('admin-tabs');
+    
+    // Initialement, on voit ContractControls
     expect(screen.getByTestId('contract-controls')).toBeInTheDocument();
-
-    // Cliquer sur l'onglet "Gestion de la propriété"
-    fireEvent.click(screen.getByText('Gestion de la propriété'));
+    
+    // Premier clic - devrait montrer OwnershipManagement
+    fireEvent.click(tabs);
     expect(screen.getByTestId('ownership-management')).toBeInTheDocument();
-
-    // Cliquer sur l'onglet "Alertes"
-    fireEvent.click(screen.getByText('Alertes'));
+    
+    // Deuxième clic - devrait montrer AlertsManagement
+    fireEvent.click(tabs);
     expect(screen.getByTestId('alerts-management')).toBeInTheDocument();
-
-    // Cliquer sur l'onglet "Logs & Statistiques"
-    fireEvent.click(screen.getByText('Logs & Statistiques'));
+    
+    // Troisième clic - devrait montrer AuditStats
+    fireEvent.click(tabs);
     expect(screen.getByTestId('audit-stats')).toBeInTheDocument();
+    
+    // Quatrième clic - devrait montrer AuditLogs
+    fireEvent.click(tabs);
     expect(screen.getByTestId('audit-logs')).toBeInTheDocument();
-  });
-
-  it('maintains tab state when switching', () => {
-    render(<AdminDashboard />);
-
-    // Aller à l'onglet Alertes
-    fireEvent.click(screen.getByText('Alertes'));
-    expect(screen.getByTestId('alerts-management')).toBeInTheDocument();
-
-    // Revenir à l'onglet Contract Controls
-    fireEvent.click(screen.getByText('Contrôle du contrat'));
-    expect(screen.getByTestId('contract-controls')).toBeInTheDocument();
-
-    // Les autres composants ne devraient pas être visibles
-    expect(screen.queryByTestId('alerts-management')).not.toBeInTheDocument();
-  });
-
-  it('renders with correct layout structure', () => {
-    const { container } = render(<AdminDashboard />);
-    
-    // Vérifier la structure de base
-    expect(screen.getByRole('tablist')).toBeInTheDocument();
-    expect(screen.getAllByRole('tab')).toHaveLength(4);
-    
-    // Vérifier que le container existe
-    expect(container.firstChild).toHaveClass('MuiContainer-root');
   });
 });

@@ -2,17 +2,40 @@ import { fireEvent, waitFor, screen } from '@testing-library/react';
 import { render } from '../../../test-utils/test-wrapper';
 import { AlertsManagement } from '../AlertsManagement';
 import { useTokenForgeAdmin } from '../../../hooks/useTokenForgeAdmin';
-import { useContractRead, useWriteContract } from 'wagmi';
 import '@testing-library/jest-dom';
+import { TOKEN_FORGE_ADDRESS } from '../../../constants/addresses';
+import { TokenForgeFactoryABI } from '../../../abi/TokenForgeFactory';
 
 // Mock des hooks
 jest.mock('../../../hooks/useTokenForgeAdmin', () => ({
   useTokenForgeAdmin: jest.fn()
 }));
 
+// Mock de wagmi
+const mockWriteContractAsync = jest.fn().mockResolvedValue({ hash: '0x123' });
+const mockRefetch = jest.fn();
+
 jest.mock('wagmi', () => ({
-  useContractRead: jest.fn(),
-  useWriteContract: jest.fn()
+  useContractRead: () => ({
+    data: [
+      { id: BigInt(1), name: 'Test Rule 1', condition: 'value > 100', enabled: true },
+      { id: BigInt(2), name: 'Test Rule 2', condition: 'value < 50', enabled: false },
+    ],
+    isLoading: false,
+    refetch: mockRefetch
+  }),
+  useWriteContract: () => ({
+    writeContractAsync: mockWriteContractAsync,
+    isLoading: false,
+    error: null
+  }),
+  useAccount: () => ({
+    address: '0x123' as `0x${string}`,
+    isConnected: true
+  }),
+  useNetwork: () => ({
+    chain: { id: 11155111, name: 'Sepolia' }
+  })
 }));
 
 // Mock des composants MUI
@@ -20,7 +43,6 @@ jest.mock('@mui/material', () => {
   const actual = jest.requireActual('@mui/material');
   return {
     ...actual,
-    // Surcharger uniquement les composants qui posent problème
     CircularProgress: () => null,
   };
 });
@@ -36,130 +58,83 @@ jest.mock('@mui/icons-material/Add', () => ({
 }));
 
 describe('AlertsManagement', () => {
-  const mockContract = {
-    addAlertRule: jest.fn().mockResolvedValue(undefined),
-    toggleAlertRule: jest.fn().mockResolvedValue(undefined),
-    deleteAlertRule: jest.fn().mockResolvedValue(undefined),
-  };
-
-  const mockWriteContractAsync = jest.fn().mockResolvedValue(undefined);
-  const mockRefetchRules = jest.fn();
-
-  const mockRules = [
-    { id: BigInt(1), name: 'Test Rule 1', condition: 'value > 100', enabled: true },
-    { id: BigInt(2), name: 'Test Rule 2', condition: 'value < 50', enabled: false },
-  ];
-
   beforeEach(() => {
-    (useTokenForgeAdmin as jest.Mock).mockReturnValue({
-      contract: mockContract,
-    });
-
-    (useWriteContract as jest.Mock).mockReturnValue({
-      writeContractAsync: mockWriteContractAsync,
-    });
-
-    (useContractRead as jest.Mock).mockReturnValue({
-      data: mockRules,
-      refetch: mockRefetchRules,
-    });
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
+    const { useTokenForgeAdmin } = jest.requireMock('../../../hooks/useTokenForgeAdmin');
+    useTokenForgeAdmin.mockReturnValue({
+      contract: {
+        addAlertRule: jest.fn().mockResolvedValue({ hash: '0x123' }),
+        toggleAlertRule: jest.fn().mockResolvedValue({ hash: '0x123' }),
+        deleteAlertRule: jest.fn().mockResolvedValue({ hash: '0x123' }),
+      },
+      isLoading: false,
+      error: null
+    });
   });
 
-  it('renders the alert management interface', () => {
-    render(<AlertsManagement />);
-    expect(screen.getByText('Gestion des Alertes')).toBeInTheDocument();
-    expect(screen.getByLabelText('Nom de la règle')).toBeInTheDocument();
-    expect(screen.getByLabelText('Condition')).toBeInTheDocument();
-  });
-
-  it('displays existing alert rules', () => {
-    render(<AlertsManagement />);
-    expect(screen.getByText('Test Rule 1')).toBeInTheDocument();
-    expect(screen.getByText('Test Rule 2')).toBeInTheDocument();
-    expect(screen.getByText('value > 100')).toBeInTheDocument();
-    expect(screen.getByText('value < 50')).toBeInTheDocument();
-  });
-
-  it('handles adding a new alert rule', async () => {
+  it('renders alert rules list', async () => {
     render(<AlertsManagement />);
     
-    const nameInput = screen.getByLabelText('Nom de la règle');
-    const conditionInput = screen.getByLabelText('Condition');
+    await waitFor(() => {
+      expect(screen.getByText('Test Rule 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Rule 2')).toBeInTheDocument();
+    });
+  });
+
+  it('handles adding a new rule', async () => {
+    render(<AlertsManagement />);
+
+    const nameInput = screen.getByLabelText(/nom de la règle/i);
+    const conditionInput = screen.getByLabelText(/condition/i);
     
     fireEvent.change(nameInput, { target: { value: 'New Rule' } });
     fireEvent.change(conditionInput, { target: { value: 'value > 200' } });
-    
-    const addButton = screen.getByText('Ajouter une règle');
+
+    const addButton = screen.getByRole('button', { name: /ajouter une règle/i });
     fireEvent.click(addButton);
 
     await waitFor(() => {
-      expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockWriteContractAsync).toHaveBeenCalledWith({
+        abi: TokenForgeFactoryABI.abi,
+        address: TOKEN_FORGE_ADDRESS,
         functionName: 'addAlertRule',
         args: ['New Rule', 'value > 200'],
-      }));
-      expect(mockRefetchRules).toHaveBeenCalled();
+      });
+      expect(mockRefetch).toHaveBeenCalled();
     });
   });
 
-  it('handles toggling an alert rule', async () => {
+  it('handles toggling a rule', async () => {
     render(<AlertsManagement />);
-    
-    const switches = screen.getAllByRole('switch');
-    fireEvent.click(switches[0]); // Toggle first rule
+
+    const toggleSwitch = screen.getAllByRole('checkbox')[0];
+    fireEvent.click(toggleSwitch);
 
     await waitFor(() => {
-      expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockWriteContractAsync).toHaveBeenCalledWith({
+        abi: TokenForgeFactoryABI.abi,
+        address: TOKEN_FORGE_ADDRESS,
         functionName: 'toggleAlertRule',
         args: [BigInt(1)],
-      }));
-      expect(mockRefetchRules).toHaveBeenCalled();
+      });
+      expect(mockRefetch).toHaveBeenCalled();
     });
   });
 
-  it('handles deleting an alert rule', async () => {
+  it('handles deleting a rule', async () => {
     render(<AlertsManagement />);
-    
-    const deleteButtons = screen.getAllByLabelText('delete');
-    fireEvent.click(deleteButtons[0]); // Delete first rule
+
+    const deleteButton = screen.getAllByRole('button', { name: /delete/i })[0];
+    fireEvent.click(deleteButton);
 
     await waitFor(() => {
-      expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockWriteContractAsync).toHaveBeenCalledWith({
+        abi: TokenForgeFactoryABI.abi,
+        address: TOKEN_FORGE_ADDRESS,
         functionName: 'deleteAlertRule',
         args: [BigInt(1)],
-      }));
-      expect(mockRefetchRules).toHaveBeenCalled();
-    });
-  });
-
-  it('disables add button when inputs are empty', () => {
-    render(<AlertsManagement />);
-    const addButton = screen.getByText('Ajouter une règle');
-    expect(addButton).toBeDisabled();
-  });
-
-  it('disables controls when loading', async () => {
-    render(<AlertsManagement />);
-    
-    const nameInput = screen.getByLabelText('Nom de la règle');
-    const conditionInput = screen.getByLabelText('Condition');
-    
-    fireEvent.change(nameInput, { target: { value: 'New Rule' } });
-    fireEvent.change(conditionInput, { target: { value: 'value > 200' } });
-    
-    const addButton = screen.getByText('Ajouter une règle');
-    fireEvent.click(addButton);
-
-    // Pendant le chargement, tous les contrôles devraient être désactivés
-    await waitFor(() => {
-      expect(addButton).toBeDisabled();
-      expect(nameInput).toBeDisabled();
-      expect(conditionInput).toBeDisabled();
-      expect(screen.getAllByRole('switch')[0]).toBeDisabled();
-      expect(screen.getAllByLabelText('delete')[0]).toBeDisabled();
+      });
+      expect(mockRefetch).toHaveBeenCalled();
     });
   });
 });

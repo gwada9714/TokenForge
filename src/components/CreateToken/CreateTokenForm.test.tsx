@@ -6,8 +6,14 @@ describe('CreateTokenForm', () => {
   it('renders form fields', () => {
     render(<CreateTokenForm />)
     
-    expect(screen.getByPlaceholderText('Nom du Token')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Symbole')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Supply Initial')).toBeInTheDocument()
+    // Vérifier la présence des labels plutôt que les placeholders
+    expect(screen.getByText('Nom du Token')).toBeInTheDocument()
+    expect(screen.getByText('Symbole')).toBeInTheDocument()
+    expect(screen.getByText('Supply Initial')).toBeInTheDocument()
+    
+    // Vérifier la présence des champs de texte
+    expect(screen.getByRole('textbox', { name: 'Nom du Token' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Symbole' })).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: 'Supply Initial' })).toBeInTheDocument()
   })
-}) 
+})

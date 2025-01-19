@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { AdminTabs } from '../AdminTabs';
+import React from 'react';
 
 describe('AdminTabs', () => {
   const mockOnChange = jest.fn();
@@ -29,11 +30,14 @@ describe('AdminTabs', () => {
   it('calls onChange when a tab is clicked', () => {
     render(<AdminTabs value={0} onChange={mockOnChange} />);
     
-    fireEvent.click(screen.getByText('Alertes'));
-    expect(mockOnChange).toHaveBeenCalledTimes(1);
+    const tabAlertes = screen.getByText('Alertes');
+    const tabLogs = screen.getByText('Logs & Statistiques');
+
+    fireEvent.click(tabAlertes);
+    expect(mockOnChange).toHaveBeenCalledWith(expect.any(Object), 2);
     
-    fireEvent.click(screen.getByText('Logs & Statistiques'));
-    expect(mockOnChange).toHaveBeenCalledTimes(2);
+    fireEvent.click(tabLogs);
+    expect(mockOnChange).toHaveBeenCalledWith(expect.any(Object), 3);
   });
 
   it('renders all tab icons', () => {
@@ -50,6 +54,8 @@ describe('AdminTabs', () => {
     
     const tabs = screen.getAllByRole('tab');
     tabs.forEach((tab, index) => {
+      expect(tab).toHaveAttribute('aria-selected', index === 0 ? 'true' : 'false');
+      expect(tab).toHaveAttribute('role', 'tab');
       expect(tab).toHaveAttribute('id', `tab-${index}`);
       expect(tab).toHaveAttribute('aria-controls', `tabpanel-${index}`);
     });

@@ -6,8 +6,18 @@ import { StyledEngineProvider } from '@mui/material/styles';
 import { testTheme } from './test-theme';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider } from 'wagmi';
-import { mockConfig } from './wagmi-mock';
+
+// Mock WagmiProvider
+jest.mock('wagmi', () => ({
+  WagmiProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAccount: () => ({
+    address: '0x123',
+    isConnected: true
+  }),
+  useNetwork: () => ({
+    chain: { id: 11155111, name: 'Sepolia' }
+  })
+}));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -21,18 +31,16 @@ const queryClient = new QueryClient({
 function render(ui: React.ReactElement, { ...renderOptions } = {}) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <WagmiProvider config={mockConfig}>
-        <QueryClientProvider client={queryClient}>
-          <StyledEngineProvider injectFirst>
-            <ThemeProvider theme={testTheme}>
-              <CssBaseline />
-              <BrowserRouter>
-                {children}
-              </BrowserRouter>
-            </ThemeProvider>
-          </StyledEngineProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+      <QueryClientProvider client={queryClient}>
+        <StyledEngineProvider injectFirst>
+          <ThemeProvider theme={testTheme}>
+            <CssBaseline />
+            <BrowserRouter>
+              {children}
+            </BrowserRouter>
+          </ThemeProvider>
+        </StyledEngineProvider>
+      </QueryClientProvider>
     );
   }
   return rtlRender(ui, { wrapper: Wrapper, ...renderOptions });
