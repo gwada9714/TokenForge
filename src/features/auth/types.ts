@@ -1,5 +1,7 @@
 import { User } from 'firebase/auth';
-import { type WalletClient } from '@wagmi/core';
+import { getWalletClient } from '@wagmi/core';
+
+export type WalletClientType = Awaited<ReturnType<typeof getWalletClient>>;
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -13,7 +15,7 @@ export interface WalletState {
   address: string | null;
   chainId: number | null;
   isCorrectNetwork: boolean;
-  walletClient: WalletClient | null;
+  walletClient: WalletClientType | null;
 }
 
 export interface TokenForgeAuthState extends AuthState, WalletState {

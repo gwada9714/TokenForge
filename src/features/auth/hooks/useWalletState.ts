@@ -1,6 +1,5 @@
 import { useReducer, useCallback } from 'react';
-import { WalletState, AuthAction, AUTH_ACTIONS } from '../types';
-import { type WalletClient } from '@wagmi/core';
+import { WalletState, AuthAction, AUTH_ACTIONS, WalletClientType } from '../types';
 
 const initialState: WalletState = {
   isConnected: false,
@@ -42,7 +41,7 @@ export function useWalletState() {
   const connectWallet = useCallback((
     address: string,
     chainId: number,
-    walletClient: WalletClient,
+    walletClient: WalletClientType,
     isCorrectNetwork: boolean
   ) => {
     dispatch({
