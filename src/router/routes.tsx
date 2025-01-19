@@ -1,11 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { lazy } from 'react';
-import Layout from '../components/layout/Layout';
+import Layout from '../components/Layout/Layout';
 import { publicRoutes } from './routes/public.routes';
 import { tokenRoutes } from './routes/token.routes';
 import { marketplaceRoutes } from './routes/marketplace.routes';
 import { dashboardRoutes } from './routes/dashboard.routes';
 import { adminRoutes } from './routes/admin.routes';
+import { authRoutes } from './routes/auth.routes';
 
 // Configure future flags for React Router v7
 export const future = {
@@ -19,11 +19,12 @@ export const router = createBrowserRouter([
     path: '/',
     element: <Layout />,
     children: [
-      ...publicRoutes,
-      ...tokenRoutes,
-      ...marketplaceRoutes,
-      ...dashboardRoutes,
-      adminRoutes,
+      ...(publicRoutes as RouteObject[]),
+      ...(authRoutes as RouteObject[]),
+      ...(tokenRoutes as RouteObject[]),
+      ...(marketplaceRoutes as RouteObject[]),
+      ...(dashboardRoutes as RouteObject[]),
+      ...(adminRoutes as RouteObject[]),
     ],
   },
 ]);
