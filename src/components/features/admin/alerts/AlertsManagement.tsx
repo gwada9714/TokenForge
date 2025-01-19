@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Box, Typography, Alert, Snackbar } from '@mui/material';
 import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
 import type { AlertRule } from '../../../../types/contracts';
 import { AlertForm } from './AlertForm';
@@ -24,52 +24,117 @@ export const AlertsManagement: React.FC = () => {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [newRuleName, setNewRuleName] = useState('');
   const [newRuleCondition, setNewRuleCondition] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { contract } = useTokenForgeAdmin();
 
-  // Chargement initial des règles
-  useEffect(() => {
-    loadAlertRules();
-  }, [contract]);
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => setError(null), 5000);
+  };
 
-  const loadAlertRules = async () => {
+  const showSuccess = (message: string) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const loadAlertRules = useCallback(async () => {
     if (!contract) return;
+    setIsLoading(true);
     try {
       const rules = await contract.getAlertRules();
       setAlertRules(rules);
-    } catch (error) {
-      console.error('Erreur lors du chargement des règles:', error);
+    } catch (err) {
+      showError('Erreur lors du chargement des règles');
+      console.error('Erreur lors du chargement des règles:', err);
+    } finally {
+      setIsLoading(false);
     }
+  }, [contract]);
+
+  useEffect(() => {
+    loadAlertRules();
+  }, [loadAlertRules]);
+
+  const validateRule = (name: string, condition: string): boolean => {
+    if (!name.trim()) {
+      showError('Le nom de la règle est requis');
+      return false;
+    }
+    if (!condition.trim()) {
+      showError('La condition est requise');
+      return false;
+    }
+    if (name.length > 50) {
+      showError('Le nom de la règle est trop long (max 50 caractères)');
+      return false;
+    }
+    if (alertRules.some(rule => rule.name === name)) {
+      showError('Une règle avec ce nom existe déjà');
+      return false;
+    }
+    return true;
   };
 
   const handleAddRule = async () => {
-    if (!contract || !newRuleName || !newRuleCondition) return;
+    if (!contract) {
+      showError('Contract non initialisé');
+      return;
+    }
+
+    if (!validateRule(newRuleName, newRuleCondition)) return;
+
+    setIsLoading(true);
     try {
       await contract.addAlertRule(newRuleName, newRuleCondition);
       setNewRuleName('');
       setNewRuleCondition('');
       await loadAlertRules();
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de la règle:', error);
+      showSuccess('Règle ajoutée avec succès');
+    } catch (err) {
+      showError('Erreur lors de l\'ajout de la règle');
+      console.error('Erreur lors de l\'ajout de la règle:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleToggleRule = async (ruleId: number) => {
-    if (!contract) return;
+    if (!contract) {
+      showError('Contract non initialisé');
+      return;
+    }
+
+    setIsLoading(true);
     try {
       await contract.toggleAlertRule(ruleId);
       await loadAlertRules();
-    } catch (error) {
-      console.error('Erreur lors de la modification de la règle:', error);
+      showSuccess('État de la règle modifié avec succès');
+    } catch (err) {
+      showError('Erreur lors de la modification de la règle');
+      console.error('Erreur lors de la modification de la règle:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeleteRule = async (ruleId: number) => {
-    if (!contract) return;
+    if (!contract) {
+      showError('Contract non initialisé');
+      return;
+    }
+
+    setIsLoading(true);
     try {
       await contract.deleteAlertRule(ruleId);
       await loadAlertRules();
-    } catch (error) {
-      console.error('Erreur lors de la suppression de la règle:', error);
+      showSuccess('Règle supprimée avec succès');
+    } catch (err) {
+      showError('Erreur lors de la suppression de la règle');
+      console.error('Erreur lors de la suppression de la règle:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -85,13 +150,27 @@ export const AlertsManagement: React.FC = () => {
         onNameChange={setNewRuleName}
         onConditionChange={setNewRuleCondition}
         onSubmit={handleAddRule}
+        isLoading={isLoading}
       />
 
       <AlertList
         rules={alertRules}
         onToggleRule={handleToggleRule}
         onDeleteRule={handleDeleteRule}
+        isLoading={isLoading}
       />
+
+      <Snackbar open={!!error} autoHideDuration={5000} onClose={() => setError(null)}>
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess(null)}>
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
