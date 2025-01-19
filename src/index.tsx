@@ -1,6 +1,34 @@
-import { StrictMode } from 'react'
-import { createRoot, type Root } from 'react-dom/client'
-import App from './App'
+import { StrictMode } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { configureChains, createConfig, WagmiConfig } from 'wagmi';
+import { sepolia } from 'wagmi/chains';
+import { publicProvider } from 'wagmi/providers/public';
+import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
+import { WalletConnectConnector } from 'wagmi/connectors/walletConnect';
+import App from './App';
+
+// Configuration de Wagmi
+const { chains, publicClient, webSocketPublicClient } = configureChains(
+  [sepolia],
+  [publicProvider()]
+);
+
+const config = createConfig({
+  autoConnect: true,
+  connectors: [
+    new MetaMaskConnector({ chains }),
+    new WalletConnectConnector({
+      chains,
+      options: {
+        projectId: process.env.REACT_APP_WALLET_CONNECT_PROJECT_ID || '',
+        showQrModal: true,
+      },
+    }),
+  ],
+  publicClient,
+  webSocketPublicClient,
+});
 
 class AppInitializationError extends Error {
   constructor(
@@ -8,16 +36,16 @@ class AppInitializationError extends Error {
     public readonly code: string = 'INIT_ERROR',
     public readonly cause?: unknown
   ) {
-    super(message)
-    this.name = 'AppInitializationError'
-    Object.setPrototypeOf(this, AppInitializationError.prototype)
+    super(message);
+    this.name = 'AppInitializationError';
+    Object.setPrototypeOf(this, AppInitializationError.prototype);
   }
 
   static elementNotFound(): AppInitializationError {
     return new AppInitializationError(
       'Failed to find the root element. Make sure there is a <div id="root"> in your HTML.',
       'ROOT_NOT_FOUND'
-    )
+    );
   }
 
   static renderError(cause: unknown): AppInitializationError {
@@ -25,29 +53,33 @@ class AppInitializationError extends Error {
       'Failed to render the application.',
       'RENDER_ERROR',
       cause
-    )
+    );
   }
 }
 
 const initializeApp = (): Root => {
-  const rootElement = document.getElementById('root')
+  const rootElement = document.getElementById('root');
   if (!rootElement) {
-    throw AppInitializationError.elementNotFound()
+    throw AppInitializationError.elementNotFound();
   }
-  return createRoot(rootElement)
-}
+  return createRoot(rootElement);
+};
 
 const renderApp = (root: Root): void => {
   try {
     root.render(
       <StrictMode>
-        <App />
+        <WagmiConfig config={config}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </WagmiConfig>
       </StrictMode>
-    )
+    );
   } catch (error) {
-    throw AppInitializationError.renderError(error)
+    throw AppInitializationError.renderError(error);
   }
-}
+};
 
 const handleError = (error: unknown): void => {
   if (error instanceof AppInitializationError) {
@@ -84,4 +116,4 @@ try {
   renderApp(root)
 } catch (error) {
   handleError(error)
-} 
+}

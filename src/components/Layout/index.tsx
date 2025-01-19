@@ -6,13 +6,10 @@ import { useWeb3 } from '../../contexts/Web3Context';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 import { GlobalFeedback } from '../Feedback/GlobalFeedback';
 import { useGlobalLoading } from '../../hooks/useGlobalLoading';
+import { Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout: React.FC = () => {
   const { isConnected, network } = useWeb3();
   const { navigateTo, canAccess } = useAppNavigation();
   const { isLoading, message } = useGlobalLoading();
@@ -70,7 +67,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </AppBar>
 
       <Container component="main" sx={{ flexGrow: 1, py: 4 }}>
-        {children}
+        <Outlet />
       </Container>
 
       <GlobalFeedback loading={isLoading} loadingMessage={message} />
@@ -87,5 +84,3 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     </Box>
   );
 };
-
-export default Layout;
