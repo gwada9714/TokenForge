@@ -16,14 +16,7 @@ describe('Redirect Rules', () => {
       <MemoryRouter initialEntries={initialEntries}>
         <TokenForgeAuthProvider>
           <Routes>
-            {publicRoutes.map((route) => (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={route.element}
-              />
-            ))}
-            {authRoutes.map((route) => (
+            {[...publicRoutes, ...authRoutes].map((route) => (
               <Route
                 key={route.path}
                 path={route.path}

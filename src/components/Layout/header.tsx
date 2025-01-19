@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { StyledProps } from '@/components/ui/types';
-import { useAuth } from '@/features/auth';
+import { useTokenForgeAuth } from '@/features/auth';
 import { useAccount } from 'wagmi';
 
 interface HeaderContainerProps {
@@ -113,7 +113,7 @@ const MobileNav = styled.nav`
 export const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user, signOut } = useAuth();
+  const { isAuthenticated, user, signOut } = useTokenForgeAuth();
   const { isConnected } = useAccount();
   const navigate = useNavigate();
 
@@ -212,7 +212,7 @@ export const Header: React.FC = () => {
           <Button 
             variant="secondary" 
             size="medium" 
-            fullWidth
+            $fullWidth
             onClick={handleAuthClick}
           >
             {isAuthenticated ? 'Déconnexion' : 'Connexion'}
@@ -222,7 +222,7 @@ export const Header: React.FC = () => {
             <Button 
               variant="primary" 
               size="medium"
-              fullWidth
+              $fullWidth
               onClick={handleWalletClick}
             >
               Connecter Wallet

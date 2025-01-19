@@ -24,21 +24,7 @@ describe('Protected Routes', () => {
       <MemoryRouter initialEntries={initialEntries}>
         <TokenForgeAuthProvider>
           <Routes>
-            {tokenRoutes.map((route) => (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={route.element}
-              />
-            ))}
-            {adminRoutes.map((route) => (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={route.element}
-              />
-            ))}
-            {dashboardRoutes.map((route) => (
+            {[...tokenRoutes, ...adminRoutes, ...dashboardRoutes].map((route) => (
               <Route
                 key={route.path}
                 path={route.path}
