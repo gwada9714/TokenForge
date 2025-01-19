@@ -22,6 +22,12 @@ export interface TokenForgeAuthState extends AuthState, WalletState {
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
+  
+  // Actions
+  login: (user: User) => void;
+  logout: () => Promise<void>;
+  updateUser: (user: User) => void;
+  setError: (error: AuthError) => void;
 }
 
 export interface AuthError extends Error {

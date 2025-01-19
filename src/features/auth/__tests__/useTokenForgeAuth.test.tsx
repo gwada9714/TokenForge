@@ -1,13 +1,14 @@
 import { renderHook, act } from '@testing-library/react';
 import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
-import { useAccount, useNetwork, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
+import { usePublicClient } from 'wagmi';
 import { getWalletClient } from '@wagmi/core';
 
 // Mocks
 jest.mock('wagmi', () => ({
   useAccount: jest.fn(),
-  useNetwork: jest.fn(),
   useDisconnect: jest.fn(),
+  usePublicClient: jest.fn(),
 }));
 
 jest.mock('@wagmi/core', () => ({
@@ -25,7 +26,7 @@ describe('useTokenForgeAuth', () => {
       isConnected: false,
     });
     
-    (useNetwork as jest.Mock).mockReturnValue({
+    (usePublicClient as jest.Mock).mockReturnValue({
       chain: null,
     });
 
@@ -58,7 +59,7 @@ describe('useTokenForgeAuth', () => {
       isConnected: true,
     });
 
-    (useNetwork as jest.Mock).mockReturnValue({
+    (usePublicClient as jest.Mock).mockReturnValue({
       chain: { id: 1 }, // mainnet
     });
 
@@ -77,26 +78,25 @@ describe('useTokenForgeAuth', () => {
     });
   });
 
-  it('should handle admin status correctly', () => {
+  it('should handle admin status correctly', async () => {
     const { result } = renderHook(() => useTokenForgeAuth());
+    const mockUser = { email: 'admin@tokenforge.com' } as any;
 
-    act(() => {
-      result.current.login({ email: 'admin@tokenforge.com' } as any);
+    await act(async () => {
+      result.current.login(mockUser);
     });
 
     expect(result.current.isAdmin).toBe(true);
     expect(result.current.canCreateToken).toBe(true);
   });
 
-  it('should handle logout and wallet disconnect', () => {
+  it('should handle logout and wallet disconnect', async () => {
     const { result } = renderHook(() => useTokenForgeAuth());
+    const mockUser = { email: 'user@example.com' } as any;
 
-    act(() => {
-      result.current.login({ email: 'user@example.com' } as any);
-    });
-
-    act(() => {
-      result.current.logout();
+    await act(async () => {
+      result.current.login(mockUser);
+      await result.current.logout();
     });
 
     expect(result.current).toMatchObject({

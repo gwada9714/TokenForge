@@ -15,11 +15,14 @@ describe('TokenForgeAuthProvider', () => {
   });
 
   it('should throw error when used outside provider', () => {
-    const { result } = renderHook(() => useTokenForgeAuthContext());
+    const consoleError = console.error;
+    console.error = jest.fn(); // Suppress React error logging
 
-    expect(result.error).toEqual(
-      Error('useTokenForgeAuthContext must be used within a TokenForgeAuthProvider')
-    );
+    expect(() => {
+      renderHook(() => useTokenForgeAuthContext());
+    }).toThrow('useTokenForgeAuthContext must be used within a TokenForgeAuthProvider');
+
+    console.error = consoleError; // Restore console.error
   });
 
   it('should render children', () => {
