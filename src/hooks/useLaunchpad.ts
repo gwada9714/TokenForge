@@ -1,10 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useContractRead, useContractWrite, useWaitForTransactionReceipt } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useContractRead, useContractWrite } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { useNetwork } from '../hooks/useNetwork';
 import { type Address } from 'viem';
-import { getContractAddress } from '../config/contracts';
-import { launchpadABI } from '../contracts/abis';
+import { LAUNCHPAD_ABI, LAUNCHPAD_ADDRESS } from '../config/contracts';
 
 interface PoolInfo {
   token: Address;
@@ -22,146 +21,94 @@ export const useLaunchpad = (poolId?: number) => {
   const [error, setError] = useState<string | null>(null);
   const [poolInfoState, setPoolInfoState] = useState<PoolInfo | null>(null);
   const [userContribution, setUserContribution] = useState<bigint>(0n);
-  const [createPoolHash, setCreatePoolHash] = useState<string | null>(null);
-  const [contributeHash, setContributeHash] = useState<string | null>(null);
-  const [claimTokensHash, setClaimTokensHash] = useState<string | null>(null);
+  const [createPoolHash, setCreatePoolHash] = useState<`0x${string}` | undefined>(undefined);
+  const [contributeHash, setContributeHash] = useState<`0x${string}` | undefined>(undefined);
+  const [claimTokensHash, setClaimTokensHash] = useState<`0x${string}` | undefined>(undefined);
+  
   const { address } = useAccount();
   const { chain } = useNetwork();
-  const launchpadAddress = getContractAddress('Launchpad', chain?.id);
-
-  const launchpadConfig = {
-    address: launchpadAddress,
-    abi: launchpadABI,
-  };
 
   const { data: poolInfo } = useContractRead({
-    ...launchpadConfig,
+    address: LAUNCHPAD_ADDRESS,
+    abi: LAUNCHPAD_ABI,
     functionName: 'getPoolInfo',
     args: poolId !== undefined ? [BigInt(poolId)] : undefined,
+    enabled: !!poolId,
   });
 
   const { data: userContributionData } = useContractRead({
-    ...launchpadConfig,
+    address: LAUNCHPAD_ADDRESS,
+    abi: LAUNCHPAD_ABI,
     functionName: 'getUserContribution',
-    args: poolId !== undefined && address ? [BigInt(poolId), address as Address] : undefined,
+    args: poolId !== undefined && address ? [BigInt(poolId), address as `0x${string}`] : undefined,
+    enabled: !!poolId && !!address,
   });
 
-  const { writeContract: createPool } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'createPool',
+  const { write: createPool, isLoading: isCreatingPool } = useContractWrite({
+    address: LAUNCHPAD_ADDRESS,
+    abi: LAUNCHPAD_ABI,
+    functionName: 'createPool'
   });
 
-  const { writeContract: contribute } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'contribute',
+  const { write: contribute, isLoading: isContributing } = useContractWrite({
+    address: LAUNCHPAD_ADDRESS,
+    abi: LAUNCHPAD_ABI,
+    functionName: 'contribute'
   });
 
-  const { writeContract: claimTokens } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'claimTokens',
+  const { write: claimTokens, isLoading: isClaiming } = useContractWrite({
+    address: LAUNCHPAD_ADDRESS,
+    abi: LAUNCHPAD_ABI,
+    functionName: 'claimTokens'
   });
 
-  const { isLoading: isCreatingPool, isSuccess: isCreatePoolSuccess } = useWaitForTransactionReceipt({
-    hash: createPoolHash,
-  });
-
-  const { isLoading: isContributing, isSuccess: isContributeSuccess } = useWaitForTransactionReceipt({
-    hash: contributeHash,
-  });
-
-  const { isLoading: isClaiming, isSuccess: isClaimSuccess } = useWaitForTransactionReceipt({
-    hash: claimTokensHash,
-  });
-
-  useEffect(() => {
-    if (isCreatePoolSuccess) {
-      // refetchPools?.();
-    }
-  }, [isCreatePoolSuccess]);
-
-  useEffect(() => {
-    if (isContributeSuccess) {
-      // refetchUserContribution?.();
-    }
-  }, [isContributeSuccess]);
-
-  useEffect(() => {
-    if (isClaimSuccess) {
-      // refetchUserContribution?.();
-    }
-  }, [isClaimSuccess]);
-
-  const handleCreatePool = useCallback(async (
-    tokenAddress: string,
-    startTime: bigint,
-    endTime: bigint,
-    hardCap: bigint,
-    softCap: bigint,
-    tokenPrice: bigint
-  ) => {
+  const handleCreatePool = async (params: {
+    token: `0x${string}`;
+    tokenPrice: bigint;
+    hardCap: bigint;
+    softCap: bigint;
+    startTime: bigint;
+    endTime: bigint;
+  }) => {
     try {
-      if (!createPool) throw new Error('Contract write not ready');
-      const result = await createPool({
-        address: launchpadAddress,
-        abi: launchpadABI,
-        functionName: 'createPool',
-        args: [tokenAddress as Address, startTime, endTime, hardCap, softCap, tokenPrice],
+      const hash = await createPool({
+        args: [params.token, params.tokenPrice, params.hardCap, params.softCap, params.startTime, params.endTime],
       });
-      setCreatePoolHash(result.hash);
-    } catch (error: unknown) {
-      console.error('Error creating pool:', error);
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unknown error occurred while creating pool');
-      }
-      // onError?.(error);
+      setCreatePoolHash(hash);
+      return hash;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
     }
-  }, [createPool]);
+  };
 
-  const handleContribute = useCallback(async (amount: bigint) => {
+  const handleContribute = async (amount: bigint) => {
+    if (!poolId) throw new Error('Pool ID is required');
     try {
-      if (!contribute) throw new Error('Contract write not ready');
-      const result = await contribute({
-        address: launchpadAddress,
-        abi: launchpadABI,
-        functionName: 'contribute',
-        args: [amount],
+      const hash = await contribute({
+        args: [BigInt(poolId), amount],
       });
-      setContributeHash(result.hash);
-    } catch (error: unknown) {
-      console.error('Error contributing:', error);
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unknown error occurred while contributing');
-      }
-      // onError?.(error);
+      setContributeHash(hash);
+      return hash;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
     }
-  }, [contribute]);
+  };
 
-  const handleClaim = useCallback(async () => {
+  const handleClaimTokens = async () => {
+    if (!poolId) throw new Error('Pool ID is required');
     try {
-      if (!claimTokens) throw new Error('Contract write not ready');
-      const result = await claimTokens({
-        address: launchpadAddress,
-        abi: launchpadABI,
-        functionName: 'claimTokens',
+      const hash = await claimTokens({
+        args: [BigInt(poolId)],
       });
-      setClaimTokensHash(result.hash);
-    } catch (error: unknown) {
-      console.error('Error claiming:', error);
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unknown error occurred while claiming');
-      }
-      // onError?.(error);
+      setClaimTokensHash(hash);
+      return hash;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
     }
-  }, [claimTokens]);
+  };
 
   useEffect(() => {
     if (poolInfo && typeof poolInfo === 'object') {
@@ -194,12 +141,30 @@ export const useLaunchpad = (poolId?: number) => {
     }
   }, [chain?.id]);
 
+  useEffect(() => {
+    if (createPoolHash) {
+      // refetchPools?.();
+    }
+  }, [createPoolHash]);
+
+  useEffect(() => {
+    if (contributeHash) {
+      // refetchUserContribution?.();
+    }
+  }, [contributeHash]);
+
+  useEffect(() => {
+    if (claimTokensHash) {
+      // refetchUserContribution?.();
+    }
+  }, [claimTokensHash]);
+
   return {
     poolInfo: poolInfoState,
     userContribution,
     createPool: handleCreatePool,
     contribute: handleContribute,
-    claim: handleClaim,
+    claim: handleClaimTokens,
     isCreatingPool,
     isContributing,
     isClaiming,
