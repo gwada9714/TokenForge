@@ -12,11 +12,9 @@ import { Web3Provider } from "./contexts/Web3Context";
 import { ContractProvider } from "./contexts/ContractContext";
 
 // Lazy loading avec preload pour les composants critiques
-const HomePage = lazy(() => import("./pages/Home" /* webpackPrefetch: true */));
+const HomePage = lazy(() => import("./pages/Home"));
 const LoginForm = lazy(() => import("./components/auth/LoginForm"));
 const SignUpForm = lazy(() => import("./components/auth/SignUpForm"));
-
-// Lazy loading pour les composants secondaires
 const TokenWizard = lazy(() => import("./components/TokenWizard/TokenWizard"));
 const StakingDashboard = lazy(() => import("./components/Staking/StakingDashboard"));
 const ProfitDashboard = lazy(() => import("./components/Dashboard/ProfitDashboard"));
@@ -25,7 +23,6 @@ const MyTokens = lazy(() => import("./pages/MyTokens"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 
-// Composant de chargement optimisé
 const LoadingFallback = () => (
   <Box 
     sx={{ 
@@ -42,103 +39,102 @@ const LoadingFallback = () => (
 
 const App = () => {
   return (
-    <Provider store={store}>
-      <ThemeProvider theme={forgeTheme}>
-        <GlobalStyle />
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            {/* Routes publiques sans Layout */}
-            <Route path="/login" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <LoginForm />
-              </Suspense>
-            } />
-            <Route path="/signup" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <SignUpForm />
-              </Suspense>
-            } />
+    <Suspense fallback={<LoadingFallback />}>
+      <Provider store={store}>
+        <ThemeProvider theme={forgeTheme}>
+          <GlobalStyle />
+          <Web3Provider>
+            <ContractProvider>
+              <Routes>
+                {/* Routes publiques sans Layout */}
+                <Route path="/login" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LoginForm />
+                  </Suspense>
+                } />
+                <Route path="/signup" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <SignUpForm />
+                  </Suspense>
+                } />
 
-            {/* Routes avec Layout */}
-            <Route path="/" element={<Layout />}>
-              {/* Routes publiques */}
-              <Route index element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <HomePage />
-                </Suspense>
-              } />
-              <Route path="pricing" element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <Pricing />
-                </Suspense>
-              } />
-              <Route path="launchpad" element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <LaunchpadPage />
-                </Suspense>
-              } />
+                {/* Routes avec Layout */}
+                <Route element={<Layout />}>
+                  {/* Routes publiques */}
+                  <Route index element={
+                    <Suspense fallback={<LoadingFallback />}>
+                      <HomePage />
+                    </Suspense>
+                  } />
+                  <Route path="pricing" element={
+                    <Suspense fallback={<LoadingFallback />}>
+                      <Pricing />
+                    </Suspense>
+                  } />
+                  <Route path="launchpad" element={
+                    <Suspense fallback={<LoadingFallback />}>
+                      <LaunchpadPage />
+                    </Suspense>
+                  } />
 
-              {/* Routes protégées nécessitant Web3 */}
-              <Route path="create" element={
-                <Web3Provider>
-                  <ContractProvider>
-                    <ProtectedRoute requireWeb3>
-                      <Suspense fallback={<LoadingFallback />}>
-                        <TokenWizard />
-                      </Suspense>
-                    </ProtectedRoute>
-                  </ContractProvider>
-                </Web3Provider>
-              } />
-              <Route path="staking" element={
-                <Web3Provider>
-                  <ContractProvider>
-                    <ProtectedRoute requireWeb3>
-                      <Suspense fallback={<LoadingFallback />}>
-                        <StakingDashboard />
-                      </Suspense>
-                    </ProtectedRoute>
-                  </ContractProvider>
-                </Web3Provider>
-              } />
-              <Route path="profit" element={
-                <Web3Provider>
-                  <ContractProvider>
-                    <ProtectedRoute requireWeb3>
-                      <Suspense fallback={<LoadingFallback />}>
-                        <ProfitDashboard />
-                      </Suspense>
-                    </ProtectedRoute>
-                  </ContractProvider>
-                </Web3Provider>
-              } />
-              <Route path="my-tokens" element={
-                <Web3Provider>
-                  <ContractProvider>
-                    <ProtectedRoute requireWeb3>
-                      <Suspense fallback={<LoadingFallback />}>
-                        <MyTokens />
-                      </Suspense>
-                    </ProtectedRoute>
-                  </ContractProvider>
-                </Web3Provider>
-              } />
-              <Route path="admin" element={
-                <Web3Provider>
-                  <ContractProvider>
-                    <ProtectedRoute requireWeb3 requireAdmin>
-                      <Suspense fallback={<LoadingFallback />}>
-                        <AdminDashboard />
-                      </Suspense>
-                    </ProtectedRoute>
-                  </ContractProvider>
-                </Web3Provider>
-              } />
-            </Route>
-          </Routes>
-        </Suspense>
-      </ThemeProvider>
-    </Provider>
+                  {/* Routes protégées nécessitant Web3 */}
+                  <Route
+                    path="create"
+                    element={
+                      <ProtectedRoute requireWeb3>
+                        <Suspense fallback={<LoadingFallback />}>
+                          <TokenWizard />
+                        </Suspense>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="staking"
+                    element={
+                      <ProtectedRoute requireWeb3>
+                        <Suspense fallback={<LoadingFallback />}>
+                          <StakingDashboard />
+                        </Suspense>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="profit"
+                    element={
+                      <ProtectedRoute requireWeb3>
+                        <Suspense fallback={<LoadingFallback />}>
+                          <ProfitDashboard />
+                        </Suspense>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="my-tokens"
+                    element={
+                      <ProtectedRoute requireWeb3>
+                        <Suspense fallback={<LoadingFallback />}>
+                          <MyTokens />
+                        </Suspense>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="admin"
+                    element={
+                      <ProtectedRoute requireWeb3 requireAdmin>
+                        <Suspense fallback={<LoadingFallback />}>
+                          <AdminDashboard />
+                        </Suspense>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Route>
+              </Routes>
+            </ContractProvider>
+          </Web3Provider>
+        </ThemeProvider>
+      </Provider>
+    </Suspense>
   );
 };
 
