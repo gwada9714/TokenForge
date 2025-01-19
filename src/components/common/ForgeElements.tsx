@@ -2,6 +2,8 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import type { DefaultTheme } from 'styled-components';
 
+type BreakpointKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
 interface StyledProps {
   theme: DefaultTheme;
 }
@@ -11,7 +13,7 @@ export const ForgeContainer = styled.div<StyledProps>`
   margin: 0 auto;
   padding: 0 ${props => props.theme.spacing.medium};
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     padding: 0 ${props => props.theme.spacing.large};
   }
 `;
@@ -21,7 +23,7 @@ export const ForgeSection = styled.section<StyledProps>`
   position: relative;
   overflow: hidden;
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     padding: ${props => props.theme.spacing.large} 0;
   }
 `;
@@ -34,11 +36,11 @@ export const ForgeHeading = styled.h1<StyledProps>`
   text-align: center;
   font-size: ${props => props.theme.typography.fontSizes['3xl']};
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     font-size: ${props => props.theme.typography.fontSizes['4xl']};
   }
 
-  ${props => props.theme.breakpoints.up('lg')} {
+  ${props => props.theme.breakpoints.up('lg' as BreakpointKey)} {
     font-size: ${props => props.theme.typography.fontSizes['5xl']};
   }
 `;
@@ -50,7 +52,7 @@ export const ForgeSubheading = styled.h2<StyledProps>`
   margin-bottom: ${props => props.theme.spacing.small};
   font-size: ${props => props.theme.typography.fontSizes['2xl']};
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     font-size: ${props => props.theme.typography.fontSizes['3xl']};
   }
 `;
@@ -62,7 +64,7 @@ export const ForgeText = styled.p<StyledProps>`
   margin-bottom: ${props => props.theme.spacing.small};
   font-size: ${props => props.theme.typography.fontSizes.sm};
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     font-size: ${props => props.theme.typography.fontSizes.base};
   }
 `;
@@ -79,7 +81,7 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
   transition: ${props => props.theme.transitions.default};
   font-size: ${props => props.theme.typography.fontSizes.sm};
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     font-size: ${props => props.theme.typography.fontSizes.base};
   }
 
@@ -95,10 +97,6 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
       background: ${props => props.theme.colors.secondary.dark};
     }
   }
-
-  ${props => props.theme.breakpoints.up('md')} {
-    padding: ${props => props.theme.spacing.large};
-  }
 `;
 
 export const ForgeCard = styled(motion.div)<StyledProps>`
@@ -113,7 +111,7 @@ export const ForgeCard = styled(motion.div)<StyledProps>`
     box-shadow: ${props => props.theme.shadows.lg};
   }
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     padding: ${props => props.theme.spacing.large};
   }
 `;
@@ -124,17 +122,17 @@ export const ForgeGrid = styled.div<StyledProps>`
   gap: ${props => props.theme.spacing.medium};
   margin: ${props => props.theme.spacing.large} 0;
 
-  ${props => props.theme.breakpoints.up('sm')} {
+  ${props => props.theme.breakpoints.up('sm' as BreakpointKey)} {
     grid-template-columns: repeat(2, 1fr);
     gap: ${props => props.theme.spacing.medium};
   }
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     grid-template-columns: repeat(3, 1fr);
-    gap: ${props => props.theme.spacing.large};
+    gap: ${props => props.theme.spacing.lg};
   }
 
-  ${props => props.theme.breakpoints.up('lg')} {
+  ${props => props.theme.breakpoints.up('lg' as BreakpointKey)} {
     grid-template-columns: repeat(4, 1fr);
   }
 `;
@@ -146,7 +144,7 @@ export const ForgeMetallicCard = styled(ForgeCard)`
   font-weight: ${props => props.theme.typography.fontWeight.medium};
   font-size: ${props => props.theme.typography.fontSizes.sm};
 
-  ${props => props.theme.breakpoints.up('md')} {
+  ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
     font-size: ${props => props.theme.typography.fontSizes.base};
   }
   position: relative;
