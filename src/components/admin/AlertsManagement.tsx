@@ -18,7 +18,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { monitor } from '../../utils/monitoring';
-import { useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { useContractRead, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { TokenForgeFactoryABI } from '../../abi/TokenForgeFactory';
 import { TOKEN_FORGE_ADDRESS } from '../../constants/addresses';
 import { AlertRule } from '../../types/contracts';
@@ -27,8 +27,11 @@ export const AlertsManagement: React.FC = () => {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [newRuleName, setNewRuleName] = useState('');
   const [newRuleCondition, setNewRuleCondition] = useState('');
-  const { isProcessing } = useTokenForgeAdmin();
+  const { contract } = useTokenForgeAdmin();
+  const { writeContract } = useWriteContract();
+  const { waitForTransactionReceipt } = useWaitForTransactionReceipt();
   const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Lecture des règles
   const { data: rules, refetch: refetchRules } = useContractRead({
@@ -38,33 +41,19 @@ export const AlertsManagement: React.FC = () => {
     watch: true,
   }) as { data: AlertRule[] | undefined, refetch: () => void };
 
-  // Écriture des règles
-  const { writeAsync: addRule } = useContractWrite({
-    address: TOKEN_FORGE_ADDRESS,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'addAlertRule',
-  });
-
-  const { writeAsync: toggleRule } = useContractWrite({
-    address: TOKEN_FORGE_ADDRESS,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'toggleAlertRule',
-  });
-
-  const { writeAsync: deleteRule } = useContractWrite({
-    address: TOKEN_FORGE_ADDRESS,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'deleteAlertRule',
-  });
-
   // Attente des transactions
-  const { isLoading: isWaiting } = useWaitForTransaction({
-    hash: pendingTx,
-    onSuccess: () => {
-      refetchRules();
-      setPendingTx(undefined);
-    },
-  });
+  useEffect(() => {
+    if (pendingTx) {
+      waitForTransactionReceipt({ hash: pendingTx })
+        .then(() => {
+          refetchRules();
+          setPendingTx(undefined);
+        })
+        .catch((error) => {
+          console.error('Error waiting for transaction receipt:', error);
+        });
+    }
+  }, [pendingTx, refetchRules, waitForTransactionReceipt]);
 
   // Mise à jour des règles quand les données changent
   useEffect(() => {
@@ -75,16 +64,19 @@ export const AlertsManagement: React.FC = () => {
   }, [rules]);
 
   const handleAddRule = useCallback(async () => {
-    if (!newRuleName || !newRuleCondition || !addRule) return;
+    if (!newRuleName || !newRuleCondition || !contract) return;
 
     try {
+      setIsLoading(true);
       monitor.info('AlertsManagement', 'Adding new alert rule', { name: newRuleName });
       
-      const tx = await addRule({
+      const { hash } = await writeContract({
+        ...contract,
+        functionName: 'addAlertRule',
         args: [newRuleName, newRuleCondition],
       });
       
-      setPendingTx(tx.hash);
+      setPendingTx(hash);
       setNewRuleName('');
       setNewRuleCondition('');
       
@@ -92,46 +84,58 @@ export const AlertsManagement: React.FC = () => {
     } catch (error) {
       monitor.error('AlertsManagement', 'Error adding alert rule', { error, rule: { name: newRuleName, condition: newRuleCondition } });
       console.error('Erreur lors de l\'ajout de la règle:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [newRuleName, newRuleCondition, addRule]);
+  }, [newRuleName, newRuleCondition, contract]);
 
   const handleToggleRule = useCallback(async (id: number) => {
-    if (!toggleRule) return;
+    if (!contract) return;
 
     try {
+      setIsLoading(true);
       monitor.info('AlertsManagement', 'Toggling alert rule', { id: id.toString() });
       
-      const tx = await toggleRule({
+      const { hash } = await writeContract({
+        ...contract,
+        functionName: 'toggleAlertRule',
         args: [BigInt(id)],
       });
       
-      setPendingTx(tx.hash);
+      setPendingTx(hash);
       monitor.info('AlertsManagement', 'Alert rule toggle initiated', { id: id.toString() });
     } catch (error) {
       monitor.error('AlertsManagement', 'Error toggling alert rule', { error, id: id.toString() });
       console.error('Erreur lors de la modification de la règle:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [toggleRule]);
+  }, [contract]);
 
   const handleDeleteRule = useCallback(async (id: number) => {
-    if (!deleteRule) return;
+    if (!contract) return;
 
     try {
+      setIsLoading(true);
       monitor.info('AlertsManagement', 'Deleting alert rule', { id: id.toString() });
       
-      const tx = await deleteRule({
+      const { hash } = await writeContract({
+        ...contract,
+        functionName: 'deleteAlertRule',
         args: [BigInt(id)],
       });
       
-      setPendingTx(tx.hash);
+      setPendingTx(hash);
       monitor.info('AlertsManagement', 'Alert rule deletion initiated', { id: id.toString() });
     } catch (error) {
       monitor.error('AlertsManagement', 'Error deleting alert rule', { error, id: id.toString() });
       console.error('Erreur lors de la suppression de la règle:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [deleteRule]);
+  }, [contract]);
 
-  const isActionDisabled = isProcessing || isWaiting;
+  const isActionDisabled = isLoading;
 
   return (
     <Card>

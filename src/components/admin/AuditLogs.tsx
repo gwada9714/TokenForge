@@ -18,15 +18,16 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
 import { monitor } from '../../utils/monitoring';
-import { useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { useContractRead, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { TokenForgeFactoryABI } from '../../abi/TokenForgeFactory';
 import { TOKEN_FORGE_ADDRESS } from '../../constants/addresses';
 import { AuditLog } from '../../types/contracts';
 
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const { isProcessing } = useTokenForgeAdmin();
+  const { contract } = useTokenForgeAdmin();
   const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Lecture des logs
   const { data: auditLogs, refetch: refetchLogs } = useContractRead({
@@ -37,20 +38,8 @@ export const AuditLogs: React.FC = () => {
   }) as { data: AuditLog[] | undefined, refetch: () => void };
 
   // Écriture pour la purge
-  const { writeAsync: purgeLogs } = useContractWrite({
-    address: TOKEN_FORGE_ADDRESS,
-    abi: TokenForgeFactoryABI.abi,
-    functionName: 'purgeAuditLogs',
-  });
-
-  // Attente des transactions
-  const { isLoading: isWaiting } = useWaitForTransaction({
-    hash: pendingTx,
-    onSuccess: () => {
-      refetchLogs();
-      setPendingTx(undefined);
-    },
-  });
+  const { writeContract } = useWriteContract();
+  const { waitForTransactionReceipt } = useWaitForTransactionReceipt();
 
   // Mise à jour des logs quand les données changent
   useEffect(() => {
@@ -91,22 +80,25 @@ export const AuditLogs: React.FC = () => {
   }, [logs]);
 
   const handlePurgeLogs = useCallback(async () => {
-    if (!purgeLogs) return;
-
+    if (!contract) return;
+    
     try {
-      monitor.info('AuditLogs', 'Purging audit logs');
-      
-      const tx = await purgeLogs();
-      setPendingTx(tx.hash);
-      
-      monitor.info('AuditLogs', 'Audit logs purge initiated');
+      setIsLoading(true);
+      const { hash } = await writeContract({
+        ...contract,
+        functionName: 'purgeAuditLogs',
+      });
+
+      await waitForTransactionReceipt({ hash });
+      refetchLogs();
+      setIsLoading(false);
     } catch (error) {
       monitor.error('AuditLogs', 'Error purging audit logs', { error });
       console.error('Erreur lors de la purge des logs:', error);
     }
-  }, [purgeLogs]);
+  }, [contract, writeContract, waitForTransactionReceipt, refetchLogs]);
 
-  const isActionDisabled = isProcessing || isWaiting;
+  const isActionDisabled = isLoading;
 
   return (
     <Card>
@@ -137,7 +129,7 @@ export const AuditLogs: React.FC = () => {
           </Box>
         </Box>
 
-        {isWaiting ? (
+        {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
           </Box>
