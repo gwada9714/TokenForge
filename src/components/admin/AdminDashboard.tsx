@@ -16,9 +16,9 @@ import {
 import { TabPanel } from '../common/TabPanel';
 import { ContractControls } from './ContractControls';
 import { OwnershipManagement } from './OwnershipManagement';
-import { AlertsManagement } from '../Alerts/AlertsManagement';
-import { AuditLogs } from '../Audit/AuditLogs';
-import { AuditStats } from '../Audit/AuditStats';
+import { AlertsManagement } from './AlertsManagement';
+import { AuditLogs } from './AuditLogs';
+import { AuditStats } from './AuditStats';
 
 export const AdminDashboard: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
