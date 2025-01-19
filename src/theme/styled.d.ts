@@ -10,13 +10,30 @@ type ColorSet = {
 
 type BreakpointKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
-type SpacingOptions = {
+type SpacingFunction = {
+  (value: number): string;
   xs: string;
   sm: string;
-  base: string;
   md: string;
   lg: string;
   xl: string;
+  base: string;
+};
+
+type FontSizes = {
+  xs: string;
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+  '2xl': string;
+  '3xl': string;
+  '4xl': string;
+  '5xl': string;
+  small: string;
+  medium: string;
+  large: string;
+  base: string;
 };
 
 declare module 'styled-components' {
@@ -58,14 +75,9 @@ declare module 'styled-components' {
         semibold: number;
         bold: number;
       };
-      fontSizes: SpacingOptions & {
-        '2xl': string;
-        '3xl': string;
-        '4xl': string;
-        '5xl': string;
-      };
+      fontSizes: FontSizes;
     };
-    spacing: SpacingOptions;
+    spacing: SpacingFunction;
     breakpoints: {
       values: Record<BreakpointKey, number>;
       up: (key: BreakpointKey) => string;

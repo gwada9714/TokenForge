@@ -10,6 +10,17 @@ const breakpointValues: Record<BreakpointKey, number> = {
   xl: 1920
 };
 
+const createSpacing = () => {
+  const spacing = (value: number): string => `${value * 0.25}rem`;
+  spacing.xs = '0.25rem';
+  spacing.sm = '0.5rem';
+  spacing.md = '1rem';
+  spacing.lg = '1.5rem';
+  spacing.xl = '2rem';
+  spacing.base = '1rem';
+  return spacing;
+};
+
 export const theme: DefaultTheme = {
   colors: {
     primary: {
@@ -82,29 +93,25 @@ export const theme: DefaultTheme = {
     fontSizes: {
       xs: "0.75rem",
       sm: "0.875rem",
-      base: "1rem",
-      md: "1.125rem",
+      md: "1rem",
       lg: "1.25rem",
       xl: "1.5rem",
       '2xl': "1.875rem",
       '3xl': "2.25rem",
       '4xl': "3rem",
-      '5xl': "3.75rem"
+      '5xl': "3.75rem",
+      small: "0.875rem",
+      medium: "1rem",
+      large: "1.25rem",
+      base: "1rem"
     }
   },
-  spacing: {
-    xs: "0.25rem",
-    sm: "0.5rem",
-    base: "1rem",
-    md: "1.5rem",
-    lg: "2rem",
-    xl: "3rem"
-  },
+  spacing: createSpacing(),
   breakpoints: {
     values: breakpointValues,
-    up: (key: BreakpointKey) => `@media (min-width: ${breakpointValues[key]}px)`,
-    down: (key: BreakpointKey) => `@media (max-width: ${breakpointValues[key] - 0.05}px)`,
-    between: (start: BreakpointKey, end: BreakpointKey) => 
+    up: (key: BreakpointKey): string => `@media (min-width: ${breakpointValues[key]}px)`,
+    down: (key: BreakpointKey): string => `@media (max-width: ${breakpointValues[key] - 0.05}px)`,
+    between: (start: BreakpointKey, end: BreakpointKey): string => 
       `@media (min-width: ${breakpointValues[start]}px) and (max-width: ${breakpointValues[end] - 0.05}px)`
   }
 };
