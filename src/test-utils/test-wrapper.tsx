@@ -6,6 +6,14 @@ import { StyledEngineProvider } from '@mui/material/styles';
 import { testTheme } from './test-theme';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import tokenCreationReducer from '../store/slices/tokenCreationSlice';
+import uiReducer from '../store/slices/uiSlice';
+import walletReducer from '../store/slices/walletSlice';
+import analyticsReducer from '../store/slices/analyticsSlice';
+import userTokensReducer from '../store/slices/userTokensSlice';
+import authReducer from '../store/slices/authSlice';
 
 // Mock WagmiProvider
 jest.mock('wagmi', () => ({
@@ -28,7 +36,24 @@ const queryClient = new QueryClient({
   },
 });
 
-function render(ui: React.ReactElement, { ...renderOptions } = {}) {
+function render(
+  ui: React.ReactElement,
+  {
+    preloadedState = {},
+    store = configureStore({
+      reducer: {
+        tokenCreation: tokenCreationReducer,
+        ui: uiReducer,
+        wallet: walletReducer,
+        analytics: analyticsReducer,
+        userTokens: userTokensReducer,
+        auth: authReducer,
+      },
+      preloadedState,
+    }),
+    ...renderOptions
+  } = {}
+) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
@@ -36,7 +61,7 @@ function render(ui: React.ReactElement, { ...renderOptions } = {}) {
           <ThemeProvider theme={testTheme}>
             <CssBaseline />
             <BrowserRouter>
-              {children}
+              <Provider store={store}>{children}</Provider>
             </BrowserRouter>
           </ThemeProvider>
         </StyledEngineProvider>

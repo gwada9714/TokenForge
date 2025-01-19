@@ -1,19 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import { Box, Typography } from '@mui/material';
 import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
 import type { AlertRule } from '../../../../types/contracts';
+import { AlertForm } from './AlertForm';
+import { AlertList } from './AlertList';
 
 export const AlertsManagement: React.FC = () => {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
@@ -26,7 +16,6 @@ export const AlertsManagement: React.FC = () => {
     loadAlertRules();
   }, [contract]);
 
-  // Chargement des règles d'alerte
   const loadAlertRules = async () => {
     if (!contract) return;
     try {
@@ -37,7 +26,6 @@ export const AlertsManagement: React.FC = () => {
     }
   };
 
-  // Ajout d'une nouvelle règle
   const handleAddRule = async () => {
     if (!contract || !newRuleName || !newRuleCondition) return;
     try {
@@ -50,7 +38,16 @@ export const AlertsManagement: React.FC = () => {
     }
   };
 
-  // Suppression d'une règle
+  const handleToggleRule = async (ruleId: number) => {
+    if (!contract) return;
+    try {
+      await contract.toggleAlertRule(ruleId);
+      await loadAlertRules();
+    } catch (error) {
+      console.error('Erreur lors de la modification de la règle:', error);
+    }
+  };
+
   const handleDeleteRule = async (ruleId: number) => {
     if (!contract) return;
     try {
@@ -63,56 +60,25 @@ export const AlertsManagement: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h6" component="h2" gutterBottom>
+      <Typography variant="h6" gutterBottom>
         Gestion des Alertes
       </Typography>
 
-      <Box sx={{ mb: 4 }}>
-        <TextField
-          label="Nom de la règle"
-          value={newRuleName}
-          onChange={(e) => setNewRuleName(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
-        <TextField
-          label="Condition"
-          value={newRuleCondition}
-          onChange={(e) => setNewRuleCondition(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleAddRule}
-          disabled={!newRuleName || !newRuleCondition}
-          sx={{ mt: 2 }}
-        >
-          Ajouter une règle
-        </Button>
-      </Box>
+      <AlertForm
+        newRuleName={newRuleName}
+        newRuleCondition={newRuleCondition}
+        onNameChange={setNewRuleName}
+        onConditionChange={setNewRuleCondition}
+        onSubmit={handleAddRule}
+      />
 
-      <List>
-        {alertRules.map((rule, index) => (
-          <ListItem key={index}>
-            <ListItemText
-              primary={rule.name}
-              secondary={rule.condition}
-            />
-            <ListItemSecondaryAction>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => handleDeleteRule(index)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
-      </List>
+      <AlertList
+        rules={alertRules}
+        onToggleRule={handleToggleRule}
+        onDeleteRule={handleDeleteRule}
+      />
     </Box>
   );
 };
+
+export default AlertsManagement;

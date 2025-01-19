@@ -1,4 +1,7 @@
 import { TokenConfig } from '@/types/token';
+import { AuthState } from './slices/authSlice';
+import { AnalyticsState } from './slices/analyticsSlice';
+import { UserTokensState } from './slices/userTokensSlice';
 
 export interface TokenCreationState {
   currentStep: number;
@@ -32,4 +35,7 @@ export interface RootState {
   tokenCreation: TokenCreationState;
   wallet: WalletState;
   ui: UIState;
+  analytics: AnalyticsState;
+  userTokens: UserTokensState;
+  auth: AuthState;
 }

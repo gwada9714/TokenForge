@@ -2,29 +2,22 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Button,
   CircularProgress,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DownloadIcon from '@mui/icons-material/Download';
 import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
 import type { AuditLog } from '../../../../types/contracts';
+import { AuditLogList } from './AuditLogList';
+import { AuditLogToolbar } from './AuditLogToolbar';
 
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const { contract } = useTokenForgeAdmin();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Chargement initial des logs
   useEffect(() => {
     loadLogs();
   }, [contract]);
 
-  // Chargement des logs
   const loadLogs = async () => {
     if (!contract) return;
     try {
@@ -38,7 +31,6 @@ export const AuditLogs: React.FC = () => {
     }
   };
 
-  // Export des logs
   const handleExport = async () => {
     if (!logs.length) return;
 
@@ -51,74 +43,59 @@ export const AuditLogs: React.FC = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'audit_logs.csv';
+    a.download = `audit_logs_${new Date().toISOString()}.csv`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
 
-  // Suppression des logs
   const handlePurge = async () => {
     if (!contract) return;
     try {
-      setIsLoading(true);
       await contract.purgeAuditLogs();
       await loadLogs();
     } catch (error) {
       console.error('Erreur lors de la purge des logs:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
+  const handleDeleteLog = async (logId: number) => {
+    if (!contract) return;
+    try {
+      await contract.deleteAuditLog(logId);
+      await loadLogs();
+    } catch (error) {
+      console.error('Erreur lors de la suppression du log:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" component="h2">
-          Logs d'Audit
-        </Typography>
-        <Box>
-          <Button
-            startIcon={<DownloadIcon />}
-            onClick={handleExport}
-            disabled={isLoading || !logs.length}
-            sx={{ mr: 1 }}
-          >
-            Exporter
-          </Button>
-          <Button
-            startIcon={<DeleteIcon />}
-            color="error"
-            onClick={handlePurge}
-            disabled={isLoading || !logs.length}
-          >
-            Purger
-          </Button>
-        </Box>
-      </Box>
+      <Typography variant="h6" gutterBottom>
+        Logs d'Audit
+      </Typography>
 
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <List>
-          {logs.map((log) => (
-            <ListItem key={log.id}>
-              <ListItemText
-                primary={log.action}
-                secondary={`${new Date(log.timestamp * 1000).toLocaleString()} - ${log.data}`}
-              />
-              <ListItemSecondaryAction>
-                <Typography variant="caption" color="textSecondary">
-                  {log.address}
-                </Typography>
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
-        </List>
-      )}
+      <AuditLogToolbar
+        onExport={handleExport}
+        onPurge={handlePurge}
+        disabled={!logs.length}
+      />
+
+      <AuditLogList
+        logs={logs}
+        onDeleteLog={handleDeleteLog}
+      />
     </Box>
   );
 };
+
+export default AuditLogs;

@@ -1,7 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { TokenAnalytics, TokenEvent } from '@/types/analytics';
 
-interface AnalyticsState {
+export interface AnalyticsState {
+  events: Array<{
+    id: string;
+    type: string;
+    timestamp: number;
+    data: any;
+  }>;
   tokens: Record<string, TokenAnalytics>;
   loading: boolean;
   error: string | null;
@@ -9,7 +14,22 @@ interface AnalyticsState {
   realtimeSubscriptions: Record<string, boolean>;
 }
 
+interface TokenAnalytics {
+  token: {
+    address: string;
+  };
+  events: TokenEvent[];
+}
+
+interface TokenEvent {
+  id: string;
+  type: string;
+  timestamp: number;
+  data: any;
+}
+
 const initialState: AnalyticsState = {
+  events: [],
   tokens: {},
   loading: false,
   error: null,
@@ -55,7 +75,17 @@ const analyticsSlice = createSlice({
       if (state.selectedToken === address) {
         state.selectedToken = null;
       }
-    }
+    },
+    addEvent: (state, action: PayloadAction<{ type: string; data: any }>) => {
+      state.events.push({
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        ...action.payload,
+      });
+    },
+    clearEvents: (state) => {
+      state.events = [];
+    },
   }
 });
 
@@ -66,7 +96,9 @@ export const {
   updateTokenAnalytics,
   addTokenEvent,
   setRealtimeSubscription,
-  clearTokenData
+  clearTokenData,
+  addEvent,
+  clearEvents
 } = analyticsSlice.actions;
 
 export default analyticsSlice.reducer;
