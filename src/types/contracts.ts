@@ -69,26 +69,32 @@ export interface TokenForgeReadFunctionReturns {
   getAuditLogs: AuditLog[];
 }
 
+export type LogLevel = 'error' | 'warning' | 'info' | 'debug';
+export type LogCategory = 'contract' | 'ownership' | 'alerts' | 'system';
+
+export interface AuditLog {
+  id: string;
+  timestamp: number;
+  level: LogLevel;
+  category: LogCategory;
+  message: string;
+  data?: Record<string, unknown>;
+}
+
 export interface AlertRule {
-  id: number;
+  id: string;
   name: string;
   condition: string;
   enabled: boolean;
-}
-
-export interface AuditLog {
-  id: number;
-  timestamp: number;
-  action: string;
-  data: string;
-  address: Address;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface TokenForgeAdminMethods {
   getAlertRules: () => Promise<AlertRule[]>;
   addAlertRule: (name: string, condition: string) => Promise<ContractTransaction>;
-  toggleAlertRule: (id: number) => Promise<ContractTransaction>;
-  deleteAlertRule: (id: number) => Promise<ContractTransaction>;
+  toggleAlertRule: (id: string) => Promise<ContractTransaction>;
+  deleteAlertRule: (id: string) => Promise<ContractTransaction>;
   getAuditLogs: () => Promise<AuditLog[]>;
   purgeAuditLogs: () => Promise<ContractTransaction>;
   owner: () => Promise<Address>;

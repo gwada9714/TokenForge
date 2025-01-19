@@ -1,14 +1,19 @@
 import React from 'react';
-import { Box, Button, CircularProgress, Alert } from '@mui/material';
+import { Box, Button, CircularProgress, Alert, Typography } from '@mui/material';
 import { useTokenForgeAdmin } from '../../../hooks/useTokenForgeAdmin';
 import { ForgeCard } from '../../../components/common/ForgeCard';
 
 interface ContractControlsProps {
   onAction: (message: string, severity: 'success' | 'error' | 'info') => void;
   onConfirm: (title: string, message: string, action: () => Promise<void>) => void;
+  onError?: (error: string) => void;
 }
 
-export const ContractControls: React.FC<ContractControlsProps> = ({ onAction, onConfirm }) => {
+export const ContractControls: React.FC<ContractControlsProps> = ({ 
+  onAction, 
+  onConfirm,
+  onError 
+}) => {
   const {
     paused,
     pause,
@@ -18,7 +23,7 @@ export const ContractControls: React.FC<ContractControlsProps> = ({ onAction, on
     isPausing,
     isUnpausing,
     isLoading: adminLoading,
-  } = useTokenForgeAdmin();
+  } = useTokenForgeAdmin({ onError });
 
   const handlePauseToggle = () => {
     const action = paused ? unpause : pause;
@@ -33,9 +38,11 @@ export const ContractControls: React.FC<ContractControlsProps> = ({ onAction, on
           await action();
           onAction(`Le contrat a été ${paused ? 'réactivé' : 'mis en pause'} avec succès.`, 'success');
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Une erreur est survenue';
-          onAction(message, 'error');
-          throw error;
+          onError?.(error instanceof Error ? error.message : 'Une erreur est survenue');
+          onAction(
+            `Erreur lors de la ${paused ? 'réactivation' : 'mise en pause'} du contrat`,
+            'error'
+          );
         }
       }
     );

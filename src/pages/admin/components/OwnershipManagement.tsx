@@ -16,9 +16,14 @@ import { ERROR_MESSAGES } from '../../../constants/errors';
 interface OwnershipManagementProps {
   onAction: (message: string, severity: 'success' | 'error' | 'info') => void;
   onConfirm: (title: string, message: string, action: () => Promise<void>) => void;
+  onError?: (error: string) => void;
 }
 
-export const OwnershipManagement: React.FC<OwnershipManagementProps> = ({ onAction, onConfirm }) => {
+export const OwnershipManagement: React.FC<OwnershipManagementProps> = ({ 
+  onAction, 
+  onConfirm,
+  onError 
+}) => {
   const { owner, transferOwnership } = useTokenForgeAdmin();
   const [openTransferDialog, setOpenTransferDialog] = useState(false);
   const [newOwnerAddressInput, setNewOwnerAddressInput] = useState('');
