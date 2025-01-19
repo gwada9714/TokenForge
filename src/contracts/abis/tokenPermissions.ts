@@ -1,0 +1,83 @@
+export const tokenPermissionsAbi = [
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "isAdmin",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "isMinter",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "isPauser",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "grantAdmin",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "grantMinter",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "grantPauser",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "revokeAdmin",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "revokeMinter",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "revokePauser",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "account", type: "address" },
+      { indexed: true, name: "role", type: "bytes32" },
+    ],
+    name: "RoleGranted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "account", type: "address" },
+      { indexed: true, name: "role", type: "bytes32" },
+    ],
+    name: "RoleRevoked",
+    type: "event",
+  },
+] as const;
