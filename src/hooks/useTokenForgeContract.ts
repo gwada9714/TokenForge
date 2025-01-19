@@ -1,22 +1,8 @@
 import { usePublicClient, useWalletClient } from 'wagmi';
-import { getContract, type Address, type PublicClient, type WalletClient, type Transport, type Chain, type Account } from 'viem';
+import { getContract, type Address } from 'viem';
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../config/contract';
 
-type ContractType = ReturnType<typeof getContract<
-  typeof CONTRACT_ABI,
-  PublicClient | WalletClient,
-  Chain | undefined,
-  Account | undefined,
-  Transport
->>;
-
-export const useTokenForgeContract = (): {
-  contract: ContractType;
-  isPaused: () => Promise<boolean>;
-  pause: () => Promise<void>;
-  unpause: () => Promise<void>;
-  transferOwnership: (newOwner: Address) => Promise<void>;
-} => {
+export const useTokenForgeContract = () => {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
@@ -49,30 +35,36 @@ export const useTokenForgeContract = (): {
   };
 
   const pause = async (): Promise<void> => {
-    if (!walletClient) throw new Error('No wallet connected');
-    const { request } = await contract.simulate.pause({
-      account: walletClient.account
+    if (!walletClient || !walletClient.account) throw new Error('No wallet connected');
+    
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'pause',
     });
-    const hash = await walletClient.writeContract(request);
     await publicClient.waitForTransactionReceipt({ hash });
   };
 
   const unpause = async (): Promise<void> => {
-    if (!walletClient) throw new Error('No wallet connected');
-    const { request } = await contract.simulate.unpause({
-      account: walletClient.account
+    if (!walletClient || !walletClient.account) throw new Error('No wallet connected');
+    
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'unpause',
     });
-    const hash = await walletClient.writeContract(request);
     await publicClient.waitForTransactionReceipt({ hash });
   };
 
   const transferOwnership = async (newOwner: Address): Promise<void> => {
-    if (!walletClient) throw new Error('No wallet connected');
-    const { request } = await contract.simulate.transferOwnership({
+    if (!walletClient || !walletClient.account) throw new Error('No wallet connected');
+    
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'transferOwnership',
       args: [newOwner],
-      account: walletClient.account
     });
-    const hash = await walletClient.writeContract(request);
     await publicClient.waitForTransactionReceipt({ hash });
   };
 
@@ -82,5 +74,5 @@ export const useTokenForgeContract = (): {
     pause,
     unpause,
     transferOwnership,
-  };
+  } as const;
 };

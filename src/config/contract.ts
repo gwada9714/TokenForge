@@ -1,59 +1,62 @@
-import { Address } from 'viem';
+import { type Address } from 'viem';
 
 export const CONTRACT_ADDRESS = (process.env.REACT_APP_CONTRACT_ADDRESS || '0x0') as Address;
 
 export const CONTRACT_ABI = [
   {
+    inputs: [],
     name: 'pause',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [],
     outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
+    inputs: [],
     name: 'unpause',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [],
     outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
+    inputs: [],
     name: 'paused',
-    type: 'function',
+    outputs: [{ type: 'bool', name: '' }],
     stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'bool' }],
+    type: 'function',
   },
   {
+    inputs: [],
     name: 'owner',
-    type: 'function',
+    outputs: [{ type: 'address', name: '' }],
     stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'address' }],
-  },
-  {
-    name: 'transferOwnership',
     type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'newOwner', type: 'address' }],
-    outputs: [],
   },
   {
+    inputs: [{ type: 'address', name: 'newOwner' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: false, type: 'address', name: 'account' }],
     name: 'Paused',
     type: 'event',
-    inputs: [{ indexed: false, name: 'account', type: 'address' }],
   },
   {
+    anonymous: false,
+    inputs: [{ indexed: false, type: 'address', name: 'account' }],
     name: 'Unpaused',
     type: 'event',
-    inputs: [{ indexed: false, name: 'account', type: 'address' }],
   },
   {
+    anonymous: false,
+    inputs: [
+      { indexed: true, type: 'address', name: 'previousOwner' },
+      { indexed: true, type: 'address', name: 'newOwner' },
+    ],
     name: 'OwnershipTransferred',
     type: 'event',
-    inputs: [
-      { indexed: true, name: 'previousOwner', type: 'address' },
-      { indexed: true, name: 'newOwner', type: 'address' },
-    ],
   },
 ] as const;
