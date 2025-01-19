@@ -1,56 +1,81 @@
+/// <reference types="vite/client" />
+
 interface ImportMetaEnv {
-  // API Keys
-  VITE_WALLET_CONNECT_PROJECT_ID: string;
-  VITE_ETHERSCAN_API_KEY: string;
-  VITE_MOONPAY_API_KEY: string;
-  VITE_ALCHEMY_API_KEY: string;
+  // Mode d'environnement
+  readonly VITE_ENV: 'development' | 'production';
 
-  // Contract Addresses
-  VITE_TOKEN_FACTORY_ADDRESS: string;
-  VITE_TOKEN_FACTORY_SEPOLIA: string;
-  VITE_TOKEN_FACTORY_MAINNET: string;
-  VITE_TOKEN_FACTORY_BSC: string;
-  VITE_TOKEN_FACTORY_BSC_TESTNET: string;
-  VITE_TOKEN_FACTORY_POLYGON: string;
-  VITE_TOKEN_FACTORY_POLYGON_MUMBAI: string;
-  VITE_TOKEN_FACTORY_AVALANCHE: string;
-  VITE_TOKEN_FACTORY_AVALANCHE_FUJI: string;
+  // Configuration du réseau
+  readonly VITE_LOCAL_CHAIN_ID: string;
+  readonly VITE_SUPPORTED_CHAINS: string;
 
-  // Launchpad Contracts
-  VITE_LAUNCHPAD_CONTRACT_SEPOLIA: string;
-  VITE_LAUNCHPAD_CONTRACT_MAINNET: string;
-  VITE_LAUNCHPAD_CONTRACT_LOCAL: string;
+  // Configuration RPC et Alchemy
+  readonly VITE_MAINNET_RPC_URL: string;
+  readonly VITE_SEPOLIA_RPC_URL: string;
+  readonly VITE_ALCHEMY_API_KEY: string;
 
-  // Liquidity Locker Contracts
-  VITE_LIQUIDITY_LOCKER_SEPOLIA: string;
-  VITE_LIQUIDITY_LOCKER_MAINNET: string;
-  VITE_LIQUIDITY_LOCKER_BSC: string;
-  VITE_LIQUIDITY_LOCKER_BSC_TESTNET: string;
-  VITE_LIQUIDITY_LOCKER_POLYGON: string;
-  VITE_LIQUIDITY_LOCKER_POLYGON_MUMBAI: string;
-  VITE_LIQUIDITY_LOCKER_AVALANCHE: string;
-  VITE_LIQUIDITY_LOCKER_AVALANCHE_FUJI: string;
+  // WalletConnect Configuration
+  readonly VITE_WALLET_CONNECT_PROJECT_ID: string;
 
-  // RPC URLs
-  VITE_SEPOLIA_RPC_URL: string;
-  VITE_MAINNET_RPC_URL: string;
-  VITE_BSC_RPC_URL: string;
-  VITE_BSC_TESTNET_RPC_URL: string;
-  VITE_POLYGON_RPC_URL: string;
-  VITE_POLYGON_MUMBAI_RPC_URL: string;
-  VITE_AVALANCHE_RPC_URL: string;
-  VITE_AVALANCHE_FUJI_RPC_URL: string;
+  // Adresses des contrats - Sepolia
+  readonly VITE_TOKEN_FACTORY_SEPOLIA: string;
+  readonly VITE_PLATFORM_TOKEN_SEPOLIA: string;
+  readonly VITE_TAX_SYSTEM_SEPOLIA: string;
+  readonly VITE_TOKEN_FORGE_PLANS_SEPOLIA: string;
+  readonly VITE_LIQUIDITY_LOCKER_SEPOLIA: string;
+  readonly VITE_STAKING_CONTRACT_SEPOLIA: string;
+  readonly VITE_LAUNCHPAD_CONTRACT_SEPOLIA: string;
 
-  // MoonPay Configuration
-  VITE_MOONPAY_BASE_URL: string;
+  // Adresses des contrats - Mainnet
+  readonly VITE_TOKEN_FACTORY_MAINNET: string;
+  readonly VITE_TOKEN_FORGE_PLANS_MAINNET: string;
+  readonly VITE_PLATFORM_TOKEN_MAINNET: string;
+  readonly VITE_LIQUIDITY_LOCKER_MAINNET: string;
+  readonly VITE_STAKING_CONTRACT_MAINNET: string;
+  readonly VITE_LAUNCHPAD_CONTRACT_MAINNET: string;
 
-  // Other Configuration
-  VITE_DEPLOYMENT_OWNER: string;
-  MODE: 'development' | 'production';
+  // Configuration de l'API
+  readonly VITE_API_URL: string;
+
+  // Configuration du déploiement
+  readonly VITE_DEPLOYMENT_OWNER: `0x${string}`;
+  readonly VITE_DEFAULT_GAS_LIMIT: string;
+  readonly VITE_GAS_PRICE_MULTIPLIER: string;
+  readonly VITE_MAX_PRIORITY_FEE: string;
+  readonly VITE_DEPLOYMENT_TIMEOUT: string;
+  readonly VITE_VERIFICATION_RETRIES: string;
+
+  // Configuration des plans
+  readonly VITE_BASIC_PLAN_PRICE: string;
+  readonly VITE_PREMIUM_PLAN_PRICE: string;
+  readonly VITE_TKN_PAYMENT_DISCOUNT: string;
+
+  // Configuration de sécurité
+  readonly VITE_ALLOW_THIRD_PARTY_COOKIES: string;
 
   [key: string]: string | undefined;
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
+}
+
+declare module '*.svg' {
+  import * as React from 'react';
+  const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  export default ReactComponent;
+}
+
+declare module '*.png' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.jpg' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.json' {
+  const content: any;
+  export default content;
 }
