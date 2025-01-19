@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useAccount, useNetwork, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
+import { useNetwork } from '/useNetwork';
 import { sepolia } from 'wagmi/chains';
 
 interface WalletConnectionState {

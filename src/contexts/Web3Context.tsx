@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAccount, useNetwork } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 

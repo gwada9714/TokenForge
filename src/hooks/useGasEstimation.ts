@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNetwork } from 'wagmi';
+import { useNetwork } from '/useNetwork';
 import { GasEstimationService, GasEstimate, TokenDeploymentEstimate } from '@/core/services/GasEstimationService';
 import { NetworkConfig } from '@/config/networks';
 import { getDefaultNetworkConfig } from '@/config/networks';

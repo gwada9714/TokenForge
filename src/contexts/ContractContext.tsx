@@ -1,5 +1,6 @@
 import { createContext, useContext, ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
-import { useNetwork, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { getContractAddress } from '../config/contracts';
 import type { Address } from 'viem';
 

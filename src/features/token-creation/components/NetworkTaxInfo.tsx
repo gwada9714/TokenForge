@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useNetworkTaxConfig } from '@/hooks/useNetworkTaxConfig';
-import { useNetwork } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
 import { ethers } from 'ethers';
 
 export const NetworkTaxInfo: React.FC = () => {
