@@ -28,35 +28,35 @@ export const useLaunchpad = (poolId?: number) => {
   const { address } = useAccount();
   const { chain } = useNetwork();
 
-  const { data: poolInfo } = useContractRead({
+  const { data: poolInfo, isError: poolError } = useContractRead({
     address: LAUNCHPAD_ADDRESS,
     abi: LAUNCHPAD_ABI,
     functionName: 'getPoolInfo',
     args: poolId !== undefined ? [BigInt(poolId)] : undefined,
-    enabled: !!poolId,
+    watch: true,
   });
 
-  const { data: userContributionData } = useContractRead({
+  const { data: userContributionData, isError: userContributionError } = useContractRead({
     address: LAUNCHPAD_ADDRESS,
     abi: LAUNCHPAD_ABI,
     functionName: 'getUserContribution',
     args: poolId !== undefined && address ? [BigInt(poolId), address as `0x${string}`] : undefined,
-    enabled: !!poolId && !!address,
+    watch: true,
   });
 
-  const { write: createPool, isLoading: isCreatingPool } = useContractWrite({
+  const { writeAsync: createPool, isLoading: isCreatingPool } = useContractWrite({
     address: LAUNCHPAD_ADDRESS,
     abi: LAUNCHPAD_ABI,
-    functionName: 'createPool'
+    functionName: 'createPool',
   });
 
-  const { write: contribute, isLoading: isContributing } = useContractWrite({
+  const { writeAsync: contribute, isLoading: isContributing } = useContractWrite({
     address: LAUNCHPAD_ADDRESS,
     abi: LAUNCHPAD_ABI,
     functionName: 'contribute'
   });
 
-  const { write: claimTokens, isLoading: isClaiming } = useContractWrite({
+  const { writeAsync: claimTokens, isLoading: isClaiming } = useContractWrite({
     address: LAUNCHPAD_ADDRESS,
     abi: LAUNCHPAD_ABI,
     functionName: 'claimTokens'

@@ -63,19 +63,19 @@ export const useStaking = (tokenAddress: Address) => {
     functionName: 'getStakingStats',
   });
 
-  const { write: stake, isLoading: isStaking } = useContractWrite({
+  const { writeAsync: stake, isLoading: isStaking } = useContractWrite({
     abi: TKNTokenABI,
     functionName: 'stake',
     address: tokenAddress,
   });
 
-  const { write: unstake, isLoading: isUnstaking } = useContractWrite({
+  const { writeAsync: unstake, isLoading: isUnstaking } = useContractWrite({
     abi: TKNTokenABI,
     functionName: 'unstake',
     address: tokenAddress,
   });
 
-  const { write: claim, isLoading: isClaiming } = useContractWrite({
+  const { writeAsync: claim, isLoading: isClaiming } = useContractWrite({
     abi: TKNTokenABI,
     functionName: 'claimRewards',
     address: tokenAddress,
@@ -140,7 +140,7 @@ export const useStaking = (tokenAddress: Address) => {
     eventName: 'Staked',
     onLogs: (logs) => {
       logs.forEach((log) => {
-        const [user, amount] = log.args as [Address, bigint];
+        const { user, amount } = log.args as { user: string; amount: bigint };
         if (user === address) {
           setStakingHistory(prev => [...prev, {
             timestamp: Date.now(),
@@ -161,7 +161,7 @@ export const useStaking = (tokenAddress: Address) => {
     eventName: 'Unstaked',
     onLogs: (logs) => {
       logs.forEach((log) => {
-        const [user, amount] = log.args as [Address, bigint];
+        const { user, amount } = log.args as { user: string; amount: bigint };
         if (user === address) {
           setStakingHistory(prev => [...prev, {
             timestamp: Date.now(),
@@ -181,7 +181,7 @@ export const useStaking = (tokenAddress: Address) => {
     eventName: 'RewardsClaimed',
     onLogs: (logs) => {
       logs.forEach((log) => {
-        const [user, amount] = log.args as [Address, bigint];
+        const { user, amount } = log.args as { user: string; amount: bigint };
         if (user === address) {
           setStakingHistory(prev => [...prev, {
             timestamp: Date.now(),
@@ -200,7 +200,7 @@ export const useStaking = (tokenAddress: Address) => {
     eventName: 'RewardsUpdated',
     onLogs: (logs) => {
       logs.forEach((log) => {
-        const [user, newRewards] = log.args as [Address, bigint];
+        const { user, newRewards } = log.args as { user: string; newRewards: bigint };
         if (user === address) {
           setRewardsHistory(prev => [...prev, {
             timestamp: Date.now(),
