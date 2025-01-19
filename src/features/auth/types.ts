@@ -1,0 +1,46 @@
+import { User } from 'firebase/auth';
+import { type WalletClient } from '@wagmi/core';
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  loading: boolean;
+  error: AuthError | null;
+}
+
+export interface WalletState {
+  isConnected: boolean;
+  address: string | null;
+  chainId: number | null;
+  isCorrectNetwork: boolean;
+  walletClient: WalletClient | null;
+}
+
+export interface TokenForgeAuthState extends AuthState, WalletState {
+  isAdmin: boolean;
+  canCreateToken: boolean;
+  canUseServices: boolean;
+}
+
+export interface AuthError extends Error {
+  code: string;
+  details?: Record<string, unknown>;
+}
+
+export interface AuthAction {
+  type: string;
+  payload?: any;
+  error?: AuthError;
+}
+
+// Constants pour les actions
+export const AUTH_ACTIONS = {
+  LOGIN_START: 'auth/loginStart',
+  LOGIN_SUCCESS: 'auth/loginSuccess',
+  LOGIN_FAILURE: 'auth/loginFailure',
+  LOGOUT: 'auth/logout',
+  WALLET_CONNECT: 'auth/walletConnect',
+  WALLET_DISCONNECT: 'auth/walletDisconnect',
+  NETWORK_CHANGE: 'auth/networkChange',
+  UPDATE_USER: 'auth/updateUser',
+} as const;
