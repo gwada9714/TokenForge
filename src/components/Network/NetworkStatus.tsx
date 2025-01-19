@@ -2,96 +2,78 @@ import React, { useState } from 'react';
 import { Box, Chip, IconButton, Tooltip } from '@mui/material';
 import { SwapHoriz as SwapIcon } from '@mui/icons-material';
 import { useNetworkManagement } from '../../hooks/useNetworkManagement';
-import { SUPPORTED_NETWORKS } from '../../config/networks';
+import { Chain } from 'viem';
 import { NetworkAlertDialog } from './NetworkAlertDialog';
 
 interface NetworkStatusProps {
-  preferredNetwork?: typeof SUPPORTED_NETWORKS.SEPOLIA | typeof SUPPORTED_NETWORKS.MAINNET;
+  preferredChain: Chain;
 }
 
 export const NetworkStatus: React.FC<NetworkStatusProps> = ({ 
-  preferredNetwork = SUPPORTED_NETWORKS.SEPOLIA 
+  preferredChain
 }) => {
   const {
-    isSupported,
-    isSwitching,
+    isCorrectNetwork,
     currentChainId,
     switchToNetwork,
+    isSupported,
+    isSwitching,
     supportedNetworks
-  } = useNetworkManagement(preferredNetwork);
+  } = useNetworkManagement(preferredChain);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [targetNetwork, setTargetNetwork] = useState<typeof SUPPORTED_NETWORKS.SEPOLIA | typeof SUPPORTED_NETWORKS.MAINNET>(
-    preferredNetwork
-  );
+
+  const handleNetworkSwitch = () => {
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
+  const handleNetworkSelect = async (chain: Chain) => {
+    await switchToNetwork(chain);
+    setDialogOpen(false);
+  };
 
   // Obtenir le nom du réseau
   const getNetworkName = (chainId?: number) => {
     if (!chainId) return 'Non connecté';
-    switch (chainId) {
-      case supportedNetworks.MAINNET:
-        return 'Ethereum Mainnet';
-      case supportedNetworks.SEPOLIA:
-        return 'Sepolia Testnet';
-      default:
-        return 'Réseau non supporté';
-    }
-  };
-
-  // Obtenir la couleur du statut
-  const getStatusColor = () => {
-    if (isSwitching) return 'warning';
-    if (!isSupported) return 'error';
-    return 'success';
-  };
-
-  // Gérer le changement de réseau
-  const handleNetworkSwitch = () => {
-    if (!currentChainId || isSwitching) return;
-    
-    // Si on est sur Mainnet, passer sur Sepolia et vice versa
-    const newTargetNetwork = currentChainId === supportedNetworks.MAINNET 
-      ? supportedNetworks.SEPOLIA 
-      : supportedNetworks.MAINNET;
-    
-    setTargetNetwork(newTargetNetwork);
-    setDialogOpen(true);
-  };
-
-  // Gérer la confirmation du changement de réseau
-  const handleConfirmNetworkSwitch = () => {
-    switchToNetwork(targetNetwork);
-    setDialogOpen(false);
+    const network = supportedNetworks.find(n => n.id === chainId);
+    return network?.name || 'Réseau inconnu';
   };
 
   return (
-    <>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Tooltip title={isSupported ? 'Réseau actuel' : 'Réseau non supporté'}>
         <Chip
           label={getNetworkName(currentChainId)}
-          color={getStatusColor()}
+          color={isCorrectNetwork ? 'success' : 'error'}
+          variant="outlined"
           size="small"
-          variant={isSupported ? 'filled' : 'outlined'}
         />
+      </Tooltip>
+      
+      {!isCorrectNetwork && (
         <Tooltip title="Changer de réseau">
           <IconButton
             size="small"
             onClick={handleNetworkSwitch}
-            disabled={isSwitching || !currentChainId}
+            disabled={isSwitching}
           >
             <SwapIcon />
           </IconButton>
         </Tooltip>
-      </Box>
+      )}
 
       <NetworkAlertDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onConfirm={handleConfirmNetworkSwitch}
-        targetNetwork={targetNetwork}
-        isLoading={isSwitching}
+        onClose={handleDialogClose}
+        onNetworkSelect={handleNetworkSelect}
+        networks={supportedNetworks}
+        currentNetwork={currentChainId}
       />
-    </>
+    </Box>
   );
 };
 

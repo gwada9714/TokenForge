@@ -6,57 +6,56 @@ import {
   DialogContentText,
   DialogActions,
   Button,
-  CircularProgress
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText
 } from '@mui/material';
-import { SUPPORTED_NETWORKS } from '../../config/networks';
+import { Chain } from 'viem';
 
 interface NetworkAlertDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
-  targetNetwork: typeof SUPPORTED_NETWORKS.MAINNET | typeof SUPPORTED_NETWORKS.SEPOLIA;
-  isLoading: boolean;
+  onNetworkSelect: (chain: Chain) => void;
+  networks: Chain[];
+  currentNetwork?: number;
 }
 
 export const NetworkAlertDialog: React.FC<NetworkAlertDialogProps> = ({
   open,
   onClose,
-  onConfirm,
-  targetNetwork,
-  isLoading
+  onNetworkSelect,
+  networks,
+  currentNetwork
 }) => {
-  const networkName = targetNetwork === SUPPORTED_NETWORKS.SEPOLIA ? 'Sepolia' : 'Mainnet';
-
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      aria-labelledby="network-alert-dialog-title"
-      aria-describedby="network-alert-dialog-description"
-    >
-      <DialogTitle id="network-alert-dialog-title">
-        Changement de réseau requis
-      </DialogTitle>
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle>Changer de réseau</DialogTitle>
       <DialogContent>
-        <DialogContentText id="network-alert-dialog-description">
-          Pour continuer, vous devez passer sur le réseau {networkName}.
-          Voulez-vous changer de réseau maintenant ?
+        <DialogContentText>
+          Veuillez sélectionner le réseau sur lequel vous souhaitez basculer :
         </DialogContentText>
+        <List>
+          {networks.map((network) => (
+            <ListItem key={network.id} disablePadding>
+              <ListItemButton 
+                onClick={() => onNetworkSelect(network)}
+                selected={currentNetwork === network.id}
+              >
+                <ListItemText 
+                  primary={network.name}
+                  secondary={currentNetwork === network.id ? '(Réseau actuel)' : ''}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="inherit" disabled={isLoading}>
-          Annuler
-        </Button>
-        <Button 
-          onClick={onConfirm} 
-          variant="contained" 
-          color="primary"
-          disabled={isLoading}
-          startIcon={isLoading ? <CircularProgress size={20} /> : null}
-        >
-          {isLoading ? 'Changement en cours...' : 'Changer de réseau'}
-        </Button>
+        <Button onClick={onClose}>Annuler</Button>
       </DialogActions>
     </Dialog>
   );
 };
+
+export default NetworkAlertDialog;

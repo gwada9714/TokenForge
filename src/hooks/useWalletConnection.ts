@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
-import { useNetwork } from '/useNetwork';
+import { useAccount, useDisconnect, useChainId } from 'wagmi';
+import { useNetworkManagement } from './useNetworkManagement';
 import { sepolia } from 'wagmi/chains';
 
 interface WalletConnectionState {
@@ -16,7 +16,8 @@ interface WalletConnectionState {
 
 export const useWalletConnection = () => {
   const { address, isConnected } = useAccount();
-  const { chain } = useNetwork();
+  const chainId = useChainId();
+  const { isCorrectNetwork } = useNetworkManagement(sepolia);
   const { disconnect: wagmiDisconnect } = useDisconnect();
 
   const [state, setState] = useState<WalletConnectionState>({
@@ -30,25 +31,42 @@ export const useWalletConnection = () => {
     errorMessage: null
   });
 
-  // Vérifier le réseau
-  useEffect(() => {
-    if (chain) {
-      setState(prev => ({
-        ...prev,
-        chainId: chain.id,
-        isCorrectNetwork: chain.id === sepolia.id
-      }));
-    }
-  }, [chain]);
-
-  // Mettre à jour l'état de la connexion
-  useEffect(() => {
+  const disconnect = useCallback(() => {
+    wagmiDisconnect();
     setState(prev => ({
       ...prev,
-      isConnected,
-      address
+      isConnected: false,
+      isAdmin: false,
+      address: undefined,
+      chainId: undefined,
+      hasError: false,
+      errorMessage: null
     }));
-  }, [isConnected, address]);
+  }, [wagmiDisconnect]);
+
+  useEffect(() => {
+    if (!isConnected) {
+      setState(prev => ({
+        ...prev,
+        isConnected: false,
+        isAdmin: false,
+        address: undefined,
+        chainId: undefined
+      }));
+      return;
+    }
+
+    setState(prev => ({
+      ...prev,
+      isInitialized: true,
+      isConnected,
+      isCorrectNetwork,
+      address,
+      chainId,
+      hasError: false,
+      errorMessage: null
+    }));
+  }, [isConnected, isCorrectNetwork, address, chainId]);
 
   // Vérifier le statut admin
   useEffect(() => {
@@ -80,28 +98,6 @@ export const useWalletConnection = () => {
 
     checkAdminStatus();
   }, [address, isConnected]);
-
-  // Initialisation
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setState(prev => ({
-        ...prev,
-        isInitialized: true
-      }));
-    }
-  }, []);
-
-  const disconnect = useCallback(() => {
-    wagmiDisconnect();
-    setState(prev => ({
-      ...prev,
-      isConnected: false,
-      isAdmin: false,
-      address: undefined,
-      hasError: false,
-      errorMessage: null
-    }));
-  }, [wagmiDisconnect]);
 
   return {
     ...state,
