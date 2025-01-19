@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useContractWrite, useContractRead, useAccount, useTransaction } from 'wagmi';
 import { useNetwork } from '../hooks/useNetwork';
-import { Address } from 'viem';
+import { type Address } from 'viem';
 import { getContractAddress } from '../config/contracts';
 import { launchpadABI } from '../contracts/abis';
 
@@ -16,8 +16,6 @@ interface PoolInfo {
   finalized: boolean;
   cancelled: boolean;
 }
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export const useLaunchpad = (poolId?: number) => {
   const [error, setError] = useState<string | null>(null);
@@ -41,37 +39,34 @@ export const useLaunchpad = (poolId?: number) => {
     args: poolId !== undefined && address ? [BigInt(poolId), address as Address] : undefined,
   });
 
-  const { data: createPoolData, writeAsync: createPool } = useContractWrite({
+  const { data: createPoolResult, writeContract: createPool } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'createPool',
-    chainId: chain?.id,
   });
 
-  const { data: investData, writeAsync: invest } = useContractWrite({
+  const { data: investResult, writeContract: invest } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'invest',
-    chainId: chain?.id,
   });
 
-  const { data: claimData, writeAsync: claim } = useContractWrite({
+  const { data: claimResult, writeContract: claim } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'claim',
-    chainId: chain?.id,
   });
 
   const { isLoading: isCreating } = useTransaction({
-    hash: createPoolData?.hash,
+    hash: createPoolResult?.hash,
   });
 
   const { isLoading: isInvesting } = useTransaction({
-    hash: investData?.hash,
+    hash: investResult?.hash,
   });
 
   const { isLoading: isClaiming } = useTransaction({
-    hash: claimData?.hash,
+    hash: claimResult?.hash,
   });
 
   const handleCreatePool = useCallback(async (
@@ -87,7 +82,7 @@ export const useLaunchpad = (poolId?: number) => {
     }
 
     try {
-      const tx = await createPool({
+      const result = await createPool({
         args: [
           token,
           BigInt(tokenPrice),
@@ -97,7 +92,7 @@ export const useLaunchpad = (poolId?: number) => {
           BigInt(endTime)
         ],
       });
-      return tx;
+      return result;
     } catch (error) {
       console.error('Error creating pool:', error);
       throw error;
@@ -110,10 +105,10 @@ export const useLaunchpad = (poolId?: number) => {
     }
 
     try {
-      const tx = await invest({
+      const result = await invest({
         args: [BigInt(amount)],
       });
-      return tx;
+      return result;
     } catch (error) {
       console.error('Error investing:', error);
       throw error;
@@ -126,8 +121,8 @@ export const useLaunchpad = (poolId?: number) => {
     }
 
     try {
-      const tx = await claim();
-      return tx;
+      const result = await claim();
+      return result;
     } catch (error) {
       console.error('Error claiming:', error);
       throw error;

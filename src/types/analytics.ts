@@ -1,29 +1,20 @@
+import { TokenContract } from '@/providers/contract/ContractProvider';
+
 export interface TokenMetrics {
-  address: string;
-  network: string;
-  holders: number;
+  address: string | null;
+  chainId: number;
+  name: string | null;
+  symbol: string | null;
+  decimals: number;
   totalSupply: string;
-  circulatingSupply: string;
-  marketCap: string;
-  price: string;
-  volume24h: string;
+  holders: number;
   transactions: {
     total: number;
     buy: number;
     sell: number;
     transfer: number;
   };
-  liquidity: {
-    total: string;
-    pairs: Array<{
-      dex: string;
-      pair: string;
-      liquidity: string;
-      price: string;
-      volume24h: string;
-    }>;
-  };
-  timestamp: Date;
+  volume: string;
 }
 
 export interface TokenEvent {
@@ -61,4 +52,54 @@ export interface TokenAnalytics {
     }>;
   };
   events: TokenEvent[];
+}
+
+export type ChartPeriod = 'daily' | 'weekly' | 'monthly';
+
+export interface ChartDataPoint {
+  timestamp: Date;
+  value: number;
+  label?: string;
+}
+
+export interface ChartDataset {
+  label: string;
+  data: number[];
+  backgroundColor?: string | string[];
+  borderColor?: string | string[];
+  borderWidth?: number;
+}
+
+export interface ChartData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
+
+export interface ChartOptions {
+  responsive?: boolean;
+  maintainAspectRatio?: boolean;
+  plugins?: {
+    legend?: {
+      position?: 'top' | 'bottom' | 'left' | 'right';
+      display?: boolean;
+    };
+    tooltip?: {
+      enabled?: boolean;
+    };
+  };
+  scales?: {
+    y?: {
+      beginAtZero?: boolean;
+      ticks?: {
+        stepSize?: number;
+      };
+    };
+  };
+}
+
+export interface TokenChartProps {
+  token?: TokenContract;
+  period: ChartPeriod;
+  height?: number;
+  className?: string;
 }

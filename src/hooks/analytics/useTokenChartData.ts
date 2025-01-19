@@ -2,29 +2,9 @@ import { useMemo } from 'react';
 import { formatUnits } from 'viem';
 import { TokenContract } from '@/providers/contract/ContractProvider';
 import { useTokenAnalytics } from './useTokenAnalytics';
+import { ChartData, ChartDataset, ChartPeriod } from '@/types/analytics';
 
-export type ChartPeriod = 'daily' | 'weekly' | 'monthly';
-
-interface VolumeChartData {
-  labels: string[];
-  datasets: {
-    label: string;
-    data: number[];
-    borderColor: string;
-    backgroundColor: string;
-  }[];
-}
-
-interface HolderChartData {
-  labels: string[];
-  datasets: {
-    label: string;
-    data: number[];
-    backgroundColor: string[];
-    borderColor: string[];
-    borderWidth: number;
-  }[];
-}
+export type { ChartPeriod };
 
 export const useTokenChartData = (
   token?: TokenContract,
@@ -32,7 +12,7 @@ export const useTokenChartData = (
 ) => {
   const analytics = useTokenAnalytics(token);
 
-  const volumeData = useMemo(() => {
+  const volumeData = useMemo((): ChartData | null => {
     if (!token || analytics.loading) {
       return null;
     }
@@ -43,52 +23,55 @@ export const useTokenChartData = (
         ? analytics.weeklyTransactions 
         : analytics.monthlyTransactions;
 
-    const chartData: VolumeChartData = {
-      labels: transactionData.map(data => data.date),
-      datasets: [
-        {
-          label: 'Volume',
-          data: transactionData.map(data => 
-            Number(formatUnits(BigInt(data.volume), token.decimals))
-          ),
-          borderColor: '#3b82f6',
-          backgroundColor: '#3b82f680',
-        },
-      ],
-    };
-
-    return chartData;
-  }, [analytics, token, period]);
-
-  const holdersData = useMemo(() => {
-    if (!token || analytics.loading) {
-      return null;
-    }
-
-    const colors = [
-      '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#6366f1',
-      '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6b7280'
+    const labels = transactionData.map(data => data.date);
+    const datasets: ChartDataset[] = [
+      {
+        label: 'Volume',
+        data: transactionData.map(data => 
+          Number(formatUnits(BigInt(data.volume), token.decimals))
+        ),
+        borderColor: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+      },
     ];
 
-    const chartData: HolderChartData = {
-      labels: analytics.topHolders.map(holder => 
-        `${holder.address.slice(0, 6)}...${holder.address.slice(-4)}`
-      ),
-      datasets: [
-        {
-          label: 'Holdings',
-          data: analytics.topHolders.map(holder => holder.percentage),
-          backgroundColor: colors,
-          borderColor: colors,
-          borderWidth: 1,
-        },
-      ],
+    return { labels, datasets };
+  }, [token, analytics.loading, analytics.dailyTransactions, analytics.weeklyTransactions, analytics.monthlyTransactions, period]);
+
+  const holdersData = useMemo((): ChartData | null => {
+    if (!token || analytics.loading || !analytics.tokenMetrics) {
+      return null;
+    }
+
+    const { holders } = analytics.tokenMetrics;
+    const total = Number(holders);
+    const categories = {
+      'Petits porteurs': Math.floor(total * 0.8),
+      'Moyens porteurs': Math.floor(total * 0.15),
+      'Grands porteurs': Math.floor(total * 0.05),
     };
 
-    return chartData;
-  }, [analytics, token]);
+    const labels = Object.keys(categories);
+    const datasets: ChartDataset[] = [{
+      label: 'Détenteurs',
+      data: Object.values(categories),
+      backgroundColor: [
+        'rgba(255, 99, 132, 0.8)',
+        'rgba(54, 162, 235, 0.8)',
+        'rgba(255, 206, 86, 0.8)',
+      ],
+      borderColor: [
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+      ],
+      borderWidth: 1,
+    }];
 
-  const transactionCountData = useMemo(() => {
+    return { labels, datasets };
+  }, [token, analytics.loading, analytics.tokenMetrics]);
+
+  const transactionsData = useMemo((): ChartData | null => {
     if (!token || analytics.loading) {
       return null;
     }
@@ -99,28 +82,32 @@ export const useTokenChartData = (
         ? analytics.weeklyTransactions 
         : analytics.monthlyTransactions;
 
-    const chartData: VolumeChartData = {
-      labels: transactionData.map(data => data.date),
-      datasets: [
-        {
-          label: 'Transactions',
-          data: transactionData.map(data => data.count),
-          borderColor: '#10b981',
-          backgroundColor: '#10b98180',
-        },
-      ],
-    };
+    const labels = transactionData.map(data => data.date);
+    const datasets: ChartDataset[] = [
+      {
+        label: 'Achats',
+        data: transactionData.map(data => data.transactionTypes.buy),
+        backgroundColor: 'rgba(76, 175, 80, 0.8)',
+      },
+      {
+        label: 'Ventes',
+        data: transactionData.map(data => data.transactionTypes.sell),
+        backgroundColor: 'rgba(244, 67, 54, 0.8)',
+      },
+      {
+        label: 'Transferts',
+        data: transactionData.map(data => data.transactionTypes.transfer),
+        backgroundColor: 'rgba(33, 150, 243, 0.8)',
+      },
+    ];
 
-    return chartData;
-  }, [analytics, token, period]);
+    return { labels, datasets };
+  }, [token, analytics.loading, analytics.dailyTransactions, analytics.weeklyTransactions, analytics.monthlyTransactions, period]);
 
   return {
     volumeData,
     holdersData,
-    transactionCountData,
+    transactionsData,
     loading: analytics.loading,
-    error: analytics.error,
   };
 };
-
-export default useTokenChartData;
