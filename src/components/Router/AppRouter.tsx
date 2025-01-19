@@ -21,8 +21,8 @@ const RouteElement: React.FC<{ route: RouteConfig }> = ({ route }) => {
 
   if (route.protected) {
     element = (
-      <ProtectedRoute requireAdmin={route.requireAdmin}>
-        {element}
+      <ProtectedRoute requireAdmin={route.requireAdmin ?? false}>
+        <>{element}</>
       </ProtectedRoute>
     );
   }
