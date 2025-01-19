@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useNetwork } from 'wagmi';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 interface Web3ContextType {
   isConnected: boolean;
   isInitialized: boolean;
+  isAdmin: boolean;
   address: string | undefined;
   chainId: number | undefined;
   isCorrectNetwork: boolean;
@@ -25,57 +26,93 @@ interface Web3ContextType {
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
 
 export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, connector } = useAccount();
+  const { chain } = useNetwork();
   const { 
     isInitialized,
     hasError,
     errorMessage,
-    isConnecting,
-    isReconnecting
+    connect
   } = useWalletConnection();
+  const networkStatus = useNetworkStatus();
 
-  const {
-    isSupported,
-    isMainnet,
-    isTestnet,
-    currentNetwork,
-    isSwitching,
-    error: networkError,
-    switchToTestnet,
-    switchToMainnet
-  } = useNetworkStatus();
-
-  const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Un réseau est considéré comme correct s'il est supporté
-    // et qu'il s'agit soit du mainnet soit de Sepolia
-    setIsCorrectNetwork(
-      isSupported && 
-      (currentNetwork === 'Ethereum' || currentNetwork === 'Sepolia')
-    );
-  }, [isSupported, currentNetwork]);
+    const initializeWeb3 = async () => {
+      try {
+        setIsLoading(true);
+        if (!isConnected && connector) {
+          await connect();
+        }
+      } catch (err) {
+        console.error('Erreur lors de l\'initialisation de Web3:', err);
+        setError(err instanceof Error ? err : new Error('Erreur inconnue'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const value = {
+    initializeWeb3();
+  }, [isConnected, connector, connect]);
+
+  // Réinitialiser l'erreur quand le réseau change
+  useEffect(() => {
+    if (chain && error) {
+      setError(null);
+    }
+  }, [chain, error]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (isConnected && address) {
+        try {
+          // Pour l'instant, on considère une adresse spécifique comme admin
+          // À remplacer par une vraie vérification via le contrat
+          const adminAddresses = [
+            "0x1234567890123456789012345678901234567890", // Exemple d'adresse admin
+            // Ajoutez d'autres adresses admin si nécessaire
+          ];
+          setIsAdmin(adminAddresses.includes(address.toLowerCase()));
+        } catch (error) {
+          console.error("Erreur lors de la vérification du statut admin:", error);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [address, isConnected]);
+
+  const value: Web3ContextType = {
     isConnected,
     isInitialized,
+    isAdmin,
     address,
-    chainId: undefined, // Sera défini par le réseau actuel
-    isCorrectNetwork,
-    isLoading: isConnecting || isReconnecting || isSwitching,
-    error: hasError ? new Error(errorMessage || networkError || 'Unknown error') : null,
+    chainId: chain?.id,
+    isCorrectNetwork: networkStatus.isSupported,
+    isLoading: isLoading || networkStatus.isSwitching,
+    error: error || (hasError ? new Error(errorMessage || 'Erreur de connexion') : null),
     network: {
-      isSupported,
-      isMainnet,
-      isTestnet,
-      currentNetwork,
-      isSwitching,
-      switchToTestnet,
-      switchToMainnet
-    }
+      isSupported: networkStatus.isSupported,
+      isMainnet: networkStatus.isMainnet,
+      isTestnet: networkStatus.isTestnet,
+      currentNetwork: chain?.name,
+      isSwitching: networkStatus.isSwitching,
+      switchToTestnet: networkStatus.switchToTestnet,
+      switchToMainnet: networkStatus.switchToMainnet,
+    },
   };
 
-  return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
+  return (
+    <Web3Context.Provider value={value}>
+      {children}
+    </Web3Context.Provider>
+  );
 };
 
 export const useWeb3 = () => {

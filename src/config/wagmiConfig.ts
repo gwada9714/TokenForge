@@ -16,23 +16,18 @@ const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
 if (!alchemyKey) throw new Error('VITE_ALCHEMY_API_KEY is not defined');
 if (!projectId) throw new Error('VITE_WALLET_CONNECT_PROJECT_ID is not defined');
 
-// Configuration des fournisseurs avec retries optimisés
+// Configuration des chaînes
 export const { chains, publicClient, webSocketPublicClient } = configureChains(
   [sepolia, mainnet],
   [
     alchemyProvider({ 
       apiKey: alchemyKey,
     }),
-    publicProvider(),
+    publicProvider(), // Fallback sur le provider public
   ],
-  {
-    batch: { multicall: true },
-    retryCount: 3,
-    pollingInterval: 4_000,
-  }
 );
 
-// Configuration des portefeuilles disponibles
+// Configuration des portefeuilles
 const connectors = connectorsForWallets([
   {
     groupName: 'Recommandé',
@@ -40,13 +35,15 @@ const connectors = connectorsForWallets([
       metaMaskWallet({ 
         projectId, 
         chains,
+        shimDisconnect: true
       }),
       injectedWallet({ 
         chains,
+        shimDisconnect: true
       }),
       walletConnectWallet({ 
         projectId, 
-        chains,
+        chains
       }),
     ],
   },
