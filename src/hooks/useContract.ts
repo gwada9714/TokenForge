@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useAccount, useNetwork, useProvider } from 'wagmi';
-import { Contract } from 'ethers';
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
+import { BrowserProvider, Contract } from 'ethers';
 
 export type ContractType = 'marketplace' | 'token' | 'staking';
 
@@ -9,12 +9,12 @@ export const useContract = (contractType: ContractType) => {
   const [error, setError] = useState<string | null>(null);
   
   const { address } = useAccount();
-  const { chain } = useNetwork();
-  const provider = useProvider();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
   useEffect(() => {
     const initContract = async () => {
-      if (!address || !chain || !provider) {
+      if (!address || !publicClient || !walletClient) {
         setContract(null);
         return;
       }
@@ -25,10 +25,13 @@ export const useContract = (contractType: ContractType) => {
         const contractAddress = ''; // À remplacer par l'adresse réelle
         const contractABI = []; // À remplacer par l'ABI réel
         
+        const provider = new BrowserProvider(publicClient as any);
+        const signer = await provider.getSigner(address);
+        
         const newContract = new Contract(
           contractAddress,
           contractABI,
-          provider
+          signer
         );
 
         setContract(newContract);
@@ -40,7 +43,7 @@ export const useContract = (contractType: ContractType) => {
     };
 
     initContract();
-  }, [address, chain, provider, contractType]);
+  }, [address, publicClient, walletClient, contractType]);
 
   return { contract, error };
 };

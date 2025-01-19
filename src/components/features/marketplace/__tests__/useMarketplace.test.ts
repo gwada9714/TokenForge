@@ -1,9 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
 import { useMarketplace } from '../hooks/useMarketplace';
 import { useContract } from '../../../../hooks/useContract';
+import { Contract } from 'ethers';
 
-// Mock du hook useContract
 jest.mock('../../../../hooks/useContract');
+jest.mock('ethers');
 
 const mockUseContract = useContract as jest.MockedFunction<typeof useContract>;
 
@@ -12,7 +13,26 @@ describe('useMarketplace', () => {
     getItems: jest.fn(),
     getStats: jest.fn(),
     createItem: jest.fn(),
-  };
+    interface: {},
+    provider: {},
+    signer: {},
+    callStatic: {},
+    estimateGas: {},
+    populateTransaction: {},
+    filters: {},
+    queryFilter: jest.fn(),
+    listenerCount: jest.fn(),
+    listeners: jest.fn(),
+    removeAllListeners: jest.fn(),
+    off: jest.fn(),
+    on: jest.fn(),
+    once: jest.fn(),
+    emit: jest.fn(),
+    connect: jest.fn(),
+    attach: jest.fn(),
+    deployed: jest.fn(),
+    _deployed: jest.fn(),
+  } as unknown as Contract;
 
   beforeEach(() => {
     mockUseContract.mockReturnValue({
