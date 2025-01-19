@@ -53,3 +53,5 @@ export const OwnershipManagement: React.FC = () => {
     </Grid>
   );
 };
+
+export default OwnershipManagement;

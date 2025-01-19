@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '@/config/firebase';
+import { auth } from '../../config/firebase';
 import { Box, Button, TextField, Typography, Alert, Link, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -121,3 +121,5 @@ export const LoginForm: React.FC = () => {
     </Box>
   );
 };
+
+export default LoginForm;

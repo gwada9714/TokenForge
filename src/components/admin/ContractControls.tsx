@@ -65,3 +65,5 @@ export const ContractControls: React.FC = () => {
     </Grid>
   );
 };
+
+export default ContractControls;

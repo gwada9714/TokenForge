@@ -169,3 +169,5 @@ export const AuditLogs: React.FC = () => {
     </Card>
   );
 };
+
+export default AuditLogs;

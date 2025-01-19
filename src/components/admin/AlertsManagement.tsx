@@ -95,14 +95,14 @@ export const AlertsManagement: React.FC = () => {
     }
   }, [newRuleName, newRuleCondition, addRule]);
 
-  const handleToggleRule = useCallback(async (id: bigint) => {
+  const handleToggleRule = useCallback(async (id: number) => {
     if (!toggleRule) return;
 
     try {
       monitor.info('AlertsManagement', 'Toggling alert rule', { id: id.toString() });
       
       const tx = await toggleRule({
-        args: [id],
+        args: [BigInt(id)],
       });
       
       setPendingTx(tx.hash);
@@ -113,14 +113,14 @@ export const AlertsManagement: React.FC = () => {
     }
   }, [toggleRule]);
 
-  const handleDeleteRule = useCallback(async (id: bigint) => {
+  const handleDeleteRule = useCallback(async (id: number) => {
     if (!deleteRule) return;
 
     try {
       monitor.info('AlertsManagement', 'Deleting alert rule', { id: id.toString() });
       
       const tx = await deleteRule({
-        args: [id],
+        args: [BigInt(id)],
       });
       
       setPendingTx(tx.hash);
@@ -170,7 +170,7 @@ export const AlertsManagement: React.FC = () => {
         </Box>
 
         <List>
-          {alertRules.map((rule) => (
+          {alertRules.map((rule, index) => (
             <ListItem key={rule.id.toString()}>
               <ListItemText
                 primary={rule.name}
@@ -179,14 +179,14 @@ export const AlertsManagement: React.FC = () => {
               <ListItemSecondaryAction>
                 <Switch
                   edge="end"
-                  onChange={() => handleToggleRule(rule.id)}
+                  onChange={() => handleToggleRule(index)}
                   checked={rule.enabled}
                   disabled={isActionDisabled}
                 />
                 <IconButton
                   edge="end"
                   aria-label="delete"
-                  onClick={() => handleDeleteRule(rule.id)}
+                  onClick={() => handleDeleteRule(index)}
                   disabled={isActionDisabled}
                 >
                   <DeleteIcon />
@@ -199,3 +199,5 @@ export const AlertsManagement: React.FC = () => {
     </Card>
   );
 };
+
+export default AlertsManagement;

@@ -12,6 +12,7 @@ import isPropValid from '@emotion/is-prop-valid';
 import { Provider as ReduxProvider } from 'react-redux';
 import { store } from '../store/store';
 import { Web3Providers } from './Web3Providers';
+import { Web3Provider } from '../contexts/Web3Context';
 import { ContractProvider } from './ContractProvider';
 import { AuthProvider } from '../contexts/AuthContext';
 
@@ -38,20 +39,22 @@ const Providers = memo<ProvidersProps>(({ children }) => {
     <QueryClientProvider client={queryClient}>
       <ReduxProvider store={store}>
         <Web3Providers>
-          <ContractProvider>
-            <AuthProvider>
-              <StyledEngineProvider injectFirst>
-                <MuiThemeProvider theme={muiTheme}>
-                  <ThemeProvider theme={styledTheme}>
-                    <StyleSheetManager enableVendorPrefixes shouldForwardProp={isPropValid}>
-                      <CssBaseline />
-                      {children}
-                    </StyleSheetManager>
-                  </ThemeProvider>
-                </MuiThemeProvider>
-              </StyledEngineProvider>
-            </AuthProvider>
-          </ContractProvider>
+          <Web3Provider>
+            <ContractProvider>
+              <AuthProvider>
+                <StyledEngineProvider injectFirst>
+                  <MuiThemeProvider theme={muiTheme}>
+                    <ThemeProvider theme={styledTheme}>
+                      <StyleSheetManager enableVendorPrefixes shouldForwardProp={isPropValid}>
+                        <CssBaseline />
+                        {children}
+                      </StyleSheetManager>
+                    </ThemeProvider>
+                  </MuiThemeProvider>
+                </StyledEngineProvider>
+              </AuthProvider>
+            </ContractProvider>
+          </Web3Provider>
         </Web3Providers>
       </ReduxProvider>
     </QueryClientProvider>

@@ -1,28 +1,39 @@
 import React from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useNetwork } from 'wagmi';
-import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
+import { CircularProgress, Box, Alert, Typography, Button, Stack } from '@mui/material';
+import { SwapHoriz as SwapIcon } from '@mui/icons-material';
+import { useWeb3 } from '../../contexts/Web3Context';
 import { useWalletConnection } from '../../hooks/useWalletConnection';
-import { RefreshRounded as RefreshIcon } from '@mui/icons-material';
 
 export const CustomConnectButton: React.FC = () => {
-  const { chain } = useNetwork();
+  const { 
+    isLoading,
+    network: {
+      isSupported,
+      currentNetwork,
+      isSwitching,
+      switchToTestnet,
+      switchToMainnet,
+      isMainnet,
+      isTestnet
+    }
+  } = useWeb3();
+
   const {
-    isConnecting,
-    isReconnecting,
     hasError,
     errorMessage,
     retryCount,
-    retry
+    retry,
+    resetError
   } = useWalletConnection();
 
-  // Afficher un loader pendant la connexion
-  if (isConnecting || isReconnecting) {
+  // Afficher un loader pendant la connexion ou le changement de réseau
+  if (isLoading || isSwitching) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <CircularProgress size={20} />
         <Typography>
-          {isReconnecting ? 'Reconnexion en cours...' : 'Connexion en cours...'}
+          {isSwitching ? 'Changement de réseau...' : 'Connexion en cours...'}
         </Typography>
       </Box>
     );
@@ -38,9 +49,12 @@ export const CustomConnectButton: React.FC = () => {
             <Button
               color="inherit"
               size="small"
-              onClick={() => retry()}
+              onClick={() => {
+                resetError();
+                retry();
+              }}
               disabled={retryCount >= 3}
-              startIcon={<RefreshIcon />}
+              startIcon={<SwapIcon />}
             >
               Réessayer
             </Button>
@@ -53,19 +67,50 @@ export const CustomConnectButton: React.FC = () => {
     );
   }
 
-  // Afficher une alerte si le réseau n'est pas supporté
-  if (chain && !chain.id.toString().match(/^(1|11155111)$/)) {
+  // Afficher un avertissement si le réseau n'est pas supporté
+  if (!isSupported) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Alert severity="warning">
-          Veuillez vous connecter au réseau Ethereum ou Sepolia
+          Réseau non supporté : {currentNetwork || 'Inconnu'}
         </Alert>
+        <Stack direction="row" spacing={2} justifyContent="center">
+          <Button
+            variant="outlined"
+            onClick={switchToMainnet}
+            disabled={isSwitching}
+          >
+            Passer sur Ethereum
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={switchToTestnet}
+            disabled={isSwitching}
+          >
+            Passer sur Sepolia
+          </Button>
+        </Stack>
         <ConnectButton />
       </Box>
     );
   }
 
-  return <ConnectButton />;
+  // Afficher le bouton de connexion avec option de changer de réseau
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <ConnectButton />
+      {(isMainnet || isTestnet) && (
+        <Button
+          size="small"
+          startIcon={<SwapIcon />}
+          onClick={isMainnet ? switchToTestnet : switchToMainnet}
+          sx={{ mt: 1 }}
+        >
+          Passer sur {isMainnet ? 'Sepolia' : 'Ethereum'}
+        </Button>
+      )}
+    </Box>
+  );
 };
 
 export default CustomConnectButton;

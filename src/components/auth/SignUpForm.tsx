@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/config/firebase';
+import { auth } from '../../config/firebase';
 import { Box, Button, TextField, Typography, Alert, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -109,3 +109,5 @@ export const SignUpForm: React.FC = () => {
     </Box>
   );
 };
+
+export default SignUpForm;
