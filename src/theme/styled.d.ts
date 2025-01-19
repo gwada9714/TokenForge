@@ -66,7 +66,6 @@ declare module 'styled-components' {
         body: string;
       };
       fontWeight: {
-        light: number;
         normal: number;
         medium: number;
         semibold: number;
@@ -86,7 +85,13 @@ declare module 'styled-components' {
         '6xl': string;
       };
     };
-    spacing: (value: number) => string;
+    spacing: {
+      xs: string;
+      sm: string;
+      md: string;
+      lg: string;
+      xl: string;
+    };
     borderRadius: {
       sm: string;
       md: string;
@@ -111,12 +116,6 @@ declare module 'styled-components' {
       snackbar: number;
       tooltip: number;
       header: number;
-      dropdown: number;
-      overlay: number;
-      max: number;
-      nav: number;
-      fab: number;
-      speedDial: number;
     };
     breakpoints: {
       values: {
