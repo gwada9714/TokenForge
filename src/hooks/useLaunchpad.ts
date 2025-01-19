@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useContractWrite, useContractRead, useAccount, useWaitForTransaction } from 'wagmi';
-import { useNetwork } from '/useNetwork';
-import { parseEther, Address } from 'viem';
+import { useContractWrite, useContractRead, useAccount, useTransaction } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
+import { Address } from 'viem';
 import { getContractAddress } from '../config/contracts';
 import { launchpadABI } from '../contracts/abis';
 
@@ -19,148 +19,134 @@ interface PoolInfo {
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
-export function useLaunchpad(poolId?: number) {
+export const useLaunchpad = (poolId?: number) => {
+  const [error, setError] = useState<string | null>(null);
+  const [poolInfoState, setPoolInfoState] = useState<PoolInfo | null>(null);
+  const [userContribution, setUserContribution] = useState<bigint>(0n);
   const { address } = useAccount();
   const { chain } = useNetwork();
-  const [enabled, setEnabled] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (chain?.id !== 11155111) {
-      setError('Please connect to Sepolia network');
-      setEnabled(false);
-      return;
-    }
-    setError(null);
-  }, [chain?.id]);
-
-  const launchpadAddress = getContractAddress('TOKEN_FACTORY', chain?.id ?? 11155111) as Address;
-
-  useEffect(() => {
-    if (error) return;
-    setEnabled(Boolean(poolId !== undefined && launchpadAddress));
-  }, [poolId, launchpadAddress, error]);
+  const launchpadAddress = getContractAddress('Launchpad', chain?.id);
 
   const { data: poolInfo } = useContractRead({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getPoolInfo',
     args: poolId !== undefined ? [BigInt(poolId)] : undefined,
-    enabled,
-    onError: (error: unknown) => {
-      console.error('Pool info error:', error);
-      if (error instanceof Error) {
-        setError(`Failed to read pool info: ${error.message}`);
-      } else {
-        setError('Failed to read pool info: Unknown error');
-      }
-    }
-  }) as { data: PoolInfo | undefined };
+  });
 
   const { data: userContributionData } = useContractRead({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'getUserContribution',
-    args: poolId !== undefined && address ? [BigInt(poolId), address] : undefined,
-    enabled: enabled && Boolean(address),
-    onError: (error: unknown) => {
-      console.error('User contribution error:', error);
-      if (error instanceof Error) {
-        setError(`Failed to read user contribution: ${error.message}`);
-      } else {
-        setError('Failed to read user contribution: Unknown error');
-      }
-    }
+    args: poolId !== undefined && address ? [BigInt(poolId), address as Address] : undefined,
   });
 
-  const { write: createPool, data: createPoolData } = useContractWrite({
+  const { data: createPoolData, writeAsync: createPool } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'createPool',
+    chainId: chain?.id,
   });
 
-  const { write: invest, data: investData } = useContractWrite({
+  const { data: investData, writeAsync: invest } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'invest',
+    chainId: chain?.id,
   });
 
-  const { write: claim, data: claimData } = useContractWrite({
+  const { data: claimData, writeAsync: claim } = useContractWrite({
     address: launchpadAddress,
     abi: launchpadABI,
     functionName: 'claim',
+    chainId: chain?.id,
   });
 
-  const [poolInfoState, setPoolInfoState] = useState<PoolInfo>({
-    token: ZERO_ADDRESS,
-    tokenPrice: 0n,
-    hardCap: 0n,
-    softCap: 0n,
-    totalRaised: 0n,
-    startTime: 0n,
-    endTime: 0n,
-    finalized: false,
-    cancelled: false,
+  const { isLoading: isCreating } = useTransaction({
+    hash: createPoolData?.hash,
   });
 
-  const [userContribution, setUserContribution] = useState<bigint>(0n);
+  const { isLoading: isInvesting } = useTransaction({
+    hash: investData?.hash,
+  });
+
+  const { isLoading: isClaiming } = useTransaction({
+    hash: claimData?.hash,
+  });
 
   const handleCreatePool = useCallback(async (
-    token: `0x${string}`,
+    token: Address,
     tokenPrice: string,
     hardCap: string,
     softCap: string,
     startTime: number,
     endTime: number
   ) => {
-    if (!createPool) return;
-    
+    if (!createPool) {
+      throw new Error('Contract not initialized');
+    }
+
     try {
-      await createPool({
+      const tx = await createPool({
         args: [
           token,
-          BigInt(parseEther(tokenPrice)),
-          BigInt(parseEther(hardCap)),
-          BigInt(parseEther(softCap)),
+          BigInt(tokenPrice),
+          BigInt(hardCap),
+          BigInt(softCap),
           BigInt(startTime),
           BigInt(endTime)
         ],
       });
+      return tx;
     } catch (error) {
       console.error('Error creating pool:', error);
-      if (error instanceof Error) {
-        setError(`Failed to create pool: ${error.message}`);
-      } else {
-        setError('Failed to create pool: Unknown error');
-      }
       throw error;
     }
   }, [createPool]);
 
-  const { isLoading: isCreating } = useWaitForTransaction({
-    hash: createPoolData?.hash,
-  });
+  const handleInvest = useCallback(async (amount: string) => {
+    if (!invest) {
+      throw new Error('Contract not initialized');
+    }
 
-  const { isLoading: isInvesting } = useWaitForTransaction({
-    hash: investData?.hash,
-  });
+    try {
+      const tx = await invest({
+        args: [BigInt(amount)],
+      });
+      return tx;
+    } catch (error) {
+      console.error('Error investing:', error);
+      throw error;
+    }
+  }, [invest]);
 
-  const { isLoading: isClaiming } = useWaitForTransaction({
-    hash: claimData?.hash,
-  });
+  const handleClaim = useCallback(async () => {
+    if (!claim) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const tx = await claim();
+      return tx;
+    } catch (error) {
+      console.error('Error claiming:', error);
+      throw error;
+    }
+  }, [claim]);
 
   useEffect(() => {
-    if (poolInfo) {
+    if (poolInfo && typeof poolInfo === 'object') {
+      const typedPoolInfo = poolInfo as unknown as PoolInfo;
       setPoolInfoState({
-        token: poolInfo.token,
-        tokenPrice: poolInfo.tokenPrice,
-        hardCap: poolInfo.hardCap,
-        softCap: poolInfo.softCap,
-        totalRaised: poolInfo.totalRaised,
-        startTime: poolInfo.startTime,
-        endTime: poolInfo.endTime,
-        finalized: poolInfo.finalized,
-        cancelled: poolInfo.cancelled,
+        token: typedPoolInfo.token,
+        tokenPrice: typedPoolInfo.tokenPrice,
+        hardCap: typedPoolInfo.hardCap,
+        softCap: typedPoolInfo.softCap,
+        totalRaised: typedPoolInfo.totalRaised,
+        startTime: typedPoolInfo.startTime,
+        endTime: typedPoolInfo.endTime,
+        finalized: typedPoolInfo.finalized,
+        cancelled: typedPoolInfo.cancelled,
       });
     }
   }, [poolInfo]);
@@ -171,18 +157,23 @@ export function useLaunchpad(poolId?: number) {
     }
   }, [userContributionData]);
 
+  useEffect(() => {
+    if (chain?.id !== 11155111) {
+      setError('Please connect to Sepolia network');
+    } else {
+      setError(null);
+    }
+  }, [chain?.id]);
+
   return {
     poolInfo: poolInfoState,
     userContribution,
-
     createPool: handleCreatePool,
-    invest,
-    claim,
-
+    invest: handleInvest,
+    claim: handleClaim,
     isCreating,
     isInvesting,
     isClaiming,
-
     error,
   };
-}
+};
