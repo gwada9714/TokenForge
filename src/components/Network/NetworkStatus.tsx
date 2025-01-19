@@ -3,15 +3,21 @@ import { Box, Chip, IconButton, Tooltip } from '@mui/material';
 import { SwapHoriz as SwapIcon } from '@mui/icons-material';
 import { useNetworkManagement } from '../../hooks/useNetworkManagement';
 import { Chain } from 'viem';
+import { mainnet, sepolia } from 'viem/chains';
 import { NetworkAlertDialog } from './NetworkAlertDialog';
 
 interface NetworkStatusProps {
-  preferredChain: Chain;
+  preferredChain?: Chain;
+  compact?: boolean;
 }
 
 export const NetworkStatus: React.FC<NetworkStatusProps> = ({ 
-  preferredChain
+  preferredChain,
+  compact = false
 }) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const defaultNetworks = [sepolia, mainnet];
+  
   const {
     isCorrectNetwork,
     currentChainId,
@@ -19,9 +25,7 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
     isSupported,
     isSwitching,
     supportedNetworks
-  } = useNetworkManagement(preferredChain);
-
-  const [dialogOpen, setDialogOpen] = useState(false);
+  } = useNetworkManagement(preferredChain || defaultNetworks[0]);
 
   const handleNetworkSwitch = () => {
     setDialogOpen(true);
@@ -36,44 +40,37 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
     setDialogOpen(false);
   };
 
-  // Obtenir le nom du réseau
-  const getNetworkName = (chainId?: number) => {
-    if (!chainId) return 'Non connecté';
-    const network = supportedNetworks.find(n => n.id === chainId);
-    return network?.name || 'Réseau inconnu';
-  };
-
+  const currentNetwork = supportedNetworks.find(network => network.id === currentChainId);
+  
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Tooltip title={isSupported ? 'Réseau actuel' : 'Réseau non supporté'}>
+    <>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Chip
-          label={getNetworkName(currentChainId)}
-          color={isCorrectNetwork ? 'success' : 'error'}
-          variant="outlined"
-          size="small"
+          label={currentNetwork?.name || 'Unknown Network'}
+          color={isSupported ? (isCorrectNetwork ? 'success' : 'warning') : 'error'}
+          size={compact ? 'small' : 'medium'}
+          sx={{ minWidth: compact ? 100 : 140 }}
         />
-      </Tooltip>
-      
-      {!isCorrectNetwork && (
-        <Tooltip title="Changer de réseau">
-          <IconButton
-            size="small"
-            onClick={handleNetworkSwitch}
-            disabled={isSwitching}
-          >
-            <SwapIcon />
-          </IconButton>
-        </Tooltip>
-      )}
-
+        {!isCorrectNetwork && (
+          <Tooltip title="Switch Network">
+            <IconButton
+              size={compact ? 'small' : 'medium'}
+              onClick={handleNetworkSwitch}
+              disabled={isSwitching}
+            >
+              <SwapIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
       <NetworkAlertDialog
         open={dialogOpen}
         onClose={handleDialogClose}
-        onNetworkSelect={handleNetworkSelect}
         networks={supportedNetworks}
+        onNetworkSelect={handleNetworkSelect}
         currentNetwork={currentChainId}
       />
-    </Box>
+    </>
   );
 };
 
