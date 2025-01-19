@@ -191,7 +191,7 @@ export const Header: React.FC = () => {
         </MobileMenuButton>
       </HeaderContent>
 
-      <MobileMenu isOpen={isMobileMenuOpen}>
+      <MobileMenu isOpen={isMobileMenuOpen} data-testid="mobile-menu">
         <MobileNav>
           {isAuthenticated && (
             <>

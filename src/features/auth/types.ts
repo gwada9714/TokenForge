@@ -22,12 +22,18 @@ export interface TokenForgeAuthState extends AuthState, WalletState {
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
+  signOut: () => Promise<void>;
   
   // Actions
   login: (user: User) => void;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
   setError: (error: AuthError) => void;
+}
+
+export interface User extends firebase.auth.UserCredential['user'] {
+  email: string;
+  isAdmin?: boolean;
 }
 
 export interface AuthError extends Error {
