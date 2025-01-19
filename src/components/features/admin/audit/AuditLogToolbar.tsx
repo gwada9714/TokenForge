@@ -1,12 +1,14 @@
 import React from 'react';
-import { Box, Tooltip } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DownloadIcon from '@mui/icons-material/Download';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 interface AuditLogToolbarProps {
   onExport: () => void;
   onPurge: () => void;
+  onRefresh?: () => void;
   isLoading: boolean;
   disabled?: boolean;
 }
@@ -14,6 +16,7 @@ interface AuditLogToolbarProps {
 export const AuditLogToolbar: React.FC<AuditLogToolbarProps> = ({
   onExport,
   onPurge,
+  onRefresh,
   isLoading,
   disabled = false,
 }) => {
@@ -21,40 +24,69 @@ export const AuditLogToolbar: React.FC<AuditLogToolbarProps> = ({
     <Box
       sx={{
         display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         gap: 2,
         mb: 2,
-        flexDirection: { xs: 'column', sm: 'row' },
       }}
     >
-      <Tooltip title={disabled || isLoading ? 'Aucun log disponible' : 'Exporter les logs au format CSV'}>
-        <span>
-          <LoadingButton
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={onExport}
-            disabled={disabled || isLoading}
-            sx={{ width: { xs: '100%', sm: 'auto' } }}
-          >
-            Exporter
-          </LoadingButton>
-        </span>
-      </Tooltip>
-      <Tooltip title={disabled || isLoading ? 'Aucun log à purger' : 'Supprimer tous les logs'}>
-        <span>
-          <LoadingButton
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={onPurge}
-            disabled={disabled || isLoading}
-            sx={{ width: { xs: '100%', sm: 'auto' } }}
-          >
-            Purger
-          </LoadingButton>
-        </span>
-      </Tooltip>
+      <Typography variant="h6" component="h2">
+        Logs d'Audit
+      </Typography>
+
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        {onRefresh && (
+          <Tooltip title="Rafraîchir les logs">
+            <span>
+              <LoadingButton
+                onClick={onRefresh}
+                loading={isLoading}
+                disabled={isLoading}
+                variant="outlined"
+                color="primary"
+                size="small"
+                startIcon={<RefreshIcon />}
+              >
+                Rafraîchir
+              </LoadingButton>
+            </span>
+          </Tooltip>
+        )}
+
+        <Tooltip title={disabled ? 'Aucun log disponible' : 'Exporter les logs au format CSV'}>
+          <span>
+            <LoadingButton
+              onClick={onExport}
+              loading={isLoading}
+              disabled={disabled || isLoading}
+              variant="outlined"
+              color="primary"
+              size="small"
+              startIcon={<DownloadIcon />}
+            >
+              Exporter
+            </LoadingButton>
+          </span>
+        </Tooltip>
+
+        <Tooltip title={disabled ? 'Aucun log à supprimer' : 'Supprimer tous les logs'}>
+          <span>
+            <LoadingButton
+              onClick={onPurge}
+              loading={isLoading}
+              disabled={disabled || isLoading}
+              variant="outlined"
+              color="error"
+              size="small"
+              startIcon={<DeleteSweepIcon />}
+            >
+              Purger
+            </LoadingButton>
+          </span>
+        </Tooltip>
+      </Box>
     </Box>
   );
 };
 
-export default AuditLogToolbar;
+export default React.memo(AuditLogToolbar);

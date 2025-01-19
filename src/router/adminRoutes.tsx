@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
-import AdminRoute from '../routes/guards/AdminRoute';
+import AdminRoute from './guards/AdminRoute';
 import LoadingFallback from '../components/common/LoadingFallback';
 
 // Admin components

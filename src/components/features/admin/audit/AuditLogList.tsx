@@ -10,146 +10,153 @@ import {
   Tooltip,
   Skeleton,
   Chip,
+  Paper,
+  useTheme,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import EventIcon from '@mui/icons-material/Event';
-import PersonIcon from '@mui/icons-material/Person';
+import CategoryIcon from '@mui/icons-material/Category';
+import ErrorIcon from '@mui/icons-material/Error';
+import WarningIcon from '@mui/icons-material/Warning';
+import InfoIcon from '@mui/icons-material/Info';
+import BugReportIcon from '@mui/icons-material/BugReport';
 import type { AuditLog } from '../../../../types/contracts';
 
 interface AuditLogListProps {
   logs: AuditLog[];
-  onDeleteLog?: (logId: number) => void;
   onViewDetails: (log: AuditLog) => void;
   isLoading?: boolean;
 }
 
+const getLevelIcon = (level: string) => {
+  switch (level.toLowerCase()) {
+    case 'error':
+      return <ErrorIcon color="error" />;
+    case 'warning':
+      return <WarningIcon color="warning" />;
+    case 'info':
+      return <InfoIcon color="info" />;
+    case 'debug':
+      return <BugReportIcon color="disabled" />;
+    default:
+      return <InfoIcon />;
+  }
+};
+
+const getLevelColor = (level: string) => {
+  switch (level.toLowerCase()) {
+    case 'error':
+      return 'error';
+    case 'warning':
+      return 'warning';
+    case 'info':
+      return 'info';
+    case 'debug':
+      return 'default';
+    default:
+      return 'default';
+  }
+};
+
 export const AuditLogList: React.FC<AuditLogListProps> = ({
   logs,
-  onDeleteLog,
   onViewDetails,
   isLoading = false,
 }) => {
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleString();
-  };
+  const theme = useTheme();
 
   if (isLoading) {
     return (
-      <List>
-        {[1, 2, 3].map((i) => (
-          <ListItem
-            key={i}
-            sx={{
-              bgcolor: 'background.paper',
-              borderRadius: 1,
-              mb: 1,
-            }}
-          >
-            <ListItemText
-              primary={<Skeleton width="40%" />}
-              secondary={
-                <>
-                  <Skeleton width="60%" />
-                  <Skeleton width="80%" />
-                </>
-              }
-            />
-            <ListItemSecondaryAction>
-              <Skeleton width={40} height={40} variant="circular" />
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
-      </List>
+      <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper' }}>
+        <List>
+          {[...Array(5)].map((_, index) => (
+            <ListItem key={index} divider={index < 4}>
+              <ListItemText
+                primary={<Skeleton width="60%" />}
+                secondary={<Skeleton width="40%" />}
+              />
+              <ListItemSecondaryAction>
+                <Skeleton width={96} height={32} />
+              </ListItemSecondaryAction>
+            </ListItem>
+          ))}
+        </List>
+      </Paper>
     );
   }
 
   if (logs.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
-        <Typography variant="body2" color="text.secondary">
+      <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'background.paper' }}>
+        <Typography variant="body1" color="textSecondary">
           Aucun log d'audit disponible
         </Typography>
-      </Box>
+      </Paper>
     );
   }
 
   return (
-    <List>
-      {logs.map((log) => (
-        <ListItem
-          key={log.id}
-          sx={{
-            bgcolor: 'background.paper',
-            borderRadius: 1,
-            mb: 1,
-            '&:hover': {
-              bgcolor: 'action.hover',
-            },
-          }}
-        >
-          <ListItemText
-            primary={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                <Chip
-                  label={log.action}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                />
-                {log.data && (
-                  <Typography variant="body2" color="text.secondary">
-                    {log.data}
-                  </Typography>
-                )}
-              </Box>
-            }
-            secondary={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <EventIcon fontSize="small" color="action" />
-                  <Typography variant="body2">
-                    {formatDate(log.timestamp)}
+    <Paper elevation={0} sx={{ bgcolor: 'background.paper' }}>
+      <List>
+        {logs.map((log, index) => (
+          <ListItem
+            key={log.id || index}
+            divider={index < logs.length - 1}
+            sx={{
+              '&:hover': {
+                bgcolor: theme.palette.action.hover,
+              },
+            }}
+          >
+            <ListItemText
+              primary={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  {getLevelIcon(log.level)}
+                  <Typography variant="body1" component="span">
+                    {log.message}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <PersonIcon fontSize="small" color="action" />
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {log.address}
-                  </Typography>
+              }
+              secondary={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <EventIcon fontSize="small" color="action" />
+                    <Typography variant="body2" color="textSecondary">
+                      {new Date(log.timestamp).toLocaleString()}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <CategoryIcon fontSize="small" color="action" />
+                    <Typography variant="body2" color="textSecondary">
+                      {log.category}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={log.level}
+                    size="small"
+                    color={getLevelColor(log.level) as any}
+                    variant="outlined"
+                  />
                 </Box>
-              </Box>
-            }
-          />
-          {onDeleteLog && (
+              }
+            />
             <ListItemSecondaryAction>
-              <Tooltip title="Supprimer ce log">
+              <Tooltip title="Voir les détails">
                 <IconButton
                   edge="end"
-                  aria-label="delete"
-                  onClick={() => onDeleteLog(log.id)}
-                  disabled={isLoading}
-                  color="error"
+                  onClick={() => onViewDetails(log)}
+                  size="small"
+                  sx={{ color: theme.palette.primary.main }}
                 >
-                  <DeleteIcon />
+                  <VisibilityIcon />
                 </IconButton>
               </Tooltip>
             </ListItemSecondaryAction>
-          )}
-          <ListItemSecondaryAction>
-            <Tooltip title="Voir les détails">
-              <IconButton
-                edge="end"
-                onClick={() => onViewDetails(log)}
-                size="small"
-              >
-                <VisibilityIcon />
-              </IconButton>
-            </Tooltip>
-          </ListItemSecondaryAction>
-        </ListItem>
-      ))}
-    </List>
+          </ListItem>
+        ))}
+      </List>
+    </Paper>
   );
 };
 
-export default AuditLogList;
+export default React.memo(AuditLogList);
