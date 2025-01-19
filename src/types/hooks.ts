@@ -44,4 +44,5 @@ export interface TokenForgeAdminHookReturn {
   isProcessing: boolean;
   handleTogglePause: () => Promise<void>;
   contractAddress: Address | undefined;
+  contract: any; // Type du contrat à définir selon votre implémentation
 }
