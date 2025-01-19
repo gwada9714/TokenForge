@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Fade } from '@mui/material';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -7,25 +7,29 @@ interface TabPanelProps {
   value: number;
 }
 
-export const TabPanel: React.FC<TabPanelProps> = (props) => {
-  const { children, value, index, ...other } = props;
+export const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
+  const isSelected = value === index;
 
   return (
     <div
       role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
+      hidden={!isSelected}
+      id={`admin-tabpanel-${index}`}
+      aria-labelledby={`admin-tab-${index}`}
+      aria-hidden={!isSelected}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      <Fade in={isSelected} timeout={300}>
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      </Fade>
     </div>
   );
 };
 
 export const a11yProps = (index: number) => {
   return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
+    id: `admin-tab-${index}`,
+    'aria-controls': `admin-tabpanel-${index}`,
   };
 };
