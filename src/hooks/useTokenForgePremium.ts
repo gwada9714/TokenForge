@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useContractRead, useContractWrite, useAccount, useNetwork, usePublicClient } from 'wagmi';
+import { useContractRead, useContractWrite, useAccount, usePublicClient } from 'wagmi';
+import { useNetwork } from '/useNetwork';
 import { parseEther, formatEther } from 'ethers';
 import { toast } from 'react-hot-toast';
 import { CONTRACT_ADDRESSES, getContractAddress } from '@/config/contracts';

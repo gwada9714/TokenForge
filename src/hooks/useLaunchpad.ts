@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useContractWrite, useContractRead, useAccount, useWaitForTransaction, useNetwork } from 'wagmi';
+import { useContractWrite, useContractRead, useAccount, useWaitForTransaction } from 'wagmi';
+import { useNetwork } from '/useNetwork';
 import { parseEther, Address } from 'viem';
 import { getContractAddress } from '../config/contracts';
 import { launchpadABI } from '../contracts/abis';

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
-import { useNetwork } from 'wagmi';
+import { useNetwork } from '/useNetwork';
 import { getNetwork } from '../config/networks';
 
 interface TransactionState {
