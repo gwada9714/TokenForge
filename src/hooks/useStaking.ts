@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useContractRead, useContractWrite, useBalance, useWatchContractEvent, useTransaction, useAccount } from 'wagmi';
-import { parseEther, type Address } from 'viem';
+import { useContractRead, useContractWrite, useBalance, useWatchContractEvent, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { type Address } from 'viem';
 
 // Temporary ABI until we generate it
 const TKNTokenABI = [
@@ -41,6 +41,9 @@ export const useStaking = (tokenAddress: Address) => {
   const [rewardsHistory, setRewardsHistory] = useState<RewardHistory[]>([]);
   const [lastStakeTime, setLastStakeTime] = useState<number>(0);
   const [timeUntilUnstake, setTimeUntilUnstake] = useState<number>(0);
+  const [stakeHash, setStakeHash] = useState<`0x${string}` | undefined>(undefined);
+  const [unstakeHash, setUnstakeHash] = useState<`0x${string}` | undefined>(undefined);
+  const [claimHash, setClaimHash] = useState<`0x${string}` | undefined>(undefined);
 
   const { address } = useAccount();
 
@@ -62,96 +65,111 @@ export const useStaking = (tokenAddress: Address) => {
     functionName: 'getStakingStats',
   });
 
-  const { data: stakeResult, writeContract: stake } = useContractWrite({
-    address: tokenAddress,
+  const { writeContract: stake } = useContractWrite({
     abi: TKNTokenABI,
+    address: tokenAddress,
     functionName: 'stake',
   });
 
-  const { data: unstakeResult, writeContract: unstake } = useContractWrite({
-    address: tokenAddress,
+  const { writeContract: unstake } = useContractWrite({
     abi: TKNTokenABI,
+    address: tokenAddress,
     functionName: 'unstake',
   });
 
-  const { data: claimResult, writeContract: claim } = useContractWrite({
-    address: tokenAddress,
+  const { writeContract: claim } = useContractWrite({
     abi: TKNTokenABI,
+    address: tokenAddress,
     functionName: 'claimRewards',
   });
 
-  const { isLoading: isStaking } = useTransaction({
-    hash: stakeResult?.hash,
-    onSuccess(data) {
+  const { isLoading: isStaking, isSuccess: isStakeSuccess } = useWaitForTransactionReceipt({
+    hash: stakeHash,
+  });
+
+  const { isLoading: isUnstaking, isSuccess: isUnstakeSuccess } = useWaitForTransactionReceipt({
+    hash: unstakeHash,
+  });
+
+  const { isLoading: isClaiming, isSuccess: isClaimSuccess } = useWaitForTransactionReceipt({
+    hash: claimHash,
+  });
+
+  useEffect(() => {
+    if (isStakeSuccess) {
       refetchStakeInfo();
       refetchStats();
       setLastStakeTime(Date.now());
-    },
-  });
+    }
+  }, [isStakeSuccess, refetchStakeInfo, refetchStats]);
 
-  const { isLoading: isUnstaking } = useTransaction({
-    hash: unstakeResult?.hash,
-    onSuccess(data) {
+  useEffect(() => {
+    if (isUnstakeSuccess) {
       refetchStakeInfo();
       refetchStats();
-    },
-  });
+    }
+  }, [isUnstakeSuccess, refetchStakeInfo, refetchStats]);
 
-  const { isLoading: isClaiming } = useTransaction({
-    hash: claimResult?.hash,
-    onSuccess(data) {
+  useEffect(() => {
+    if (isClaimSuccess) {
       refetchStakeInfo();
-    },
-  });
+      refetchStats();
+    }
+  }, [isClaimSuccess, refetchStakeInfo, refetchStats]);
 
-  const stakeTokens = async (amount: string) => {
+  const handleStake = async (amount: bigint) => {
     try {
       if (!stake) throw new Error('Contract write not ready');
-
-      const result = await stake({
-        args: [parseEther(amount)],
+      const tx = await stake({
+        args: [amount],
       });
-      return result;
-    } catch (error) {
+      if (tx?.hash) {
+        setStakeHash(tx.hash);
+      }
+    } catch (error: unknown) {
       console.error('Error staking:', error);
       if (error instanceof Error) {
         setError(error.message);
+      } else {
+        setError('An unknown error occurred while staking');
       }
-      throw error;
     }
   };
 
-  const withdrawTokens = async (amount: string) => {
+  const handleUnstake = async (amount: bigint) => {
     try {
-      if (!amount || parseFloat(amount) <= 0) {
-        throw new Error('Montant invalide');
-      }
       if (!unstake) throw new Error('Contract write not ready');
-
-      const result = await unstake({
-        args: [parseEther(amount)],
+      const tx = await unstake({
+        args: [amount],
       });
-    } catch (error) {
+      if (tx?.hash) {
+        setUnstakeHash(tx.hash);
+      }
+    } catch (error: unknown) {
       console.error('Error unstaking:', error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError('Une erreur est survenue lors du unstaking');
+        setError('An unknown error occurred while unstaking');
       }
     }
   };
 
-  const claimRewards = async () => {
+  const handleClaimRewards = async () => {
     try {
       if (!claim) throw new Error('Contract write not ready');
-
-      const result = await claim();
-    } catch (error) {
+      const tx = await claim({
+        args: [],
+      });
+      if (tx?.hash) {
+        setClaimHash(tx.hash);
+      }
+    } catch (error: unknown) {
       console.error('Error claiming rewards:', error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError('Une erreur est survenue lors de la réclamation des récompenses');
+        setError('An unknown error occurred while claiming rewards');
       }
     }
   };
@@ -260,9 +278,9 @@ export const useStaking = (tokenAddress: Address) => {
     setStakeAmount,
     withdrawAmount,
     setWithdrawAmount,
-    stake: stakeTokens,
-    withdraw: withdrawTokens,
-    claimRewards,
+    stake: handleStake,
+    withdraw: handleUnstake,
+    claimRewards: handleClaimRewards,
     isLoading: isStaking || isUnstaking || isClaiming,
     error,
     canUnstake: timeUntilUnstake === 0,
