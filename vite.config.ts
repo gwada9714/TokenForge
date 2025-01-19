@@ -12,7 +12,8 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       // Rend les variables d'environnement disponibles globalement
-      'process.env': env
+      'process.env': env,
+      global: 'globalThis',
     },
     base: '/',
     server: {
@@ -30,22 +31,39 @@ export default defineConfig(({ mode }) => {
       react({
         babel: {
           plugins: [
-            ['@babel/plugin-transform-react-jsx', { optimize: true }]
+            ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
           ]
         },
         jsxRuntime: 'automatic'
       }),
       nodePolyfills({
+        include: ['buffer', 'process', 'util', 'stream', 'events'],
         globals: {
           Buffer: true,
           global: true,
-          process: true,
-        },
-        protocolImports: true,
+          process: true
+        }
       }),
       VitePWA({
         registerType: 'autoUpdate',
-        injectRegister: 'auto',
+        includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+        manifest: {
+          name: 'TokenForge',
+          short_name: 'TokenForge',
+          theme_color: '#ffffff',
+          icons: [
+            {
+              src: '/android-chrome-192x192.png',
+              sizes: '192x192',
+              type: 'image/png'
+            },
+            {
+              src: '/android-chrome-512x512.png',
+              sizes: '512x512',
+              type: 'image/png'
+            }
+          ]
+        },
         devOptions: {
           enabled: true,
           type: 'module',
@@ -60,15 +78,24 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        'events': 'events',
+        'buffer': 'buffer',
+        'process': 'process/browser',
       },
     },
     optimizeDeps: {
+      esbuildOptions: {
+        define: {
+          global: 'globalThis'
+        }
+      },
       include: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
       exclude: ['@rainbow-me/rainbowkit']
     },
     build: {
       sourcemap: true,
       rollupOptions: {
+        external: ['buffer'],
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
