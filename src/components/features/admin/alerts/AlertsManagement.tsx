@@ -5,6 +5,21 @@ import type { AlertRule } from '../../../../types/contracts';
 import { AlertForm } from './AlertForm';
 import { AlertList } from './AlertList';
 
+/**
+ * Composant de gestion des alertes.
+ * Permet de créer, modifier et supprimer des règles d'alerte.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <AlertsManagement />
+ * ```
+ *
+ * @remarks
+ * Ce composant utilise le hook useTokenForgeAdmin pour interagir avec le contrat.
+ * Les alertes sont stockées sur la blockchain et peuvent être configurées pour
+ * surveiller différentes conditions.
+ */
 export const AlertsManagement: React.FC = () => {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [newRuleName, setNewRuleName] = useState('');

@@ -10,6 +10,7 @@ import { GlobalStyle } from "./styles/GlobalStyle";
 import { ContractProvider } from "./contexts/ContractContext";
 import { Web3Providers } from "./providers/Web3Providers";
 import '@rainbow-me/rainbowkit/styles.css';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 export function App() {
   return (
@@ -18,9 +19,11 @@ export function App() {
         <Web3Providers>
           <ContractProvider>
             <GlobalStyle />
-            <Suspense fallback={<LoadingFallback />}>
-              <RouterProvider router={router} />
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingFallback />}>
+                <RouterProvider router={router} />
+              </Suspense>
+            </ErrorBoundary>
           </ContractProvider>
         </Web3Providers>
       </ThemeProvider>

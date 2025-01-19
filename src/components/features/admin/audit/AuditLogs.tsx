@@ -9,6 +9,21 @@ import type { AuditLog } from '../../../../types/contracts';
 import { AuditLogList } from './AuditLogList';
 import { AuditLogToolbar } from './AuditLogToolbar';
 
+/**
+ * Composant de gestion des logs d'audit.
+ * Affiche l'historique des actions effectuées sur le contrat.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <AuditLogs />
+ * ```
+ *
+ * @remarks
+ * Les logs sont stockés sur la blockchain et peuvent être exportés ou purgés.
+ * Chaque log contient des informations sur l'action effectuée, l'adresse de
+ * l'utilisateur et l'horodatage.
+ */
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const { contract } = useTokenForgeAdmin();

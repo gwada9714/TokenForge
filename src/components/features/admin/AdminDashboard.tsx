@@ -8,6 +8,16 @@ import { AuditLogs, AuditStats } from './audit';
 import { AdminHeader } from './AdminHeader';
 import { AdminTabs } from './AdminTabs';
 
+/**
+ * Dashboard principal de l'interface d'administration.
+ * Fournit une vue d'ensemble et la navigation vers les différentes sections admin.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <AdminDashboard />
+ * ```
+ */
 export const AdminDashboard: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
 
