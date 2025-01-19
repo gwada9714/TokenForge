@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
 import { getContractAddress } from '../config/contracts';
 import { CircularProgress, Box, Alert, Button } from '@mui/material';
 import { sepolia } from 'wagmi/chains';
+import { useNetwork } from '../hooks/useNetwork';
 
 interface ContractContextType {
   contractAddress: `0x${string}` | null;
@@ -22,7 +23,7 @@ export const useContract = () => useContext(ContractContext);
 export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { chain } = useNetwork();
   const { isConnected } = useAccount();
-  const { switchNetwork } = useSwitchNetwork();
+  const { switchChain } = useSwitchChain();
   const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,80 +31,45 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Fonction pour basculer vers Sepolia
   const switchToSepolia = async () => {
     try {
-      if (switchNetwork) {
-        await switchNetwork(sepolia.id);
-      }
-    } catch (err) {
-      console.error('Erreur lors du changement de réseau:', err);
-      setError('Impossible de changer de réseau. Veuillez le faire manuellement.');
+      await switchChain({ chainId: sepolia.id });
+    } catch (error) {
+      console.error('Failed to switch to Sepolia:', error);
+      setError('Failed to switch network. Please try again.');
     }
   };
 
   useEffect(() => {
-    const loadContractAddress = async () => {
+    const loadContract = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Si pas connecté, on affiche un message
         if (!isConnected) {
-          setError("Veuillez connecter votre wallet");
-          setContractAddress(null);
+          setError('Please connect your wallet');
           return;
         }
 
-        // Si pas de chaîne, on affiche un message
         if (!chain) {
-          setError("Réseau non détecté");
-          setContractAddress(null);
+          setError('Network not detected');
           return;
         }
 
-        // Vérification du réseau Sepolia
         if (chain.id !== sepolia.id) {
-          setError(`Veuillez vous connecter au réseau Sepolia`);
-          setContractAddress(null);
+          setError('Please switch to Sepolia network');
           return;
         }
 
-        try {
-          const address = getContractAddress('TOKEN_FACTORY', chain.id);
-          console.log('Contract configuration:', {
-            chainId: chain.id,
-            address,
-            chainName: chain.name,
-          });
-
-          if (!address) {
-            setError('Adresse du contrat non définie');
-            setContractAddress(null);
-            return;
-          }
-
-          // Vérifie si l'adresse est valide
-          if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-            setError('Format d\'adresse du contrat invalide');
-            setContractAddress(null);
-            return;
-          }
-
-          setContractAddress(address);
-          setError(null);
-        } catch (err) {
-          console.error('Erreur lors du chargement du contrat:', err);
-          setError(err instanceof Error ? err.message : 'Erreur lors du chargement du contrat');
-          setContractAddress(null);
-        }
+        const address = getContractAddress('TOKEN_FACTORY', chain.id);
+        setContractAddress(address);
       } catch (err) {
-        console.error('Error loading contract address:', err);
-        setError(err instanceof Error ? err.message : 'Erreur lors du chargement de l\'adresse du contrat');
-        setContractAddress(null);
+        console.error('Error loading contract:', err);
+        setError('Failed to load contract. Please try again.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadContractAddress();
+    loadContract();
   }, [chain, isConnected]);
 
   if (isLoading) {
@@ -117,14 +83,14 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   if (error) {
     return (
       <Box p={2}>
-        <Alert 
-          severity="error" 
+        <Alert
+          severity="error"
           action={
-            chain?.id !== sepolia.id && switchNetwork ? (
+            chain?.id !== sepolia.id && (
               <Button color="inherit" size="small" onClick={switchToSepolia}>
-                Changer pour Sepolia
+                Switch to Sepolia
               </Button>
-            ) : undefined
+            )
           }
         >
           {error}

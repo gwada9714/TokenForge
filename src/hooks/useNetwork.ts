@@ -1,18 +1,16 @@
-import { useEffect, useState } from 'react';
-import { useWeb3React } from '@web3-react/core';
-import { NetworkConfig, networks } from '@/config/networks';
+import { useChainId, useConfig } from 'wagmi';
+import { type NetworkConfig, networks } from '../config/networks';
 
 export function useNetwork() {
-  const { chainId } = useWeb3React();
-  const [network, setNetwork] = useState<NetworkConfig | null>(null);
+  const chainId = useChainId();
+  const config = useConfig();
+  
+  const chain = config.chains.find(c => c.id === chainId);
+  const network: NetworkConfig | null = chainId ? networks[chainId] : null;
 
-  useEffect(() => {
-    if (chainId && networks[chainId]) {
-      setNetwork(networks[chainId]);
-    } else {
-      setNetwork(null);
-    }
-  }, [chainId]);
-
-  return { network };
+  return { 
+    chain,
+    chains: config.chains,
+    network 
+  };
 }
