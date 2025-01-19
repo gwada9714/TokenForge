@@ -7,12 +7,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 interface AuditLogToolbarProps {
   onExport: () => void;
   onPurge: () => void;
+  isLoading: boolean;
   disabled?: boolean;
 }
 
 export const AuditLogToolbar: React.FC<AuditLogToolbarProps> = ({
   onExport,
   onPurge,
+  isLoading,
   disabled = false,
 }) => {
   return (
@@ -24,27 +26,27 @@ export const AuditLogToolbar: React.FC<AuditLogToolbarProps> = ({
         flexDirection: { xs: 'column', sm: 'row' },
       }}
     >
-      <Tooltip title={disabled ? 'Aucun log disponible' : 'Exporter les logs au format CSV'}>
+      <Tooltip title={disabled || isLoading ? 'Aucun log disponible' : 'Exporter les logs au format CSV'}>
         <span>
           <LoadingButton
             variant="outlined"
             startIcon={<DownloadIcon />}
             onClick={onExport}
-            disabled={disabled}
+            disabled={disabled || isLoading}
             sx={{ width: { xs: '100%', sm: 'auto' } }}
           >
             Exporter
           </LoadingButton>
         </span>
       </Tooltip>
-      <Tooltip title={disabled ? 'Aucun log à purger' : 'Supprimer tous les logs'}>
+      <Tooltip title={disabled || isLoading ? 'Aucun log à purger' : 'Supprimer tous les logs'}>
         <span>
           <LoadingButton
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}
             onClick={onPurge}
-            disabled={disabled}
+            disabled={disabled || isLoading}
             sx={{ width: { xs: '100%', sm: 'auto' } }}
           >
             Purger

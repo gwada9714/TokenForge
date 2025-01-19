@@ -1,224 +1,169 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Typography,
   CircularProgress,
-  Snackbar,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
   Button,
+  Alert,
 } from '@mui/material';
 import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
 import type { AuditLog } from '../../../../types/contracts';
 import { AuditLogList } from './AuditLogList';
 import { AuditLogToolbar } from './AuditLogToolbar';
+import { AdminComponentProps } from '../types';
+import { ForgeCard } from '../../../common/ForgeCard';
 
-/**
- * Composant de gestion des logs d'audit.
- * Affiche l'historique des actions effectuées sur le contrat.
- *
- * @component
- * @example
- * ```tsx
- * <AuditLogs />
- * ```
- *
- * @remarks
- * Les logs sont stockés sur la blockchain et peuvent être exportés ou purgés.
- * Chaque log contient des informations sur l'action effectuée, l'adresse de
- * l'utilisateur et l'horodatage.
- */
-export const AuditLogs: React.FC = () => {
+export const AuditLogs: React.FC<AdminComponentProps> = ({ onError }) => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const { contract } = useTokenForgeAdmin();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    open: boolean;
-    title: string;
-    message: string;
-    action: () => Promise<void>;
-  }>({
-    open: false,
-    title: '',
-    message: '',
-    action: async () => {},
-  });
-
-  const showError = (message: string) => {
-    setError(message);
-    setTimeout(() => setError(null), 5000);
-  };
-
-  const showSuccess = (message: string) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(null), 3000);
-  };
-
-  const handleConfirmDialogClose = () => {
-    setConfirmDialog(prev => ({ ...prev, open: false }));
-  };
-
-  const handleConfirmAction = async () => {
-    try {
-      await confirmDialog.action();
-      handleConfirmDialogClose();
-    } catch (err) {
-      console.error('Erreur lors de l\'exécution de l\'action:', err);
-      showError('Une erreur est survenue lors de l\'exécution de l\'action');
-    }
-  };
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'purge' | null>(null);
+  const { contract, error: adminError } = useTokenForgeAdmin({ onError });
 
   const loadLogs = useCallback(async () => {
     if (!contract) return;
+    
     try {
       setIsLoading(true);
       const auditLogs = await contract.getAuditLogs();
       setLogs(auditLogs);
-    } catch (err) {
-      showError('Erreur lors du chargement des logs');
-      console.error('Erreur lors du chargement des logs:', err);
+    } catch (error) {
+      onError?.(error instanceof Error ? error.message : 'Failed to load audit logs');
     } finally {
       setIsLoading(false);
     }
-  }, [contract]);
+  }, [contract, onError]);
 
-  useEffect(() => {
-    loadLogs();
-  }, [loadLogs]);
-
-  const handleExport = useCallback(async () => {
-    if (!logs.length) {
-      showError('Aucun log à exporter');
-      return;
-    }
-
+  const handleExport = async () => {
     try {
-      const csvContent = logs.map(log => {
-        const date = new Date(log.timestamp * 1000).toLocaleString();
-        return `${date},${log.action},${log.data},${log.address}`;
-      }).join('\n');
-
-      const blob = new Blob([`Date,Action,Data,Address\n${csvContent}`], { type: 'text/csv' });
+      setIsLoading(true);
+      const csvContent = logs
+        .map(log => `${log.timestamp},${log.level},${log.category},${log.message}`)
+        .join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `audit_logs_${new Date().toISOString()}.csv`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      showSuccess('Logs exportés avec succès');
-    } catch (err) {
-      showError('Erreur lors de l\'export des logs');
-      console.error('Erreur lors de l\'export des logs:', err);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      onError?.(error instanceof Error ? error.message : 'Failed to export logs');
+    } finally {
+      setIsLoading(false);
     }
-  }, [logs]);
+  };
 
-  const handlePurge = useCallback(() => {
-    setConfirmDialog({
-      open: true,
-      title: 'Confirmer la purge',
-      message: 'Êtes-vous sûr de vouloir supprimer tous les logs ? Cette action est irréversible.',
-      action: async () => {
-        if (!contract) return;
-        try {
-          await contract.purgeAuditLogs();
-          await loadLogs();
-          showSuccess('Logs purgés avec succès');
-        } catch (err) {
-          showError('Erreur lors de la purge des logs');
-          console.error('Erreur lors de la purge des logs:', err);
-        }
-      },
-    });
-  }, [contract, loadLogs]);
+  const handlePurge = async () => {
+    try {
+      setIsLoading(true);
+      await contract.purgeAuditLogs();
+      setLogs([]);
+      setConfirmAction(null);
+    } catch (error) {
+      onError?.(error instanceof Error ? error.message : 'Failed to purge logs');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleDeleteLog = useCallback((logId: number) => {
-    setConfirmDialog({
-      open: true,
-      title: 'Confirmer la suppression',
-      message: 'Êtes-vous sûr de vouloir supprimer ce log ?',
-      action: async () => {
-        if (!contract) return;
-        try {
-          await contract.deleteAuditLog(logId);
-          await loadLogs();
-          showSuccess('Log supprimé avec succès');
-        } catch (err) {
-          showError('Erreur lors de la suppression du log');
-          console.error('Erreur lors de la suppression du log:', err);
-        }
-      },
-    });
-  }, [contract, loadLogs]);
+  const handleViewDetails = (log: AuditLog) => {
+    setSelectedLog(log);
+  };
 
-  if (isLoading && !logs.length) {
+  React.useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
+
+  if (adminError) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-        <CircularProgress />
-      </Box>
+      <ForgeCard>
+        <Alert severity="error">
+          Une erreur est survenue lors du chargement des logs d'audit
+        </Alert>
+      </ForgeCard>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Logs d'Audit
-      </Typography>
-
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <AuditLogToolbar
         onExport={handleExport}
-        onPurge={handlePurge}
-        disabled={!logs.length || isLoading}
+        onPurge={() => setConfirmAction('purge')}
+        isLoading={isLoading}
+        disabled={logs.length === 0}
       />
 
       <AuditLogList
         logs={logs}
-        onDeleteLog={handleDeleteLog}
         isLoading={isLoading}
+        onViewDetails={handleViewDetails}
       />
 
       <Dialog
-        open={confirmDialog.open}
-        onClose={handleConfirmDialogClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+        open={!!selectedLog}
+        onClose={() => setSelectedLog(null)}
+        maxWidth="md"
+        fullWidth
       >
-        <DialogTitle id="alert-dialog-title">
-          {confirmDialog.title}
-        </DialogTitle>
+        <DialogTitle>Détails du Log</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {confirmDialog.message}
-          </DialogContentText>
+          {selectedLog && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Timestamp: {new Date(selectedLog.timestamp).toLocaleString()}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                Level: {selectedLog.level}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                Category: {selectedLog.category}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                Message: {selectedLog.message}
+              </Typography>
+              {selectedLog.data && (
+                <Typography variant="subtitle1" component="pre" sx={{ mt: 2 }}>
+                  Data: {JSON.stringify(selectedLog.data, null, 2)}
+                </Typography>
+              )}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleConfirmDialogClose}>Annuler</Button>
-          <Button onClick={handleConfirmAction} color="error" autoFocus>
-            Confirmer
-          </Button>
+          <Button onClick={() => setSelectedLog(null)}>Fermer</Button>
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={!!error} autoHideDuration={5000} onClose={() => setError(null)}>
-        <Alert severity="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess(null)}>
-        <Alert severity="success" onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      </Snackbar>
+      <Dialog
+        open={confirmAction === 'purge'}
+        onClose={() => setConfirmAction(null)}
+      >
+        <DialogTitle>Confirmation</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Êtes-vous sûr de vouloir supprimer tous les logs d'audit ? Cette action est irréversible.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmAction(null)} color="inherit">
+            Annuler
+          </Button>
+          <Button onClick={handlePurge} color="error" variant="contained">
+            Supprimer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
 
-export default AuditLogs;
+export default React.memo(AuditLogs);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -11,15 +11,24 @@ import type { ButtonProps } from '@mui/material';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
+import { AdminComponentProps } from '../types';
 
-export const ContractControls: React.FC = () => {
+export const ContractControls: React.FC<AdminComponentProps> = ({ onError }) => {
   const {
     isPaused,
     isPausing,
     isUnpausing,
-    handleTogglePause,
+    handleTogglePause: togglePause,
     contractAddress,
   } = useTokenForgeAdmin();
+
+  const handleTogglePause = useCallback(async () => {
+    try {
+      await togglePause();
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'Failed to toggle contract state');
+    }
+  }, [togglePause, onError]);
 
   const buttonProps: ButtonProps & { loading?: boolean; loadingPosition?: 'start' | 'end' | 'center' } = {
     variant: "contained",
@@ -66,4 +75,4 @@ export const ContractControls: React.FC = () => {
   );
 };
 
-export default ContractControls;
+export default React.memo(ContractControls);

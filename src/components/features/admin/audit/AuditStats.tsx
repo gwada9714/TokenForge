@@ -7,6 +7,8 @@ import {
   Grid,
   Typography,
   useTheme,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   BarChart,
@@ -21,6 +23,8 @@ import {
   Cell,
 } from 'recharts';
 import { useAuditLogs, LogLevel, LogCategory } from '../../../../hooks/useAuditLogs';
+import { AdminComponentProps } from '../types';
+import { ForgeCard } from '../../../common/ForgeCard';
 
 interface LogStats {
   byLevel: Record<LogLevel, number>;
@@ -29,19 +33,16 @@ interface LogStats {
   total: number;
   lastDay: number;
   lastWeek: number;
-  lastMonth: number;
 }
 
-export const AuditStats: React.FC = () => {
-  const { logs } = useAuditLogs();
+export const AuditStats: React.FC<AdminComponentProps> = ({ onError }) => {
   const theme = useTheme();
+  const { logs, isLoading, error } = useAuditLogs({ onError });
 
-  // Calculer les statistiques
-  const stats = useMemo((): LogStats => {
+  const stats = useMemo<LogStats>(() => {
     const now = Date.now();
     const oneDayAgo = now - 24 * 60 * 60 * 1000;
     const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
-    const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
 
     return logs.reduce(
       (acc, log) => {
@@ -55,13 +56,11 @@ export const AuditStats: React.FC = () => {
         const hour = new Date(log.timestamp).getHours();
         acc.byHour[hour] = (acc.byHour[hour] || 0) + 1;
 
-        // Totaux par période
-        const timestamp = log.timestamp;
-        acc.total++;
-        if (timestamp >= oneDayAgo) acc.lastDay++;
-        if (timestamp >= oneWeekAgo) acc.lastWeek++;
-        if (timestamp >= oneMonthAgo) acc.lastMonth++;
+        // Statistiques temporelles
+        if (log.timestamp >= oneDayAgo) acc.lastDay++;
+        if (log.timestamp >= oneWeekAgo) acc.lastWeek++;
 
+        acc.total++;
         return acc;
       },
       {
@@ -71,152 +70,169 @@ export const AuditStats: React.FC = () => {
         total: 0,
         lastDay: 0,
         lastWeek: 0,
-        lastMonth: 0,
       }
     );
   }, [logs]);
 
-  // Données pour les graphiques
-  const levelData = Object.entries(stats.byLevel).map(([level, count]) => ({
-    name: level,
-    value: count,
-  }));
+  const levelData = useMemo(
+    () =>
+      Object.entries(stats.byLevel).map(([level, count]) => ({
+        name: level,
+        value: count,
+      })),
+    [stats.byLevel]
+  );
 
-  const categoryData = Object.entries(stats.byCategory).map(([category, count]) => ({
-    name: category,
-    value: count,
-  }));
+  const categoryData = useMemo(
+    () =>
+      Object.entries(stats.byCategory).map(([category, count]) => ({
+        name: category,
+        value: count,
+      })),
+    [stats.byCategory]
+  );
 
-  const hourlyData = Array.from({ length: 24 }, (_, hour) => ({
-    hour: `${hour}h`,
-    count: stats.byHour[hour] || 0,
-  }));
+  const hourlyData = useMemo(
+    () =>
+      Array.from({ length: 24 }, (_, hour) => ({
+        hour: hour.toString().padStart(2, '0') + 'h',
+        count: stats.byHour[hour] || 0,
+      })),
+    [stats.byHour]
+  );
 
-  // Couleurs pour les graphiques
   const COLORS = {
-    ERROR: theme.palette.error.main,
-    WARNING: theme.palette.warning.main,
-    INFO: theme.palette.info.main,
-    DEBUG: theme.palette.success.light,
+    error: theme.palette.error.main,
+    warning: theme.palette.warning.main,
+    info: theme.palette.info.main,
+    debug: theme.palette.grey[500],
   };
 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ mt: 3 }}>
-      <Grid container spacing={3}>
-        {/* Statistiques générales */}
-        <Grid item xs={12}>
-          <Card>
-            <CardHeader title="Vue d'ensemble" />
-            <CardContent>
-              <Grid container spacing={2}>
-                <Grid item xs={3}>
-                  <Typography variant="h6">{stats.total}</Typography>
-                  <Typography color="textSecondary">Total des logs</Typography>
-                </Grid>
-                <Grid item xs={3}>
-                  <Typography variant="h6">{stats.lastDay}</Typography>
-                  <Typography color="textSecondary">Dernières 24h</Typography>
-                </Grid>
-                <Grid item xs={3}>
-                  <Typography variant="h6">{stats.lastWeek}</Typography>
-                  <Typography color="textSecondary">7 derniers jours</Typography>
-                </Grid>
-                <Grid item xs={3}>
-                  <Typography variant="h6">{stats.lastMonth}</Typography>
-                  <Typography color="textSecondary">30 derniers jours</Typography>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
+    <Grid container spacing={3}>
+      <Grid item xs={12} md={4}>
+        <ForgeCard>
+          <CardHeader title="Statistiques Générales" />
+          <CardContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Typography variant="h4">{stats.total}</Typography>
+              <Typography color="text.secondary">Logs au Total</Typography>
 
-        {/* Distribution par niveau */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader title="Distribution par niveau" />
-            <CardContent>
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={levelData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      {levelData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[entry.name as keyof typeof COLORS]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="h6">{stats.lastDay}</Typography>
+                <Typography color="text.secondary">Dernières 24h</Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
 
-        {/* Distribution par catégorie */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader title="Distribution par catégorie" />
-            <CardContent>
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      {categoryData.map((_entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={theme.palette.primary.main}
-                          opacity={0.5 + (index * 0.5) / categoryData.length}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="h6">{stats.lastWeek}</Typography>
+                <Typography color="text.secondary">7 Derniers Jours</Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Distribution horaire */}
-        <Grid item xs={12}>
-          <Card>
-            <CardHeader title="Distribution horaire" />
-            <CardContent>
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={hourlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill={theme.palette.primary.main} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            </Box>
+          </CardContent>
+        </ForgeCard>
       </Grid>
-    </Box>
+
+      <Grid item xs={12} md={4}>
+        <ForgeCard>
+          <CardHeader title="Distribution par Niveau" />
+          <CardContent>
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={levelData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    label
+                  >
+                    {levelData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[entry.name as keyof typeof COLORS]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </ForgeCard>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <ForgeCard>
+          <CardHeader title="Distribution par Catégorie" />
+          <CardContent>
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    label
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={theme.palette.primary.main}
+                        opacity={0.5 + (index * 0.5) / categoryData.length}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </ForgeCard>
+      </Grid>
+
+      <Grid item xs={12}>
+        <ForgeCard>
+          <CardHeader title="Distribution Horaire" />
+          <CardContent>
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer>
+                <BarChart data={hourlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill={theme.palette.primary.main} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </ForgeCard>
+      </Grid>
+    </Grid>
   );
 };
 
-export default AuditStats;
+export default React.memo(AuditStats);

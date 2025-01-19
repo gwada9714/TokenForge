@@ -19,12 +19,14 @@ import type { AuditLog } from '../../../../types/contracts';
 interface AuditLogListProps {
   logs: AuditLog[];
   onDeleteLog?: (logId: number) => void;
+  onViewDetails: (log: AuditLog) => void;
   isLoading?: boolean;
 }
 
 export const AuditLogList: React.FC<AuditLogListProps> = ({
   logs,
   onDeleteLog,
+  onViewDetails,
   isLoading = false,
 }) => {
   const formatDate = (timestamp: number) => {
@@ -133,6 +135,17 @@ export const AuditLogList: React.FC<AuditLogListProps> = ({
               </Tooltip>
             </ListItemSecondaryAction>
           )}
+          <ListItemSecondaryAction>
+            <Tooltip title="Voir les détails">
+              <IconButton
+                edge="end"
+                onClick={() => onViewDetails(log)}
+                size="small"
+              >
+                <VisibilityIcon />
+              </IconButton>
+            </Tooltip>
+          </ListItemSecondaryAction>
         </ListItem>
       ))}
     </List>

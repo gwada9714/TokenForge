@@ -16,15 +16,13 @@ import type { AlertRule } from '../../../../types/contracts';
 
 interface AlertListProps {
   rules: AlertRule[];
-  onToggleRule: (ruleId: number) => void;
-  onDeleteRule: (ruleId: number) => void;
+  onDelete: (ruleId: string) => Promise<void>;
   isLoading: boolean;
 }
 
 export const AlertList: React.FC<AlertListProps> = ({
   rules,
-  onToggleRule,
-  onDeleteRule,
+  onDelete,
   isLoading,
 }) => {
   if (isLoading) {
@@ -82,18 +80,10 @@ export const AlertList: React.FC<AlertListProps> = ({
             }
           />
           <ListItemSecondaryAction>
-            <Tooltip title={rule.enabled ? 'Désactiver' : 'Activer'}>
-              <Switch
-                edge="end"
-                checked={rule.enabled}
-                onChange={() => onToggleRule(rule.id)}
-                disabled={isLoading}
-              />
-            </Tooltip>
             <Tooltip title="Supprimer">
               <IconButton
                 edge="end"
-                onClick={() => onDeleteRule(rule.id)}
+                onClick={() => onDelete(rule.id)}
                 disabled={isLoading}
                 color="error"
                 sx={{ ml: 1 }}
