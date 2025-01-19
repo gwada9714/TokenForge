@@ -85,6 +85,7 @@ declare module 'styled-components' {
       xs: string;
       sm: string;
       base: string;
+      md: string;
       lg: string;
       xl: string;
     };
@@ -101,13 +102,11 @@ declare module 'styled-components' {
       tooltip: number;
     };
     breakpoints: {
-      values: {
-        xs: number;
-        sm: number;
-        md: number;
-        lg: number;
-        xl: number;
-      };
+      xs: string;
+      sm: string;
+      md: string;
+      lg: string;
+      xl: string;
       up: (key: string) => string;
       down: (key: string) => string;
       between: (start: string, end: string) => string;

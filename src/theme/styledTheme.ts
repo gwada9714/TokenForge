@@ -84,8 +84,9 @@ export const theme: DefaultTheme = {
     xs: '0.25rem',
     sm: '0.5rem',
     base: '1rem',
-    lg: '1.5rem',
-    xl: '2rem'
+    md: '1.5rem',
+    lg: '2rem',
+    xl: '3rem'
   },
   borderRadius: {
     sm: "0.25rem",
@@ -100,16 +101,15 @@ export const theme: DefaultTheme = {
     tooltip: 1500,
   },
   breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 960,
-      lg: 1280,
-      xl: 1920,
-    },
-    up: (key: string) => `@media (min-width: ${theme.breakpoints.values[key as keyof typeof theme.breakpoints.values]}px)`,
-    down: (key: string) => `@media (max-width: ${theme.breakpoints.values[key as keyof typeof theme.breakpoints.values] - 0.05}px)`,
-    between: (start: string, end: string) => `@media (min-width: ${theme.breakpoints.values[start as keyof typeof theme.breakpoints.values]}px) and (max-width: ${theme.breakpoints.values[end as keyof typeof theme.breakpoints.values] - 0.05}px)`,
+    xs: '0px',
+    sm: '600px',
+    md: '960px',
+    lg: '1280px',
+    xl: '1920px',
+    up: (key: string) => `@media (min-width: ${theme.breakpoints[key as keyof typeof theme.breakpoints]})`,
+    down: (key: string) => `@media (max-width: ${theme.breakpoints[key as keyof typeof theme.breakpoints]})`,
+    between: (start: string, end: string) => 
+      `@media (min-width: ${theme.breakpoints[start as keyof typeof theme.breakpoints]}) and (max-width: ${theme.breakpoints[end as keyof typeof theme.breakpoints]})`
   },
   transitions: {
     default: "all 0.3s ease-in-out",
