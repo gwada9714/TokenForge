@@ -1,5 +1,4 @@
 import { DefaultTheme } from 'styled-components';
-import { breakpoints } from './breakpoints';
 
 export const theme: DefaultTheme = {
   colors: {
@@ -16,6 +15,17 @@ export const theme: DefaultTheme = {
       dark: "#1d4ed8",
       border: "#93c5fd",
       hover: "#1d4ed8"
+    },
+    background: {
+      default: "#0c1019",
+      paper: "#182038",
+      dark: "#000000"
+    },
+    text: {
+      primary: "#FFFFFF",
+      secondary: "#6B7280",
+      disabled: "#9e9e9e",
+      light: "#FFFFFF"
     },
     success: {
       main: "#22c55e",
@@ -41,16 +51,6 @@ export const theme: DefaultTheme = {
       light: "#fdba74",
       dark: "#c2410c",
     },
-    background: {
-      default: "#0c1019",
-      paper: "#182038",
-      dark: "#000000",
-    },
-    text: {
-      primary: "#FFFFFF",
-      secondary: "#6B7280",
-      light: "#FFFFFF",
-    },
     gradient: {
       primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
       secondary: "linear-gradient(135deg, #D97706 0%, #f59e0b 100%)",
@@ -59,35 +59,33 @@ export const theme: DefaultTheme = {
   },
   typography: {
     fontFamily: {
-      heading: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      heading: "'Poppins', sans-serif",
+      body: "'Inter', sans-serif"
     },
     fontWeight: {
       normal: 400,
       medium: 500,
       semibold: 600,
-      bold: 700,
-      extrabold: 800
+      bold: 700
     },
     fontSizes: {
-      xs: "0.75rem",
-      sm: "0.875rem",
-      md: "1rem",
-      lg: "1.125rem",
-      xl: "1.25rem",
-      "2xl": "1.5rem",
-      "3xl": "1.875rem",
-      "4xl": "2.25rem",
-      "5xl": "3rem",
-      "6xl": "4rem"
-    },
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+      '5xl': '3rem'
+    }
   },
   spacing: {
-    xs: "0.5rem",
-    sm: "1rem",
-    md: "1.5rem",
-    lg: "2rem",
-    xl: "2.5rem"
+    xs: '0.25rem',
+    sm: '0.5rem',
+    base: '1rem',
+    lg: '1.5rem',
+    xl: '2rem'
   },
   borderRadius: {
     sm: "0.25rem",
@@ -101,7 +99,28 @@ export const theme: DefaultTheme = {
     snackbar: 1400,
     tooltip: 1500,
   },
-  breakpoints,
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 960,
+      lg: 1280,
+      xl: 1920,
+    },
+    up: (key: string) => `@media (min-width: ${theme.breakpoints.values[key as keyof typeof theme.breakpoints.values]}px)`,
+    down: (key: string) => `@media (max-width: ${theme.breakpoints.values[key as keyof typeof theme.breakpoints.values] - 0.05}px)`,
+    between: (start: string, end: string) => `@media (min-width: ${theme.breakpoints.values[start as keyof typeof theme.breakpoints.values]}px) and (max-width: ${theme.breakpoints.values[end as keyof typeof theme.breakpoints.values] - 0.05}px)`,
+  },
+  transitions: {
+    default: "all 0.3s ease-in-out",
+    fast: "all 0.15s ease-in-out",
+    slow: "all 0.5s ease-in-out"
+  },
+  shadows: {
+    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
+  },
 };
 
 export default theme;

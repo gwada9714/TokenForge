@@ -7,11 +7,15 @@ declare module 'styled-components' {
         main: string;
         light: string;
         dark: string;
+        border: string;
+        hover: string;
       };
       secondary: {
         main: string;
         light: string;
         dark: string;
+        border: string;
+        hover: string;
       };
       background: {
         default: string;
@@ -21,6 +25,7 @@ declare module 'styled-components' {
       text: {
         primary: string;
         secondary: string;
+        disabled: string;
         light: string;
       };
       forge: {
@@ -28,26 +33,9 @@ declare module 'styled-components' {
         dark: string;
         light: string;
         metallic: string;
-        ember: string;
         glow: string;
         border: string;
         hover: string;
-        disabled: string;
-      };
-      gradient: {
-        primary: string;
-        secondary: string;
-        forge: string;
-      };
-      action: {
-        active: string;
-        hover: string;
-        selected: string;
-      };
-      error: {
-        main: string;
-        light: string;
-        dark: string;
       };
       success: {
         main: string;
@@ -58,6 +46,16 @@ declare module 'styled-components' {
         main: string;
         light: string;
         dark: string;
+      };
+      ember: {
+        main: string;
+        light: string;
+        dark: string;
+      };
+      gradient: {
+        primary: string;
+        secondary: string;
+        forge: string;
       };
     };
     typography: {
@@ -70,25 +68,23 @@ declare module 'styled-components' {
         medium: number;
         semibold: number;
         bold: number;
-        extrabold: number;
       };
       fontSizes: {
         xs: string;
         sm: string;
-        md: string;
+        base: string;
         lg: string;
         xl: string;
         '2xl': string;
         '3xl': string;
         '4xl': string;
         '5xl': string;
-        '6xl': string;
       };
     };
     spacing: {
       xs: string;
       sm: string;
-      md: string;
+      base: string;
       lg: string;
       xl: string;
     };
@@ -96,18 +92,6 @@ declare module 'styled-components' {
       sm: string;
       md: string;
       lg: string;
-      xl: string;
-      full: string;
-    };
-    shadows: {
-      sm: string;
-      md: string;
-      lg: string;
-    };
-    transitions: {
-      default: string;
-      slow: string;
-      fast: string;
     };
     zIndex: {
       appBar: number;
@@ -115,7 +99,6 @@ declare module 'styled-components' {
       modal: number;
       snackbar: number;
       tooltip: number;
-      header: number;
     };
     breakpoints: {
       values: {
@@ -128,8 +111,16 @@ declare module 'styled-components' {
       up: (key: string) => string;
       down: (key: string) => string;
       between: (start: string, end: string) => string;
-      only: (key: string) => string;
-      width: (key: string) => number;
+    };
+    transitions: {
+      default: string;
+      fast: string;
+      slow: string;
+    };
+    shadows: {
+      sm: string;
+      md: string;
+      lg: string;
     };
   }
 }
