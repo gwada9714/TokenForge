@@ -1,8 +1,14 @@
 import React, { useEffect } from 'react';
 import { WagmiConfig } from 'wagmi';
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { wagmiConfig, chains } from '../config/wagmiConfig';
-import '@rainbow-me/rainbowkit/styles.css';
+
+// Import dynamique des styles pour éviter les problèmes de SSR
+const importRainbowStyles = async () => {
+  if (typeof window !== 'undefined') {
+    await import('@rainbow-me/rainbowkit/styles.css');
+  }
+};
 
 interface Web3ProvidersProps {
   children: React.ReactNode;
@@ -10,9 +16,11 @@ interface Web3ProvidersProps {
 
 export const Web3Providers: React.FC<Web3ProvidersProps> = ({ children }) => {
   useEffect(() => {
+    importRainbowStyles();
+    
     // Vérifier si MetaMask est installé
     const checkMetaMask = async () => {
-      if (typeof window.ethereum === 'undefined') {
+      if (typeof window !== 'undefined' && typeof window.ethereum === 'undefined') {
         console.warn('MetaMask n\'est pas installé');
       }
     };
@@ -22,13 +30,8 @@ export const Web3Providers: React.FC<Web3ProvidersProps> = ({ children }) => {
   return (
     <WagmiConfig config={wagmiConfig}>
       <RainbowKitProvider 
-        chains={chains} 
-        theme={darkTheme()}
-        modalSize="compact"
-        appInfo={{
-          appName: 'TokenForge',
-          learnMoreUrl: 'https://tokenforge.io/about',
-        }}
+        chains={chains}
+        coolMode
       >
         {children}
       </RainbowKitProvider>

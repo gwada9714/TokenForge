@@ -8,13 +8,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 export default defineConfig({
   base: '/',
   plugins: [
-    react({
-      babel: {
-        plugins: [
-          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
-        ]
-      }
-    }),
+    react(),
     nodePolyfills({
       globals: {
         Buffer: true,
@@ -61,22 +55,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@config': path.resolve(__dirname, './src/config'),
-      '@contexts': path.resolve(__dirname, './src/contexts'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@pages': path.resolve(__dirname, './src/pages'),
-      '@reducers': path.resolve(__dirname, './src/reducers'),
-      '@styles': path.resolve(__dirname, './src/styles'),
-      '@types': path.resolve(__dirname, './src/types'),
-      '@utils': path.resolve(__dirname, './src/utils'),
       'process': 'process/browser',
       'stream': 'stream-browserify',
       'zlib': 'browserify-zlib',
       'util': 'util',
       'buffer': 'buffer'
-    },
-    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    }
   },
   optimizeDeps: {
     esbuildOptions: {
@@ -93,70 +77,29 @@ export default defineConfig({
       '@rainbow-me/rainbowkit/wallets',
       'wagmi',
       'wagmi/providers/alchemy',
-      'wagmi/providers/public',
-      'react',
-      'react-dom',
-      'react-router-dom',
-      '@tanstack/react-query'
-    ],
-    exclude: []
+      'wagmi/providers/public'
+    ]
   },
   build: {
-    target: 'esnext',
-    minify: 'esbuild',
-    cssMinify: true,
-    sourcemap: true,
+    target: 'es2020',
+    commonjsOptions: {
+      transformMixedEsModules: true
+    },
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'web3-vendor': ['wagmi', 'viem', '@rainbow-me/rainbowkit'],
-          'ui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled'],
           'rainbow': ['@rainbow-me/rainbowkit'],
-          'wagmi': ['wagmi', 'wagmi/providers/alchemy', 'wagmi/providers/public']
-        },
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
+          'wagmi': ['wagmi']
+        }
       }
-    },
-    assetsInlineLimit: 4096,
-    chunkSizeWarningLimit: 1000,
-    emptyOutDir: true,
-    outDir: 'dist',
-    assetsDir: 'assets'
-  },
-  server: {
-    port: 3005,
-    strictPort: true,
-    host: true,
-    cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-    },
-    hmr: {
-      overlay: true,
-      clientPort: 3005
-    },
-    fs: {
-      strict: false,
-      allow: ['..']
-    },
-    watch: {
-      usePolling: true,
-      interval: 100
     }
   },
-  preview: {
-    port: 3005,
-    strictPort: true,
+  server: {
+    port: 3000,
     host: true,
-    cors: true
-  },
-  cacheDir: '.vite',
-  define: {
-    'process.env': {}
+    fs: {
+      strict: false,
+      allow: ['.']
+    }
   }
 });
