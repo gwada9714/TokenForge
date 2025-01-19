@@ -8,8 +8,16 @@ type ColorSet = {
   hover?: string;
 };
 
-type SpacingKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'base';
 type BreakpointKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+type SpacingOptions = {
+  xs: string;
+  sm: string;
+  base: string;
+  md: string;
+  lg: string;
+  xl: string;
+};
 
 declare module 'styled-components' {
   export interface DefaultTheme {
@@ -50,29 +58,14 @@ declare module 'styled-components' {
         semibold: number;
         bold: number;
       };
-      fontSizes: {
-        xs: string;
-        sm: string;
-        base: string;
-        lg: string;
-        xl: string;
+      fontSizes: SpacingOptions & {
         '2xl': string;
         '3xl': string;
         '4xl': string;
         '5xl': string;
       };
     };
-    spacing: Record<SpacingKey, string>;
-    borderRadius: {
-      sm: string;
-      md: string;
-      lg: string;
-    };
-    transitions: {
-      default: string;
-      fast: string;
-      slow: string;
-    };
+    spacing: SpacingOptions;
     breakpoints: {
       values: Record<BreakpointKey, number>;
       up: (key: BreakpointKey) => string;

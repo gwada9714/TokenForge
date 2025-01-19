@@ -1,7 +1,6 @@
 import { DefaultTheme } from 'styled-components';
 
 type BreakpointKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-type SpacingKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'base';
 
 const breakpointValues: Record<BreakpointKey, number> = {
   xs: 0,
@@ -50,29 +49,29 @@ export const theme: DefaultTheme = {
       light: "#FFFFFF"
     },
     background: {
-      default: "#0c1019",
-      paper: "#182038",
-      dark: "#000000"
+      default: "#0F172A",
+      paper: "#1E293B",
+      dark: "#020617"
     },
     gradient: {
-      primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
-      secondary: "linear-gradient(135deg, #D97706 0%, #f59e0b 100%)",
-      forge: "linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%)"
+      primary: "linear-gradient(45deg, #f97316 30%, #fdba74 90%)",
+      secondary: "linear-gradient(45deg, #3b82f6 30%, #93c5fd 90%)",
+      forge: "linear-gradient(45deg, #f97316 30%, #c2410c 90%)"
     },
     forge: {
-      main: "#182038",
-      dark: "#0c1019",
-      light: "#2a3654",
-      border: "#2a3654",
-      hover: "#2a3654",
-      metallic: "linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%)",
-      glow: "rgba(217, 119, 6, 0.4)"
+      main: "#f97316",
+      light: "#fdba74",
+      dark: "#c2410c",
+      border: "#fdba74",
+      hover: "#c2410c",
+      metallic: "#B87333",
+      glow: "#FFA500"
     }
   },
   typography: {
     fontFamily: {
-      heading: "'Poppins', sans-serif",
-      body: "'Inter', sans-serif"
+      heading: "'Montserrat', sans-serif",
+      body: "'Roboto', sans-serif"
     },
     fontWeight: {
       normal: 400,
@@ -81,34 +80,25 @@ export const theme: DefaultTheme = {
       bold: 700
     },
     fontSizes: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      base: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
-      '2xl': '1.5rem',
-      '3xl': '1.875rem',
-      '4xl': '2.25rem',
-      '5xl': '3rem'
+      xs: "0.75rem",
+      sm: "0.875rem",
+      base: "1rem",
+      md: "1.125rem",
+      lg: "1.25rem",
+      xl: "1.5rem",
+      '2xl': "1.875rem",
+      '3xl': "2.25rem",
+      '4xl': "3rem",
+      '5xl': "3.75rem"
     }
   },
   spacing: {
-    xs: '0.25rem',
-    sm: '0.5rem',
-    md: '1rem',
-    lg: '1.5rem',
-    xl: '2rem',
-    base: '1rem'
-  },
-  borderRadius: {
-    sm: "0.25rem",
-    md: "0.5rem",
-    lg: "1rem"
-  },
-  transitions: {
-    default: "all 0.3s ease-in-out",
-    fast: "all 0.15s ease-in-out",
-    slow: "all 0.5s ease-in-out"
+    xs: "0.25rem",
+    sm: "0.5rem",
+    base: "1rem",
+    md: "1.5rem",
+    lg: "2rem",
+    xl: "3rem"
   },
   breakpoints: {
     values: breakpointValues,

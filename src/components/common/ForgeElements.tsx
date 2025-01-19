@@ -11,20 +11,20 @@ interface StyledProps {
 export const ForgeContainer = styled.div<StyledProps>`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 ${props => props.theme.spacing.medium};
+  padding: 0 ${props => props.theme.spacing.md};
 
   ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
-    padding: 0 ${props => props.theme.spacing.large};
+    padding: 0 ${props => props.theme.spacing.lg};
   }
 `;
 
 export const ForgeSection = styled.section<StyledProps>`
-  padding: ${props => props.theme.spacing.large} 0;
+  padding: ${props => props.theme.spacing.lg} 0;
   position: relative;
   overflow: hidden;
 
   ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
-    padding: ${props => props.theme.spacing.large} 0;
+    padding: ${props => props.theme.spacing.xl} 0;
   }
 `;
 
@@ -32,7 +32,7 @@ export const ForgeHeading = styled.h1<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.bold};
   color: ${props => props.theme.colors.text.primary};
-  margin-bottom: ${props => props.theme.spacing.medium};
+  margin-bottom: ${props => props.theme.spacing.md};
   text-align: center;
   font-size: ${props => props.theme.typography.fontSizes['3xl']};
 
@@ -49,7 +49,7 @@ export const ForgeSubheading = styled.h2<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.semibold};
   color: ${props => props.theme.colors.text.secondary};
-  margin-bottom: ${props => props.theme.spacing.small};
+  margin-bottom: ${props => props.theme.spacing.sm};
   font-size: ${props => props.theme.typography.fontSizes['2xl']};
 
   ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
@@ -61,7 +61,7 @@ export const ForgeText = styled.p<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.body};
   color: ${props => props.theme.colors.text.primary};
   line-height: 1.6;
-  margin-bottom: ${props => props.theme.spacing.small};
+  margin-bottom: ${props => props.theme.spacing.sm};
   font-size: ${props => props.theme.typography.fontSizes.sm};
 
   ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
@@ -74,11 +74,11 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
   color: ${props => props.theme.colors.text.light};
   font-family: ${props => props.theme.typography.fontFamily.body};
   font-weight: ${props => props.theme.typography.fontWeight.medium};
-  padding: ${props => `${props.theme.spacing.small} ${props.theme.spacing.medium}`};
-  border-radius: ${props => props.theme.borderRadius.md};
+  padding: ${props => `${props.theme.spacing.sm} ${props.theme.spacing.md}`};
+  border-radius: 0.375rem;
   border: none;
   cursor: pointer;
-  transition: ${props => props.theme.transitions.default};
+  transition: all 0.2s ease-in-out;
   font-size: ${props => props.theme.typography.fontSizes.sm};
 
   ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
@@ -101,39 +101,28 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
 
 export const ForgeCard = styled(motion.div)<StyledProps>`
   background: ${props => props.theme.colors.background.paper};
-  border-radius: ${props => props.theme.borderRadius.lg};
-  padding: ${props => props.theme.spacing.large};
-  box-shadow: ${props => props.theme.shadows.md};
-  transition: ${props => props.theme.transitions.default};
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: ${props => props.theme.shadows.lg};
-  }
+  border-radius: 0.5rem;
+  padding: ${props => props.theme.spacing.md};
+  margin-bottom: ${props => props.theme.spacing.md};
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
   ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
-    padding: ${props => props.theme.spacing.large};
+    padding: ${props => props.theme.spacing.lg};
   }
 `;
 
 export const ForgeGrid = styled.div<StyledProps>`
   display: grid;
+  gap: ${props => props.theme.spacing.md};
   grid-template-columns: 1fr;
-  gap: ${props => props.theme.spacing.medium};
-  margin: ${props => props.theme.spacing.large} 0;
-
-  ${props => props.theme.breakpoints.up('sm' as BreakpointKey)} {
-    grid-template-columns: repeat(2, 1fr);
-    gap: ${props => props.theme.spacing.medium};
-  }
 
   ${props => props.theme.breakpoints.up('md' as BreakpointKey)} {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: ${props => props.theme.spacing.lg};
   }
 
   ${props => props.theme.breakpoints.up('lg' as BreakpointKey)} {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 `;
 
