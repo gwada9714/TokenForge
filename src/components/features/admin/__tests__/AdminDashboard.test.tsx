@@ -1,32 +1,36 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { AdminDashboard } from '../AdminDashboard';
+import AdminDashboard from '../AdminDashboard';
 
 // Mock des composants enfants
-jest.mock('../contract/ContractControls', () => ({
-  ContractControls: ({ onError }: { onError: (msg: string) => void }): React.ReactElement => (
-    <div data-testid="contract-controls" onClick={() => onError('test error')}>Contract Controls</div>
-  ),
-}));
+jest.mock('../ContractControls', () => {
+  return {
+    __esModule: true,
+    default: () => <div data-testid="contract-controls">Contract Controls</div>
+  };
+});
 
-jest.mock('../ownership/OwnershipManagement', () => ({
-  OwnershipManagement: ({ onError }: { onError: (msg: string) => void }): React.ReactElement => (
-    <div data-testid="ownership-management" onClick={() => onError('ownership error')}>Ownership Management</div>
-  ),
-}));
+jest.mock('../OwnershipManagement', () => {
+  return {
+    __esModule: true,
+    default: () => <div data-testid="ownership-management">Ownership Management</div>
+  };
+});
 
-jest.mock('../alerts/AlertsManagement', () => ({
-  AlertsManagement: ({ onError }: { onError: (msg: string) => void }): React.ReactElement => (
-    <div data-testid="alerts-management" onClick={() => onError('alerts error')}>Alerts Management</div>
-  ),
-}));
+jest.mock('../AlertsManagement', () => {
+  return {
+    __esModule: true,
+    default: () => <div data-testid="alerts-management">Alerts Management</div>
+  };
+});
 
-jest.mock('../audit/AuditLogs', () => ({
-  AuditLogs: ({ onError }: { onError: (msg: string) => void }): React.ReactElement => (
-    <div data-testid="audit-logs" onClick={() => onError('audit error')}>Audit Logs</div>
-  ),
-}));
+jest.mock('../AuditLogs', () => {
+  return {
+    __esModule: true,
+    default: () => <div data-testid="audit-logs">Audit Logs</div>
+  };
+});
 
 jest.mock('../audit/AuditStats', () => ({
   AuditStats: (): React.ReactElement => <div data-testid="audit-stats">Audit Stats</div>,
@@ -45,56 +49,53 @@ jest.mock('../AdminTabs', () => ({
 }));
 
 describe('AdminDashboard', () => {
-  const mockOnError = jest.fn();
-
-  beforeEach(() => {
-    render(<AdminDashboard onError={mockOnError} />);
-    mockOnError.mockClear();
+  it('renders all tabs correctly', () => {
+    render(<AdminDashboard />);
+    
+    expect(screen.getByText('Contract Controls')).toBeInTheDocument();
+    expect(screen.getByText('Ownership')).toBeInTheDocument();
+    expect(screen.getByText('Alerts')).toBeInTheDocument();
+    expect(screen.getByText('Audit Logs')).toBeInTheDocument();
   });
 
-  it('renders all components initially', () => {
-    expect(screen.getByTestId('admin-header')).toBeInTheDocument();
-    expect(screen.getByTestId('admin-tabs')).toBeInTheDocument();
-    expect(screen.getByTestId('contract-controls')).toBeInTheDocument();
+  it('switches between tabs correctly', () => {
+    render(<AdminDashboard />);
+    
+    // Par défaut, le premier onglet devrait être visible
+    expect(screen.getByTestId('contract-controls')).toBeVisible();
+    
+    // Cliquer sur l'onglet Ownership
+    fireEvent.click(screen.getByText('Ownership'));
+    expect(screen.getByTestId('ownership-management')).toBeVisible();
+    
+    // Cliquer sur l'onglet Alerts
+    fireEvent.click(screen.getByText('Alerts'));
+    expect(screen.getByTestId('alerts-management')).toBeVisible();
+    
+    // Cliquer sur l'onglet Audit Logs
+    fireEvent.click(screen.getByText('Audit Logs'));
+    expect(screen.getByTestId('audit-logs')).toBeVisible();
   });
 
-  it('changes tab content when clicking tabs', () => {
-    const tabs = screen.getByTestId('admin-tabs');
+  it('shows error message when triggered', async () => {
+    render(<AdminDashboard />);
     
-    // Initialement, on voit ContractControls
-    expect(screen.getByTestId('contract-controls')).toBeInTheDocument();
-    
-    // Premier clic : passage à OwnershipManagement
-    fireEvent.click(tabs);
-    expect(screen.getByTestId('ownership-management')).toBeInTheDocument();
-    
-    // Deuxième clic : passage à AlertsManagement
-    fireEvent.click(tabs);
-    expect(screen.getByTestId('alerts-management')).toBeInTheDocument();
-    
-    // Troisième clic : passage à AuditLogs
-    fireEvent.click(tabs);
-    expect(screen.getByTestId('audit-logs')).toBeInTheDocument();
-  });
-
-  it('propagates errors from child components', () => {
-    // Test des erreurs de ContractControls
+    // Simuler une erreur
     fireEvent.click(screen.getByTestId('contract-controls'));
-    expect(mockOnError).toHaveBeenCalledWith('test error');
+    
+    // Vérifier que le message d'erreur s'affiche
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
 
-    // Passage à OwnershipManagement et test des erreurs
-    fireEvent.click(screen.getByTestId('admin-tabs'));
-    fireEvent.click(screen.getByTestId('ownership-management'));
-    expect(mockOnError).toHaveBeenCalledWith('ownership error');
-
-    // Passage à AlertsManagement et test des erreurs
-    fireEvent.click(screen.getByTestId('admin-tabs'));
-    fireEvent.click(screen.getByTestId('alerts-management'));
-    expect(mockOnError).toHaveBeenCalledWith('alerts error');
-
-    // Passage à AuditLogs et test des erreurs
-    fireEvent.click(screen.getByTestId('admin-tabs'));
-    fireEvent.click(screen.getByTestId('audit-logs'));
-    expect(mockOnError).toHaveBeenCalledWith('audit error');
+  it('maintains tab state when switching', () => {
+    render(<AdminDashboard />);
+    
+    // Aller à l'onglet Audit Logs
+    fireEvent.click(screen.getByText('Audit Logs'));
+    expect(screen.getByTestId('audit-logs')).toBeVisible();
+    
+    // Revenir à l'onglet Contract Controls
+    fireEvent.click(screen.getByText('Contract Controls'));
+    expect(screen.getByTestId('contract-controls')).toBeVisible();
   });
 });

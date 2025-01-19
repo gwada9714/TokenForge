@@ -1,30 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { Box, Container, Alert, Snackbar } from '@mui/material';
+import { Box, Container, Alert, Snackbar, Tab, Tabs } from '@mui/material';
 import { TabPanel } from '../../common/TabPanel';
-import { ContractControls } from './contract/ContractControls';
-import { OwnershipManagement } from './ownership/OwnershipManagement';
-import { AlertsManagement } from './alerts/AlertsManagement';
-import { AuditLogs } from './audit/AuditLogs';
-import { AuditStats } from './audit/AuditStats';
-import { AdminHeader } from './AdminHeader';
-import { AdminTabs } from './AdminTabs';
-import { AdminComponentProps } from './types';
+import ContractControls from './ContractControls';
+import OwnershipManagement from './OwnershipManagement';
+import AlertsManagement from './AlertsManagement';
+import AuditLogs from './AuditLogs';
 
-/**
- * Dashboard principal de l'interface d'administration.
- * Fournit une vue d'ensemble et la navigation vers les différentes sections admin.
- *
- * @component
- * @example
- * ```tsx
- * <AdminDashboard onError={(msg) => console.error(msg)} />
- * ```
- */
-export interface AdminDashboardProps extends AdminComponentProps {
-  onError: (message: string) => void;
-}
-
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onError }) => {
+const AdminDashboard: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,8 +16,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onError }) => {
 
   const handleError = useCallback((message: string) => {
     setError(message);
-    onError(message);
-  }, [onError]);
+  }, []);
 
   const handleCloseError = useCallback(() => {
     setError(null);
@@ -44,29 +25,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onError }) => {
   return (
     <Container maxWidth="xl">
       <Box sx={{ width: '100%', mt: 3 }}>
-        <AdminHeader />
-
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-          <AdminTabs value={tabValue} onChange={handleTabChange} />
+          <Tabs value={tabValue} onChange={handleTabChange} aria-label="admin tabs">
+            <Tab label="Contract Controls" id="admin-tab-0" aria-controls="admin-tabpanel-0" />
+            <Tab label="Ownership" id="admin-tab-1" aria-controls="admin-tabpanel-1" />
+            <Tab label="Alerts" id="admin-tab-2" aria-controls="admin-tabpanel-2" />
+            <Tab label="Audit Logs" id="admin-tab-3" aria-controls="admin-tabpanel-3" />
+          </Tabs>
         </Box>
 
         <TabPanel value={tabValue} index={0}>
-          <ContractControls onError={handleError} />
+          <ContractControls />
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          <OwnershipManagement onError={handleError} />
+          <OwnershipManagement />
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
-          <AlertsManagement onError={handleError} />
+          <AlertsManagement />
         </TabPanel>
 
         <TabPanel value={tabValue} index={3}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <AuditStats onError={handleError} />
-            <AuditLogs onError={handleError} />
-          </Box>
+          <AuditLogs />
         </TabPanel>
       </Box>
 
