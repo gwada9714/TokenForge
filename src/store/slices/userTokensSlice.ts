@@ -1,14 +1,19 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { AppThunk } from '../store';
+import { getUserTokens } from '../../services/tokenService';
+
+export interface UserToken {
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSupply: string;
+  chainId: number;
+  balance: string;
+}
 
 export interface UserTokensState {
-  tokens: Array<{
-    address: string;
-    name: string;
-    symbol: string;
-    decimals: number;
-    totalSupply: string;
-    chainId: number;
-  }>;
+  tokens: UserToken[];
   loading: boolean;
   error: string | null;
 }
@@ -35,7 +40,7 @@ export const userTokensSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
-    addToken: (state, action: PayloadAction<UserTokensState['tokens'][0]>) => {
+    addToken: (state, action: PayloadAction<UserToken>) => {
       state.tokens.push(action.payload);
     },
     removeToken: (state, action: PayloadAction<string>) => {
@@ -49,13 +54,23 @@ export const userTokensSlice = createSlice({
   },
 });
 
-export const { 
-  setTokens, 
-  setLoading, 
-  setError, 
-  addToken, 
-  removeToken, 
-  clearTokens 
+export const {
+  setTokens,
+  setLoading,
+  setError,
+  addToken,
+  removeToken,
+  clearTokens,
 } = userTokensSlice.actions;
+
+export const fetchUserTokens = (address: string): AppThunk => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const tokens = await getUserTokens(address);
+    dispatch(setTokens(tokens));
+  } catch (error) {
+    dispatch(setError(error instanceof Error ? error.message : 'Failed to fetch tokens'));
+  }
+};
 
 export default userTokensSlice.reducer;

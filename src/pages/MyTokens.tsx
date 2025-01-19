@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { fetchUserTokens } from '@/store/slices/userTokensSlice';
-import TokenCard from '@/components/TokenCard';
+import { fetchUserTokens, UserToken } from '@/store/slices/userTokensSlice';
+import { TokenCard } from '@/components/features/token';
 import { Container, Typography, Grid, Box, CircularProgress } from '@mui/material';
 import { useAccount } from 'wagmi';
 
@@ -23,9 +23,9 @@ const MyTokens: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Box className="flex justify-center items-center min-h-[400px]">
-          <CircularProgress className="text-secondary-main" />
+      <Container maxWidth="lg">
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress />
         </Box>
       </Container>
     );
@@ -33,9 +33,9 @@ const MyTokens: React.FC = () => {
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Box className="text-center py-12">
-          <Typography variant="h6" color="error" gutterBottom>
+      <Container maxWidth="lg">
+        <Box mt={4}>
+          <Typography color="error" align="center">
             {error}
           </Typography>
         </Box>
@@ -43,36 +43,39 @@ const MyTokens: React.FC = () => {
     );
   }
 
-  return (
-    <Container maxWidth="lg" sx={{ py: 6 }}>
-      <Typography variant="h4" component="h1" gutterBottom className="font-heading font-bold text-primary-main">
-        Mes Tokens
-      </Typography>
-      
-      {!address ? (
-        <Box className="text-center py-12">
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            Connectez votre portefeuille pour voir vos tokens
-          </Typography>
-        </Box>
-      ) : tokens.length === 0 ? (
-        <Box className="text-center py-12">
-          <Typography variant="h6" color="text.secondary" gutterBottom>
+  if (!tokens.length) {
+    return (
+      <Container maxWidth="lg">
+        <Box mt={4}>
+          <Typography variant="h6" align="center">
             Vous n'avez pas encore de tokens
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Commencez par créer votre premier token en utilisant notre assistant de création
-          </Typography>
         </Box>
-      ) : (
-        <Grid container spacing={4}>
-          {tokens.map((token) => (
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg">
+      <Box mt={4}>
+        <Typography variant="h4" gutterBottom>
+          Mes Tokens
+        </Typography>
+        <Grid container spacing={3}>
+          {tokens.map((token: UserToken) => (
             <Grid item xs={12} sm={6} md={4} key={token.address}>
-              <TokenCard token={token} onAction={handleTokenAction} />
+              <TokenCard
+                token={{
+                  address: token.address,
+                  symbol: token.symbol,
+                  balance: token.balance
+                }}
+                onAction={handleTokenAction}
+              />
             </Grid>
           ))}
         </Grid>
-      )}
+      </Box>
     </Container>
   );
 };
