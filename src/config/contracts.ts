@@ -11,6 +11,10 @@ const contractAddresses: ContractAddresses = {
     1: '0x0000000000000000000000000000000000000000' as Address, // Mainnet - pas encore déployé
     11155111: '0xE2b29a1D3021027aF7AC8dAe5e230922F3247a0A' as Address, // Sepolia
   },
+  LAUNCHPAD: {
+    1: '0x0000000000000000000000000000000000000000' as Address, // Mainnet
+    11155111: '0x1234567890123456789012345678901234567890' as Address, // Sepolia - À remplacer par la vraie adresse
+  },
   TOKEN_FORGE_PLANS: {
     1: '0x0000000000000000000000000000000000000000' as Address, // Mainnet
     11155111: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' as Address, // Sepolia
@@ -38,3 +42,72 @@ export const getContractAddress = (contractName: string, chainId: number = 11155
   }
   return address;
 };
+
+export const LAUNCHPAD_ADDRESS = getContractAddress('LAUNCHPAD');
+
+export const LAUNCHPAD_ABI = [
+  {
+    inputs: [
+      { name: 'token', type: 'address' },
+      { name: 'tokenPrice', type: 'uint256' },
+      { name: 'hardCap', type: 'uint256' },
+      { name: 'softCap', type: 'uint256' },
+      { name: 'startTime', type: 'uint256' },
+      { name: 'endTime', type: 'uint256' }
+    ],
+    name: 'createPool',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [
+      { name: 'poolId', type: 'uint256' },
+      { name: 'amount', type: 'uint256' }
+    ],
+    name: 'contribute',
+    outputs: [],
+    stateMutability: 'payable',
+    type: 'function'
+  },
+  {
+    inputs: [{ name: 'poolId', type: 'uint256' }],
+    name: 'claimTokens',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [{ name: 'poolId', type: 'uint256' }],
+    name: 'getPoolInfo',
+    outputs: [
+      {
+        components: [
+          { name: 'token', type: 'address' },
+          { name: 'tokenPrice', type: 'uint256' },
+          { name: 'hardCap', type: 'uint256' },
+          { name: 'softCap', type: 'uint256' },
+          { name: 'totalRaised', type: 'uint256' },
+          { name: 'startTime', type: 'uint256' },
+          { name: 'endTime', type: 'uint256' },
+          { name: 'finalized', type: 'bool' },
+          { name: 'cancelled', type: 'bool' }
+        ],
+        name: '',
+        type: 'tuple'
+      }
+    ],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [
+      { name: 'poolId', type: 'uint256' },
+      { name: 'user', type: 'address' }
+    ],
+    name: 'getUserContribution',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  }
+] as const;
