@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminRoute from './guards/AdminRoute';
 import LoadingFallback from '../components/common/LoadingFallback';
+import { AdminErrorBoundary } from '../components/features/admin/AdminErrorBoundary';
 
 // Admin components
 const AdminDashboard = lazy(() => import('../components/features/admin/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
@@ -23,23 +24,23 @@ export const adminRoutes = {
   children: [
     {
       index: true,
-      element: <LazyWrapper><AdminDashboard /></LazyWrapper>
+      element: <LazyWrapper><AdminErrorBoundary><AdminDashboard /></AdminErrorBoundary></LazyWrapper>
     },
     {
       path: 'contract',
-      element: <LazyWrapper><ContractControls /></LazyWrapper>
+      element: <LazyWrapper><AdminErrorBoundary><ContractControls /></AdminErrorBoundary></LazyWrapper>
     },
     {
       path: 'ownership',
-      element: <LazyWrapper><OwnershipManagement /></LazyWrapper>
+      element: <LazyWrapper><AdminErrorBoundary><OwnershipManagement /></AdminErrorBoundary></LazyWrapper>
     },
     {
       path: 'alerts',
-      element: <LazyWrapper><AlertsManagement /></LazyWrapper>
+      element: <LazyWrapper><AdminErrorBoundary><AlertsManagement /></AdminErrorBoundary></LazyWrapper>
     },
     {
       path: 'audit',
-      element: <LazyWrapper><AuditLogs /></LazyWrapper>
+      element: <LazyWrapper><AdminErrorBoundary><AuditLogs /></AdminErrorBoundary></LazyWrapper>
     }
   ]
 };
