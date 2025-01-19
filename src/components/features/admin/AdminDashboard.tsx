@@ -8,6 +8,7 @@ import { AuditLogs } from './audit/AuditLogs';
 import { AuditStats } from './audit/AuditStats';
 import { AdminHeader } from './AdminHeader';
 import { AdminTabs } from './AdminTabs';
+import { AdminComponentProps } from './types';
 
 /**
  * Dashboard principal de l'interface d'administration.
@@ -16,10 +17,14 @@ import { AdminTabs } from './AdminTabs';
  * @component
  * @example
  * ```tsx
- * <AdminDashboard />
+ * <AdminDashboard onError={(msg) => console.error(msg)} />
  * ```
  */
-export const AdminDashboard: React.FC = () => {
+export interface AdminDashboardProps extends AdminComponentProps {
+  onError: (message: string) => void;
+}
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onError }) => {
   const [tabValue, setTabValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +34,8 @@ export const AdminDashboard: React.FC = () => {
 
   const handleError = useCallback((message: string) => {
     setError(message);
-  }, []);
+    onError(message);
+  }, [onError]);
 
   const handleCloseError = useCallback(() => {
     setError(null);
