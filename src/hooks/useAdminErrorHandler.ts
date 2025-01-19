@@ -11,5 +11,5 @@ export const useAdminErrorHandler = () => {
     });
   }, [enqueueSnackbar]);
 
-  return handleError;
+  return { handleError };
 };

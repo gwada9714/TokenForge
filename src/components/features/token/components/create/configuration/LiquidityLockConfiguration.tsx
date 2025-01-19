@@ -8,8 +8,6 @@ import {
   Switch,
   TextField,
   Typography,
-  Select,
-  MenuItem,
   Grid,
   InputAdornment,
   Tooltip,
