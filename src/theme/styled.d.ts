@@ -30,10 +30,14 @@ declare module 'styled-components' {
         metallic: string;
         ember: string;
         glow: string;
+        border: string;
+        hover: string;
+        disabled: string;
       };
       gradient: {
         primary: string;
         secondary: string;
+        forge: string;
       };
       action: {
         active: string;
@@ -62,32 +66,27 @@ declare module 'styled-components' {
         body: string;
       };
       fontWeight: {
-        regular: number;
+        light: number;
+        normal: number;
         medium: number;
         semibold: number;
         bold: number;
+        extrabold: number;
       };
-      fontSize: {
+      fontSizes: {
         xs: string;
         sm: string;
-        base: string;
+        md: string;
         lg: string;
         xl: string;
         '2xl': string;
         '3xl': string;
         '4xl': string;
         '5xl': string;
+        '6xl': string;
       };
     };
-    spacing: {
-      xs: string;
-      sm: string;
-      md: string;
-      lg: string;
-      xl: string;
-      '2xl': string;
-      '3xl': string;
-    };
+    spacing: (value: number) => string;
     borderRadius: {
       sm: string;
       md: string;
@@ -106,10 +105,18 @@ declare module 'styled-components' {
       fast: string;
     };
     zIndex: {
+      appBar: number;
+      drawer: number;
       modal: number;
-      popup: number;
+      snackbar: number;
+      tooltip: number;
       header: number;
       dropdown: number;
+      overlay: number;
+      max: number;
+      nav: number;
+      fab: number;
+      speedDial: number;
     };
     breakpoints: {
       values: {
@@ -122,6 +129,8 @@ declare module 'styled-components' {
       up: (key: string) => string;
       down: (key: string) => string;
       between: (start: string, end: string) => string;
+      only: (key: string) => string;
+      width: (key: string) => number;
     };
   }
 }

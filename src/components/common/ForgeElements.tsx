@@ -9,20 +9,20 @@ interface StyledProps {
 export const ForgeContainer = styled.div<StyledProps>`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 ${props => props.theme.spacing.md};
+  padding: 0 ${props => props.theme.spacing(4)};
 
   ${props => props.theme.breakpoints.up('md')} {
-    padding: 0 ${props => props.theme.spacing.xl};
+    padding: 0 ${props => props.theme.spacing(8)};
   }
 `;
 
 export const ForgeSection = styled.section<StyledProps>`
-  padding: ${props => props.theme.spacing.xl} 0;
+  padding: ${props => props.theme.spacing(8)} 0;
   position: relative;
   overflow: hidden;
 
   ${props => props.theme.breakpoints.up('md')} {
-    padding: ${props => props.theme.spacing['2xl']} 0;
+    padding: ${props => props.theme.spacing(12)} 0;
   }
 `;
 
@@ -30,16 +30,16 @@ export const ForgeHeading = styled.h1<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.bold};
   color: ${props => props.theme.colors.text.primary};
-  margin-bottom: ${props => props.theme.spacing.md};
+  margin-bottom: ${props => props.theme.spacing(4)};
   text-align: center;
-  font-size: ${props => props.theme.typography.fontSize['3xl']};
+  font-size: ${props => props.theme.typography.fontSizes['3xl']};
 
   ${props => props.theme.breakpoints.up('md')} {
-    font-size: ${props => props.theme.typography.fontSize['4xl']};
+    font-size: ${props => props.theme.typography.fontSizes['4xl']};
   }
 
   ${props => props.theme.breakpoints.up('lg')} {
-    font-size: ${props => props.theme.typography.fontSize['5xl']};
+    font-size: ${props => props.theme.typography.fontSizes['5xl']};
   }
 `;
 
@@ -47,11 +47,11 @@ export const ForgeSubheading = styled.h2<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.semibold};
   color: ${props => props.theme.colors.text.secondary};
-  margin-bottom: ${props => props.theme.spacing.sm};
-  font-size: ${props => props.theme.typography.fontSize['2xl']};
+  margin-bottom: ${props => props.theme.spacing(2)};
+  font-size: ${props => props.theme.typography.fontSizes['2xl']};
 
   ${props => props.theme.breakpoints.up('md')} {
-    font-size: ${props => props.theme.typography.fontSize['3xl']};
+    font-size: ${props => props.theme.typography.fontSizes['3xl']};
   }
 `;
 
@@ -59,11 +59,11 @@ export const ForgeText = styled.p<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.body};
   color: ${props => props.theme.colors.text.primary};
   line-height: 1.6;
-  margin-bottom: ${props => props.theme.spacing.sm};
-  font-size: ${props => props.theme.typography.fontSize.md};
+  margin-bottom: ${props => props.theme.spacing(2)};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
 
   ${props => props.theme.breakpoints.up('md')} {
-    font-size: ${props => props.theme.typography.fontSize.lg};
+    font-size: ${props => props.theme.typography.fontSizes.md};
   }
 `;
 
@@ -72,11 +72,16 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
   color: ${props => props.theme.colors.text.light};
   font-family: ${props => props.theme.typography.fontFamily.body};
   font-weight: ${props => props.theme.typography.fontWeight.medium};
-  padding: ${props => `${props.theme.spacing.sm} ${props.theme.spacing.md}`};
+  padding: ${props => `${props.theme.spacing(2)} ${props.theme.spacing(4)}`};
   border-radius: ${props => props.theme.borderRadius.md};
   border: none;
   cursor: pointer;
   transition: ${props => props.theme.transitions.default};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+
+  ${props => props.theme.breakpoints.up('md')} {
+    font-size: ${props => props.theme.typography.fontSizes.md};
+  }
 
   &:hover {
     background: ${props => props.theme.colors.primary.dark};
@@ -92,14 +97,14 @@ export const ForgeButton = styled(motion.button)<StyledProps>`
   }
 
   ${props => props.theme.breakpoints.up('md')} {
-    padding: ${props => `${props.theme.spacing.md} ${props.theme.spacing.xl}`};
+    padding: ${props => `${props.theme.spacing(4)} ${props.theme.spacing(8)}`};
   }
 `;
 
 export const ForgeCard = styled(motion.div)<StyledProps>`
   background: ${props => props.theme.colors.background.paper};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: ${props => props.theme.spacing.xl};
+  padding: ${props => props.theme.spacing(8)};
   box-shadow: ${props => props.theme.shadows.md};
   transition: ${props => props.theme.transitions.default};
 
@@ -109,24 +114,24 @@ export const ForgeCard = styled(motion.div)<StyledProps>`
   }
 
   ${props => props.theme.breakpoints.up('md')} {
-    padding: ${props => props.theme.spacing['2xl']};
+    padding: ${props => props.theme.spacing(12)};
   }
 `;
 
 export const ForgeGrid = styled.div<StyledProps>`
   display: grid;
   grid-template-columns: 1fr;
-  gap: ${props => props.theme.spacing.md};
-  margin: ${props => props.theme.spacing.xl} 0;
+  gap: ${props => props.theme.spacing(4)};
+  margin: ${props => props.theme.spacing(8)} 0;
 
   ${props => props.theme.breakpoints.up('sm')} {
     grid-template-columns: repeat(2, 1fr);
-    gap: ${props => props.theme.spacing.lg};
+    gap: ${props => props.theme.spacing(6)};
   }
 
   ${props => props.theme.breakpoints.up('md')} {
     grid-template-columns: repeat(3, 1fr);
-    gap: ${props => props.theme.spacing.xl};
+    gap: ${props => props.theme.spacing(8)};
   }
 
   ${props => props.theme.breakpoints.up('lg')} {
@@ -137,6 +142,13 @@ export const ForgeGrid = styled.div<StyledProps>`
 export const ForgeMetallicCard = styled(ForgeCard)`
   background: ${props => props.theme.colors.forge.metallic};
   color: ${props => props.theme.colors.text.light};
+  font-family: ${props => props.theme.typography.fontFamily.body};
+  font-weight: ${props => props.theme.typography.fontWeight.medium};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+
+  ${props => props.theme.breakpoints.up('md')} {
+    font-size: ${props => props.theme.typography.fontSizes.md};
+  }
   position: relative;
   overflow: hidden;
 
