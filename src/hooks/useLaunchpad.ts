@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useContractRead, useContractWrite } from 'wagmi';
+import { useContractWrite, useContractRead } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { useNetwork } from '../hooks/useNetwork';
 import { type Address } from 'viem';
-import { LAUNCHPAD_ABI, LAUNCHPAD_ADDRESS } from '../config/contracts';
+import { LAUNCHPAD_ABI } from '../contracts/abis/Launchpad';
+
+const LAUNCHPAD_ADDRESS = process.env.NEXT_PUBLIC_LAUNCHPAD_ADDRESS as `0x${string}`;
 
 interface PoolInfo {
   token: Address;
@@ -17,7 +19,7 @@ interface PoolInfo {
   cancelled: boolean;
 }
 
-export const useLaunchpad = (poolId?: number) => {
+export const useLaunchpad = (poolId?: string, address?: `0x${string}`) => {
   const [error, setError] = useState<string | null>(null);
   const [poolInfoState, setPoolInfoState] = useState<PoolInfo | null>(null);
   const [userContribution, setUserContribution] = useState<bigint>(0n);
@@ -25,54 +27,57 @@ export const useLaunchpad = (poolId?: number) => {
   const [contributeHash, setContributeHash] = useState<`0x${string}` | undefined>(undefined);
   const [claimTokensHash, setClaimTokensHash] = useState<`0x${string}` | undefined>(undefined);
   
-  const { address } = useAccount();
+  const { address: userAddress } = useAccount();
   const { chain } = useNetwork();
 
-  const { data: poolInfo, isError: poolError } = useContractRead({
+  const { data: poolInfo } = useContractRead({
     address: LAUNCHPAD_ADDRESS,
     abi: LAUNCHPAD_ABI,
     functionName: 'getPoolInfo',
     args: poolId !== undefined ? [BigInt(poolId)] : undefined,
-    watch: true,
+    query: {
+      enabled: !!poolId
+    }
   });
 
-  const { data: userContributionData, isError: userContributionError } = useContractRead({
+  const { data: userContributionData } = useContractRead({
     address: LAUNCHPAD_ADDRESS,
     abi: LAUNCHPAD_ABI,
     functionName: 'getUserContribution',
-    args: poolId !== undefined && address ? [BigInt(poolId), address as `0x${string}`] : undefined,
-    watch: true,
+    args: poolId !== undefined && address ? [BigInt(poolId), address] : undefined,
+    query: {
+      enabled: !!poolId && !!address
+    }
   });
 
-  const { writeAsync: createPool, isLoading: isCreatingPool } = useContractWrite({
-    address: LAUNCHPAD_ADDRESS,
+  const { writeContract: createPool, isPending: isCreatingPool } = useContractWrite({
     abi: LAUNCHPAD_ABI,
-    functionName: 'createPool',
+    functionName: 'createPool'
   });
 
-  const { writeAsync: contribute, isLoading: isContributing } = useContractWrite({
-    address: LAUNCHPAD_ADDRESS,
+  const { writeContract: contribute, isPending: isContributing } = useContractWrite({
     abi: LAUNCHPAD_ABI,
     functionName: 'contribute'
   });
 
-  const { writeAsync: claimTokens, isLoading: isClaiming } = useContractWrite({
-    address: LAUNCHPAD_ADDRESS,
+  const { writeContract: claimTokens, isPending: isClaiming } = useContractWrite({
     abi: LAUNCHPAD_ABI,
     functionName: 'claimTokens'
   });
 
   const handleCreatePool = async (params: {
     token: `0x${string}`;
-    tokenPrice: bigint;
-    hardCap: bigint;
-    softCap: bigint;
     startTime: bigint;
     endTime: bigint;
+    tokenPrice: bigint;
+    softCap: bigint;
+    hardCap: bigint;
   }) => {
+    if (!LAUNCHPAD_ADDRESS) return;
     try {
       const hash = await createPool({
-        args: [params.token, params.tokenPrice, params.hardCap, params.softCap, params.startTime, params.endTime],
+        address: LAUNCHPAD_ADDRESS,
+        args: [params.token, params.startTime, params.endTime, params.tokenPrice, params.softCap, params.hardCap]
       });
       setCreatePoolHash(hash);
       return hash;
@@ -83,10 +88,11 @@ export const useLaunchpad = (poolId?: number) => {
   };
 
   const handleContribute = async (amount: bigint) => {
-    if (!poolId) throw new Error('Pool ID is required');
+    if (!LAUNCHPAD_ADDRESS || !poolId) return;
     try {
       const hash = await contribute({
-        args: [BigInt(poolId), amount],
+        address: LAUNCHPAD_ADDRESS,
+        args: [BigInt(poolId), amount]
       });
       setContributeHash(hash);
       return hash;
@@ -96,11 +102,12 @@ export const useLaunchpad = (poolId?: number) => {
     }
   };
 
-  const handleClaimTokens = async () => {
-    if (!poolId) throw new Error('Pool ID is required');
+  const handleClaim = async () => {
+    if (!LAUNCHPAD_ADDRESS || !poolId) return;
     try {
       const hash = await claimTokens({
-        args: [BigInt(poolId)],
+        address: LAUNCHPAD_ADDRESS,
+        args: [BigInt(poolId)]
       });
       setClaimTokensHash(hash);
       return hash;
@@ -164,7 +171,7 @@ export const useLaunchpad = (poolId?: number) => {
     userContribution,
     createPool: handleCreatePool,
     contribute: handleContribute,
-    claim: handleClaimTokens,
+    claim: handleClaim,
     isCreatingPool,
     isContributing,
     isClaiming,
