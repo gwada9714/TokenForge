@@ -13,7 +13,8 @@ export default defineConfig({
         plugins: [
           ['@babel/plugin-transform-react-jsx', { optimize: true }]
         ]
-      }
+      },
+      jsxRuntime: 'automatic'
     }),
     nodePolyfills({
       globals: {
@@ -48,11 +49,6 @@ export default defineConfig({
             src: '/android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png'
-          },
-          {
-            src: '/android-chrome-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
           }
         ]
       }
@@ -61,97 +57,39 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'process': 'process/browser',
-      'stream': 'stream-browserify',
-      'zlib': 'browserify-zlib',
-      'util': 'util',
-      'buffer': 'buffer'
     }
   },
-  build: {
-    target: 'esnext',
-    minify: 'esbuild',
-    commonjsOptions: {
-      transformMixedEsModules: true
-    },
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'mui-vendor': ['@mui/material', '@mui/icons-material'],
-          'web3-vendor': ['wagmi', '@rainbow-me/rainbowkit'],
-          'rainbow': ['@rainbow-me/rainbowkit'],
-          'wagmi': ['wagmi']
-        }
-      }
-    },
-    chunkSizeWarningLimit: 1000
-  },
   optimizeDeps: {
-    esbuildOptions: {
-      target: 'es2020',
-      supported: { 
-        bigint: true 
-      },
-      define: {
-        global: 'globalThis'
-      }
-    },
     include: [
       'react',
       'react-dom',
       'react-router-dom',
       '@mui/material',
-      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled',
       'wagmi',
-      '@rainbow-me/rainbowkit',
-      '@rainbow-me/rainbowkit/wallets',
-      'wagmi/providers/alchemy',
-      'wagmi/providers/public'
+      '@rainbow-me/rainbowkit'
     ],
-    exclude: ['@vite/client', '@vite/env']
+    esbuildOptions: {
+      target: 'esnext'
+    }
+  },
+  build: {
+    target: 'esnext',
+    sourcemap: true,
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    }
   },
   server: {
     port: 3000,
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['X-Requested-With', 'Content-Type', 'Authorization'],
-    },
-    proxy: {
-      '^/api/.*': {
-        target: 'https://rpc.sepolia.org',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
-        }
-      }
-    },
+    host: true,
+    strictPort: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
-    },
-    host: true,
-    hmr: {
-      overlay: false
-    },
-    watch: {
-      usePolling: false
-    },
-    fs: {
-      strict: false,
-      allow: ['.']
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }
   }
 });
