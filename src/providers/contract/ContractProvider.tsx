@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Address, Hash } from 'viem';
-import { useNetworkManagement } from '@/components/Features/network';
+import { useNetworkManagement } from '@/components/Network';
 
 export interface TokenContract {
   address: Address;

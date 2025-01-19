@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Container, AppBar, Toolbar, Typography, useTheme, useMediaQuery } from '@mui/material';
-import { NetworkStatus } from '@features/network';
+import { NetworkStatus } from '@/components/Network';
 import { Navigation } from './Navigation';
 
 interface AppLayoutProps {
