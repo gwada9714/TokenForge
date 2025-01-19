@@ -1,4 +1,16 @@
-export const theme = {
+import type { DefaultTheme } from 'styled-components';
+
+const createBreakpoints = (values: { [key: string]: number }) => {
+  return {
+    values,
+    up: (key: string) => `@media (min-width: ${values[key]}px)`,
+    down: (key: string) => `@media (max-width: ${values[key] - 0.05}px)`,
+    between: (start: string, end: string) => 
+      `@media (min-width: ${values[start]}px) and (max-width: ${values[end] - 0.05}px)`,
+  };
+};
+
+export const theme: DefaultTheme = {
   colors: {
     primary: {
       main: "#182038",
@@ -21,8 +33,12 @@ export const theme = {
       light: "#FFFFFF",
     },
     forge: {
-      glow: "rgba(217, 119, 6, 0.4)",
+      main: "#182038",
+      dark: "#0c1019",
+      light: "#2a3654",
       metallic: "linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%)",
+      ember: "#D97706",
+      glow: "rgba(217, 119, 6, 0.4)",
     },
     gradient: {
       primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
@@ -99,8 +115,16 @@ export const theme = {
     fast: "all 0.1s ease-in-out",
   },
   zIndex: {
-    navbar: 1000,
-    modal: 1300,
-    tooltip: 1500,
+    modal: 1000,
+    popup: 900,
+    header: 800,
+    dropdown: 700,
   },
-} as const;
+  breakpoints: createBreakpoints({
+    xs: 0,
+    sm: 600,
+    md: 900,
+    lg: 1200,
+    xl: 1536,
+  }),
+};

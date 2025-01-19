@@ -24,8 +24,12 @@ declare module 'styled-components' {
         light: string;
       };
       forge: {
-        glow: string;
+        main: string;
+        dark: string;
+        light: string;
         metallic: string;
+        ember: string;
+        glow: string;
       };
       gradient: {
         primary: string;
@@ -115,6 +119,9 @@ declare module 'styled-components' {
         lg: number;
         xl: number;
       };
+      up: (key: string) => string;
+      down: (key: string) => string;
+      between: (start: string, end: string) => string;
     };
   }
 }

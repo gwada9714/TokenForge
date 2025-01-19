@@ -1,42 +1,73 @@
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { DefaultTheme } from '../../styles/styled';
+import type { DefaultTheme } from 'styled-components';
 
-export const ForgeContainer = styled.div`
+interface StyledProps {
+  theme: DefaultTheme;
+}
+
+export const ForgeContainer = styled.div<StyledProps>`
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 ${props => props.theme.spacing.md};
+
+  ${props => props.theme.breakpoints.up('md')} {
+    padding: 0 ${props => props.theme.spacing.xl};
+  }
 `;
 
-export const ForgeSection = styled.section`
+export const ForgeSection = styled.section<StyledProps>`
   padding: ${props => props.theme.spacing.xl} 0;
   position: relative;
   overflow: hidden;
+
+  ${props => props.theme.breakpoints.up('md')} {
+    padding: ${props => props.theme.spacing['2xl']} 0;
+  }
 `;
 
-export const ForgeHeading = styled.h1`
+export const ForgeHeading = styled.h1<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.bold};
   color: ${props => props.theme.colors.text.primary};
   margin-bottom: ${props => props.theme.spacing.md};
   text-align: center;
+  font-size: ${props => props.theme.typography.fontSize['3xl']};
+
+  ${props => props.theme.breakpoints.up('md')} {
+    font-size: ${props => props.theme.typography.fontSize['4xl']};
+  }
+
+  ${props => props.theme.breakpoints.up('lg')} {
+    font-size: ${props => props.theme.typography.fontSize['5xl']};
+  }
 `;
 
-export const ForgeSubheading = styled.h2`
+export const ForgeSubheading = styled.h2<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.heading};
   font-weight: ${props => props.theme.typography.fontWeight.semibold};
   color: ${props => props.theme.colors.text.secondary};
   margin-bottom: ${props => props.theme.spacing.sm};
+  font-size: ${props => props.theme.typography.fontSize['2xl']};
+
+  ${props => props.theme.breakpoints.up('md')} {
+    font-size: ${props => props.theme.typography.fontSize['3xl']};
+  }
 `;
 
-export const ForgeText = styled.p`
+export const ForgeText = styled.p<StyledProps>`
   font-family: ${props => props.theme.typography.fontFamily.body};
   color: ${props => props.theme.colors.text.primary};
   line-height: 1.6;
   margin-bottom: ${props => props.theme.spacing.sm};
+  font-size: ${props => props.theme.typography.fontSize.md};
+
+  ${props => props.theme.breakpoints.up('md')} {
+    font-size: ${props => props.theme.typography.fontSize.lg};
+  }
 `;
 
-export const ForgeButton = styled(motion.button)`
+export const ForgeButton = styled(motion.button)<StyledProps>`
   background: ${props => props.theme.colors.primary.main};
   color: ${props => props.theme.colors.text.light};
   font-family: ${props => props.theme.typography.fontFamily.body};
@@ -59,9 +90,13 @@ export const ForgeButton = styled(motion.button)`
       background: ${props => props.theme.colors.secondary.dark};
     }
   }
+
+  ${props => props.theme.breakpoints.up('md')} {
+    padding: ${props => `${props.theme.spacing.md} ${props.theme.spacing.xl}`};
+  }
 `;
 
-export const ForgeCard = styled(motion.div)`
+export const ForgeCard = styled(motion.div)<StyledProps>`
   background: ${props => props.theme.colors.background.paper};
   border-radius: ${props => props.theme.borderRadius.lg};
   padding: ${props => props.theme.spacing.xl};
@@ -72,13 +107,31 @@ export const ForgeCard = styled(motion.div)`
     transform: translateY(-4px);
     box-shadow: ${props => props.theme.shadows.lg};
   }
+
+  ${props => props.theme.breakpoints.up('md')} {
+    padding: ${props => props.theme.spacing['2xl']};
+  }
 `;
 
-export const ForgeGrid = styled.div`
+export const ForgeGrid = styled.div<StyledProps>`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: ${props => props.theme.spacing.xl};
+  grid-template-columns: 1fr;
+  gap: ${props => props.theme.spacing.md};
   margin: ${props => props.theme.spacing.xl} 0;
+
+  ${props => props.theme.breakpoints.up('sm')} {
+    grid-template-columns: repeat(2, 1fr);
+    gap: ${props => props.theme.spacing.lg};
+  }
+
+  ${props => props.theme.breakpoints.up('md')} {
+    grid-template-columns: repeat(3, 1fr);
+    gap: ${props => props.theme.spacing.xl};
+  }
+
+  ${props => props.theme.breakpoints.up('lg')} {
+    grid-template-columns: repeat(4, 1fr);
+  }
 `;
 
 export const ForgeMetallicCard = styled(ForgeCard)`
@@ -99,7 +152,7 @@ export const ForgeMetallicCard = styled(ForgeCard)`
   }
 `;
 
-export const ForgeGlowingBorder = styled.div`
+export const ForgeGlowingBorder = styled.div<StyledProps>`
   position: relative;
   
   &:before {
