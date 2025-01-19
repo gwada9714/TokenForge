@@ -26,6 +26,8 @@ export interface WalletState {
   address: string | null;
   chainId: number | null;
   walletClient: WalletClientType | null;
+  isCorrectNetwork: boolean;
+  provider: any;
 }
 
 export interface TokenForgeAuthState {
@@ -43,6 +45,8 @@ export interface TokenForgeAuthState {
   address: string | null;
   chainId: number | null;
   walletClient: WalletClientType | null;
+  isCorrectNetwork: boolean;
+  provider: any;
   
   // Actions
   login: (user: User) => void;

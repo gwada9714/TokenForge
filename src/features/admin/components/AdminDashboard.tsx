@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Box, Container, Alert, Snackbar, Tab, Tabs } from '@mui/material';
-import { TabPanel } from '../../../components/common/TabPanel';
+import TabPanel from '../../../components/common/TabPanel';
 import ContractControls from './ContractControls';
 import OwnershipManagement from './OwnershipManagement';
 import AlertsManagement from './AlertsManagement';
