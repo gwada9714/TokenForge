@@ -1,38 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useContractRead, useContractWrite, useBalance, useWatchContractEvent, useAccount } from 'wagmi';
-import { type Address, Hash } from 'viem';
+import { type Address } from 'viem';
 import { TKNTokenABI } from '../contracts/abis/TKNToken';
-
-interface StakingEvent {
-  timestamp: number;
-  type: 'stake' | 'unstake' | 'claim';
-  amount: bigint;
-}
-
-interface RewardHistory {
-  timestamp: number;
-  rewards: bigint;
-}
 
 export const STAKING_CONFIG = {
   LOCK_PERIOD: 7 * 24 * 60 * 60, // 7 days in seconds
   MIN_STAKE_AMOUNT: '100', // 100 tokens
-  MAX_STAKE_AMOUNT: '1000000' // 1M tokens
+  MAX_STAKE_AMOUNT: '1000000', // 1M tokens
+  REFRESH_INTERVAL: 60 * 1000, // 1 minute in milliseconds
+  SAFETY_MARGIN: 60 // 60 seconds safety margin
 };
 
-export const useStaking = (tokenAddress: `0x${string}` | undefined, address: `0x${string}` | undefined) => {
+interface StakeInfo {
+  amount: bigint;
+  lastStakeTime: bigint;
+  rewards: bigint;
+}
+
+interface StakingStats {
+  totalStaked: bigint;
+  totalStakers: bigint;
+  rewardRate: bigint;
+}
+
+export const useStaking = (tokenAddress: Address | undefined, address: Address | undefined) => {
   const [error, setError] = useState<string | null>(null);
-  const [stakingHistory, setStakingHistory] = useState<Array<{
-    timestamp: number;
-    type: 'stake' | 'unstake' | 'claim';
-    amount: bigint;
-  }>>([]);
-
-  const [rewardsHistory, setRewardsHistory] = useState<Array<{
-    timestamp: number;
-    rewards: bigint;
-  }>>([]);
-
   const [lastStakeTime, setLastStakeTime] = useState<number>(0);
   const [timeUntilUnstake, setTimeUntilUnstake] = useState<number>(0);
 
@@ -48,186 +40,123 @@ export const useStaking = (tokenAddress: `0x${string}` | undefined, address: `0x
     abi: TKNTokenABI,
     functionName: 'getStakeInfo',
     args: address ? [address] : undefined,
-    query: {
-      enabled: !!address && !!tokenAddress
-    }
+    enabled: !!address && !!tokenAddress,
   });
 
   const { data: stats, refetch: refetchStats } = useContractRead({
     address: tokenAddress,
     abi: TKNTokenABI,
     functionName: 'getStakingStats',
-    query: {
-      enabled: !!tokenAddress
-    }
+    enabled: !!tokenAddress,
   });
 
-  const { writeContract: stake, isPending: isStaking } = useContractWrite({
-    abi: TKNTokenABI,
-    functionName: 'stake'
-  });
-
-  const { writeContract: unstake, isPending: isUnstaking } = useContractWrite({
-    abi: TKNTokenABI,
-    functionName: 'unstake'
-  });
-
-  const { writeContract: claim, isPending: isClaiming } = useContractWrite({
-    abi: TKNTokenABI,
-    functionName: 'claimRewards'
-  });
-
-  useWatchContractEvent({
+  const { writeAsync: stake, isPending: isStaking } = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
-    eventName: 'Staked',
-    onLogs(logs) {
-      logs.forEach(log => {
-        const { user, amount } = log.args as { user: `0x${string}`; amount: bigint };
-        if (user === address) {
-          setStakingHistory(prev => [...prev, {
-            timestamp: Date.now(),
-            type: 'stake',
-            amount
-          }]);
-          setLastStakeTime(Date.now());
-          refetchStakeInfo?.();
-          refetchStats?.();
-        }
-      });
-    }
+    functionName: 'stake',
   });
 
-  useWatchContractEvent({
+  const { writeAsync: unstake, isPending: isUnstaking } = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
-    eventName: 'Unstaked',
-    onLogs(logs) {
-      logs.forEach(log => {
-        const { user, amount } = log.args as { user: `0x${string}`; amount: bigint };
-        if (user === address) {
-          setStakingHistory(prev => [...prev, {
-            timestamp: Date.now(),
-            type: 'unstake',
-            amount
-          }]);
-          refetchStakeInfo?.();
-          refetchStats?.();
-        }
-      });
-    }
+    functionName: 'unstake',
   });
 
-  useWatchContractEvent({
+  const { writeAsync: claim, isPending: isClaiming } = useContractWrite({
     address: tokenAddress,
     abi: TKNTokenABI,
-    eventName: 'RewardsClaimed',
-    onLogs(logs) {
-      logs.forEach(log => {
-        const { user, amount } = log.args as { user: `0x${string}`; amount: bigint };
-        if (user === address) {
-          setStakingHistory(prev => [...prev, {
-            timestamp: Date.now(),
-            type: 'claim',
-            amount
-          }]);
-          refetchStakeInfo?.();
-        }
-      });
-    }
-  });
-
-  useWatchContractEvent({
-    address: tokenAddress,
-    abi: TKNTokenABI,
-    eventName: 'RewardsUpdated',
-    onLogs(logs) {
-      logs.forEach(log => {
-        const { user, newRewards } = log.args as { user: `0x${string}`; newRewards: bigint };
-        if (user === address) {
-          setRewardsHistory(prev => [...prev, {
-            timestamp: Date.now(),
-            rewards: newRewards
-          }]);
-          refetchStakeInfo?.();
-        }
-      });
-    }
+    functionName: 'claimRewards',
   });
 
   useEffect(() => {
-    const updateUnstakeTimer = () => {
-      if (lastStakeTime === 0) {
-        setTimeUntilUnstake(0);
-        return;
-      }
+    if (!stakeInfo) return;
+    setLastStakeTime(Number(stakeInfo.lastStakeTime));
+  }, [stakeInfo]);
 
-      const now = Date.now();
-      const timePassed = Math.floor((now - lastStakeTime) / 1000);
-      const timeLeft = Math.max(0, STAKING_CONFIG.LOCK_PERIOD - timePassed);
+  useEffect(() => {
+    if (!lastStakeTime) return;
+
+    const calculateTimeLeft = () => {
+      const now = Math.floor(Date.now() / 1000);
+      const unlockTime = lastStakeTime + STAKING_CONFIG.LOCK_PERIOD;
+      const timeLeft = Math.max(0, unlockTime - now);
       setTimeUntilUnstake(timeLeft);
     };
 
-    const timer = setInterval(updateUnstakeTimer, 1000);
-    return () => clearInterval(timer);
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, STAKING_CONFIG.REFRESH_INTERVAL);
+
+    return () => clearInterval(interval);
   }, [lastStakeTime]);
 
-  const handleStake = async (amount: string) => {
+  const handleStake = async (amount: bigint) => {
+    if (!tokenAddress) {
+      setError('Token address is required');
+      return;
+    }
+
+    if (amount < BigInt(STAKING_CONFIG.MIN_STAKE_AMOUNT) || amount > BigInt(STAKING_CONFIG.MAX_STAKE_AMOUNT)) {
+      setError('Invalid stake amount');
+      return;
+    }
+
     try {
-      if (!tokenAddress) return;
-      const tx = await stake({
-        address: tokenAddress,
-        args: [amount]
-      });
-      return tx;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
+      await stake({ args: [amount] });
+      await refetchStakeInfo();
+      await refetchStats();
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Stake failed');
     }
   };
 
-  const handleUnstake = async (amount: string) => {
+  const handleUnstake = async (amount: bigint) => {
+    if (!tokenAddress) {
+      setError('Token address is required');
+      return;
+    }
+
+    if (timeUntilUnstake > STAKING_CONFIG.SAFETY_MARGIN) {
+      setError('Staking period not finished');
+      return;
+    }
+
     try {
-      if (!tokenAddress) return;
-      const tx = await unstake({
-        address: tokenAddress,
-        args: [amount]
-      });
-      return tx;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
+      await unstake({ args: [amount] });
+      await refetchStakeInfo();
+      await refetchStats();
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unstake failed');
     }
   };
 
   const handleClaim = async () => {
+    if (!tokenAddress) {
+      setError('Token address is required');
+      return;
+    }
+
     try {
-      if (!tokenAddress) return;
-      const tx = await claim({
-        address: tokenAddress,
-        args: []
-      });
-      return tx;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
+      await claim({ args: [] });
+      await refetchStakeInfo();
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Claim failed');
     }
   };
 
   return {
     balance,
-    stakeInfo,
-    stats,
-    stakingHistory,
-    rewardsHistory,
-    lastStakeTime,
+    stakeInfo: stakeInfo as StakeInfo | undefined,
+    stats: stats as StakingStats | undefined,
     timeUntilUnstake,
-    stake: handleStake,
-    unstake: handleUnstake,
-    claim: handleClaim,
+    error,
     isStaking,
     isUnstaking,
     isClaiming,
-    error,
+    handleStake,
+    handleUnstake,
+    handleClaim,
   };
 };
