@@ -27,19 +27,25 @@ describe('MarketplaceItem', () => {
 
   it('renders active status chip correctly', () => {
     render(<MarketplaceItem item={mockItem} />);
-    expect(screen.getByText('active')).toHaveClass('MuiChip-colorSuccess');
+    const chip = screen.getByTestId('status-chip');
+    expect(chip).toHaveClass('MuiChip-filled');
+    expect(chip).toHaveClass('MuiChip-colorSuccess');
   });
 
   it('renders sold status chip correctly', () => {
     const soldItem = { ...mockItem, status: 'sold' as const };
     render(<MarketplaceItem item={soldItem} />);
-    expect(screen.getByText('sold')).toHaveClass('MuiChip-colorError');
+    const chip = screen.getByTestId('status-chip');
+    expect(chip).toHaveClass('MuiChip-filled');
+    expect(chip).toHaveClass('MuiChip-colorError');
   });
 
   it('renders cancelled status chip correctly', () => {
     const cancelledItem = { ...mockItem, status: 'cancelled' as const };
     render(<MarketplaceItem item={cancelledItem} />);
-    expect(screen.getByText('cancelled')).toHaveClass('MuiChip-colorDefault');
+    const chip = screen.getByTestId('status-chip');
+    expect(chip).toHaveClass('MuiChip-filled');
+    expect(chip).toHaveClass('MuiChip-colorDefault');
   });
 
   it('disables buy button for non-active items', () => {

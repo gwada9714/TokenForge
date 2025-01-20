@@ -29,6 +29,7 @@ export const MarketplaceItem: React.FC<MarketplaceItemProps> = ({ item }) => {
             {item.name}
           </Typography>
           <Chip
+            data-testid="status-chip"
             label={item.status}
             color={statusColors[item.status] as 'success' | 'error' | 'default'}
             size="small"

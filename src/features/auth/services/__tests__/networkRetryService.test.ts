@@ -3,7 +3,15 @@ import { networkRetryService, RetryConfig } from '../networkRetryService';
 import { notificationService } from '../notificationService';
 import { logService } from '../logService';
 
-vi.mock('../notificationService');
+vi.mock('../notificationService', () => ({
+  notificationService: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn()
+  }
+}));
+
 vi.mock('../logService');
 
 describe('NetworkRetryService', () => {

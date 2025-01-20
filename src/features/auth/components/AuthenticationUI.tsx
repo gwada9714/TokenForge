@@ -1,15 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { Box, Paper, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import { AuthStatus } from '../types';
 import { AuthError } from '../errors/AuthError';
 import { AuthProgress } from './ui/AuthProgress';
 import { AuthErrorDisplay } from './ui/AuthError';
 import { AuthStatusBar } from './ui/AuthStatusBar';
 import { AuthNotification } from './ui/AuthNotification';
-import { AuthProgressIndicator } from './ui/AuthProgressIndicator';
 import { AuthTransition } from './ui/AuthTransition';
+import { AuthProgressIndicator } from './ui/AuthProgressIndicator';
 import { LoginForm } from './LoginForm';
-import { NetworkSelector } from './NetworkSelector';
 import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
 
 interface AuthenticationUIProps {
@@ -32,7 +31,6 @@ export const AuthenticationUI: React.FC<AuthenticationUIProps> = ({
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const { isAuthenticated, walletState, actions } = useTokenForgeAuth();
-  const theme = useTheme();
 
   // Calculer l'étape actuelle en fonction de l'état
   React.useEffect(() => {
@@ -148,7 +146,10 @@ export const AuthenticationUI: React.FC<AuthenticationUIProps> = ({
           <AuthTransition type="fade" in={isAuthenticated && walletState.isConnected && !walletState.isCorrectNetwork}>
             <div>
               {isAuthenticated && walletState.isConnected && !walletState.isCorrectNetwork && (
-                <NetworkSelector />
+                <Box sx={{ textAlign: 'center', my: 2 }}>
+                  <AuthProgress status="verifying" />
+                  <Box sx={{ mt: 2 }}>Switching to correct network...</Box>
+                </Box>
               )}
             </div>
           </AuthTransition>

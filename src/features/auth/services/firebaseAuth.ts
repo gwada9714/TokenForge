@@ -139,15 +139,17 @@ class FirebaseAuthService {
     }
   }
 
-  getCurrentSession(): AuthSession | null {
+  async getCurrentSession(): Promise<AuthSession | null> {
     const user = this.currentUser;
     if (!user) return null;
 
+    const idTokenResult = await user.getIdTokenResult();
     return {
       uid: user.uid,
       emailVerified: user.emailVerified,
       email: user.email,
       provider: user.providerData[0]?.providerId || 'wallet',
+      customClaims: idTokenResult.claims,
     };
   }
 

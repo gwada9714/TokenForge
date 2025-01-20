@@ -141,6 +141,11 @@ export class WalletReconnectionService {
     try {
       const result = await networkRetryService.retryWithTimeout(
         async () => {
+          notificationService.info(
+            'Tentative de reconnexion au wallet...',
+            { toastId: 'wallet-reconnection-attempt' }
+          );
+
           const config: Partial<Config> = {
             chains: [mainnet],
           };
@@ -167,6 +172,11 @@ export class WalletReconnectionService {
           if (latency > 0) {
             await storageService.updateNetworkLatency(latency);
           }
+
+          notificationService.success(
+            'Reconnexion au wallet réussie',
+            { toastId: 'wallet-reconnection-success' }
+          );
 
           return { walletClient, provider, chainId: chainIdNumber };
         },

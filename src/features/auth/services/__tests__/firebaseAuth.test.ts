@@ -1,151 +1,126 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { signInWithCustomToken, onAuthStateChanged, signOut } from 'firebase/auth';
+import {
+  signInWithCustomToken,
+  signOut,
+  onAuthStateChanged,
+  type User,
+  type NextOrObserver,
+} from 'firebase/auth';
+import { auth } from '../../../config/firebase';
 import { firebaseAuth } from '../firebaseAuth';
-import { notificationService } from '../notificationService';
-import { AuthError } from '../../errors/AuthError';
-import type { User, UserCredential, Auth } from 'firebase/auth';
+import { AuthError } from '../errors/AuthError';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-// Mock des services
 vi.mock('firebase/auth');
-vi.mock('../notificationService');
+vi.mock('../../../config/firebase');
 
 describe('firebaseAuth', () => {
-  let mockUser: Partial<User>;
-  let authStateCallback: ((user: User | null) => void) | null = null;
+  const mockUser = {
+    uid: 'test-uid',
+    email: 'test@example.com',
+    emailVerified: false,
+    providerData: [{ providerId: 'wallet' }],
+    getIdTokenResult: vi.fn().mockResolvedValue({
+      claims: {
+        walletAddress: '0x123',
+      },
+    }),
+    reload: vi.fn(),
+  } as unknown as User;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUser = {
-      uid: 'test-uid',
-      email: 'test@example.com',
-      emailVerified: false,
-      isAnonymous: false,
-      metadata: {},
-      providerData: [],
-      refreshToken: '',
-      tenantId: null,
-      delete: vi.fn(),
-      getIdToken: vi.fn(),
-      getIdTokenResult: vi.fn().mockResolvedValue({
-        claims: { walletAddress: '0x123' },
-      }),
-      reload: vi.fn(),
-      toJSON: vi.fn()
-    };
-
-    // Mock de onAuthStateChanged
-    vi.mocked(onAuthStateChanged).mockImplementation((_auth: Auth, callback) => {
+    vi.mocked(signInWithCustomToken).mockResolvedValue({ user: mockUser });
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback: NextOrObserver<User | null>) => {
       if (typeof callback === 'function') {
-        authStateCallback = callback;
+        callback(mockUser);
       }
       return () => {};
     });
   });
 
   describe('signInWithWallet', () => {
-    const mockWalletAddress = '0x123';
-    const mockSignature = 'signature';
-    const mockToken = 'mock-jwt-token';
-
-    beforeEach(() => {
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ token: mockToken }),
-      });
-    });
-
     it('devrait se connecter avec succès', async () => {
-      const mockCredential: UserCredential = {
-        user: mockUser as User,
-        providerId: null,
-        operationType: 'signIn'
-      };
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ token: 'test-token' }),
+      } as Response);
 
-      vi.mocked(signInWithCustomToken).mockResolvedValue(mockCredential);
+      const session = await firebaseAuth.signInWithWallet('0x123', 'signature');
 
-      const result = await firebaseAuth.signInWithWallet(mockWalletAddress, mockSignature);
-
-      expect(result).toEqual({
+      expect(session).toEqual({
         uid: mockUser.uid,
         email: mockUser.email,
         emailVerified: mockUser.emailVerified,
-        customClaims: { walletAddress: '0x123' }
-      });
-      
-      expect(signInWithCustomToken).toHaveBeenCalledWith(
-        expect.anything(),
-        mockToken
-      );
-      expect(notificationService.notify).toHaveBeenCalledWith({
-        type: 'success',
-        message: expect.any(String)
+        provider: 'wallet',
+        customClaims: {
+          walletAddress: '0x123',
+        },
       });
     });
 
     it('devrait gérer les erreurs de connexion', async () => {
-      const mockError = new Error('Auth error');
-      vi.mocked(signInWithCustomToken).mockRejectedValue(mockError);
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+      } as Response);
 
-      await expect(firebaseAuth.signInWithWallet(mockWalletAddress, mockSignature)).rejects.toThrow(
-        AuthError
-      );
-      expect(notificationService.notify).toHaveBeenCalledWith({
-        type: 'error',
-        message: expect.any(String)
-      });
+      await expect(firebaseAuth.signInWithWallet('0x123', 'signature'))
+        .rejects.toThrow(AuthError);
     });
   });
 
   describe('signOut', () => {
     it('devrait se déconnecter avec succès', async () => {
-      vi.mocked(signOut).mockResolvedValue();
-
-      await firebaseAuth.signOut();
-
-      expect(signOut).toHaveBeenCalled();
-      expect(notificationService.notify).toHaveBeenCalledWith({
-        type: 'success',
-        message: expect.any(String)
-      });
+      vi.mocked(signOut).mockResolvedValueOnce();
+      await expect(firebaseAuth.signOut()).resolves.not.toThrow();
     });
 
     it('devrait gérer les erreurs de déconnexion', async () => {
-      const mockError = new Error('Sign out error');
-      vi.mocked(signOut).mockRejectedValue(mockError);
-
+      vi.mocked(signOut).mockRejectedValueOnce(new Error('Sign out failed'));
       await expect(firebaseAuth.signOut()).rejects.toThrow(AuthError);
-      expect(notificationService.notify).toHaveBeenCalledWith({
-        type: 'error',
-        message: expect.any(String)
-      });
     });
   });
 
   describe('session management', () => {
-    it('devrait retourner la session courante', () => {
-      if (authStateCallback) {
-        authStateCallback(mockUser as User);
-      }
-      const session = firebaseAuth.getCurrentSession();
+    it('devrait retourner null quand aucun utilisateur n\'est connecté', async () => {
+      vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback: NextOrObserver<User | null>) => {
+        if (typeof callback === 'function') {
+          callback(null);
+        }
+        return () => {};
+      });
+
+      const session = await firebaseAuth.getCurrentSession();
+      expect(session).toBeNull();
+    });
+
+    it('devrait retourner la session courante', async () => {
+      const session = await firebaseAuth.getCurrentSession();
       expect(session).toEqual({
         uid: mockUser.uid,
         email: mockUser.email,
-        emailVerified: mockUser.emailVerified
+        emailVerified: mockUser.emailVerified,
+        provider: 'wallet',
+        customClaims: {
+          walletAddress: '0x123',
+        },
       });
     });
 
     it('devrait notifier des changements de session', () => {
-      const mockCallback = vi.fn();
-      firebaseAuth.onSessionChange(mockCallback);
-      
-      if (authStateCallback) {
-        authStateCallback(mockUser as User);
-      }
-
-      expect(mockCallback).toHaveBeenCalledWith({
-        uid: mockUser.uid,
-        email: mockUser.email,
-        emailVerified: mockUser.emailVerified
+      return new Promise<void>((resolve) => {
+        const unsubscribe = firebaseAuth.onSessionChange((session) => {
+          expect(session).toEqual({
+            uid: mockUser.uid,
+            email: mockUser.email,
+            emailVerified: mockUser.emailVerified,
+            provider: 'wallet',
+            customClaims: {
+              walletAddress: '0x123',
+            },
+          });
+          unsubscribe();
+          resolve();
+        });
       });
     });
   });

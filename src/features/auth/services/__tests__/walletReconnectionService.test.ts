@@ -5,6 +5,7 @@ import { BrowserProvider } from 'ethers';
 import { WalletReconnectionService } from '../walletReconnectionService';
 import { storageService } from '../storageService';
 import { logService } from '../logService';
+import { notificationService } from '../notificationService';
 import { type WalletClient } from 'viem';
 import { EventEmitter } from 'events';
 import type { Connector } from '@wagmi/core';
@@ -20,6 +21,13 @@ vi.mock('../logService', () => ({
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+vi.mock('../notificationService', () => ({
+  notificationService: {
+    info: vi.fn(),
+    success: vi.fn(),
     error: vi.fn(),
   },
 }));
@@ -118,6 +126,9 @@ describe('WalletReconnectionService', () => {
       chainId: mockChainId,
       isConnected: true,
     });
+    vi.mocked(notificationService.info).mockReset();
+    vi.mocked(notificationService.success).mockReset();
+    vi.mocked(notificationService.error).mockReset();
   });
 
   afterEach(() => {
@@ -133,6 +144,14 @@ describe('WalletReconnectionService', () => {
 
       await service.attemptReconnection(onConnect, onDisconnect);
 
+      expect(notificationService.info).toHaveBeenCalledWith(
+        'Tentative de reconnexion au wallet...',
+        expect.objectContaining({ toastId: 'wallet-reconnection-attempt' })
+      );
+      expect(notificationService.success).toHaveBeenCalledWith(
+        'Reconnexion au wallet réussie',
+        expect.objectContaining({ toastId: 'wallet-reconnection-success' })
+      );
       expect(onConnect).toHaveBeenCalledWith(
         mockAddress,
         mockChainId,
@@ -152,6 +171,14 @@ describe('WalletReconnectionService', () => {
 
       await service.attemptReconnection(onConnect, onDisconnect);
 
+      expect(notificationService.info).toHaveBeenCalledWith(
+        'Tentative de reconnexion au wallet...',
+        expect.objectContaining({ toastId: 'wallet-reconnection-attempt' })
+      );
+      expect(notificationService.error).toHaveBeenCalledWith(
+        expect.stringContaining('Échec de la connexion'),
+        expect.objectContaining({ toastId: expect.stringMatching(/connection-error-\d+/) })
+      );
       expect(onConnect).not.toHaveBeenCalled();
       expect(onDisconnect).toHaveBeenCalled();
       expect(logService.error).toHaveBeenCalledWith(
