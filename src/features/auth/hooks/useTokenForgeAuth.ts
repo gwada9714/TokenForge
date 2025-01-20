@@ -1,16 +1,37 @@
 import { useReducer, useEffect, useCallback } from 'react';
-import { useAccount, useDisconnect, useChainId, useWalletClient, usePublicClient } from 'wagmi';
-import { TokenForgeAuth, TokenForgeUser, WalletState } from '../types';
+import { useAccount, useDisconnect, useChainId, usePublicClient, useWalletClient } from 'wagmi';
+import type { TokenForgeAuth, TokenForgeUser } from '../types';
 import { auth } from '../../../config/firebase';
 import { signInWithEmailAndPassword, User as FirebaseUser } from 'firebase/auth';
-import { AuthError } from '../errors/AuthError';
 import { authReducer, initialState } from '../reducers/authReducer';
 import { authActions } from '../actions/authActions';
-import { errorService } from '../services/errorService';
+import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 import { sessionService } from '../services/sessionService';
-import { walletReconnectionService } from '../services/walletReconnectionService';
+import { emailVerificationService } from '../services/emailVerificationService';
+import { tokenRefreshService } from '../services/tokenRefreshService';
+import type { BrowserProvider } from 'ethers';
+
+const convertToTokenForgeUser = (
+  firebaseUser: FirebaseUser,
+  storedData?: { isAdmin?: boolean; customMetadata?: Record<string, unknown> }
+): TokenForgeUser => {
+  const metadata = {
+    creationTime: firebaseUser.metadata.creationTime,
+    lastSignInTime: firebaseUser.metadata.lastSignInTime,
+    lastLoginTime: Date.now(),
+    walletAddress: null,
+    chainId: null,
+    customMetadata: storedData?.customMetadata
+  };
+
+  return {
+    ...firebaseUser,
+    isAdmin: storedData?.isAdmin || false,
+    metadata
+  };
+};
 
 export function useTokenForgeAuth(): TokenForgeAuth {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -18,8 +39,8 @@ export function useTokenForgeAuth(): TokenForgeAuth {
   // Wagmi hooks
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const { data: walletClient } = useWalletClient();
   const provider = usePublicClient();
+  const { data: walletClient } = useWalletClient();
   const { disconnect } = useDisconnect();
 
   // Firebase auth handlers
@@ -28,23 +49,30 @@ export function useTokenForgeAuth(): TokenForgeAuth {
       dispatch(authActions.loginStart());
       
       const storedData = await storageService.getUserData(firebaseUser.uid);
-      const user: TokenForgeUser = {
-        ...firebaseUser,
-        isAdmin: storedData?.isAdmin || false,
-        metadata: {
-          creationTime: firebaseUser.metadata.creationTime,
-          lastSignInTime: firebaseUser.metadata.lastSignInTime,
-          ...(storedData?.customMetadata || {})
-        }
-      };
+      const user = convertToTokenForgeUser(firebaseUser, storedData || undefined);
       
       dispatch(authActions.loginSuccess(user));
       
       if (!user.emailVerified) {
         notificationService.warning('Please verify your email address');
+        await emailVerificationService.sendVerificationEmail(user);
       }
+
+      const unsubscribe = sessionService.initializeSession((authUser) => {
+        if (authUser) {
+          tokenRefreshService.startTokenRefresh(authUser);
+        }
+      });
+
+      return () => {
+        unsubscribe();
+      };
     } catch (error) {
-      const authError = errorService.handleError(error) as AuthError;
+      const authError = createAuthError(
+        AUTH_ERROR_CODES.FIREBASE_ERROR,
+        error instanceof Error ? error.message : 'Authentication error occurred',
+        { originalError: error }
+      );
       dispatch(authActions.loginFailure(authError));
       notificationService.error(authError.message);
     }
@@ -52,92 +80,97 @@ export function useTokenForgeAuth(): TokenForgeAuth {
 
   const handleLogout = useCallback(async () => {
     try {
+      await sessionService.clearSession();
       await auth.signOut();
-      await storageService.clearUserData();
       disconnect();
       dispatch(authActions.logout());
-      notificationService.info('Logged out successfully');
     } catch (error) {
-      const authError = errorService.handleError(error) as AuthError;
-      dispatch(authActions.setError(authError));
+      const authError = createAuthError(
+        AUTH_ERROR_CODES.FIREBASE_ERROR,
+        error instanceof Error ? error.message : 'Logout error occurred',
+        { originalError: error }
+      );
       notificationService.error(authError.message);
     }
   }, [disconnect]);
 
-  // Wallet state synchronization
+  // Wallet connection handlers
   useEffect(() => {
-    if (isConnected && address && chainId && walletClient && provider) {
-      const walletState: WalletState = {
-        isConnected: true,
-        address,
-        chainId,
-        isCorrectNetwork: walletReconnectionService.isCorrectNetwork(chainId),
-        provider,
-        walletClient
-      };
-      dispatch(authActions.connectWallet(walletState));
-    } else {
-      dispatch(authActions.disconnectWallet());
+    if (isConnected && address && chainId) {
+      const isCorrectNetwork = Number(process.env.REACT_APP_CHAIN_ID) === chainId;
+      dispatch(authActions.updateNetwork({ chainId, isCorrectNetwork }));
     }
-  }, [isConnected, address, chainId, walletClient, provider]);
+  }, [isConnected, address, chainId]);
 
-  // Network change handler
+  // Firebase auth state listener
   useEffect(() => {
-    if (chainId) {
-      const isCorrectNetwork = walletReconnectionService.isCorrectNetwork(chainId);
-      dispatch(authActions.updateNetwork(chainId, isCorrectNetwork));
-      
-      if (!isCorrectNetwork) {
-        notificationService.warning('Please switch to the correct network');
-      }
-    }
-  }, [chainId]);
-
-  // Provider update handler
-  useEffect(() => {
-    if (provider) {
-      dispatch(authActions.updateProvider(provider));
-    }
-  }, [provider]);
-
-  // Session management
-  useEffect(() => {
-    const unsubscribe = sessionService.initializeSession((user) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         handleLogin(user);
       } else {
-        handleLogout();
+        dispatch(authActions.logout());
       }
+    }, (error) => {
+      const authError = createAuthError(
+        AUTH_ERROR_CODES.FIREBASE_ERROR,
+        error instanceof Error ? error.message : 'Auth state error occurred',
+        { originalError: error }
+      );
+      notificationService.error(authError.message);
     });
-
     return () => unsubscribe();
-  }, [handleLogin, handleLogout]);
+  }, [handleLogin]);
 
-  const isAdmin = state.user?.isAdmin || false;
-  const canCreateToken = isAdmin || (state.isAuthenticated && state.walletState.isCorrectNetwork);
-  const canUseServices = state.isAuthenticated && state.walletState.isConnected && state.walletState.isCorrectNetwork;
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      dispatch(authActions.loginStart());
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      await handleLogin(user);
+    } catch (error) {
+      const authError = createAuthError(
+        AUTH_ERROR_CODES.FIREBASE_ERROR,
+        error instanceof Error ? error.message : 'Login error occurred',
+        { originalError: error }
+      );
+      dispatch(authActions.loginFailure(authError));
+      throw authError;
+    }
+  }, [handleLogin]);
+
+  const updateUser = useCallback(async (updates: Partial<TokenForgeUser>) => {
+    try {
+      if (!state.user) throw new Error('No user logged in');
+      
+      const updatedUser = { ...state.user, ...updates };
+      await storageService.saveAuthState(updatedUser);
+      dispatch(authActions.updateUser(updates));
+      
+      notificationService.success('User profile updated successfully');
+    } catch (error) {
+      const authError = createAuthError(
+        AUTH_ERROR_CODES.STORAGE_ERROR,
+        error instanceof Error ? error.message : 'Update user error occurred',
+        { originalError: error }
+      );
+      notificationService.error(authError.message);
+      throw authError;
+    }
+  }, [state.user]);
+
+  const walletState = {
+    isConnected,
+    address: address || null,
+    chainId: chainId || null,
+    isCorrectNetwork: chainId === Number(process.env.REACT_APP_CHAIN_ID),
+    provider: provider as BrowserProvider,
+    walletClient: walletClient || null
+  };
 
   return {
     ...state,
-    isAdmin,
-    canCreateToken,
-    canUseServices,
-    actions: {
-      login: async (email: string, password: string) => {
-        try {
-          dispatch(authActions.loginStart());
-          const { user } = await signInWithEmailAndPassword(auth, email, password);
-          await handleLogin(user);
-        } catch (error) {
-          const authError = errorService.handleError(error) as AuthError;
-          dispatch(authActions.loginFailure(authError));
-          throw authError;
-        }
-      },
-      logout: handleLogout,
-      updateUser: (updates: Partial<TokenForgeUser>) => {
-        dispatch(authActions.updateUser(updates));
-      }
-    }
+    walletState,
+    login,
+    logout: handleLogout,
+    updateUser
   };
 }
