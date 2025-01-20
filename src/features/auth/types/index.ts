@@ -1,6 +1,8 @@
 import { User as FirebaseUser } from 'firebase/auth';
-import { BrowserProvider, JsonRpcSigner } from 'ethers';
+import { JsonRpcSigner } from 'ethers';
+import type { PublicClient } from 'viem';
 import { AuthError } from '../errors/AuthError';
+import { authActions } from '../actions/authActions';
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error';
 
@@ -16,8 +18,22 @@ export interface WalletState {
   address: string | null;
   chainId: number | null;
   isCorrectNetwork: boolean;
-  provider: BrowserProvider | null;
+  provider: PublicClient | null;
   walletClient: JsonRpcSigner | null;
+}
+
+export interface TokenForgeMetadata {
+  creationTime?: string | undefined;
+  lastSignInTime?: string | undefined;
+  lastLoginTime?: number | undefined;
+  walletAddress?: string | undefined;
+  chainId?: number | undefined;
+  customMetadata: Record<string, unknown>;
+}
+
+export interface TokenForgeUser extends Omit<FirebaseUser, 'metadata'> {
+  isAdmin: boolean;
+  metadata: TokenForgeMetadata;
 }
 
 export interface TokenForgeAuthState extends AuthState {
@@ -27,42 +43,12 @@ export interface TokenForgeAuthState extends AuthState {
   canUseServices: boolean;
 }
 
-export interface TokenForgeMetadata {
-  creationTime: string | null;
-  lastSignInTime: string | null;
-  lastLoginTime: number | null;
-  walletAddress: string | null;
-  chainId: number | null;
-  customMetadata?: Record<string, unknown>;
-}
-
-export interface TokenForgeUser extends Omit<FirebaseUser, 'metadata'> {
-  isAdmin: boolean;
-  metadata: TokenForgeMetadata;
-}
-
-export interface TokenForgeAuth extends TokenForgeAuthState {
+export interface TokenForgeAuthMethods {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<TokenForgeUser>) => Promise<void>;
 }
 
-export interface AuthSession {
-  user: TokenForgeUser;
-  token: string;
-  expiresAt: number;
+export interface TokenForgeAuth extends TokenForgeAuthState, TokenForgeAuthMethods {
+  actions: typeof authActions;
 }
-
-export interface NetworkState {
-  isChanging: boolean;
-  error: Error | null;
-  lastAttemptedChainId: number | null;
-}
-
-export type AuthAction = 
-  | { type: 'LOGIN_START' }
-  | { type: 'LOGIN_SUCCESS'; payload: TokenForgeUser }
-  | { type: 'LOGIN_FAILURE'; payload: AuthError }
-  | { type: 'LOGOUT' }
-  | { type: 'UPDATE_USER'; payload: Partial<TokenForgeUser> }
-  | { type: 'UPDATE_NETWORK'; payload: { chainId: number; isCorrectNetwork: boolean } };
