@@ -109,7 +109,7 @@ describe('WalletReconnectionService', () => {
   });
 
   afterEach(() => {
-    walletReconnectionService.clearState();
+    walletReconnectionService.cleanup();
     delete global.window.ethereum;
   });
 
@@ -205,5 +205,160 @@ describe('WalletReconnectionService', () => {
       expect.anything(),
       expect.anything()
     );
+  });
+
+  it('devrait gérer le changement de réseau', async () => {
+    const onConnect = vi.fn();
+    const onDisconnect = vi.fn();
+    const newChainId = 5;
+
+    await walletReconnectionService.attemptReconnection(onConnect, onDisconnect);
+
+    // Simuler un changement de réseau
+    const newNetworkState = {
+      ...connectedAccountState,
+      chainId: newChainId,
+      chain: {
+        ...mainnet,
+        id: newChainId,
+      },
+    };
+    vi.mocked(getAccount).mockReturnValue(newNetworkState as any);
+    
+    // Attendre la vérification périodique
+    await new Promise(resolve => setTimeout(resolve, 1100));
+
+    expect(onDisconnect).toHaveBeenCalled();
+  });
+
+  it('devrait gérer le timeout de connexion', async () => {
+    const onConnect = vi.fn();
+    const onDisconnect = vi.fn();
+
+    // Simuler un timeout
+    vi.mocked(getWalletClient).mockImplementation(() => {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(mockWalletClient as any), 11000); // Plus long que CONNECTION_TIMEOUT
+      });
+    });
+
+    await walletReconnectionService.attemptReconnection(onConnect, onDisconnect);
+
+    expect(onConnect).not.toHaveBeenCalled();
+    expect(onDisconnect).toHaveBeenCalled();
+  });
+
+  it('devrait valider les réseaux supportés', async () => {
+    const onConnect = vi.fn();
+    const onDisconnect = vi.fn();
+
+    // Simuler un réseau non supporté
+    const unsupportedNetworkState = {
+      ...connectedAccountState,
+      chainId: 999, // Réseau non supporté
+      chain: {
+        ...mainnet,
+        id: 999,
+      },
+    };
+    vi.mocked(getAccount).mockReturnValue(unsupportedNetworkState as any);
+
+    await walletReconnectionService.attemptReconnection(onConnect, onDisconnect);
+
+    expect(onConnect).not.toHaveBeenCalled();
+    expect(onDisconnect).toHaveBeenCalled();
+  });
+
+  describe('Synchronisation multi-onglets', () => {
+    it('devrait synchroniser l\'état du wallet entre les onglets', async () => {
+      const onConnect = vi.fn();
+      const onDisconnect = vi.fn();
+
+      await walletReconnectionService.attemptReconnection(onConnect, onDisconnect);
+
+      // Simuler un message de synchronisation
+      const syncMessage = {
+        type: 'UPDATE_WALLET_STATE',
+        payload: {
+          isConnected: true,
+          address: '0x456',
+          chainId: mockChainId,
+        },
+        timestamp: Date.now(),
+        tabId: 'other-tab',
+      };
+
+      // Déclencher l'événement de message
+      const messageEvent = new MessageEvent('message', {
+        data: syncMessage,
+      });
+      window.dispatchEvent(messageEvent);
+
+      // Attendre la synchronisation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(onConnect).toHaveBeenCalledWith('0x456', mockChainId, expect.anything(), expect.anything());
+    });
+
+    it('devrait ignorer les messages de son propre onglet', async () => {
+      const onConnect = vi.fn();
+      const onDisconnect = vi.fn();
+
+      await walletReconnectionService.attemptReconnection(onConnect, onDisconnect);
+
+      // Simuler un message de synchronisation du même onglet
+      const syncMessage = {
+        type: 'UPDATE_WALLET_STATE',
+        payload: {
+          isConnected: true,
+          address: '0x456',
+          chainId: mockChainId,
+        },
+        timestamp: Date.now(),
+        tabId: walletReconnectionService.getCurrentTabId(), // Utiliser l'ID de l'onglet courant
+      };
+
+      // Déclencher l'événement de message
+      const messageEvent = new MessageEvent('message', {
+        data: syncMessage,
+      });
+      window.dispatchEvent(messageEvent);
+
+      // Attendre la synchronisation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Le onConnect initial ne devrait être appelé qu'une fois
+      expect(onConnect).toHaveBeenCalledTimes(1);
+    });
+
+    it('devrait gérer la déconnexion synchronisée', async () => {
+      const onConnect = vi.fn();
+      const onDisconnect = vi.fn();
+
+      await walletReconnectionService.attemptReconnection(onConnect, onDisconnect);
+
+      // Simuler un message de déconnexion
+      const syncMessage = {
+        type: 'UPDATE_WALLET_STATE',
+        payload: {
+          isConnected: false,
+          address: null,
+          chainId: null,
+        },
+        timestamp: Date.now(),
+        tabId: 'other-tab',
+      };
+
+      // Déclencher l'événement de message
+      const messageEvent = new MessageEvent('message', {
+        data: syncMessage,
+      });
+      window.dispatchEvent(messageEvent);
+
+      // Attendre la synchronisation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(onDisconnect).toHaveBeenCalled();
+    });
   });
 });
