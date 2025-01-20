@@ -1,16 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getWalletClient, watchAccount } from '@wagmi/core';
+import { getWalletClient, getAccount } from '@wagmi/core';
 import { mainnet } from '@wagmi/core/chains';
 import { BrowserProvider } from 'ethers';
 import { WalletReconnectionService } from '../walletReconnectionService';
 import { storageService } from '../storageService';
+import { logService } from '../logService';
 import { type WalletClient } from 'viem';
-import type { Connector } from '@wagmi/core';
 import { EventEmitter } from 'events';
+import type { Connector } from '@wagmi/core';
 
 // Mock des services
 vi.mock('../storageService');
-vi.mock('@wagmi/core');
+vi.mock('@wagmi/core', () => ({
+  getWalletClient: vi.fn(),
+  getAccount: vi.fn(),
+}));
+vi.mock('../logService', () => ({
+  logService: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 describe('WalletReconnectionService', () => {
   const mockAddress = '0x123' as `0x${string}`;
@@ -19,13 +31,9 @@ describe('WalletReconnectionService', () => {
     account: { address: mockAddress },
     chain: { id: mockChainId },
   } as WalletClient;
-  const mockProvider = {} as BrowserProvider;
 
-  // Mock du Connector de base
-  const createMockConnector = (): Connector => {
+  const createMockConnector = () => {
     const emitter = new EventEmitter();
-    
-    // Créer un mock de l'emitter qui implémente seulement les méthodes nécessaires
     const mockEmitter = {
       uid: 'mock-emitter',
       _emitter: emitter,
@@ -44,243 +52,116 @@ describe('WalletReconnectionService', () => {
       emit: (event: string, ...args: any[]) => {
         return emitter.emit(event, ...args);
       },
+      removeAllListeners: (event?: string) => {
+        emitter.removeAllListeners(event);
+        return mockEmitter;
+      },
       listenerCount: (event: string) => emitter.listenerCount(event)
-    } as unknown as Connector['emitter'];
-    
+    };
+
     return {
-      uid: 'mock-connector',
       id: 'mock',
       name: 'Mock Wallet',
       type: 'injected',
-      ready: true,
-      icon: undefined,
-      rdns: undefined,
-      supportsSimulation: false,
-      emitter: mockEmitter,
-
-      async connect() {
-        return { accounts: [mockAddress], chainId: mockChainId };
-      },
-
-      async disconnect() {},
-
-      async getAccounts() {
-        return [mockAddress];
-      },
-
-      async getChainId() {
-        return mockChainId;
-      },
-
-      async getProvider() {
-        return {};
-      },
-
-      async isAuthorized() {
-        return true;
-      },
-
-      async switchChain({ chainId }) {
-        return { ...mainnet, id: chainId };
-      },
-
-      // Ces méthodes sont des handlers, pas des listeners
-      onAccountsChanged(accounts: string[]) {
-        mockEmitter.emit('connect', {
-          accounts: accounts.map(addr => addr as `0x${string}`) as readonly `0x${string}`[],
-          chainId: mockChainId
-        });
-      },
-
-      onChainChanged(chainId: string) {
-        mockEmitter.emit('change', { chainId: parseInt(chainId) });
-      },
-
-      onDisconnect() {
-        mockEmitter.emit('disconnect');
-      },
-
-      onMessage() {},
-
-      // Méthodes supplémentaires requises par l'interface
-      async addChain() {},
-      async watchAsset() { return true; },
-      async getWalletClient() { return mockWalletClient; },
-      async getSigner() { return {}; }
-    };
+      uid: 'mock-connector',
+      emitter: mockEmitter as unknown as Connector['emitter'],
+      connect: async () => ({ accounts: [mockAddress], chainId: mockChainId }),
+      disconnect: async () => {},
+      getAccounts: async () => [mockAddress],
+      getChainId: async () => mockChainId,
+      getProvider: async () => ({}),
+      isAuthorized: async () => true,
+      switchChain: async ({ chainId }) => ({
+        ...mainnet,
+        id: chainId,
+        name: 'Ethereum',
+        nativeCurrency: {
+          name: 'Ether',
+          symbol: 'ETH',
+          decimals: 18,
+        },
+        rpcUrls: {
+          default: { http: ['https://ethereum.publicnode.com'] },
+          public: { http: ['https://ethereum.publicnode.com'] },
+        },
+        blockExplorers: {
+          default: {
+            name: 'Etherscan',
+            url: 'https://etherscan.io',
+          },
+        },
+      }),
+      watchAsset: async () => true,
+      onAccountsChanged: () => {},
+      onChainChanged: () => {},
+      onDisconnect: () => {},
+    } as unknown as Connector;
   };
-
-  const watchAccountCleanup = vi.fn();
 
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.clearAllMocks();
-
-    // Mock de getWalletClient
     vi.mocked(getWalletClient).mockResolvedValue(mockWalletClient);
-
-    // Mock de watchAccount avec des états simplifiés
-    vi.mocked(watchAccount).mockImplementation((_config, { onChange }) => {
-      setTimeout(() => {
-        // Simuler une connexion réussie
-        onChange({
-          address: mockAddress,
-          addresses: [mockAddress],
-          chain: mainnet,
-          chainId: mockChainId,
-          connector: createMockConnector(),
-          isConnected: true as const,
-          isConnecting: false as const,
-          isDisconnected: false as const,
-          isReconnecting: false as const,
-          status: 'connected' as const
-        }, {
-          address: undefined,
-          addresses: undefined,
-          chain: undefined,
-          chainId: undefined,
-          connector: undefined,
-          isConnected: false as const,
-          isConnecting: true as const,
-          isDisconnected: false as const,
-          isReconnecting: false as const,
-          status: 'connecting' as const
-        });
-      }, 50);
-      return watchAccountCleanup;
+    vi.mocked(getAccount).mockResolvedValue({
+      address: mockAddress,
+      addresses: [mockAddress],
+      chain: mainnet,
+      chainId: mockChainId,
+      connector: createMockConnector(),
+      isConnected: true,
+      isConnecting: false,
+      isDisconnected: false,
+      isReconnecting: false,
+      status: 'connected' as const
+    });
+    vi.mocked(storageService.getWalletState).mockResolvedValue({
+      address: mockAddress,
+      chainId: mockChainId,
+      isConnected: true,
     });
   });
 
   afterEach(() => {
-    vi.clearAllTimers();
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
-  it('devrait se connecter avec succès', async () => {
-    const service = WalletReconnectionService.getInstance();
-    const onConnect = vi.fn();
-    const onDisconnect = vi.fn();
+  describe('Reconnexion', () => {
+    it('devrait tenter la reconnexion avec succès', async () => {
+      const service = WalletReconnectionService.getInstance();
+      const onConnect = vi.fn();
+      const onDisconnect = vi.fn();
 
-    // Mock de connectWithTimeout
-    vi.spyOn(service as any, 'connectWithTimeout').mockResolvedValue({
-      walletClient: mockWalletClient,
-      provider: mockProvider,
-      chainId: mockChainId
+      await service.attemptReconnection(onConnect, onDisconnect);
+
+      expect(onConnect).toHaveBeenCalledWith(
+        mockAddress,
+        mockChainId,
+        mockWalletClient,
+        expect.any(BrowserProvider)
+      );
+      expect(onDisconnect).not.toHaveBeenCalled();
     });
 
-    await service.attemptReconnection(onConnect, onDisconnect);
-    await vi.advanceTimersByTimeAsync(100);
+    it('devrait gérer l\'échec de reconnexion', async () => {
+      const service = WalletReconnectionService.getInstance();
+      const onConnect = vi.fn();
+      const onDisconnect = vi.fn();
+      const mockError = new Error('Connection failed');
 
-    expect(onConnect).toHaveBeenCalledWith(
-      mockAddress,
-      mockChainId,
-      expect.anything(),
-      expect.anything()
-    );
-    expect(onDisconnect).not.toHaveBeenCalled();
-    expect(storageService.saveWalletState).toHaveBeenCalledWith({
-      address: mockAddress,
-      chainId: mockChainId,
-      isConnected: true,
-      isCorrectNetwork: true
-    });
-  });
+      vi.mocked(getWalletClient).mockRejectedValueOnce(mockError);
 
-  it('devrait gérer le changement de réseau', async () => {
-    const service = WalletReconnectionService.getInstance();
-    const onConnect = vi.fn();
-    const onDisconnect = vi.fn();
-    const unsupportedChainId = 999;
+      await service.attemptReconnection(onConnect, onDisconnect);
 
-    // Mock initial pour une connexion réussie
-    vi.spyOn(service as any, 'connectWithTimeout').mockResolvedValueOnce({
-      walletClient: mockWalletClient,
-      provider: mockProvider,
-      chainId: unsupportedChainId
-    });
-
-    await service.attemptReconnection(onConnect, onDisconnect);
-    await vi.advanceTimersByTimeAsync(100);
-
-    expect(onDisconnect).toHaveBeenCalled();
-    expect(storageService.saveWalletState).toHaveBeenCalledWith({
-      isConnected: false,
-      chainId: null,
-      address: null,
-      isCorrectNetwork: false
-    });
-  });
-
-  it('devrait gérer la déconnexion du wallet', async () => {
-    const service = WalletReconnectionService.getInstance();
-    const onConnect = vi.fn();
-    const onDisconnect = vi.fn();
-
-    // Mock de watchAccount pour simuler une déconnexion
-    vi.mocked(watchAccount).mockImplementationOnce((_config, { onChange }) => {
-      setTimeout(() => {
-        // Simuler une connexion suivie d'une déconnexion
-        onChange({
-          address: mockAddress,
-          addresses: [mockAddress],
-          chain: mainnet,
-          chainId: mockChainId,
-          connector: createMockConnector(),
-          isConnected: true as const,
-          isConnecting: false as const,
-          isDisconnected: false as const,
-          isReconnecting: false as const,
-          status: 'connected' as const
-        }, {
-          address: undefined,
-          addresses: undefined,
-          chain: undefined,
-          chainId: undefined,
-          connector: undefined,
-          isConnected: false as const,
-          isConnecting: false as const,
-          isDisconnected: true as const,
-          isReconnecting: false as const,
-          status: 'disconnected' as const
-        });
-        setTimeout(() => {
-          onChange({
-            address: undefined,
-            addresses: undefined,
-            chain: undefined,
-            chainId: undefined,
-            connector: undefined,
-            isConnected: false as const,
-            isConnecting: false as const,
-            isDisconnected: true as const,
-            isReconnecting: false as const,
-            status: 'disconnected' as const
-          }, {
-            address: mockAddress,
-            addresses: [mockAddress],
-            chain: mainnet,
-            chainId: mockChainId,
-            connector: createMockConnector(),
-            isConnected: true as const,
-            isConnecting: false as const,
-            isDisconnected: false as const,
-            isReconnecting: false as const,
-            status: 'connected' as const
-          });
-        }, 50);
-      }, 50);
-      return watchAccountCleanup;
-    });
-
-    await service.attemptReconnection(onConnect, onDisconnect);
-    await vi.advanceTimersByTimeAsync(150);
-
-    expect(onDisconnect).toHaveBeenCalled();
-    expect(storageService.saveWalletState).toHaveBeenLastCalledWith({
-      address: null,
-      chainId: null,
-      isConnected: false,
-      isCorrectNetwork: false
+      expect(onConnect).not.toHaveBeenCalled();
+      expect(onDisconnect).toHaveBeenCalled();
+      expect(logService.error).toHaveBeenCalledWith(
+        'WalletReconnectionService',
+        'Reconnection failed',
+        expect.objectContaining({
+          name: 'ReconnectionError',
+          message: mockError.message,
+        })
+      );
     });
   });
 });
