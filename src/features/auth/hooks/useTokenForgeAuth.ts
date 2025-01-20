@@ -1,8 +1,8 @@
 import { useReducer, useEffect, useCallback } from 'react';
 import { useAccount, useDisconnect, useChainId, usePublicClient, useWalletClient } from 'wagmi';
-import type { TokenForgeAuth, TokenForgeUser } from '../types';
-import { auth } from '../../../config/firebase';
-import { signInWithEmailAndPassword, User as FirebaseUser } from 'firebase/auth';
+import type { TokenForgeAuth, TokenForgeUser, WalletState, TokenForgeAuthState } from '../types';
+import { getAuth, User } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { authReducer, initialState } from '../reducers/authReducer';
 import { authActions } from '../actions/authActions';
 import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
@@ -11,19 +11,21 @@ import { notificationService } from '../services/notificationService';
 import { sessionService } from '../services/sessionService';
 import { emailVerificationService } from '../services/emailVerificationService';
 import { tokenRefreshService } from '../services/tokenRefreshService';
-import type { BrowserProvider } from 'ethers';
+import { type PublicClient } from 'viem';
+
+const firebaseAuth = getAuth();
 
 const convertToTokenForgeUser = (
-  firebaseUser: FirebaseUser,
+  firebaseUser: User,
   storedData?: { isAdmin?: boolean; customMetadata?: Record<string, unknown> }
 ): TokenForgeUser => {
   const metadata = {
     creationTime: firebaseUser.metadata.creationTime,
     lastSignInTime: firebaseUser.metadata.lastSignInTime,
     lastLoginTime: Date.now(),
-    walletAddress: null,
-    chainId: null,
-    customMetadata: storedData?.customMetadata
+    walletAddress: undefined,
+    chainId: undefined,
+    customMetadata: storedData?.customMetadata || {}
   };
 
   return {
@@ -39,12 +41,12 @@ export function useTokenForgeAuth(): TokenForgeAuth {
   // Wagmi hooks
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const provider = usePublicClient();
+  const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
   const { disconnect } = useDisconnect();
 
   // Firebase auth handlers
-  const handleLogin = useCallback(async (firebaseUser: FirebaseUser) => {
+  const handleLogin = useCallback(async (firebaseUser: User) => {
     try {
       dispatch(authActions.loginStart());
       
@@ -81,7 +83,7 @@ export function useTokenForgeAuth(): TokenForgeAuth {
   const handleLogout = useCallback(async () => {
     try {
       await sessionService.clearSession();
-      await auth.signOut();
+      await firebaseAuth.signOut();
       disconnect();
       dispatch(authActions.logout());
     } catch (error) {
@@ -98,33 +100,37 @@ export function useTokenForgeAuth(): TokenForgeAuth {
   useEffect(() => {
     if (isConnected && address && chainId) {
       const isCorrectNetwork = Number(process.env.REACT_APP_CHAIN_ID) === chainId;
-      dispatch(authActions.updateNetwork({ chainId, isCorrectNetwork }));
+      dispatch(authActions.updateNetwork(chainId, isCorrectNetwork));
     }
   }, [isConnected, address, chainId]);
 
   // Firebase auth state listener
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        handleLogin(user);
-      } else {
-        dispatch(authActions.logout());
+    const unsubscribe = onAuthStateChanged(
+      firebaseAuth,
+      (user: User | null) => {
+        if (user) {
+          handleLogin(user);
+        } else {
+          dispatch(authActions.logout());
+        }
+      },
+      (error: Error) => {
+        const authError = createAuthError(
+          AUTH_ERROR_CODES.FIREBASE_ERROR,
+          error.message || 'Auth state error occurred',
+          { originalError: error }
+        );
+        notificationService.error(authError.message);
       }
-    }, (error) => {
-      const authError = createAuthError(
-        AUTH_ERROR_CODES.FIREBASE_ERROR,
-        error instanceof Error ? error.message : 'Auth state error occurred',
-        { originalError: error }
-      );
-      notificationService.error(authError.message);
-    });
+    );
     return () => unsubscribe();
   }, [handleLogin]);
 
   const login = useCallback(async (email: string, password: string) => {
     try {
       dispatch(authActions.loginStart());
-      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      const { user } = await signInWithEmailAndPassword(firebaseAuth, email, password);
       await handleLogin(user);
     } catch (error) {
       const authError = createAuthError(
@@ -157,20 +163,29 @@ export function useTokenForgeAuth(): TokenForgeAuth {
     }
   }, [state.user]);
 
-  const walletState = {
+  const walletState: WalletState = {
     isConnected,
     address: address || null,
     chainId: chainId || null,
     isCorrectNetwork: chainId === Number(process.env.REACT_APP_CHAIN_ID),
-    provider: provider as BrowserProvider,
+    provider: publicClient as PublicClient,
     walletClient: walletClient || null
   };
 
-  return {
+  const authState: TokenForgeAuthState = {
     ...state,
     walletState,
-    login,
-    logout: handleLogout,
-    updateUser
+    isAdmin: state.user?.isAdmin || false,
+    canCreateToken: state.user?.isAdmin || (state.isAuthenticated && Number(chainId) === Number(process.env.REACT_APP_CHAIN_ID)),
+    canUseServices: state.isAuthenticated && isConnected && Number(chainId) === Number(process.env.REACT_APP_CHAIN_ID)
   };
+
+  return {
+    ...authState,
+    actions: {
+      login,
+      logout: handleLogout,
+      updateUser
+    }
+  } as TokenForgeAuth;
 }
