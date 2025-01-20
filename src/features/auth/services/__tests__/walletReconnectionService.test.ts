@@ -4,7 +4,9 @@ import { mainnet } from '@wagmi/core/chains';
 import { BrowserProvider } from 'ethers';
 import { WalletReconnectionService } from '../walletReconnectionService';
 import { storageService } from '../storageService';
-import type { WalletClient } from 'viem';
+import { type WalletClient } from 'viem';
+import type { Connector } from '@wagmi/core';
+import { EventEmitter } from 'events';
 
 // Mock des services
 vi.mock('../storageService');
@@ -19,30 +21,93 @@ describe('WalletReconnectionService', () => {
   } as WalletClient;
   const mockProvider = {} as BrowserProvider;
 
-  const connectedAccountState = {
-    address: mockAddress,
-    chain: mainnet,
-    connector: {
+  // Mock du Connector de base
+  const createMockConnector = (): Connector => {
+    const emitter = new EventEmitter();
+    
+    // Créer un mock de l'emitter qui implémente seulement les méthodes nécessaires
+    const mockEmitter = {
+      uid: 'mock-emitter',
+      _emitter: emitter,
+      on: (event: string, listener: (...args: any[]) => void) => {
+        emitter.on(event, listener);
+        return mockEmitter;
+      },
+      once: (event: string, listener: (...args: any[]) => void) => {
+        emitter.once(event, listener);
+        return mockEmitter;
+      },
+      off: (event: string, listener: (...args: any[]) => void) => {
+        emitter.off(event, listener);
+        return mockEmitter;
+      },
+      emit: (event: string, ...args: any[]) => {
+        return emitter.emit(event, ...args);
+      },
+      listenerCount: (event: string) => emitter.listenerCount(event)
+    } as unknown as Connector['emitter'];
+    
+    return {
+      uid: 'mock-connector',
       id: 'mock',
       name: 'Mock Wallet',
-      type: 'injected'
-    },
-    isConnected: true,
-    isConnecting: false,
-    isDisconnected: false,
-    isReconnecting: false,
-    status: 'connected' as const
-  };
+      type: 'injected',
+      ready: true,
+      icon: undefined,
+      rdns: undefined,
+      supportsSimulation: false,
+      emitter: mockEmitter,
 
-  const disconnectedAccountState = {
-    address: undefined,
-    chain: undefined,
-    connector: undefined,
-    isConnected: false,
-    isConnecting: false,
-    isDisconnected: true,
-    isReconnecting: false,
-    status: 'disconnected' as const
+      async connect() {
+        return { accounts: [mockAddress], chainId: mockChainId };
+      },
+
+      async disconnect() {},
+
+      async getAccounts() {
+        return [mockAddress];
+      },
+
+      async getChainId() {
+        return mockChainId;
+      },
+
+      async getProvider() {
+        return {};
+      },
+
+      async isAuthorized() {
+        return true;
+      },
+
+      async switchChain({ chainId }) {
+        return { ...mainnet, id: chainId };
+      },
+
+      // Ces méthodes sont des handlers, pas des listeners
+      onAccountsChanged(accounts: string[]) {
+        mockEmitter.emit('connect', {
+          accounts: accounts.map(addr => addr as `0x${string}`) as readonly `0x${string}`[],
+          chainId: mockChainId
+        });
+      },
+
+      onChainChanged(chainId: string) {
+        mockEmitter.emit('change', { chainId: parseInt(chainId) });
+      },
+
+      onDisconnect() {
+        mockEmitter.emit('disconnect');
+      },
+
+      onMessage() {},
+
+      // Méthodes supplémentaires requises par l'interface
+      async addChain() {},
+      async watchAsset() { return true; },
+      async getWalletClient() { return mockWalletClient; },
+      async getSigner() { return {}; }
+    };
   };
 
   const watchAccountCleanup = vi.fn();
@@ -54,10 +119,33 @@ describe('WalletReconnectionService', () => {
     // Mock de getWalletClient
     vi.mocked(getWalletClient).mockResolvedValue(mockWalletClient);
 
-    // Mock de watchAccount
+    // Mock de watchAccount avec des états simplifiés
     vi.mocked(watchAccount).mockImplementation((_config, { onChange }) => {
       setTimeout(() => {
-        onChange(connectedAccountState);
+        // Simuler une connexion réussie
+        onChange({
+          address: mockAddress,
+          addresses: [mockAddress],
+          chain: mainnet,
+          chainId: mockChainId,
+          connector: createMockConnector(),
+          isConnected: true as const,
+          isConnecting: false as const,
+          isDisconnected: false as const,
+          isReconnecting: false as const,
+          status: 'connected' as const
+        }, {
+          address: undefined,
+          addresses: undefined,
+          chain: undefined,
+          chainId: undefined,
+          connector: undefined,
+          isConnected: false as const,
+          isConnecting: true as const,
+          isDisconnected: false as const,
+          isReconnecting: false as const,
+          status: 'connecting' as const
+        });
       }, 50);
       return watchAccountCleanup;
     });
@@ -119,6 +207,79 @@ describe('WalletReconnectionService', () => {
       isConnected: false,
       chainId: null,
       address: null,
+      isCorrectNetwork: false
+    });
+  });
+
+  it('devrait gérer la déconnexion du wallet', async () => {
+    const service = WalletReconnectionService.getInstance();
+    const onConnect = vi.fn();
+    const onDisconnect = vi.fn();
+
+    // Mock de watchAccount pour simuler une déconnexion
+    vi.mocked(watchAccount).mockImplementationOnce((_config, { onChange }) => {
+      setTimeout(() => {
+        // Simuler une connexion suivie d'une déconnexion
+        onChange({
+          address: mockAddress,
+          addresses: [mockAddress],
+          chain: mainnet,
+          chainId: mockChainId,
+          connector: createMockConnector(),
+          isConnected: true as const,
+          isConnecting: false as const,
+          isDisconnected: false as const,
+          isReconnecting: false as const,
+          status: 'connected' as const
+        }, {
+          address: undefined,
+          addresses: undefined,
+          chain: undefined,
+          chainId: undefined,
+          connector: undefined,
+          isConnected: false as const,
+          isConnecting: false as const,
+          isDisconnected: true as const,
+          isReconnecting: false as const,
+          status: 'disconnected' as const
+        });
+        setTimeout(() => {
+          onChange({
+            address: undefined,
+            addresses: undefined,
+            chain: undefined,
+            chainId: undefined,
+            connector: undefined,
+            isConnected: false as const,
+            isConnecting: false as const,
+            isDisconnected: true as const,
+            isReconnecting: false as const,
+            status: 'disconnected' as const
+          }, {
+            address: mockAddress,
+            addresses: [mockAddress],
+            chain: mainnet,
+            chainId: mockChainId,
+            connector: createMockConnector(),
+            isConnected: true as const,
+            isConnecting: false as const,
+            isDisconnected: false as const,
+            isReconnecting: false as const,
+            status: 'connected' as const
+          });
+        }, 50);
+      }, 50);
+      return watchAccountCleanup;
+    });
+
+    await service.attemptReconnection(onConnect, onDisconnect);
+    await vi.advanceTimersByTimeAsync(150);
+
+    expect(onDisconnect).toHaveBeenCalled();
+    expect(storageService.saveWalletState).toHaveBeenLastCalledWith({
+      address: null,
+      chainId: null,
+      isConnected: false,
       isCorrectNetwork: false
     });
   });
