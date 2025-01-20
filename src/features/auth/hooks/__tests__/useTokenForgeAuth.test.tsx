@@ -5,6 +5,39 @@ import { useWalletState } from '../useWalletState';
 import { useEmailVerification } from '../useEmailVerification';
 import { TokenForgeUser } from '../../types';
 import { UserMetadata } from 'firebase/auth';
+import { WagmiConfig, createConfig } from 'wagmi';
+import { http, Chain } from 'viem';
+import { FC, PropsWithChildren } from 'react';
+
+// Configuration de la chaîne Ethereum pour les tests
+const testChain = {
+  id: 1,
+  name: 'Ethereum',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ethereum',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    public: { http: ['https://eth-mainnet.g.alchemy.com/v2'] },
+    default: { http: ['https://eth-mainnet.g.alchemy.com/v2'] },
+  },
+} as const satisfies Chain;
+
+// Configuration Wagmi pour les tests
+const config = createConfig({
+  chains: [testChain],
+  transports: {
+    [testChain.id]: http(),
+  },
+});
+
+// Wrapper pour les providers
+const Wrapper: FC<PropsWithChildren> = ({ children }) => (
+  <WagmiConfig config={config}>
+    {children}
+  </WagmiConfig>
+);
 
 // Mocks
 jest.mock('../useAuthState');
@@ -85,8 +118,12 @@ describe('useTokenForgeAuth', () => {
     (useEmailVerification as jest.Mock).mockReturnValue(mockEmailVerification);
   });
 
+  const renderHookWithProviders = () => {
+    return renderHook(() => useTokenForgeAuth(), { wrapper: Wrapper });
+  };
+
   it('should initialize with correct state', () => {
-    const { result } = renderHook(() => useTokenForgeAuth());
+    const { result } = renderHookWithProviders();
     const auth = result.current;
 
     expect(auth.isAuthenticated).toBe(false);
@@ -100,7 +137,7 @@ describe('useTokenForgeAuth', () => {
   });
 
   it('should handle login process', async () => {
-    const { result } = renderHook(() => useTokenForgeAuth());
+    const { result } = renderHookWithProviders();
     const credentials = { email: 'test@example.com', password: 'password123' };
 
     await act(async () => {
@@ -116,7 +153,6 @@ describe('useTokenForgeAuth', () => {
       emailVerified: false,
     });
 
-    // Mettre à jour l'état mockAuthState sans modifier directement user
     const updatedAuthState = {
       ...mockAuthState,
       state: {
@@ -127,7 +163,7 @@ describe('useTokenForgeAuth', () => {
     };
     (useAuthState as jest.Mock).mockReturnValue(updatedAuthState);
 
-    const { result } = renderHook(() => useTokenForgeAuth());
+    const { result } = renderHookWithProviders();
 
     await act(async () => {
       await result.current.verifyEmail(mockUser);
@@ -138,7 +174,7 @@ describe('useTokenForgeAuth', () => {
   });
 
   it('should handle logout', async () => {
-    const { result } = renderHook(() => useTokenForgeAuth());
+    const { result } = renderHookWithProviders();
 
     await act(async () => {
       await result.current.logout();
@@ -176,7 +212,7 @@ describe('useTokenForgeAuth', () => {
       };
       (useWalletState as jest.Mock).mockReturnValue(updatedWalletState);
 
-      const { result } = renderHook(() => useTokenForgeAuth());
+      const { result } = renderHookWithProviders();
       const auth = result.current;
 
       expect(auth.isAdmin).toBe(true);
@@ -201,7 +237,7 @@ describe('useTokenForgeAuth', () => {
       };
       (useAuthState as jest.Mock).mockReturnValue(updatedAuthState);
 
-      const { result } = renderHook(() => useTokenForgeAuth());
+      const { result } = renderHookWithProviders();
       const auth = result.current;
 
       expect(auth.isAdmin).toBe(false);
@@ -225,7 +261,7 @@ describe('useTokenForgeAuth', () => {
       };
       (useAuthState as jest.Mock).mockReturnValue(updatedAuthState);
 
-      const { result } = renderHook(() => useTokenForgeAuth());
+      const { result } = renderHookWithProviders();
       const auth = result.current;
 
       expect(auth.canCreateToken).toBe(false);
@@ -234,10 +270,9 @@ describe('useTokenForgeAuth', () => {
   });
 
   it('should handle network changes', async () => {
-    const { result } = renderHook(() => useTokenForgeAuth());
+    const { result } = renderHookWithProviders();
     const newChainId = 1; // Ethereum Mainnet
 
-    // Mise à jour du wallet state avec le nouveau chainId
     const updatedWalletState = {
       ...mockWalletState,
       state: {
@@ -258,10 +293,9 @@ describe('useTokenForgeAuth', () => {
   });
 
   it('should handle account changes', async () => {
-    const { result } = renderHook(() => useTokenForgeAuth());
+    const { result } = renderHookWithProviders();
     const newAddress = '0x123...';
 
-    // Mise à jour du wallet state avec la nouvelle adresse
     const updatedWalletState = {
       ...mockWalletState,
       state: {
