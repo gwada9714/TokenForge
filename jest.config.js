@@ -8,8 +8,9 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@mui/material$': '<rootDir>/src/components/admin/__tests__/__mocks__/mui.ts',
-    '^@mui/icons-material/(.*)$': '<rootDir>/src/components/admin/__tests__/__mocks__/mui.ts'
+    '^@mui/material$': '<rootDir>/src/features/auth/components/__tests__/__mocks__/mui.ts',
+    '^@mui/material/styles$': '<rootDir>/src/features/auth/components/__tests__/__mocks__/mui.ts',
+    '^@mui/icons-material/.*$': '<rootDir>/src/features/auth/components/__tests__/__mocks__/mui.ts'
   },
   testMatch: [
     '<rootDir>/src/**/*.{spec,test}.{ts,tsx}'
@@ -18,5 +19,9 @@ module.exports = {
     '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: 'tsconfig.json'
     }]
+  },
+  moduleDirectories: ['node_modules', 'src'],
+  testEnvironmentOptions: {
+    url: 'http://localhost'
   }
-}
+};
