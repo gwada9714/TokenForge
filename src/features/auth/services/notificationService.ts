@@ -1,11 +1,10 @@
 import { toast, ToastOptions } from 'react-toastify';
 
-type NotificationType = 'success' | 'error' | 'info' | 'warning';
+export type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
-interface NotificationOptions {
+export interface NotificationOptions extends ToastOptions {
   type?: NotificationType;
-  duration?: number;
-  position?: 'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left';
+  toastId?: string;
 }
 
 class NotificationService {
@@ -23,11 +22,11 @@ class NotificationService {
   private getToastOptions(options?: NotificationOptions): ToastOptions {
     return {
       position: options?.position || 'top-right',
-      autoClose: options?.duration || 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
+      autoClose: options?.autoClose || 5000,
+      hideProgressBar: options?.hideProgressBar || false,
+      closeOnClick: options?.closeOnClick || true,
+      pauseOnHover: options?.pauseOnHover || true,
+      draggable: options?.draggable || true,
     };
   }
 
@@ -69,7 +68,7 @@ class NotificationService {
   notifyEmailVerificationSent(email: string): void {
     toast.info(
       `Email de vérification envoyé à ${email}`,
-      this.getToastOptions({ duration: 10000 })
+      this.getToastOptions({ autoClose: 10000 })
     );
   }
 
