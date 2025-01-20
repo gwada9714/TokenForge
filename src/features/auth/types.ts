@@ -1,20 +1,31 @@
 import { getWalletClient } from '@wagmi/core';
 import { User as FirebaseUser } from 'firebase/auth';
-import { ErrorCode } from '../../types/errors';
 
 export type WalletClientType = Awaited<ReturnType<typeof getWalletClient>>;
 
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'verifying' | 'error';
 
-// Utilise directement le type ErrorCode global qui inclut maintenant nos codes spécifiques
-export type { ErrorCode };
+// Codes d'erreur spécifiques à l'authentification
+export const AUTH_ERROR_CODES = {
+  WALLET_NOT_FOUND: 'AUTH_001',
+  NETWORK_MISMATCH: 'AUTH_002',
+  INVALID_SIGNATURE: 'AUTH_003',
+  SESSION_EXPIRED: 'AUTH_004',
+  FIREBASE_ERROR: 'AUTH_005',
+  TWO_FACTOR_REQUIRED: 'AUTH_006',
+  TWO_FACTOR_INVALID: 'AUTH_007',
+  WALLET_DISCONNECTED: 'AUTH_008',
+  PROVIDER_ERROR: 'AUTH_009',
+} as const;
+
+export type ErrorCode = typeof AUTH_ERROR_CODES[keyof typeof AUTH_ERROR_CODES];
 
 export interface AuthError extends Error {
   code: ErrorCode;
   details?: Record<string, unknown>;
+  toJSON(): Record<string, unknown>;
 }
 
-// Type pour représenter un utilisateur Firebase avec des champs supplémentaires
 export interface TokenForgeUser extends FirebaseUser {
   isAdmin?: boolean;
   customMetadata?: {
@@ -33,37 +44,34 @@ export interface WalletState {
 }
 
 export interface AuthState {
+  status: AuthStatus;
   isAuthenticated: boolean;
   user: TokenForgeUser | null;
-  loading: boolean;
   error: AuthError | null;
+}
+
+export interface BaseAuthState extends AuthState {
   emailVerified: boolean;
 }
 
-export interface TokenForgeAuthState extends Omit<AuthState, 'loading'> {
-  status: AuthStatus;
+export interface TokenForgeAuthState extends BaseAuthState, WalletState {
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
-  
-  // Wallet state
-  isConnected: boolean;
-  address: string | null;
-  chainId: number | null;
-  walletClient: WalletClientType | null;
-  isCorrectNetwork: boolean;
-  provider: any;
-  
-  // Actions
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  verifyEmail: () => Promise<void>;
-  connectWallet: () => Promise<void>;
-  disconnectWallet: () => Promise<void>;
-  switchNetwork: (chainId: number) => Promise<void>;
 }
 
+export interface TokenForgeAuthActions {
+  login: (email: string, password: string) => Promise<void>;
+  loginWithUser: (user: TokenForgeUser) => Promise<void>;
+  logout: () => Promise<void>;
+  updateUser: (user: Partial<TokenForgeUser>) => void;
+  verifyEmail: (user: TokenForgeUser) => Promise<void>;
+}
+
+export interface TokenForgeAuth extends TokenForgeAuthState, TokenForgeAuthActions {}
+
 export const AUTH_ACTIONS = {
+  SET_STATUS: 'auth/setStatus',
   LOGIN_START: 'auth/loginStart',
   LOGIN_SUCCESS: 'auth/loginSuccess',
   LOGIN_FAILURE: 'auth/loginFailure',
@@ -72,20 +80,5 @@ export const AUTH_ACTIONS = {
   EMAIL_VERIFICATION_START: 'auth/emailVerificationStart',
   EMAIL_VERIFICATION_SUCCESS: 'auth/emailVerificationSuccess',
   EMAIL_VERIFICATION_FAILURE: 'auth/emailVerificationFailure',
-  WALLET_CONNECT: 'auth/walletConnect',
-  WALLET_DISCONNECT: 'auth/walletDisconnect',
-  NETWORK_CHANGE: 'auth/networkChange',
+  UPDATE_WALLET_STATE: 'auth/updateWalletState',
 } as const;
-
-export type AuthAction =
-  | { type: typeof AUTH_ACTIONS.LOGIN_START }
-  | { type: typeof AUTH_ACTIONS.LOGIN_SUCCESS; payload: TokenForgeUser }
-  | { type: typeof AUTH_ACTIONS.LOGIN_FAILURE; error: AuthError }
-  | { type: typeof AUTH_ACTIONS.LOGOUT }
-  | { type: typeof AUTH_ACTIONS.UPDATE_USER; payload: TokenForgeUser }
-  | { type: typeof AUTH_ACTIONS.EMAIL_VERIFICATION_START }
-  | { type: typeof AUTH_ACTIONS.EMAIL_VERIFICATION_SUCCESS }
-  | { type: typeof AUTH_ACTIONS.EMAIL_VERIFICATION_FAILURE; error: AuthError }
-  | { type: typeof AUTH_ACTIONS.WALLET_CONNECT }
-  | { type: typeof AUTH_ACTIONS.WALLET_DISCONNECT }
-  | { type: typeof AUTH_ACTIONS.NETWORK_CHANGE; payload: number };
