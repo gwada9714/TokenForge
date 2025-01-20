@@ -7,7 +7,6 @@ import { tabSyncService } from './tabSyncService';
 import { type WalletClient } from 'viem';
 import { config } from '../config/wagmiConfig';
 import { mainnet, sepolia } from '@wagmi/core/chains';
-import crypto from 'crypto';
 
 const LOG_CATEGORY = 'WalletReconnectionService';
 
@@ -30,7 +29,7 @@ export class WalletReconnectionService {
   private readonly tabId: string;
 
   private constructor() {
-    this.tabId = crypto.randomUUID();
+    this.tabId = window.crypto.randomUUID();
   }
 
   static getInstance(): WalletReconnectionService {
@@ -56,6 +55,7 @@ export class WalletReconnectionService {
     const storedState = await storageService.getWalletState();
     if (!storedState?.address) {
       logService.debug(LOG_CATEGORY, 'No stored wallet state found');
+      onDisconnect();
       return;
     }
 
@@ -66,6 +66,9 @@ export class WalletReconnectionService {
       await this.attemptConnection(address, onConnect, onDisconnect);
       // Mettre en place les watchers après une connexion réussie
       this.setupWatchers(onConnect, onDisconnect);
+    } catch (error) {
+      logService.error(LOG_CATEGORY, 'Reconnection failed', error instanceof Error ? error : new Error('Unknown error'));
+      onDisconnect();
     } finally {
       this.isReconnecting = false;
     }
@@ -83,7 +86,6 @@ export class WalletReconnectionService {
 
     this.isReconnecting = true;
     let attempt = 1;
-    let cleanup: (() => void) | null = null;
 
     try {
       while (attempt <= MAX_RETRIES) {
@@ -92,21 +94,40 @@ export class WalletReconnectionService {
           if (result) {
             const { walletClient, provider, chainId } = result;
             
-            // Nettoyer l'ancien watcher si présent
-            if (cleanup) {
-              cleanup();
+            // Vérifier si le réseau est supporté
+            if (!SUPPORTED_NETWORKS.some(net => net.id === chainId)) {
+              notificationService.warning('Réseau non supporté');
+              await storageService.saveWalletState({
+                address: null,
+                chainId: null,
+                isConnected: false,
+                isCorrectNetwork: false
+              });
+              onDisconnect();
+              return;
             }
             
-            // Configurer le nouveau watcher
-            cleanup = this.setupWatchers(onConnect, onDisconnect);
+            // Mettre à jour l'état du wallet
+            await storageService.saveWalletState({
+              address,
+              chainId,
+              isConnected: true,
+              isCorrectNetwork: true
+            });
             
+            // Notifier la connexion
             onConnect(address, chainId, walletClient, provider);
+            
+            // Configurer les watchers après une connexion réussie
+            this.setupWatchers(onConnect, onDisconnect);
+            
             return;
           }
         } catch (error) {
           logService.warn(LOG_CATEGORY, `Reconnection attempt ${attempt} failed`, {
             address,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            errorType: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date().toISOString()
           });
 
           if (attempt < MAX_RETRIES) {
@@ -120,6 +141,14 @@ export class WalletReconnectionService {
         attempt++;
       }
 
+      // Si toutes les tentatives ont échoué
+      await storageService.saveWalletState({
+        address: null,
+        chainId: null,
+        isConnected: false,
+        isCorrectNetwork: false
+      });
+      
       notificationService.error('La reconnexion au wallet a échoué après plusieurs tentatives');
       onDisconnect();
     } finally {
@@ -193,7 +222,9 @@ export class WalletReconnectionService {
           break;
         case 'UNSUPPORTED_NETWORK':
           const supportedNetworks = SUPPORTED_NETWORKS.map(net => net.name).join(' ou ');
-          notificationService.warning(`Réseau non supporté. Veuillez vous connecter à ${supportedNetworks}.`);
+          notificationService.warning(
+            `Réseau non supporté. Veuillez vous connecter à ${supportedNetworks}.`
+          );
           break;
         default:
           notificationService.error('Erreur de connexion au wallet');
@@ -219,10 +250,16 @@ export class WalletReconnectionService {
 
     // S'abonner aux mises à jour du wallet des autres onglets
     const unsubscribe = tabSyncService.subscribe((message) => {
-      if (message.type === 'UPDATE_WALLET_STATE' && message.payload) {
+      if (message.type === 'UPDATE_WALLET_STATE' && message.payload && message.tabId !== this.tabId) {
         const { isConnected, address, chainId } = message.payload;
         
         if (!isConnected || !address) {
+          storageService.saveWalletState({
+            address: null,
+            chainId: null,
+            isConnected: false,
+            isCorrectNetwork: false
+          });
           onDisconnect();
           return;
         }
@@ -233,12 +270,14 @@ export class WalletReconnectionService {
           notificationService.warning(
             `Réseau non supporté dans un autre onglet. Veuillez vous connecter à ${supportedNetworks}.`
           );
+          onDisconnect();
           return;
         }
 
         // Tenter de reconnecter avec le nouvel état
         this.attemptConnection(address, onConnect, onDisconnect).catch(error => {
           logService.error(LOG_CATEGORY, 'Error reconnecting after tab sync', error);
+          onDisconnect();
         });
       }
     });
@@ -247,6 +286,25 @@ export class WalletReconnectionService {
     this.accountCheckInterval = setInterval(async () => {
       try {
         const account = getAccount(config);
+        if (!account.address) {
+          await storageService.saveWalletState({
+            address: null,
+            chainId: null,
+            isConnected: false,
+            isCorrectNetwork: false
+          });
+          
+          // Synchroniser la déconnexion avec les autres onglets
+          tabSyncService.syncWalletState({
+            isConnected: false,
+            address: null,
+            chainId: null
+          });
+          
+          onDisconnect();
+          return;
+        }
+
         const provider = new BrowserProvider(window.ethereum);
         const network = await provider.getNetwork();
         const chainId = Number(network.chainId);
@@ -259,44 +317,47 @@ export class WalletReconnectionService {
           notificationService.warning(
             `Réseau non supporté. Veuillez vous connecter à ${supportedNetworks}.`
           );
-          logService.warn(LOG_CATEGORY, 'Unsupported network detected', {
-            currentChainId: chainId,
-            supportedNetworks: SUPPORTED_NETWORKS.map(net => ({ id: net.id, name: net.name }))
+          
+          await storageService.saveWalletState({
+            address: null,
+            chainId: null,
+            isConnected: false,
+            isCorrectNetwork: false
           });
+          
+          onDisconnect();
           return;
         }
 
-        // Gérer les changements d'état du wallet
-        if (account.address) {
+        // Vérifier les changements d'état
+        const state = await storageService.getWalletState();
+        const hasAddressChanged = state?.address !== account.address;
+        const hasNetworkChanged = state?.chainId !== chainId;
+        
+        if (hasAddressChanged || hasNetworkChanged) {
           const walletClient = await getWalletClient(config);
           if (walletClient) {
-            // Vérifier si le réseau a changé
-            const state = await storageService.getWalletState();
-            const previousNetwork = state?.chainId;
-            
-            if (previousNetwork && previousNetwork !== chainId) {
+            if (hasNetworkChanged && state?.chainId) {
               const newNetworkName = SUPPORTED_NETWORKS.find(net => net.id === chainId)?.name || 'Inconnu';
               notificationService.info(`Réseau changé pour ${newNetworkName}`);
               logService.info(LOG_CATEGORY, 'Network changed', {
-                previousNetwork,
+                previousNetwork: state.chainId,
                 newNetwork: chainId,
                 newNetworkName
               });
             }
 
-            // Mettre à jour l'état et notifier
+            // Mettre à jour l'état
             const newState = { 
               address: account.address, 
               chainId,
               isConnected: true,
-              isCorrectNetwork: SUPPORTED_NETWORKS.some(net => net.id === chainId),
-              walletClient,
-              provider
+              isCorrectNetwork: true
             };
             
             await storageService.saveWalletState(newState);
             
-            // Synchroniser l'état avec les autres onglets
+            // Synchroniser avec les autres onglets
             tabSyncService.syncWalletState({
               isConnected: true,
               address: account.address,
@@ -305,17 +366,6 @@ export class WalletReconnectionService {
             
             onConnect(account.address, chainId, walletClient, provider);
           }
-        } else {
-          notificationService.warning('Wallet déconnecté');
-          
-          // Synchroniser la déconnexion avec les autres onglets
-          tabSyncService.syncWalletState({
-            isConnected: false,
-            address: null,
-            chainId: null
-          });
-          
-          onDisconnect();
         }
       } catch (error) {
         logService.error(
@@ -323,6 +373,7 @@ export class WalletReconnectionService {
           'Error checking wallet state',
           error instanceof Error ? error : new Error('Unknown error')
         );
+        onDisconnect();
       }
     }, NETWORK_CHECK_INTERVAL);
 

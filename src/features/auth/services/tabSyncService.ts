@@ -1,5 +1,5 @@
-import { AuthState, TokenForgeUser } from '../types';
-import { AUTH_ACTIONS } from '../reducers/authReducer';
+import { TokenForgeUser } from '../types';
+import { AUTH_ACTIONS } from '../actions/authActions';
 
 const SYNC_CHANNEL = 'tokenforge_auth_sync';
 const STATE_DEBOUNCE_MS = 100;
@@ -25,7 +25,7 @@ class TabSyncService {
   private currentState: Map<string, any>;
 
   private constructor() {
-    this.tabId = crypto.randomUUID();
+    this.tabId = window.crypto.randomUUID();
     this.channel = new BroadcastChannel(SYNC_CHANNEL);
     this.subscribers = [];
     this.lastProcessedTimestamp = Date.now();
@@ -56,7 +56,7 @@ class TabSyncService {
     });
 
     // Résolveur pour l'état du wallet
-    this.conflictResolvers.set(AUTH_ACTIONS.UPDATE_WALLET_STATE, (current, incoming) => {
+    this.conflictResolvers.set(AUTH_ACTIONS.WALLET_CONNECT, (current, incoming) => {
       if (!current) return incoming;
       if (!incoming) return current;
       return incoming.timestamp > current.timestamp ? incoming : current;
@@ -78,7 +78,7 @@ class TabSyncService {
 
     window.addEventListener('beforeunload', () => {
       this.broadcast({
-        type: AUTH_ACTIONS.AUTH_LOGOUT,
+        type: AUTH_ACTIONS.LOGOUT,
         timestamp: Date.now(),
         tabId: this.tabId,
         priority: 1000 // Priorité haute pour la déconnexion
@@ -148,7 +148,7 @@ class TabSyncService {
     });
   }
 
-  syncAuthState(state: Partial<AuthState>): void {
+  syncAuthState(state: Partial<TokenForgeUser>): void {
     this.broadcast({
       type: AUTH_ACTIONS.UPDATE_USER,
       payload: state,
@@ -160,7 +160,7 @@ class TabSyncService {
 
   syncWalletState(walletState: { isConnected: boolean; address: string | null; chainId: number | null }): void {
     this.broadcast({
-      type: AUTH_ACTIONS.UPDATE_WALLET_STATE,
+      type: AUTH_ACTIONS.WALLET_CONNECT,
       payload: { ...walletState, timestamp: Date.now() },
       timestamp: Date.now(),
       tabId: this.tabId,
