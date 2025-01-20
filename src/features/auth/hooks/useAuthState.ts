@@ -4,8 +4,11 @@ import { errorService } from '../services/errorService';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 import { sessionService } from '../services/sessionService';
+import { tabSyncService } from '../services/tabSyncService';
+import { tokenService } from '../services/tokenService';
 import { auth } from '../../../config/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
+import { AUTH_ACTIONS, type AuthAction } from '../reducers/authReducer';
 
 const initialState: AuthState = {
   isAuthenticated: false,
@@ -14,25 +17,15 @@ const initialState: AuthState = {
   error: null,
 };
 
-type AuthAction =
-  | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: TokenForgeUser }
-  | { type: 'AUTH_ERROR'; payload: AuthError }
-  | { type: 'AUTH_LOGOUT' }
-  | { type: 'EMAIL_VERIFICATION_START' }
-  | { type: 'EMAIL_VERIFICATION_SUCCESS' }
-  | { type: 'EMAIL_VERIFICATION_ERROR'; payload: AuthError }
-  | { type: 'UPDATE_USER'; payload: Partial<TokenForgeUser> };
-
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
-    case 'AUTH_START':
+    case AUTH_ACTIONS.AUTH_START:
       return {
         ...state,
         status: 'loading',
         error: null,
       };
-    case 'AUTH_SUCCESS':
+    case AUTH_ACTIONS.AUTH_SUCCESS:
       return {
         ...state,
         isAuthenticated: true,
@@ -40,7 +33,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         status: 'authenticated',
         error: null,
       };
-    case 'AUTH_ERROR':
+    case AUTH_ACTIONS.AUTH_ERROR:
       return {
         ...state,
         isAuthenticated: false,
@@ -48,7 +41,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         status: 'error',
         error: action.payload,
       };
-    case 'AUTH_LOGOUT':
+    case AUTH_ACTIONS.AUTH_LOGOUT:
       return {
         ...state,
         isAuthenticated: false,
@@ -56,27 +49,37 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         status: 'idle',
         error: null,
       };
-    case 'EMAIL_VERIFICATION_START':
+    case AUTH_ACTIONS.EMAIL_VERIFICATION_START:
       return {
         ...state,
         status: 'verifying',
       };
-    case 'EMAIL_VERIFICATION_SUCCESS':
+    case AUTH_ACTIONS.EMAIL_VERIFICATION_SUCCESS:
       return {
         ...state,
         status: 'authenticated',
         user: state.user ? { ...state.user, emailVerified: true } : null,
       };
-    case 'EMAIL_VERIFICATION_ERROR':
+    case AUTH_ACTIONS.EMAIL_VERIFICATION_ERROR:
       return {
         ...state,
         status: 'error',
         error: action.payload,
       };
-    case 'UPDATE_USER':
+    case AUTH_ACTIONS.UPDATE_USER:
       return {
         ...state,
         user: state.user ? { ...state.user, ...action.payload } : null,
+      };
+    case AUTH_ACTIONS.UPDATE_WALLET_STATE:
+      return {
+        ...state,
+        user: state.user ? {
+          ...state.user,
+          walletAddress: action.payload.address,
+          chainId: action.payload.chainId,
+          isWalletConnected: action.payload.isConnected
+        } : null,
       };
     default:
       return state;
@@ -94,43 +97,81 @@ function convertToTokenForgeUser(firebaseUser: FirebaseUser, storedData?: { isAd
 export function useAuthState() {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const handleAuthSuccess = useCallback(async (user: FirebaseUser) => {
-    try {
-      dispatch({ type: 'AUTH_START' });
-      
-      // Initialiser la session
-      await sessionService.initSession();
-      
-      const storedData = await storageService.getAuthState();
-      const tokenForgeUser = convertToTokenForgeUser(user, {
-        isAdmin: storedData?.user?.isAdmin,
-        customMetadata: storedData?.user?.customMetadata
-      });
-      
-      dispatch({ type: 'AUTH_SUCCESS', payload: tokenForgeUser });
-      await storageService.saveAuthState(tokenForgeUser);
-    } catch (error) {
-      const authError = errorService.handleError(error);
-      dispatch({ type: 'AUTH_ERROR', payload: authError });
-    }
-  }, []);
-
   const handleLogout = useCallback(async () => {
     try {
-      await sessionService.endSession();
-      dispatch({ type: 'AUTH_LOGOUT' });
-      await storageService.clearAuthState();
+      tokenService.cleanup();
+      dispatch({ type: AUTH_ACTIONS.AUTH_LOGOUT });
+      await sessionService.clearSession();
+      notificationService.info('Déconnexion réussie');
+      tabSyncService.syncAuthState({ user: null, isAuthenticated: false });
     } catch (error) {
-      const authError = errorService.handleError(error);
-      dispatch({ type: 'AUTH_ERROR', payload: authError });
+      handleAuthError(error as AuthError);
     }
   }, []);
 
-  const updateUserActivity = useCallback(async () => {
-    if (state.isAuthenticated) {
-      await sessionService.updateActivity();
+  // Gestionnaire des messages de synchronisation
+  useEffect(() => {
+    const unsubscribe = tabSyncService.subscribe((message) => {
+      switch (message.type) {
+        case AUTH_ACTIONS.UPDATE_USER:
+          dispatch({ type: AUTH_ACTIONS.UPDATE_USER, payload: message.payload });
+          break;
+        case AUTH_ACTIONS.UPDATE_WALLET_STATE:
+          dispatch({ type: AUTH_ACTIONS.UPDATE_WALLET_STATE, payload: message.payload });
+          break;
+        case AUTH_ACTIONS.AUTH_LOGOUT:
+          handleLogout();
+          break;
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [handleLogout]);
+
+  const handleAuthStart = useCallback(() => {
+    dispatch({ type: AUTH_ACTIONS.AUTH_START });
+  }, []);
+
+  const handleAuthSuccess = useCallback(async (user: TokenForgeUser) => {
+    try {
+      await tokenService.initialize(user);
+      dispatch({ type: AUTH_ACTIONS.AUTH_SUCCESS, payload: user });
+      notificationService.success('Authentification réussie');
+      tabSyncService.syncAuthState({ user, isAuthenticated: true });
+    } catch (error) {
+      handleAuthError(error as AuthError);
     }
-  }, [state.isAuthenticated]);
+  }, []);
+
+  const handleAuthError = useCallback((error: AuthError) => {
+    dispatch({ type: AUTH_ACTIONS.AUTH_ERROR, payload: error });
+    errorService.handleAuthError(error);
+  }, []);
+
+  const handleUpdateUser = useCallback((userData: Partial<TokenForgeUser>) => {
+    dispatch({ type: AUTH_ACTIONS.UPDATE_USER, payload: userData });
+  }, []);
+
+  const handleEmailVerificationStart = useCallback(() => {
+    dispatch({ type: AUTH_ACTIONS.EMAIL_VERIFICATION_START });
+  }, []);
+
+  const handleEmailVerificationSuccess = useCallback(() => {
+    dispatch({ type: AUTH_ACTIONS.EMAIL_VERIFICATION_SUCCESS });
+    notificationService.success('Email vérifié avec succès');
+  }, []);
+
+  const handleEmailVerificationError = useCallback((error: AuthError) => {
+    dispatch({ type: AUTH_ACTIONS.EMAIL_VERIFICATION_ERROR, payload: error });
+    errorService.handleAuthError(error);
+  }, []);
+
+  const handleWalletStateUpdate = useCallback((walletState: { isConnected: boolean; address: string | null; chainId: number | null }) => {
+    dispatch({ type: AUTH_ACTIONS.UPDATE_WALLET_STATE, payload: walletState });
+    tabSyncService.syncWalletState(walletState);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -142,7 +183,12 @@ export function useAuthState() {
           notificationService.warn('Session expirée. Veuillez vous reconnecter.');
           return;
         }
-        await handleAuthSuccess(user);
+        const storedData = await storageService.getAuthState();
+        const tokenForgeUser = convertToTokenForgeUser(user, {
+          isAdmin: storedData?.user?.isAdmin,
+          customMetadata: storedData?.user?.customMetadata
+        });
+        await handleAuthSuccess(tokenForgeUser);
       } else {
         await handleLogout();
       }
@@ -150,7 +196,11 @@ export function useAuthState() {
 
     const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
     const activityListeners = activityEvents.map(event => {
-      const listener = () => updateUserActivity();
+      const listener = () => {
+        if (state.isAuthenticated) {
+          sessionService.updateActivity();
+        }
+      };
       window.addEventListener(event, listener);
       return { event, listener };
     });
@@ -161,35 +211,13 @@ export function useAuthState() {
         window.removeEventListener(event, listener);
       });
     };
-  }, [handleAuthSuccess, handleLogout, updateUserActivity]);
+  }, [handleAuthSuccess, handleLogout]);
 
-  const handleAuthStart = useCallback(() => {
-    dispatch({ type: 'AUTH_START' });
-  }, []);
-
-  const handleAuthError = useCallback((error: unknown) => {
-    const handledError = errorService.handleError(error);
-    dispatch({ type: 'AUTH_ERROR', payload: handledError });
-    notificationService.notifyLoginError(handledError.message);
-  }, []);
-
-  const handleEmailVerificationStart = useCallback(() => {
-    dispatch({ type: 'EMAIL_VERIFICATION_START' });
-  }, []);
-
-  const handleEmailVerificationSuccess = useCallback(() => {
-    dispatch({ type: 'EMAIL_VERIFICATION_SUCCESS' });
-    notificationService.notifyEmailVerified();
-  }, []);
-
-  const handleEmailVerificationFailure = useCallback((error: unknown) => {
-    const handledError = errorService.handleError(error);
-    dispatch({ type: 'EMAIL_VERIFICATION_ERROR', payload: handledError });
-  }, []);
-
-  const handleUpdateUser = useCallback((update: Partial<TokenForgeUser>) => {
-    dispatch({ type: 'UPDATE_USER', payload: update });
-  }, []);
+  useEffect(() => {
+    if (state.isAuthenticated && tokenService.isTokenExpired()) {
+      handleLogout();
+    }
+  }, [state.isAuthenticated, handleLogout]);
 
   return {
     state,
@@ -200,8 +228,9 @@ export function useAuthState() {
       handleLogout,
       handleEmailVerificationStart,
       handleEmailVerificationSuccess,
-      handleEmailVerificationFailure,
+      handleEmailVerificationError,
       handleUpdateUser,
+      handleWalletStateUpdate,
     },
   };
 }

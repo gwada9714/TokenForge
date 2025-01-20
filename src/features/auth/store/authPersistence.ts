@@ -1,4 +1,4 @@
-import { createAuthError } from '../errors/AuthError';
+import { createAuthError, AuthError } from '../errors/AuthError';
 
 const STORAGE_KEY = 'tokenforge_auth';
 const VERSION = 1;
@@ -59,6 +59,18 @@ export class AuthPersistence {
         'AUTH_004',
         'Failed to save auth state',
         { originalError: error }
+      );
+    }
+  }
+
+  async remove(key: string): Promise<void> {
+    try {
+      this.storage.removeItem(`${STORAGE_KEY}_${key}`);
+    } catch (error) {
+      throw createAuthError(
+        AuthError.CODES.FIREBASE_ERROR,
+        'Erreur lors de la suppression des données de stockage',
+        { key, error: String(error) }
       );
     }
   }

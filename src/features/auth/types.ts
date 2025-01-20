@@ -16,6 +16,8 @@ export const AUTH_ERROR_CODES = {
   TWO_FACTOR_INVALID: 'AUTH_007',
   WALLET_DISCONNECTED: 'AUTH_008',
   PROVIDER_ERROR: 'AUTH_009',
+  EMAIL_NOT_VERIFIED: 'AUTH_010',
+  EMAIL_VERIFICATION_TIMEOUT: 'AUTH_011',
 } as const;
 
 export type ErrorCode = typeof AUTH_ERROR_CODES[keyof typeof AUTH_ERROR_CODES];
@@ -32,6 +34,10 @@ export interface TokenForgeUser extends FirebaseUser {
     creationTime?: string;
     lastSignInTime?: string;
   };
+  walletAddress?: string | null;
+  chainId?: number | null;
+  isWalletConnected?: boolean;
+  lastLoginTime?: number;
 }
 
 export interface WalletState {

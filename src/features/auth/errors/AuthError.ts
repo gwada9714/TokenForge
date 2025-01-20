@@ -21,6 +21,8 @@ export class AuthError extends Error {
     TWO_FACTOR_INVALID: 'AUTH_007',
     WALLET_DISCONNECTED: 'AUTH_008',
     PROVIDER_ERROR: 'AUTH_009',
+    EMAIL_NOT_VERIFIED: 'AUTH_010',
+    EMAIL_VERIFICATION_TIMEOUT: 'AUTH_011',
   } as const;
 
   static create(
