@@ -86,6 +86,22 @@ class NotificationService {
     toast[type](message, this.getToastOptions(rest));
   }
 
+  success(message: string, options?: Omit<NotificationOptions, 'type'>): void {
+    this.notify(message, { ...options, type: 'success' });
+  }
+
+  error(message: string, options?: Omit<NotificationOptions, 'type'>): void {
+    this.notify(message, { ...options, type: 'error' });
+  }
+
+  info(message: string, options?: Omit<NotificationOptions, 'type'>): void {
+    this.notify(message, { ...options, type: 'info' });
+  }
+
+  warning(message: string, options?: Omit<NotificationOptions, 'type'>): void {
+    this.notify(message, { ...options, type: 'warning' });
+  }
+
   warn(message: string, options?: NotificationOptions): void {
     toast.warning(message, this.getToastOptions(options));
   }

@@ -135,6 +135,14 @@ class ErrorService {
       { originalError: String(error) }
     );
   }
+
+  handleAuthError(error: unknown): AuthError {
+    const authError = this.handleError(error);
+    if (!authError.code.startsWith('AUTH_')) {
+      authError.code = AUTH_ERROR_CODES.FIREBASE_ERROR;
+    }
+    return authError;
+  }
 }
 
 export const errorService = ErrorService.getInstance();

@@ -151,6 +151,15 @@ export class SessionService {
     }
   }
 
+  async clearSession(): Promise<void> {
+    try {
+      await this.persistence.remove('session');
+      await this.persistence.remove('lastActivity');
+    } catch (error) {
+      console.error('Error clearing session:', error);
+    }
+  }
+
   isSessionValid(): Promise<boolean> {
     return new Promise(async (resolve) => {
       try {
