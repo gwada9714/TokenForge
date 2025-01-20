@@ -1,11 +1,10 @@
 import { User } from 'firebase/auth';
 import { logService } from './logService';
-import { sessionSyncService } from './sessionSyncService';
 import { errorService } from './errorService';
+import { AUTH_ERROR_CODES } from '../types';
 
 const LOG_CATEGORY = 'TokenRefreshService';
 const TOKEN_REFRESH_INTERVAL = 4 * 60 * 1000; // 4 minutes
-const TOKEN_EXPIRY_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 
 class TokenRefreshService {
   private static instance: TokenRefreshService;
@@ -29,16 +28,7 @@ class TokenRefreshService {
       try {
         await this.refreshToken();
       } catch (error) {
-        logService.error(
-          LOG_CATEGORY,
-          'Token refresh failed',
-          error instanceof Error ? error : new Error('Unknown error')
-        );
-        
-        // Si l'erreur est liée à l'expiration de la session, notifier les autres onglets
-        if (error instanceof Error && error.message.includes('token expired')) {
-          await sessionSyncService.broadcastSessionExpired();
-        }
+        logService.error(LOG_CATEGORY, 'Auto refresh failed', error instanceof Error ? error : new Error('Unknown error'));
       }
     }, TOKEN_REFRESH_INTERVAL);
 
@@ -46,35 +36,6 @@ class TokenRefreshService {
       userId: user.uid,
       email: user.email
     });
-  }
-
-  async refreshToken(): Promise<void> {
-    if (!this.user) {
-      throw errorService.handleError(new Error('No user to refresh token for'));
-    }
-
-    try {
-      // Vérifier si le token actuel expire bientôt
-      const decodedToken = await this.user.getIdTokenResult();
-      const expirationTime = new Date(decodedToken.expirationTime).getTime();
-      const now = Date.now();
-
-      if (expirationTime - now <= TOKEN_EXPIRY_THRESHOLD) {
-        // Forcer le rafraîchissement du token
-        await this.user.getIdToken(true);
-        logService.info(LOG_CATEGORY, 'Token refreshed', {
-          userId: this.user.uid,
-          email: this.user.email
-        });
-      }
-    } catch (error) {
-      logService.error(
-        LOG_CATEGORY,
-        'Error refreshing token',
-        error instanceof Error ? error : new Error('Unknown error')
-      );
-      throw error;
-    }
   }
 
   stopTokenRefresh(): void {
@@ -92,9 +53,40 @@ class TokenRefreshService {
     this.user = null;
   }
 
+  async refreshToken(): Promise<string> {
+    if (!this.user) {
+      const error = new Error('No user found for token refresh');
+      error.name = AUTH_ERROR_CODES.NO_USER;
+      throw error;
+    }
+
+    try {
+      const token = await this.user.getIdToken(true);
+      logService.debug(LOG_CATEGORY, 'Token refreshed successfully');
+      
+      // Broadcast token refresh to other tabs
+      this.channel?.postMessage({
+        type: 'SESSION_REFRESH',
+        payload: {
+          timestamp: Date.now(),
+          tabId: crypto.randomUUID(),
+          token
+        }
+      });
+      
+      return token;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      logService.error(LOG_CATEGORY, 'Failed to refresh token', err);
+      throw errorService.handleError(error);
+    }
+  }
+
   isRefreshing(): boolean {
     return this.refreshInterval !== null;
   }
+
+  private channel = new BroadcastChannel('tokenforge-token-refresh');
 }
 
 export const tokenRefreshService = TokenRefreshService.getInstance();

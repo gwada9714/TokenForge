@@ -19,7 +19,7 @@ export class EmailVerificationService {
     return EmailVerificationService.instance;
   }
 
-  async sendVerificationEmail(user: FirebaseUser): Promise<void> {
+  async sendVerificationEmail(user: FirebaseUser): Promise<boolean> {
     try {
       logService.info(LOG_CATEGORY, 'Sending verification email', { userEmail: user.email });
       
@@ -30,24 +30,27 @@ export class EmailVerificationService {
           },
           {
             maxAttempts: 3,
-            initialDelay: 1000
+            initialDelay: 1000,
+            maxDelay: 5000,
+            backoffFactor: 2,
+            onError: (err: Error) => {
+              logService.error(LOG_CATEGORY, 'Failed to send verification email', {
+                message: err.message,
+                name: err.name
+              });
+            }
           }
         );
-        
-        notificationService.success('Email de vérification envoyé');
-        logService.info(LOG_CATEGORY, 'Verification email sent successfully', { userEmail: user.email });
-      } else {
-        logService.info(LOG_CATEGORY, 'Email already verified', { userEmail: user.email });
+        return true;
       }
+      return false;
     } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logService.error(
-        LOG_CATEGORY,
-        'Failed to send verification email',
-        err,
-        { status: 'send_failed', userEmail: user.email }
-      );
-      throw errorService.handleError(error);
+      const authError = errorService.handleError(error);
+      logService.error(LOG_CATEGORY, 'Error sending verification email', {
+        message: authError.message,
+        name: authError.name
+      });
+      throw authError;
     }
   }
 

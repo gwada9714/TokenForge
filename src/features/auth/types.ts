@@ -19,6 +19,7 @@ export const AUTH_ERROR_CODES = {
   EMAIL_NOT_VERIFIED: 'AUTH_010',
   EMAIL_VERIFICATION_TIMEOUT: 'AUTH_011',
   NO_USER: 'AUTH_012',
+  STORAGE_ERROR: 'AUTH_013'
 } as const;
 
 export type ErrorCode = typeof AUTH_ERROR_CODES[keyof typeof AUTH_ERROR_CODES];
@@ -59,9 +60,10 @@ export interface AuthState {
 
 export interface BaseAuthState extends AuthState {
   emailVerified: boolean;
+  walletState: WalletState;
 }
 
-export interface TokenForgeAuthState extends BaseAuthState, WalletState {
+export interface TokenForgeAuthState extends BaseAuthState {
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;

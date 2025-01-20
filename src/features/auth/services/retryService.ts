@@ -6,6 +6,7 @@ interface RetryConfig {
   initialDelay: number;
   maxDelay: number;
   backoffFactor: number;
+  onError?: (error: Error) => void;
 }
 
 const DEFAULT_CONFIG: RetryConfig = {

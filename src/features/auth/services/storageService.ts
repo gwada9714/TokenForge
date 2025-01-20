@@ -95,6 +95,31 @@ class StorageService {
     this.clearAuthState();
     this.clearWalletState();
   }
+
+  async getUserData(uid: string): Promise<{ isAdmin?: boolean; customMetadata?: Record<string, unknown> } | null> {
+    const stored = localStorage.getItem(`${STORAGE_KEYS.AUTH}_${uid}`);
+    if (!stored) return null;
+    
+    try {
+      const data = JSON.parse(stored);
+      return {
+        isAdmin: data.user?.isAdmin || false,
+        customMetadata: data.user?.customMetadata || {}
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async clearUserData(): Promise<void> {
+    const keys = Object.values(STORAGE_KEYS);
+    keys.forEach(key => {
+      const pattern = new RegExp(`^${key}`);
+      Object.keys(localStorage)
+        .filter(k => pattern.test(k))
+        .forEach(k => localStorage.removeItem(k));
+    });
+  }
 }
 
 export const storageService = StorageService.getInstance();

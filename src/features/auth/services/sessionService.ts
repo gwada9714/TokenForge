@@ -179,6 +179,31 @@ export class SessionService {
       }
     });
   }
+
+  updateSession(token: string): void {
+    const expiresAt = Date.now() + SESSION_TIMEOUT;
+    this.persistence.setItem('session', {
+      expiresAt,
+      lastActivity: Date.now(),
+      refreshToken: token
+    });
+  }
+
+  startSessionTimeout(onTimeout: () => void): { clear: () => void } {
+    const timeoutId = setTimeout(() => {
+      this.clearSession();
+      onTimeout();
+    }, SESSION_TIMEOUT);
+
+    this.activeTimeouts.add(timeoutId);
+
+    return {
+      clear: () => {
+        clearTimeout(timeoutId);
+        this.activeTimeouts.delete(timeoutId);
+      }
+    };
+  }
 }
 
 export const sessionService = SessionService.getInstance();

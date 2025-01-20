@@ -111,6 +111,19 @@ export class AuthPersistence {
     this.storage.removeItem(STORAGE_KEY);
   }
 
+  setItem<T>(key: string, value: T): void {
+    try {
+      const storageKey = `${STORAGE_KEY}_${key}`;
+      localStorage.setItem(storageKey, JSON.stringify({
+        version: VERSION,
+        timestamp: Date.now(),
+        data: value
+      }));
+    } catch (error) {
+      throw createAuthError(AuthError.CODES.STORAGE_ERROR, 'Failed to store data', { error });
+    }
+  }
+
   private getInitialState(): StoredAuthState {
     return {
       version: VERSION,
