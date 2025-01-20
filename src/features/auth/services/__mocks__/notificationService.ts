@@ -1,10 +1,12 @@
+import { vi } from 'vitest';
+
 export const notificationService = {
-  notifyLoginSuccess: jest.fn(),
-  notifyLoginError: jest.fn(),
-  notifyLogout: jest.fn(),
-  notifyEmailVerified: jest.fn(),
-  notifyEmailVerificationError: jest.fn(),
-  notifyWalletConnected: jest.fn(),
-  notifyWalletDisconnected: jest.fn(),
-  notifyNetworkChanged: jest.fn(),
+  notifyLoginSuccess: vi.fn(),
+  notifyLoginError: vi.fn(),
+  notifyLogout: vi.fn(),
+  notifyEmailVerified: vi.fn(),
+  notifyEmailVerificationError: vi.fn(),
+  notifyWalletConnected: vi.fn(),
+  notifyWalletDisconnected: vi.fn(),
+  notifyNetworkChanged: vi.fn(),
 };
