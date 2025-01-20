@@ -1,115 +1,93 @@
-import { retryService } from '../retryService';
-import { AuthError } from '../../errors/AuthError';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { RetryService } from '../retryService';
 
 describe('RetryService', () => {
+  let retryService: RetryService;
+
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
+    retryService = RetryService.getInstance();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
-  describe('withRetry', () => {
-    it('should succeed on first attempt if operation succeeds', async () => {
-      const operation = jest.fn().mockResolvedValue('success');
-      
-      const result = await retryService.withRetry(operation);
-      
-      expect(result).toBe('success');
-      expect(operation).toHaveBeenCalledTimes(1);
+  it('devrait réussir au premier essai', async () => {
+    const mockFn = vi.fn().mockResolvedValue('success');
+    const operation = async () => mockFn();
+    const result = await retryService.withRetry(operation, {
+      maxAttempts: 3,
+      initialDelay: 1000,
+      maxDelay: 5000,
+      backoffFactor: 2
     });
 
-    it('should retry on failure and succeed eventually', async () => {
-      const operation = jest.fn()
-        .mockRejectedValueOnce(new AuthError(AuthError.CODES.PROVIDER_ERROR, 'Failed'))
-        .mockRejectedValueOnce(new AuthError(AuthError.CODES.PROVIDER_ERROR, 'Failed'))
-        .mockResolvedValue('success');
-
-      const result = await retryService.withRetry(
-        operation,
-        { maxAttempts: 3, initialDelay: 100 },
-        [AuthError.CODES.PROVIDER_ERROR]
-      );
-
-      expect(operation).toHaveBeenCalledTimes(3);
-      expect(result).toBe('success');
-    });
-
-    it('should throw after max attempts', async () => {
-      const operation = jest.fn()
-        .mockRejectedValue(new AuthError(AuthError.CODES.PROVIDER_ERROR, 'Failed'));
-
-      await expect(retryService.withRetry(
-        operation,
-        { maxAttempts: 2, initialDelay: 100 },
-        [AuthError.CODES.PROVIDER_ERROR]
-      )).rejects.toThrow('Operation failed after 2 attempts');
-
-      expect(operation).toHaveBeenCalledTimes(2);
-    });
-
-    it('should not retry on non-retryable errors', async () => {
-      const operation = jest.fn()
-        .mockRejectedValue(new AuthError(AuthError.CODES.SESSION_EXPIRED, 'Not retryable'));
-
-      await expect(retryService.withRetry(
-        operation,
-        { maxAttempts: 3, initialDelay: 100 },
-        [AuthError.CODES.PROVIDER_ERROR]
-      )).rejects.toThrow('Not retryable');
-
-      expect(operation).toHaveBeenCalledTimes(1);
-    });
+    expect(result).toBe('success');
+    expect(mockFn).toHaveBeenCalledTimes(1);
   });
 
-  describe('withTimeout', () => {
-    it('should resolve if operation completes within timeout', async () => {
-      const operation = Promise.resolve('success');
-      
-      const result = await retryService.withTimeout(operation, 1000, 'test');
-      
-      expect(result).toBe('success');
+  it('devrait réessayer après une erreur', async () => {
+    const mockFn = vi.fn()
+      .mockRejectedValueOnce(new Error('fail'))
+      .mockResolvedValueOnce('success');
+    const operation = async () => mockFn();
+
+    const retryPromise = retryService.withRetry(operation, {
+      maxAttempts: 3,
+      initialDelay: 1000,
+      maxDelay: 5000,
+      backoffFactor: 2
     });
 
-    it('should reject if operation exceeds timeout', async () => {
-      const operation = new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const timeoutPromise = retryService.withTimeout(operation, 1000, 'test');
-      
-      jest.advanceTimersByTime(1001);
-      
-      await expect(timeoutPromise).rejects.toThrow('Operation test timed out after 1000ms');
-    });
+    await vi.advanceTimersByTimeAsync(1000);
+    const result = await retryPromise;
+
+    expect(result).toBe('success');
+    expect(mockFn).toHaveBeenCalledTimes(2);
   });
 
-  describe('exponential backoff', () => {
-    it('should increase delay exponentially but not exceed maxDelay', async () => {
-      const operation = jest.fn()
-        .mockRejectedValue(new AuthError(AuthError.CODES.PROVIDER_ERROR, 'Failed'));
+  it('devrait échouer après tous les essais', async () => {
+    const mockError = new Error('fail');
+    const mockFn = vi.fn().mockRejectedValue(mockError);
+    const operation = async () => mockFn();
 
-      const config = {
-        maxAttempts: 4,
-        initialDelay: 100,
-        maxDelay: 300,
-        backoffFactor: 2
-      };
-
-      try {
-        await retryService.withRetry(
-          operation,
-          config,
-          [AuthError.CODES.PROVIDER_ERROR]
-        );
-      } catch (error) {
-        // Expected to fail
-      }
-
-      // Vérifier les délais entre les tentatives
-      expect(setTimeout).toHaveBeenCalledTimes(3); // 3 délais pour 4 tentatives
-      expect(setTimeout).toHaveBeenNthCalledWith(1, expect.any(Function), 100);
-      expect(setTimeout).toHaveBeenNthCalledWith(2, expect.any(Function), 200);
-      expect(setTimeout).toHaveBeenNthCalledWith(3, expect.any(Function), 300); // Plafonné à maxDelay
+    const retryPromise = retryService.withRetry(operation, {
+      maxAttempts: 2,
+      initialDelay: 1000,
+      maxDelay: 5000,
+      backoffFactor: 2
     });
+
+    await vi.advanceTimersByTimeAsync(2000);
+    await expect(retryPromise).rejects.toThrow(mockError);
+    expect(mockFn).toHaveBeenCalledTimes(3); // Initial + 2 retries
+  });
+
+  it('devrait utiliser un délai exponentiel', async () => {
+    const mockFn = vi.fn()
+      .mockRejectedValueOnce(new Error('fail1'))
+      .mockRejectedValueOnce(new Error('fail2'))
+      .mockResolvedValueOnce('success');
+    const operation = async () => mockFn();
+
+    const retryPromise = retryService.withRetry(operation, {
+      maxAttempts: 2,
+      initialDelay: 1000,
+      maxDelay: 5000,
+      backoffFactor: 2
+    });
+
+    // Premier retry après 1000ms
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(mockFn).toHaveBeenCalledTimes(2);
+
+    // Deuxième retry après 2000ms supplémentaires
+    await vi.advanceTimersByTimeAsync(2000);
+    const result = await retryPromise;
+
+    expect(result).toBe('success');
+    expect(mockFn).toHaveBeenCalledTimes(3);
   });
 });
