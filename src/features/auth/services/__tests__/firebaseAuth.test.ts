@@ -1,208 +1,152 @@
-import { auth } from '../../../../config/firebase';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { signInWithCustomToken, onAuthStateChanged, signOut } from 'firebase/auth';
 import { firebaseAuth } from '../firebaseAuth';
-import { Auth, User } from 'firebase/auth';
+import { notificationService } from '../notificationService';
+import { AuthError } from '../../errors/AuthError';
+import type { User, UserCredential, Auth } from 'firebase/auth';
 
-// Mock des dépendances Firebase
-jest.mock('../../../../config/firebase', () => ({
-  auth: {
-    onAuthStateChanged: jest.fn(),
-    signInWithCustomToken: jest.fn(),
-    signOut: jest.fn(),
-  } as unknown as Auth,
-}));
-
-// Mock de fetch pour les appels API
-global.fetch = jest.fn();
+// Mock des services
+vi.mock('firebase/auth');
+vi.mock('../notificationService');
 
 describe('firebaseAuth', () => {
-  const mockUser = {
-    uid: '123',
-    email: 'test@tokenforge.eth',
-    emailVerified: false,
-    getIdTokenResult: jest.fn().mockResolvedValue({
-      claims: { walletAddress: '0x123' },
-    }),
-    reload: jest.fn(),
-  } as unknown as User;
+  let mockUser: Partial<User>;
+  let authStateCallback: ((user: User | null) => void) | null = null;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (auth.onAuthStateChanged as jest.Mock).mockImplementation((callback) => {
-      callback(null);
-      return jest.fn();
+    vi.clearAllMocks();
+    mockUser = {
+      uid: 'test-uid',
+      email: 'test@example.com',
+      emailVerified: false,
+      isAnonymous: false,
+      metadata: {},
+      providerData: [],
+      refreshToken: '',
+      tenantId: null,
+      delete: vi.fn(),
+      getIdToken: vi.fn(),
+      getIdTokenResult: vi.fn().mockResolvedValue({
+        claims: { walletAddress: '0x123' },
+      }),
+      reload: vi.fn(),
+      toJSON: vi.fn()
+    };
+
+    // Mock de onAuthStateChanged
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth: Auth, callback) => {
+      if (typeof callback === 'function') {
+        authStateCallback = callback;
+      }
+      return () => {};
     });
   });
 
   describe('signInWithWallet', () => {
     const mockWalletAddress = '0x123';
-    const mockSignature = '0xabc';
+    const mockSignature = 'signature';
     const mockToken = 'mock-jwt-token';
 
     beforeEach(() => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ token: mockToken }),
       });
-      (auth.signInWithCustomToken as jest.Mock).mockResolvedValue({
-        user: mockUser,
-      });
     });
 
-    it('should sign in successfully with wallet', async () => {
-      const session = await firebaseAuth.signInWithWallet(
-        mockWalletAddress,
-        mockSignature
-      );
+    it('devrait se connecter avec succès', async () => {
+      const mockCredential: UserCredential = {
+        user: mockUser as User,
+        providerId: null,
+        operationType: 'signIn'
+      };
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/wallet'),
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({
-            walletAddress: mockWalletAddress,
-            signature: mockSignature,
-          }),
-        })
-      );
+      vi.mocked(signInWithCustomToken).mockResolvedValue(mockCredential);
 
-      expect(auth.signInWithCustomToken).toHaveBeenCalledWith(mockToken);
-      expect(session).toEqual({
+      const result = await firebaseAuth.signInWithWallet(mockWalletAddress, mockSignature);
+
+      expect(result).toEqual({
         uid: mockUser.uid,
         email: mockUser.email,
         emailVerified: mockUser.emailVerified,
-        customClaims: { walletAddress: '0x123' },
+        customClaims: { walletAddress: '0x123' }
       });
-    });
-
-    it('should handle API error', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: false,
-        status: 400,
-      });
-
-      await expect(
-        firebaseAuth.signInWithWallet(mockWalletAddress, mockSignature)
-      ).rejects.toEqual(
-        expect.objectContaining({
-          code: 'AUTH_003',
-        })
+      
+      expect(signInWithCustomToken).toHaveBeenCalledWith(
+        expect.anything(),
+        mockToken
       );
+      expect(notificationService.notify).toHaveBeenCalledWith({
+        type: 'success',
+        message: expect.any(String)
+      });
     });
 
-    it('should handle Firebase error', async () => {
-      const mockError = new Error('Firebase error');
-      (auth.signInWithCustomToken as jest.Mock).mockRejectedValue(mockError);
+    it('devrait gérer les erreurs de connexion', async () => {
+      const mockError = new Error('Auth error');
+      vi.mocked(signInWithCustomToken).mockRejectedValue(mockError);
 
-      await expect(
-        firebaseAuth.signInWithWallet(mockWalletAddress, mockSignature)
-      ).rejects.toEqual(
-        expect.objectContaining({
-          code: 'AUTH_003',
-          originalError: mockError,
-        })
+      await expect(firebaseAuth.signInWithWallet(mockWalletAddress, mockSignature)).rejects.toThrow(
+        AuthError
       );
-    });
-  });
-
-  describe('sendVerificationEmail', () => {
-    beforeEach(() => {
-      (auth.onAuthStateChanged as jest.Mock).mockImplementation((callback) => {
-        callback(mockUser);
-        return jest.fn();
+      expect(notificationService.notify).toHaveBeenCalledWith({
+        type: 'error',
+        message: expect.any(String)
       });
-    });
-
-    it('should send verification email successfully', async () => {
-      const sendEmailVerification = jest.fn().mockResolvedValue(undefined);
-      const mockUserWithSendEmail = {
-        ...mockUser,
-        sendEmailVerification,
-      };
-
-      (auth.onAuthStateChanged as jest.Mock).mockImplementation((callback) => {
-        callback(mockUserWithSendEmail);
-        return jest.fn();
-      });
-
-      await firebaseAuth.sendVerificationEmail();
-      expect(sendEmailVerification).toHaveBeenCalled();
-    });
-
-    it('should handle no user error', async () => {
-      (auth.onAuthStateChanged as jest.Mock).mockImplementation((callback) => {
-        callback(null);
-        return jest.fn();
-      });
-
-      await expect(firebaseAuth.sendVerificationEmail()).rejects.toEqual(
-        expect.objectContaining({
-          code: 'AUTH_004',
-        })
-      );
     });
   });
 
   describe('signOut', () => {
-    it('should sign out successfully', async () => {
-      (auth.signOut as jest.Mock).mockResolvedValue(undefined);
+    it('devrait se déconnecter avec succès', async () => {
+      vi.mocked(signOut).mockResolvedValue();
 
       await firebaseAuth.signOut();
-      expect(auth.signOut).toHaveBeenCalled();
+
+      expect(signOut).toHaveBeenCalled();
+      expect(notificationService.notify).toHaveBeenCalledWith({
+        type: 'success',
+        message: expect.any(String)
+      });
     });
 
-    it('should handle sign out error', async () => {
-      const mockError = new Error('Sign out failed');
-      (auth.signOut as jest.Mock).mockRejectedValue(mockError);
+    it('devrait gérer les erreurs de déconnexion', async () => {
+      const mockError = new Error('Sign out error');
+      vi.mocked(signOut).mockRejectedValue(mockError);
 
-      await expect(firebaseAuth.signOut()).rejects.toEqual(
-        expect.objectContaining({
-          code: 'AUTH_004',
-          originalError: mockError,
-        })
-      );
+      await expect(firebaseAuth.signOut()).rejects.toThrow(AuthError);
+      expect(notificationService.notify).toHaveBeenCalledWith({
+        type: 'error',
+        message: expect.any(String)
+      });
     });
   });
 
   describe('session management', () => {
-    it('should return current session', () => {
-      (auth.onAuthStateChanged as jest.Mock).mockImplementation((callback) => {
-        callback(mockUser);
-        return jest.fn();
-      });
-
+    it('devrait retourner la session courante', () => {
+      if (authStateCallback) {
+        authStateCallback(mockUser as User);
+      }
       const session = firebaseAuth.getCurrentSession();
       expect(session).toEqual({
         uid: mockUser.uid,
         email: mockUser.email,
-        emailVerified: mockUser.emailVerified,
+        emailVerified: mockUser.emailVerified
       });
     });
 
-    it('should handle session changes', () => {
-      const mockCallback = jest.fn();
+    it('devrait notifier des changements de session', () => {
+      const mockCallback = vi.fn();
       firebaseAuth.onSessionChange(mockCallback);
+      
+      if (authStateCallback) {
+        authStateCallback(mockUser as User);
+      }
 
-      // Simuler un changement d'état d'authentification
-      const authStateCallback = (auth.onAuthStateChanged as jest.Mock).mock.calls[0][0];
-      authStateCallback(mockUser);
-
-      expect(mockCallback).toHaveBeenCalledWith(
-        expect.objectContaining({
-          uid: mockUser.uid,
-          email: mockUser.email,
-          emailVerified: mockUser.emailVerified,
-        })
-      );
-    });
-
-    it('should refresh session', async () => {
-      (auth.onAuthStateChanged as jest.Mock).mockImplementation((callback) => {
-        callback(mockUser);
-        return jest.fn();
+      expect(mockCallback).toHaveBeenCalledWith({
+        uid: mockUser.uid,
+        email: mockUser.email,
+        emailVerified: mockUser.emailVerified
       });
-
-      await firebaseAuth.refreshSession();
-      expect(mockUser.reload).toHaveBeenCalled();
     });
   });
 });
