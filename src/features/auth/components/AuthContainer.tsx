@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Stack } from '@mui/material';
+import { Box, Stack, Divider, Typography } from '@mui/material';
 import { useAuthManager } from '../hooks/useAuthManager';
 import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
 import { AuthButton } from './AuthButton';
+import { GoogleAuthButton } from './GoogleAuthButton';
 import { NetworkSelector } from './NetworkSelector';
 import { AuthFeedback } from './AuthFeedback';
 import { EmailVerification } from './EmailVerification';
@@ -14,6 +15,7 @@ interface AuthContainerProps {
   size?: 'small' | 'medium' | 'large';
   showNetworkSelector?: boolean;
   requireEmailVerification?: boolean;
+  showGoogleAuth?: boolean;
   spacing?: number;
 }
 
@@ -23,6 +25,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({
   size = 'medium',
   showNetworkSelector = true,
   requireEmailVerification = true,
+  showGoogleAuth = true,
   spacing = 2,
 }) => {
   const { error: walletError, resetError: resetWalletError } = useAuthManager(requiredChainId);
@@ -46,29 +49,64 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({
 
   const error = walletError || firebaseError;
 
+  // Ne pas afficher le bouton Google si l'utilisateur est déjà connecté
+  const showGoogleButton = showGoogleAuth && !session?.provider;
+
   return (
-    <Box>
-      <Stack direction="row" spacing={spacing} alignItems="center">
-        <AuthButton
-          requiredChainId={requiredChainId}
-          variant={variant}
-          size={size}
-        />
-        {showNetworkSelector && (
-          <NetworkSelector
-            variant={variant === 'contained' ? 'outlined' : variant}
-            size={size}
-          />
+    <Box sx={{ width: '100%', maxWidth: 400 }}>
+      <Stack spacing={3}>
+        {/* Section Wallet */}
+        <Box>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Connect with Wallet
+          </Typography>
+          <Stack direction="row" spacing={spacing} alignItems="center">
+            <AuthButton
+              requiredChainId={requiredChainId}
+              variant={variant}
+              size={size}
+              fullWidth
+            />
+            {showNetworkSelector && (
+              <NetworkSelector
+                variant={variant === 'contained' ? 'outlined' : variant}
+                size={size}
+              />
+            )}
+          </Stack>
+        </Box>
+
+        {/* Section Google */}
+        {showGoogleButton && (
+          <Box>
+            <Stack direction="row" alignItems="center" spacing={2} sx={{ my: 1 }}>
+              <Divider sx={{ flex: 1 }} />
+              <Typography variant="body2" color="text.secondary">
+                or continue with
+              </Typography>
+              <Divider sx={{ flex: 1 }} />
+            </Stack>
+
+            <GoogleAuthButton
+              variant={variant}
+              size={size}
+              fullWidth
+            />
+          </Box>
         )}
       </Stack>
-      <AuthFeedback
-        error={error}
-        onClose={handleErrorClose}
-      />
-      <EmailVerification
-        open={showEmailVerification}
-        onClose={handleEmailVerificationClose}
-      />
+
+      {/* Feedback et Vérification */}
+      <Box sx={{ mt: 2 }}>
+        <AuthFeedback
+          error={error}
+          onClose={handleErrorClose}
+        />
+        <EmailVerification
+          open={showEmailVerification}
+          onClose={handleEmailVerificationClose}
+        />
+      </Box>
     </Box>
   );
 };

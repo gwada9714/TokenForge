@@ -4,6 +4,8 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   sendEmailVerification,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import { auth } from '../../../config/firebase';
 import { createAuthError } from '../errors/AuthError';
@@ -15,13 +17,16 @@ export interface AuthSession {
   customClaims?: {
     [key: string]: any;
   };
+  provider?: string;
 }
 
 class FirebaseAuthService {
   private static instance: FirebaseAuthService;
   private currentUser: FirebaseUser | null = null;
+  private googleProvider: GoogleAuthProvider;
 
   private constructor() {
+    this.googleProvider = new GoogleAuthProvider();
     onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
     });
@@ -32,6 +37,31 @@ class FirebaseAuthService {
       FirebaseAuthService.instance = new FirebaseAuthService();
     }
     return FirebaseAuthService.instance;
+  }
+
+  async signInWithGoogle(): Promise<AuthSession> {
+    try {
+      const result = await signInWithPopup(auth, this.googleProvider);
+      const { user } = result;
+
+      if (!user) {
+        throw new Error('No user data after Google authentication');
+      }
+
+      return {
+        uid: user.uid,
+        emailVerified: user.emailVerified,
+        email: user.email,
+        provider: 'google',
+        customClaims: (await user.getIdTokenResult()).claims,
+      };
+    } catch (error) {
+      throw createAuthError(
+        'AUTH_003',
+        'Failed to authenticate with Google',
+        { originalError: error }
+      );
+    }
   }
 
   async signInWithWallet(walletAddress: string, signature: string): Promise<AuthSession> {
@@ -66,6 +96,7 @@ class FirebaseAuthService {
         uid: user.uid,
         emailVerified: user.emailVerified,
         email: user.email,
+        provider: 'wallet',
         customClaims: (await user.getIdTokenResult()).claims,
       };
     } catch (error) {
@@ -116,8 +147,7 @@ class FirebaseAuthService {
       uid: user.uid,
       emailVerified: user.emailVerified,
       email: user.email,
-      // Note: Les customClaims ne sont pas disponibles immédiatement,
-      // ils doivent être récupérés via getIdTokenResult()
+      provider: user.providerData[0]?.providerId || 'wallet',
     };
   }
 
@@ -148,6 +178,7 @@ class FirebaseAuthService {
             uid: user.uid,
             emailVerified: user.emailVerified,
             email: user.email,
+            provider: user.providerData[0]?.providerId || 'wallet',
             customClaims: idTokenResult.claims,
           });
         });

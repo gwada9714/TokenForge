@@ -30,6 +30,41 @@ export const useFirebaseAuth = () => {
     return () => unsubscribe();
   }, []);
 
+  // Authentification avec Google
+  const signInWithGoogle = useCallback(async () => {
+    setState(prev => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+    }));
+
+    try {
+      const session = await firebaseAuth.signInWithGoogle();
+      setState(prev => ({
+        ...prev,
+        session,
+        isLoading: false,
+        error: null,
+      }));
+
+      return session;
+    } catch (error) {
+      const authError = createAuthError(
+        'AUTH_003',
+        'Failed to sign in with Google',
+        { originalError: error }
+      );
+
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: authError,
+      }));
+
+      throw authError;
+    }
+  }, []);
+
   // Authentification avec le wallet
   const signInWithWallet = useCallback(async () => {
     if (!account || !provider) {
@@ -164,6 +199,7 @@ export const useFirebaseAuth = () => {
 
   return {
     ...state,
+    signInWithGoogle,
     signInWithWallet,
     signOut,
     sendVerificationEmail,
