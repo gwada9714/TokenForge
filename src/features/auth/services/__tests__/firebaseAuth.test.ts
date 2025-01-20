@@ -4,14 +4,14 @@ import {
   onAuthStateChanged,
   type User,
   type NextOrObserver,
+  type UserCredential,
 } from 'firebase/auth';
-import { auth } from '../../../config/firebase';
 import { firebaseAuth } from '../firebaseAuth';
-import { AuthError } from '../errors/AuthError';
+import { AuthError } from '@/features/auth/errors/AuthError';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 vi.mock('firebase/auth');
-vi.mock('../../../config/firebase');
+vi.mock('@/config/firebase');
 
 describe('firebaseAuth', () => {
   const mockUser = {
@@ -27,9 +27,15 @@ describe('firebaseAuth', () => {
     reload: vi.fn(),
   } as unknown as User;
 
+  const mockUserCredential: UserCredential = {
+    user: mockUser,
+    providerId: 'wallet',
+    operationType: 'signIn'
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(signInWithCustomToken).mockResolvedValue({ user: mockUser });
+    vi.mocked(signInWithCustomToken).mockResolvedValue(mockUserCredential);
     vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback: NextOrObserver<User | null>) => {
       if (typeof callback === 'function') {
         callback(mockUser);
