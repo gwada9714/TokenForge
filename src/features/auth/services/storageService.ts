@@ -3,11 +3,27 @@ import { TokenForgeUser, WalletState } from '../types';
 const STORAGE_KEYS = {
   AUTH: 'tokenforge_auth',
   WALLET: 'tokenforge_wallet',
+  METRICS: 'tokenforge_metrics',
 } as const;
 
 interface StoredAuthState {
   user: Pick<TokenForgeUser, 'uid' | 'email' | 'emailVerified' | 'isAdmin' | 'customMetadata'> | null;
   lastLogin: number;
+}
+
+interface NetworkMetrics {
+  lastReconnectionAttempt: number;
+  reconnectionAttempts: number;
+  successfulReconnections: number;
+  failedReconnections: number;
+  averageReconnectionTime: number;
+  networkLatency: number[];
+  lastNetworkChange: number;
+  networkChanges: {
+    timestamp: number;
+    fromChainId: number | null;
+    toChainId: number;
+  }[];
 }
 
 class StorageService {
@@ -88,6 +104,98 @@ class StorageService {
 
   clearWalletState(): void {
     localStorage.removeItem(STORAGE_KEYS.WALLET);
+  }
+
+  // Metrics Storage
+  private getDefaultMetrics(): NetworkMetrics {
+    return {
+      lastReconnectionAttempt: 0,
+      reconnectionAttempts: 0,
+      successfulReconnections: 0,
+      failedReconnections: 0,
+      averageReconnectionTime: 0,
+      networkLatency: [],
+      lastNetworkChange: 0,
+      networkChanges: [],
+    };
+  }
+
+  async saveNetworkMetrics(metrics: Partial<NetworkMetrics>): Promise<void> {
+    try {
+      const currentMetrics = await this.getNetworkMetrics();
+      const updatedMetrics = {
+        ...currentMetrics,
+        ...metrics,
+      };
+      localStorage.setItem(STORAGE_KEYS.METRICS, JSON.stringify(updatedMetrics));
+    } catch (error) {
+      console.error('Failed to save network metrics:', error);
+    }
+  }
+
+  async getNetworkMetrics(): Promise<NetworkMetrics> {
+    try {
+      const storedMetrics = localStorage.getItem(STORAGE_KEYS.METRICS);
+      if (!storedMetrics) {
+        return this.getDefaultMetrics();
+      }
+      return JSON.parse(storedMetrics);
+    } catch (error) {
+      console.error('Failed to get network metrics:', error);
+      return this.getDefaultMetrics();
+    }
+  }
+
+  async updateReconnectionMetrics(
+    success: boolean,
+    duration: number
+  ): Promise<void> {
+    const metrics = await this.getNetworkMetrics();
+    const now = Date.now();
+
+    const updatedMetrics: NetworkMetrics = {
+      ...metrics,
+      lastReconnectionAttempt: now,
+      reconnectionAttempts: metrics.reconnectionAttempts + 1,
+      successfulReconnections: metrics.successfulReconnections + (success ? 1 : 0),
+      failedReconnections: metrics.failedReconnections + (success ? 0 : 1),
+      averageReconnectionTime: success
+        ? (metrics.averageReconnectionTime * metrics.successfulReconnections + duration) /
+          (metrics.successfulReconnections + 1)
+        : metrics.averageReconnectionTime,
+    };
+
+    await this.saveNetworkMetrics(updatedMetrics);
+  }
+
+  async recordNetworkChange(fromChainId: number | null, toChainId: number): Promise<void> {
+    const metrics = await this.getNetworkMetrics();
+    const now = Date.now();
+
+    const updatedMetrics: NetworkMetrics = {
+      ...metrics,
+      lastNetworkChange: now,
+      networkChanges: [
+        ...metrics.networkChanges.slice(-9), // Garder les 9 derniers changements
+        {
+          timestamp: now,
+          fromChainId,
+          toChainId,
+        },
+      ],
+    };
+
+    await this.saveNetworkMetrics(updatedMetrics);
+  }
+
+  async updateNetworkLatency(latency: number): Promise<void> {
+    const metrics = await this.getNetworkMetrics();
+    const updatedMetrics: NetworkMetrics = {
+      ...metrics,
+      networkLatency: [...metrics.networkLatency.slice(-9), latency], // Garder les 10 dernières mesures
+    };
+
+    await this.saveNetworkMetrics(updatedMetrics);
   }
 
   // Clear all storage
