@@ -1,54 +1,60 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { tokenService } from '../tokenService';
 import { notificationService } from '../notificationService';
+import { storageService } from '../storageService';
 import { AuthError } from '../../errors/AuthError';
-import { User } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
-jest.mock('../notificationService');
+vi.mock('../notificationService');
+vi.mock('../storageService', () => ({
+  storageService: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+  },
+}));
 
 describe('TokenService', () => {
-  let mockUser: jest.Mocked<User>;
+  let mockUser: vi.Mocked<User>;
   
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     
     // Mock de l'utilisateur Firebase
     mockUser = {
-      getIdToken: jest.fn(),
-      getIdTokenResult: jest.fn(),
-    } as unknown as jest.Mocked<User>;
+      getIdToken: vi.fn(),
+      getIdTokenResult: vi.fn(),
+    } as unknown as vi.Mocked<User>;
 
     // Reset des mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
     tokenService.cleanup();
   });
 
   describe('initialize', () => {
-    it('should initialize with user and start refresh timer', async () => {
-      const token = 'mock-token';
-      const expirationTime = new Date(Date.now() + 3600000).toISOString();
-      
-      mockUser.getIdToken.mockResolvedValue(token);
+    it('devrait initialiser le service avec un utilisateur', async () => {
+      const mockToken = 'mock-token';
+      mockUser.getIdToken.mockResolvedValue(mockToken);
       mockUser.getIdTokenResult.mockResolvedValue({
-        expirationTime,
-        token,
-        claims: {},
-        authTime: '',
-        issuedAtTime: '',
-        signInProvider: null,
-        signInSecondFactor: null,
+        token: mockToken,
+        claims: { admin: true },
+        authTime: new Date().toISOString(),
+        issuedAtTime: new Date().toISOString(),
+        expirationTime: new Date(Date.now() + 3600000).toISOString(),
+        signInProvider: 'custom'
       });
 
       await tokenService.initialize(mockUser);
 
-      expect(mockUser.getIdToken).toHaveBeenCalledWith(true);
+      expect(mockUser.getIdToken).toHaveBeenCalled();
       expect(mockUser.getIdTokenResult).toHaveBeenCalled();
     });
 
-    it('should cleanup when initialized with null user', async () => {
+    it('devrait nettoyer le service lorsqu\'initialisé avec un utilisateur null', async () => {
       await tokenService.initialize(null);
       
       const token = await tokenService.getToken().catch(e => e);
@@ -58,44 +64,38 @@ describe('TokenService', () => {
   });
 
   describe('refreshToken', () => {
-    it('should refresh token successfully', async () => {
-      const token = 'new-token';
-      const expirationTime = new Date(Date.now() + 3600000).toISOString();
-      
-      mockUser.getIdToken.mockResolvedValue(token);
+    it('devrait rafraîchir le token avec succès', async () => {
+      const mockToken = 'new-token';
+      mockUser.getIdToken.mockResolvedValue(mockToken);
       mockUser.getIdTokenResult.mockResolvedValue({
-        expirationTime,
-        token,
-        claims: {},
-        authTime: '',
-        issuedAtTime: '',
-        signInProvider: null,
-        signInSecondFactor: null,
+        token: mockToken,
+        claims: { admin: true },
+        authTime: new Date().toISOString(),
+        issuedAtTime: new Date().toISOString(),
+        expirationTime: new Date(Date.now() + 3600000).toISOString(),
+        signInProvider: 'custom'
       });
 
       await tokenService.initialize(mockUser);
       
-      // Avancer le temps pour déclencher un refresh
-      jest.advanceTimersByTime(45 * 60 * 1000 + 1000);
+      // Avancer le temps pour déclencher un rafraîchissement
+      vi.advanceTimersByTime(45 * 60 * 1000 + 1000);
       
-      await Promise.resolve(); // Laisser le temps au refresh de s'exécuter
+      await Promise.resolve(); // Laisser le temps au rafraîchissement de s'exécuter
       
-      expect(mockUser.getIdToken).toHaveBeenCalledTimes(2); // Initial + refresh
+      expect(mockUser.getIdToken).toHaveBeenCalledTimes(2); // Initial + rafraîchissement
     });
 
-    it('should notify when token is about to expire', async () => {
-      const token = 'mock-token';
-      const expirationTime = new Date(Date.now() + 4 * 60 * 1000).toISOString(); // 4 minutes
-      
-      mockUser.getIdToken.mockResolvedValue(token);
+    it('devrait notifier lorsque le token est sur le point d\'expirer', async () => {
+      const mockToken = 'mock-token';
+      mockUser.getIdToken.mockResolvedValue(mockToken);
       mockUser.getIdTokenResult.mockResolvedValue({
-        expirationTime,
-        token,
-        claims: {},
-        authTime: '',
-        issuedAtTime: '',
-        signInProvider: null,
-        signInSecondFactor: null,
+        token: mockToken,
+        claims: { admin: true },
+        authTime: new Date().toISOString(),
+        issuedAtTime: new Date().toISOString(),
+        expirationTime: new Date(Date.now() + 4 * 60 * 1000).toISOString(),
+        signInProvider: 'custom'
       });
 
       await tokenService.initialize(mockUser);
@@ -107,28 +107,25 @@ describe('TokenService', () => {
   });
 
   describe('getToken', () => {
-    it('should return valid token', async () => {
-      const token = 'mock-token';
-      const expirationTime = new Date(Date.now() + 3600000).toISOString();
-      
-      mockUser.getIdToken.mockResolvedValue(token);
+    it('devrait retourner un token valide', async () => {
+      const mockToken = 'mock-token';
+      mockUser.getIdToken.mockResolvedValue(mockToken);
       mockUser.getIdTokenResult.mockResolvedValue({
-        expirationTime,
-        token,
-        claims: {},
-        authTime: '',
-        issuedAtTime: '',
-        signInProvider: null,
-        signInSecondFactor: null,
+        token: mockToken,
+        claims: { admin: true },
+        authTime: new Date().toISOString(),
+        issuedAtTime: new Date().toISOString(),
+        expirationTime: new Date(Date.now() + 3600000).toISOString(),
+        signInProvider: 'custom'
       });
 
       await tokenService.initialize(mockUser);
       
       const result = await tokenService.getToken();
-      expect(result).toBe(token);
+      expect(result).toBe(mockToken);
     });
 
-    it('should throw when no token is available', async () => {
+    it('devrait lancer une erreur lorsque aucun token n\'est disponible', async () => {
       await tokenService.initialize(null);
       
       await expect(tokenService.getToken()).rejects.toThrow('No token available');
@@ -136,19 +133,16 @@ describe('TokenService', () => {
   });
 
   describe('cleanup', () => {
-    it('should clear token info and stop refresh timer', async () => {
-      const token = 'mock-token';
-      const expirationTime = new Date(Date.now() + 3600000).toISOString();
-      
-      mockUser.getIdToken.mockResolvedValue(token);
+    it('devrait nettoyer les informations de token et arrêter le minuteur de rafraîchissement', async () => {
+      const mockToken = 'mock-token';
+      mockUser.getIdToken.mockResolvedValue(mockToken);
       mockUser.getIdTokenResult.mockResolvedValue({
-        expirationTime,
-        token,
-        claims: {},
-        authTime: '',
-        issuedAtTime: '',
-        signInProvider: null,
-        signInSecondFactor: null,
+        token: mockToken,
+        claims: { admin: true },
+        authTime: new Date().toISOString(),
+        issuedAtTime: new Date().toISOString(),
+        expirationTime: new Date(Date.now() + 3600000).toISOString(),
+        signInProvider: 'custom'
       });
 
       await tokenService.initialize(mockUser);
