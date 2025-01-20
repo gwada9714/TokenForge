@@ -1,13 +1,13 @@
 import { getWalletClient } from '@wagmi/core';
-import { User as FirebaseUser, UserMetadata } from 'firebase/auth';
-import { ErrorCode as GlobalErrorCode } from '../../types/errors';
+import { User as FirebaseUser } from 'firebase/auth';
+import { ErrorCode } from '../../types/errors';
 
 export type WalletClientType = Awaited<ReturnType<typeof getWalletClient>>;
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
-// Étend les codes d'erreur globaux avec nos codes spécifiques à l'auth
-export type ErrorCode = GlobalErrorCode | 'auth/email-not-verified' | 'auth/verification-timeout';
+// Utilise directement le type ErrorCode global qui inclut maintenant nos codes spécifiques
+export type { ErrorCode };
 
 export interface AuthError extends Error {
   code: ErrorCode;
