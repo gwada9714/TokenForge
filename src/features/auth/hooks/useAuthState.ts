@@ -3,6 +3,7 @@ import { AuthState, TokenForgeUser, AuthError } from '../types';
 import { errorService } from '../services/errorService';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
+import { sessionService } from '../services/sessionService';
 import { auth } from '../../../config/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 
@@ -93,51 +94,83 @@ function convertToTokenForgeUser(firebaseUser: FirebaseUser, storedData?: { isAd
 export function useAuthState() {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Charger l'état initial depuis le stockage local
-  useEffect(() => {
-    const storedState = storageService.getAuthState();
-    if (storedState?.user) {
-      // Récupérer l'utilisateur Firebase actuel
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        // Fusionner les données stockées avec l'utilisateur Firebase
-        const user = convertToTokenForgeUser(currentUser, {
-          isAdmin: storedState.user.isAdmin,
-          customMetadata: storedState.user.customMetadata,
-        });
-        dispatch({ type: 'AUTH_SUCCESS', payload: user });
-      }
+  const handleAuthSuccess = useCallback(async (user: FirebaseUser) => {
+    try {
+      dispatch({ type: 'AUTH_START' });
+      
+      // Initialiser la session
+      await sessionService.initSession();
+      
+      const storedData = await storageService.getAuthState();
+      const tokenForgeUser = convertToTokenForgeUser(user, {
+        isAdmin: storedData?.user?.isAdmin,
+        customMetadata: storedData?.user?.customMetadata
+      });
+      
+      dispatch({ type: 'AUTH_SUCCESS', payload: tokenForgeUser });
+      await storageService.saveAuthState(tokenForgeUser);
+    } catch (error) {
+      const authError = errorService.handleError(error);
+      dispatch({ type: 'AUTH_ERROR', payload: authError });
     }
   }, []);
 
-  // Sauvegarder l'état dans le stockage local quand il change
-  useEffect(() => {
-    if (state.status === 'authenticated') {
-      storageService.saveAuthState(state.user);
-    } else if (state.status === 'idle') {
-      storageService.clearAuthState();
+  const handleLogout = useCallback(async () => {
+    try {
+      await sessionService.endSession();
+      dispatch({ type: 'AUTH_LOGOUT' });
+      await storageService.clearAuthState();
+    } catch (error) {
+      const authError = errorService.handleError(error);
+      dispatch({ type: 'AUTH_ERROR', payload: authError });
     }
-  }, [state.status, state.user]);
+  }, []);
+
+  const updateUserActivity = useCallback(async () => {
+    if (state.isAuthenticated) {
+      await sessionService.updateActivity();
+    }
+  }, [state.isAuthenticated]);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Vérifier la validité de la session
+        const isSessionValid = await sessionService.isSessionValid();
+        if (!isSessionValid) {
+          await handleLogout();
+          notificationService.warn('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        await handleAuthSuccess(user);
+      } else {
+        await handleLogout();
+      }
+    });
+
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const activityListeners = activityEvents.map(event => {
+      const listener = () => updateUserActivity();
+      window.addEventListener(event, listener);
+      return { event, listener };
+    });
+
+    return () => {
+      unsubscribe();
+      activityListeners.forEach(({ event, listener }) => {
+        window.removeEventListener(event, listener);
+      });
+    };
+  }, [handleAuthSuccess, handleLogout, updateUserActivity]);
 
   const handleAuthStart = useCallback(() => {
     dispatch({ type: 'AUTH_START' });
-  }, []);
-
-  const handleAuthSuccess = useCallback((user: TokenForgeUser) => {
-    dispatch({ type: 'AUTH_SUCCESS', payload: user });
-    notificationService.notifyLoginSuccess(user.email || 'Utilisateur inconnu');
   }, []);
 
   const handleAuthError = useCallback((error: unknown) => {
     const handledError = errorService.handleError(error);
     dispatch({ type: 'AUTH_ERROR', payload: handledError });
     notificationService.notifyLoginError(handledError.message);
-  }, []);
-
-  const handleLogout = useCallback(() => {
-    dispatch({ type: 'AUTH_LOGOUT' });
-    storageService.clearAuthState();
-    notificationService.notifyLogout();
   }, []);
 
   const handleEmailVerificationStart = useCallback(() => {

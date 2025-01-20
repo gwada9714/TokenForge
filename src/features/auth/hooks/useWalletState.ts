@@ -3,6 +3,7 @@ import { WalletState, WalletClientType } from '../types';
 import { mainnet, sepolia } from '../../../config/chains';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
+import { walletReconnectionService } from '../services/walletReconnectionService';
 
 const initialState: WalletState = {
   isConnected: false,
@@ -67,29 +68,6 @@ function walletReducer(state: WalletState, action: WalletAction): WalletState {
 export function useWalletState() {
   const [state, dispatch] = useReducer(walletReducer, initialState);
 
-  // Charger l'état initial depuis le stockage local
-  useEffect(() => {
-    const storedState = storageService.getWalletState();
-    if (storedState?.address && storedState.chainId) {
-      // Ne pas restaurer le walletClient et le provider car ils doivent être réinitialisés
-      storageService.clearWalletState();
-    }
-  }, []);
-
-  // Sauvegarder l'état dans le stockage local quand il change
-  useEffect(() => {
-    if (state.isConnected) {
-      storageService.saveWalletState({
-        address: state.address,
-        chainId: state.chainId,
-        isConnected: state.isConnected,
-        isCorrectNetwork: state.isCorrectNetwork,
-      });
-    } else {
-      storageService.clearWalletState();
-    }
-  }, [state.isConnected, state.address, state.chainId, state.isCorrectNetwork]);
-
   const connectWallet = useCallback((
     address: string,
     chainId: number,
@@ -124,7 +102,38 @@ export function useWalletState() {
   const disconnectWallet = useCallback(() => {
     dispatch({ type: 'DISCONNECT' });
     notificationService.notifyWalletDisconnected();
+    walletReconnectionService.clearState();
   }, []);
+
+  // Tentative de reconnexion au démarrage
+  useEffect(() => {
+    const initializeWallet = async () => {
+      await walletReconnectionService.attemptReconnection(
+        connectWallet,
+        disconnectWallet
+      );
+    };
+
+    initializeWallet();
+
+    return () => {
+      walletReconnectionService.clearState();
+    };
+  }, [connectWallet, disconnectWallet]);
+
+  // Sauvegarder l'état dans le stockage local quand il change
+  useEffect(() => {
+    if (state.isConnected) {
+      storageService.saveWalletState({
+        address: state.address,
+        chainId: state.chainId,
+        isConnected: state.isConnected,
+        isCorrectNetwork: state.isCorrectNetwork,
+      });
+    } else {
+      storageService.clearWalletState();
+    }
+  }, [state.isConnected, state.address, state.chainId, state.isCorrectNetwork]);
 
   const updateNetwork = useCallback((chainId: number) => {
     dispatch({

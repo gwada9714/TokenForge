@@ -85,6 +85,10 @@ class NotificationService {
     const { type = 'info', ...rest } = options || {};
     toast[type](message, this.getToastOptions(rest));
   }
+
+  warn(message: string, options?: NotificationOptions): void {
+    toast.warning(message, this.getToastOptions(options));
+  }
 }
 
 export const notificationService = NotificationService.getInstance();

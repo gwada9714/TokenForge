@@ -3,13 +3,28 @@ import { createAuthError } from '../errors/AuthError';
 const STORAGE_KEY = 'tokenforge_auth';
 const VERSION = 1;
 
-interface StoredAuthState {
+export interface SessionInfo {
+  expiresAt: number;
+  lastActivity: number;
+  refreshToken: string | null;
+}
+
+export interface StoredAuthState {
   version: number;
   timestamp: number;
   account: string | null;
   lastProvider: string | null;
   trustedDevices?: string[];
   sessionExpiry?: number;
+  sessionInfo?: SessionInfo;
+  user: {
+    uid: string;
+    email: string | null;
+    emailVerified: boolean;
+    isAdmin?: boolean;
+    customMetadata?: Record<string, unknown>;
+  } | null;
+  lastLogin: number;
 }
 
 export class AuthPersistence {
@@ -91,6 +106,8 @@ export class AuthPersistence {
       account: null,
       lastProvider: null,
       trustedDevices: [],
+      user: null,
+      lastLogin: 0,
     };
   }
 
