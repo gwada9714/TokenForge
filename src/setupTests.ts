@@ -20,6 +20,32 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
+// Mock fetch
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    json: () => Promise.resolve({}),
+    ok: true,
+    status: 200,
+  })
+) as jest.Mock;
+
+// Mock Firebase
+jest.mock('firebase/app', () => ({
+  initializeApp: jest.fn(),
+  getApps: jest.fn(() => []),
+}));
+
+jest.mock('firebase/auth', () => ({
+  getAuth: jest.fn(() => ({
+    currentUser: null,
+    signInWithPopup: jest.fn(),
+    signOut: jest.fn(),
+  })),
+  GoogleAuthProvider: jest.fn(() => ({})),
+  signInWithPopup: jest.fn(),
+  signOut: jest.fn(),
+}));
+
 // Mock modules
 jest.mock("@web3modal/wagmi", () => ({
   useWeb3Modal: () => ({

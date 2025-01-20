@@ -18,7 +18,6 @@ const defaultMockValues = {
 
 describe('GoogleAuthButton', () => {
   beforeEach(() => {
-    // Reset des mocks avant chaque test
     jest.clearAllMocks();
   });
 
@@ -32,7 +31,10 @@ describe('GoogleAuthButton', () => {
 
     render(<GoogleAuthButton />);
     
-    expect(screen.getByText('Continue with Google')).toBeInTheDocument();
+    const button = screen.getByTestId('mui-button');
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent('Continue with Google');
+    expect(button.className).toContain('styled-component');
   });
 
   it('masque le bouton quand connecté', () => {
@@ -51,7 +53,6 @@ describe('GoogleAuthButton', () => {
     });
 
     const { container } = render(<GoogleAuthButton />);
-    
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -65,9 +66,12 @@ describe('GoogleAuthButton', () => {
 
     render(<GoogleAuthButton />);
     
-    const button = screen.getByRole('button');
+    const button = screen.getByTestId('mui-button');
+    const progress = screen.getByTestId('mui-progress');
+
     expect(button).toBeDisabled();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(progress).toBeInTheDocument();
+    expect(progress.className).toContain('MuiCircularProgress-root');
   });
 
   it('appelle signInWithGoogle au clic', async () => {
@@ -87,7 +91,7 @@ describe('GoogleAuthButton', () => {
 
     render(<GoogleAuthButton />);
     
-    const button = screen.getByRole('button');
+    const button = screen.getByTestId('mui-button');
     fireEvent.click(button);
 
     await waitFor(() => {
@@ -111,10 +115,15 @@ describe('GoogleAuthButton', () => {
       />
     );
     
-    const button = screen.getByRole('button');
-    expect(button).toHaveClass('MuiButton-contained');
-    expect(button).toHaveClass('MuiButton-sizeSmall');
-    expect(button).toHaveClass('MuiButton-fullWidth');
+    const button = screen.getByTestId('mui-button');
+    const className = button.className;
+
+    // Vérifie que toutes les classes sont présentes
+    expect(className).toContain('MuiButton-root');
+    expect(className).toContain('MuiButton-contained');
+    expect(className).toContain('MuiButton-sizeSmall');
+    expect(className).toContain('MuiButton-fullWidth');
+    expect(className).toContain('styled-component');
   });
 
   it('gère les erreurs de connexion silencieusement', async () => {
@@ -130,7 +139,7 @@ describe('GoogleAuthButton', () => {
 
     render(<GoogleAuthButton />);
     
-    const button = screen.getByRole('button');
+    const button = screen.getByTestId('mui-button');
     fireEvent.click(button);
 
     await waitFor(() => {

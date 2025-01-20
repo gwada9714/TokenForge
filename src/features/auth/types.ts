@@ -1,21 +1,23 @@
 import { getWalletClient } from '@wagmi/core';
+import { User as FirebaseUser, UserMetadata } from 'firebase/auth';
+import { ErrorCode as GlobalErrorCode } from '../../types/errors';
 
 export type WalletClientType = Awaited<ReturnType<typeof getWalletClient>>;
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
+// Étend les codes d'erreur globaux avec nos codes spécifiques à l'auth
+export type ErrorCode = GlobalErrorCode | 'auth/email-not-verified' | 'auth/verification-timeout';
+
 export interface AuthError extends Error {
-  code: string;
+  code: ErrorCode;
   details?: Record<string, unknown>;
 }
 
-export interface User {
-  uid: string;
-  email: string | null;
+// Type pour représenter un utilisateur Firebase avec des champs supplémentaires
+export interface TokenForgeUser extends FirebaseUser {
   isAdmin?: boolean;
-  displayName?: string | null;
-  photoURL?: string | null;
-  metadata?: {
+  customMetadata?: {
     creationTime?: string;
     lastSignInTime?: string;
   };
@@ -30,15 +32,19 @@ export interface WalletState {
   provider: any;
 }
 
-export interface TokenForgeAuthState {
-  status: AuthStatus;
+export interface AuthState {
   isAuthenticated: boolean;
-  user: User | null;
+  user: TokenForgeUser | null;
+  loading: boolean;
   error: AuthError | null;
+  emailVerified: boolean;
+}
+
+export interface TokenForgeAuthState extends Omit<AuthState, 'loading'> {
+  status: AuthStatus;
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
-  signOut: () => Promise<void>;
   
   // Wallet state
   isConnected: boolean;
@@ -49,33 +55,37 @@ export interface TokenForgeAuthState {
   provider: any;
   
   // Actions
-  login: (user: User) => void;
-  logout: () => void;
-  setError: (error: AuthError) => void;
-  updateUser: (user: User) => void;
-}
-
-export interface TokenForgeAuthContextValue extends TokenForgeAuthState {
-  // Authentication methods
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
-  
-  // Wallet methods
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  verifyEmail: () => Promise<void>;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;
   switchNetwork: (chainId: number) => Promise<void>;
 }
 
-// Constants pour les actions
 export const AUTH_ACTIONS = {
   LOGIN_START: 'auth/loginStart',
   LOGIN_SUCCESS: 'auth/loginSuccess',
   LOGIN_FAILURE: 'auth/loginFailure',
   LOGOUT: 'auth/logout',
+  UPDATE_USER: 'auth/updateUser',
+  EMAIL_VERIFICATION_START: 'auth/emailVerificationStart',
+  EMAIL_VERIFICATION_SUCCESS: 'auth/emailVerificationSuccess',
+  EMAIL_VERIFICATION_FAILURE: 'auth/emailVerificationFailure',
   WALLET_CONNECT: 'auth/walletConnect',
   WALLET_DISCONNECT: 'auth/walletDisconnect',
   NETWORK_CHANGE: 'auth/networkChange',
-  UPDATE_USER: 'auth/updateUser',
 } as const;
+
+export type AuthAction =
+  | { type: typeof AUTH_ACTIONS.LOGIN_START }
+  | { type: typeof AUTH_ACTIONS.LOGIN_SUCCESS; payload: TokenForgeUser }
+  | { type: typeof AUTH_ACTIONS.LOGIN_FAILURE; error: AuthError }
+  | { type: typeof AUTH_ACTIONS.LOGOUT }
+  | { type: typeof AUTH_ACTIONS.UPDATE_USER; payload: TokenForgeUser }
+  | { type: typeof AUTH_ACTIONS.EMAIL_VERIFICATION_START }
+  | { type: typeof AUTH_ACTIONS.EMAIL_VERIFICATION_SUCCESS }
+  | { type: typeof AUTH_ACTIONS.EMAIL_VERIFICATION_FAILURE; error: AuthError }
+  | { type: typeof AUTH_ACTIONS.WALLET_CONNECT }
+  | { type: typeof AUTH_ACTIONS.WALLET_DISCONNECT }
+  | { type: typeof AUTH_ACTIONS.NETWORK_CHANGE; payload: number };
