@@ -3,6 +3,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { AuthPersistence } from '../store/authPersistence';
 import { createAuthError } from '../errors/AuthError';
 import { notificationService } from './notificationService';
+import { tabSyncService } from './tabSyncService';
 
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiry
@@ -13,11 +14,20 @@ interface SessionInfo {
   refreshToken: string | null;
 }
 
+interface TokenForgeUser {
+  uid: string;
+  email: string | null;
+  emailVerified: boolean;
+  lastLoginTime?: number;
+  provider?: string;
+}
+
 export class SessionService {
   private static instance: SessionService;
   private persistence: AuthPersistence;
   private sessionCheckInterval: NodeJS.Timeout | null = null;
   private activeTimeouts: Set<NodeJS.Timeout> = new Set();
+  private currentUser: TokenForgeUser | null = null;
 
   private constructor() {
     this.persistence = AuthPersistence.getInstance();
@@ -147,15 +157,20 @@ export class SessionService {
 
       await this.persistence.clear();
       await auth.signOut();
+      this.clearSession();
     } catch (error) {
       throw createAuthError('AUTH_005', 'Failed to end session', { originalError: error });
     }
   }
 
-  async clearSession(): Promise<void> {
+  clearSession(): void {
     try {
-      await this.persistence.remove('session');
-      await this.persistence.remove('lastActivity');
+      this.persistence.remove('session');
+      this.persistence.remove('lastActivity');
+      this.currentUser = null;
+      this.stopActivityMonitoring();
+      // Notifier les autres onglets de la déconnexion avec un objet vide
+      tabSyncService.syncAuthState({} as Partial<TokenForgeUser>);
     } catch (error) {
       console.error('Error clearing session:', error);
     }
@@ -181,13 +196,23 @@ export class SessionService {
     });
   }
 
-  updateSession(token: string): void {
-    const expiresAt = Date.now() + SESSION_TIMEOUT;
-    this.persistence.setItem('session', {
-      expiresAt,
-      lastActivity: Date.now(),
-      refreshToken: token
-    });
+  updateSession(user: TokenForgeUser): void {
+    this.currentUser = user;
+    this.startActivityMonitoring();
+    // Synchroniser l'état avec les autres onglets
+    tabSyncService.syncAuthState(user);
+  }
+
+  getCurrentUser(): TokenForgeUser | null {
+    return this.currentUser;
+  }
+
+  startActivityMonitoring(): void {
+    // Implement activity monitoring logic here
+  }
+
+  stopActivityMonitoring(): void {
+    // Implement stopping activity monitoring logic here
   }
 
   startSessionTimeout(onTimeout: () => void): { clear: () => void } {

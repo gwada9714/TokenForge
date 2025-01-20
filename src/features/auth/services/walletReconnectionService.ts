@@ -42,6 +42,11 @@ export class WalletReconnectionService {
   private tabId = crypto.randomUUID();
   private timeoutHandles = new Map<string, NodeJS.Timeout>();
   private currentChainId: number | null = null;
+  private isConnected = false;
+  private address: string | null = null;
+  private chainId: number | null = null;
+  private walletClient: WalletClient | null = null;
+  private provider: BrowserProvider | null = null;
 
   private constructor() {
     this.setupTabSync();
@@ -65,12 +70,17 @@ export class WalletReconnectionService {
 
   private setupNetworkChangeListener(): void {
     if (window.ethereum) {
-      window.ethereum.on('chainChanged', (chainId: string) => {
+      const chainChangedHandler = (chainId: string) => {
         const newChainId = parseInt(chainId);
         const oldChainId = this.currentChainId;
         this.currentChainId = newChainId;
         void this.handleNetworkChange(oldChainId, newChainId);
-      });
+      };
+
+      window.ethereum.on('chainChanged', chainChangedHandler);
+      
+      // Stocker le handler pour le test
+      (this as any)._chainChangedHandler = chainChangedHandler;
     }
   }
 
@@ -178,6 +188,8 @@ export class WalletReconnectionService {
             { toastId: 'wallet-reconnection-success' }
           );
 
+          this.handleWalletConnection(walletClient.account.address, chainIdNumber, walletClient, provider);
+
           return { walletClient, provider, chainId: chainIdNumber };
         },
         NETWORK_RETRY_CONFIG,
@@ -192,9 +204,10 @@ export class WalletReconnectionService {
           stack: error.stack,
         });
         notificationService.error(
-          `Échec de la connexion après ${result.attempts} tentatives`,
+          `Échec de la connexion après ${result.attempts} tentative${result.attempts === 1 ? '' : 's'}`,
           { toastId: `connection-error-${result.attempts}` } satisfies NotificationOptions
         );
+        this.handleWalletDisconnection();
         return null;
       }
 
@@ -236,7 +249,10 @@ export class WalletReconnectionService {
   private async measureNetworkLatency(): Promise<number> {
     const start = performance.now();
     try {
-      const provider = new BrowserProvider(window.ethereum);
+      const provider = this.getProvider();
+      if (!provider) {
+        throw new Error('Provider not initialized');
+      }
       await provider.getBlockNumber();
       return performance.now() - start;
     } catch (error) {
@@ -289,8 +305,97 @@ export class WalletReconnectionService {
     }
   }
 
+  private async handleWalletConnection(
+    address: string,
+    chainId: number,
+    walletClient: WalletClient,
+    provider: BrowserProvider
+  ) {
+    this.isConnected = true;
+    this.address = address;
+    this.chainId = chainId;
+    this.walletClient = walletClient;
+    this.provider = provider;
+    
+    // Synchroniser l'état avec les autres onglets
+    tabSyncService.syncWalletState({
+      isConnected: true,
+      address,
+      chainId
+    });
+  }
+
+  private handleWalletDisconnection() {
+    this.isConnected = false;
+    this.address = null;
+    this.chainId = null;
+    this.walletClient = null;
+    this.provider = null;
+    
+    // Synchroniser l'état avec les autres onglets
+    tabSyncService.syncWalletState({
+      isConnected: false,
+      address: null,
+      chainId: null
+    });
+  }
+
+  getWalletState() {
+    return {
+      isConnected: this.isConnected,
+      address: this.address,
+      chainId: this.chainId
+    };
+  }
+
+  async connect(): Promise<boolean> {
+    try {
+      const config: Partial<Config> = {
+        chains: [mainnet],
+      };
+
+      const account = await getAccount(config as Config);
+      if (!account.address) {
+        notificationService.error('Aucun wallet connecté', {
+          toastId: 'no-wallet-connected'
+        } satisfies NotificationOptions);
+        return false;
+      }
+
+      const result = await this.connectWithTimeout(account.address);
+      if (result) {
+        const { walletClient, provider, chainId } = result;
+        this.handleWalletConnection(account.address, chainId, walletClient, provider);
+        return true;
+      }
+
+      this.handleWalletDisconnection();
+      return false;
+    } catch (error) {
+      logService.error(LOG_CATEGORY, 'Erreur lors de la connexion', {
+        name: error instanceof Error ? error.name : 'UnknownError',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      this.handleWalletDisconnection();
+      return false;
+    }
+  }
+
+  disconnect(): void {
+    this.handleWalletDisconnection();
+  }
+
   isCorrectNetwork(chainId: number): boolean {
     return SUPPORTED_NETWORKS.some(n => n.id === chainId);
+  }
+
+  getWalletClient(): WalletClient | null {
+    return this.walletClient;
+  }
+
+  getProvider(): BrowserProvider | null {
+    return this.provider;
   }
 }
 
