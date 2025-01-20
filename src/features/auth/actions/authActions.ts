@@ -1,102 +1,76 @@
-import { TokenForgeUser, AuthError } from '../types';
+import { TokenForgeUser, WalletState } from '../types';
+import { AuthError } from '../errors/AuthError';
 
 export const AUTH_ACTIONS = {
-  // Core Authentication
+  // Auth actions
   LOGIN_START: 'auth/loginStart',
   LOGIN_SUCCESS: 'auth/loginSuccess',
   LOGIN_FAILURE: 'auth/loginFailure',
   LOGOUT: 'auth/logout',
-  
-  // User Management
   UPDATE_USER: 'auth/updateUser',
-  UPDATE_USER_METADATA: 'auth/updateUserMetadata',
+  SET_ERROR: 'auth/setError',
+  CLEAR_ERROR: 'auth/clearError',
   
-  // Email Verification
-  EMAIL_VERIFICATION_START: 'auth/emailVerificationStart',
-  EMAIL_VERIFICATION_SUCCESS: 'auth/emailVerificationSuccess',
-  EMAIL_VERIFICATION_FAILURE: 'auth/emailVerificationFailure',
-  
-  // Wallet Integration
+  // Wallet actions
   WALLET_CONNECT: 'auth/walletConnect',
   WALLET_DISCONNECT: 'auth/walletDisconnect',
   WALLET_NETWORK_CHANGE: 'auth/walletNetworkChange',
-  
-  // Session Management
-  SESSION_REFRESH: 'auth/sessionRefresh',
-  SESSION_EXPIRED: 'auth/sessionExpired',
-  SESSION_ERROR: 'auth/sessionError',
-  
-  // Status Updates
-  SET_STATUS: 'auth/setStatus',
-  SET_ERROR: 'auth/setError',
-  CLEAR_ERROR: 'auth/clearError'
+  WALLET_UPDATE_PROVIDER: 'auth/walletUpdateProvider'
 } as const;
 
-export type AuthActionType = typeof AUTH_ACTIONS[keyof typeof AUTH_ACTIONS];
+type ActionMap = {
+  [AUTH_ACTIONS.LOGIN_START]: undefined;
+  [AUTH_ACTIONS.LOGIN_SUCCESS]: TokenForgeUser;
+  [AUTH_ACTIONS.LOGIN_FAILURE]: AuthError;
+  [AUTH_ACTIONS.LOGOUT]: undefined;
+  [AUTH_ACTIONS.UPDATE_USER]: Partial<TokenForgeUser>;
+  [AUTH_ACTIONS.SET_ERROR]: AuthError;
+  [AUTH_ACTIONS.CLEAR_ERROR]: undefined;
+  [AUTH_ACTIONS.WALLET_CONNECT]: WalletState;
+  [AUTH_ACTIONS.WALLET_DISCONNECT]: undefined;
+  [AUTH_ACTIONS.WALLET_NETWORK_CHANGE]: { chainId: number; isCorrectNetwork: boolean };
+  [AUTH_ACTIONS.WALLET_UPDATE_PROVIDER]: { provider: any };
+};
 
-export interface AuthAction {
-  type: AuthActionType;
-  payload?: any;
-}
+export type AuthAction = {
+  [K in keyof ActionMap]: ActionMap[K] extends undefined
+    ? { type: K }
+    : { type: K; payload: ActionMap[K] };
+}[keyof ActionMap];
 
-// Action Creators
 export const authActions = {
-  loginStart: (): AuthAction => ({
-    type: AUTH_ACTIONS.LOGIN_START
+  loginStart: () => ({ type: AUTH_ACTIONS.LOGIN_START }),
+  loginSuccess: (user: TokenForgeUser) => ({ 
+    type: AUTH_ACTIONS.LOGIN_SUCCESS, 
+    payload: user 
   }),
-  
-  loginSuccess: (user: TokenForgeUser): AuthAction => ({
-    type: AUTH_ACTIONS.LOGIN_SUCCESS,
-    payload: user
+  loginFailure: (error: AuthError) => ({ 
+    type: AUTH_ACTIONS.LOGIN_FAILURE, 
+    payload: error 
   }),
-  
-  loginFailure: (error: AuthError): AuthAction => ({
-    type: AUTH_ACTIONS.LOGIN_FAILURE,
-    payload: error
+  logout: () => ({ type: AUTH_ACTIONS.LOGOUT }),
+  updateUser: (updates: Partial<TokenForgeUser>) => ({ 
+    type: AUTH_ACTIONS.UPDATE_USER, 
+    payload: updates 
   }),
-  
-  logout: (): AuthAction => ({
-    type: AUTH_ACTIONS.LOGOUT
+  setError: (error: AuthError) => ({ 
+    type: AUTH_ACTIONS.SET_ERROR, 
+    payload: error 
   }),
+  clearError: () => ({ type: AUTH_ACTIONS.CLEAR_ERROR }),
   
-  updateUser: (userData: Partial<TokenForgeUser>): AuthAction => ({
-    type: AUTH_ACTIONS.UPDATE_USER,
-    payload: userData
+  // Wallet actions
+  connectWallet: (walletState: WalletState) => ({ 
+    type: AUTH_ACTIONS.WALLET_CONNECT, 
+    payload: walletState 
   }),
-  
-  startEmailVerification: (): AuthAction => ({
-    type: AUTH_ACTIONS.EMAIL_VERIFICATION_START
+  disconnectWallet: () => ({ type: AUTH_ACTIONS.WALLET_DISCONNECT }),
+  updateNetwork: (chainId: number, isCorrectNetwork: boolean) => ({
+    type: AUTH_ACTIONS.WALLET_NETWORK_CHANGE,
+    payload: { chainId, isCorrectNetwork }
   }),
-  
-  emailVerificationSuccess: (): AuthAction => ({
-    type: AUTH_ACTIONS.EMAIL_VERIFICATION_SUCCESS
-  }),
-  
-  emailVerificationFailure: (error: AuthError): AuthAction => ({
-    type: AUTH_ACTIONS.EMAIL_VERIFICATION_FAILURE,
-    payload: error
-  }),
-  
-  updateWalletState: (walletState: { 
-    isConnected: boolean; 
-    address: string | null; 
-    chainId: number | null 
-  }): AuthAction => ({
-    type: AUTH_ACTIONS.WALLET_CONNECT,
-    payload: walletState
-  }),
-  
-  setStatus: (status: string): AuthAction => ({
-    type: AUTH_ACTIONS.SET_STATUS,
-    payload: status
-  }),
-  
-  setError: (error: AuthError): AuthAction => ({
-    type: AUTH_ACTIONS.SET_ERROR,
-    payload: error
-  }),
-  
-  clearError: (): AuthAction => ({
-    type: AUTH_ACTIONS.CLEAR_ERROR
+  updateProvider: (provider: any) => ({ 
+    type: AUTH_ACTIONS.WALLET_UPDATE_PROVIDER, 
+    payload: { provider } 
   })
 };
