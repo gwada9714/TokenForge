@@ -2,15 +2,14 @@ import { useEffect, useCallback } from 'react';
 import { useAccount, useDisconnect, useChainId, useWalletClient, usePublicClient } from 'wagmi';
 import { useAuthState } from './useAuthState';
 import { useWalletState } from './useWalletState';
-import { useEmailVerification } from './useEmailVerification';
 import { TokenForgeAuth, TokenForgeUser } from '../types';
 import { auth } from '../../../config/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { AuthError } from '../errors/AuthError';
 
 export function useTokenForgeAuth(): TokenForgeAuth {
-  const { state: authState, actions: authActions } = useAuthState();
+  const authState = useAuthState();
   const { state: walletState, actions: walletActions } = useWalletState();
-  const emailVerification = useEmailVerification();
   
   // Wagmi hooks
   const { address, isConnected } = useAccount();
@@ -56,65 +55,50 @@ export function useTokenForgeAuth(): TokenForgeAuth {
     }
   }, [chainId, walletActions]);
 
-  // Logique centralisée pour la vérification de l'email
-  const handleEmailVerification = useCallback(async (user: TokenForgeUser) => {
-    try {
-      authActions.handleEmailVerificationStart();
-      await emailVerification.sendVerificationEmail(user);
-      await emailVerification.waitForEmailVerification(user);
-      authActions.handleEmailVerificationSuccess();
-    } catch (error) {
-      authActions.handleEmailVerificationFailure(error);
-      throw error;
-    }
-  }, [authActions, emailVerification]);
-
   // Logique centralisée pour le login avec email/mot de passe
   const handleLogin = useCallback(async (email: string, password: string) => {
     try {
-      authActions.handleAuthStart();
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const user = credential.user as TokenForgeUser;
       
       if (!user.emailVerified) {
-        await handleEmailVerification(user);
+        await authState.startEmailVerification();
       } else {
-        await emailVerification.checkEmailVerification(user);
+        await authState.verifyEmail();
       }
-      
-      authActions.handleAuthSuccess(user);
     } catch (error) {
-      authActions.handleAuthError(error);
-      throw error;
+      throw error instanceof AuthError ? error : new AuthError(
+        AuthError.CODES.FIREBASE_ERROR,
+        'Erreur lors de la connexion',
+        { originalError: error }
+      );
     }
-  }, [authActions, handleEmailVerification, emailVerification]);
+  }, [authState]);
 
   // Logique centralisée pour le login avec un utilisateur existant
   const handleLoginWithUser = useCallback(async (user: TokenForgeUser) => {
     try {
-      authActions.handleAuthStart();
-
-      // Vérifier si l'email est vérifié
       if (!user.emailVerified) {
-        await handleEmailVerification(user);
+        await authState.startEmailVerification();
       } else {
-        await emailVerification.checkEmailVerification(user);
+        await authState.verifyEmail();
       }
-
-      authActions.handleAuthSuccess(user);
     } catch (error) {
-      authActions.handleAuthError(error);
-      throw error;
+      throw error instanceof AuthError ? error : new AuthError(
+        AuthError.CODES.FIREBASE_ERROR,
+        'Erreur lors de la connexion',
+        { originalError: error }
+      );
     }
-  }, [authActions, handleEmailVerification, emailVerification]);
+  }, [authState]);
 
   // Logique centralisée pour le logout
   const handleLogout = useCallback(async () => {
-    authActions.handleLogout();
+    await authState.logout();
     if (isConnected) {
       disconnect();
     }
-  }, [authActions, isConnected, disconnect]);
+  }, [authState, isConnected, disconnect]);
 
   // Vérifier si l'utilisateur est admin
   const isAdmin = authState.user?.email?.endsWith('@tokenforge.com') || false;
@@ -134,12 +118,7 @@ export function useTokenForgeAuth(): TokenForgeAuth {
     emailVerified: authState.user?.emailVerified || false,
 
     // Wallet state
-    isConnected: walletState.isConnected,
-    address: walletState.address,
-    chainId: walletState.chainId,
-    isCorrectNetwork: walletState.isCorrectNetwork,
-    walletClient: walletState.walletClient,
-    provider: walletState.provider,
+    ...walletState,
 
     // Combined state
     isAdmin,
@@ -150,7 +129,9 @@ export function useTokenForgeAuth(): TokenForgeAuth {
     login: handleLogin,
     loginWithUser: handleLoginWithUser,
     logout: handleLogout,
-    updateUser: authActions.handleUpdateUser,
-    verifyEmail: handleEmailVerification,
+    updateUser: authState.updateUser,
+    updateWalletState: walletActions.updateWalletState,
+    startEmailVerification: authState.startEmailVerification,
+    verifyEmail: authState.verifyEmail,
   };
 }

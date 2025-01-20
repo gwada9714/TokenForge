@@ -4,7 +4,6 @@ import { errorService } from './errorService';
 import { notificationService } from './notificationService';
 import { logService } from './logService';
 import { retryService } from './retryService';
-import { ErrorCode } from '../../../types/errors';
 
 const LOG_CATEGORY = 'EmailVerificationService';
 
@@ -42,7 +41,12 @@ export class EmailVerificationService {
       }
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      logService.error(LOG_CATEGORY, 'Failed to send verification email', { status: 'send_failed' }, err);
+      logService.error(
+        LOG_CATEGORY,
+        'Failed to send verification email',
+        err,
+        { status: 'send_failed', userEmail: user.email }
+      );
       throw errorService.handleError(error);
     }
   }
@@ -56,21 +60,31 @@ export class EmailVerificationService {
       
       if (!user.emailVerified) {
         const error = new AuthError(
-          'auth/email-not-verified' as ErrorCode,
+          AuthError.CODES.EMAIL_NOT_VERIFIED,
           'Email non vérifié',
           { 
             email: user.email,
             type: 'email-not-verified'
           }
         );
-        logService.warn(LOG_CATEGORY, 'Email not verified', { status: 'pending', userEmail: user.email }, error);
+        logService.warn(
+          LOG_CATEGORY,
+          'Email not verified',
+          { status: 'pending', userEmail: user.email },
+          error
+        );
         throw error;
       }
       
       logService.info(LOG_CATEGORY, 'Email verified successfully', { status: 'success', userEmail: user.email });
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      logService.error(LOG_CATEGORY, 'Error checking email verification', { status: 'error' }, err);
+      logService.error(
+        LOG_CATEGORY,
+        'Error checking email verification',
+        err,
+        { status: 'error', userEmail: user.email }
+      );
       throw errorService.handleError(error);
     }
   }
@@ -113,7 +127,7 @@ export class EmailVerificationService {
           const elapsedTime = Date.now() - startTime;
           if (elapsedTime > timeoutMs) {
             const error = new AuthError(
-              'auth/verification-timeout' as ErrorCode,
+              AuthError.CODES.EMAIL_VERIFICATION_TIMEOUT,
               'Le délai de vérification de l\'email a expiré',
               { 
                 email: user.email,
@@ -121,7 +135,12 @@ export class EmailVerificationService {
                 elapsedTime
               }
             );
-            logService.error(LOG_CATEGORY, 'Email verification timeout', { status: 'timeout' }, error);
+            logService.error(
+              LOG_CATEGORY,
+              'Email verification timeout',
+              error,
+              { status: 'timeout', userEmail: user.email, elapsedTime }
+            );
             notificationService.error('Le délai de vérification a expiré');
             reject(error);
             return;
@@ -137,7 +156,12 @@ export class EmailVerificationService {
           setTimeout(checkVerification, intervalMs);
         } catch (error) {
           const err = error instanceof Error ? error : new Error(String(error));
-          logService.error(LOG_CATEGORY, 'Error during verification check', { status: 'error' }, err);
+          logService.error(
+            LOG_CATEGORY,
+            'Error during verification check',
+            err,
+            { status: 'error', userEmail: user.email }
+          );
           reject(errorService.handleError(error));
         }
       };

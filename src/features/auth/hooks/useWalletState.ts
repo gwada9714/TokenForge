@@ -18,7 +18,8 @@ type WalletAction =
   | { type: 'CONNECT'; payload: { address: string; chainId: number; walletClient: WalletClientType; provider: any } }
   | { type: 'DISCONNECT' }
   | { type: 'UPDATE_NETWORK'; payload: { chainId: number } }
-  | { type: 'UPDATE_PROVIDER'; payload: { provider: any } };
+  | { type: 'UPDATE_PROVIDER'; payload: { provider: any } }
+  | { type: 'UPDATE_STATE'; payload: Partial<WalletState> };
 
 function getNetworkName(chainId: number): string {
   switch (chainId) {
@@ -59,6 +60,11 @@ function walletReducer(state: WalletState, action: WalletAction): WalletState {
       return {
         ...state,
         provider: action.payload.provider,
+      };
+    case 'UPDATE_STATE':
+      return {
+        ...state,
+        ...action.payload,
       };
     default:
       return state;
@@ -161,6 +167,10 @@ export function useWalletState() {
     });
   }, []);
 
+  const updateWalletState = useCallback((newState: Partial<WalletState>) => {
+    dispatch({ type: 'UPDATE_STATE', payload: newState });
+  }, []);
+
   return {
     state,
     actions: {
@@ -168,6 +178,7 @@ export function useWalletState() {
       disconnectWallet,
       updateNetwork,
       updateProvider,
+      updateWalletState,
     },
   };
 }

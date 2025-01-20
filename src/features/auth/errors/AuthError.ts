@@ -1,4 +1,4 @@
-import { ErrorCode } from '../../../types/errors';
+import { ErrorCode, AUTH_ERROR_CODES } from '../types';
 
 export class AuthError extends Error {
   constructor(
@@ -11,19 +11,7 @@ export class AuthError extends Error {
     Object.setPrototypeOf(this, AuthError.prototype);
   }
 
-  static CODES = {
-    WALLET_NOT_FOUND: 'AUTH_001',
-    NETWORK_MISMATCH: 'AUTH_002',
-    INVALID_SIGNATURE: 'AUTH_003',
-    SESSION_EXPIRED: 'AUTH_004',
-    FIREBASE_ERROR: 'AUTH_005',
-    TWO_FACTOR_REQUIRED: 'AUTH_006',
-    TWO_FACTOR_INVALID: 'AUTH_007',
-    WALLET_DISCONNECTED: 'AUTH_008',
-    PROVIDER_ERROR: 'AUTH_009',
-    EMAIL_NOT_VERIFIED: 'AUTH_010',
-    EMAIL_VERIFICATION_TIMEOUT: 'AUTH_011',
-  } as const;
+  static CODES = AUTH_ERROR_CODES;
 
   static create(
     code: ErrorCode,

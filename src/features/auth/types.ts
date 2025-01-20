@@ -18,6 +18,7 @@ export const AUTH_ERROR_CODES = {
   PROVIDER_ERROR: 'AUTH_009',
   EMAIL_NOT_VERIFIED: 'AUTH_010',
   EMAIL_VERIFICATION_TIMEOUT: 'AUTH_011',
+  NO_USER: 'AUTH_012',
 } as const;
 
 export type ErrorCode = typeof AUTH_ERROR_CODES[keyof typeof AUTH_ERROR_CODES];
@@ -71,10 +72,12 @@ export interface TokenForgeAuthActions {
   loginWithUser: (user: TokenForgeUser) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: Partial<TokenForgeUser>) => void;
-  verifyEmail: (user: TokenForgeUser) => Promise<void>;
+  updateWalletState: (state: Partial<WalletState>) => void;
+  startEmailVerification: () => Promise<void>;
+  verifyEmail: () => Promise<void>;
 }
 
-export interface TokenForgeAuth extends TokenForgeAuthState, TokenForgeAuthActions {}
+export interface TokenForgeAuth extends AuthState, WalletState, TokenForgeAuthState, TokenForgeAuthActions {}
 
 export const AUTH_ACTIONS = {
   SET_STATUS: 'auth/setStatus',
