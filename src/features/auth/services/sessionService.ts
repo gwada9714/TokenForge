@@ -1,4 +1,5 @@
 import { auth } from '../../../config/firebase';
+import { User as FirebaseUser } from 'firebase/auth';
 import { AuthPersistence } from '../store/authPersistence';
 import { createAuthError } from '../errors/AuthError';
 import { notificationService } from './notificationService';
@@ -204,6 +205,11 @@ export class SessionService {
       }
     };
   }
+
+  initializeSession(callback: (user: FirebaseUser | null) => void): () => void {
+    return auth.onAuthStateChanged(callback);
+  }
+
 }
 
 export const sessionService = SessionService.getInstance();

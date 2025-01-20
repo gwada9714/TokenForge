@@ -1,15 +1,19 @@
-import { useEffect, useCallback } from 'react';
+import { useReducer, useEffect, useCallback } from 'react';
 import { useAccount, useDisconnect, useChainId, useWalletClient, usePublicClient } from 'wagmi';
-import { useAuthState } from './useAuthState';
-import { useWalletState } from './useWalletState';
-import { TokenForgeAuth, TokenForgeUser } from '../types';
+import { TokenForgeAuth, TokenForgeUser, WalletState } from '../types';
 import { auth } from '../../../config/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, User as FirebaseUser } from 'firebase/auth';
 import { AuthError } from '../errors/AuthError';
+import { authReducer, initialState } from '../reducers/authReducer';
+import { authActions } from '../actions/authActions';
+import { errorService } from '../services/errorService';
+import { storageService } from '../services/storageService';
+import { notificationService } from '../services/notificationService';
+import { sessionService } from '../services/sessionService';
+import { walletReconnectionService } from '../services/walletReconnectionService';
 
 export function useTokenForgeAuth(): TokenForgeAuth {
-  const authState = useAuthState();
-  const { state: walletState, actions: walletActions } = useWalletState();
+  const [state, dispatch] = useReducer(authReducer, initialState);
   
   // Wagmi hooks
   const { address, isConnected } = useAccount();
@@ -18,120 +22,122 @@ export function useTokenForgeAuth(): TokenForgeAuth {
   const provider = usePublicClient();
   const { disconnect } = useDisconnect();
 
-  // Synchroniser l'état du wallet avec Wagmi
-  useEffect(() => {
-    const syncWalletState = async () => {
-      if (isConnected && address && chainId) {
-        try {
-          walletActions.connectWallet(
-            address,
-            chainId,
-            walletClient,
-            provider
-          );
-        } catch (error) {
-          console.error('Failed to sync wallet state:', error);
-          walletActions.disconnectWallet();
-        }
-      } else {
-        walletActions.disconnectWallet();
-      }
-    };
-
-    syncWalletState();
-  }, [isConnected, address, chainId, walletClient, provider, walletActions]);
-
-  // Mettre à jour le provider quand il change
-  useEffect(() => {
-    if (provider) {
-      walletActions.updateProvider(provider);
-    }
-  }, [provider, walletActions]);
-
-  // Mettre à jour le réseau quand il change
-  useEffect(() => {
-    if (chainId) {
-      walletActions.updateNetwork(chainId);
-    }
-  }, [chainId, walletActions]);
-
-  // Logique centralisée pour le login avec email/mot de passe
-  const handleLogin = useCallback(async (email: string, password: string) => {
+  // Firebase auth handlers
+  const handleLogin = useCallback(async (firebaseUser: FirebaseUser) => {
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      const user = credential.user as TokenForgeUser;
+      dispatch(authActions.loginStart());
+      
+      const storedData = await storageService.getUserData(firebaseUser.uid);
+      const user: TokenForgeUser = {
+        ...firebaseUser,
+        isAdmin: storedData?.isAdmin || false,
+        metadata: {
+          creationTime: firebaseUser.metadata.creationTime,
+          lastSignInTime: firebaseUser.metadata.lastSignInTime,
+          ...(storedData?.customMetadata || {})
+        }
+      };
+      
+      dispatch(authActions.loginSuccess(user));
       
       if (!user.emailVerified) {
-        await authState.startEmailVerification();
-      } else {
-        await authState.verifyEmail();
+        notificationService.warning('Please verify your email address');
       }
     } catch (error) {
-      throw error instanceof AuthError ? error : new AuthError(
-        AuthError.CODES.FIREBASE_ERROR,
-        'Erreur lors de la connexion',
-        { originalError: error }
-      );
+      const authError = errorService.handleError(error) as AuthError;
+      dispatch(authActions.loginFailure(authError));
+      notificationService.error(authError.message);
     }
-  }, [authState]);
+  }, []);
 
-  // Logique centralisée pour le login avec un utilisateur existant
-  const handleLoginWithUser = useCallback(async (user: TokenForgeUser) => {
-    try {
-      if (!user.emailVerified) {
-        await authState.startEmailVerification();
-      } else {
-        await authState.verifyEmail();
-      }
-    } catch (error) {
-      throw error instanceof AuthError ? error : new AuthError(
-        AuthError.CODES.FIREBASE_ERROR,
-        'Erreur lors de la connexion',
-        { originalError: error }
-      );
-    }
-  }, [authState]);
-
-  // Logique centralisée pour le logout
   const handleLogout = useCallback(async () => {
-    await authState.logout();
-    if (isConnected) {
+    try {
+      await auth.signOut();
+      await storageService.clearUserData();
       disconnect();
+      dispatch(authActions.logout());
+      notificationService.info('Logged out successfully');
+    } catch (error) {
+      const authError = errorService.handleError(error) as AuthError;
+      dispatch(authActions.setError(authError));
+      notificationService.error(authError.message);
     }
-  }, [authState, isConnected, disconnect]);
+  }, [disconnect]);
 
-  // Vérifier si l'utilisateur est admin
-  const isAdmin = authState.user?.email?.endsWith('@tokenforge.com') || false;
+  // Wallet state synchronization
+  useEffect(() => {
+    if (isConnected && address && chainId && walletClient && provider) {
+      const walletState: WalletState = {
+        isConnected: true,
+        address,
+        chainId,
+        isCorrectNetwork: walletReconnectionService.isCorrectNetwork(chainId),
+        provider,
+        walletClient
+      };
+      dispatch(authActions.connectWallet(walletState));
+    } else {
+      dispatch(authActions.disconnectWallet());
+    }
+  }, [isConnected, address, chainId, walletClient, provider]);
 
-  // Vérifier si l'utilisateur peut créer un token
-  const canCreateToken = isAdmin || (authState.isAuthenticated && walletState.isCorrectNetwork);
+  // Network change handler
+  useEffect(() => {
+    if (chainId) {
+      const isCorrectNetwork = walletReconnectionService.isCorrectNetwork(chainId);
+      dispatch(authActions.updateNetwork(chainId, isCorrectNetwork));
+      
+      if (!isCorrectNetwork) {
+        notificationService.warning('Please switch to the correct network');
+      }
+    }
+  }, [chainId]);
 
-  // Vérifier si l'utilisateur peut utiliser les services
-  const canUseServices = authState.isAuthenticated && walletState.isConnected && walletState.isCorrectNetwork;
+  // Provider update handler
+  useEffect(() => {
+    if (provider) {
+      dispatch(authActions.updateProvider(provider));
+    }
+  }, [provider]);
+
+  // Session management
+  useEffect(() => {
+    const unsubscribe = sessionService.initializeSession((user) => {
+      if (user) {
+        handleLogin(user);
+      } else {
+        handleLogout();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [handleLogin, handleLogout]);
+
+  const isAdmin = state.user?.isAdmin || false;
+  const canCreateToken = isAdmin || (state.isAuthenticated && state.walletState.isCorrectNetwork);
+  const canUseServices = state.isAuthenticated && state.walletState.isConnected && state.walletState.isCorrectNetwork;
 
   return {
-    // Auth state
-    status: authState.status,
-    isAuthenticated: authState.isAuthenticated,
-    user: authState.user,
-    error: authState.error,
-    emailVerified: authState.user?.emailVerified || false,
-
-    // Wallet state
-    ...walletState,
-
-    // Combined state
+    ...state,
     isAdmin,
     canCreateToken,
     canUseServices,
-
-    // Actions
-    login: handleLogin,
-    loginWithUser: handleLoginWithUser,
-    logout: handleLogout,
-    updateUser: authState.updateUser,
-    updateWalletState: walletActions.updateWalletState,
-    startEmailVerification: authState.startEmailVerification,
-    verifyEmail: authState.verifyEmail,
+    actions: {
+      login: async (email: string, password: string) => {
+        try {
+          dispatch(authActions.loginStart());
+          const { user } = await signInWithEmailAndPassword(auth, email, password);
+          await handleLogin(user);
+        } catch (error) {
+          const authError = errorService.handleError(error) as AuthError;
+          dispatch(authActions.loginFailure(authError));
+          throw authError;
+        }
+      },
+      logout: handleLogout,
+      updateUser: (updates: Partial<TokenForgeUser>) => {
+        dispatch(authActions.updateUser(updates));
+      }
+    }
   };
 }

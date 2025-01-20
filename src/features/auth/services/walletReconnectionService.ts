@@ -278,6 +278,10 @@ export class WalletReconnectionService {
       this.isReconnecting = false;
     }
   }
+
+  isCorrectNetwork(chainId: number): boolean {
+    return SUPPORTED_NETWORKS.some(n => n.id === chainId);
+  }
 }
 
 export const walletReconnectionService = WalletReconnectionService.getInstance();
