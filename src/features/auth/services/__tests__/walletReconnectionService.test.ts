@@ -1,67 +1,35 @@
 import { vi } from 'vitest';
 import { WalletReconnectionService } from '../walletReconnectionService';
-import { getWalletClient, getAccount, type GetAccountReturnType, type Connector, type ConnectorEventMap } from '@wagmi/core';
+import { getWalletClient, getAccount, type GetAccountReturnType, type Connector } from '@wagmi/core';
 import type { Chain } from 'viem';
 import { EventEmitter } from 'events';
-
-interface EmitterInterface<T> {
-  on<K extends keyof T & string>(eventName: K, listener: (event: T[K]) => void): this;
-  once<K extends keyof T & string>(eventName: K, listener: (event: T[K]) => void): this;
-  off<K extends keyof T & string>(eventName: K, listener: (event: T[K]) => void): this;
-  emit<K extends keyof T & string>(eventName: K, event: T[K]): boolean;
-  removeAllListeners<K extends keyof T & string>(event?: K): this;
-  listeners<K extends keyof T & string>(event: K): Array<(event: T[K]) => void>;
-}
-
-class TypedEventEmitter<T extends { [K in keyof T]: any }> extends EventEmitter implements EmitterInterface<T> {
-  private _listeners: { [K in keyof T]?: Array<(event: T[K]) => void> } = {};
-
-  on<K extends keyof T & string>(eventName: K, listener: (event: T[K]) => void): this {
-    if (!this._listeners[eventName]) {
-      this._listeners[eventName] = [];
-    }
-    this._listeners[eventName]?.push(listener);
-    return super.on(eventName, listener);
-  }
-
-  once<K extends keyof T & string>(eventName: K, listener: (event: T[K]) => void): this {
-    return super.once(eventName, listener);
-  }
-
-  off<K extends keyof T & string>(eventName: K, listener: (event: T[K]) => void): this {
-    const listeners = this._listeners[eventName];
-    if (listeners) {
-      const index = listeners.indexOf(listener);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
-    }
-    return super.off(eventName, listener);
-  }
-
-  emit<K extends keyof T & string>(eventName: K, event: T[K]): boolean {
-    return super.emit(eventName, event);
-  }
-
-  removeAllListeners<K extends keyof T & string>(event?: K): this {
-    if (event) {
-      delete this._listeners[event];
-    } else {
-      this._listeners = {};
-    }
-    return super.removeAllListeners(event);
-  }
-
-  listeners<K extends keyof T & string>(event: K): Array<(event: T[K]) => void> {
-    return (this._listeners[event] || []) as Array<(event: T[K]) => void>;
-  }
-}
 
 // Constantes de test
 const TEST_ADDRESS = '0x123' as `0x${string}`;
 const TEST_CHAIN_ID = 1;
 const POLYGON_CHAIN_ID = 137;
 const NETWORK_TIMEOUT = 10000;
+
+// Helper pour créer une chaîne de test
+const createTestChain = (chainId: number): Chain => ({
+  id: chainId,
+  name: chainId === TEST_CHAIN_ID ? 'Ethereum' : `Chain ${chainId}`,
+  nativeCurrency: {
+    name: 'Ether',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: { http: [chainId === TEST_CHAIN_ID ? 'https://eth-mainnet.g.alchemy.com/v2' : `https://rpc-${chainId}.example.com`] },
+    public: { http: [chainId === TEST_CHAIN_ID ? 'https://eth-mainnet.g.alchemy.com/v2' : `https://rpc-${chainId}.example.com`] },
+  },
+  blockExplorers: {
+    default: {
+      name: chainId === TEST_CHAIN_ID ? 'Etherscan' : 'Explorer',
+      url: chainId === TEST_CHAIN_ID ? 'https://etherscan.io' : `https://explorer-${chainId}.example.com`,
+    },
+  },
+});
 
 // Helper pour créer un mock wallet client
 const createMockWalletClient = (address = TEST_ADDRESS, chainId = TEST_CHAIN_ID) => ({
@@ -75,9 +43,9 @@ const createMockWalletClient = (address = TEST_ADDRESS, chainId = TEST_CHAIN_ID)
 
 // Mock du connector avec emitter
 const createMockConnector = (): Connector => {
-  const emitter = new TypedEventEmitter<ConnectorEventMap>();
-  const mockAddress = '0x123' as const;
-  const mockChainId = 1;
+  const emitter = new EventEmitter();
+  (emitter as any).uid = 'mock-emitter-' + Math.random().toString(36).substr(2, 9);
+  (emitter as any)._emitter = emitter;
 
   return {
     id: 'mock',
@@ -88,66 +56,43 @@ const createMockConnector = (): Connector => {
     icon: undefined,
     rdns: undefined,
     supportsSimulation: false,
-    emitter,
-    connect: async () => {
-      return {
-        accounts: [mockAddress as `0x${string}`],
-        chainId: mockChainId
-      };
-    },
-    disconnect: async () => {
-      return Promise.resolve();
-    },
+    emitter: emitter as any,
+    connect: async () => ({
+      accounts: [TEST_ADDRESS],
+      chainId: TEST_CHAIN_ID
+    }),
+    disconnect: async () => Promise.resolve(),
     isConnected: () => true,
     getProvider: () => Promise.resolve({}),
-    getChainId: () => Promise.resolve(mockChainId),
+    getChainId: () => Promise.resolve(TEST_CHAIN_ID),
     getAccount: () => ({ 
-      address: mockAddress as `0x${string}`, 
-      addresses: [mockAddress as `0x${string}`], 
-      chainId: mockChainId, 
+      address: TEST_ADDRESS, 
+      addresses: [TEST_ADDRESS], 
+      chainId: TEST_CHAIN_ID, 
       connector: null 
     }),
-    getAccounts: async () => [mockAddress as `0x${string}`],
+    getAccounts: async () => [TEST_ADDRESS],
     isAuthorized: async () => true,
     onAccountsChanged: (accounts: string[]) => {
       emitter.emit('change', {
         accounts: accounts as readonly `0x${string}`[],
-        chainId: mockChainId
+        chainId: TEST_CHAIN_ID
       });
     },
     onChainChanged: (chainId: string) => {
       emitter.emit('change', {
-        accounts: [mockAddress as `0x${string}`],
+        accounts: [TEST_ADDRESS],
         chainId: parseInt(chainId)
       });
     },
-    onDisconnect: (error?: Error) => {
-      emitter.emit('disconnect', { reason: error?.message || 'Disconnected' });
+    onDisconnect: () => {
+      emitter.emit('disconnect');
     },
     onMessage: (message: { type: string; data?: unknown }) => {
       emitter.emit('message', { type: message.type, data: message.data });
     },
     switchChain: async ({ chainId }: { chainId: number }) => {
-      const chain: Chain = {
-        id: chainId,
-        name: `Chain ${chainId}`,
-        nativeCurrency: {
-          name: 'Ether',
-          symbol: 'ETH',
-          decimals: 18,
-        },
-        rpcUrls: {
-          default: { http: [`https://rpc-${chainId}.example.com`] },
-          public: { http: [`https://rpc-${chainId}.example.com`] },
-        },
-        blockExplorers: {
-          default: {
-            name: 'Explorer',
-            url: `https://explorer-${chainId}.example.com`,
-          },
-        },
-      };
-      return Promise.resolve(chain);
+      return Promise.resolve(createTestChain(chainId));
     },
     watchAsset: async () => true,
     signMessage: async () => '0x',
@@ -159,25 +104,7 @@ const createMockConnector = (): Connector => {
 const mockConnectedAccount: GetAccountReturnType = {
   address: TEST_ADDRESS,
   addresses: [TEST_ADDRESS],
-  chain: {
-    id: TEST_CHAIN_ID,
-    name: 'Ethereum',
-    nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: { http: ['https://eth-mainnet.g.alchemy.com/v2'] },
-      public: { http: ['https://eth-mainnet.g.alchemy.com/v2'] },
-    },
-    blockExplorers: {
-      default: {
-        name: 'Etherscan',
-        url: 'https://etherscan.io',
-      },
-    },
-  } as Chain,
+  chain: createTestChain(TEST_CHAIN_ID),
   chainId: TEST_CHAIN_ID,
   connector: createMockConnector(),
   isConnected: true,
@@ -257,22 +184,7 @@ const verifyWalletState = (isConnected: boolean, address: string | null = null, 
   });
 };
 
-// Mock de BrowserProvider
-class MockBrowserProvider {
-  constructor(provider: any) {
-    Object.assign(this, {
-      provider,
-      getNetwork: vi.fn().mockResolvedValue({ chainId: TEST_CHAIN_ID }),
-      detectNetwork: vi.fn().mockResolvedValue({ chainId: TEST_CHAIN_ID }),
-    });
-  }
-}
-
 // Mocks des services et modules
-vi.mock('ethers', () => ({
-  BrowserProvider: vi.fn().mockImplementation((provider) => new MockBrowserProvider(provider))
-}));
-
 vi.mock('@wagmi/core', () => ({
   getWalletClient: vi.fn(),
   getAccount: vi.fn(),
@@ -467,5 +379,166 @@ describe('WalletReconnectionService', () => {
         expect.any(Object)
       );
     }, NETWORK_TIMEOUT);
+  });
+});
+
+import { walletReconnectionService } from '../walletReconnectionService';
+import { errorService } from '../errorService';
+import { AUTH_ERROR_CODES } from '../../errors/AuthError';
+
+vi.mock('../errorService');
+
+describe('WalletReconnectionService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Mock de window.ethereum
+    (global as any).ethereum = {
+      request: vi.fn()
+    };
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+    delete (global as any).ethereum;
+  });
+
+  describe('validateNetworkBeforeConnect', () => {
+    it('should validate correct network', async () => {
+      // Arrange
+      (global as any).ethereum.request
+        .mockResolvedValueOnce('0x1'); // chainId pour Ethereum Mainnet
+
+      // Act
+      const result = await walletReconnectionService.validateNetworkBeforeConnect();
+
+      // Assert
+      expect(result).toBe(true);
+      expect(global.ethereum.request).toHaveBeenCalledWith({
+        method: 'eth_chainId'
+      });
+    });
+
+    it('should attempt to switch network if incorrect', async () => {
+      // Arrange
+      (global as any).ethereum.request
+        .mockResolvedValueOnce('0x2') // Mauvais réseau
+        .mockResolvedValueOnce({}); // Succès du changement de réseau
+
+      // Act
+      const result = await walletReconnectionService.validateNetworkBeforeConnect();
+
+      // Assert
+      expect(result).toBe(true);
+      expect(global.ethereum.request).toHaveBeenCalledWith({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x1' }]
+      });
+    });
+
+    it('should handle missing provider', async () => {
+      // Arrange
+      delete (global as any).ethereum;
+
+      // Act & Assert
+      await expect(
+        walletReconnectionService.validateNetworkBeforeConnect()
+      ).rejects.toThrow();
+
+      expect(errorService.createAuthError).toHaveBeenCalledWith(
+        AUTH_ERROR_CODES.PROVIDER_ERROR,
+        expect.any(String)
+      );
+    });
+
+    it('should handle network switch failure', async () => {
+      // Arrange
+      const switchError = { code: 4902 }; // Code pour réseau non configuré
+      (global as any).ethereum.request
+        .mockResolvedValueOnce('0x2') // Mauvais réseau
+        .mockRejectedValueOnce(switchError); // Échec du changement
+
+      // Act & Assert
+      await expect(
+        walletReconnectionService.validateNetworkBeforeConnect()
+      ).rejects.toThrow();
+
+      expect(errorService.createAuthError).toHaveBeenCalledWith(
+        AUTH_ERROR_CODES.NETWORK_MISMATCH,
+        expect.any(String)
+      );
+    });
+  });
+
+  describe('reconnectWallet', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should reconnect successfully', async () => {
+      // Arrange
+      (global as any).ethereum.request
+        .mockResolvedValueOnce('0x1') // chainId
+        .mockResolvedValueOnce(['0x123']); // accounts
+
+      // Act
+      const result = await walletReconnectionService.reconnectWallet();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('should handle max reconnection attempts', async () => {
+      // Arrange
+      const error = new Error('Connection failed');
+      (global as any).ethereum.request.mockRejectedValue(error);
+
+      // Act & Assert
+      for (let i = 0; i < 3; i++) {
+        await expect(walletReconnectionService.reconnectWallet()).rejects.toThrow();
+      }
+
+      // Quatrième tentative devrait échouer avec max attempts
+      await expect(walletReconnectionService.reconnectWallet()).rejects.toThrow();
+      expect(errorService.createAuthError).toHaveBeenCalledWith(
+        AUTH_ERROR_CODES.WALLET_DISCONNECTED,
+        expect.any(String)
+      );
+    });
+
+    it('should handle reconnection attempts with interval', () => {
+      // Arrange
+      const error = new Error('Connection failed');
+      (global as any).ethereum.request.mockRejectedValue(error);
+
+      // Act
+      walletReconnectionService.startReconnectionAttempts();
+      vi.advanceTimersByTime(5000); // 5 secondes
+
+      // Assert
+      expect(global.ethereum.request).toHaveBeenCalled();
+    });
+
+    it('should stop reconnection attempts', () => {
+      // Arrange
+      walletReconnectionService.startReconnectionAttempts();
+
+      // Act
+      walletReconnectionService.stopReconnectionAttempts();
+      vi.advanceTimersByTime(5000); // 5 secondes
+
+      // Assert
+      expect(global.ethereum.request).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('isCorrectNetwork', () => {
+    it('should validate Ethereum mainnet', () => {
+      expect(walletReconnectionService.isCorrectNetwork(1)).toBe(true);
+      expect(walletReconnectionService.isCorrectNetwork(2)).toBe(false);
+    });
   });
 });

@@ -1,207 +1,190 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, sendPasswordResetEmail, updateProfile as firebaseUpdateProfile } from 'firebase/auth';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { InjectedConnector } from '@wagmi/core';
-import { bsc, bscTestnet } from 'viem/chains';
-import { 
-  TokenForgeAuthState, 
-  TokenForgeAuthContextValue,
-  User,
-  AuthError,
-  AuthStatus 
-} from '../types';
-import { authReducer } from '../reducers/authReducer';
+import React, { createContext, useReducer, useContext, useCallback, useEffect } from 'react';
+import { useConnect, useDisconnect, useAccount } from 'wagmi';
+import { getWalletClient, type WalletClient } from '@wagmi/core';
+import { firebaseService } from '../services/firebaseService';
+import { errorService } from '../services/errorService';
+import { walletReconnectionService } from '../services/walletReconnectionService';
+import { authSyncService } from '../services/authSyncService';
+import { authReducer, initialState } from '../reducers/authReducer';
+import { TokenForgeAuthContextValue } from '../types';
+import { authActions } from '../actions/authActions';
+import { createAuthError } from '../errors/AuthError';
 
-const initialState: TokenForgeAuthState = {
-  status: 'idle',
-  isAuthenticated: false,
-  user: null,
-  error: null,
-  isAdmin: false,
-  canCreateToken: false,
-  canUseServices: false,
-  isConnected: false,
-  address: null,
-  chainId: null,
-  walletClient: null,
-  signOut: async () => {},
-  login: () => {},
-  logout: () => {},
-  setError: () => {},
-  updateUser: () => {},
-};
-
-export const TokenForgeAuthContext = createContext<TokenForgeAuthContextValue | null>(null);
+const TokenForgeAuthContext = createContext<TokenForgeAuthContextValue | null>(null);
 
 export const TokenForgeAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const auth = getAuth();
-
-  // Wagmi hooks
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
   const { address, isConnected } = useAccount();
-  const { connectAsync } = useConnect();
-  const { disconnectAsync } = useDisconnect();
 
   // Firebase Auth listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const tokenForgeUser: User = {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          isAdmin: user.email?.endsWith('@tokenforge.com') || false,
-          metadata: {
-            creationTime: user.metadata.creationTime,
-            lastSignInTime: user.metadata.lastSignInTime,
-          },
-        };
-        dispatch({ type: 'LOGIN', payload: tokenForgeUser });
+    const unsubscribe = firebaseService.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const user = await firebaseService.getUserData(firebaseUser.uid);
+          dispatch(authActions.loginSuccess(user));
+          // Démarrer le refresh de token
+          authSyncService.startTokenRefresh();
+        } catch (error) {
+          const authError = errorService.handleAuthError(error);
+          dispatch(authActions.loginFailure(authError));
+        }
       } else {
-        dispatch({ type: 'LOGOUT' });
+        dispatch(authActions.logout());
+        // Arrêter le refresh de token
+        authSyncService.stopTokenRefresh();
       }
     });
 
-    return () => unsubscribe();
-  }, [auth]);
+    return () => {
+      unsubscribe();
+      authSyncService.stopTokenRefresh();
+    };
+  }, []);
 
   // Wallet connection listener
   useEffect(() => {
-    dispatch({ 
-      type: 'UPDATE_WALLET_STATE', 
-      payload: { 
-        isConnected, 
-        address: address || null, 
-        chainId: null // We'll update this when we implement chain detection
-      } 
-    });
-  }, [isConnected, address]);
+    if (isConnected && address) {
+      getWalletClient().then(async (client: WalletClient | null) => {
+        if (client) {
+          const chainId = client.chain.id;
+          const isCorrectNetwork = walletReconnectionService.isCorrectNetwork(chainId);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      dispatch({ type: 'SET_STATUS', payload: 'loading' });
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      const authError: AuthError = {
-        message: 'Failed to sign in',
-        name: 'AuthError',
-        code: (error as any).code || 'unknown',
-        details: error
-      };
-      dispatch({ type: 'SET_ERROR', payload: authError });
-    }
-  };
+          dispatch(authActions.connectWallet({
+            isConnected: true,
+            address,
+            chainId,
+            isCorrectNetwork,
+            provider: client.transport,
+            walletClient: client
+          }));
 
-  const signUp = async (email: string, password: string) => {
-    try {
-      dispatch({ type: 'SET_STATUS', payload: 'loading' });
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      const authError: AuthError = {
-        message: 'Failed to create account',
-        name: 'AuthError',
-        code: (error as any).code || 'unknown',
-        details: error
-      };
-      dispatch({ type: 'SET_ERROR', payload: authError });
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      await firebaseSignOut(auth);
-      await disconnectAsync();
-      dispatch({ type: 'LOGOUT' });
-    } catch (error) {
-      const authError: AuthError = {
-        message: 'Failed to sign out',
-        name: 'AuthError',
-        code: 'auth/sign-out-failed',
-        details: error
-      };
-      dispatch({ type: 'SET_ERROR', payload: authError });
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      dispatch({ type: 'SET_STATUS', payload: 'loading' });
-      await sendPasswordResetEmail(auth, email);
-    } catch (error) {
-      const authError: AuthError = {
-        message: 'Failed to reset password',
-        name: 'AuthError',
-        code: (error as any).code || 'unknown',
-        details: error
-      };
-      dispatch({ type: 'SET_ERROR', payload: authError });
-    }
-  };
-
-  const updateProfile = async (data: Partial<User>) => {
-    if (!auth.currentUser) return;
-
-    try {
-      dispatch({ type: 'SET_STATUS', payload: 'loading' });
-      await firebaseUpdateProfile(auth.currentUser, {
-        displayName: data.displayName || null,
-        photoURL: data.photoURL || null,
+          try {
+            // Synchroniser l'état du wallet avec l'authentification
+            await authSyncService.synchronizeWalletAndAuth(
+              {
+                isConnected: true,
+                address,
+                chainId,
+                isCorrectNetwork,
+                provider: client.transport,
+                walletClient: client
+              },
+              state
+            );
+          } catch (error) {
+            const authError = errorService.handleAuthError(error);
+            dispatch(authActions.setError(authError));
+          }
+        }
+      }).catch(error => {
+        const walletError = createAuthError(
+          'AUTH_009',
+          'Failed to get wallet client',
+          { originalError: error }
+        );
+        dispatch(authActions.setError(walletError));
       });
-      dispatch({ type: 'UPDATE_USER', payload: data });
-    } catch (error) {
-      const authError: AuthError = {
-        message: 'Failed to update profile',
-        name: 'AuthError',
-        code: 'auth/update-profile-failed',
-        details: error
-      };
-      dispatch({ type: 'SET_ERROR', payload: authError });
+    } else {
+      dispatch(authActions.disconnectWallet());
     }
-  };
+  }, [isConnected, address, state]);
 
-  const connectWallet = async () => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
-      await connectAsync({ connector: new InjectedConnector() });
+      dispatch(authActions.loginStart());
+      const user = await firebaseService.signIn(email, password);
+      dispatch(authActions.loginSuccess(user));
     } catch (error) {
-      const authError: AuthError = {
-        message: 'Failed to connect wallet',
-        name: 'AuthError',
-        code: 'wallet/connect-failed',
-        details: error
-      };
-      dispatch({ type: 'SET_ERROR', payload: authError });
+      const authError = errorService.handleAuthError(error);
+      dispatch(authActions.loginFailure(authError));
     }
-  };
+  }, []);
 
-  const disconnectWallet = async () => {
+  const signUp = useCallback(async (email: string, password: string) => {
     try {
-      await disconnectAsync();
+      dispatch(authActions.loginStart());
+      const user = await firebaseService.signUp(email, password);
+      dispatch(authActions.loginSuccess(user));
     } catch (error) {
-      const authError: AuthError = {
-        message: 'Failed to disconnect wallet',
-        name: 'AuthError',
-        code: 'wallet/disconnect-failed',
-        details: error
-      };
-      dispatch({ type: 'SET_ERROR', payload: authError });
+      const authError = errorService.handleAuthError(error);
+      dispatch(authActions.loginFailure(authError));
     }
-  };
+  }, []);
 
-  const switchNetwork = async (chainId: number) => {
+  const signOut = useCallback(async () => {
     try {
-      // Pour l'instant, on ne fait rien car nous n'avons pas implémenté le changement de réseau
-      console.warn('Network switching not implemented yet');
+      await firebaseService.signOut();
+      if (isConnected) {
+        await disconnect();
+      }
+      dispatch(authActions.logout());
     } catch (error) {
-      const authError: AuthError = {
-        message: 'Failed to switch network',
-        name: 'AuthError',
-        code: 'wallet/network-switch-failed',
-        details: error
-      };
-      dispatch({ type: 'SET_ERROR', payload: authError });
+      const authError = errorService.handleAuthError(error);
+      dispatch(authActions.setError(authError));
     }
-  };
+  }, [disconnect, isConnected]);
+
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      await firebaseService.resetPassword(email);
+    } catch (error) {
+      const authError = errorService.handleAuthError(error);
+      dispatch(authActions.setError(authError));
+    }
+  }, []);
+
+  const updateProfile = useCallback(async (displayName?: string, photoURL?: string) => {
+    try {
+      const user = await firebaseService.updateProfile(displayName, photoURL);
+      dispatch(authActions.updateUser(user));
+    } catch (error) {
+      const authError = errorService.handleAuthError(error);
+      dispatch(authActions.setError(authError));
+    }
+  }, []);
+
+  const connectWallet = useCallback(async () => {
+    try {
+      // Pré-valider le réseau avant la connexion
+      await walletReconnectionService.validateNetworkBeforeConnect();
+      await connect();
+      return true;
+    } catch (error) {
+      const walletError = createAuthError(
+        'AUTH_009',
+        'Failed to connect wallet',
+        { originalError: error }
+      );
+      dispatch(authActions.setError(walletError));
+      return false;
+    }
+  }, [connect]);
+
+  const disconnectWallet = useCallback(async () => {
+    try {
+      await disconnect();
+      dispatch(authActions.disconnectWallet());
+      // Synchroniser la déconnexion avec l'état d'authentification
+      await authSyncService.synchronizeWalletAndAuth(
+        initialState.walletState,
+        state
+      );
+    } catch (error) {
+      const walletError = createAuthError(
+        'AUTH_009',
+        'Failed to disconnect wallet',
+        { originalError: error }
+      );
+      dispatch(authActions.setError(walletError));
+    }
+  }, [disconnect, state]);
+
+  const clearError = useCallback(() => {
+    dispatch(authActions.clearError());
+  }, []);
 
   const value: TokenForgeAuthContextValue = {
     ...state,
@@ -212,7 +195,7 @@ export const TokenForgeAuthProvider: React.FC<{ children: React.ReactNode }> = (
     updateProfile,
     connectWallet,
     disconnectWallet,
-    switchNetwork,
+    clearError
   };
 
   return (
@@ -225,7 +208,10 @@ export const TokenForgeAuthProvider: React.FC<{ children: React.ReactNode }> = (
 export const useTokenForgeAuth = () => {
   const context = useContext(TokenForgeAuthContext);
   if (!context) {
-    throw new Error('useTokenForgeAuth must be used within a TokenForgeAuthProvider');
+    throw createAuthError(
+      'AUTH_018',
+      'useTokenForgeAuth must be used within a TokenForgeAuthProvider'
+    );
   }
   return context;
 };

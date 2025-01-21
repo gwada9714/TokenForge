@@ -1,4 +1,5 @@
-import { AuthError, AUTH_ERROR_CODES, ErrorCode } from '../types';
+import type { AuthError } from '../types';
+import { AUTH_ERROR_CODES } from '../errors/AuthError';
 
 // Type pour les erreurs Firebase
 interface FirebaseError extends Error {
@@ -71,11 +72,11 @@ class ErrorService {
     this.currentLocale = locale;
   }
 
-  private getLocalizedMessage(code: string): string {
+  getLocalizedMessage(code: string): string {
     return this.ERROR_MESSAGES[this.currentLocale][code] || this.ERROR_MESSAGES[this.currentLocale]['unknown-error'];
   }
 
-  private createAuthError(code: ErrorCode, message: string, details?: Record<string, unknown>): AuthError {
+  public createAuthError(code: typeof AUTH_ERROR_CODES[keyof typeof AUTH_ERROR_CODES], message: string, details?: Record<string, unknown>): AuthError {
     const error = new Error(message) as AuthError;
     error.code = code;
     error.details = details;
@@ -104,7 +105,7 @@ class ErrorService {
   }
 
   private handleWalletError(error: Error): AuthError {
-    let code: ErrorCode = AUTH_ERROR_CODES.PROVIDER_ERROR;
+    let code: typeof AUTH_ERROR_CODES[keyof typeof AUTH_ERROR_CODES] = AUTH_ERROR_CODES.PROVIDER_ERROR;
     
     if (error.message.includes('wallet') || error.message.includes('metamask')) {
       code = AUTH_ERROR_CODES.WALLET_NOT_FOUND;

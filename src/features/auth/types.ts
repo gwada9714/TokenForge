@@ -3,19 +3,33 @@ import { PublicClient } from 'viem';
 import { getWalletClient } from '@wagmi/core';
 import { ErrorCode } from './errors/AuthError';
 
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'verifying' | 'error';
+export type AuthStatus = 
+  | 'idle'
+  | 'loading'
+  | 'authenticated'
+  | 'wallet_connected'
+  | 'wallet_connected_auth_pending'
+  | 'wallet_connected_wrong_network'
+  | 'error';
 
 export type WalletClientType = Awaited<ReturnType<typeof getWalletClient>>;
 
 export interface TokenForgeUser extends Omit<FirebaseUser, 'metadata'> {
-  isAdmin: boolean;
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
   metadata: {
-    creationTime?: string;
-    lastSignInTime?: string;
+    creationTime: string;
+    lastSignInTime: string;
     lastLoginTime?: number;
     walletAddress?: string;
     chainId?: number;
   };
+  isAdmin: boolean;
+  canCreateToken: boolean;
+  canUseServices: boolean;
+  customMetadata?: Record<string, unknown>;
 }
 
 export interface WalletState {
@@ -49,6 +63,18 @@ export interface TokenForgeAuthActions {
 
 export interface TokenForgeAuth extends TokenForgeAuthState {
   actions: TokenForgeAuthActions;
+  validateAdminAccess: () => boolean;
+}
+
+export interface TokenForgeAuthContextValue extends TokenForgeAuthState {
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateProfile: (displayName?: string, photoURL?: string) => Promise<void>;
+  connectWallet: () => Promise<boolean>;
+  disconnectWallet: () => Promise<void>;
+  clearError: () => void;
 }
 
 export interface AuthError {

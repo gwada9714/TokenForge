@@ -11,13 +11,19 @@ import { notificationService } from '../services/notificationService';
 import { sessionService } from '../services/sessionService';
 import { emailVerificationService } from '../services/emailVerificationService';
 import { tokenRefreshService } from '../services/tokenRefreshService';
+import { adminService } from '../services/adminService';
 import { type PublicClient } from 'viem';
 
 const firebaseAuth = getAuth();
 
 const convertToTokenForgeUser = (
   firebaseUser: User,
-  storedData?: { isAdmin?: boolean; customMetadata?: Record<string, unknown> }
+  storedData?: { 
+    isAdmin?: boolean;
+    canCreateToken?: boolean;
+    canUseServices?: boolean;
+    customMetadata?: Record<string, unknown>;
+  }
 ): TokenForgeUser => {
   const metadata = {
     creationTime: firebaseUser.metadata.creationTime,
@@ -25,12 +31,14 @@ const convertToTokenForgeUser = (
     lastLoginTime: Date.now(),
     walletAddress: undefined,
     chainId: undefined,
-    customMetadata: storedData?.customMetadata || {}
   };
 
   return {
     ...firebaseUser,
     isAdmin: storedData?.isAdmin || false,
+    canCreateToken: storedData?.canCreateToken || false,
+    canUseServices: storedData?.canUseServices || false,
+    customMetadata: storedData?.customMetadata || {},
     metadata
   };
 };
@@ -53,7 +61,13 @@ export function useTokenForgeAuth(): TokenForgeAuth {
       const storedData = await storageService.getUserData(firebaseUser.uid);
       const user = convertToTokenForgeUser(firebaseUser, storedData || undefined);
       
-      dispatch(authActions.loginSuccess(user));
+      // Récupérer les droits admin
+      const adminRights = await adminService.getAdminRights(user);
+      
+      dispatch(authActions.loginSuccess({
+        ...user,
+        ...adminRights
+      }));
       
       if (!user.emailVerified) {
         notificationService.warning('Please verify your email address');
@@ -163,6 +177,23 @@ export function useTokenForgeAuth(): TokenForgeAuth {
     }
   }, [state.user]);
 
+  // Validation des droits admin
+  const validateAdminAccess = useCallback(() => {
+    const { isAdmin, isAuthenticated } = state;
+    const result = adminService.validateAdminAccess(
+      isAdmin,
+      isAuthenticated,
+      isConnected,
+      chainId === Number(process.env.REACT_APP_CHAIN_ID)
+    );
+    
+    if (!result.canAccess && result.reason) {
+      notificationService.warning(result.reason);
+    }
+    
+    return result.canAccess;
+  }, [state.isAdmin, state.isAuthenticated, isConnected, chainId]);
+
   const walletState: WalletState = {
     isConnected,
     address: address || null,
@@ -182,6 +213,7 @@ export function useTokenForgeAuth(): TokenForgeAuth {
 
   return {
     ...authState,
+    validateAdminAccess,
     actions: {
       login,
       logout: handleLogout,

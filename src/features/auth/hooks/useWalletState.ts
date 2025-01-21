@@ -1,25 +1,13 @@
-import { useReducer, useCallback, useEffect } from 'react';
-import { WalletState, WalletClientType } from '../types';
+import { useCallback, useEffect } from 'react';
+import { WalletClientType } from '../types';
 import { mainnet, sepolia } from '../../../config/chains';
 import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 import { walletReconnectionService } from '../services/walletReconnectionService';
-
-const initialState: WalletState = {
-  isConnected: false,
-  address: null,
-  chainId: null,
-  isCorrectNetwork: false,
-  walletClient: null,
-  provider: null,
-};
-
-type WalletAction =
-  | { type: 'CONNECT'; payload: { address: string; chainId: number; walletClient: WalletClientType; provider: any } }
-  | { type: 'DISCONNECT' }
-  | { type: 'UPDATE_NETWORK'; payload: { chainId: number } }
-  | { type: 'UPDATE_PROVIDER'; payload: { provider: any } }
-  | { type: 'UPDATE_STATE'; payload: Partial<WalletState> };
+import { useTokenForgeAuth } from './useTokenForgeAuth';
+import { authActions } from '../actions/authActions';
+import { TokenForgeAuthContext } from '../context/TokenForgeAuthContext';
+import { useContext } from 'react';
 
 function getNetworkName(chainId: number): string {
   switch (chainId) {
@@ -36,43 +24,12 @@ function isCorrectChainId(chainId: number): boolean {
   return chainId === mainnet.id || chainId === sepolia.id;
 }
 
-function walletReducer(state: WalletState, action: WalletAction): WalletState {
-  switch (action.type) {
-    case 'CONNECT':
-      return {
-        ...state,
-        isConnected: true,
-        address: action.payload.address,
-        chainId: action.payload.chainId,
-        walletClient: action.payload.walletClient,
-        provider: action.payload.provider,
-        isCorrectNetwork: isCorrectChainId(action.payload.chainId),
-      };
-    case 'DISCONNECT':
-      return initialState;
-    case 'UPDATE_NETWORK':
-      return {
-        ...state,
-        chainId: action.payload.chainId,
-        isCorrectNetwork: isCorrectChainId(action.payload.chainId),
-      };
-    case 'UPDATE_PROVIDER':
-      return {
-        ...state,
-        provider: action.payload.provider,
-      };
-    case 'UPDATE_STATE':
-      return {
-        ...state,
-        ...action.payload,
-      };
-    default:
-      return state;
-  }
-}
-
 export function useWalletState() {
-  const [state, dispatch] = useReducer(walletReducer, initialState);
+  const auth = useTokenForgeAuth();
+  const context = useContext(TokenForgeAuthContext);
+  if (!context) throw new Error('useWalletState must be used within TokenForgeAuthProvider');
+  const { dispatch } = context;
+  const { walletState } = auth;
 
   const connectWallet = useCallback((
     address: string,
@@ -82,15 +39,14 @@ export function useWalletState() {
   ) => {
     if (!walletClient) return;
     
-    dispatch({
-      type: 'CONNECT',
-      payload: { 
-        address, 
-        chainId, 
-        walletClient,
-        provider,
-      },
-    });
+    dispatch(authActions.connectWallet({
+      isConnected: true,
+      address,
+      chainId,
+      walletClient,
+      provider,
+      isCorrectNetwork: isCorrectChainId(chainId)
+    }));
 
     notificationService.notifyWalletConnected(address);
 
@@ -101,84 +57,57 @@ export function useWalletState() {
         getNetworkName(sepolia.id),
       ].join(' ou ');
       
-      notificationService.notifyWrongNetwork(expectedNetworks, currentNetwork);
+      notificationService.notifyWrongNetwork(currentNetwork, expectedNetworks);
     }
-  }, []);
+
+    storageService.saveWalletState({
+      address,
+      chainId,
+      isConnected: true,
+      isCorrectNetwork: isCorrectChainId(chainId)
+    });
+  }, [dispatch]);
 
   const disconnectWallet = useCallback(() => {
-    dispatch({ type: 'DISCONNECT' });
+    dispatch(authActions.disconnectWallet());
     notificationService.notifyWalletDisconnected();
-    walletReconnectionService.clearState();
-  }, []);
-
-  // Tentative de reconnexion au démarrage
-  useEffect(() => {
-    const initializeWallet = async () => {
-      await walletReconnectionService.attemptReconnection(
-        connectWallet,
-        disconnectWallet
-      );
-    };
-
-    initializeWallet();
-
-    return () => {
-      walletReconnectionService.clearState();
-    };
-  }, [connectWallet, disconnectWallet]);
-
-  // Sauvegarder l'état dans le stockage local quand il change
-  useEffect(() => {
-    if (state.isConnected) {
-      storageService.saveWalletState({
-        address: state.address,
-        chainId: state.chainId,
-        isConnected: state.isConnected,
-        isCorrectNetwork: state.isCorrectNetwork,
-      });
-    } else {
-      storageService.clearWalletState();
-    }
-  }, [state.isConnected, state.address, state.chainId, state.isCorrectNetwork]);
+    storageService.clearWalletState();
+  }, [dispatch]);
 
   const updateNetwork = useCallback((chainId: number) => {
-    dispatch({
-      type: 'UPDATE_NETWORK',
-      payload: { chainId },
-    });
-    
-    const networkName = getNetworkName(chainId);
-    notificationService.notifyNetworkChanged(networkName);
+    dispatch(authActions.updateNetwork(chainId, isCorrectChainId(chainId)));
 
     if (!isCorrectChainId(chainId)) {
+      const currentNetwork = getNetworkName(chainId);
       const expectedNetworks = [
         getNetworkName(mainnet.id),
         getNetworkName(sepolia.id),
       ].join(' ou ');
       
-      notificationService.notifyWrongNetwork(expectedNetworks, networkName);
+      notificationService.notifyWrongNetwork(currentNetwork, expectedNetworks);
     }
-  }, []);
+  }, [dispatch]);
 
   const updateProvider = useCallback((provider: any) => {
-    dispatch({
-      type: 'UPDATE_PROVIDER',
-      payload: { provider },
-    });
-  }, []);
+    dispatch(authActions.updateProvider(provider));
+  }, [dispatch]);
 
-  const updateWalletState = useCallback((newState: Partial<WalletState>) => {
-    dispatch({ type: 'UPDATE_STATE', payload: newState });
-  }, []);
+  useEffect(() => {
+    const cleanup = walletReconnectionService.initialize({
+      onConnect: connectWallet,
+      onDisconnect: disconnectWallet,
+      onNetworkChange: updateNetwork,
+      onProviderChange: updateProvider
+    });
+
+    return cleanup;
+  }, [connectWallet, disconnectWallet, updateNetwork, updateProvider]);
 
   return {
-    state,
-    actions: {
-      connectWallet,
-      disconnectWallet,
-      updateNetwork,
-      updateProvider,
-      updateWalletState,
-    },
+    ...walletState,
+    connectWallet,
+    disconnectWallet,
+    updateNetwork,
+    updateProvider
   };
 }

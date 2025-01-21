@@ -7,7 +7,7 @@ const STORAGE_KEYS = {
 } as const;
 
 interface StoredAuthState {
-  user: Pick<TokenForgeUser, 'uid' | 'email' | 'emailVerified' | 'isAdmin' | 'customMetadata'> | null;
+  user: Pick<TokenForgeUser, 'uid' | 'email' | 'emailVerified' | 'isAdmin' | 'canCreateToken' | 'canUseServices' | 'customMetadata'> | null;
   lastLogin: number;
 }
 
@@ -47,7 +47,9 @@ class StorageService {
           email: user.email,
           emailVerified: user.emailVerified,
           isAdmin: user.isAdmin,
-          customMetadata: user.customMetadata,
+          canCreateToken: user.canCreateToken,
+          canUseServices: user.canUseServices,
+          customMetadata: user.customMetadata
         },
         lastLogin: Date.now(),
       };
@@ -76,6 +78,36 @@ class StorageService {
 
   clearAuthState(): void {
     localStorage.removeItem(STORAGE_KEYS.AUTH);
+  }
+
+  async getUserData(userId: string): Promise<StoredAuthState['user']> {
+    const authState = localStorage.getItem(STORAGE_KEYS.AUTH);
+    if (!authState) return null;
+    
+    const parsed = JSON.parse(authState) as StoredAuthState;
+    return parsed.user && parsed.user.uid === userId ? parsed.user : null;
+  }
+
+  async updateUserData(
+    userId: string,
+    updates: Partial<StoredAuthState['user']>
+  ): Promise<void> {
+    const currentData = await this.getUserData(userId);
+    if (!currentData) {
+      throw new Error('User data not found');
+    }
+
+    const updatedData = {
+      ...currentData,
+      ...updates,
+    };
+
+    const authState = {
+      user: updatedData,
+      lastLogin: Date.now(),
+    };
+
+    localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(authState));
   }
 
   // Wallet Storage
@@ -202,21 +234,6 @@ class StorageService {
   clearAll(): void {
     this.clearAuthState();
     this.clearWalletState();
-  }
-
-  async getUserData(uid: string): Promise<{ isAdmin?: boolean; customMetadata?: Record<string, unknown> } | null> {
-    const stored = localStorage.getItem(`${STORAGE_KEYS.AUTH}_${uid}`);
-    if (!stored) return null;
-    
-    try {
-      const data = JSON.parse(stored);
-      return {
-        isAdmin: data.user?.isAdmin || false,
-        customMetadata: data.user?.customMetadata || {}
-      };
-    } catch {
-      return null;
-    }
   }
 
   async clearUserData(): Promise<void> {

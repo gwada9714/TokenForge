@@ -100,7 +100,8 @@ describe('AuthenticationFlow Integration Tests', () => {
         </TokenForgeAuthProvider>
       );
 
-      expect(screen.getByText(/connect your wallet/i)).toBeDefined();
+      // Utiliser getByRole pour le titre h6 spécifiquement
+      expect(screen.getByRole('heading', { name: /connect your wallet/i })).toBeDefined();
       expect(screen.getByRole('button', { name: /connect wallet/i })).toBeDefined();
     });
 
@@ -114,8 +115,12 @@ describe('AuthenticationFlow Integration Tests', () => {
         </TokenForgeAuthProvider>
       );
 
-      await user.click(screen.getByRole('button', { name: /connect wallet/i }));
-      expect(mockUseTokenForgeAuth.actions.connectWallet).toHaveBeenCalled();
+      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
+      await user.click(connectButton);
+      
+      await waitFor(() => {
+        expect(mockUseTokenForgeAuth.actions.connectWallet).toHaveBeenCalled();
+      });
     });
   });
 
