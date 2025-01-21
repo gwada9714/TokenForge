@@ -1,147 +1,179 @@
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import React from 'react';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useWalletState } from '../useWalletState';
-import { notificationService } from '../../services/notificationService';
-import { mainnet, sepolia } from '../../../../config/chains';
+import { TokenForgeAuthContext } from '../../context/TokenForgeAuthContext';
+import { AuthStatus, TokenForgeAuthContextValue, WalletState } from '../../types';
+import type { Mock } from 'vitest';
 
-jest.mock('../../services/notificationService');
+// Mock des chaînes
+const mockChains = {
+  mainnet: {
+    id: 1,
+    name: 'Ethereum Mainnet'
+  },
+  sepolia: {
+    id: 11155111,
+    name: 'Sepolia Testnet'
+  }
+};
+
+vi.mock('../../../config/chains', () => mockChains);
+
+// Mocks des services
+vi.mock('../../services/walletReconnectionService', () => ({
+  walletReconnectionService: {
+    initialize: vi.fn(),
+    cleanup: vi.fn()
+  }
+}));
+
+vi.mock('../../services/notificationService', () => ({
+  notificationService: {
+    notifyWalletConnected: vi.fn(),
+    notifyWalletDisconnected: vi.fn(),
+    notifyWrongNetwork: vi.fn()
+  }
+}));
+
+vi.mock('../../services/storageService', () => ({
+  storageService: {
+    saveWalletState: vi.fn(),
+    clearWalletState: vi.fn()
+  }
+}));
+
+const mockDispatch = vi.fn() as Mock;
+
+const mockWalletState: WalletState = {
+  isConnected: false,
+  address: null,
+  chainId: null,
+  isCorrectNetwork: false,
+  provider: null,
+  walletClient: null
+};
+
+const mockAuthContextValue: TokenForgeAuthContextValue = {
+  dispatch: mockDispatch,
+  status: 'idle',
+  isAuthenticated: false,
+  user: null,
+  error: null,
+  walletState: mockWalletState
+};
+
+const Wrapper = ({ children }: { children: React.ReactNode }) => (
+  <TokenForgeAuthContext.Provider value={mockAuthContextValue}>
+    {children}
+  </TokenForgeAuthContext.Provider>
+);
 
 describe('useWalletState', () => {
-  const mockWalletClient = { id: 'mock-wallet' };
-  const mockProvider = { id: 'mock-provider' };
-
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('devrait retourner l\'état initial correct', () => {
-    const { result } = renderHook(() => useWalletState());
-
-    expect(result.current.state).toEqual({
-      isConnected: false,
-      address: null,
-      chainId: null,
-      isCorrectNetwork: false,
-      walletClient: null,
-      provider: null,
-    });
-  });
-
-  it('devrait connecter le wallet', () => {
-    const { result } = renderHook(() => useWalletState());
-    const address = '0x123';
-    const chainId = mainnet.id;
-
-    act(() => {
-      result.current.actions.connectWallet(address, chainId, mockWalletClient, mockProvider);
-    });
-
-    expect(result.current.state).toEqual({
-      isConnected: true,
-      address,
-      chainId,
-      isCorrectNetwork: true,
-      walletClient: mockWalletClient,
-      provider: mockProvider,
-    });
-    expect(notificationService.notifyWalletConnected).toHaveBeenCalledWith(address);
-  });
-
-  it('devrait déconnecter le wallet', () => {
-    const { result } = renderHook(() => useWalletState());
+  it('devrait initialiser avec l\'état par défaut', () => {
+    const { result } = renderHook(() => useWalletState(), { wrapper: Wrapper });
     
-    // D'abord connecter
-    act(() => {
-      result.current.actions.connectWallet('0x123', mainnet.id, mockWalletClient, mockProvider);
-    });
-
-    // Puis déconnecter
-    act(() => {
-      result.current.actions.disconnectWallet();
-    });
-
-    expect(result.current.state).toEqual({
-      isConnected: false,
-      address: null,
-      chainId: null,
-      isCorrectNetwork: false,
-      walletClient: null,
-      provider: null,
-    });
-    expect(notificationService.notifyWalletDisconnected).toHaveBeenCalled();
-  });
-
-  it('devrait mettre à jour le réseau', () => {
-    const { result } = renderHook(() => useWalletState());
-    const chainId = sepolia.id;
-
-    act(() => {
-      result.current.actions.updateNetwork(chainId);
-    });
-
-    expect(result.current.state.chainId).toBe(chainId);
-    expect(result.current.state.isCorrectNetwork).toBe(true);
-  });
-
-  it('devrait mettre à jour le provider', () => {
-    const { result } = renderHook(() => useWalletState());
-
-    act(() => {
-      result.current.actions.updateProvider(mockProvider);
-    });
-
-    expect(result.current.state.provider).toBe(mockProvider);
-  });
-
-  it('devrait mettre à jour partiellement l\'état du wallet', () => {
-    const { result } = renderHook(() => useWalletState());
-    const newState = {
-      address: '0x456',
-      isConnected: true,
-    };
-
-    act(() => {
-      result.current.actions.updateWalletState(newState);
-    });
-
-    expect(result.current.state).toEqual({
-      ...result.current.state,
-      ...newState,
+    expect(result.current).toEqual({
+      connectWallet: expect.any(Function),
+      disconnectWallet: expect.any(Function),
+      updateNetwork: expect.any(Function),
+      updateProvider: expect.any(Function),
+      ...mockWalletState
     });
   });
 
-  it('devrait préserver les propriétés non modifiées lors de la mise à jour partielle', () => {
-    const { result } = renderHook(() => useWalletState());
+  it('devrait gérer la connexion du wallet sur Ethereum Mainnet', async () => {
+    const mockAddress = '0x123';
+    const mockWalletClient = { address: mockAddress };
+    const mockProvider = {};
     
-    // D'abord définir un état complet
-    act(() => {
-      result.current.actions.connectWallet('0x123', mainnet.id, mockWalletClient, mockProvider);
+    const { result } = renderHook(() => useWalletState(), { wrapper: Wrapper });
+
+    await act(async () => {
+      result.current.connectWallet(mockAddress, mockChains.mainnet.id, mockWalletClient, mockProvider);
     });
 
-    const initialState = result.current.state;
-    const partialUpdate = {
-      address: '0x456',
-    };
-
-    // Puis faire une mise à jour partielle
-    act(() => {
-      result.current.actions.updateWalletState(partialUpdate);
-    });
-
-    expect(result.current.state).toEqual({
-      ...initialState,
-      ...partialUpdate,
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'wallet/connect',
+      payload: {
+        isConnected: true,
+        address: mockAddress,
+        chainId: mockChains.mainnet.id,
+        walletClient: mockWalletClient,
+        provider: mockProvider,
+        isCorrectNetwork: true
+      }
     });
   });
 
-  it('devrait notifier d\'un mauvais réseau', () => {
-    const { result } = renderHook(() => useWalletState());
-    const wrongChainId = 999;
+  it('devrait gérer la connexion du wallet sur un réseau non supporté', async () => {
+    const mockAddress = '0x123';
+    const mockWalletClient = { address: mockAddress };
+    const mockProvider = {};
+    const wrongChainId = 1337;
+    
+    const { result } = renderHook(() => useWalletState(), { wrapper: Wrapper });
 
-    act(() => {
-      result.current.actions.connectWallet('0x123', wrongChainId, mockWalletClient, mockProvider);
+    await act(async () => {
+      result.current.connectWallet(mockAddress, wrongChainId, mockWalletClient, mockProvider);
     });
 
-    expect(notificationService.notifyWrongNetwork).toHaveBeenCalled();
-    expect(result.current.state.isCorrectNetwork).toBe(false);
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'wallet/connect',
+      payload: {
+        isConnected: true,
+        address: mockAddress,
+        chainId: wrongChainId,
+        walletClient: mockWalletClient,
+        provider: mockProvider,
+        isCorrectNetwork: false
+      }
+    });
+  });
+
+  it('devrait gérer la déconnexion du wallet', async () => {
+    const { result } = renderHook(() => useWalletState(), { wrapper: Wrapper });
+
+    await act(async () => {
+      result.current.disconnectWallet();
+    });
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'wallet/disconnect'
+    });
+  });
+
+  it('devrait gérer le changement de réseau', async () => {
+    const { result } = renderHook(() => useWalletState(), { wrapper: Wrapper });
+
+    await act(async () => {
+      result.current.updateNetwork(mockChains.sepolia.id);
+    });
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'wallet/updateNetwork',
+      payload: {
+        chainId: mockChains.sepolia.id,
+        isCorrectNetwork: true
+      }
+    });
+  });
+
+  it('devrait gérer la mise à jour du provider', async () => {
+    const mockProvider = { test: 'provider' };
+    const { result } = renderHook(() => useWalletState(), { wrapper: Wrapper });
+
+    await act(async () => {
+      result.current.updateProvider(mockProvider);
+    });
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'wallet/updateProvider',
+      payload: mockProvider
+    });
   });
 });

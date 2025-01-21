@@ -1,16 +1,19 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach } from 'vitest'
-import { TokenForgeAuthProvider } from '../../context/TokenForgeAuthProvider'
+import { TokenForgeAuthProvider as AuthProvider } from '../../context/TokenForgeAuthProvider'
+import { FC, PropsWithChildren, ReactElement } from 'react'
 
 afterEach(() => {
   cleanup()
 })
 
-function renderWithProviders(ui: React.ReactElement) {
+const Wrapper: FC<PropsWithChildren> = ({ children }) => (
+  <AuthProvider>{children}</AuthProvider>
+)
+
+function renderWithProviders(ui: ReactElement) {
   return render(ui, {
-    wrapper: ({ children }) => (
-      <TokenForgeAuthProvider>{children}</TokenForgeAuthProvider>
-    ),
+    wrapper: Wrapper
   })
 }
 
