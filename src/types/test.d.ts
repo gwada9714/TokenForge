@@ -1,8 +1,5 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 
-declare module '@testing-library/jest-dom' {
-  export interface Matchers<R> {
-    toBeInTheDocument(): R
-    toHaveStyle(style: Record<string, any>): R
-  }
-} 
+declare module '@testing-library/jest-dom/vitest' {
+  export * from '@testing-library/jest-dom'
+}

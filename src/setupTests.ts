@@ -1,89 +1,93 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-import "@testing-library/jest-dom";
+// vitest setup
+import "@testing-library/jest-dom/vitest";
+import { vi } from 'vitest';
 import { TextEncoder, TextDecoder } from "util";
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as any;
 
-// Mock window.matchMedia
-Object.defineProperty(window, "matchMedia", {
+// Mock matchMedia
+Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 
 // Mock fetch
-global.fetch = jest.fn(() =>
+global.fetch = vi.fn(() =>
   Promise.resolve({
     json: () => Promise.resolve({}),
     ok: true,
     status: 200,
   })
-) as jest.Mock;
+) as unknown as typeof fetch;
 
 // Mock Firebase
-jest.mock('firebase/app', () => ({
-  initializeApp: jest.fn(),
-  getApps: jest.fn(() => []),
+vi.mock('firebase/app', () => ({
+  initializeApp: vi.fn(),
+  getApps: vi.fn(() => []),
 }));
 
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(() => ({
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(() => ({
     currentUser: null,
-    signInWithPopup: jest.fn(),
-    signOut: jest.fn(),
+    signInWithPopup: vi.fn(),
+    signOut: vi.fn(),
   })),
-  GoogleAuthProvider: jest.fn(() => ({})),
-  signInWithPopup: jest.fn(),
-  signOut: jest.fn(),
+  GoogleAuthProvider: vi.fn(() => ({})),
+  signInWithPopup: vi.fn(),
+  signOut: vi.fn(),
 }));
 
-// Mock modules
-jest.mock("@web3modal/wagmi", () => ({
+// Mock Web3Modal
+vi.mock("@web3modal/wagmi", () => ({
   useWeb3Modal: () => ({
-    open: jest.fn(),
-    close: jest.fn(),
+    open: vi.fn(),
+    close: vi.fn(),
     isOpen: false,
   }),
-  createWeb3Modal: jest.fn(),
+  createWeb3Modal: vi.fn(),
 }));
 
-// Mock wagmi
-jest.mock("wagmi", () => {
-  const originalModule = jest.requireActual("wagmi");
+// Mock Wagmi
+vi.mock("wagmi", async () => {
+  const actual = await vi.importActual("wagmi");
   return {
-    ...originalModule,
+    ...actual,
     WagmiProvider: ({ children }: { children: React.ReactNode }) => children,
     useAccount: () => ({
       address: "0x1234567890123456789012345678901234567890",
       isConnecting: false,
       isDisconnected: false,
     }),
-    useContractRead: jest.fn(),
-    useWriteContract: jest.fn(),
-    createConfig: jest.fn(),
-    http: jest.fn(),
+    useContractRead: vi.fn(),
+    useWriteContract: vi.fn(),
+    createConfig: vi.fn(),
+    http: vi.fn(),
   };
 });
 
-// Mock ethers
-jest.mock("ethers", () => ({
-  ...jest.requireActual("ethers"),
-  JsonRpcProvider: jest.fn(),
-}));
+// Mock Ethers
+vi.mock("ethers", async () => {
+  const actual = await vi.importActual("ethers");
+  return {
+    ...actual,
+    JsonRpcProvider: vi.fn(),
+  };
+});
 
-// Mock react-query
-jest.mock("@tanstack/react-query", () => ({
-  QueryClient: jest.fn(() => ({
-    setDefaultOptions: jest.fn(),
+// Mock React Query
+vi.mock("@tanstack/react-query", () => ({
+  QueryClient: vi.fn(() => ({
+    setDefaultOptions: vi.fn(),
   })),
   QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));

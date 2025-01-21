@@ -14,10 +14,11 @@ import walletReducer from '../store/slices/walletSlice';
 import analyticsReducer from '../store/slices/analyticsSlice';
 import userTokensReducer from '../store/slices/userTokensSlice';
 import authReducer from '../store/slices/authSlice';
+import { vi } from 'vitest';
 
 // Mock WagmiProvider
-jest.mock('wagmi', () => ({
-  WagmiProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+vi.mock('wagmi', () => ({
+  WagmiConfig: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useAccount: () => ({
     address: '0x123',
     isConnected: true
@@ -70,6 +71,16 @@ function render(
   }
   return rtlRender(ui, { wrapper: Wrapper, ...renderOptions });
 }
+
+export const renderWithProviders = (ui: React.ReactElement) => {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        {ui}
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
 // re-export everything
 export * from '@testing-library/react';
