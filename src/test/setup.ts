@@ -1,5 +1,4 @@
 import { vi } from 'vitest'
-import '@testing-library/jest-dom'
 
 // Mock des services
 vi.mock('../features/auth/services/notificationService', () => ({
