@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest'
 import { authReducer } from '../reducers/authReducer';
 import { AuthError } from '../errors/AuthError';
 import { TokenForgeUser, TokenForgeAuthState, WalletState, AuthStatus } from '../types/auth';
@@ -23,11 +24,11 @@ const mockUser = {
     lastLoginTime: Date.now()
   },
   // Firebase User methods
-  delete: jest.fn(),
-  getIdToken: jest.fn(),
-  getIdTokenResult: jest.fn(),
-  reload: jest.fn(),
-  toJSON: jest.fn()
+  delete: vi.fn(),
+  getIdToken: vi.fn(),
+  getIdTokenResult: vi.fn(),
+  reload: vi.fn(),
+  toJSON: vi.fn()
 } as unknown as TokenForgeUser;
 
 const mockWalletState: WalletState = {
@@ -52,7 +53,8 @@ const initialState: TokenForgeAuthState = {
 
 describe('authReducer', () => {
   it('devrait retourner l\'état initial', () => {
-    expect(authReducer(undefined, { type: AUTH_ACTIONS.LOGIN_START })).toEqual(initialState);
+    // Utiliser une action inconnue pour tester l'état initial
+    expect(authReducer(undefined, { type: 'UNKNOWN_ACTION' as any })).toEqual(initialState);
   });
 
   it('devrait gérer auth/loginStart', () => {
@@ -161,6 +163,153 @@ describe('authReducer', () => {
       ...initialState,
       status: 'idle' as AuthStatus,
       walletState: mockWalletState
+    });
+  });
+
+  it('devrait gérer auth/walletNetworkChange avec un réseau supporté', () => {
+    const stateWithWallet = {
+      ...initialState,
+      status: 'wallet_connected' as AuthStatus,
+      walletState: {
+        isConnected: true,
+        address: '0x123',
+        chainId: 1,
+        isCorrectNetwork: true,
+        provider: { id: 'mock-provider' },
+        walletClient: { id: 'mock-wallet' }
+      }
+    };
+
+    const nextState = authReducer(stateWithWallet, {
+      type: AUTH_ACTIONS.WALLET_NETWORK_CHANGE,
+      payload: { chainId: 1, isCorrectNetwork: true }
+    });
+
+    expect(nextState).toEqual({
+      ...stateWithWallet,
+      walletState: {
+        ...stateWithWallet.walletState,
+        chainId: 1,
+        isCorrectNetwork: true
+      }
+    });
+  });
+
+  it('devrait gérer auth/walletNetworkChange avec un réseau non supporté', () => {
+    const stateWithWallet = {
+      ...initialState,
+      status: 'wallet_connected' as AuthStatus,
+      walletState: {
+        isConnected: true,
+        address: '0x123',
+        chainId: 1,
+        isCorrectNetwork: true,
+        provider: { id: 'mock-provider' },
+        walletClient: { id: 'mock-wallet' }
+      }
+    };
+
+    const nextState = authReducer(stateWithWallet, {
+      type: AUTH_ACTIONS.WALLET_NETWORK_CHANGE,
+      payload: { chainId: 999, isCorrectNetwork: false }
+    });
+
+    expect(nextState).toEqual({
+      ...stateWithWallet,
+      walletState: {
+        ...stateWithWallet.walletState,
+        chainId: 999,
+        isCorrectNetwork: false
+      }
+    });
+  });
+
+  it('devrait gérer auth/walletUpdateProvider', () => {
+    const newProvider = { id: 'new-mock-provider' };
+    const stateWithWallet = {
+      ...initialState,
+      status: 'wallet_connected' as AuthStatus,
+      walletState: {
+        isConnected: true,
+        address: '0x123',
+        chainId: 1,
+        isCorrectNetwork: true,
+        provider: { id: 'mock-provider' },
+        walletClient: { id: 'mock-wallet' }
+      }
+    };
+
+    const nextState = authReducer(stateWithWallet, {
+      type: AUTH_ACTIONS.WALLET_UPDATE_PROVIDER,
+      payload: { provider: newProvider }
+    });
+
+    expect(nextState).toEqual({
+      ...stateWithWallet,
+      walletState: {
+        ...stateWithWallet.walletState,
+        provider: newProvider
+      }
+    });
+  });
+
+  it('devrait gérer auth/updateUser', () => {
+    const stateWithUser = {
+      ...initialState,
+      status: 'authenticated' as AuthStatus,
+      isAuthenticated: true,
+      user: mockUser
+    };
+
+    const userUpdates = {
+      displayName: 'Test User',
+      photoURL: 'https://example.com/photo.jpg'
+    };
+
+    const nextState = authReducer(stateWithUser, {
+      type: AUTH_ACTIONS.UPDATE_USER,
+      payload: userUpdates
+    });
+
+    expect(nextState).toEqual({
+      ...stateWithUser,
+      user: {
+        ...mockUser,
+        ...userUpdates
+      }
+    });
+  });
+
+  it('devrait gérer auth/setError', () => {
+    const error = new AuthError('AUTH_017', 'Network error');
+
+    const nextState = authReducer(initialState, {
+      type: AUTH_ACTIONS.SET_ERROR,
+      payload: error
+    });
+
+    expect(nextState).toEqual({
+      ...initialState,
+      error,
+      status: 'error' as AuthStatus
+    });
+  });
+
+  it('devrait gérer auth/clearError', () => {
+    const stateWithError = {
+      ...initialState,
+      error: new AuthError('AUTH_017', 'Network error'),
+      status: 'error' as AuthStatus
+    };
+
+    const nextState = authReducer(stateWithError, {
+      type: AUTH_ACTIONS.CLEAR_ERROR
+    });
+
+    expect(nextState).toEqual({
+      ...stateWithError,
+      error: null,
+      status: 'idle' as AuthStatus
     });
   });
 });

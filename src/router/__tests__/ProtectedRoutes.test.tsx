@@ -6,16 +6,16 @@ import { adminRoutes } from '../routes/admin.routes';
 import { dashboardRoutes } from '../routes/dashboard.routes';
 
 // Mock Firebase Auth
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(),
-  onAuthStateChanged: jest.fn(),
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  onAuthStateChanged: vi.fn(),
 }));
 
 // Mock Wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
-  useNetwork: jest.fn(),
-  usePublicClient: jest.fn(),
+vi.mock('wagmi', () => ({
+  useAccount: vi.fn(),
+  useNetwork: vi.fn(),
+  usePublicClient: vi.fn(),
 }));
 
 describe('Protected Routes', () => {
@@ -45,7 +45,7 @@ describe('Protected Routes', () => {
 
     it('redirects to connect wallet page when wallet is not connected', () => {
       renderWithRouter(['/tokens']);
-      expect(screen.getByText('Connect Your Wallet')).toBeInTheDocument();
+      expect(screen.getByText('Connect Your Wallet')).toBeTruthy();
     });
 
     it('redirects to wrong network page when on incorrect network', () => {
@@ -53,7 +53,7 @@ describe('Protected Routes', () => {
       (require('wagmi') as any).useNetwork.mockReturnValue({ chain: { id: 999 } });
       
       renderWithRouter(['/tokens']);
-      expect(screen.getByText('Wrong Network')).toBeInTheDocument();
+      expect(screen.getByText('Wrong Network')).toBeTruthy();
     });
 
     it('shows token dashboard when all conditions are met', () => {
@@ -61,7 +61,7 @@ describe('Protected Routes', () => {
       (require('wagmi') as any).useNetwork.mockReturnValue({ chain: { id: 1 } });
       
       renderWithRouter(['/tokens']);
-      expect(screen.getByText('Token Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('Token Dashboard')).toBeTruthy();
     });
   });
 
@@ -73,7 +73,7 @@ describe('Protected Routes', () => {
 
     it('redirects to unauthorized page when user is not admin', () => {
       renderWithRouter(['/admin']);
-      expect(screen.getByText('Access Denied')).toBeInTheDocument();
+      expect(screen.getByText('Access Denied')).toBeTruthy();
     });
 
     it('shows admin dashboard when user is admin', () => {
@@ -82,7 +82,7 @@ describe('Protected Routes', () => {
       });
       
       renderWithRouter(['/admin']);
-      expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('Admin Dashboard')).toBeTruthy();
     });
   });
 
@@ -93,7 +93,7 @@ describe('Protected Routes', () => {
       });
       
       renderWithRouter(['/dashboard']);
-      expect(screen.getByText('Sign In')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeTruthy();
     });
 
     it('shows dashboard when user is authenticated', () => {
@@ -102,7 +102,7 @@ describe('Protected Routes', () => {
       });
       
       renderWithRouter(['/dashboard']);
-      expect(screen.getByText('User Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('User Dashboard')).toBeTruthy();
     });
   });
 });

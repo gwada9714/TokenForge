@@ -5,21 +5,21 @@ import { ConnectWalletPage } from '../../ConnectWalletPage';
 import { WrongNetworkPage } from '../../WrongNetworkPage';
 
 // Mock RainbowKit
-jest.mock('@rainbow-me/rainbowkit', () => ({
+vi.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => <button>Connect Wallet</button>,
 }));
 
 // Mock Wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
-  useNetwork: jest.fn(),
-  usePublicClient: jest.fn(),
+vi.mock('wagmi', () => ({
+  useAccount: vi.fn(),
+  useNetwork: vi.fn(),
+  usePublicClient: vi.fn(),
 }));
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', () => ({
+  ...vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ state: { from: { pathname: '/dashboard' } } }),
 }));
@@ -39,7 +39,7 @@ describe('Wallet Connection Flow', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('shows connect wallet page when wallet is not connected', () => {
@@ -47,8 +47,8 @@ describe('Wallet Connection Flow', () => {
     
     renderWalletFlow();
     
-    expect(screen.getByText('Connect Your Wallet')).toBeInTheDocument();
-    expect(screen.getByText('Connect Wallet')).toBeInTheDocument();
+    expect(screen.getByText('Connect Your Wallet')).toBeTruthy();
+    expect(screen.getByText('Connect Wallet')).toBeTruthy();
   });
 
   it('redirects to wrong network page on incorrect network', async () => {

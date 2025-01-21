@@ -26,17 +26,17 @@ interface CreateItemRequest extends AuthenticatedRequest {
   };
 }
 
-jest.mock('ethers', () => ({
-  ...jest.requireActual('ethers'),
-  Contract: jest.fn().mockImplementation(() => mockTokenContract),
+vi.mock('ethers', () => ({
+  ...vi.importActual('ethers'),
+  Contract: vi.fn().mockImplementation(() => mockTokenContract),
 }));
 
 describe('MarketplaceController', () => {
   let controller: MarketplaceController;
   let mockReq: Partial<MarketplaceRequest | CreateItemRequest>;
   let mockRes: Partial<Response>;
-  const mockJson = jest.fn();
-  const mockStatus = jest.fn().mockReturnValue({ json: mockJson });
+  const mockJson = vi.fn();
+  const mockStatus = vi.fn().mockReturnValue({ json: mockJson });
 
   beforeEach(() => {
     controller = new MarketplaceController(mockMarketplaceContract as Contract);
@@ -169,7 +169,7 @@ describe('MarketplaceController', () => {
     });
 
     it('should return 400 when allowance is insufficient', async () => {
-      jest.spyOn(mockTokenContract, 'allowance').mockResolvedValueOnce(0);
+      vi.spyOn(mockTokenContract, 'allowance').mockResolvedValueOnce(0);
 
       await controller.createItem(mockReq as CreateItemRequest, mockRes as Response);
 

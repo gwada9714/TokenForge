@@ -3,9 +3,9 @@ import { MarketplaceList } from '../components/MarketplaceList';
 import { useMarketplace } from '../hooks/useMarketplace';
 
 // Mock du hook useMarketplace
-jest.mock('../hooks/useMarketplace');
+vi.mock('../hooks/useMarketplace');
 
-const mockUseMarketplace = useMarketplace as jest.MockedFunction<typeof useMarketplace>;
+const mockUseMarketplace = useMarketplace as vi.MockedFunction<typeof useMarketplace>;
 
 describe('MarketplaceList', () => {
   const mockItems = [
@@ -37,14 +37,14 @@ describe('MarketplaceList', () => {
       stats: mockStats,
       isLoading: false,
       error: null,
-      loadItems: jest.fn(),
-      loadStats: jest.fn(),
-      createItem: jest.fn(),
+      loadItems: vi.fn(),
+      loadStats: vi.fn(),
+      createItem: vi.fn(),
     });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders loading state', () => {
@@ -53,13 +53,13 @@ describe('MarketplaceList', () => {
       stats: mockStats,
       isLoading: true,
       error: null,
-      loadItems: jest.fn(),
-      loadStats: jest.fn(),
-      createItem: jest.fn(),
+      loadItems: vi.fn(),
+      loadStats: vi.fn(),
+      createItem: vi.fn(),
     });
 
     render(<MarketplaceList />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeTruthy();
   });
 
   it('renders error state', () => {
@@ -69,18 +69,18 @@ describe('MarketplaceList', () => {
       stats: mockStats,
       isLoading: false,
       error: errorMessage,
-      loadItems: jest.fn(),
-      loadStats: jest.fn(),
-      createItem: jest.fn(),
+      loadItems: vi.fn(),
+      loadStats: vi.fn(),
+      createItem: vi.fn(),
     });
 
     render(<MarketplaceList />);
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(screen.getByText(errorMessage)).toBeTruthy();
   });
 
   it('renders empty state', () => {
     render(<MarketplaceList />);
-    expect(screen.getByText(/Aucun item disponible/i)).toBeInTheDocument();
+    expect(screen.getByText(/Aucun item disponible/i)).toBeTruthy();
   });
 
   it('renders items list', () => {
@@ -89,18 +89,18 @@ describe('MarketplaceList', () => {
       stats: mockStats,
       isLoading: false,
       error: null,
-      loadItems: jest.fn(),
-      loadStats: jest.fn(),
-      createItem: jest.fn(),
+      loadItems: vi.fn(),
+      loadStats: vi.fn(),
+      createItem: vi.fn(),
     });
 
     render(<MarketplaceList />);
-    expect(screen.getByText(mockItems[0].name)).toBeInTheDocument();
+    expect(screen.getByText(mockItems[0].name)).toBeTruthy();
   });
 
   it('calls loadItems and loadStats on mount', () => {
-    const loadItems = jest.fn();
-    const loadStats = jest.fn();
+    const loadItems = vi.fn();
+    const loadStats = vi.fn();
 
     mockUseMarketplace.mockReturnValue({
       items: [],
@@ -109,7 +109,7 @@ describe('MarketplaceList', () => {
       error: null,
       loadItems,
       loadStats,
-      createItem: jest.fn(),
+      createItem: vi.fn(),
     });
 
     render(<MarketplaceList />);

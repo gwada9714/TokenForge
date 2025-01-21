@@ -1,10 +1,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import { AuditLogList } from '../AuditLogList';
 import type { AuditLog } from '../../../../../types/contracts';
 
 describe('AuditLogList', () => {
-  const mockOnDeleteLog = jest.fn();
+  const mockOnDeleteLog = vi.fn();
 
   const mockLogs: AuditLog[] = [
     {
@@ -29,7 +29,7 @@ describe('AuditLogList', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders all logs with correct formatting', () => {
@@ -40,8 +40,8 @@ describe('AuditLogList', () => {
     expect(screen.getByText('Mint')).toHaveClass('MuiChip-label');
     
     // Vérifie les données supplémentaires
-    expect(screen.getByText('Transferred 100 tokens')).toBeInTheDocument();
-    expect(screen.getByText('Minted 50 tokens')).toBeInTheDocument();
+    expect(screen.getByText('Transferred 100 tokens')).toBeTruthy();
+    expect(screen.getByText('Minted 50 tokens')).toBeTruthy();
     
     // Vérifie les adresses en format monospace
     const addresses = screen.getAllByText(/0x[0-9a-f]+\.\.\./i);
@@ -60,8 +60,8 @@ describe('AuditLogList', () => {
     expect(screen.getAllByTestId('EventIcon')).toHaveLength(2);
     expect(screen.getAllByTestId('PersonIcon')).toHaveLength(2);
     
-    expect(screen.getByText(new RegExp(now.toLocaleString()))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(oneHourAgo.toLocaleString()))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(now.toLocaleString()))).toBeTruthy();
+    expect(screen.getByText(new RegExp(oneHourAgo.toLocaleString()))).toBeTruthy();
   });
 
   it('shows delete button with tooltip when onDeleteLog is provided', () => {
@@ -85,13 +85,13 @@ describe('AuditLogList', () => {
   it('does not render delete buttons when onDeleteLog is not provided', () => {
     render(<AuditLogList logs={mockLogs} />);
     
-    expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /delete/i })).toBeFalsy();
   });
 
   it('shows empty state message when no logs are provided', () => {
     render(<AuditLogList {...defaultProps} logs={[]} />);
     
-    expect(screen.getByText('Aucun log d\'audit disponible')).toBeInTheDocument();
+    expect(screen.getByText('Aucun log d\'audit disponible')).toBeTruthy();
   });
 
   it('shows loading skeleton when isLoading is true', () => {
@@ -102,8 +102,8 @@ describe('AuditLogList', () => {
     expect(skeletons.length).toBeGreaterThan(0);
     
     // Vérifie que le contenu normal n'est pas affiché
-    expect(screen.queryByText('Transfer')).not.toBeInTheDocument();
-    expect(screen.queryByText('Mint')).not.toBeInTheDocument();
+    expect(screen.queryByText('Transfer')).toBeFalsy();
+    expect(screen.queryByText('Mint')).toBeFalsy();
   });
 
   it('disables delete buttons when isLoading is true', () => {

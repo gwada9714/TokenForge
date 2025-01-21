@@ -2,16 +2,16 @@ import { Response, NextFunction } from 'express';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
 import { verifyMessage } from 'ethers';
 
-jest.mock('ethers', () => ({
-  verifyMessage: jest.fn(),
+vi.mock('ethers', () => ({
+  verifyMessage: vi.fn(),
 }));
 
 describe('Auth Middleware', () => {
   let mockReq: Partial<AuthenticatedRequest>;
   let mockRes: Partial<Response>;
   let mockNext: NextFunction;
-  const mockJson = jest.fn();
-  const mockStatus = jest.fn().mockReturnValue({ json: mockJson });
+  const mockJson = vi.fn();
+  const mockStatus = vi.fn().mockReturnValue({ json: mockJson });
 
   beforeEach(() => {
     mockReq = {
@@ -21,10 +21,10 @@ describe('Auth Middleware', () => {
       status: mockStatus,
       json: mockJson,
     };
-    mockNext = jest.fn();
+    mockNext = vi.fn();
     mockJson.mockClear();
     mockStatus.mockClear();
-    (verifyMessage as jest.Mock).mockClear();
+    (verifyMessage as vi.Mock).mockClear();
   });
 
   it('should return 401 when no authorization header', async () => {
@@ -83,7 +83,7 @@ describe('Auth Middleware', () => {
       authorization: `Bearer ${address}.${timestamp}.invalid_signature`,
     };
 
-    (verifyMessage as jest.Mock).mockReturnValue('0x9999999999999999999999999999999999999999');
+    (verifyMessage as vi.Mock).mockReturnValue('0x9999999999999999999999999999999999999999');
 
     await authMiddleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
@@ -101,7 +101,7 @@ describe('Auth Middleware', () => {
       authorization: `Bearer ${address}.${timestamp}.valid_signature`,
     };
 
-    (verifyMessage as jest.Mock).mockReturnValue(address);
+    (verifyMessage as vi.Mock).mockReturnValue(address);
 
     await authMiddleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 

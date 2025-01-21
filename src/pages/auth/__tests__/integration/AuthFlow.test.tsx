@@ -8,22 +8,22 @@ import { WrongNetworkPage } from '../../WrongNetworkPage';
 import { UnauthorizedPage } from '../../UnauthorizedPage';
 
 // Mock Firebase Auth
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(),
-  signInWithEmailAndPassword: jest.fn(),
-  createUserWithEmailAndPassword: jest.fn(),
-  signOut: jest.fn(),
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(),
 }));
 
 // Mock RainbowKit
-jest.mock('@rainbow-me/rainbowkit', () => ({
+vi.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => <button>Connect Wallet</button>,
 }));
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', () => ({
+  ...vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
 
@@ -45,14 +45,14 @@ describe('Authentication Flow', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('allows navigation between login and signup pages', () => {
     renderAuthFlow();
     
     // Start at login page
-    expect(screen.getByText('Sign In')).toBeInTheDocument();
+    expect(screen.getByText('Sign In')).toBeTruthy();
     
     // Navigate to signup
     const signUpLink = screen.getByText(/don't have an account\?/i);
@@ -63,7 +63,7 @@ describe('Authentication Flow', () => {
   });
 
   it('shows wallet connection flow after login', async () => {
-    const mockSignIn = jest.fn().mockResolvedValue({});
+    const mockSignIn = vi.fn().mockResolvedValue({});
     (require('firebase/auth') as any).signInWithEmailAndPassword.mockImplementation(mockSignIn);
     
     renderAuthFlow();
@@ -102,7 +102,7 @@ describe('Authentication Flow', () => {
     fireEvent.submit(screen.getByRole('form'));
     
     await waitFor(() => {
-      expect(screen.getByText('Invalid password')).toBeInTheDocument();
+      expect(screen.getByText('Invalid password')).toBeTruthy();
     });
   });
 });

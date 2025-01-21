@@ -3,16 +3,16 @@ import { useMarketplace } from '../hooks/useMarketplace';
 import { useContract } from '../../../../hooks/useContract';
 import { Contract } from 'ethers';
 
-jest.mock('../../../../hooks/useContract');
-jest.mock('ethers');
+vi.mock('../../../../hooks/useContract');
+vi.mock('ethers');
 
-const mockUseContract = useContract as jest.MockedFunction<typeof useContract>;
+const mockUseContract = useContract as vi.MockedFunction<typeof useContract>;
 
 describe('useMarketplace', () => {
   const mockContract = {
-    getItems: jest.fn(),
-    getStats: jest.fn(),
-    createItem: jest.fn(),
+    getItems: vi.fn(),
+    getStats: vi.fn(),
+    createItem: vi.fn(),
     interface: {},
     provider: {},
     signer: {},
@@ -20,18 +20,18 @@ describe('useMarketplace', () => {
     estimateGas: {},
     populateTransaction: {},
     filters: {},
-    queryFilter: jest.fn(),
-    listenerCount: jest.fn(),
-    listeners: jest.fn(),
-    removeAllListeners: jest.fn(),
-    off: jest.fn(),
-    on: jest.fn(),
-    once: jest.fn(),
-    emit: jest.fn(),
-    connect: jest.fn(),
-    attach: jest.fn(),
-    deployed: jest.fn(),
-    _deployed: jest.fn(),
+    queryFilter: vi.fn(),
+    listenerCount: vi.fn(),
+    listeners: vi.fn(),
+    removeAllListeners: vi.fn(),
+    off: vi.fn(),
+    on: vi.fn(),
+    once: vi.fn(),
+    emit: vi.fn(),
+    connect: vi.fn(),
+    attach: vi.fn(),
+    deployed: vi.fn(),
+    _deployed: vi.fn(),
   } as unknown as Contract;
 
   beforeEach(() => {
@@ -42,7 +42,7 @@ describe('useMarketplace', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('initializes with default values', () => {

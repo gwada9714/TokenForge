@@ -28,17 +28,17 @@ interface TokenAuthRequest extends AuthenticatedRequest {
   };
 }
 
-jest.mock('ethers', () => ({
-  ...jest.requireActual('ethers'),
-  Contract: jest.fn().mockImplementation(() => mockTokenContract),
+vi.mock('ethers', () => ({
+  ...vi.importActual('ethers'),
+  Contract: vi.fn().mockImplementation(() => mockTokenContract),
 }));
 
 describe('TokensController', () => {
   let controller: TokensController;
   let mockReq: Partial<TokenRequest | TokenSearchRequest | TokenAuthRequest>;
   let mockRes: Partial<Response>;
-  const mockJson = jest.fn();
-  const mockStatus = jest.fn().mockReturnValue({ json: mockJson });
+  const mockJson = vi.fn();
+  const mockStatus = vi.fn().mockReturnValue({ json: mockJson });
 
   beforeEach(() => {
     controller = new TokensController(mockTokenForgeFactory as Contract);

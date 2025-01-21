@@ -7,21 +7,21 @@ import { authSyncService } from '../../services/authSyncService';
 import { createAuthError } from '../../errors/AuthError';
 
 // Mock des services
-jest.mock('../../services/firebaseService');
-jest.mock('../../services/errorService');
-jest.mock('../../services/walletReconnectionService');
-jest.mock('../../services/authSyncService');
+vi.mock('../../services/firebaseService');
+vi.mock('../../services/errorService');
+vi.mock('../../services/walletReconnectionService');
+vi.mock('../../services/authSyncService');
 
 // Mock Wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(() => ({ address: null, isConnected: false })),
-  useConnect: jest.fn(() => ({ connect: jest.fn() })),
-  useDisconnect: jest.fn(() => ({ disconnect: jest.fn() })),
+vi.mock('wagmi', () => ({
+  useAccount: vi.fn(() => ({ address: null, isConnected: false })),
+  useConnect: vi.fn(() => ({ connect: vi.fn() })),
+  useDisconnect: vi.fn(() => ({ disconnect: vi.fn() })),
 }));
 
 // Mock @wagmi/core
-jest.mock('@wagmi/core', () => ({
-  getWalletClient: jest.fn(),
+vi.mock('@wagmi/core', () => ({
+  getWalletClient: vi.fn(),
 }));
 
 // Composant de test
@@ -65,15 +65,15 @@ describe('TokenForgeAuthContext', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Configuration des mocks par défaut
-    (firebaseService.onAuthStateChanged as jest.Mock).mockImplementation((callback) => {
+    (firebaseService.onAuthStateChanged as vi.Mock).mockImplementation((callback) => {
       callback(null);
-      return jest.fn();
+      return vi.fn();
     });
-    (firebaseService.getUserData as jest.Mock).mockResolvedValue(mockUser);
-    (walletReconnectionService.isCorrectNetwork as jest.Mock).mockReturnValue(true);
-    (walletReconnectionService.validateNetworkBeforeConnect as jest.Mock).mockResolvedValue(true);
+    (firebaseService.getUserData as vi.Mock).mockResolvedValue(mockUser);
+    (walletReconnectionService.isCorrectNetwork as vi.Mock).mockReturnValue(true);
+    (walletReconnectionService.validateNetworkBeforeConnect as vi.Mock).mockResolvedValue(true);
   });
 
   it('provides initial auth state', () => {
@@ -83,13 +83,13 @@ describe('TokenForgeAuthContext', () => {
       </TokenForgeAuthProvider>
     );
 
-    expect(screen.getByTestId('status')).toHaveTextContent('idle');
-    expect(screen.getByTestId('is-authenticated')).toHaveTextContent('false');
-    expect(screen.getByTestId('wallet-connected')).toHaveTextContent('false');
+    expect(screen.getByTestId('status').textContent).toBe('idle');
+    expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
+    expect(screen.getByTestId('wallet-connected').textContent).toBe('false');
   });
 
   it('handles sign in successfully', async () => {
-    (firebaseService.signIn as jest.Mock).mockResolvedValue(mockUser);
+    (firebaseService.signIn as vi.Mock).mockResolvedValue(mockUser);
 
     render(
       <TokenForgeAuthProvider>
@@ -101,16 +101,16 @@ describe('TokenForgeAuthContext', () => {
 
     await waitFor(() => {
       expect(firebaseService.signIn).toHaveBeenCalledWith('test@example.com', 'password');
-      expect(screen.getByTestId('is-authenticated')).toHaveTextContent('true');
-      expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
+      expect(screen.getByTestId('is-authenticated').textContent).toBe('true');
+      expect(screen.getByTestId('status').textContent).toBe('authenticated');
       expect(authSyncService.startTokenRefresh).toHaveBeenCalled();
     });
   });
 
   it('handles sign in error', async () => {
     const mockError = new Error('Invalid credentials');
-    (firebaseService.signIn as jest.Mock).mockRejectedValue(mockError);
-    (errorService.handleAuthError as jest.Mock).mockReturnValue(
+    (firebaseService.signIn as vi.Mock).mockRejectedValue(mockError);
+    (errorService.handleAuthError as vi.Mock).mockReturnValue(
       createAuthError('AUTH_016', 'Invalid credentials')
     );
 
@@ -123,13 +123,13 @@ describe('TokenForgeAuthContext', () => {
     fireEvent.click(screen.getByText('Sign In'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('status')).toHaveTextContent('error');
+      expect(screen.getByTestId('status').textContent).toBe('error');
       expect(errorService.handleAuthError).toHaveBeenCalledWith(mockError);
     });
   });
 
   it('handles wallet connection with network validation', async () => {
-    const { useAccount } = require('wagmi');
+    import { useAccount } from "wagmi";
     useAccount.mockImplementation(() => ({ 
       address: '0x123', 
       isConnected: true 
@@ -148,13 +148,13 @@ describe('TokenForgeAuthContext', () => {
 
     await waitFor(() => {
       expect(walletReconnectionService.validateNetworkBeforeConnect).toHaveBeenCalled();
-      expect(screen.getByTestId('wallet-connected')).toHaveTextContent('true');
+      expect(screen.getByTestId('wallet-connected').textContent).toBe('true');
       expect(authSyncService.synchronizeWalletAndAuth).toHaveBeenCalled();
     });
   });
 
   it('handles wallet connection with wrong network', async () => {
-    const { useAccount } = require('wagmi');
+    import { useAccount } from "wagmi";
     useAccount.mockImplementation(() => ({ 
       address: '0x123', 
       isConnected: true 
@@ -163,7 +163,7 @@ describe('TokenForgeAuthContext', () => {
     const { getWalletClient } = require('@wagmi/core');
     getWalletClient.mockResolvedValue(mockWalletClient);
 
-    (walletReconnectionService.validateNetworkBeforeConnect as jest.Mock).mockRejectedValue(
+    (walletReconnectionService.validateNetworkBeforeConnect as vi.Mock).mockRejectedValue(
       createAuthError('AUTH_002', 'Wrong network')
     );
 
@@ -176,14 +176,14 @@ describe('TokenForgeAuthContext', () => {
     fireEvent.click(screen.getByText('Connect Wallet'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('status')).toHaveTextContent('error');
+      expect(screen.getByTestId('status').textContent).toBe('error');
     });
   });
 
   it('handles auth state changes and token refresh', async () => {
-    (firebaseService.onAuthStateChanged as jest.Mock).mockImplementation((callback) => {
+    (firebaseService.onAuthStateChanged as vi.Mock).mockImplementation((callback) => {
       callback(mockUser);
-      return jest.fn();
+      return vi.fn();
     });
 
     render(
@@ -193,15 +193,15 @@ describe('TokenForgeAuthContext', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('is-authenticated')).toHaveTextContent('true');
-      expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
+      expect(screen.getByTestId('is-authenticated').textContent).toBe('true');
+      expect(screen.getByTestId('status').textContent).toBe('authenticated');
       expect(authSyncService.startTokenRefresh).toHaveBeenCalled();
     });
   });
 
   it('cleans up resources on unmount', () => {
-    const unsubscribe = jest.fn();
-    (firebaseService.onAuthStateChanged as jest.Mock).mockReturnValue(unsubscribe);
+    const unsubscribe = vi.fn();
+    (firebaseService.onAuthStateChanged as vi.Mock).mockReturnValue(unsubscribe);
 
     const { unmount } = render(
       <TokenForgeAuthProvider>
@@ -215,8 +215,8 @@ describe('TokenForgeAuthContext', () => {
   });
 
   it('handles sign out with connected wallet', async () => {
-    const { useAccount, useDisconnect } = require('wagmi');
-    const mockDisconnect = jest.fn();
+    import { useAccount, useDisconnect } from "wagmi";
+    const mockDisconnect = vi.fn();
     useAccount.mockImplementation(() => ({ 
       address: '0x123', 
       isConnected: true 
@@ -236,14 +236,14 @@ describe('TokenForgeAuthContext', () => {
     await waitFor(() => {
       expect(mockDisconnect).toHaveBeenCalled();
       expect(authSyncService.stopTokenRefresh).toHaveBeenCalled();
-      expect(screen.getByTestId('is-authenticated')).toHaveTextContent('false');
-      expect(screen.getByTestId('wallet-connected')).toHaveTextContent('false');
+      expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
+      expect(screen.getByTestId('wallet-connected').textContent).toBe('false');
     });
   });
 
   it('handles wallet disconnection sync', async () => {
-    const { useAccount, useDisconnect } = require('wagmi');
-    const mockDisconnect = jest.fn();
+    import { useAccount, useDisconnect } from "wagmi";
+    const mockDisconnect = vi.fn();
     useAccount.mockImplementation(() => ({ 
       address: '0x123', 
       isConnected: true 
@@ -263,7 +263,7 @@ describe('TokenForgeAuthContext', () => {
     await waitFor(() => {
       expect(mockDisconnect).toHaveBeenCalled();
       expect(authSyncService.synchronizeWalletAndAuth).toHaveBeenCalled();
-      expect(screen.getByTestId('wallet-connected')).toHaveTextContent('false');
+      expect(screen.getByTestId('wallet-connected').textContent).toBe('false');
     });
   });
 });

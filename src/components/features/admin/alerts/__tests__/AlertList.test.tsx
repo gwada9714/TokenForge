@@ -1,11 +1,11 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import { AlertList } from '../AlertList';
 import type { AlertRule } from '../../../../../types/contracts';
 
 describe('AlertList', () => {
-  const mockOnToggleRule = jest.fn();
-  const mockOnDeleteRule = jest.fn();
+  const mockOnToggleRule = vi.fn();
+  const mockOnDeleteRule = vi.fn();
 
   const mockRules: AlertRule[] = [
     { id: 1, name: 'Rule 1', condition: 'value > 10', enabled: true },
@@ -19,16 +19,16 @@ describe('AlertList', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders all rules', () => {
     render(<AlertList {...defaultProps} />);
     
-    expect(screen.getByText('Rule 1')).toBeInTheDocument();
-    expect(screen.getByText('value > 10')).toBeInTheDocument();
-    expect(screen.getByText('Rule 2')).toBeInTheDocument();
-    expect(screen.getByText('value < 5')).toBeInTheDocument();
+    expect(screen.getByText('Rule 1')).toBeTruthy();
+    expect(screen.getByText('value > 10')).toBeTruthy();
+    expect(screen.getByText('Rule 2')).toBeTruthy();
+    expect(screen.getByText('value < 5')).toBeTruthy();
   });
 
   it('calls onToggleRule when switch is clicked', () => {
@@ -60,6 +60,6 @@ describe('AlertList', () => {
   it('renders empty list when no rules provided', () => {
     render(<AlertList {...defaultProps} rules={[]} />);
     
-    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).toBeFalsy();
   });
 });

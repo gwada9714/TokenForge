@@ -7,15 +7,15 @@ import { tokenRoutes } from '../../../router/routes/token.routes';
 import { adminRoutes } from '../../../router/routes/admin.routes';
 
 // Mock Firebase Auth
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(),
-  onAuthStateChanged: jest.fn(),
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  onAuthStateChanged: vi.fn(),
 }));
 
 // Mock Wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
-  useNetwork: jest.fn(),
+vi.mock('wagmi', () => ({
+  useAccount: vi.fn(),
+  useNetwork: vi.fn(),
 }));
 
 describe('Redirect Flow', () => {
@@ -51,7 +51,7 @@ describe('Redirect Flow', () => {
       });
 
       renderWithRouter(['/']);
-      expect(screen.getByText('Welcome to TokenForge')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to TokenForge')).toBeTruthy();
     });
   });
 
@@ -64,7 +64,7 @@ describe('Redirect Flow', () => {
       renderWithRouter(['/dashboard']);
 
       await waitFor(() => {
-        expect(screen.getByText('Sign In')).toBeInTheDocument();
+        expect(screen.getByText('Sign In')).toBeTruthy();
       });
     });
 
@@ -79,7 +79,7 @@ describe('Redirect Flow', () => {
       renderWithRouter(['/tokens']);
 
       await waitFor(() => {
-        expect(screen.getByText('Connect Your Wallet')).toBeInTheDocument();
+        expect(screen.getByText('Connect Your Wallet')).toBeTruthy();
       });
     });
 
@@ -97,7 +97,7 @@ describe('Redirect Flow', () => {
       renderWithRouter(['/tokens']);
 
       await waitFor(() => {
-        expect(screen.getByText('Wrong Network')).toBeInTheDocument();
+        expect(screen.getByText('Wrong Network')).toBeTruthy();
       });
     });
   });
@@ -111,7 +111,7 @@ describe('Redirect Flow', () => {
       renderWithRouter(['/admin']);
 
       await waitFor(() => {
-        expect(screen.getByText('Access Denied')).toBeInTheDocument();
+        expect(screen.getByText('Access Denied')).toBeTruthy();
       });
     });
 
@@ -123,7 +123,7 @@ describe('Redirect Flow', () => {
       renderWithRouter(['/admin']);
 
       await waitFor(() => {
-        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('Admin Dashboard')).toBeTruthy();
       });
     });
   });
@@ -137,7 +137,7 @@ describe('Redirect Flow', () => {
       renderWithRouter(['/login']);
 
       await waitFor(() => {
-        expect(screen.getByText('User Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('User Dashboard')).toBeTruthy();
       });
     });
 
@@ -149,7 +149,7 @@ describe('Redirect Flow', () => {
       renderWithRouter(['/signup']);
 
       await waitFor(() => {
-        expect(screen.getByText('User Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('User Dashboard')).toBeTruthy();
       });
     });
   });

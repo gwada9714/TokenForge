@@ -3,7 +3,7 @@ import { EmailVerification } from '../EmailVerification';
 import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 
 // Mock des dépendances
-jest.mock('../../hooks/useFirebaseAuth');
+vi.mock('../../hooks/useFirebaseAuth');
 
 describe('EmailVerification', () => {
   const mockSession = {
@@ -12,19 +12,19 @@ describe('EmailVerification', () => {
     email: 'test@tokenforge.eth',
   };
 
-  const mockSendVerificationEmail = jest.fn();
-  const mockOnClose = jest.fn();
+  const mockSendVerificationEmail = vi.fn();
+  const mockOnClose = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useFirebaseAuth as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    (useFirebaseAuth as vi.Mock).mockReturnValue({
       session: mockSession,
       sendVerificationEmail: mockSendVerificationEmail,
     });
   });
 
   it('should render nothing when no session exists', () => {
-    (useFirebaseAuth as jest.Mock).mockReturnValue({
+    (useFirebaseAuth as vi.Mock).mockReturnValue({
       session: null,
     });
 
@@ -36,7 +36,7 @@ describe('EmailVerification', () => {
   });
 
   it('should render nothing when email is verified', () => {
-    (useFirebaseAuth as jest.Mock).mockReturnValue({
+    (useFirebaseAuth as vi.Mock).mockReturnValue({
       session: { ...mockSession, emailVerified: true },
     });
 
@@ -50,8 +50,8 @@ describe('EmailVerification', () => {
   it('should render verification dialog when email is not verified', () => {
     render(<EmailVerification open={true} onClose={mockOnClose} />);
 
-    expect(screen.getByText('Email Verification Required')).toBeInTheDocument();
-    expect(screen.getByText(mockSession.email!)).toBeInTheDocument();
+    expect(screen.getByText('Email Verification Required')).toBeTruthy();
+    expect(screen.getByText(mockSession.email!)).toBeTruthy();
   });
 
   it('should handle send verification email click', async () => {
@@ -64,7 +64,7 @@ describe('EmailVerification', () => {
 
     expect(mockSendVerificationEmail).toHaveBeenCalled();
     await waitFor(() => {
-      expect(screen.getByText('Verification email sent successfully')).toBeInTheDocument();
+      expect(screen.getByText('Verification email sent successfully')).toBeTruthy();
     });
   });
 
@@ -78,7 +78,7 @@ describe('EmailVerification', () => {
     fireEvent.click(sendButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to send verification email')).toBeInTheDocument();
+      expect(screen.getByText('Failed to send verification email')).toBeTruthy();
     });
   });
 
@@ -101,11 +101,11 @@ describe('EmailVerification', () => {
     const sendButton = screen.getByText('Send Verification Email');
     fireEvent.click(sendButton);
 
-    expect(screen.getByText('Sending...')).toBeInTheDocument();
+    expect(screen.getByText('Sending...')).toBeTruthy();
     expect(sendButton).toBeDisabled();
 
     await waitFor(() => {
-      expect(screen.getByText('Resend Email')).toBeInTheDocument();
+      expect(screen.getByText('Resend Email')).toBeTruthy();
       expect(sendButton).not.toBeDisabled();
     });
   });
@@ -119,7 +119,7 @@ describe('EmailVerification', () => {
     fireEvent.click(sendButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Resend Email')).toBeInTheDocument();
+      expect(screen.getByText('Resend Email')).toBeTruthy();
     });
 
     // Tenter de renvoyer l'email

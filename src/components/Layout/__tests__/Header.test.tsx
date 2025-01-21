@@ -4,27 +4,27 @@ import { Header } from '../header';
 import { TokenForgeAuthProvider } from '../../../features/auth';
 
 // Mock hooks
-jest.mock('@/features/auth', () => ({
-  ...jest.requireActual('@/features/auth'),
-  useTokenForgeAuth: jest.fn(),
+vi.mock('@/features/auth', () => ({
+  ...vi.importActual('@/features/auth'),
+  useTokenForgeAuth: vi.fn(),
 }));
 
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
+vi.mock('wagmi', () => ({
+  useAccount: vi.fn(),
 }));
 
 describe('Header', () => {
-  const mockNavigate = jest.fn();
+  const mockNavigate = vi.fn();
   
   // Mock useNavigate
-  jest.mock('react-router-dom', () => ({
-    ...jest.requireActual('react-router-dom'),
+  vi.mock('react-router-dom', () => ({
+    ...vi.importActual('react-router-dom'),
     useNavigate: () => mockNavigate,
   }));
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const renderHeader = () => {
@@ -49,10 +49,10 @@ describe('Header', () => {
 
       renderHeader();
 
-      expect(screen.getByText('À propos')).toBeInTheDocument();
-      expect(screen.getByText('Contact')).toBeInTheDocument();
-      expect(screen.getByText('Marketplace')).toBeInTheDocument();
-      expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
+      expect(screen.getByText('À propos')).toBeTruthy();
+      expect(screen.getByText('Contact')).toBeTruthy();
+      expect(screen.getByText('Marketplace')).toBeTruthy();
+      expect(screen.queryByText('Dashboard')).toBeFalsy();
     });
 
     it('shows authenticated links when logged in', () => {
@@ -66,9 +66,9 @@ describe('Header', () => {
 
       renderHeader();
 
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
-      expect(screen.getByText('Mes Tokens')).toBeInTheDocument();
-      expect(screen.queryByText('À propos')).not.toBeInTheDocument();
+      expect(screen.getByText('Dashboard')).toBeTruthy();
+      expect(screen.getByText('Mes Tokens')).toBeTruthy();
+      expect(screen.queryByText('À propos')).toBeFalsy();
     });
 
     it('shows admin link when user is admin', () => {
@@ -79,7 +79,7 @@ describe('Header', () => {
 
       renderHeader();
 
-      expect(screen.getByText('Admin')).toBeInTheDocument();
+      expect(screen.getByText('Admin')).toBeTruthy();
     });
   });
 
@@ -92,12 +92,12 @@ describe('Header', () => {
 
       renderHeader();
 
-      expect(screen.getByText('Connexion')).toBeInTheDocument();
-      expect(screen.queryByText('Déconnexion')).not.toBeInTheDocument();
+      expect(screen.getByText('Connexion')).toBeTruthy();
+      expect(screen.queryByText('Déconnexion')).toBeFalsy();
     });
 
     it('shows logout button when authenticated', () => {
-      const mockSignOut = jest.fn();
+      const mockSignOut = vi.fn();
       (require('@/features/auth') as any).useTokenForgeAuth.mockReturnValue({
         isAuthenticated: true,
         user: { email: 'user@example.com' },
@@ -107,7 +107,7 @@ describe('Header', () => {
       renderHeader();
 
       const logoutButton = screen.getByText('Déconnexion');
-      expect(logoutButton).toBeInTheDocument();
+      expect(logoutButton).toBeTruthy();
       
       fireEvent.click(logoutButton);
       expect(mockSignOut).toHaveBeenCalled();
@@ -122,7 +122,7 @@ describe('Header', () => {
 
       renderHeader();
 
-      expect(screen.getByText('Connecter Wallet')).toBeInTheDocument();
+      expect(screen.getByText('Connecter Wallet')).toBeTruthy();
     });
 
     it('hides connect wallet button when wallet is connected', () => {
@@ -132,7 +132,7 @@ describe('Header', () => {
 
       renderHeader();
 
-      expect(screen.queryByText('Connecter Wallet')).not.toBeInTheDocument();
+      expect(screen.queryByText('Connecter Wallet')).toBeFalsy();
     });
   });
 

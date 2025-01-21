@@ -1,10 +1,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import { AuditLogToolbar } from '../AuditLogToolbar';
 
 describe('AuditLogToolbar', () => {
-  const mockOnExport = jest.fn();
-  const mockOnPurge = jest.fn();
+  const mockOnExport = vi.fn();
+  const mockOnPurge = vi.fn();
 
   const defaultProps = {
     onExport: mockOnExport,
@@ -12,14 +12,14 @@ describe('AuditLogToolbar', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders export and purge buttons', () => {
     render(<AuditLogToolbar {...defaultProps} />);
     
-    expect(screen.getByRole('button', { name: /exporter/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /purger/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /exporter/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /purger/i })).toBeTruthy();
   });
 
   it('calls onExport when export button is clicked', () => {

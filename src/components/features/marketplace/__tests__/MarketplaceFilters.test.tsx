@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MarketplaceFilters } from '../components/MarketplaceFilters';
 
 describe('MarketplaceFilters', () => {
-  const mockOnFilter = jest.fn();
+  const mockOnFilter = vi.fn();
 
   beforeEach(() => {
     mockOnFilter.mockClear();
@@ -11,11 +11,11 @@ describe('MarketplaceFilters', () => {
   it('renders all filter fields', () => {
     render(<MarketplaceFilters onFilter={mockOnFilter} />);
 
-    expect(screen.getByLabelText(/statut/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/prix min/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/prix max/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/trier par/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/direction/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/statut/i)).toBeTruthy();
+    expect(screen.getByLabelText(/prix min/i)).toBeTruthy();
+    expect(screen.getByLabelText(/prix max/i)).toBeTruthy();
+    expect(screen.getByLabelText(/trier par/i)).toBeTruthy();
+    expect(screen.getByLabelText(/direction/i)).toBeTruthy();
   });
 
   it('calls onFilter with default values when mounted', () => {

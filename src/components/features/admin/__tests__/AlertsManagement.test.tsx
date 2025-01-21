@@ -1,33 +1,33 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import AlertsManagement from '../AlertsManagement';
 import { useContract } from '../../../../hooks/useContract';
 
 // Mock du hook useContract
-jest.mock('../../../../hooks/useContract', () => ({
-  useContract: jest.fn(),
+vi.mock('../../../../hooks/useContract', () => ({
+  useContract: vi.fn(),
 }));
 
 describe('AlertsManagement', () => {
   const mockContract = {
-    addAlert: jest.fn(),
-    updateAlert: jest.fn(),
-    deleteAlert: jest.fn(),
+    addAlert: vi.fn(),
+    updateAlert: vi.fn(),
+    deleteAlert: vi.fn(),
   };
 
   beforeEach(() => {
-    (useContract as jest.Mock).mockReturnValue({ contract: mockContract });
+    (useContract as vi.Mock).mockReturnValue({ contract: mockContract });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the alerts management interface', () => {
     render(<AlertsManagement />);
     
-    expect(screen.getByText('Alerts Management')).toBeInTheDocument();
-    expect(screen.getByText('Add Alert')).toBeInTheDocument();
+    expect(screen.getByText('Alerts Management')).toBeTruthy();
+    expect(screen.getByText('Add Alert')).toBeTruthy();
   });
 
   it('opens add alert dialog when clicking add button', () => {
@@ -35,9 +35,9 @@ describe('AlertsManagement', () => {
     
     fireEvent.click(screen.getByText('Add Alert'));
     
-    expect(screen.getByText('Add New Alert')).toBeInTheDocument();
-    expect(screen.getByLabelText('Type')).toBeInTheDocument();
-    expect(screen.getByLabelText('Message')).toBeInTheDocument();
+    expect(screen.getByText('Add New Alert')).toBeTruthy();
+    expect(screen.getByLabelText('Type')).toBeTruthy();
+    expect(screen.getByLabelText('Message')).toBeTruthy();
   });
 
   it('validates form inputs', async () => {
@@ -63,7 +63,7 @@ describe('AlertsManagement', () => {
 
   it('adds a new alert successfully', async () => {
     mockContract.addAlert.mockResolvedValueOnce({
-      wait: jest.fn().mockResolvedValueOnce({}),
+      wait: vi.fn().mockResolvedValueOnce({}),
     });
 
     render(<AlertsManagement />);
@@ -85,7 +85,7 @@ describe('AlertsManagement', () => {
     });
     
     // Vérifier le message de succès
-    expect(await screen.findByText('Alert added successfully')).toBeInTheDocument();
+    expect(await screen.findByText('Alert added successfully')).toBeTruthy();
   });
 
   it('handles add alert error', async () => {
@@ -105,7 +105,7 @@ describe('AlertsManagement', () => {
     fireEvent.click(screen.getByText('Add'));
     
     // Vérifier le message d'erreur
-    expect(await screen.findByText('Failed to add alert')).toBeInTheDocument();
+    expect(await screen.findByText('Failed to add alert')).toBeTruthy();
   });
 
   it('closes dialog on cancel', () => {
@@ -118,6 +118,6 @@ describe('AlertsManagement', () => {
     fireEvent.click(screen.getByText('Cancel'));
     
     // Vérifier que le dialogue est fermé
-    expect(screen.queryByText('Add New Alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Add New Alert')).toBeFalsy();
   });
 });

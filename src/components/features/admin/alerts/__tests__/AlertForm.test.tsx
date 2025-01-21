@@ -1,11 +1,11 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import { AlertForm } from '../AlertForm';
 
 describe('AlertForm', () => {
-  const mockOnNameChange = jest.fn();
-  const mockOnConditionChange = jest.fn();
-  const mockOnSubmit = jest.fn();
+  const mockOnNameChange = vi.fn();
+  const mockOnConditionChange = vi.fn();
+  const mockOnSubmit = vi.fn();
 
   const defaultProps = {
     newRuleName: '',
@@ -16,15 +16,15 @@ describe('AlertForm', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders all form elements', () => {
     render(<AlertForm {...defaultProps} />);
     
-    expect(screen.getByLabelText(/nom de la règle/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/condition/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /ajouter/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/nom de la règle/i)).toBeTruthy();
+    expect(screen.getByLabelText(/condition/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /ajouter/i })).toBeTruthy();
   });
 
   it('calls onChange handlers when inputs change', () => {

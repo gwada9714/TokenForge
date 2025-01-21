@@ -12,17 +12,17 @@ describe('MarketplaceStats', () => {
   it('renders all stats correctly', () => {
     render(<MarketplaceStats stats={mockStats} />);
 
-    expect(screen.getByText('Total Items')).toBeInTheDocument();
-    expect(screen.getByText('100')).toBeInTheDocument();
+    expect(screen.getByText('Total Items')).toBeTruthy();
+    expect(screen.getByText('100')).toBeTruthy();
 
-    expect(screen.getByText('Volume Total')).toBeInTheDocument();
-    expect(screen.getByText('1000')).toBeInTheDocument();
+    expect(screen.getByText('Volume Total')).toBeTruthy();
+    expect(screen.getByText('1000')).toBeTruthy();
 
-    expect(screen.getByText('Items Actifs')).toBeInTheDocument();
-    expect(screen.getByText('75')).toBeInTheDocument();
+    expect(screen.getByText('Items Actifs')).toBeTruthy();
+    expect(screen.getByText('75')).toBeTruthy();
 
-    expect(screen.getByText('Items Vendus')).toBeInTheDocument();
-    expect(screen.getByText('25')).toBeInTheDocument();
+    expect(screen.getByText('Items Vendus')).toBeTruthy();
+    expect(screen.getByText('25')).toBeTruthy();
   });
 
   it('updates when stats change', () => {
@@ -36,8 +36,8 @@ describe('MarketplaceStats', () => {
 
     rerender(<MarketplaceStats stats={newStats} />);
 
-    expect(screen.getByText('150')).toBeInTheDocument();
-    expect(screen.getByText('100')).toBeInTheDocument();
+    expect(screen.getByText('150')).toBeTruthy();
+    expect(screen.getByText('100')).toBeTruthy();
   });
 
   it('renders zero values correctly', () => {

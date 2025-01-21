@@ -1,44 +1,44 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import ContractControls from '../ContractControls';
 import { useContract } from '../../../../hooks/useContract';
 
 // Mock du hook useContract
-jest.mock('../../../../hooks/useContract', () => ({
-  useContract: jest.fn(),
+vi.mock('../../../../hooks/useContract', () => ({
+  useContract: vi.fn(),
 }));
 
 describe('ContractControls', () => {
   const mockContract = {
-    pause: jest.fn(),
-    unpause: jest.fn(),
+    pause: vi.fn(),
+    unpause: vi.fn(),
   };
 
   beforeEach(() => {
-    (useContract as jest.Mock).mockReturnValue({ contract: mockContract });
+    (useContract as vi.Mock).mockReturnValue({ contract: mockContract });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the contract controls interface', () => {
     render(<ContractControls />);
     
-    expect(screen.getByText('Contract Controls')).toBeInTheDocument();
-    expect(screen.getByText('Contract Status')).toBeInTheDocument();
-    expect(screen.getByText('Emergency Controls')).toBeInTheDocument();
+    expect(screen.getByText('Contract Controls')).toBeTruthy();
+    expect(screen.getByText('Contract Status')).toBeTruthy();
+    expect(screen.getByText('Emergency Controls')).toBeTruthy();
   });
 
   it('displays active status by default', () => {
     render(<ContractControls />);
     
-    expect(screen.getByText('Active')).toBeInTheDocument();
+    expect(screen.getByText('Active')).toBeTruthy();
   });
 
   it('handles pause action successfully', async () => {
     mockContract.pause.mockResolvedValueOnce({
-      wait: jest.fn().mockResolvedValueOnce({}),
+      wait: vi.fn().mockResolvedValueOnce({}),
     });
 
     render(<ContractControls />);
@@ -47,13 +47,13 @@ describe('ContractControls', () => {
     
     await waitFor(() => {
       expect(mockContract.pause).toHaveBeenCalled();
-      expect(screen.getByText('Contract successfully paused')).toBeInTheDocument();
+      expect(screen.getByText('Contract successfully paused')).toBeTruthy();
     });
   });
 
   it('handles unpause action successfully', async () => {
     mockContract.unpause.mockResolvedValueOnce({
-      wait: jest.fn().mockResolvedValueOnce({}),
+      wait: vi.fn().mockResolvedValueOnce({}),
     });
 
     render(<ContractControls />);
@@ -63,7 +63,7 @@ describe('ContractControls', () => {
     fireEvent.click(pauseButton);
     
     await waitFor(() => {
-      expect(screen.getByText('Paused')).toBeInTheDocument();
+      expect(screen.getByText('Paused')).toBeTruthy();
     });
     
     // Ensuite réactiver le contrat
@@ -72,7 +72,7 @@ describe('ContractControls', () => {
     
     await waitFor(() => {
       expect(mockContract.unpause).toHaveBeenCalled();
-      expect(screen.getByText('Contract successfully unpaused')).toBeInTheDocument();
+      expect(screen.getByText('Contract successfully unpaused')).toBeTruthy();
     });
   });
 
@@ -84,7 +84,7 @@ describe('ContractControls', () => {
     fireEvent.click(screen.getByText('Pause Contract'));
     
     await waitFor(() => {
-      expect(screen.getByText('Failed to pause contract')).toBeInTheDocument();
+      expect(screen.getByText('Failed to pause contract')).toBeTruthy();
     });
   });
 
@@ -110,10 +110,10 @@ describe('ContractControls', () => {
     
     fireEvent.click(screen.getByText('Pause Contract'));
     
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeTruthy();
     
     await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      expect(screen.queryByRole('progressbar')).toBeFalsy();
     });
   });
 });

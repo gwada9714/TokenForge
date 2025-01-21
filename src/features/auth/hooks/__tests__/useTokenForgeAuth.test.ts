@@ -7,10 +7,10 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAccount, useDisconnect, useChainId, useWalletClient, usePublicClient } from 'wagmi';
 
 // Mock des hooks
-jest.mock('../useAuthState');
-jest.mock('../useWalletState');
-jest.mock('wagmi');
-jest.mock('firebase/auth');
+vi.mock('../useAuthState');
+vi.mock('../useWalletState');
+vi.mock('wagmi');
+vi.mock('firebase/auth');
 
 describe('useTokenForgeAuth', () => {
   // Configuration initiale des mocks
@@ -19,10 +19,10 @@ describe('useTokenForgeAuth', () => {
     isAuthenticated: false,
     user: null,
     error: null,
-    updateUser: jest.fn(),
-    startEmailVerification: jest.fn(),
-    verifyEmail: jest.fn(),
-    logout: jest.fn(),
+    updateUser: vi.fn(),
+    startEmailVerification: vi.fn(),
+    verifyEmail: vi.fn(),
+    logout: vi.fn(),
   };
 
   const mockWalletState = {
@@ -35,11 +35,11 @@ describe('useTokenForgeAuth', () => {
       provider: null,
     },
     actions: {
-      connectWallet: jest.fn(),
-      disconnectWallet: jest.fn(),
-      updateNetwork: jest.fn(),
-      updateProvider: jest.fn(),
-      updateWalletState: jest.fn(),
+      connectWallet: vi.fn(),
+      disconnectWallet: vi.fn(),
+      updateNetwork: vi.fn(),
+      updateProvider: vi.fn(),
+      updateWalletState: vi.fn(),
     },
   };
 
@@ -49,18 +49,18 @@ describe('useTokenForgeAuth', () => {
     chainId: 1,
     walletClient: null,
     provider: null,
-    disconnect: jest.fn(),
+    disconnect: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useAuthState as jest.Mock).mockReturnValue(mockAuthState);
-    (useWalletState as jest.Mock).mockReturnValue(mockWalletState);
-    (useAccount as jest.Mock).mockReturnValue({ address: mockWagmi.address, isConnected: mockWagmi.isConnected });
-    (useChainId as jest.Mock).mockReturnValue(mockWagmi.chainId);
-    (useWalletClient as jest.Mock).mockReturnValue({ data: mockWagmi.walletClient });
-    (usePublicClient as jest.Mock).mockReturnValue(mockWagmi.provider);
-    (useDisconnect as jest.Mock).mockReturnValue({ disconnect: mockWagmi.disconnect });
+    vi.clearAllMocks();
+    (useAuthState as vi.Mock).mockReturnValue(mockAuthState);
+    (useWalletState as vi.Mock).mockReturnValue(mockWalletState);
+    (useAccount as vi.Mock).mockReturnValue({ address: mockWagmi.address, isConnected: mockWagmi.isConnected });
+    (useChainId as vi.Mock).mockReturnValue(mockWagmi.chainId);
+    (useWalletClient as vi.Mock).mockReturnValue({ data: mockWagmi.walletClient });
+    (usePublicClient as vi.Mock).mockReturnValue(mockWagmi.provider);
+    (useDisconnect as vi.Mock).mockReturnValue({ disconnect: mockWagmi.disconnect });
   });
 
   it('devrait retourner l\'état initial correct', () => {
@@ -92,7 +92,7 @@ describe('useTokenForgeAuth', () => {
       emailVerified: true,
     };
 
-    (signInWithEmailAndPassword as jest.Mock).mockResolvedValueOnce({
+    (signInWithEmailAndPassword as vi.Mock).mockResolvedValueOnce({
       user: mockUser,
     });
 
@@ -112,7 +112,7 @@ describe('useTokenForgeAuth', () => {
 
   it('devrait gérer les erreurs de login', async () => {
     const mockError = new Error('Invalid credentials');
-    (signInWithEmailAndPassword as jest.Mock).mockRejectedValueOnce(mockError);
+    (signInWithEmailAndPassword as vi.Mock).mockRejectedValueOnce(mockError);
 
     const { result } = renderHook(() => useTokenForgeAuth());
 
@@ -135,7 +135,7 @@ describe('useTokenForgeAuth', () => {
   });
 
   it('devrait déconnecter le wallet lors du logout si connecté', async () => {
-    (useAccount as jest.Mock).mockReturnValue({ isConnected: true });
+    (useAccount as vi.Mock).mockReturnValue({ isConnected: true });
     const { result } = renderHook(() => useTokenForgeAuth());
 
     await act(async () => {
@@ -158,7 +158,7 @@ describe('useTokenForgeAuth', () => {
   });
 
   it('devrait identifier correctement un admin', () => {
-    (useAuthState as jest.Mock).mockReturnValue({
+    (useAuthState as vi.Mock).mockReturnValue({
       ...mockAuthState,
       user: { email: 'admin@tokenforge.com' },
     });

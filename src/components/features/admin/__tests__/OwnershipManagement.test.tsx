@@ -1,40 +1,40 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import OwnershipManagement from '../OwnershipManagement';
 import { useContract } from '../../../../hooks/useContract';
 
 // Mock du hook useContract et ethers
-jest.mock('../../../../hooks/useContract', () => ({
-  useContract: jest.fn(),
+vi.mock('../../../../hooks/useContract', () => ({
+  useContract: vi.fn(),
 }));
 
-jest.mock('ethers', () => ({
+vi.mock('ethers', () => ({
   ethers: {
-    isAddress: jest.fn((address: string) => address === '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'),
+    isAddress: vi.fn((address: string) => address === '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'),
   },
 }));
 
 describe('OwnershipManagement', () => {
   const mockContract = {
-    transferOwnership: jest.fn(),
+    transferOwnership: vi.fn(),
   };
 
   const validAddress = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
 
   beforeEach(() => {
-    (useContract as jest.Mock).mockReturnValue({ contract: mockContract });
+    (useContract as vi.Mock).mockReturnValue({ contract: mockContract });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the ownership management interface', () => {
     render(<OwnershipManagement />);
     
-    expect(screen.getByText('Ownership Management')).toBeInTheDocument();
-    expect(screen.getByText('Current Owner')).toBeInTheDocument();
-    expect(screen.getByText('Transfer Ownership')).toBeInTheDocument();
+    expect(screen.getByText('Ownership Management')).toBeTruthy();
+    expect(screen.getByText('Current Owner')).toBeTruthy();
+    expect(screen.getByText('Transfer Ownership')).toBeTruthy();
   });
 
   it('opens transfer dialog when clicking transfer button', () => {
@@ -42,8 +42,8 @@ describe('OwnershipManagement', () => {
     
     fireEvent.click(screen.getByText('Transfer to New Owner'));
     
-    expect(screen.getByText('Transfer Ownership')).toBeInTheDocument();
-    expect(screen.getByLabelText('New Owner Address')).toBeInTheDocument();
+    expect(screen.getByText('Transfer Ownership')).toBeTruthy();
+    expect(screen.getByLabelText('New Owner Address')).toBeTruthy();
   });
 
   it('validates ethereum address format', async () => {
@@ -56,20 +56,20 @@ describe('OwnershipManagement', () => {
     
     fireEvent.change(input, { target: { value: invalidAddress } });
     
-    expect(screen.getByText('Please enter a valid Ethereum address')).toBeInTheDocument();
+    expect(screen.getByText('Please enter a valid Ethereum address')).toBeTruthy();
     expect(screen.getByText('Transfer')).toBeDisabled();
     
     fireEvent.change(input, { target: { value: validAddress } });
     
     await waitFor(() => {
-      expect(screen.queryByText('Please enter a valid Ethereum address')).not.toBeInTheDocument();
+      expect(screen.queryByText('Please enter a valid Ethereum address')).toBeFalsy();
       expect(screen.getByText('Transfer')).not.toBeDisabled();
     });
   });
 
   it('handles transfer ownership successfully', async () => {
     mockContract.transferOwnership.mockResolvedValueOnce({
-      wait: jest.fn().mockResolvedValueOnce({}),
+      wait: vi.fn().mockResolvedValueOnce({}),
     });
 
     render(<OwnershipManagement />);
@@ -83,11 +83,11 @@ describe('OwnershipManagement', () => {
     
     await waitFor(() => {
       expect(mockContract.transferOwnership).toHaveBeenCalledWith(validAddress);
-      expect(screen.getByText('Ownership transferred successfully')).toBeInTheDocument();
+      expect(screen.getByText('Ownership transferred successfully')).toBeTruthy();
     });
     
     // Le dialogue devrait être fermé
-    expect(screen.queryByText('Transfer Ownership')).not.toBeInTheDocument();
+    expect(screen.queryByText('Transfer Ownership')).toBeFalsy();
   });
 
   it('handles transfer ownership error', async () => {
@@ -103,11 +103,11 @@ describe('OwnershipManagement', () => {
     fireEvent.click(screen.getByText('Transfer'));
     
     await waitFor(() => {
-      expect(screen.getByText('Failed to transfer ownership')).toBeInTheDocument();
+      expect(screen.getByText('Failed to transfer ownership')).toBeTruthy();
     });
     
     // Le dialogue devrait rester ouvert
-    expect(screen.getByText('Transfer Ownership')).toBeInTheDocument();
+    expect(screen.getByText('Transfer Ownership')).toBeTruthy();
   });
 
   it('shows loading state during transfer', async () => {
@@ -124,10 +124,10 @@ describe('OwnershipManagement', () => {
     
     fireEvent.click(screen.getByText('Transfer'));
     
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeTruthy();
     
     await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      expect(screen.queryByRole('progressbar')).toBeFalsy();
     });
   });
 
@@ -141,7 +141,7 @@ describe('OwnershipManagement', () => {
     
     fireEvent.click(screen.getByText('Cancel'));
     
-    expect(screen.queryByText('Transfer Ownership')).not.toBeInTheDocument();
+    expect(screen.queryByText('Transfer Ownership')).toBeFalsy();
     expect(mockContract.transferOwnership).not.toHaveBeenCalled();
   });
 });

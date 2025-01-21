@@ -3,10 +3,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { SignUpPage } from '../SignUpPage';
 import { TokenForgeAuthProvider } from '../../../features/auth';
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', () => ({
+  ...vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ state: { from: { pathname: '/dashboard' } } }),
 }));
@@ -23,15 +23,15 @@ describe('SignUpPage', () => {
   });
 
   it('renders signup form', () => {
-    expect(screen.getByText('Create Account')).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+    expect(screen.getByText('Create Account')).toBeTruthy();
+    expect(screen.getByLabelText(/email/i)).toBeTruthy();
+    expect(screen.getByLabelText(/^password$/i)).toBeTruthy();
+    expect(screen.getByLabelText(/confirm password/i)).toBeTruthy();
   });
 
   it('has sign in link', () => {
     const signInLink = screen.getByText(/already have an account\?/i);
-    expect(signInLink).toBeInTheDocument();
+    expect(signInLink).toBeTruthy();
     expect(signInLink.closest('a')).toHaveAttribute('href', '/login');
   });
 });

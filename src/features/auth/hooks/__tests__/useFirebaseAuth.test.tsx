@@ -5,8 +5,8 @@ import { firebaseAuth } from '../../services/firebaseAuth';
 import { AuthError } from '../../errors/AuthError';
 
 // Mock des dépendances
-jest.mock('../useAuthManager');
-jest.mock('../../services/firebaseAuth');
+vi.mock('../useAuthManager');
+vi.mock('../../services/firebaseAuth');
 
 describe('useFirebaseAuth', () => {
   const mockSession = {
@@ -17,23 +17,23 @@ describe('useFirebaseAuth', () => {
 
   const mockAccount = '0x123456789';
   const mockProvider = {
-    getSigner: jest.fn(),
+    getSigner: vi.fn(),
   };
 
   beforeEach(() => {
     // Reset des mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock de useAuthManager
-    (useAuthManager as jest.Mock).mockReturnValue({
+    (useAuthManager as vi.Mock).mockReturnValue({
       account: mockAccount,
       provider: mockProvider,
     });
 
     // Mock des méthodes de firebaseAuth
-    (firebaseAuth.onSessionChange as jest.Mock).mockImplementation((callback) => {
+    (firebaseAuth.onSessionChange as vi.Mock).mockImplementation((callback) => {
       callback(null);
-      return jest.fn();
+      return vi.fn();
     });
   });
 
@@ -48,12 +48,12 @@ describe('useFirebaseAuth', () => {
   it('should handle successful wallet sign in', async () => {
     // Mock de la signature
     const mockSigner = {
-      signMessage: jest.fn().mockResolvedValue('mockSignature'),
+      signMessage: vi.fn().mockResolvedValue('mockSignature'),
     };
     mockProvider.getSigner.mockResolvedValue(mockSigner);
 
     // Mock de la connexion Firebase
-    (firebaseAuth.signInWithWallet as jest.Mock).mockResolvedValue(mockSession);
+    (firebaseAuth.signInWithWallet as vi.Mock).mockResolvedValue(mockSession);
 
     const { result } = renderHook(() => useFirebaseAuth());
 
@@ -91,7 +91,7 @@ describe('useFirebaseAuth', () => {
   });
 
   it('should handle successful sign out', async () => {
-    (firebaseAuth.signOut as jest.Mock).mockResolvedValue(undefined);
+    (firebaseAuth.signOut as vi.Mock).mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useFirebaseAuth());
 
@@ -106,9 +106,9 @@ describe('useFirebaseAuth', () => {
   });
 
   it('should handle session changes', () => {
-    (firebaseAuth.onSessionChange as jest.Mock).mockImplementation((callback) => {
+    (firebaseAuth.onSessionChange as vi.Mock).mockImplementation((callback) => {
       callback(mockSession);
-      return jest.fn();
+      return vi.fn();
     });
 
     const { result } = renderHook(() => useFirebaseAuth());
@@ -118,13 +118,13 @@ describe('useFirebaseAuth', () => {
   });
 
   it('should handle email verification', async () => {
-    (firebaseAuth.sendVerificationEmail as jest.Mock).mockResolvedValue(undefined);
+    (firebaseAuth.sendVerificationEmail as vi.Mock).mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useFirebaseAuth());
 
     // Simuler une session active
     act(() => {
-      (firebaseAuth.onSessionChange as jest.Mock).mock.calls[0][0](mockSession);
+      (firebaseAuth.onSessionChange as vi.Mock).mock.calls[0][0](mockSession);
     });
 
     await act(async () => {
@@ -135,8 +135,8 @@ describe('useFirebaseAuth', () => {
   });
 
   it('should clean up session listener on unmount', () => {
-    const mockUnsubscribe = jest.fn();
-    (firebaseAuth.onSessionChange as jest.Mock).mockReturnValue(mockUnsubscribe);
+    const mockUnsubscribe = vi.fn();
+    (firebaseAuth.onSessionChange as vi.Mock).mockReturnValue(mockUnsubscribe);
 
     const { unmount } = renderHook(() => useFirebaseAuth());
     unmount();

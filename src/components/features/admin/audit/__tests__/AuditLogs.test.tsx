@@ -1,20 +1,20 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import { AuditLogs } from '../AuditLogs';
 import { useTokenForgeAdmin } from '../../../../../hooks/useTokenForgeAdmin';
 
-jest.mock('../../../../../hooks/useTokenForgeAdmin');
+vi.mock('../../../../../hooks/useTokenForgeAdmin');
 
 describe('AuditLogs', () => {
   const mockContract = {
-    getAuditLogs: jest.fn(),
-    deleteAuditLog: jest.fn(),
-    purgeAuditLogs: jest.fn(),
+    getAuditLogs: vi.fn(),
+    deleteAuditLog: vi.fn(),
+    purgeAuditLogs: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useTokenForgeAdmin as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    (useTokenForgeAdmin as vi.Mock).mockReturnValue({
       contract: mockContract,
     });
   });
@@ -30,7 +30,7 @@ describe('AuditLogs', () => {
     });
 
     expect(mockContract.getAuditLogs).toHaveBeenCalled();
-    expect(screen.getByText('Transfer')).toBeInTheDocument();
+    expect(screen.getByText('Transfer')).toBeTruthy();
   });
 
   it('shows loading state while fetching logs', async () => {
@@ -38,7 +38,7 @@ describe('AuditLogs', () => {
 
     render(<AuditLogs />);
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeTruthy();
   });
 
   describe('Delete Log Functionality', () => {
@@ -57,8 +57,8 @@ describe('AuditLogs', () => {
         fireEvent.click(deleteButton);
       });
 
-      expect(screen.getByText('Confirmer la suppression')).toBeInTheDocument();
-      expect(screen.getByText('Êtes-vous sûr de vouloir supprimer ce log ?')).toBeInTheDocument();
+      expect(screen.getByText('Confirmer la suppression')).toBeTruthy();
+      expect(screen.getByText('Êtes-vous sûr de vouloir supprimer ce log ?')).toBeTruthy();
     });
 
     it('deletes log when confirmed and shows success message', async () => {
@@ -85,7 +85,7 @@ describe('AuditLogs', () => {
 
       expect(mockContract.deleteAuditLog).toHaveBeenCalledWith(1);
       expect(mockContract.getAuditLogs).toHaveBeenCalledTimes(2);
-      expect(screen.getByText('Log supprimé avec succès')).toBeInTheDocument();
+      expect(screen.getByText('Log supprimé avec succès')).toBeTruthy();
     });
 
     it('cancels log deletion when dialog is dismissed', async () => {
@@ -111,7 +111,7 @@ describe('AuditLogs', () => {
       });
 
       expect(mockContract.deleteAuditLog).not.toHaveBeenCalled();
-      expect(screen.queryByText('Confirmer la suppression')).not.toBeInTheDocument();
+      expect(screen.queryByText('Confirmer la suppression')).toBeFalsy();
     });
   });
 
@@ -131,8 +131,8 @@ describe('AuditLogs', () => {
         fireEvent.click(purgeButton);
       });
 
-      expect(screen.getByText('Confirmer la purge')).toBeInTheDocument();
-      expect(screen.getByText('Êtes-vous sûr de vouloir supprimer tous les logs ? Cette action est irréversible.')).toBeInTheDocument();
+      expect(screen.getByText('Confirmer la purge')).toBeTruthy();
+      expect(screen.getByText('Êtes-vous sûr de vouloir supprimer tous les logs ? Cette action est irréversible.')).toBeTruthy();
     });
 
     it('purges logs when confirmed and shows success message', async () => {
@@ -159,7 +159,7 @@ describe('AuditLogs', () => {
 
       expect(mockContract.purgeAuditLogs).toHaveBeenCalled();
       expect(mockContract.getAuditLogs).toHaveBeenCalledTimes(2);
-      expect(screen.getByText('Logs purgés avec succès')).toBeInTheDocument();
+      expect(screen.getByText('Logs purgés avec succès')).toBeTruthy();
     });
   });
 
@@ -170,14 +170,14 @@ describe('AuditLogs', () => {
       ];
       mockContract.getAuditLogs.mockResolvedValue(mockLogs);
 
-      const mockCreateElement = jest.spyOn(document, 'createElement');
-      const mockCreateObjectURL = jest.spyOn(URL, 'createObjectURL');
-      const mockRevokeObjectURL = jest.spyOn(URL, 'revokeObjectURL');
-      const mockAppendChild = jest.spyOn(document.body, 'appendChild');
-      const mockRemoveChild = jest.spyOn(document.body, 'removeChild');
+      const mockCreateElement = vi.spyOn(document, 'createElement');
+      const mockCreateObjectURL = vi.spyOn(URL, 'createObjectURL');
+      const mockRevokeObjectURL = vi.spyOn(URL, 'revokeObjectURL');
+      const mockAppendChild = vi.spyOn(document.body, 'appendChild');
+      const mockRemoveChild = vi.spyOn(document.body, 'removeChild');
       
       const mockLink = {
-        click: jest.fn(),
+        click: vi.fn(),
         href: '',
         download: '',
       };
@@ -198,7 +198,7 @@ describe('AuditLogs', () => {
       expect(mockCreateObjectURL).toHaveBeenCalled();
       expect(mockLink.click).toHaveBeenCalled();
       expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test');
-      expect(screen.getByText('Logs exportés avec succès')).toBeInTheDocument();
+      expect(screen.getByText('Logs exportés avec succès')).toBeTruthy();
 
       // Nettoyage des mocks
       mockCreateElement.mockRestore();
@@ -214,7 +214,7 @@ describe('AuditLogs', () => {
       ];
       mockContract.getAuditLogs.mockResolvedValue(mockLogs);
 
-      const mockCreateObjectURL = jest.spyOn(URL, 'createObjectURL');
+      const mockCreateObjectURL = vi.spyOn(URL, 'createObjectURL');
       mockCreateObjectURL.mockImplementation(() => {
         throw new Error('Failed to create URL');
       });
@@ -228,21 +228,21 @@ describe('AuditLogs', () => {
         fireEvent.click(exportButton);
       });
 
-      expect(screen.getByText('Erreur lors de l\'export des logs')).toBeInTheDocument();
+      expect(screen.getByText('Erreur lors de l\'export des logs')).toBeTruthy();
       mockCreateObjectURL.mockRestore();
     });
   });
 
   describe('Error Handling', () => {
     it('shows error message when loading logs fails', async () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockContract.getAuditLogs.mockRejectedValueOnce(new Error('API Error'));
 
       await act(async () => {
         render(<AuditLogs />);
       });
 
-      expect(screen.getByText('Erreur lors du chargement des logs')).toBeInTheDocument();
+      expect(screen.getByText('Erreur lors du chargement des logs')).toBeTruthy();
       consoleErrorSpy.mockRestore();
     });
 
@@ -269,7 +269,7 @@ describe('AuditLogs', () => {
         fireEvent.click(confirmButton);
       });
 
-      expect(screen.getByText('Erreur lors de la suppression du log')).toBeInTheDocument();
+      expect(screen.getByText('Erreur lors de la suppression du log')).toBeTruthy();
     });
   });
 });

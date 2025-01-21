@@ -19,10 +19,10 @@ describe('MarketplaceItem', () => {
   it('renders item details correctly', () => {
     render(<MarketplaceItem item={mockItem} />);
 
-    expect(screen.getByText(mockItem.name)).toBeInTheDocument();
-    expect(screen.getByText(mockItem.description)).toBeInTheDocument();
-    expect(screen.getByText(`${mockItem.price} ${mockItem.tokenSymbol}`)).toBeInTheDocument();
-    expect(screen.getByText(`Vendeur: ${mockItem.seller}`)).toBeInTheDocument();
+    expect(screen.getByText(mockItem.name)).toBeTruthy();
+    expect(screen.getByText(mockItem.description)).toBeTruthy();
+    expect(screen.getByText(`${mockItem.price} ${mockItem.tokenSymbol}`)).toBeTruthy();
+    expect(screen.getByText(`Vendeur: ${mockItem.seller}`)).toBeTruthy();
   });
 
   it('renders active status chip correctly', () => {

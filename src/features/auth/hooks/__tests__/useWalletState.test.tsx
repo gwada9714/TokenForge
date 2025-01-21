@@ -1,4 +1,63 @@
-// Mock des variables d'environnement avant tout
+// Mock de chains.ts avec configuration complète
+vi.mock('../../../config/chains', () => {
+  const mockMainnet = {
+    id: 1,
+    name: 'Ethereum',
+    network: 'mainnet',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: {
+      default: { http: ['https://eth-mainnet.mock.local'] },
+      public: { http: ['https://eth-mainnet.mock.local'] }
+    },
+    blockExplorers: {
+      default: { name: 'Etherscan', url: 'https://etherscan.io' }
+    }
+  };
+  
+  const mockSepolia = {
+    id: 11155111,
+    name: 'Sepolia',
+    network: 'sepolia',
+    nativeCurrency: { name: 'Sepolia Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: {
+      default: { http: ['https://eth-sepolia.mock.local'] },
+      public: { http: ['https://eth-sepolia.mock.local'] }
+    },
+    blockExplorers: {
+      default: { name: 'Etherscan', url: 'https://sepolia.etherscan.io' }
+    }
+  };
+
+  return {
+    mainnet: mockMainnet,
+    sepolia: mockSepolia,
+    getRpcUrl: vi.fn().mockImplementation((chainId: number) => {
+      if (chainId === 1) return 'https://eth-mainnet.mock.local';
+      if (chainId === 11155111) return 'https://eth-sepolia.mock.local';
+      return '';
+    }),
+    getContractAddress: vi.fn().mockImplementation((chainId: number) => {
+      if (chainId === 1) return mockEnv.VITE_TOKEN_FACTORY_MAINNET;
+      if (chainId === 11155111) return mockEnv.VITE_TOKEN_FACTORY_SEPOLIA;
+      return '';
+    }),
+    isChainSupported: vi.fn().mockImplementation((chainId: number) => 
+      [1, 11155111].includes(chainId)
+    )
+  };
+});
+
+// Imports nécessaires pour les tests
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import React from 'react';
+import { renderHook } from '@testing-library/react-hooks';
+import type { WalletState, TokenForgeAuthState } from '../../types/auth';
+import { TokenForgeAuthContext } from '../../context/TokenForgeAuthContext';
+import { useWalletState } from '../useWalletState';
+import { authActions } from '../../actions/authActions';
+import type { AuthAction } from '../../actions/authActions';
+
+// Mock des variables d'environnement
 vi.mock('vite', () => ({
   defineConfig: vi.fn()
 }));
@@ -14,14 +73,6 @@ Object.defineProperty(import.meta, 'env', {
 });
 
 // Imports après les mocks d'environnement
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import React from 'react';
-import { renderHook } from '@testing-library/react-hooks';
-import type { WalletState, TokenForgeAuthState } from '../../types/auth';
-import { TokenForgeAuthContext } from '../../context/TokenForgeAuthContext';
-import { useWalletState } from '../useWalletState';
-import { authActions } from '../../actions/authActions';
-import type { AuthAction } from '../../actions/authActions';
 
 // Définir les constantes de chaînes
 const mockMainnet = {
@@ -48,24 +99,6 @@ const mockSepolia = {
 vi.mock('viem/chains', () => ({
   mainnet: mockMainnet,
   sepolia: mockSepolia
-}));
-
-// Mock de config/chains
-vi.mock('../../../config/chains', () => ({
-  supportedChains: [mockMainnet, mockSepolia],
-  supportedChainIds: [1, 11155111],
-  defaultChain: mockSepolia,
-  getContractAddress: (chainId: number) => {
-    if (chainId === 1) return mockEnv.VITE_TOKEN_FACTORY_MAINNET as `0x${string}`;
-    if (chainId === 11155111) return mockEnv.VITE_TOKEN_FACTORY_SEPOLIA as `0x${string}`;
-    return null;
-  },
-  getRpcUrl: (chainId: number) => {
-    if (chainId === 1) return mockMainnet.rpcUrls.default.http[0];
-    if (chainId === 11155111) return mockSepolia.rpcUrls.default.http[0];
-    throw new Error(`Chaîne ID ${chainId} non supportée`);
-  },
-  isChainSupported: (chainId: number) => [1, 11155111].includes(chainId)
 }));
 
 // Mock des services
@@ -142,12 +175,11 @@ describe('useWalletState', () => {
       wrapper: Wrapper
     });
 
-    expect(result.current).toEqual({
-      connectWallet: expect.any(Function),
-      disconnectWallet: expect.any(Function),
-      updateNetwork: expect.any(Function),
-      updateProvider: expect.any(Function)
-    });
+    // Vérifier que les fonctions sont présentes
+    expect(typeof result.current.connectWallet).toBe('function');
+    expect(typeof result.current.disconnectWallet).toBe('function');
+    expect(typeof result.current.updateNetwork).toBe('function');
+    expect(typeof result.current.updateProvider).toBe('function');
   });
 
   it('should handle wallet connection', () => {
@@ -171,6 +203,69 @@ describe('useWalletState', () => {
         provider: mockProvider,
         isCorrectNetwork: true
       })
+    );
+  });
+
+  it('should handle wallet disconnection', () => {
+    const { result } = renderHook(() => useWalletState(), {
+      wrapper: Wrapper
+    });
+
+    result.current.disconnectWallet();
+
+    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
+      authActions.disconnectWallet()
+    );
+  });
+
+  it('should handle network update with supported chain', () => {
+    const { result } = renderHook(() => useWalletState(), {
+      wrapper: Wrapper
+    });
+
+    const supportedChainId = 1; // mainnet
+    result.current.updateNetwork(supportedChainId);
+
+    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
+      authActions.updateNetwork(supportedChainId, true)
+    );
+  });
+
+  it('should handle network update with unsupported chain', () => {
+    const { result } = renderHook(() => useWalletState(), {
+      wrapper: Wrapper
+    });
+
+    const unsupportedChainId = 999; // chaîne non supportée
+    result.current.updateNetwork(unsupportedChainId);
+
+    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
+      authActions.updateNetwork(unsupportedChainId, false)
+    );
+  });
+
+  it('should handle provider update', () => {
+    const { result } = renderHook(() => useWalletState(), {
+      wrapper: Wrapper
+    });
+
+    const mockProvider = { provider: 'test' };
+    result.current.updateProvider(mockProvider);
+
+    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
+      authActions.updateProvider(mockProvider)
+    );
+  });
+
+  it('should handle null provider update', () => {
+    const { result } = renderHook(() => useWalletState(), {
+      wrapper: Wrapper
+    });
+
+    result.current.updateProvider(null);
+
+    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
+      authActions.updateProvider(null)
     );
   });
 });

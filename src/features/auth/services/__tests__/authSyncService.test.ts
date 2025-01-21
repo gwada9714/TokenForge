@@ -6,8 +6,8 @@ import { AUTH_ERROR_CODES } from '../../errors/AuthError';
 import type { PublicClient, WalletClient } from '@wagmi/core';
 
 // Mock des services
-jest.mock('../firebaseService');
-jest.mock('../errorService');
+vi.mock('../firebaseService');
+vi.mock('../errorService');
 
 describe('AuthSyncService', () => {
   let mockWalletState: WalletState;
@@ -27,14 +27,14 @@ describe('AuthSyncService', () => {
     key: 'mock',
     name: 'Mock Provider',
     pollingInterval: 4000,
-    request: jest.fn(),
+    request: vi.fn(),
     transport: { type: 'mock' },
     type: 'publicClient',
     uid: 'mock'
   } as PublicClient;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // État du wallet par défaut
     mockWalletState = {
@@ -60,12 +60,12 @@ describe('AuthSyncService', () => {
 
     // Mock de window.ethereum
     (global as any).ethereum = {
-      request: jest.fn()
+      request: vi.fn()
     };
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     delete (global as any).ethereum;
   });
 
@@ -157,17 +157,17 @@ describe('AuthSyncService', () => {
 
   describe('Token Refresh', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should start token refresh interval', () => {
       // Act
       authSyncService.startTokenRefresh();
-      jest.advanceTimersByTime(55 * 60 * 1000); // 55 minutes
+      vi.advanceTimersByTime(55 * 60 * 1000); // 55 minutes
 
       // Assert
       expect(firebaseService.refreshToken).toHaveBeenCalled();
@@ -179,7 +179,7 @@ describe('AuthSyncService', () => {
 
       // Act
       authSyncService.stopTokenRefresh();
-      jest.advanceTimersByTime(55 * 60 * 1000); // 55 minutes
+      vi.advanceTimersByTime(55 * 60 * 1000); // 55 minutes
 
       // Assert
       expect(firebaseService.refreshToken).not.toHaveBeenCalled();
@@ -188,12 +188,12 @@ describe('AuthSyncService', () => {
     it('should handle refresh token failure gracefully', async () => {
       // Arrange
       const mockError = new Error('Refresh failed');
-      (firebaseService.refreshToken as jest.Mock).mockRejectedValue(mockError);
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      (firebaseService.refreshToken as vi.Mock).mockRejectedValue(mockError);
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act
       authSyncService.startTokenRefresh();
-      jest.advanceTimersByTime(55 * 60 * 1000); // 55 minutes
+      vi.advanceTimersByTime(55 * 60 * 1000); // 55 minutes
 
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith('Token refresh failed:', mockError);

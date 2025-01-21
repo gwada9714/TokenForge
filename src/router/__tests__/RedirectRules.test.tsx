@@ -5,9 +5,9 @@ import { publicRoutes } from '../routes/public.routes';
 import { authRoutes } from '../routes/auth.routes';
 
 // Mock Firebase Auth
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(),
-  onAuthStateChanged: jest.fn(),
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  onAuthStateChanged: vi.fn(),
 }));
 
 describe('Redirect Rules', () => {
@@ -36,7 +36,7 @@ describe('Redirect Rules', () => {
       });
       
       renderWithRouter(['/login']);
-      expect(screen.getByText('Welcome to TokenForge')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to TokenForge')).toBeTruthy();
     });
 
     it('redirects from signup to home when already authenticated', () => {
@@ -45,7 +45,7 @@ describe('Redirect Rules', () => {
       });
       
       renderWithRouter(['/signup']);
-      expect(screen.getByText('Welcome to TokenForge')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to TokenForge')).toBeTruthy();
     });
 
     it('shows login page when not authenticated', () => {
@@ -54,7 +54,7 @@ describe('Redirect Rules', () => {
       });
       
       renderWithRouter(['/login']);
-      expect(screen.getByText('Sign In')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeTruthy();
     });
   });
 
@@ -65,7 +65,7 @@ describe('Redirect Rules', () => {
       });
       
       renderWithRouter(['/']);
-      expect(screen.getByText('Welcome to TokenForge')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to TokenForge')).toBeTruthy();
     });
 
     it('allows access to about page without authentication', () => {
@@ -74,7 +74,7 @@ describe('Redirect Rules', () => {
       });
       
       renderWithRouter(['/about']);
-      expect(screen.getByText('About TokenForge')).toBeInTheDocument();
+      expect(screen.getByText('About TokenForge')).toBeTruthy();
     });
 
     it('allows access to contact page without authentication', () => {
@@ -83,7 +83,7 @@ describe('Redirect Rules', () => {
       });
       
       renderWithRouter(['/contact']);
-      expect(screen.getByText('Contact Us')).toBeInTheDocument();
+      expect(screen.getByText('Contact Us')).toBeTruthy();
     });
   });
 });

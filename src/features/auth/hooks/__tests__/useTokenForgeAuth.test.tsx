@@ -40,9 +40,9 @@ const Wrapper: FC<PropsWithChildren> = ({ children }) => (
 );
 
 // Mocks
-jest.mock('../useAuthState');
-jest.mock('../useWalletState');
-jest.mock('../useEmailVerification');
+vi.mock('../useAuthState');
+vi.mock('../useWalletState');
+vi.mock('../useEmailVerification');
 
 describe('useTokenForgeAuth', () => {
   // Mock implementations
@@ -55,14 +55,14 @@ describe('useTokenForgeAuth', () => {
       emailVerified: false,
     },
     actions: {
-      handleAuthStart: jest.fn(),
-      handleAuthSuccess: jest.fn(),
-      handleAuthError: jest.fn(),
-      handleLogout: jest.fn(),
-      handleEmailVerificationStart: jest.fn(),
-      handleEmailVerificationSuccess: jest.fn(),
-      handleEmailVerificationFailure: jest.fn(),
-      handleUpdateUser: jest.fn(),
+      handleAuthStart: vi.fn(),
+      handleAuthSuccess: vi.fn(),
+      handleAuthError: vi.fn(),
+      handleLogout: vi.fn(),
+      handleEmailVerificationStart: vi.fn(),
+      handleEmailVerificationSuccess: vi.fn(),
+      handleEmailVerificationFailure: vi.fn(),
+      handleUpdateUser: vi.fn(),
     },
   };
 
@@ -76,16 +76,16 @@ describe('useTokenForgeAuth', () => {
       provider: null,
     },
     actions: {
-      handleConnect: jest.fn(),
-      handleDisconnect: jest.fn(),
-      handleNetworkChange: jest.fn(),
-      handleAccountChange: jest.fn(),
+      handleConnect: vi.fn(),
+      handleDisconnect: vi.fn(),
+      handleNetworkChange: vi.fn(),
+      handleAccountChange: vi.fn(),
     },
   };
 
   const mockEmailVerification = {
-    sendVerificationEmail: jest.fn(),
-    checkVerificationStatus: jest.fn(),
+    sendVerificationEmail: vi.fn(),
+    checkVerificationStatus: vi.fn(),
   };
 
   const createMockUser = (overrides: Partial<TokenForgeUser> = {}): TokenForgeUser => ({
@@ -97,11 +97,11 @@ describe('useTokenForgeAuth', () => {
     providerData: [],
     refreshToken: '',
     tenantId: null,
-    delete: jest.fn(),
-    getIdToken: jest.fn(),
-    getIdTokenResult: jest.fn(),
-    reload: jest.fn(),
-    toJSON: jest.fn(),
+    delete: vi.fn(),
+    getIdToken: vi.fn(),
+    getIdTokenResult: vi.fn(),
+    reload: vi.fn(),
+    toJSON: vi.fn(),
     displayName: null,
     phoneNumber: null,
     photoURL: null,
@@ -112,10 +112,10 @@ describe('useTokenForgeAuth', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useAuthState as jest.Mock).mockReturnValue(mockAuthState);
-    (useWalletState as jest.Mock).mockReturnValue(mockWalletState);
-    (useEmailVerification as jest.Mock).mockReturnValue(mockEmailVerification);
+    vi.clearAllMocks();
+    (useAuthState as vi.Mock).mockReturnValue(mockAuthState);
+    (useWalletState as vi.Mock).mockReturnValue(mockWalletState);
+    (useEmailVerification as vi.Mock).mockReturnValue(mockEmailVerification);
   });
 
   const renderHookWithProviders = () => {
@@ -161,7 +161,7 @@ describe('useTokenForgeAuth', () => {
         isAuthenticated: true,
       },
     };
-    (useAuthState as jest.Mock).mockReturnValue(updatedAuthState);
+    (useAuthState as vi.Mock).mockReturnValue(updatedAuthState);
 
     const { result } = renderHookWithProviders();
 
@@ -200,7 +200,7 @@ describe('useTokenForgeAuth', () => {
           isAuthenticated: true,
         },
       };
-      (useAuthState as jest.Mock).mockReturnValue(updatedAuthState);
+      (useAuthState as vi.Mock).mockReturnValue(updatedAuthState);
 
       const updatedWalletState = {
         ...mockWalletState,
@@ -210,7 +210,7 @@ describe('useTokenForgeAuth', () => {
           isCorrectNetwork: true,
         },
       };
-      (useWalletState as jest.Mock).mockReturnValue(updatedWalletState);
+      (useWalletState as vi.Mock).mockReturnValue(updatedWalletState);
 
       const { result } = renderHookWithProviders();
       const auth = result.current;
@@ -235,7 +235,7 @@ describe('useTokenForgeAuth', () => {
           isAuthenticated: true,
         },
       };
-      (useAuthState as jest.Mock).mockReturnValue(updatedAuthState);
+      (useAuthState as vi.Mock).mockReturnValue(updatedAuthState);
 
       const { result } = renderHookWithProviders();
       const auth = result.current;
@@ -259,7 +259,7 @@ describe('useTokenForgeAuth', () => {
           isAuthenticated: true,
         },
       };
-      (useAuthState as jest.Mock).mockReturnValue(updatedAuthState);
+      (useAuthState as vi.Mock).mockReturnValue(updatedAuthState);
 
       const { result } = renderHookWithProviders();
       const auth = result.current;
@@ -284,7 +284,7 @@ describe('useTokenForgeAuth', () => {
 
     await act(async () => {
       mockWalletState.actions.handleNetworkChange(newChainId);
-      (useWalletState as jest.Mock).mockReturnValue(updatedWalletState);
+      (useWalletState as vi.Mock).mockReturnValue(updatedWalletState);
     });
 
     expect(mockWalletState.actions.handleNetworkChange).toHaveBeenCalledWith(newChainId);
@@ -307,7 +307,7 @@ describe('useTokenForgeAuth', () => {
 
     await act(async () => {
       mockWalletState.actions.handleAccountChange([newAddress]);
-      (useWalletState as jest.Mock).mockReturnValue(updatedWalletState);
+      (useWalletState as vi.Mock).mockReturnValue(updatedWalletState);
     });
 
     expect(mockWalletState.actions.handleAccountChange).toHaveBeenCalledWith([newAddress]);

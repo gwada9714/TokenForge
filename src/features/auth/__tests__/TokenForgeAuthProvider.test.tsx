@@ -16,7 +16,7 @@ describe('TokenForgeAuthProvider', () => {
 
   it('should throw error when used outside provider', () => {
     const consoleError = console.error;
-    console.error = jest.fn(); // Suppress React error logging
+    console.error = vi.fn(); // Suppress React error logging
 
     expect(() => {
       renderHook(() => useTokenForgeAuthContext());
@@ -34,6 +34,6 @@ describe('TokenForgeAuthProvider', () => {
       </TokenForgeAuthProvider>
     );
 
-    expect(getByTestId('test-child')).toBeInTheDocument();
+    expect(getByTestId('test-child')).toBeTruthy();
   });
 });

@@ -1,24 +1,24 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import { AlertsManagement } from '../AlertsManagement';
 import { useTokenForgeAdmin } from '../../../../../hooks/useTokenForgeAdmin';
 
 // Mock du hook useTokenForgeAdmin
-jest.mock('../../../../../hooks/useTokenForgeAdmin');
+vi.mock('../../../../../hooks/useTokenForgeAdmin');
 
 describe('AlertsManagement', () => {
   const mockContract = {
-    getAlertRules: jest.fn(),
-    addAlertRule: jest.fn(),
-    toggleAlertRule: jest.fn(),
-    deleteAlertRule: jest.fn(),
+    getAlertRules: vi.fn(),
+    addAlertRule: vi.fn(),
+    toggleAlertRule: vi.fn(),
+    deleteAlertRule: vi.fn(),
   };
 
-  const mockOnError = jest.fn();
+  const mockOnError = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useTokenForgeAdmin as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    (useTokenForgeAdmin as vi.Mock).mockReturnValue({
       contract: mockContract,
     });
   });
@@ -34,7 +34,7 @@ describe('AlertsManagement', () => {
     });
 
     expect(mockContract.getAlertRules).toHaveBeenCalled();
-    expect(screen.getByText('Rule 1')).toBeInTheDocument();
+    expect(screen.getByText('Rule 1')).toBeTruthy();
     expect(mockOnError).not.toHaveBeenCalled();
   });
 
@@ -176,7 +176,7 @@ describe('AlertsManagement', () => {
   });
 
   it('handles errors gracefully', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockContract.getAlertRules.mockRejectedValueOnce(new Error('API Error'));
 
     await act(async () => {

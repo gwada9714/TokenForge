@@ -5,36 +5,36 @@ import { usePublicClient } from 'wagmi';
 import { getWalletClient } from '@wagmi/core';
 
 // Mocks
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
-  useDisconnect: jest.fn(),
-  usePublicClient: jest.fn(),
+vi.mock('wagmi', () => ({
+  useAccount: vi.fn(),
+  useDisconnect: vi.fn(),
+  usePublicClient: vi.fn(),
 }));
 
-jest.mock('@wagmi/core', () => ({
-  getWalletClient: jest.fn(),
+vi.mock('@wagmi/core', () => ({
+  getWalletClient: vi.fn(),
 }));
 
 describe('useTokenForgeAuth', () => {
   const mockWalletClient = {} as Awaited<ReturnType<typeof getWalletClient>>;
-  const mockDisconnect = jest.fn();
+  const mockDisconnect = vi.fn();
 
   beforeEach(() => {
     // Reset mocks
-    (useAccount as jest.Mock).mockReturnValue({
+    (useAccount as vi.Mock).mockReturnValue({
       address: null,
       isConnected: false,
     });
     
-    (usePublicClient as jest.Mock).mockReturnValue({
+    (usePublicClient as vi.Mock).mockReturnValue({
       chain: null,
     });
 
-    (useDisconnect as jest.Mock).mockReturnValue({
+    (useDisconnect as vi.Mock).mockReturnValue({
       disconnect: mockDisconnect,
     });
 
-    (getWalletClient as jest.Mock).mockResolvedValue(mockWalletClient);
+    (getWalletClient as vi.Mock).mockResolvedValue(mockWalletClient);
   });
 
   it('should initialize with default state', () => {
@@ -54,12 +54,12 @@ describe('useTokenForgeAuth', () => {
   });
 
   it('should update wallet state when connected', async () => {
-    (useAccount as jest.Mock).mockReturnValue({
+    (useAccount as vi.Mock).mockReturnValue({
       address: '0x123',
       isConnected: true,
     });
 
-    (usePublicClient as jest.Mock).mockReturnValue({
+    (usePublicClient as vi.Mock).mockReturnValue({
       chain: { id: 1 }, // mainnet
     });
 

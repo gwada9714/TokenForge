@@ -3,14 +3,14 @@ import { BrowserRouter } from 'react-router-dom';
 import { ConnectWalletPage } from '../ConnectWalletPage';
 import { TokenForgeAuthProvider } from '../../../features/auth';
 
-jest.mock('@rainbow-me/rainbowkit', () => ({
+vi.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => <button>Connect Wallet</button>,
 }));
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', () => ({
+  ...vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ state: { from: { pathname: '/dashboard' } } }),
 }));
@@ -27,10 +27,10 @@ describe('ConnectWalletPage', () => {
   });
 
   it('renders connect wallet message', () => {
-    expect(screen.getByText('Connect Your Wallet')).toBeInTheDocument();
+    expect(screen.getByText('Connect Your Wallet')).toBeTruthy();
   });
 
   it('displays the connect button', () => {
-    expect(screen.getByText('Connect Wallet')).toBeInTheDocument();
+    expect(screen.getByText('Connect Wallet')).toBeTruthy();
   });
 });

@@ -1,11 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import AuditLogs from '../AuditLogs';
 import { useContract } from '../../../../hooks/useContract';
 
 // Mock du hook useContract
-jest.mock('../../../../hooks/useContract', () => ({
-  useContract: jest.fn(),
+vi.mock('../../../../hooks/useContract', () => ({
+  useContract: vi.fn(),
 }));
 
 describe('AuditLogs', () => {
@@ -33,7 +33,7 @@ describe('AuditLogs', () => {
   ];
 
   const mockContract = {
-    queryFilter: jest.fn().mockResolvedValue(
+    queryFilter: vi.fn().mockResolvedValue(
       mockLogs.map(log => ({
         transactionHash: log.transactionHash,
         blockNumber: log.blockNumber,
@@ -43,27 +43,27 @@ describe('AuditLogs', () => {
           details: log.details,
           success: log.status === 'success',
         },
-        getBlock: jest.fn().mockResolvedValue({ timestamp: Math.floor(log.timestamp / 1000) }),
+        getBlock: vi.fn().mockResolvedValue({ timestamp: Math.floor(log.timestamp / 1000) }),
       }))
     ),
   };
 
   beforeEach(() => {
-    (useContract as jest.Mock).mockReturnValue({ contract: mockContract });
+    (useContract as vi.Mock).mockReturnValue({ contract: mockContract });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the audit logs interface', async () => {
     render(<AuditLogs />);
     
-    expect(screen.getByText('Audit Logs')).toBeInTheDocument();
+    expect(screen.getByText('Audit Logs')).toBeTruthy();
     
     await waitFor(() => {
-      expect(screen.getByText('Contract Paused')).toBeInTheDocument();
-      expect(screen.getByText('Ownership Transferred')).toBeInTheDocument();
+      expect(screen.getByText('Contract Paused')).toBeTruthy();
+      expect(screen.getByText('Ownership Transferred')).toBeTruthy();
     });
   });
 
@@ -71,41 +71,41 @@ describe('AuditLogs', () => {
     render(<AuditLogs />);
     
     await waitFor(() => {
-      expect(screen.getByText('Contract Paused')).toBeInTheDocument();
+      expect(screen.getByText('Contract Paused')).toBeTruthy();
     });
     
     const searchInput = screen.getByPlaceholderText('Search logs...');
     fireEvent.change(searchInput, { target: { value: 'Ownership' } });
     
-    expect(screen.queryByText('Contract Paused')).not.toBeInTheDocument();
-    expect(screen.getByText('Ownership Transferred')).toBeInTheDocument();
+    expect(screen.queryByText('Contract Paused')).toBeFalsy();
+    expect(screen.getByText('Ownership Transferred')).toBeTruthy();
   });
 
   it('handles pagination correctly', async () => {
     render(<AuditLogs />);
     
     await waitFor(() => {
-      expect(screen.getByText('Contract Paused')).toBeInTheDocument();
+      expect(screen.getByText('Contract Paused')).toBeTruthy();
     });
     
     const rowsPerPageSelect = screen.getByLabelText('Rows per page:');
     fireEvent.mouseDown(rowsPerPageSelect);
     fireEvent.click(screen.getByText('25'));
     
-    expect(screen.getByText('1-2 of 2')).toBeInTheDocument();
+    expect(screen.getByText('1-2 of 2')).toBeTruthy();
   });
 
   it('exports logs to CSV', async () => {
     // Mock URL.createObjectURL et URL.revokeObjectURL
-    const mockCreateObjectURL = jest.fn();
-    const mockRevokeObjectURL = jest.fn();
+    const mockCreateObjectURL = vi.fn();
+    const mockRevokeObjectURL = vi.fn();
     global.URL.createObjectURL = mockCreateObjectURL;
     global.URL.revokeObjectURL = mockRevokeObjectURL;
     
     render(<AuditLogs />);
     
     await waitFor(() => {
-      expect(screen.getByText('Contract Paused')).toBeInTheDocument();
+      expect(screen.getByText('Contract Paused')).toBeTruthy();
     });
     
     const exportButton = screen.getByTitle('Export logs');
@@ -119,7 +119,7 @@ describe('AuditLogs', () => {
     const mockError = new Error('Failed to fetch logs');
     mockContract.queryFilter.mockRejectedValueOnce(mockError);
     
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
     render(<AuditLogs />);
     

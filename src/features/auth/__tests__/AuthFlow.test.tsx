@@ -7,24 +7,24 @@ import { ConnectWalletPage } from '../../../pages/auth/ConnectWalletPage';
 import { WrongNetworkPage } from '../../../pages/auth/WrongNetworkPage';
 
 // Mock Firebase Auth
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(),
-  signInWithEmailAndPassword: jest.fn(),
-  createUserWithEmailAndPassword: jest.fn(),
-  onAuthStateChanged: jest.fn(),
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  onAuthStateChanged: vi.fn(),
 }));
 
 // Mock Wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
-  useConnect: jest.fn(),
-  useNetwork: jest.fn(),
-  useSwitchNetwork: jest.fn(),
+vi.mock('wagmi', () => ({
+  useAccount: vi.fn(),
+  useConnect: vi.fn(),
+  useNetwork: vi.fn(),
+  useSwitchNetwork: vi.fn(),
 }));
 
 describe('Authentication Flow', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const renderWithProvider = (Component: React.ComponentType) => {
@@ -39,7 +39,7 @@ describe('Authentication Flow', () => {
 
   describe('Email/Password Authentication', () => {
     it('allows user to sign in with valid credentials', async () => {
-      const mockSignIn = jest.fn().mockResolvedValue({
+      const mockSignIn = vi.fn().mockResolvedValue({
         user: { email: 'user@example.com' },
       });
       (require('firebase/auth') as any).signInWithEmailAndPassword.mockImplementation(mockSignIn);
@@ -64,7 +64,7 @@ describe('Authentication Flow', () => {
     });
 
     it('shows error message with invalid credentials', async () => {
-      const mockSignIn = jest.fn().mockRejectedValue(new Error('Invalid credentials'));
+      const mockSignIn = vi.fn().mockRejectedValue(new Error('Invalid credentials'));
       (require('firebase/auth') as any).signInWithEmailAndPassword.mockImplementation(mockSignIn);
 
       renderWithProvider(LoginPage);
@@ -78,14 +78,14 @@ describe('Authentication Flow', () => {
       fireEvent.click(screen.getByText(/se connecter/i));
 
       await waitFor(() => {
-        expect(screen.getByText(/identifiants invalides/i)).toBeInTheDocument();
+        expect(screen.getByText(/identifiants invalides/i)).toBeTruthy();
       });
     });
   });
 
   describe('Wallet Connection Flow', () => {
     it('allows connecting wallet when MetaMask is available', async () => {
-      const mockConnect = jest.fn().mockResolvedValue({});
+      const mockConnect = vi.fn().mockResolvedValue({});
       (require('wagmi') as any).useConnect.mockReturnValue({
         connect: mockConnect,
         connectors: [{ name: 'MetaMask', ready: true }],
@@ -101,7 +101,7 @@ describe('Authentication Flow', () => {
     });
 
     it('shows network switch prompt when on wrong network', async () => {
-      const mockSwitchNetwork = jest.fn();
+      const mockSwitchNetwork = vi.fn();
       (require('wagmi') as any).useNetwork.mockReturnValue({
         chain: { id: 97 }, // Wrong network
       });
@@ -119,7 +119,7 @@ describe('Authentication Flow', () => {
 
   describe('Registration Flow', () => {
     it('allows user to create account with valid information', async () => {
-      const mockSignUp = jest.fn().mockResolvedValue({
+      const mockSignUp = vi.fn().mockResolvedValue({
         user: { email: 'newuser@example.com' },
       });
       (require('firebase/auth') as any).createUserWithEmailAndPassword.mockImplementation(mockSignUp);
@@ -160,7 +160,7 @@ describe('Authentication Flow', () => {
       });
       fireEvent.click(screen.getByText(/créer un compte/i));
 
-      expect(screen.getByText(/les mots de passe ne correspondent pas/i)).toBeInTheDocument();
+      expect(screen.getByText(/les mots de passe ne correspondent pas/i)).toBeTruthy();
     });
   });
 });

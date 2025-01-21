@@ -2,10 +2,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { UnauthorizedPage } from '../UnauthorizedPage';
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', () => ({
+  ...vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
 
@@ -19,7 +19,7 @@ describe('UnauthorizedPage', () => {
   });
 
   it('renders access denied message', () => {
-    expect(screen.getByText('Access Denied')).toBeInTheDocument();
+    expect(screen.getByText('Access Denied')).toBeTruthy();
   });
 
   it('has home button that navigates to home', () => {

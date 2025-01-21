@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
+;
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -7,12 +7,12 @@ import { adminRoutes } from '../adminRoutes';
 import authReducer from '../../store/slices/authSlice';
 
 // Mock des composants lazy-loadés
-jest.mock('../../components/features/admin/AdminDashboard', () => ({
+vi.mock('../../components/features/admin/AdminDashboard', () => ({
   __esModule: true,
   default: () => <div>Admin Dashboard</div>,
 }));
 
-jest.mock('../../components/features/admin/contract/ContractControls', () => ({
+vi.mock('../../components/features/admin/contract/ContractControls', () => ({
   __esModule: true,
   default: () => <div>Contract Controls</div>,
 }));
@@ -62,24 +62,24 @@ describe('Admin Routes Configuration', () => {
   it('renders admin dashboard at /admin path', async () => {
     renderWithProviders('/admin');
     await screen.findByText('Admin Dashboard');
-    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Admin Dashboard')).toBeTruthy();
   });
 
   it('renders contract controls at /admin/contract path', async () => {
     renderWithProviders('/admin/contract');
     await screen.findByText('Contract Controls');
-    expect(screen.getByText('Contract Controls')).toBeInTheDocument();
+    expect(screen.getByText('Contract Controls')).toBeTruthy();
   });
 
   it('redirects to unauthorized when user is not admin', async () => {
     renderWithProviders('/admin', { isAuthenticated: true, isAdmin: false });
     await screen.findByText('Unauthorized Page');
-    expect(screen.getByText('Unauthorized Page')).toBeInTheDocument();
+    expect(screen.getByText('Unauthorized Page')).toBeTruthy();
   });
 
   it('redirects to login when user is not authenticated', async () => {
     renderWithProviders('/admin', { isAuthenticated: false, isAdmin: false });
     await screen.findByText('Login Page');
-    expect(screen.getByText('Login Page')).toBeInTheDocument();
+    expect(screen.getByText('Login Page')).toBeTruthy();
   });
 });

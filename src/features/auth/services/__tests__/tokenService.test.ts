@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { tokenService } from '../tokenService';
 import { notificationService } from '../notificationService';
-import { storageService } from '../storageService';
-import { AuthError } from '../../errors/AuthError';
+import { AUTH_ERROR_CODES, AuthError } from '../../errors/AuthError';
 import type { User } from 'firebase/auth';
 
+// Mocks
 vi.mock('../notificationService');
 vi.mock('../storageService', () => ({
   storageService: {
@@ -14,17 +14,44 @@ vi.mock('../storageService', () => ({
   },
 }));
 
+vi.mock('../../errors/AuthError', () => ({
+  AUTH_ERROR_CODES: {
+    NETWORK_MISMATCH: 'AUTH_002',
+    PROVIDER_ERROR: 'AUTH_009',
+    SESSION_EXPIRED: 'AUTH_004'
+  },
+  AuthError: {
+    CODES: {
+      NETWORK_MISMATCH: 'AUTH_002',
+      PROVIDER_ERROR: 'AUTH_009',
+      SESSION_EXPIRED: 'AUTH_004'
+    }
+  },
+  createAuthError: vi.fn((code, message) => {
+    return {
+      code,
+      message,
+      name: 'AuthError'
+    };
+  })
+}));
+
 describe('TokenService', () => {
-  let mockUser: vi.Mocked<User>;
+  let mockUser: Partial<User>;
   
   beforeEach(() => {
     vi.useFakeTimers();
     
     // Mock de l'utilisateur Firebase
     mockUser = {
+      uid: 'test-uid',
+      email: 'test@example.com',
+      emailVerified: true,
       getIdToken: vi.fn(),
       getIdTokenResult: vi.fn(),
-    } as unknown as vi.Mocked<User>;
+      providerData: [],
+      refreshToken: 'mock-refresh-token'
+    };
 
     // Reset des mocks
     vi.clearAllMocks();
@@ -38,8 +65,8 @@ describe('TokenService', () => {
   describe('initialize', () => {
     it('devrait initialiser le service avec un utilisateur', async () => {
       const mockToken = 'mock-token';
-      mockUser.getIdToken.mockResolvedValue(mockToken);
-      mockUser.getIdTokenResult.mockResolvedValue({
+      (mockUser.getIdToken as ReturnType<typeof vi.fn>).mockResolvedValue(mockToken);
+      (mockUser.getIdTokenResult as ReturnType<typeof vi.fn>).mockResolvedValue({
         token: mockToken,
         claims: { admin: true },
         authTime: new Date().toISOString(),
@@ -48,7 +75,7 @@ describe('TokenService', () => {
         signInProvider: 'custom'
       });
 
-      await tokenService.initialize(mockUser);
+      await tokenService.initialize(mockUser as User);
 
       expect(mockUser.getIdToken).toHaveBeenCalled();
       expect(mockUser.getIdTokenResult).toHaveBeenCalled();
@@ -59,15 +86,15 @@ describe('TokenService', () => {
       
       const token = await tokenService.getToken().catch(e => e);
       expect(token).toBeInstanceOf(AuthError);
-      expect(token.code).toBe(AuthError.CODES.SESSION_EXPIRED);
+      expect(token.code).toBe(AUTH_ERROR_CODES.SESSION_EXPIRED);
     });
   });
 
   describe('refreshToken', () => {
     it('devrait rafraîchir le token avec succès', async () => {
       const mockToken = 'new-token';
-      mockUser.getIdToken.mockResolvedValue(mockToken);
-      mockUser.getIdTokenResult.mockResolvedValue({
+      (mockUser.getIdToken as ReturnType<typeof vi.fn>).mockResolvedValue(mockToken);
+      (mockUser.getIdTokenResult as ReturnType<typeof vi.fn>).mockResolvedValue({
         token: mockToken,
         claims: { admin: true },
         authTime: new Date().toISOString(),
@@ -76,7 +103,7 @@ describe('TokenService', () => {
         signInProvider: 'custom'
       });
 
-      await tokenService.initialize(mockUser);
+      await tokenService.initialize(mockUser as User);
       
       // Avancer le temps pour déclencher un rafraîchissement
       vi.advanceTimersByTime(45 * 60 * 1000 + 1000);
@@ -88,8 +115,8 @@ describe('TokenService', () => {
 
     it('devrait notifier lorsque le token est sur le point d\'expirer', async () => {
       const mockToken = 'mock-token';
-      mockUser.getIdToken.mockResolvedValue(mockToken);
-      mockUser.getIdTokenResult.mockResolvedValue({
+      (mockUser.getIdToken as ReturnType<typeof vi.fn>).mockResolvedValue(mockToken);
+      (mockUser.getIdTokenResult as ReturnType<typeof vi.fn>).mockResolvedValue({
         token: mockToken,
         claims: { admin: true },
         authTime: new Date().toISOString(),
@@ -98,7 +125,7 @@ describe('TokenService', () => {
         signInProvider: 'custom'
       });
 
-      await tokenService.initialize(mockUser);
+      await tokenService.initialize(mockUser as User);
 
       expect(notificationService.warning).toHaveBeenCalledWith(
         'Votre session va bientôt expirer'
@@ -109,8 +136,8 @@ describe('TokenService', () => {
   describe('getToken', () => {
     it('devrait retourner un token valide', async () => {
       const mockToken = 'mock-token';
-      mockUser.getIdToken.mockResolvedValue(mockToken);
-      mockUser.getIdTokenResult.mockResolvedValue({
+      (mockUser.getIdToken as ReturnType<typeof vi.fn>).mockResolvedValue(mockToken);
+      (mockUser.getIdTokenResult as ReturnType<typeof vi.fn>).mockResolvedValue({
         token: mockToken,
         claims: { admin: true },
         authTime: new Date().toISOString(),
@@ -119,7 +146,7 @@ describe('TokenService', () => {
         signInProvider: 'custom'
       });
 
-      await tokenService.initialize(mockUser);
+      await tokenService.initialize(mockUser as User);
       
       const result = await tokenService.getToken();
       expect(result).toBe(mockToken);
@@ -135,8 +162,8 @@ describe('TokenService', () => {
   describe('cleanup', () => {
     it('devrait nettoyer les informations de token et arrêter le minuteur de rafraîchissement', async () => {
       const mockToken = 'mock-token';
-      mockUser.getIdToken.mockResolvedValue(mockToken);
-      mockUser.getIdTokenResult.mockResolvedValue({
+      (mockUser.getIdToken as ReturnType<typeof vi.fn>).mockResolvedValue(mockToken);
+      (mockUser.getIdTokenResult as ReturnType<typeof vi.fn>).mockResolvedValue({
         token: mockToken,
         claims: { admin: true },
         authTime: new Date().toISOString(),
@@ -145,7 +172,7 @@ describe('TokenService', () => {
         signInProvider: 'custom'
       });
 
-      await tokenService.initialize(mockUser);
+      await tokenService.initialize(mockUser as User);
       tokenService.cleanup();
       
       await expect(tokenService.getToken()).rejects.toThrow('No token available');

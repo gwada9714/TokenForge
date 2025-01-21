@@ -4,21 +4,21 @@ import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import type { AuthSession } from '../../services/firebaseAuth';
 
 // Mock du hook useFirebaseAuth
-jest.mock('../../hooks/useFirebaseAuth');
-const mockUseFirebaseAuth = useFirebaseAuth as jest.MockedFunction<typeof useFirebaseAuth>;
+vi.mock('../../hooks/useFirebaseAuth');
+const mockUseFirebaseAuth = useFirebaseAuth as vi.MockedFunction<typeof useFirebaseAuth>;
 
 // Mock des valeurs par défaut pour useFirebaseAuth
 const defaultMockValues = {
-  signInWithWallet: jest.fn(),
-  signOut: jest.fn(),
-  sendVerificationEmail: jest.fn(),
-  refreshSession: jest.fn(),
+  signInWithWallet: vi.fn(),
+  signOut: vi.fn(),
+  sendVerificationEmail: vi.fn(),
+  refreshSession: vi.fn(),
   error: null,
 };
 
 describe('GoogleAuthButton', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('affiche le bouton quand non connecté', () => {
@@ -26,14 +26,14 @@ describe('GoogleAuthButton', () => {
       ...defaultMockValues,
       session: null,
       isLoading: false,
-      signInWithGoogle: jest.fn(),
+      signInWithGoogle: vi.fn(),
     });
 
     render(<GoogleAuthButton />);
     
     const button = screen.getByTestId('mui-button');
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent('Continue with Google');
+    expect(button).toBeTruthy();
+    expect(button.textContent).toBe('Continue with Google');
     expect(button.className).toContain('styled-component');
   });
 
@@ -49,7 +49,7 @@ describe('GoogleAuthButton', () => {
       ...defaultMockValues,
       session: mockSession,
       isLoading: false,
-      signInWithGoogle: jest.fn(),
+      signInWithGoogle: vi.fn(),
     });
 
     const { container } = render(<GoogleAuthButton />);
@@ -61,7 +61,7 @@ describe('GoogleAuthButton', () => {
       ...defaultMockValues,
       session: null,
       isLoading: true,
-      signInWithGoogle: jest.fn(),
+      signInWithGoogle: vi.fn(),
     });
 
     render(<GoogleAuthButton />);
@@ -70,12 +70,12 @@ describe('GoogleAuthButton', () => {
     const progress = screen.getByTestId('mui-progress');
 
     expect(button).toBeDisabled();
-    expect(progress).toBeInTheDocument();
+    expect(progress).toBeTruthy();
     expect(progress.className).toContain('MuiCircularProgress-root');
   });
 
   it('appelle signInWithGoogle au clic', async () => {
-    const mockSignIn = jest.fn().mockResolvedValue({
+    const mockSignIn = vi.fn().mockResolvedValue({
       uid: '123',
       emailVerified: true,
       email: 'test@example.com',
@@ -104,7 +104,7 @@ describe('GoogleAuthButton', () => {
       ...defaultMockValues,
       session: null,
       isLoading: false,
-      signInWithGoogle: jest.fn(),
+      signInWithGoogle: vi.fn(),
     });
 
     render(
@@ -127,8 +127,8 @@ describe('GoogleAuthButton', () => {
   });
 
   it('gère les erreurs de connexion silencieusement', async () => {
-    const mockSignIn = jest.fn().mockRejectedValue(new Error('Test error'));
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const mockSignIn = vi.fn().mockRejectedValue(new Error('Test error'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
 
     mockUseFirebaseAuth.mockReturnValue({
       ...defaultMockValues,
