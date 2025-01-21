@@ -12,7 +12,9 @@ import type { NotificationOptions } from './notificationService';
 import { storageService } from './storageService';
 import { tabSyncService } from './tabSyncService';
 import { errorService } from './errorService';
-import { AUTH_ERROR_CODES } from '../errors/AuthError';
+import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
+import { configService } from './configService';
+import { TokenForgeAuthState } from '../types';
 
 const LOG_CATEGORY = 'WalletReconnectionService';
 
@@ -50,7 +52,10 @@ export interface WalletCallbacks {
 
 export class WalletReconnectionService {
   private static instance: WalletReconnectionService;
-  private isReconnecting = false;
+  private retryCount: number = 0;
+  private reconnectionTimeout: NodeJS.Timeout | null = null;
+  private isReconnecting: boolean = false;
+  private lastAttempt: number = 0;
   private tabId = crypto.randomUUID();
   private timeoutHandles = new Map<string, NodeJS.Timeout>();
   private currentChainId: number | null = null;
@@ -60,12 +65,11 @@ export class WalletReconnectionService {
   private walletClient: WalletClient | null = null;
   private provider: BrowserProvider | null = null;
   private callbacks: WalletCallbacks | null = null;
-  private reconnectionAttempts = 0;
-  private reconnectionTimer?: NodeJS.Timeout;
 
   private constructor() {
     this.setupTabSync();
     this.setupNetworkChangeListener();
+    this.initSyncListener();
   }
 
   static getInstance(): WalletReconnectionService {
@@ -79,7 +83,7 @@ export class WalletReconnectionService {
     this.callbacks = callbacks;
     
     // Tenter la reconnexion immédiate
-    void this.attemptReconnection(3, 1000);
+    void this.startReconnection();
 
     // Configurer les listeners
     const unsubscribeTab = this.setupTabSync();
@@ -144,20 +148,66 @@ export class WalletReconnectionService {
     this.timeoutHandles.clear();
   }
 
-  public async attemptReconnection(
-    maxAttempts: number,
-    baseDelay: number
-  ): Promise<void> {
+  private initSyncListener() {
+    tabSyncService.subscribe('wallet', async (message) => {
+      if (message.type === 'reconnection_success') {
+        this.stopReconnection();
+        await this.syncWalletState(message.walletState);
+      }
+    });
+  }
+
+  private async syncWalletState(walletState: any) {
+    try {
+      await storageService.saveWalletState(walletState);
+      notificationService.info('Wallet state synchronized');
+    } catch (error) {
+      errorService.handleWalletError(error);
+    }
+  }
+
+  async startReconnection(): Promise<void> {
     if (this.isReconnecting) {
-      logService.debug(LOG_CATEGORY, 'Reconnection already in progress');
       return;
     }
 
+    this.isReconnecting = true;
+    this.retryCount = 0;
+    await this.attemptReconnection();
+  }
+
+  private async attemptReconnection(): Promise<void> {
+    if (this.retryCount >= MAX_RECONNECTION_ATTEMPTS) {
+      this.handleReconnectionFailure();
+      return;
+    }
+
+    try {
+      const currentTime = Date.now();
+      if (currentTime - this.lastAttempt < RECONNECTION_INTERVAL) {
+        await new Promise(resolve => setTimeout(resolve, RECONNECTION_INTERVAL));
+      }
+      this.lastAttempt = currentTime;
+
+      const connectionPromise = this.connect();
+      const timeoutPromise = new Promise((_, reject) => {
+        this.reconnectionTimeout = setTimeout(() => {
+          reject(new Error('Connection timeout'));
+        }, 10000);
+      });
+
+      const result = await Promise.race([connectionPromise, timeoutPromise]);
+      this.handleReconnectionSuccess(result);
+    } catch (error) {
+      this.handleReconnectionError(error);
+    }
+  }
+
+  private async connect() {
+    // Implémentation de la connexion ici
     const storedState = await storageService.getWalletState();
     if (!storedState?.address) {
-      logService.debug(LOG_CATEGORY, 'No stored wallet state found');
-      this.callbacks?.onDisconnect();
-      return;
+      throw new Error('No wallet state found');
     }
 
     this.isReconnecting = true;
@@ -167,7 +217,7 @@ export class WalletReconnectionService {
         return;
       }
 
-      const result = await this.connectWithTimeout(storedState.address, maxAttempts, baseDelay);
+      const result = await this.connectWithTimeout(storedState.address, 3, 1000);
       if (result) {
         const { walletClient, provider, chainId } = result;
         this.callbacks?.onConnect(storedState.address, chainId, walletClient, provider);
@@ -345,51 +395,54 @@ export class WalletReconnectionService {
     }
   }
 
-  async reconnect(): Promise<boolean> {
-    if (this.isReconnecting) {
-      notificationService.info('Tentative de reconnexion déjà en cours...', {
-        toastId: 'reconnect-in-progress'
-      } satisfies NotificationOptions);
-      return false;
-    }
-
-    this.isReconnecting = true;
+  private handleReconnectionSuccess(walletState: any) {
+    this.clearTimeout();
+    this.isReconnecting = false;
+    this.retryCount = 0;
     
-    try {
-      const config: Partial<Config> = {
-        chains: [mainnet],
-      };
+    tabSyncService.broadcast('wallet', {
+      type: 'reconnection_success',
+      walletState,
+      timestamp: Date.now()
+    });
+    
+    notificationService.success('Wallet reconnected successfully');
+  }
 
-      const account = await getAccount(config as Config);
-      if (!account.address) {
-        notificationService.error('Aucun wallet connecté', {
-          toastId: 'no-wallet-connected'
-        } satisfies NotificationOptions);
-        return false;
-      }
-
-      const isValid = await this.validateNetworkBeforeConnect();
-      if (!isValid) {
-        return false;
-      }
-
-      const result = await this.connectWithTimeout(account.address, 3, 1000);
-      const success = !!result;
-      
-      if (success) {
-        notificationService.success('Wallet reconnecté avec succès', {
-          toastId: 'reconnect-success'
-        } satisfies NotificationOptions);
-      } else {
-        notificationService.error('Échec de la reconnexion du wallet', {
-          toastId: 'reconnect-error'
-        } satisfies NotificationOptions);
-      }
-
-      return success;
-    } finally {
-      this.isReconnecting = false;
+  private handleReconnectionError(error: any) {
+    this.clearTimeout();
+    this.retryCount++;
+    
+    errorService.handleWalletError(error);
+    
+    if (this.retryCount < MAX_RECONNECTION_ATTEMPTS) {
+      this.scheduleRetry();
+    } else {
+      this.handleReconnectionFailure();
     }
+  }
+
+  private handleReconnectionFailure() {
+    this.isReconnecting = false;
+    this.retryCount = 0;
+    notificationService.error('Failed to reconnect wallet after multiple attempts');
+  }
+
+  private scheduleRetry() {
+    setTimeout(() => this.attemptReconnection(), RECONNECTION_INTERVAL);
+  }
+
+  private clearTimeout() {
+    if (this.reconnectionTimeout) {
+      clearTimeout(this.reconnectionTimeout);
+      this.reconnectionTimeout = null;
+    }
+  }
+
+  stopReconnection(): void {
+    this.clearTimeout();
+    this.isReconnecting = false;
+    this.retryCount = 0;
   }
 
   private async handleWalletConnection(
@@ -480,8 +533,35 @@ export class WalletReconnectionService {
     this.handleWalletDisconnection();
   }
 
-  isCorrectNetwork(chainId: number): boolean {
-    return chainId === EXPECTED_CHAIN_ID;
+  public isCorrectNetwork(chainId: number): boolean {
+    return chainId === configService.getRequiredChainId();
+  }
+
+  public async validateNetwork(chainId: number | null): Promise<void> {
+    if (!chainId) {
+      throw createAuthError(AUTH_ERROR_CODES.NETWORK_MISMATCH, 'No network selected', { chainId });
+    }
+
+    if (!this.isCorrectNetwork(chainId)) {
+      throw createAuthError(AUTH_ERROR_CODES.NETWORK_MISMATCH, 'Incorrect network', { 
+        currentChainId: chainId,
+        requiredChainId: configService.getRequiredChainId()
+      });
+    }
+  }
+
+  public async validateNetworkBeforeConnect(): Promise<void> {
+    const chainId = await configService.getCurrentChainId();
+    await this.validateNetwork(chainId);
+  }
+
+  public async startReconnection(): Promise<void> {
+    try {
+      const chainId = await configService.getCurrentChainId();
+      await this.validateNetwork(chainId);
+    } catch (error) {
+      throw createAuthError(AUTH_ERROR_CODES.NETWORK_MISMATCH, 'Failed to reconnect wallet', { error });
+    }
   }
 
   getWalletClient(): WalletClient | null {
@@ -490,100 +570,6 @@ export class WalletReconnectionService {
 
   getProvider(): BrowserProvider | null {
     return this.provider;
-  }
-
-  public async validateNetworkBeforeConnect(): Promise<boolean> {
-    if (!window.ethereum) {
-      throw errorService.createAuthError(
-        AUTH_ERROR_CODES.PROVIDER_ERROR,
-        'No Ethereum provider found'
-      );
-    }
-
-    try {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      if (this.isCorrectNetwork(parseInt(chainId, 16))) {
-        return true;
-      }
-
-      // Tenter de changer de réseau
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: `0x${EXPECTED_CHAIN_ID.toString(16)}` }],
-      });
-
-      return true;
-    } catch (error: any) {
-      if (error.code === 4902) {
-        throw errorService.createAuthError(
-          AUTH_ERROR_CODES.NETWORK_MISMATCH,
-          'Network not configured in wallet'
-        );
-      }
-      throw error;
-    }
-  }
-
-  async reconnectWallet(): Promise<boolean> {
-    try {
-      if (this.reconnectionAttempts >= MAX_RECONNECTION_ATTEMPTS) {
-        this.stopReconnectionAttempts();
-        throw errorService.createAuthError(
-          AUTH_ERROR_CODES.WALLET_DISCONNECTED,
-          'Max reconnection attempts reached'
-        );
-      }
-
-      const isValid = await this.validateNetworkBeforeConnect();
-      if (!isValid) {
-        return false;
-      }
-
-      // Logique de reconnexion du wallet
-      const provider = window.ethereum;
-      if (!provider) {
-        throw errorService.createAuthError(
-          AUTH_ERROR_CODES.PROVIDER_ERROR,
-          'No Ethereum provider found'
-        );
-      }
-
-      const accounts = await provider.request({ method: 'eth_requestAccounts' });
-      if (!accounts || accounts.length === 0) {
-        throw errorService.createAuthError(
-          AUTH_ERROR_CODES.WALLET_NOT_FOUND,
-          'No accounts found'
-        );
-      }
-
-      this.stopReconnectionAttempts();
-      return true;
-    } catch (error) {
-      this.reconnectionAttempts++;
-      throw errorService.handleAuthError(error);
-    }
-  }
-
-  startReconnectionAttempts(): void {
-    if (this.reconnectionTimer) {
-      return;
-    }
-
-    this.reconnectionTimer = setInterval(() => {
-      this.reconnectWallet().catch(() => {
-        if (this.reconnectionAttempts >= MAX_RECONNECTION_ATTEMPTS) {
-          this.stopReconnectionAttempts();
-        }
-      });
-    }, RECONNECTION_INTERVAL);
-  }
-
-  stopReconnectionAttempts(): void {
-    this.reconnectionAttempts = 0;
-    if (this.reconnectionTimer) {
-      clearInterval(this.reconnectionTimer);
-      this.reconnectionTimer = undefined;
-    }
   }
 }
 

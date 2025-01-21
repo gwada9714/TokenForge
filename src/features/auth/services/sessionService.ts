@@ -1,9 +1,10 @@
 import { auth } from '../../../config/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { AuthPersistence } from '../store/authPersistence';
-import { createAuthError } from '../errors/AuthError';
+import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
 import { notificationService } from './notificationService';
 import { tabSyncService } from './tabSyncService';
+import { randomUUID } from 'crypto';
 
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiry
@@ -12,6 +13,8 @@ interface SessionInfo {
   expiresAt: number;
   lastActivity: number;
   refreshToken: string | null;
+  tabId?: string;
+  lastSync?: number;
 }
 
 interface TokenForgeUser {
@@ -22,15 +25,27 @@ interface TokenForgeUser {
   provider?: string;
 }
 
+interface SyncMessage {
+  type: string;
+  timestamp: number;
+  tabId: string;
+  payload?: any;
+  priority?: number;
+}
+
 export class SessionService {
   private static instance: SessionService;
   private persistence: AuthPersistence;
   private sessionCheckInterval: NodeJS.Timeout | null = null;
   private activeTimeouts: Set<NodeJS.Timeout> = new Set();
   private currentUser: TokenForgeUser | null = null;
+  private tabId: string;
+  private lastSync: number = 0;
 
   private constructor() {
     this.persistence = AuthPersistence.getInstance();
+    this.tabId = randomUUID();
+    this.initTabSync();
   }
 
   static getInstance(): SessionService {
@@ -40,11 +55,30 @@ export class SessionService {
     return SessionService.instance;
   }
 
+  private initTabSync() {
+    tabSyncService.subscribe((message: SyncMessage) => {
+      if (message.type === 'session' && message.tabId !== this.tabId) {
+        void this.handleTabSync(message);
+      }
+    });
+  }
+
+  private async handleTabSync(message: SyncMessage) {
+    if (message.timestamp > this.lastSync) {
+      this.lastSync = message.timestamp;
+      await this.refreshSession();
+      notificationService.info('Session synchronized across tabs');
+    }
+  }
+
   async initSession(): Promise<void> {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) {
-        throw createAuthError('AUTH_001', 'No user found');
+        throw createAuthError(
+          AUTH_ERROR_CODES.NO_USER,
+          'No user found'
+        );
       }
 
       const state = await this.persistence.load();
@@ -52,6 +86,8 @@ export class SessionService {
         expiresAt: Date.now() + SESSION_TIMEOUT,
         lastActivity: Date.now(),
         refreshToken: await currentUser.getIdToken(),
+        tabId: this.tabId,
+        lastSync: Date.now()
       };
 
       // Récupérer les données stockées précédemment pour préserver isAdmin et customMetadata
@@ -71,67 +107,70 @@ export class SessionService {
       });
       this.startSessionMonitoring();
     } catch (error) {
-      throw createAuthError('AUTH_002', 'Failed to initialize session', { originalError: error });
+      throw createAuthError(
+        AUTH_ERROR_CODES.SESSION_ERROR,
+        'Failed to initialize session',
+        { originalError: error }
+      );
     }
   }
 
-  private startSessionMonitoring(): void {
+  public startSessionMonitoring(): void {
+    if (!this.sessionCheckInterval) {
+      this.sessionCheckInterval = setInterval(() => {
+        void this.refreshSession();
+      }, REFRESH_THRESHOLD);
+    }
+  }
+
+  public stopSessionMonitoring(): void {
     if (this.sessionCheckInterval) {
       clearInterval(this.sessionCheckInterval);
+      this.sessionCheckInterval = null;
     }
-
-    this.sessionCheckInterval = setInterval(async () => {
-      try {
-        const state = await this.persistence.load();
-        const sessionInfo = state.sessionInfo as SessionInfo;
-
-        if (!sessionInfo) return;
-
-        const now = Date.now();
-        const timeUntilExpiry = sessionInfo.expiresAt - now;
-
-        // Si proche de l'expiration, rafraîchir la session
-        if (timeUntilExpiry < REFRESH_THRESHOLD && timeUntilExpiry > 0) {
-          await this.refreshSession();
-        }
-        // Si expiré, déconnecter
-        else if (timeUntilExpiry <= 0) {
-          await this.endSession();
-          notificationService.warn('Session expirée. Veuillez vous reconnecter.');
-        }
-      } catch (error) {
-        console.error('Session monitoring error:', error);
-      }
-    }, 60000); // Vérifier toutes les minutes
   }
 
   async refreshSession(): Promise<void> {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw createAuthError('AUTH_003', 'No user found during refresh');
+      const currentTime = Date.now();
+      const state = await this.persistence.load();
+      
+      if (!state || !state.sessionInfo || currentTime >= state.sessionInfo.expiresAt) {
+        await this.endSession();
+        return;
       }
 
-      const state = await this.persistence.load();
-      const sessionInfo: SessionInfo = {
-        expiresAt: Date.now() + SESSION_TIMEOUT,
-        lastActivity: Date.now(),
-        refreshToken: await currentUser.getIdToken(true),
-      };
+      if (currentTime >= state.sessionInfo.expiresAt - REFRESH_THRESHOLD) {
+        const newSessionInfo: SessionInfo = {
+          ...state.sessionInfo,
+          expiresAt: currentTime + SESSION_TIMEOUT,
+          lastActivity: currentTime,
+          tabId: this.tabId,
+          lastSync: Date.now()
+        };
 
-      await this.persistence.save({
-        ...state,
-        sessionInfo,
-      });
+        await this.persistence.save({
+          ...state,
+          sessionInfo: newSessionInfo
+        });
+
+        tabSyncService.broadcast({
+          type: 'session',
+          timestamp: Date.now(),
+          tabId: this.tabId,
+          payload: { action: 'refresh' }
+        });
+      }
     } catch (error) {
-      throw createAuthError('AUTH_004', 'Failed to refresh session', { originalError: error });
+      console.error('Error refreshing session:', error);
+      notificationService.error('Error refreshing session');
     }
   }
 
   async updateActivity(): Promise<void> {
     try {
       const state = await this.persistence.load();
-      if (state.sessionInfo) {
+      if (state?.sessionInfo) {
         await this.persistence.save({
           ...state,
           sessionInfo: {
@@ -159,18 +198,26 @@ export class SessionService {
       await auth.signOut();
       this.clearSession();
     } catch (error) {
-      throw createAuthError('AUTH_005', 'Failed to end session', { originalError: error });
+      throw createAuthError(
+        AUTH_ERROR_CODES.SESSION_ERROR,
+        'Failed to end session',
+        { originalError: error }
+      );
     }
   }
 
   clearSession(): void {
     try {
-      this.persistence.remove('session');
-      this.persistence.remove('lastActivity');
+      this.persistence.clear();
       this.currentUser = null;
-      this.stopActivityMonitoring();
-      // Notifier les autres onglets de la déconnexion avec un objet vide
-      tabSyncService.syncAuthState({} as Partial<TokenForgeUser>);
+      this.stopSessionMonitoring();
+      // Notifier les autres onglets de la déconnexion
+      tabSyncService.broadcast({
+        type: 'session',
+        timestamp: Date.now(),
+        tabId: this.tabId,
+        payload: { action: 'logout' }
+      });
     } catch (error) {
       console.error('Error clearing session:', error);
     }
@@ -198,7 +245,7 @@ export class SessionService {
 
   updateSession(user: TokenForgeUser): void {
     this.currentUser = user;
-    this.startActivityMonitoring();
+    this.startSessionMonitoring();
     // Synchroniser l'état avec les autres onglets
     tabSyncService.syncAuthState(user);
   }

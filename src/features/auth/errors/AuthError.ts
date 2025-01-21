@@ -17,30 +17,26 @@ export const AUTH_ERROR_CODES = {
   OPERATION_NOT_ALLOWED: 'AUTH_015',
   INVALID_CREDENTIALS: 'AUTH_016',
   PROVIDER_NOT_FOUND: 'AUTH_017',
-  INVALID_CONTEXT: 'AUTH_018'
+  INVALID_CONTEXT: 'AUTH_018',
+  ADMIN_ERROR: 'AUTH_019',
+  SESSION_ERROR: 'AUTH_020',
+  SYNC_ERROR: 'AUTH_021',
+  UNKNOWN_ERROR: 'AUTH_999'
 } as const;
 
 export type ErrorCode = typeof AUTH_ERROR_CODES[keyof typeof AUTH_ERROR_CODES];
 
 export class AuthError extends Error {
+  public readonly details: Record<string, unknown>;
+
   constructor(
-    public code: ErrorCode,
+    public readonly code: ErrorCode,
     message: string,
-    public details?: Record<string, unknown>
+    details: Record<string, unknown> = {}
   ) {
     super(message);
     this.name = 'AuthError';
-    Object.setPrototypeOf(this, AuthError.prototype);
-  }
-
-  static CODES = AUTH_ERROR_CODES;
-
-  static create(
-    code: ErrorCode,
-    message: string,
-    details?: Record<string, unknown>
-  ): AuthError {
-    return new AuthError(code, message, details);
+    this.details = details;
   }
 
   toJSON() {
@@ -48,15 +44,15 @@ export class AuthError extends Error {
       name: this.name,
       code: this.code,
       message: this.message,
-      details: this.details,
+      details: this.details
     };
   }
 }
 
-export const createAuthError = (
+export function createAuthError(
   code: ErrorCode,
   message: string,
-  details?: Record<string, unknown>
-): AuthError => {
-  return AuthError.create(code, message, details);
-};
+  details: Record<string, unknown> = {}
+): AuthError {
+  return new AuthError(code, message, details);
+}
