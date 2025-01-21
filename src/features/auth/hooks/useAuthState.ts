@@ -1,15 +1,26 @@
 import { useCallback, useEffect, useReducer } from 'react';
-import { errorService } from '../errors/errorService';
+import { errorService } from '../services/errorService';
 import { firebaseAuth } from '../services/firebaseAuth';
 import { sessionService } from '../services/sessionService';
-import { TokenForgeUser, TokenForgeMetadata } from '../types';
-import { authActions } from '../actions/authActions';
+import { TokenForgeUser, AuthStatus } from '../types/auth';
+import { authActions, AuthAction } from '../actions/authActions';
 import { authReducer, initialState } from '../reducers/authReducer';
+import { AuthError } from '../errors/AuthError';
 
-export const useAuthState = () => {
+interface AuthStateHook {
+  status: AuthStatus;
+  isAuthenticated: boolean;
+  user: TokenForgeUser | null;
+  error: Error | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  dispatch: React.Dispatch<AuthAction>;
+}
+
+export const useAuthState = (): AuthStateHook => {
   const [state, dispatch] = useReducer(authReducer, {
     ...initialState,
-    status: 'idle',
+    status: 'idle' as AuthStatus,
     isAuthenticated: false,
     user: null,
     error: null
@@ -17,25 +28,27 @@ export const useAuthState = () => {
 
   // Gérer les changements de session Firebase
   useEffect(() => {
-    const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
+    const unsubscribe = firebaseAuth.onAuthStateChanged(async (user) => {
       if (user) {
-        const metadata: TokenForgeMetadata = {
-          creationTime: user.metadata.creationTime || '',
-          lastSignInTime: user.metadata.lastSignInTime || '',
-          lastLoginTime: Date.now(),
-          walletAddress: undefined,
-          chainId: undefined,
-          customMetadata: {}
-        };
-
-        const tokenForgeUser: TokenForgeUser = {
-          ...user,
-          isAdmin: false,
-          canCreateToken: false,
-          canUseServices: false,
-          metadata
-        };
-        dispatch(authActions.loginSuccess(tokenForgeUser));
+        try {
+          const sessionData = await sessionService.getUserSession(user.uid);
+          const tokenForgeUser: TokenForgeUser = {
+            ...user,
+            isAdmin: sessionData?.isAdmin ?? false,
+            canCreateToken: sessionData?.canCreateToken ?? false,
+            canUseServices: sessionData?.canUseServices ?? false,
+            metadata: {
+              ...sessionData?.metadata,
+              creationTime: user.metadata.creationTime || '',
+              lastSignInTime: user.metadata.lastSignInTime || '',
+              lastLoginTime: Date.now()
+            }
+          };
+          dispatch(authActions.loginSuccess(tokenForgeUser));
+        } catch (error) {
+          const authError = errorService.handleError(error) as AuthError;
+          dispatch(authActions.loginFailure(authError));
+        }
       } else {
         dispatch(authActions.logout());
       }
@@ -45,54 +58,32 @@ export const useAuthState = () => {
   }, []);
 
   // Login avec email/password
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<void> => {
     try {
       dispatch(authActions.loginStart());
       await firebaseAuth.signInWithEmailAndPassword(email, password);
-      // Note: le succès sera géré par l'effet onSessionChange
+      // Le succès sera géré par l'effet onAuthStateChanged
     } catch (error) {
-      const authError = errorService.handleAuthError(error);
+      const authError = errorService.handleError(error) as AuthError;
       dispatch(authActions.loginFailure(authError));
-      throw authError;
-    }
-  }, []);
-
-  // Login avec Google
-  const loginWithGoogle = useCallback(async () => {
-    try {
-      dispatch(authActions.loginStart());
-      await firebaseAuth.signInWithGoogle();
-      // Note: le succès sera géré par l'effet onSessionChange
-    } catch (error) {
-      const authError = errorService.handleAuthError(error);
-      dispatch(authActions.loginFailure(authError));
-      throw authError;
     }
   }, []);
 
   // Logout
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (): Promise<void> => {
     try {
-      await sessionService.endSession();
       await firebaseAuth.signOut();
-      dispatch(authActions.logout());
+      // Le logout sera géré par l'effet onAuthStateChanged
     } catch (error) {
-      const authError = errorService.handleAuthError(error);
+      const authError = errorService.handleError(error) as AuthError;
       dispatch(authActions.setError(authError));
-      throw authError;
     }
-  }, []);
-
-  // Reset error
-  const resetError = useCallback(() => {
-    dispatch(authActions.clearError());
   }, []);
 
   return {
     ...state,
     login,
-    loginWithGoogle,
     logout,
-    resetError
+    dispatch
   };
 };

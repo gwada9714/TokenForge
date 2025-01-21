@@ -1,12 +1,11 @@
-import React, { createContext, useReducer, useContext, useCallback, useEffect } from 'react';
+import React, { createContext, useReducer, useEffect } from 'react';
 import { useConnect, useDisconnect, useAccount, usePublicClient } from 'wagmi';
 import { getWalletClient } from '@wagmi/core';
 import { firebaseService } from '../services/firebaseService';
-import { errorService } from '../services/errorService';
 import { walletReconnectionService } from '../services/walletReconnectionService';
 import { authSyncService } from '../services/authSyncService';
 import { authReducer, initialState } from '../reducers/authReducer';
-import { TokenForgeAuthContextValue } from '../types';
+import { TokenForgeAuthContextValue, WalletState } from '../types';
 import { authActions } from '../actions/authActions';
 import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
 
@@ -17,8 +16,6 @@ export const TokenForgeAuthContext = createContext<TokenForgeAuthContextValue>({
 
 export const TokenForgeAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
 
@@ -54,7 +51,7 @@ export const TokenForgeAuthProvider: React.FC<{ children: React.ReactNode }> = (
             throw createAuthError(AUTH_ERROR_CODES.WALLET_NOT_FOUND, 'Wallet client not found', { error: 'No wallet client' });
           }
 
-          const walletState = {
+          const walletState: WalletState = {
             isConnected: true,
             address,
             chainId: walletClient.chain.id,

@@ -1,4 +1,4 @@
-import { TokenForgeUser, WalletState } from '../types';
+import { TokenForgeUser, WalletState } from '../types/auth';
 import { AuthError } from '../errors/AuthError';
 
 export const AUTH_ACTIONS = {
@@ -39,7 +39,10 @@ export type AuthAction = {
 }[keyof ActionMap];
 
 export const authActions = {
-  loginStart: () => ({ type: AUTH_ACTIONS.LOGIN_START }),
+  // Auth actions
+  loginStart: () => ({ 
+    type: AUTH_ACTIONS.LOGIN_START 
+  }),
   loginSuccess: (user: TokenForgeUser) => ({ 
     type: AUTH_ACTIONS.LOGIN_SUCCESS, 
     payload: user 
@@ -48,29 +51,35 @@ export const authActions = {
     type: AUTH_ACTIONS.LOGIN_FAILURE, 
     payload: error 
   }),
-  logout: () => ({ type: AUTH_ACTIONS.LOGOUT }),
-  updateUser: (updates: Partial<TokenForgeUser>) => ({ 
-    type: AUTH_ACTIONS.UPDATE_USER, 
-    payload: updates 
+  logout: () => ({ 
+    type: AUTH_ACTIONS.LOGOUT 
+  }),
+  updateUser: (updates: Partial<TokenForgeUser>) => ({
+    type: AUTH_ACTIONS.UPDATE_USER,
+    payload: updates
   }),
   setError: (error: AuthError) => ({ 
     type: AUTH_ACTIONS.SET_ERROR, 
     payload: error 
   }),
-  clearError: () => ({ type: AUTH_ACTIONS.CLEAR_ERROR }),
-  
-  // Wallet actions
-  connectWallet: (walletState: WalletState) => ({ 
-    type: AUTH_ACTIONS.WALLET_CONNECT, 
-    payload: walletState 
+  clearError: () => ({ 
+    type: AUTH_ACTIONS.CLEAR_ERROR 
   }),
-  disconnectWallet: () => ({ type: AUTH_ACTIONS.WALLET_DISCONNECT }),
+
+  // Wallet actions
+  connectWallet: (walletState: WalletState) => ({
+    type: AUTH_ACTIONS.WALLET_CONNECT,
+    payload: walletState
+  }),
+  disconnectWallet: () => ({
+    type: AUTH_ACTIONS.WALLET_DISCONNECT
+  }),
   updateNetwork: (chainId: number, isCorrectNetwork: boolean) => ({
     type: AUTH_ACTIONS.WALLET_NETWORK_CHANGE,
     payload: { chainId, isCorrectNetwork }
   }),
-  updateProvider: (provider: any) => ({ 
-    type: AUTH_ACTIONS.WALLET_UPDATE_PROVIDER, 
-    payload: { provider } 
+  updateProvider: (provider: any) => ({
+    type: AUTH_ACTIONS.WALLET_UPDATE_PROVIDER,
+    payload: { provider }
   })
 };

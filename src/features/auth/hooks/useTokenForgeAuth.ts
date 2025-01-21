@@ -1,51 +1,59 @@
-import { useContext, useEffect, useCallback } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 import { TokenForgeAuthContext } from '../context/TokenForgeAuthContext';
 import { useAuthState } from './useAuthState';
 import { useWalletState } from './useWalletState';
-import { authActions } from '../actions/authActions';
 import { sessionService } from '../services/sessionService';
-import { walletReconnectionService } from '../services/walletReconnectionService';
-import { AUTH_ERROR_CODES, createAuthError } from '../errors/AuthError';
 import { errorService } from '../services/errorService';
-import { notificationService } from '../services/notificationService';
-import { adminService } from '../services/adminService';
-import { TokenForgeUser, TokenForgeAuthState } from '../types';
+import { authActions } from '../actions/authActions';
+import { TokenForgeUser, TokenForgeAuthState } from '../types/auth';
+import { firebaseAuth } from '../services/firebaseAuth';
+import { AuthError } from '../errors/AuthError';
 
-export const useTokenForgeAuth = (): TokenForgeAuthState & { login: (user: TokenForgeUser) => Promise<void> } => {
+export interface TokenForgeAuthHook extends TokenForgeAuthState {
+  login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+  updateUserProfile: (updates: Partial<TokenForgeUser>) => Promise<void>;
+  resetError: () => void;
+  isFullyAuthenticated: boolean;
+  canAccessServices: boolean;
+}
+
+export const useTokenForgeAuth = (): TokenForgeAuthHook => {
   const context = useContext(TokenForgeAuthContext);
   if (!context) {
-    throw createAuthError(AUTH_ERROR_CODES.INVALID_CONTEXT, 'useTokenForgeAuth must be used within a TokenForgeAuthProvider', { error: 'Context not found' });
+    throw new Error('useTokenForgeAuth must be used within a TokenForgeAuthProvider');
   }
 
   const { dispatch, ...state } = context;
-  const authState = useAuthState();
-  const walletState = useWalletState();
+  const auth = useAuthState();
+  const wallet = useWalletState();
 
   // Synchronisation de l'état d'authentification
   useEffect(() => {
-    if (authState.user && !state.user) {
+    if (auth.user && !state.user) {
       dispatch(authActions.loginSuccess({
-        ...authState.user,
+        ...auth.user,
         metadata: {
-          ...authState.user.metadata,
+          ...auth.user.metadata,
           lastLoginTime: Date.now()
         }
       }));
-    } else if (!authState.user && state.user) {
+    } else if (!auth.user && state.user) {
       dispatch(authActions.logout());
     }
-  }, [authState.user, state.user, dispatch]);
+  }, [auth.user, state.user, dispatch]);
 
   // Synchronisation de l'état du wallet
   useEffect(() => {
-    if (walletState.isConnected !== state.walletState.isConnected) {
-      if (walletState.isConnected) {
-        dispatch(authActions.connectWallet(walletState));
+    if (wallet.isConnected !== state.walletState.isConnected) {
+      if (wallet.isConnected) {
+        dispatch(authActions.connectWallet(wallet));
       } else {
         dispatch(authActions.disconnectWallet());
       }
     }
-  }, [walletState.isConnected, state.walletState.isConnected, dispatch]);
+  }, [wallet.isConnected, state.walletState.isConnected, dispatch]);
 
   // Gestion des droits admin
   useEffect(() => {
@@ -81,25 +89,54 @@ export const useTokenForgeAuth = (): TokenForgeAuthState & { login: (user: Token
 
   // Reconnexion du wallet
   useEffect(() => {
-    if (walletState.isConnected && !state.walletState.isConnected) {
+    if (wallet.isConnected && !state.walletState.isConnected) {
       void walletReconnectionService.startReconnection();
     }
-  }, [walletState.isConnected, state.walletState.isConnected]);
+  }, [wallet.isConnected, state.walletState.isConnected]);
 
-  const login = useCallback(async (user: TokenForgeUser) => {
+  // Login avec Google
+  const loginWithGoogle = useCallback(async (): Promise<void> => {
     try {
-      dispatch(authActions.loginStart());
-      await sessionService.initSession();
-      dispatch(authActions.loginSuccess(user));
+      auth.dispatch(authActions.loginStart());
+      await firebaseAuth.signInWithGoogle();
+      // Le succès sera géré par useAuthState
     } catch (error) {
-      const authError = errorService.handleAuthError(error);
-      dispatch(authActions.loginFailure(authError));
-      throw authError;
+      const authError = errorService.handleError(error) as AuthError;
+      auth.dispatch(authActions.loginFailure(authError));
     }
-  }, [dispatch]);
+  }, [auth]);
+
+  // Reset error
+  const resetError = useCallback((): void => {
+    auth.dispatch(authActions.clearError());
+  }, [auth]);
+
+  // Mise à jour du profil utilisateur
+  const updateUserProfile = useCallback(async (updates: Partial<TokenForgeUser>): Promise<void> => {
+    try {
+      if (!auth.user?.uid) throw new Error('User not authenticated');
+      await sessionService.updateUserSession(auth.user.uid, updates);
+      auth.dispatch(authActions.updateUser(updates));
+    } catch (error) {
+      const authError = errorService.handleError(error) as AuthError;
+      auth.dispatch(authActions.setError(authError));
+    }
+  }, [auth]);
+
+  const isFullyAuthenticated = auth.isAuthenticated && wallet.isConnected && wallet.isCorrectNetwork;
+  const canAccessServices = auth.isAuthenticated && auth.user?.canUseServices && wallet.isCorrectNetwork;
 
   return {
-    ...state,
-    login
+    // État authentification
+    ...auth,
+    // État wallet
+    ...wallet,
+    // Méthodes
+    loginWithGoogle,
+    resetError,
+    updateUserProfile,
+    // États dérivés
+    isFullyAuthenticated,
+    canAccessServices
   };
 };

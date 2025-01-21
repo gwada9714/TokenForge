@@ -33,6 +33,13 @@ interface SyncMessage {
   priority?: number;
 }
 
+interface SessionData {
+  isAdmin: boolean;
+  canCreateToken: boolean;
+  canUseServices: boolean;
+  metadata: any;
+}
+
 export class SessionService {
   private static instance: SessionService;
   private persistence: AuthPersistence;
@@ -282,6 +289,52 @@ export class SessionService {
     return auth.onAuthStateChanged(callback);
   }
 
+  async getUserSession(uid: string): Promise<SessionData | null> {
+    try {
+      const sessionData = await this.persistence.getData(`users/${uid}`);
+      if (!sessionData) {
+        return {
+          isAdmin: false,
+          canCreateToken: false,
+          canUseServices: false,
+          metadata: {}
+        };
+      }
+      return sessionData as SessionData;
+    } catch (error) {
+      throw createAuthError(
+        AUTH_ERROR_CODES.SESSION_ERROR,
+        'Failed to get user session',
+        { userId: uid, error }
+      );
+    }
+  }
+
+  async updateUserSession(uid: string, updates: Partial<SessionData>): Promise<void> {
+    try {
+      const currentData = await this.getUserSession(uid);
+      const updatedData = {
+        ...currentData,
+        ...updates,
+        metadata: {
+          ...currentData?.metadata,
+          ...updates.metadata
+        }
+      };
+      await this.persistence.setData(`users/${uid}`, updatedData);
+      this.notifySessionUpdate(uid, updatedData);
+    } catch (error) {
+      throw createAuthError(
+        AUTH_ERROR_CODES.SESSION_ERROR,
+        'Failed to update user session',
+        { userId: uid, updates, error }
+      );
+    }
+  }
+
+  private notifySessionUpdate(uid: string, data: SessionData) {
+    // Implement notification logic here
+  }
 }
 
 export const sessionService = SessionService.getInstance();

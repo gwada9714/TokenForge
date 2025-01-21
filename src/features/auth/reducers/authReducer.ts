@@ -1,5 +1,5 @@
-import { TokenForgeAuthState } from '../types';
-import { AUTH_ACTIONS, AuthAction } from '../actions/authActions';
+import { TokenForgeAuthState } from '../types/auth';
+import { AuthAction, AUTH_ACTIONS } from '../actions/authActions';
 
 export const initialState: TokenForgeAuthState = {
   status: 'idle',
@@ -20,11 +20,10 @@ export const initialState: TokenForgeAuthState = {
 };
 
 export const authReducer = (
-  state: TokenForgeAuthState,
+  state: TokenForgeAuthState = initialState,
   action: AuthAction
 ): TokenForgeAuthState => {
   switch (action.type) {
-    // Auth actions
     case AUTH_ACTIONS.LOGIN_START:
       return {
         ...state,
@@ -35,9 +34,16 @@ export const authReducer = (
     case AUTH_ACTIONS.LOGIN_SUCCESS:
       return {
         ...state,
-        status: 'authenticated',
+        status: state.walletState.isConnected 
+          ? state.walletState.isCorrectNetwork 
+            ? 'authenticated'
+            : 'wallet_connected_wrong_network'
+          : 'authenticated',
         isAuthenticated: true,
         user: action.payload,
+        isAdmin: action.payload.isAdmin,
+        canCreateToken: action.payload.canCreateToken,
+        canUseServices: action.payload.canUseServices,
         error: null
       };
 
@@ -51,44 +57,67 @@ export const authReducer = (
       };
 
     case AUTH_ACTIONS.LOGOUT:
-      return initialState;
+      return {
+        ...initialState,
+        status: state.walletState.isConnected ? 'wallet_connected' : 'idle',
+        walletState: state.walletState // Preserve wallet state on logout
+      };
 
     case AUTH_ACTIONS.UPDATE_USER:
       return {
         ...state,
-        user: state.user ? { ...state.user, ...action.payload } : null
+        user: state.user ? { ...state.user, ...action.payload } : null,
+        isAdmin: action.payload.isAdmin ?? state.isAdmin,
+        canCreateToken: action.payload.canCreateToken ?? state.canCreateToken,
+        canUseServices: action.payload.canUseServices ?? state.canUseServices
       };
 
     case AUTH_ACTIONS.SET_ERROR:
       return {
         ...state,
-        error: action.payload,
-        status: 'error'
+        status: 'error',
+        error: action.payload
       };
 
     case AUTH_ACTIONS.CLEAR_ERROR:
       return {
         ...state,
-        error: null,
-        status: state.isAuthenticated ? 'authenticated' : 'idle'
+        status: state.isAuthenticated 
+          ? 'authenticated' 
+          : state.walletState.isConnected
+            ? 'wallet_connected'
+            : 'idle',
+        error: null
       };
 
-    // Wallet actions
     case AUTH_ACTIONS.WALLET_CONNECT:
       return {
         ...state,
+        status: state.isAuthenticated 
+          ? action.payload.isCorrectNetwork 
+            ? 'authenticated'
+            : 'wallet_connected_wrong_network'
+          : 'wallet_connected',
         walletState: action.payload
       };
 
     case AUTH_ACTIONS.WALLET_DISCONNECT:
       return {
         ...state,
-        walletState: initialState.walletState
+        status: state.isAuthenticated ? 'authenticated' : 'idle',
+        walletState: {
+          ...initialState.walletState
+        }
       };
 
     case AUTH_ACTIONS.WALLET_NETWORK_CHANGE:
       return {
         ...state,
+        status: state.isAuthenticated 
+          ? action.payload.isCorrectNetwork 
+            ? 'authenticated'
+            : 'wallet_connected_wrong_network'
+          : 'wallet_connected',
         walletState: {
           ...state.walletState,
           chainId: action.payload.chainId,
