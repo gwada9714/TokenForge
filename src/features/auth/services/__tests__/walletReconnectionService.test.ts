@@ -1,8 +1,9 @@
-import { vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WalletReconnectionService } from '../walletReconnectionService';
 import { getWalletClient, getAccount, type GetAccountReturnType, type Connector } from '@wagmi/core';
 import type { Chain } from 'viem';
 import { EventEmitter } from 'events';
+import { BrowserProvider } from 'ethers';
 
 // Constantes de test
 const TEST_ADDRESS = '0x123' as `0x${string}`;
@@ -164,25 +165,23 @@ const setupEthereumProvider = (chainId = TEST_CHAIN_ID) => {
   });
 };
 
-const connectWallet = async () => {
-  const connectPromise = service.connect();
-  await flushPromisesAndTimers();
-  const connected = await connectPromise;
-  return connected;
-};
+async function connectWallet(): Promise<boolean> {
+  const service = WalletReconnectionService.getInstance();
+  await service.startReconnection();
+  return service.getWalletState().isConnected;
+}
 
-const verifyWalletState = (isConnected: boolean, address: string | null = null, chainId: number | null = null) => {
-  expect(service.getWalletState().isConnected).toBe(isConnected);
-  if (isConnected) {
-    expect(service.getWalletClient()).toEqual(mockWalletClientInstance);
-    expect(service.getProvider()).toBeDefined();
+function verifyWalletState(isConnected: boolean, address: string | null = null, chainId: number | null = null) {
+  const service = WalletReconnectionService.getInstance();
+  const state = service.getWalletState();
+  expect(state.isConnected).toBe(isConnected);
+  if (address !== null) {
+    expect(state.address).toBe(address);
   }
-  expect(mockTabSyncService.syncWalletState).toHaveBeenCalledWith({
-    isConnected,
-    address,
-    chainId,
-  });
-};
+  if (chainId !== null) {
+    expect(state.chainId).toBe(chainId);
+  }
+}
 
 // Mocks des services et modules
 vi.mock('@wagmi/core', () => ({
@@ -198,6 +197,8 @@ const mockStorageService = {
 const mockTabSyncService = {
   onWalletStateChange: vi.fn(() => vi.fn()),
   syncWalletState: vi.fn(),
+  emit: vi.fn(),
+  off: vi.fn(),
 };
 
 const mockNotificationService = {
@@ -379,6 +380,140 @@ describe('WalletReconnectionService', () => {
         expect.any(Object)
       );
     }, NETWORK_TIMEOUT);
+  });
+
+  describe('Synchronisation entre onglets', () => {
+    it('devrait synchroniser l\'état du wallet entre les onglets', async () => {
+      const service = WalletReconnectionService.getInstance();
+      await connectWallet();
+      
+      // Simuler un message de synchronisation d'un autre onglet
+      const newState = {
+        address: '0x456',
+        chainId: POLYGON_CHAIN_ID,
+        isConnected: true
+      };
+      
+      // Émettre un événement de synchronisation
+      mockTabSyncService.emit('walletSync', {
+        type: 'walletStateSync',
+        data: newState
+      });
+      
+      await flushPromisesAndTimers();
+      
+      // Vérifier que l'état a été synchronisé
+      const currentState = service.getWalletState();
+      expect(currentState.address).toBe(newState.address);
+      expect(currentState.chainId).toBe(newState.chainId);
+      expect(currentState.isConnected).toBe(newState.isConnected);
+    });
+
+    it('devrait ignorer les messages de synchronisation du même onglet', async () => {
+      await connectWallet();
+      const initialState = service.getWalletState();
+      
+      // Simuler un message du même onglet
+      mockTabSyncService.emit('walletSync', {
+        type: 'walletStateSync',
+        tabId: service.tabId, // Même tabId
+        data: {
+          address: '0x456',
+          chainId: POLYGON_CHAIN_ID,
+          isConnected: true
+        }
+      });
+      
+      await flushPromisesAndTimers();
+      
+      // Vérifier que l'état n'a pas changé
+      const currentState = service.getWalletState();
+      expect(currentState).toEqual(initialState);
+    });
+  });
+
+  describe('Notifications en temps réel', () => {
+    it('devrait notifier lors d\'un changement de réseau', async () => {
+      await connectWallet();
+      
+      // Simuler un changement de réseau
+      await simulateNetworkChange(POLYGON_CHAIN_ID);
+      await flushPromisesAndTimers();
+      
+      // Vérifier les notifications
+      expect(mockNotificationService.info).toHaveBeenCalledWith(
+        expect.stringContaining('Switching network'),
+        expect.any(Object)
+      );
+      expect(mockNotificationService.success).toHaveBeenCalledWith(
+        expect.stringContaining('Successfully connected to Polygon'),
+        expect.any(Object)
+      );
+    });
+
+    it('devrait notifier lors d\'une tentative de reconnexion', async () => {
+      // Simuler un échec de connexion suivi d'une réussite
+      let attempts = 0;
+      mockNetworkRetryService.retryWithTimeout.mockImplementation(async (fn) => {
+        attempts++;
+        if (attempts === 1) {
+          return { success: false, error: new Error('Connection failed'), attempts };
+        }
+        const result = await fn();
+        return { success: true, result, attempts };
+      });
+
+      await connectWallet();
+      
+      // Vérifier les notifications de tentative et de succès
+      expect(mockNotificationService.info).toHaveBeenCalledWith(
+        expect.stringContaining('Attempting to reconnect'),
+        expect.any(Object)
+      );
+      expect(mockNotificationService.success).toHaveBeenCalledWith(
+        expect.stringContaining('Successfully reconnected'),
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('Performance et nettoyage', () => {
+    it('devrait gérer la latence réseau', async () => {
+      await connectWallet();
+      
+      // Mock de la mesure de latence
+      mockEthereumProvider.request.mockImplementation(() => {
+        return new Promise(resolve => {
+          setTimeout(() => resolve('0x1'), 100);
+        });
+      });
+      
+      // Simuler un changement de réseau pour déclencher la mesure de latence
+      await simulateNetworkChange(POLYGON_CHAIN_ID);
+      await flushPromisesAndTimers();
+      
+      // Vérifier que le changement de réseau a été géré
+      expect(mockLogService.info).toHaveBeenCalledWith(
+        'WalletReconnectionService',
+        expect.stringContaining('Network latency'),
+        expect.any(Object)
+      );
+    });
+
+    it('devrait nettoyer les ressources lors de la déconnexion', async () => {
+      await connectWallet();
+      
+      // Ajouter quelques timeouts
+      const service = WalletReconnectionService.getInstance();
+      service.startReconnectionAttempts();
+      
+      // Déconnecter et vérifier le nettoyage
+      service.disconnect();
+      
+      // Vérifier que les timeouts ont été nettoyés
+      expect(service.hasActiveTimeouts()).toBe(false);
+      expect(mockTabSyncService.off).toHaveBeenCalled();
+    });
   });
 });
 

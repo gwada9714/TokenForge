@@ -1,5 +1,5 @@
 import { User } from 'firebase/auth';
-import { createAuthError, AuthError } from '../errors/AuthError';
+import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
 import { notificationService } from './notificationService';
 import { retryService, DEFAULT_RETRYABLE_ERRORS } from './retryService';
 import { logService } from './logService';
@@ -38,6 +38,9 @@ class TokenService {
         logService.info(LOG_CATEGORY, 'Token service initialized successfully', { userId: user.uid });
       } catch (error) {
         logService.error(LOG_CATEGORY, 'Failed to initialize token service', error as Error);
+        this.stopRefreshTimer();
+        this.tokenInfo = null;
+        this.currentUser = null;
         throw error;
       }
     } else {
@@ -51,7 +54,7 @@ class TokenService {
     try {
       if (!this.currentUser) {
         const error = createAuthError(
-          AuthError.CODES.SESSION_EXPIRED,
+          AUTH_ERROR_CODES.SESSION_EXPIRED,
           'No user found for token refresh'
         );
         logService.error(LOG_CATEGORY, 'Token refresh failed - no user', error);
@@ -62,39 +65,44 @@ class TokenService {
 
       await retryService.withRetry(
         async () => {
-          const tokenPromise = this.currentUser!.getIdToken(true);
-          const token = await retryService.withTimeout(
-            tokenPromise,
-            10000,
-            'token refresh'
-          );
+          try {
+            const tokenPromise = this.currentUser!.getIdToken(true);
+            const token = await retryService.withTimeout(
+              tokenPromise,
+              10000,
+              'token refresh'
+            );
 
-          const decodedTokenPromise = this.currentUser!.getIdTokenResult();
-          const decodedToken = await retryService.withTimeout(
-            decodedTokenPromise,
-            5000,
-            'token decode'
-          );
+            const decodedTokenPromise = this.currentUser!.getIdTokenResult();
+            const decodedToken = await retryService.withTimeout(
+              decodedTokenPromise,
+              5000,
+              'token decode'
+            );
 
-          const expirationTime = new Date(decodedToken.expirationTime).getTime();
+            const expirationTime = new Date(decodedToken.expirationTime).getTime();
 
-          this.tokenInfo = {
-            token,
-            expirationTime,
-          };
+            this.tokenInfo = {
+              token,
+              expirationTime,
+            };
 
-          logService.debug(LOG_CATEGORY, 'Token refreshed successfully', {
-            userId: this.currentUser!.uid,
-            expiresIn: Math.floor((expirationTime - Date.now()) / 1000)
-          });
-
-          // Vérifier si le token est proche de l'expiration
-          const timeUntilExpiry = expirationTime - Date.now();
-          if (timeUntilExpiry < TOKEN_EXPIRY_THRESHOLD) {
-            logService.warn(LOG_CATEGORY, 'Token expiration approaching', {
-              timeUntilExpiry: Math.floor(timeUntilExpiry / 1000)
+            logService.debug(LOG_CATEGORY, 'Token refreshed successfully', {
+              userId: this.currentUser!.uid,
+              expiresIn: Math.floor((expirationTime - Date.now()) / 1000)
             });
-            notificationService.warning('Votre session va bientôt expirer');
+
+            // Vérifier si le token est proche de l'expiration
+            const timeUntilExpiry = expirationTime - Date.now();
+            if (timeUntilExpiry < TOKEN_EXPIRY_THRESHOLD) {
+              logService.warn(LOG_CATEGORY, 'Token expiration approaching', {
+                timeUntilExpiry: Math.floor(timeUntilExpiry / 1000)
+              });
+              notificationService.warning('Votre session va bientôt expirer');
+            }
+          } catch (error) {
+            logService.error(LOG_CATEGORY, 'Token refresh operation failed', error as Error);
+            throw error;
           }
         },
         {
@@ -107,11 +115,7 @@ class TokenService {
     } catch (error) {
       logService.error(LOG_CATEGORY, 'Token refresh failed', error as Error);
       notificationService.error('Erreur lors du rafraîchissement du token');
-      throw createAuthError(
-        AuthError.CODES.SESSION_EXPIRED,
-        'Failed to refresh token',
-        { error: String(error) }
-      );
+      throw error;
     }
   }
 
@@ -140,7 +144,7 @@ class TokenService {
   async getToken(): Promise<string> {
     if (!this.tokenInfo) {
       const error = createAuthError(
-        AuthError.CODES.SESSION_EXPIRED,
+        AUTH_ERROR_CODES.SESSION_EXPIRED,
         'No token available'
       );
       logService.error(LOG_CATEGORY, 'Token request failed - no token available', error);
