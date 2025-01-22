@@ -1,33 +1,52 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BinanceService } from '../../binance/BinanceService';
-import { BaseProviderService } from '../../BaseProviderService';
-import { providers, utils, BigNumber } from 'ethers';
+import { type Address, type Hash, type PublicClient, type WalletClient, createPublicClient, createWalletClient } from 'viem';
+import { BEP20_ABI, PANCAKESWAP_ROUTER_ABI } from '../../binance/abi';
 
 // Mock des dépendances
-vi.mock('../../BaseProviderService');
-vi.mock('ethers');
+vi.mock('viem', async () => {
+  const actual = await vi.importActual('viem');
+  return {
+    ...actual,
+    createPublicClient: vi.fn(),
+    createWalletClient: vi.fn(),
+  };
+});
 
 describe('BinanceService', () => {
   let service: BinanceService;
-  let mockProvider: providers.JsonRpcProvider;
+  let mockPublicClient: PublicClient;
+  let mockWalletClient: WalletClient;
+  const testAddress = '0x1234567890123456789012345678901234567890' as Address;
+  const mockTxHash = '0x1234567890123456789012345678901234567890123456789012345678901234' as Hash;
+  const PANCAKESWAP_ROUTER_ADDRESS = '0x1234567890123456789012345678901234567890' as Address;
+  const bsc = 'bsc';
 
   beforeEach(() => {
-    // Reset des mocks
     vi.clearAllMocks();
 
-    // Configuration du mock provider
-    mockProvider = {
+    // Configuration des mocks
+    mockPublicClient = {
       getBalance: vi.fn(),
-      getSigner: vi.fn(),
-      getGasPrice: vi.fn(),
-      getNetwork: vi.fn(),
-    } as unknown as providers.JsonRpcProvider;
+      simulateContract: vi.fn(),
+      waitForTransactionReceipt: vi.fn(),
+    } as unknown as PublicClient;
 
-    // Mock de BaseProviderService.getProvider
-    vi.mocked(BaseProviderService.getProvider).mockResolvedValue(mockProvider);
+    mockWalletClient = {
+      account: {
+        address: testAddress,
+      },
+      deployContract: vi.fn(),
+      writeContract: vi.fn(),
+    } as unknown as WalletClient;
+
+    vi.mocked(createPublicClient).mockReturnValue(mockPublicClient);
+    vi.mocked(createWalletClient).mockReturnValue(mockWalletClient);
 
     // Création d'une nouvelle instance du service
     service = new BinanceService();
+    // @ts-ignore accès à la propriété privée pour les tests
+    service.client = mockPublicClient;
   });
 
   describe('getNativeTokenPrice', () => {
@@ -36,7 +55,7 @@ describe('BinanceService', () => {
     });
 
     it('should return BNB price when API call is successful', async () => {
-      const mockPrice = 300;
+      const mockPrice = 100;
       vi.mocked(global.fetch).mockResolvedValueOnce({
         json: () => Promise.resolve({ binancecoin: { usd: mockPrice } }),
       } as Response);
@@ -55,33 +74,28 @@ describe('BinanceService', () => {
 
   describe('getBalance', () => {
     it('should return correct balance', async () => {
-      const mockBalance = BigNumber.from('1000000000000000000'); // 1 BNB
-      const address = '0x1234567890123456789012345678901234567890';
+      const mockBalance = BigInt('1000000000000000000'); // 1 BNB
+      vi.mocked(mockPublicClient.getBalance).mockResolvedValueOnce(mockBalance);
 
-      vi.mocked(mockProvider.getBalance).mockResolvedValueOnce(mockBalance);
-
-      const balance = await service.getBalance(address);
-      expect(balance).toEqual(mockBalance);
-      expect(mockProvider.getBalance).toHaveBeenCalledWith(address);
+      const balance = await service.getBalance(testAddress);
+      expect(balance).toBe(mockBalance);
+      expect(mockPublicClient.getBalance).toHaveBeenCalledWith({ address: testAddress });
     });
 
     it('should throw error when provider fails', async () => {
-      const address = '0x1234567890123456789012345678901234567890';
-      vi.mocked(mockProvider.getBalance).mockRejectedValueOnce(new Error('Provider Error'));
+      vi.mocked(mockPublicClient.getBalance).mockRejectedValueOnce(new Error('Provider Error'));
 
-      await expect(service.getBalance(address)).rejects.toThrow();
+      await expect(service.getBalance(testAddress)).rejects.toThrow('Failed to get balance');
     });
   });
 
   describe('validateAddress', () => {
     it('should return true for valid BSC address', () => {
-      const validAddress = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
-      expect(service.validateAddress(validAddress)).toBe(true);
+      expect(service.validateAddress(testAddress)).toBe(true);
     });
 
     it('should return false for invalid BSC address', () => {
-      const invalidAddress = '0xinvalid';
-      expect(service.validateAddress(invalidAddress)).toBe(false);
+      expect(service.validateAddress('invalid-address')).toBe(false);
     });
   });
 
@@ -91,83 +105,124 @@ describe('BinanceService', () => {
       symbol: 'TEST',
       decimals: 18,
       totalSupply: '1000000',
-      owner: '0x1234567890123456789012345678901234567890',
+      owner: testAddress,
     };
 
     it('should create BEP20 token successfully', async () => {
-      const mockAddress = '0x9876543210987654321098765432109876543210';
-      const mockContract = {
-        address: mockAddress,
-        deployed: vi.fn().mockResolvedValueOnce(undefined),
-      };
-
-      const mockContractFactory = {
-        deploy: vi.fn().mockResolvedValueOnce(mockContract),
-      };
-
-      vi.mocked(utils.parseUnits).mockReturnValueOnce(
-        BigNumber.from('1000000000000000000000000')
-      );
-
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockResolvedValueOnce(mockParams.owner),
-        getContractFactory: vi.fn().mockResolvedValueOnce(mockContractFactory),
+      const mockContractAddress = '0x9876543210987654321098765432109876543210' as Address;
+      vi.mocked(mockPublicClient.simulateContract).mockResolvedValueOnce({
+        request: {
+          account: mockWalletClient.account,
+          address: PANCAKESWAP_ROUTER_ADDRESS,
+          abi: BEP20_ABI,
+          args: [mockParams.name, mockParams.symbol, mockParams.decimals, BigInt(mockParams.totalSupply), mockParams.owner],
+          chain: bsc
+        } as any,
+        result: mockContractAddress
+      } as any);
+      vi.mocked(mockWalletClient.deployContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockPublicClient.waitForTransactionReceipt).mockResolvedValueOnce({
+        contractAddress: mockContractAddress,
       } as any);
 
       const result = await service.createToken(mockParams);
-      expect(result).toBe(mockAddress);
+      expect(result).toBe(mockContractAddress);
+      expect(mockPublicClient.simulateContract).toHaveBeenCalled();
+      expect(mockWalletClient.deployContract).toHaveBeenCalled();
     });
 
     it('should throw error when token creation fails', async () => {
-      const mockError = new Error('Contract creation failed');
-      const mockContractFactory = {
-        deploy: vi.fn().mockRejectedValueOnce(mockError),
-      };
+      vi.mocked(mockPublicClient.simulateContract).mockRejectedValueOnce(new Error('Contract creation failed'));
 
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockRejectedValueOnce(mockError),
-        getContractFactory: vi.fn().mockResolvedValueOnce(mockContractFactory),
-      } as any);
-
-      await expect(service.createToken(mockParams)).rejects.toThrow();
+      await expect(service.createToken(mockParams)).rejects.toThrow('Failed to create BEP20 token');
     });
   });
 
   describe('addLiquidity', () => {
     const mockParams = {
-      tokenAddress: '0x1234567890123456789012345678901234567890',
-      amount: '1.0',
+      tokenAddress: testAddress,
+      amount: BigInt('1000000000000000000'),
       deadline: Math.floor(Date.now() / 1000) + 3600,
     };
 
     it('should add liquidity successfully', async () => {
-      const mockTx = {
-        wait: vi.fn().mockResolvedValueOnce(undefined),
-      };
-
-      const mockRouterContract = {
-        addLiquidityBNB: vi.fn().mockResolvedValueOnce(mockTx),
-      };
-
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockResolvedValueOnce(mockParams.tokenAddress),
-        getContract: vi.fn().mockResolvedValueOnce(mockRouterContract),
+      vi.mocked(mockPublicClient.simulateContract).mockResolvedValueOnce({
+        request: {
+          account: mockWalletClient.account,
+          address: PANCAKESWAP_ROUTER_ADDRESS,
+          abi: PANCAKESWAP_ROUTER_ABI,
+          args: [mockParams.tokenAddress, mockParams.amount, BigInt(0), BigInt(0), testAddress, mockParams.deadline],
+          chain: bsc,
+          value: mockParams.amount
+        } as any,
+        result: [BigInt(1), BigInt(1), BigInt(1)]
       } as any);
-
-      vi.mocked(utils.parseEther).mockReturnValueOnce(
-        BigNumber.from('1000000000000000000')
-      );
+      vi.mocked(mockWalletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockPublicClient.waitForTransactionReceipt).mockResolvedValueOnce({} as any);
 
       const result = await service.addLiquidity(mockParams);
       expect(result).toBe(true);
+      expect(mockPublicClient.simulateContract).toHaveBeenCalled();
+      expect(mockWalletClient.writeContract).toHaveBeenCalled();
     });
 
     it('should throw error when adding liquidity fails', async () => {
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockRejectedValueOnce(new Error('Signer error')),
-      } as any);
+      vi.mocked(mockPublicClient.simulateContract).mockRejectedValueOnce(new Error('Liquidity add failed'));
 
-      await expect(service.addLiquidity(mockParams)).rejects.toThrow();
+      await expect(service.addLiquidity(mockParams)).rejects.toThrow('Failed to add liquidity on PancakeSwap');
+    });
+  });
+
+  describe('removeLiquidity', () => {
+    const mockParams = {
+      tokenAddress: testAddress,
+      amount: BigInt('1000000000000000000'),
+      deadline: Math.floor(Date.now() / 1000) + 3600,
+    };
+
+    it('should remove liquidity successfully', async () => {
+      vi.mocked(mockPublicClient.simulateContract).mockResolvedValueOnce({
+        request: {
+          account: mockWalletClient.account,
+          address: PANCAKESWAP_ROUTER_ADDRESS,
+          abi: PANCAKESWAP_ROUTER_ABI,
+          args: [mockParams.tokenAddress, mockParams.amount, BigInt(0), BigInt(0), testAddress, mockParams.deadline],
+          chain: bsc
+        } as any,
+        result: [BigInt(1), BigInt(1)]
+      } as any);
+      vi.mocked(mockWalletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockPublicClient.waitForTransactionReceipt).mockResolvedValueOnce({} as any);
+
+      const result = await service.removeLiquidity(mockParams);
+      expect(result).toBe(true);
+      expect(mockPublicClient.simulateContract).toHaveBeenCalled();
+      expect(mockWalletClient.writeContract).toHaveBeenCalled();
+    });
+
+    it('should throw error when removing liquidity fails', async () => {
+      vi.mocked(mockPublicClient.simulateContract).mockRejectedValueOnce(new Error('Liquidity removal failed'));
+
+      await expect(service.removeLiquidity(mockParams)).rejects.toThrow('Failed to remove liquidity from PancakeSwap');
+    });
+  });
+
+  describe('stake', () => {
+    it('should throw not implemented error', async () => {
+      await expect(service.stake({
+        tokenAddress: testAddress,
+        amount: BigInt('1000000000000000000'),
+        duration: 30,
+      })).rejects.toThrow('Staking not implemented for BSC yet');
+    });
+  });
+
+  describe('unstake', () => {
+    it('should throw not implemented error', async () => {
+      await expect(service.unstake({
+        tokenAddress: testAddress,
+        amount: BigInt('1000000000000000000'),
+      })).rejects.toThrow('Unstaking not implemented for BSC yet');
     });
   });
 });

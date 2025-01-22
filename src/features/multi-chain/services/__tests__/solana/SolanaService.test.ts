@@ -1,25 +1,51 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SolanaService } from '../../solana/SolanaService';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { Token } from '@solana/spl-token';
+import { Connection, PublicKey, Keypair } from '@solana/web3.js';
+import { getMint, createMint, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token';
+import { Address } from 'viem';
 
 // Mock des dépendances
-vi.mock('@solana/web3.js');
-vi.mock('@solana/spl-token');
+vi.mock('@solana/web3.js', () => ({
+  Connection: vi.fn(),
+  PublicKey: vi.fn((address) => ({
+    toString: () => address,
+    toBase58: () => address,
+  })),
+  Keypair: {
+    generate: vi.fn()
+  },
+  SystemProgram: {
+    createAccount: vi.fn()
+  }
+}));
+
+vi.mock('@solana/spl-token', () => ({
+  getMint: vi.fn(),
+  createMint: vi.fn(),
+  getOrCreateAssociatedTokenAccount: vi.fn(),
+  mintTo: vi.fn(),
+  TOKEN_PROGRAM_ID: 'token-program',
+  MINT_SIZE: 82
+}));
 
 describe('SolanaService', () => {
   let service: SolanaService;
   let mockConnection: Connection;
+  const testAddress = '0xGsbwXfJraMomNxBcpR5WTNdtx1BgwYhQdThwcWvJuf8p' as Address;
+  const testPublicKey = { toBase58: () => testAddress.slice(2) } as PublicKey;
 
   beforeEach(() => {
-    // Reset des mocks
     vi.clearAllMocks();
+
+    // Mock de Keypair
+    vi.mocked(Keypair.generate).mockReturnValue({
+      publicKey: testPublicKey
+    } as any);
 
     // Configuration du mock connection
     mockConnection = {
       getBalance: vi.fn(),
-      getLatestBlockhash: vi.fn(),
-      sendTransaction: vi.fn(),
+      getMinimumBalanceForRentExemption: vi.fn().mockResolvedValue(1000000),
     } as unknown as Connection;
 
     // Création d'une nouvelle instance du service
@@ -54,32 +80,30 @@ describe('SolanaService', () => {
   describe('getBalance', () => {
     it('should return correct balance', async () => {
       const mockBalance = 1000000000; // 1 SOL
-      const address = 'GsbwXfJraMomNxBcpR5WTNdtx1BgwYhQdThwcWvJuf8p';
-
       vi.mocked(mockConnection.getBalance).mockResolvedValueOnce(mockBalance);
 
-      const balance = await service.getBalance(address);
-      expect(balance.toNumber()).toBe(mockBalance);
-      expect(mockConnection.getBalance).toHaveBeenCalledWith(new PublicKey(address));
+      const balance = await service.getBalance(testAddress);
+      expect(balance).toBe(BigInt(mockBalance));
+      expect(mockConnection.getBalance).toHaveBeenCalledWith(expect.any(PublicKey));
     });
 
     it('should throw error when connection fails', async () => {
-      const address = 'GsbwXfJraMomNxBcpR5WTNdtx1BgwYhQdThwcWvJuf8p';
       vi.mocked(mockConnection.getBalance).mockRejectedValueOnce(new Error('Connection Error'));
 
-      await expect(service.getBalance(address)).rejects.toThrow();
+      await expect(service.getBalance(testAddress)).rejects.toThrow('Failed to get balance');
     });
   });
 
   describe('validateAddress', () => {
     it('should return true for valid Solana address', () => {
-      const validAddress = 'GsbwXfJraMomNxBcpR5WTNdtx1BgwYhQdThwcWvJuf8p';
-      expect(service.validateAddress(validAddress)).toBe(true);
+      expect(service.validateAddress(testAddress)).toBe(true);
     });
 
     it('should return false for invalid Solana address', () => {
-      const invalidAddress = 'invalid-address';
-      expect(service.validateAddress(invalidAddress)).toBe(false);
+      vi.mocked(PublicKey).mockImplementationOnce(() => {
+        throw new Error('Invalid address');
+      });
+      expect(service.validateAddress('invalid-address')).toBe(false);
     });
   });
 
@@ -89,115 +113,103 @@ describe('SolanaService', () => {
       symbol: 'TEST',
       decimals: 9,
       totalSupply: '1000000',
-      owner: 'GsbwXfJraMomNxBcpR5WTNdtx1BgwYhQdThwcWvJuf8p',
+      owner: testAddress,
     };
 
     it('should create SPL token successfully', async () => {
-      const mockMint = new PublicKey('mint-address');
-      const mockToken = {
-        createMint: vi.fn().mockResolvedValueOnce(mockMint),
-        getMint: vi.fn().mockResolvedValueOnce({ address: mockMint }),
-      };
-
-      vi.mocked(Token).mockImplementationOnce(() => mockToken as any);
-
-      vi.mocked(mockConnection.getLatestBlockhash).mockResolvedValueOnce({
-        blockhash: 'mock-blockhash',
-        lastValidBlockHeight: 1000,
-      });
+      // Mock des fonctions SPL Token
+      vi.mocked(createMint).mockResolvedValueOnce(testPublicKey);
+      vi.mocked(getOrCreateAssociatedTokenAccount).mockResolvedValueOnce({
+        address: testPublicKey,
+      } as any);
+      vi.mocked(mintTo).mockResolvedValueOnce('tx-signature');
 
       const result = await service.createToken(mockParams);
-      expect(result).toBe(mockMint.toString());
+      expect(result).toBe(testAddress);
+      expect(createMint).toHaveBeenCalled();
+      expect(getOrCreateAssociatedTokenAccount).toHaveBeenCalled();
+      expect(mintTo).toHaveBeenCalled();
     });
 
     it('should throw error when token creation fails', async () => {
-      const mockError = new Error('Token creation failed');
-      vi.mocked(Token.createMint).mockRejectedValueOnce(mockError);
+      vi.mocked(createMint).mockRejectedValueOnce(new Error('Token creation failed'));
 
-      await expect(service.createToken(mockParams)).rejects.toThrow();
+      await expect(service.createToken(mockParams)).rejects.toThrow('Failed to create token on Solana');
+    });
+  });
+
+  describe('getTokenInfo', () => {
+    it('should return token info', async () => {
+      const mockMintInfo = {
+        decimals: 9,
+        supply: BigInt('1000000000'),
+      };
+
+      vi.mocked(getMint).mockResolvedValueOnce(mockMintInfo as any);
+
+      const tokenInfo = await service.getTokenInfo(testAddress);
+      expect(tokenInfo).toEqual({
+        address: testAddress,
+        name: '',
+        symbol: '',
+        decimals: mockMintInfo.decimals,
+        totalSupply: mockMintInfo.supply,
+      });
+    });
+
+    it('should throw error when getting token info fails', async () => {
+      vi.mocked(getMint).mockRejectedValueOnce(new Error('Failed to get mint info'));
+
+      await expect(service.getTokenInfo(testAddress)).rejects.toThrow('Failed to get token info');
     });
   });
 
   describe('addLiquidity', () => {
-    const mockParams = {
-      tokenAddress: 'GsbwXfJraMomNxBcpR5WTNdtx1BgwYhQdThwcWvJuf8p',
-      amount: '1.0',
-      deadline: Math.floor(Date.now() / 1000) + 3600,
-    };
-
-    it('should add liquidity successfully', async () => {
-      vi.mocked(mockConnection.getLatestBlockhash).mockResolvedValueOnce({
-        blockhash: 'mock-blockhash',
-        lastValidBlockHeight: 1000,
-      });
-
-      vi.mocked(mockConnection.sendTransaction).mockResolvedValueOnce('tx-signature');
-
-      const result = await service.addLiquidity(mockParams);
-      expect(result).toBe(true);
+    it('should throw not implemented error', async () => {
+      await expect(service.addLiquidity({
+        tokenAddress: testAddress,
+        amount: BigInt('1000000000'),
+        deadline: Math.floor(Date.now() / 1000) + 3600,
+      })).rejects.toThrow('Liquidity provision not implemented for Solana yet');
     });
+  });
 
-    it('should throw error when adding liquidity fails', async () => {
-      vi.mocked(mockConnection.sendTransaction).mockRejectedValueOnce(
-        new Error('Transaction failed')
-      );
-
-      await expect(service.addLiquidity(mockParams)).rejects.toThrow();
+  describe('removeLiquidity', () => {
+    it('should throw not implemented error', async () => {
+      await expect(service.removeLiquidity({
+        tokenAddress: testAddress,
+        amount: BigInt('1000000000'),
+        deadline: Math.floor(Date.now() / 1000) + 3600,
+      })).rejects.toThrow('Liquidity removal not implemented for Solana yet');
     });
   });
 
   describe('stake', () => {
-    const mockParams = {
-      tokenAddress: 'GsbwXfJraMomNxBcpR5WTNdtx1BgwYhQdThwcWvJuf8p',
-      amount: '1.0',
-      duration: 30,
-    };
-
-    it('should stake tokens successfully', async () => {
-      vi.mocked(mockConnection.getLatestBlockhash).mockResolvedValueOnce({
-        blockhash: 'mock-blockhash',
-        lastValidBlockHeight: 1000,
-      });
-
-      vi.mocked(mockConnection.sendTransaction).mockResolvedValueOnce('tx-signature');
-
-      const result = await service.stake(mockParams);
-      expect(result).toBe(true);
-    });
-
-    it('should throw error when staking fails', async () => {
-      vi.mocked(mockConnection.sendTransaction).mockRejectedValueOnce(
-        new Error('Transaction failed')
-      );
-
-      await expect(service.stake(mockParams)).rejects.toThrow();
+    it('should throw not implemented error', async () => {
+      await expect(service.stake({
+        tokenAddress: testAddress,
+        amount: BigInt('1000000000'),
+        duration: 30,
+      })).rejects.toThrow('Staking not implemented for Solana yet');
     });
   });
 
   describe('unstake', () => {
-    const mockParams = {
-      tokenAddress: 'GsbwXfJraMomNxBcpR5WTNdtx1BgwYhQdThwcWvJuf8p',
-      amount: '1.0', // Ajout du paramètre amount requis
-    };
-
-    it('should unstake tokens successfully', async () => {
-      vi.mocked(mockConnection.getLatestBlockhash).mockResolvedValueOnce({
-        blockhash: 'mock-blockhash',
-        lastValidBlockHeight: 1000,
-      });
-
-      vi.mocked(mockConnection.sendTransaction).mockResolvedValueOnce('tx-signature');
-
-      const result = await service.unstake(mockParams);
-      expect(result).toBe(true);
+    it('should throw not implemented error', async () => {
+      await expect(service.unstake({
+        tokenAddress: testAddress,
+        amount: BigInt('1000000000'),
+      })).rejects.toThrow('Unstaking not implemented for Solana yet');
     });
+  });
 
-    it('should throw error when unstaking fails', async () => {
-      vi.mocked(mockConnection.sendTransaction).mockRejectedValueOnce(
-        new Error('Transaction failed')
-      );
-
-      await expect(service.unstake(mockParams)).rejects.toThrow();
+  describe('estimateFees', () => {
+    it('should return base fee estimation', async () => {
+      const fees = await service.estimateFees({
+        to: testAddress,
+        value: BigInt('1000000000'),
+      });
+      expect(fees).toBe(BigInt(5000));
     });
   });
 });

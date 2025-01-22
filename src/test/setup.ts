@@ -1,10 +1,13 @@
 import { vi } from 'vitest';
-import { TextEncoder, TextDecoder } from 'util';
 import '@testing-library/jest-dom';
 
 // Polyfills nécessaires pour les tests
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder as any;
+if (typeof global.TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util');
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+  global.Uint8Array = Uint8Array;
+}
 
 // Mock de fetch pour les tests
 global.fetch = vi.fn();
