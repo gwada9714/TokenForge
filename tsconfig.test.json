@@ -1,14 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ES2020",
-    "moduleResolution": "bundler",
+    "module": "commonjs",
+    "target": "es2021",
     "esModuleInterop": true,
     "isolatedModules": false,
-    "noEmit": true,
+    "noEmit": false,
     "jsx": "react-jsx",
-    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "types": ["jest", "node"],
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "baseUrl": ".",

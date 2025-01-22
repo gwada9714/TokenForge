@@ -1,39 +1,71 @@
-import { vi, beforeAll, afterAll } from 'vitest';
-import '@testing-library/jest-dom/vitest';
+import { vi } from 'vitest';
+import { TextEncoder, TextDecoder } from 'util';
+import '@testing-library/jest-dom';
+
+// Polyfills nécessaires pour les tests
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as any;
+
+// Mock de fetch pour les tests
+global.fetch = vi.fn();
+
+// Mock de console.error pour éviter le bruit dans les tests
+console.error = vi.fn();
+
+// Mock des APIs Web3
+vi.mock('@solana/web3.js', async () => {
+  const actual = await vi.importActual('@solana/web3.js');
+  return {
+    ...(actual as any),
+    Connection: vi.fn(),
+    PublicKey: vi.fn().mockImplementation((key) => ({
+      toString: () => key,
+      toBase58: () => key,
+    })),
+  };
+});
+
+vi.mock('ethers', async () => {
+  const actual = await vi.importActual('ethers');
+  return {
+    ...(actual as any),
+    providers: {
+      JsonRpcProvider: vi.fn(),
+      Web3Provider: vi.fn(),
+    },
+    Contract: vi.fn(),
+    utils: {
+      formatUnits: vi.fn(),
+      parseUnits: vi.fn(),
+      formatEther: vi.fn(),
+      parseEther: vi.fn(),
+    },
+    BigNumber: {
+      from: vi.fn(),
+    },
+  };
+});
 
 // Mock de firebase/app
 vi.mock('firebase/app', () => {
-  const app = {
-    name: '[DEFAULT]',
-    options: {},
-    on: vi.fn(),
-    automaticDataCollectionEnabled: false
-  };
   return {
-    initializeApp: vi.fn(() => app),
-    getApps: vi.fn(() => [app]),
-    getApp: vi.fn(() => app)
+    initializeApp: vi.fn(),
+    getApps: vi.fn(() => []),
   };
 });
 
 // Mock de firebase/auth
 vi.mock('firebase/auth', () => {
-  const auth = {
-    currentUser: null,
-    onAuthStateChanged: vi.fn(),
-    app: {
-      name: '[DEFAULT]',
-      options: {},
-      on: vi.fn(),
-      automaticDataCollectionEnabled: false
-    }
-  };
   return {
-    getAuth: vi.fn(() => auth),
+    getAuth: vi.fn(() => ({
+      currentUser: null,
+      onAuthStateChanged: vi.fn(),
+      signInWithEmailAndPassword: vi.fn(),
+      signOut: vi.fn(),
+    })),
     signInWithEmailAndPassword: vi.fn(),
-    createUserWithEmailAndPassword: vi.fn(),
     signOut: vi.fn(),
-    onAuthStateChanged: vi.fn()
+    onAuthStateChanged: vi.fn(),
   };
 });
 
@@ -69,23 +101,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Polyfills pour TextEncoder/TextDecoder
-class MockTextEncoder {
-  encode(input: string): Uint8Array {
-    return new Uint8Array(Buffer.from(input));
-  }
-}
-
-class MockTextDecoder {
-  decode(input?: BufferSource): string {
-    if (!input) return '';
-    return Buffer.from(input as ArrayBuffer).toString();
-  }
-}
-
-global.TextEncoder = MockTextEncoder as any;
-global.TextDecoder = MockTextDecoder as any;
-
 // Configuration globale de Vitest
 beforeAll(() => {
   vi.useFakeTimers();
@@ -93,4 +108,9 @@ beforeAll(() => {
 
 afterAll(() => {
   vi.useRealTimers();
+});
+
+// Nettoyage après chaque test
+afterEach(() => {
+  vi.clearAllMocks();
 });
