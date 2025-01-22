@@ -1,16 +1,16 @@
-import { BigNumber } from 'ethers';
+import { Address } from 'viem';
 
 export interface TokenInfo {
   name: string;
   symbol: string;
   decimals: number;
-  totalSupply: BigNumber;
-  address: string;
+  totalSupply: bigint;
+  address: Address;
 }
 
 export interface IBlockchainService {
   // Informations de base
-  getBalance(address: string): Promise<BigNumber>;
+  getBalance(address: Address): Promise<bigint>;
   getNativeTokenPrice(): Promise<number>;
   
   // Gestion des tokens
@@ -19,42 +19,43 @@ export interface IBlockchainService {
     symbol: string;
     decimals: number;
     totalSupply: string;
-    owner: string;
-  }): Promise<string>; // Retourne l'adresse du contrat
+    owner: Address;
+  }): Promise<Address>; // Retourne l'adresse du contrat
 
   // Informations sur les tokens
-  getTokenInfo(tokenAddress: string): Promise<TokenInfo>;
+  getTokenInfo(tokenAddress: Address): Promise<TokenInfo>;
   
   // Gestion de la liquidité
   addLiquidity(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
     deadline?: number;
   }): Promise<boolean>;
   
   removeLiquidity(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
     deadline?: number;
   }): Promise<boolean>;
 
   // Staking
   stake(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
     duration?: number;
   }): Promise<boolean>;
   
   unstake(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
   }): Promise<boolean>;
 
-  // Utilitaires
+  // Validation et estimation
   validateAddress(address: string): boolean;
+  
   estimateFees(params: {
-    to: string;
-    value?: string;
-    data?: string;
-  }): Promise<BigNumber>;
+    to: Address;
+    value?: bigint;
+    data?: `0x${string}`;
+  }): Promise<bigint>;
 }

@@ -1,26 +1,94 @@
-import { providers, Contract, utils, BigNumber, Signer } from 'ethers';
+import { 
+  PublicClient, 
+  WalletClient, 
+  createWalletClient, 
+  custom, 
+  getContract,
+  Address,
+  isAddress,
+  type GetContractReturnType
+} from 'viem';
 import { ChainId, EVMChainConfig } from '../types/Chain';
 import { BaseProviderService } from './BaseProviderService';
 import { IBlockchainService, TokenInfo } from './interfaces/IBlockchainService';
-import { TransactionService } from './TransactionService';
 
 // ABI minimal pour ERC20
 const ERC20_ABI = [
-  'function name() view returns (string)',
-  'function symbol() view returns (string)',
-  'function decimals() view returns (uint8)',
-  'function totalSupply() view returns (uint256)',
-  'function balanceOf(address) view returns (uint256)',
-  'function transfer(address to, uint amount) returns (bool)',
-  'function allowance(address owner, address spender) view returns (uint256)',
-  'function approve(address spender, uint amount) returns (bool)',
-];
+  {
+    name: 'name',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'string' }]
+  },
+  {
+    name: 'symbol',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'string' }]
+  },
+  {
+    name: 'decimals',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint8' }]
+  },
+  {
+    name: 'totalSupply',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }]
+  },
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ type: 'uint256' }]
+  },
+  {
+    name: 'transfer',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' }
+    ],
+    outputs: [{ type: 'bool' }]
+  },
+  {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' }
+    ],
+    outputs: [{ type: 'uint256' }]
+  },
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' }
+    ],
+    outputs: [{ type: 'bool' }]
+  }
+] as const;
+
+type ERC20AbiType = typeof ERC20_ABI;
+type ERC20Contract = GetContractReturnType<ERC20AbiType>;
 
 export abstract class EVMBaseService implements IBlockchainService {
-  protected provider!: providers.JsonRpcProvider;
+  protected client!: PublicClient;
+  protected walletClient: WalletClient | null = null;
   protected chainId: ChainId;
   protected chainConfig: EVMChainConfig;
-  protected signer: Signer | null = null;
 
   constructor(chainId: ChainId, config: EVMChainConfig) {
     this.chainId = chainId;
@@ -28,30 +96,24 @@ export abstract class EVMBaseService implements IBlockchainService {
   }
 
   protected async initProvider() {
-    const baseProvider = await BaseProviderService.getProvider(this.chainId);
-    if (!('getBalance' in baseProvider) || !('getGasPrice' in baseProvider)) {
-      throw new Error('Invalid provider type for EVM chain');
-    }
-    this.provider = baseProvider as providers.JsonRpcProvider;
+    this.client = await BaseProviderService.getProvider(this.chainId) as PublicClient;
   }
 
-  protected async getSigner(): Promise<Signer> {
-    if (!this.provider) await this.initProvider();
-    if (!this.signer) {
-      // Vérifier si window.ethereum est disponible
-      if (typeof window !== 'undefined' && (window as any).ethereum) {
-        const provider = new providers.Web3Provider((window as any).ethereum);
-        this.signer = provider.getSigner();
-      } else {
-        throw new Error('No web3 provider available');
+  protected async getWalletClient(): Promise<WalletClient> {
+    if (!this.walletClient) {
+      if (typeof window === 'undefined' || !window.ethereum) {
+        throw new Error('No ethereum provider found');
       }
+      this.walletClient = createWalletClient({
+        transport: custom(window.ethereum)
+      });
     }
-    return this.signer;
+    return this.walletClient;
   }
 
-  async getBalance(address: string): Promise<BigNumber> {
-    if (!this.provider) await this.initProvider();
-    return this.provider.getBalance(address);
+  async getBalance(address: Address): Promise<bigint> {
+    if (!this.client) await this.initProvider();
+    return this.client.getBalance({ address });
   }
 
   abstract getNativeTokenPrice(): Promise<number>;
@@ -61,20 +123,34 @@ export abstract class EVMBaseService implements IBlockchainService {
     symbol: string;
     decimals: number;
     totalSupply: string;
-    owner: string;
-  }): Promise<string>;
+    owner: Address;
+  }): Promise<Address>;
 
-  async getTokenInfo(tokenAddress: string): Promise<TokenInfo> {
-    if (!this.provider) await this.initProvider();
-    
-    const contract = new Contract(tokenAddress, ERC20_ABI, this.provider);
+  async getTokenInfo(tokenAddress: Address): Promise<TokenInfo> {
+    if (!this.client) await this.initProvider();
     
     const [name, symbol, decimals, totalSupply] = await Promise.all([
-      contract.name(),
-      contract.symbol(),
-      contract.decimals(),
-      contract.totalSupply(),
-    ]);
+      this.client.readContract({
+        address: tokenAddress,
+        abi: ERC20_ABI,
+        functionName: 'name'
+      }),
+      this.client.readContract({
+        address: tokenAddress,
+        abi: ERC20_ABI,
+        functionName: 'symbol'
+      }),
+      this.client.readContract({
+        address: tokenAddress,
+        abi: ERC20_ABI,
+        functionName: 'decimals'
+      }),
+      this.client.readContract({
+        address: tokenAddress,
+        abi: ERC20_ABI,
+        functionName: 'totalSupply'
+      })
+    ]) as [string, string, number, bigint];
 
     return {
       name,
@@ -86,56 +162,52 @@ export abstract class EVMBaseService implements IBlockchainService {
   }
 
   abstract addLiquidity(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
     deadline?: number;
   }): Promise<boolean>;
 
   abstract removeLiquidity(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
     deadline?: number;
   }): Promise<boolean>;
 
   abstract stake(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
     duration?: number;
   }): Promise<boolean>;
 
   abstract unstake(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
   }): Promise<boolean>;
 
   validateAddress(address: string): boolean {
-    return utils.isAddress(address);
+    return isAddress(address);
   }
 
   async estimateFees(params: {
-    to: string;
-    value?: string;
-    data?: string;
-  }): Promise<BigNumber> {
-    if (!this.provider) await this.initProvider();
-
-    const gasEstimate = await TransactionService.estimateGas({
-      chainId: this.chainId,
+    to: Address;
+    value?: bigint;
+    data?: `0x${string}`;
+  }): Promise<bigint> {
+    if (!this.client) await this.initProvider();
+    return this.client.estimateGas({
       to: params.to,
       value: params.value,
-      data: params.data,
+      data: params.data
     });
-
-    return BigNumber.from(gasEstimate);
   }
 
-  protected getContract(address: string, abi: any): Contract {
-    if (!this.provider) throw new Error('Provider not initialized');
-    return new Contract(address, abi, this.provider);
-  }
-
-  protected async getSignedContract(address: string, abi: any): Promise<Contract> {
-    const signer = await this.getSigner();
-    return new Contract(address, abi, signer);
+  protected async getContract(address: Address): Promise<ERC20Contract> {
+    if (!this.client) await this.initProvider();
+    
+    return getContract({
+      address,
+      abi: ERC20_ABI,
+      client: this.client,
+    });
   }
 }

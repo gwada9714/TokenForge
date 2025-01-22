@@ -1,11 +1,12 @@
-import { providers } from 'ethers';
 import { Connection } from '@solana/web3.js';
+import { createPublicClient, fallback, http, PublicClient } from 'viem';
 import { ChainId, EVMChainConfig, SolanaChainConfig } from '../types/Chain';
 import { getChainConfig } from '../config/chains';
 import { PROVIDERS, NETWORK_CONFIG } from '../config/dependencies';
+import { mainnet, polygon, bsc } from 'viem/chains';
 
 export class BaseProviderService {
-  private static evmProviders: Map<ChainId, providers.Provider> = new Map();
+  private static evmClients: Map<ChainId, PublicClient> = new Map();
   private static solanaConnections: Map<ChainId, Connection> = new Map();
 
   static async getProvider(chainId: ChainId) {
@@ -27,11 +28,11 @@ export class BaseProviderService {
   private static async getEVMProvider(
     chainId: ChainId, 
     config: EVMChainConfig
-  ): Promise<providers.Provider> {
-    // Vérifier si un provider existe déjà
-    const existingProvider = this.evmProviders.get(chainId);
-    if (existingProvider) {
-      return existingProvider;
+  ): Promise<PublicClient> {
+    // Vérifier si un client existe déjà
+    const existingClient = this.evmClients.get(chainId);
+    if (existingClient) {
+      return existingClient;
     }
 
     // Créer les URLs RPC avec les clés API
@@ -42,23 +43,35 @@ export class BaseProviderService {
          .replace('${POLYGON_NODE_KEY}', PROVIDERS.POLYGON_NODE_KEY)
     );
 
-    let provider: providers.Provider;
+    // Sélectionner la chaîne appropriée
+    const chain = this.getChainConfig(chainId);
 
-    if (rpcUrls.length > 1) {
-      // Si plusieurs URLs sont disponibles, utiliser FallbackProvider
-      provider = new providers.FallbackProvider(
-        rpcUrls.map(url => new providers.JsonRpcProvider(url)),
-        1
-      );
-    } else {
-      // Sinon, utiliser un simple JsonRpcProvider
-      provider = new providers.JsonRpcProvider(rpcUrls[0]);
+    // Créer les transports HTTP pour chaque URL
+    const transports = rpcUrls.map(url => http(url));
+
+    // Créer le client avec fallback si plusieurs URLs
+    const client = createPublicClient({
+      chain,
+      transport: transports.length > 1 ? fallback(transports) : transports[0],
+    });
+
+    // Stocker le client
+    this.evmClients.set(chainId, client);
+
+    return client;
+  }
+
+  private static getChainConfig(chainId: ChainId) {
+    switch (chainId) {
+      case ChainId.ETH:
+        return mainnet;
+      case ChainId.POLYGON:
+        return polygon;
+      case ChainId.BSC:
+        return bsc;
+      default:
+        throw new Error(`Unsupported chain ID: ${chainId}`);
     }
-
-    // Stocker le provider
-    this.evmProviders.set(chainId, provider);
-
-    return provider;
   }
 
   private static getSolanaConnection(
@@ -88,7 +101,7 @@ export class BaseProviderService {
 
   // Méthode utilitaire pour nettoyer les providers
   static clearProviders() {
-    this.evmProviders.clear();
+    this.evmClients.clear();
     this.solanaConnections.clear();
   }
 }
