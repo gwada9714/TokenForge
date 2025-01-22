@@ -12,13 +12,18 @@ import {
 } from '@solana/web3.js';
 import {
   TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress
 } from '@solana/spl-token';
 import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus } from '../payment/types/PaymentSession';
+import { PaymentNetwork } from '../payment/types/PaymentSession';
 import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
 import { validatePaymentParams } from '../payment/utils/paymentValidation';
+
+// Type personnalisé pour les options de transaction Solana
+type SolanaTransactionOptions = {
+  skipPreflight?: boolean;
+  commitment?: 'processed' | 'confirmed' | 'finalized';
+};
 
 export interface SolanaPaymentConfig {
   programId: PublicKey;
@@ -110,9 +115,9 @@ export class SolanaPaymentService implements BasePaymentService {
         PaymentNetwork.SOLANA,
         {
           address: tokenMint.toString(),
-          amount: typeof amount === 'number' ? amount : parseFloat(amount.toString()),
-          serviceType
-        }
+          amount: amount.toString(),
+        },
+        serviceType
       );
 
       // Get associated token accounts
@@ -129,7 +134,7 @@ export class SolanaPaymentService implements BasePaymentService {
       // Create payment instruction
       const ix = await this.program.methods
         .processPayment(
-          new BN(typeof amount === 'number' ? amount : amount.toString()),
+          new BN(amount.toString()),
           session.id
         )
         .accounts({
@@ -145,18 +150,17 @@ export class SolanaPaymentService implements BasePaymentService {
         })
         .instruction();
 
-      // Build and send transaction
-      const tx = new Transaction().add(ix);
-      const signature = await this.config.connection.sendTransaction(
-        tx,
-        [this.config.wallet],
-        {
-          skipPreflight: options.skipPreflight,
-          commitment: options.commitment || 'confirmed'
-        }
-      );
+      // Build transaction
+      const transaction = new Transaction().add(ix);
 
-      await this.config.connection.confirmTransaction(signature);
+      // Send transaction with proper options typing
+      const txOptions: SolanaTransactionOptions = {
+        skipPreflight: options.skipPreflight,
+        commitment: options.commitment || 'confirmed'
+      };
+      
+      const signature = await this.program.provider.sendAndConfirm(transaction, [], txOptions);
+
       return session.id;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

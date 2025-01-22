@@ -39,7 +39,8 @@ export class EthereumPaymentService implements BasePaymentService {
         await this.sessionService.updateSessionStatus(
           sessionId,
           PaymentStatus.CONFIRMED,
-          payer
+          payer,
+          undefined
         );
       } catch (error) {
         console.error('Error updating payment status:', error);
@@ -66,12 +67,14 @@ export class EthereumPaymentService implements BasePaymentService {
       // Create payment session
       const session = await this.sessionService.createSession(
         userId,
-        PaymentNetwork.ETHEREUM,
+        amount instanceof BigNumber ? amount : BigNumber.from(amount.toString()),
         {
           address: tokenAddress,
-          amount: amount instanceof BigNumber ? amount : BigNumber.from(amount.toString()),
-          serviceType
-        }
+          network: PaymentNetwork.ETHEREUM,
+          symbol: 'TOKEN',
+          decimals: 18
+        },
+        serviceType
       );
 
       // Prepare transaction options

@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
+import { Web3Provider } from '@ethersproject/providers';
 import { useWeb3React } from '@web3-react/core';
 
 import { PaymentNetwork } from '../services/payment/types/PaymentSession';
@@ -11,32 +12,32 @@ import { PolygonPaymentService } from '../services/polygon/PolygonPaymentService
 import { BinancePaymentService } from '../services/binance/BinancePaymentService';
 
 export const usePayment = () => {
-  const { account, library } = useWeb3React();
+  const { provider } = useWeb3React<Web3Provider>();
   const { publicKey, signTransaction } = useWallet();
 
   const paymentServices = useMemo(() => {
-    if (!library && !publicKey) return null;
+    if (!provider && !publicKey) return null;
 
     const services: Partial<Record<PaymentNetwork, BasePaymentService>> = {};
 
-    if (library) {
+    if (provider) {
       services[PaymentNetwork.ETHEREUM] = EthereumPaymentService.getInstance({
-        provider: library,
-        signer: library.getSigner(),
+        provider,
+        signer: provider.getSigner(),
         contractAddress: process.env.REACT_APP_ETHEREUM_PAYMENT_CONTRACT!,
         receiverAddress: process.env.REACT_APP_PAYMENT_RECEIVER!
       });
 
       services[PaymentNetwork.POLYGON] = PolygonPaymentService.getInstance({
-        provider: library,
-        signer: library.getSigner(),
+        provider,
+        signer: provider.getSigner(),
         contractAddress: process.env.REACT_APP_POLYGON_PAYMENT_CONTRACT!,
         receiverAddress: process.env.REACT_APP_PAYMENT_RECEIVER!
       });
 
       services[PaymentNetwork.BINANCE] = BinancePaymentService.getInstance({
-        provider: library,
-        signer: library.getSigner(),
+        provider,
+        signer: provider.getSigner(),
         contractAddress: process.env.REACT_APP_BINANCE_PAYMENT_CONTRACT!,
         receiverAddress: process.env.REACT_APP_PAYMENT_RECEIVER!
       });
@@ -44,18 +45,18 @@ export const usePayment = () => {
 
     if (publicKey && signTransaction) {
       services[PaymentNetwork.SOLANA] = SolanaPaymentService.getInstance({
-        connection: library,
+        connection: provider as any,
         wallet: {
           publicKey,
           signTransaction
-        },
+        } as any,
         programId: new PublicKey(process.env.REACT_APP_SOLANA_PAYMENT_PROGRAM!),
         receiverAddress: new PublicKey(process.env.REACT_APP_PAYMENT_RECEIVER!)
       });
     }
 
     return services;
-  }, [library, account, publicKey, signTransaction]);
+  }, [provider, publicKey, signTransaction]);
 
   const pay = useCallback(async (
     network: PaymentNetwork,
