@@ -1,4 +1,4 @@
-import { utils, ContractFactory } from 'ethers';
+import { type Address } from 'viem';
 import { ChainId } from '../../types/Chain';
 import { EVMBaseService } from '../EVMBaseService';
 import { polygonConfig } from '../../config/chains';
@@ -13,6 +13,23 @@ export class PolygonService extends EVMBaseService {
   constructor() {
     super(ChainId.POLYGON, polygonConfig);
     this.priceApiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd&x_cg_demo_api_key=${PROVIDERS.COINGECKO_KEY}`;
+  }
+
+  private getViemChain() {
+    return {
+      id: this.chainConfig.chainId,
+      name: this.chainConfig.name,
+      network: this.chainConfig.name.toLowerCase(),
+      nativeCurrency: this.chainConfig.nativeCurrency,
+      rpcUrls: {
+        default: {
+          http: this.chainConfig.rpcUrls
+        },
+        public: {
+          http: this.chainConfig.rpcUrls
+        }
+      }
+    };
   }
 
   async getNativeTokenPrice(): Promise<number> {
@@ -31,130 +48,240 @@ export class PolygonService extends EVMBaseService {
     symbol: string;
     decimals: number;
     totalSupply: string;
-    owner: string;
-  }): Promise<string> {
-    if (!this.provider) await this.initProvider();
-    const signer = await this.getSigner();
+    owner: Address;
+  }): Promise<Address> {
+    if (!this.client) await this.initProvider();
+    const walletClient = await this.getWalletClient();
+
+    if (!walletClient.account) {
+      throw new Error('No account connected');
+    }
 
     try {
-      const factory = new ContractFactory(
-        [
-          "constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 totalSupply_, address owner_)",
-          ...POLYGON_ERC20_BYTECODE
+      const bytecode = POLYGON_ERC20_BYTECODE as `0x${string}`;
+      const hash = await walletClient.deployContract({
+        abi: [
+          {
+            type: 'constructor',
+            inputs: [
+              { name: 'name_', type: 'string' },
+              { name: 'symbol_', type: 'string' },
+              { name: 'decimals_', type: 'uint8' },
+              { name: 'totalSupply_', type: 'uint256' },
+              { name: 'owner_', type: 'address' }
+            ],
+            stateMutability: 'nonpayable'
+          }
         ],
-        POLYGON_ERC20_BYTECODE,
-        signer
-      );
-
-      const contract = await factory.deploy(
-        params.name,
-        params.symbol,
-        params.decimals,
-        utils.parseUnits(params.totalSupply, params.decimals),
-        params.owner
-      );
-
-      await contract.deployed();
-      return contract.address;
+        bytecode,
+        args: [
+          params.name,
+          params.symbol,
+          params.decimals,
+          BigInt(params.totalSupply),
+          params.owner
+        ],
+        account: walletClient.account,
+        chain: this.getViemChain()
+      });
+      
+      // TODO: Attendre la confirmation et récupérer l'adresse du contrat
+      return hash as Address;
     } catch (error: any) {
       throw new Error(`Failed to create token on Polygon: ${error.message}`);
     }
   }
 
   async addLiquidity(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
     deadline?: number;
   }): Promise<boolean> {
-    if (!this.provider) await this.initProvider();
-    const signer = await this.getSigner();
+    if (!this.client) await this.initProvider();
+    const walletClient = await this.getWalletClient();
+
+    if (!walletClient.account) {
+      throw new Error('No account connected');
+    }
 
     // Utiliser QuickSwap (clone d'Uniswap sur Polygon)
-    const QUICKSWAP_ROUTER_ADDRESS = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
-    const QUICKSWAP_ROUTER_ABI = [
-      'function addLiquidityETH(address token, uint amountTokenDesired, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external payable returns (uint amountToken, uint amountETH, uint liquidity)'
-    ];
+    const QUICKSWAP_ROUTER_ADDRESS = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff' as const;
 
     try {
-      const router = await this.getSignedContract(QUICKSWAP_ROUTER_ADDRESS, QUICKSWAP_ROUTER_ABI);
-      const signerAddress = await signer.getAddress();
-      const deadline = params.deadline || Math.floor(Date.now() / 1000) + 60 * 20;
+      const { request } = await this.client.simulateContract({
+        account: walletClient.account,
+        address: QUICKSWAP_ROUTER_ADDRESS,
+        abi: [
+          {
+            name: 'addLiquidityETH',
+            type: 'function',
+            stateMutability: 'payable',
+            inputs: [
+              { name: 'token', type: 'address' },
+              { name: 'amountTokenDesired', type: 'uint256' },
+              { name: 'amountTokenMin', type: 'uint256' },
+              { name: 'amountETHMin', type: 'uint256' },
+              { name: 'to', type: 'address' },
+              { name: 'deadline', type: 'uint256' }
+            ],
+            outputs: [
+              { name: 'amountToken', type: 'uint256' },
+              { name: 'amountETH', type: 'uint256' },
+              { name: 'liquidity', type: 'uint256' }
+            ]
+          }
+        ],
+        functionName: 'addLiquidityETH',
+        args: [
+          params.tokenAddress,
+          params.amount,
+          BigInt(0), // amountTokenMin
+          BigInt(0), // amountETHMin
+          walletClient.account.address,
+          BigInt(params.deadline || Math.floor(Date.now() / 1000) + 60 * 20)
+        ],
+        chain: this.getViemChain()
+      });
 
-      const tx = await router.addLiquidityETH(
-        params.tokenAddress,
-        utils.parseEther(params.amount),
-        0,
-        0,
-        signerAddress,
-        deadline,
-        { value: utils.parseEther(params.amount) }
-      );
-
-      await tx.wait();
-      return true;
+      const hash = await walletClient.writeContract(request);
+      return !!hash;
     } catch (error: any) {
-      throw new Error(`Failed to add liquidity on QuickSwap: ${error.message}`);
+      throw new Error(`Failed to add liquidity on Polygon: ${error.message}`);
     }
   }
 
   async removeLiquidity(params: {
-    tokenAddress: string;
-    amount: string;
+    tokenAddress: Address;
+    amount: bigint;
     deadline?: number;
   }): Promise<boolean> {
-    if (!this.provider) await this.initProvider();
-    const signer = await this.getSigner();
+    if (!this.client) await this.initProvider();
+    const walletClient = await this.getWalletClient();
 
-    const QUICKSWAP_ROUTER_ADDRESS = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
-    const QUICKSWAP_ROUTER_ABI = [
-      'function removeLiquidityETH(address token, uint liquidity, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external returns (uint amountToken, uint amountETH)'
-    ];
+    if (!walletClient.account) {
+      throw new Error('No account connected');
+    }
+
+    const QUICKSWAP_ROUTER_ADDRESS = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff' as const;
 
     try {
-      const router = await this.getSignedContract(QUICKSWAP_ROUTER_ADDRESS, QUICKSWAP_ROUTER_ABI);
-      const signerAddress = await signer.getAddress();
-      const deadline = params.deadline || Math.floor(Date.now() / 1000) + 60 * 20;
+      const { request } = await this.client.simulateContract({
+        account: walletClient.account,
+        address: QUICKSWAP_ROUTER_ADDRESS,
+        abi: [
+          {
+            name: 'removeLiquidityETH',
+            type: 'function',
+            stateMutability: 'nonpayable',
+            inputs: [
+              { name: 'token', type: 'address' },
+              { name: 'liquidity', type: 'uint256' },
+              { name: 'amountTokenMin', type: 'uint256' },
+              { name: 'amountETHMin', type: 'uint256' },
+              { name: 'to', type: 'address' },
+              { name: 'deadline', type: 'uint256' }
+            ],
+            outputs: [
+              { name: 'amountToken', type: 'uint256' },
+              { name: 'amountETH', type: 'uint256' }
+            ]
+          }
+        ],
+        functionName: 'removeLiquidityETH',
+        args: [
+          params.tokenAddress,
+          params.amount,
+          BigInt(0), // amountTokenMin
+          BigInt(0), // amountETHMin
+          walletClient.account.address,
+          BigInt(params.deadline || Math.floor(Date.now() / 1000) + 60 * 20)
+        ],
+        chain: this.getViemChain()
+      });
 
-      const tx = await router.removeLiquidityETH(
-        params.tokenAddress,
-        utils.parseEther(params.amount),
-        0,
-        0,
-        signerAddress,
-        deadline
-      );
-
-      await tx.wait();
-      return true;
+      const hash = await walletClient.writeContract(request);
+      return !!hash;
     } catch (error: any) {
-      throw new Error(`Failed to remove liquidity from QuickSwap: ${error.message}`);
+      throw new Error(`Failed to remove liquidity on Polygon: ${error.message}`);
     }
   }
 
-  async stake(_params: {
-    tokenAddress: string;
-    amount: string;
+  async stake(params: {
+    tokenAddress: Address;
+    amount: bigint;
     duration?: number;
   }): Promise<boolean> {
-    // TODO: Implement Polygon staking with the following features:
-    // - Integration with QuickSwap staking pools
-    // - Support for Polygon's native staking mechanisms
-    // - Integration with popular Polygon staking protocols
-    // - Support for validator staking
-    // - Configurable staking periods and APY tracking
-    throw new Error('Staking not implemented for Polygon yet');
+    if (!this.client) await this.initProvider();
+    const walletClient = await this.getWalletClient();
+
+    if (!walletClient.account) {
+      throw new Error('No account connected');
+    }
+
+    try {
+      const { request } = await this.client.simulateContract({
+        account: walletClient.account,
+        address: params.tokenAddress,
+        abi: [
+          {
+            name: 'stake',
+            type: 'function',
+            stateMutability: 'nonpayable',
+            inputs: [
+              { name: 'amount', type: 'uint256' },
+              { name: 'duration', type: 'uint256' }
+            ],
+            outputs: [{ type: 'bool' }]
+          }
+        ],
+        functionName: 'stake',
+        args: [
+          params.amount,
+          BigInt(params.duration || 0)
+        ],
+        chain: this.getViemChain()
+      });
+
+      const hash = await walletClient.writeContract(request);
+      return !!hash;
+    } catch (error: any) {
+      throw new Error(`Failed to stake tokens on Polygon: ${error.message}`);
+    }
   }
 
-  async unstake(_params: {
-    tokenAddress: string;
-    amount: string;
+  async unstake(params: {
+    tokenAddress: Address;
+    amount: bigint;
   }): Promise<boolean> {
-    // TODO: Implement Polygon unstaking with the following features:
-    // - Support for QuickSwap pool withdrawal
-    // - Handling of unstaking delays and fees
-    // - Support for validator unstaking process
-    // - Emergency withdrawal options
-    // - Reward distribution handling
-    throw new Error('Unstaking not implemented for Polygon yet');
+    if (!this.client) await this.initProvider();
+    const walletClient = await this.getWalletClient();
+
+    if (!walletClient.account) {
+      throw new Error('No account connected');
+    }
+
+    try {
+      const { request } = await this.client.simulateContract({
+        account: walletClient.account,
+        address: params.tokenAddress,
+        abi: [
+          {
+            name: 'unstake',
+            type: 'function',
+            stateMutability: 'nonpayable',
+            inputs: [{ name: 'amount', type: 'uint256' }],
+            outputs: [{ type: 'bool' }]
+          }
+        ],
+        functionName: 'unstake',
+        args: [params.amount],
+        chain: this.getViemChain()
+      });
+
+      const hash = await walletClient.writeContract(request);
+      return !!hash;
+    } catch (error: any) {
+      throw new Error(`Failed to unstake tokens on Polygon: ${error.message}`);
+    }
   }
 }

@@ -1,159 +1,183 @@
-import { utils, ContractFactory } from 'ethers';
-import { ChainId } from '../../types/Chain';
 import { EVMBaseService } from '../EVMBaseService';
-import { bscConfig } from '../../config/chains';
-import { PROVIDERS } from '../../config/dependencies';
+import { type Address, type PublicClient, type WalletClient, createPublicClient, createWalletClient, http } from 'viem';
+import { bsc } from 'viem/chains';
+import { BEP20_ABI, PANCAKESWAP_ROUTER_ABI } from './abi';
+import { PANCAKESWAP_ROUTER_ADDRESS } from './constants';
 
-// ABI et Bytecode pour le contrat BEP20
-const BEP20_BYTECODE = `608060405234801561001057600080fd5b506040516103bc3803806103bc83398101604081905261002f91610074565b600381805461003c906100d4565b6100479291906100b4565b5050600481805461003c906100d4565b6000602082840312156100865761008561012f565b5b81516001600160a01b038116811461009e5761009d61012f565b92915050565b6000815180845260005b818110156100c8576020818501810151868301820152016100ac565b818111156100da576000602083870101525b50601f01601f19169290920160200192915050565b600181811c908216806100e857607f821691505b60208210811415610109576108f46108f4565b50919050565b601f82111561012a57600081815260208120601f850160051c810160208610156101075750805b601f850160051c820191505b818110156101265782815560010161011d565b5050505b505050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b6102608061016e6000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063095ea7b31461003b578063a9059cbb14610066575b600080fd5b61004e610049366004610195565b610091565b604051901515815260200160405180910390f35b61004e610074366004610195565b6100fe565b6000336001600160a01b038416148061008c5750336000908152600160209081526040808320848452909152902054155b92915050565b60006001600160a01b0383166100a657600080fd5b336000818152600160209081526040808320878452825280832086905551938290039283908082858560051c82870101915050600082866000526020600020905b81548152906001019060200180831161010257829003601f168201915b505050505091505092915050565b80356001600160a01b038116811461012857600080fd5b919050565b634e487b7160e01b600052604160045260246000fd5b600080604083850312156101585761015761012d565b5b61016183610111565b915060208301356001600160a01b038116811461017e5761017d61012d565b809150509250929050565b6000602082840312156101a7576101a661012d565b5061008c83610111565b6000602082840312156101c4576101c361012d565b5035919050565b600080604083850312156101e0576101df61012d565b5b6101e983610111565b946020939093013593505050565b600080600060608486031215610210576102106102d2565b5b610219846101f1565b925060208401359150604084013567ffffffffffffffff8082111561023f5761023e6102d2565b604051601f8301601f19908116603f011681019082821181831017156102675761026661012d565b8160405283815286602085880101111561028157610280610280565b8286015b8481101561029c578035835260209283019201610285565b509695505050505050565b6000806000606084860312156102bf576102be6102d2565b506102c8846101f1565b925060208401359150604084013590509250925092565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fdfe`;
+interface TokenParams {
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSupply: string;
+  owner: Address;
+}
+
+interface LiquidityParams {
+  tokenAddress: Address;
+  amount: bigint;
+  deadline: number;
+}
+
+interface StakingParams {
+  tokenAddress: Address;
+  amount: bigint;
+  duration?: number;
+}
 
 export class BinanceService extends EVMBaseService {
-  private priceApiUrl: string;
+  protected client: PublicClient;
+  protected walletClient: WalletClient | null = null;
 
   constructor() {
-    super(ChainId.BSC, bscConfig);
-    this.priceApiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd&x_cg_demo_api_key=${PROVIDERS.COINGECKO_KEY}`;
+    super(bsc.id, {
+      id: bsc.id,
+      chainId: bsc.id,
+      name: bsc.name,
+      networkId: bsc.id,
+      nativeCurrency: bsc.nativeCurrency,
+      rpcUrls: [bsc.rpcUrls.default.http[0]],
+      blockExplorerUrls: [bsc.blockExplorers.default.url],
+    });
+    this.client = createPublicClient({
+      chain: bsc,
+      transport: http(),
+    });
   }
 
   async getNativeTokenPrice(): Promise<number> {
     try {
-      const response = await fetch(this.priceApiUrl);
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd');
       const data = await response.json();
       return data.binancecoin.usd;
     } catch (error) {
-      console.error('Failed to fetch BNB price:', error);
+      console.error('Failed to get BNB price:', error);
       return 0;
     }
   }
 
-  async createToken(params: {
-    name: string;
-    symbol: string;
-    decimals: number;
-    totalSupply: string;
-    owner: string;
-  }): Promise<string> {
-    if (!this.provider) await this.initProvider();
-    const signer = await this.getSigner();
-
+  async getBalance(address: Address): Promise<bigint> {
     try {
-      const factory = new ContractFactory(
-        [
-          "constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 totalSupply_, address owner_)",
-          ...BEP20_BYTECODE
-        ],
-        BEP20_BYTECODE,
-        signer
-      );
-
-      const contract = await factory.deploy(
-        params.name,
-        params.symbol,
-        params.decimals,
-        utils.parseUnits(params.totalSupply, params.decimals),
-        params.owner
-      );
-
-      await contract.deployed();
-      return contract.address;
-    } catch (error: any) {
-      throw new Error(`Failed to create BEP20 token: ${error.message}`);
+      const balance = await this.client.getBalance({ address });
+      return balance;
+    } catch (error) {
+      console.error('Failed to get balance:', error);
+      throw new Error('Failed to get balance');
     }
   }
 
-  async addLiquidity(params: {
-    tokenAddress: string;
-    amount: string;
-    deadline?: number;
-  }): Promise<boolean> {
-    if (!this.provider) await this.initProvider();
-    const signer = await this.getSigner();
-
-    const PANCAKESWAP_ROUTER_ADDRESS = '0x10ED43C718714eb63d5aA57B78B54704E256024E';
-    const PANCAKESWAP_ROUTER_ABI = [
-      'function addLiquidityBNB(address token, uint amountTokenDesired, uint amountTokenMin, uint amountBNBMin, address to, uint deadline) external payable returns (uint amountToken, uint amountBNB, uint liquidity)'
-    ];
-
+  validateAddress(address: string): boolean {
     try {
-      const router = await this.getSignedContract(PANCAKESWAP_ROUTER_ADDRESS, PANCAKESWAP_ROUTER_ABI);
-      const signerAddress = await signer.getAddress();
-      const deadline = params.deadline || Math.floor(Date.now() / 1000) + 60 * 20;
+      return /^0x[a-fA-F0-9]{40}$/.test(address);
+    } catch (error) {
+      return false;
+    }
+  }
 
-      const tx = await router.addLiquidityBNB(
-        params.tokenAddress,
-        utils.parseEther(params.amount),
-        0,
-        0,
-        signerAddress,
-        deadline,
-        { value: utils.parseEther(params.amount) }
-      );
+  async createToken(params: TokenParams): Promise<Address> {
+    try {
+      if (!this.walletClient) {
+        this.walletClient = createWalletClient({
+          chain: bsc,
+          transport: http(),
+        });
+      }
 
-      await tx.wait();
+      if (!this.walletClient.account) {
+        throw new Error('No wallet account found');
+      }
+
+      const deployRequest = {
+        abi: BEP20_ABI,
+        bytecode: '0x608060405234801561001057600080fd5b50610...' as `0x${string}`,
+        account: this.walletClient.account,
+        chain: bsc,
+        args: [params.name, params.symbol, params.decimals, BigInt(params.totalSupply), params.owner]
+      };
+
+      const hash = await this.walletClient.deployContract(deployRequest);
+      const receipt = await this.client.waitForTransactionReceipt({ hash });
+
+      if (!receipt.contractAddress) {
+        throw new Error('Contract address not found in receipt');
+      }
+
+      return receipt.contractAddress;
+    } catch (error) {
+      console.error('Failed to create BEP20 token:', error);
+      throw new Error('Failed to create BEP20 token');
+    }
+  }
+
+  async addLiquidity(params: LiquidityParams): Promise<boolean> {
+    try {
+      if (!this.walletClient) {
+        this.walletClient = createWalletClient({
+          chain: bsc,
+          transport: http(),
+        });
+      }
+
+      if (!this.walletClient.account) {
+        throw new Error('No wallet account found');
+      }
+
+      const { request } = await this.client.simulateContract({
+        account: this.walletClient.account,
+        address: PANCAKESWAP_ROUTER_ADDRESS,
+        abi: PANCAKESWAP_ROUTER_ABI,
+        functionName: 'addLiquidityETH',
+        args: [params.tokenAddress, params.amount, 0n, 0n, this.walletClient.account.address, BigInt(params.deadline)],
+        value: params.amount,
+      });
+
+      const hash = await this.walletClient.writeContract(request);
+      await this.client.waitForTransactionReceipt({ hash });
+
       return true;
-    } catch (error: any) {
-      throw new Error(`Failed to add liquidity on PancakeSwap: ${error.message}`);
+    } catch (error) {
+      console.error('Failed to add liquidity:', error);
+      throw new Error('Failed to add liquidity on PancakeSwap');
     }
   }
 
-  async removeLiquidity(params: {
-    tokenAddress: string;
-    amount: string;
-    deadline?: number;
-  }): Promise<boolean> {
-    if (!this.provider) await this.initProvider();
-    const signer = await this.getSigner();
-
-    const PANCAKESWAP_ROUTER_ADDRESS = '0x10ED43C718714eb63d5aA57B78B54704E256024E';
-    const PANCAKESWAP_ROUTER_ABI = [
-      'function removeLiquidityBNB(address token, uint liquidity, uint amountTokenMin, uint amountBNBMin, address to, uint deadline) external returns (uint amountToken, uint amountBNB)'
-    ];
-
+  async removeLiquidity(params: LiquidityParams): Promise<boolean> {
     try {
-      const router = await this.getSignedContract(PANCAKESWAP_ROUTER_ADDRESS, PANCAKESWAP_ROUTER_ABI);
-      const signerAddress = await signer.getAddress();
-      const deadline = params.deadline || Math.floor(Date.now() / 1000) + 60 * 20;
+      if (!this.walletClient) {
+        this.walletClient = createWalletClient({
+          chain: bsc,
+          transport: http(),
+        });
+      }
 
-      const tx = await router.removeLiquidityBNB(
-        params.tokenAddress,
-        utils.parseEther(params.amount),
-        0,
-        0,
-        signerAddress,
-        deadline
-      );
+      if (!this.walletClient.account) {
+        throw new Error('No wallet account found');
+      }
 
-      await tx.wait();
+      const { request } = await this.client.simulateContract({
+        account: this.walletClient.account,
+        address: PANCAKESWAP_ROUTER_ADDRESS,
+        abi: PANCAKESWAP_ROUTER_ABI,
+        functionName: 'removeLiquidityETH',
+        args: [params.tokenAddress, params.amount, 0n, 0n, this.walletClient.account.address, BigInt(params.deadline)],
+      });
+
+      const hash = await this.walletClient.writeContract(request);
+      await this.client.waitForTransactionReceipt({ hash });
+
       return true;
-    } catch (error: any) {
-      throw new Error(`Failed to remove liquidity from PancakeSwap: ${error.message}`);
+    } catch (error) {
+      console.error('Failed to remove liquidity:', error);
+      throw new Error('Failed to remove liquidity from PancakeSwap');
     }
   }
 
-  async stake(_params: {
-    tokenAddress: string;
-    amount: string;
-    duration?: number;
-  }): Promise<boolean> {
-    // TODO: Implement BSC staking with the following features:
-    // - Integration with PancakeSwap staking pools
-    // - Support for BEP20 token staking
-    // - Integration with BSC-native staking protocols
-    // - Configurable staking periods and APY calculation
-    // - Auto-compounding options
+  async stake(params: StakingParams): Promise<boolean> {
+    console.warn('Staking not implemented for BSC yet:', params);
     throw new Error('Staking not implemented for BSC yet');
   }
 
-  async unstake(_params: {
-    tokenAddress: string;
-    amount: string;
-  }): Promise<boolean> {
-    // TODO: Implement BSC unstaking with the following features:
-    // - Support for PancakeSwap pool withdrawal
-    // - Handling of unstaking fees and timeouts
-    // - Emergency withdrawal options
-    // - Support for partial unstaking
-    // - Reward claim functionality
+  async unstake(params: StakingParams): Promise<boolean> {
+    console.warn('Unstaking not implemented for BSC yet:', params);
     throw new Error('Unstaking not implemented for BSC yet');
   }
 }
