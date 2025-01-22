@@ -109,10 +109,10 @@ export class SolanaPaymentService implements BasePaymentService {
         throw new Error('Failed to create payment session');
       }
 
-      // Get provider
+      // Get provider and verify it exists
       const provider = this.program.provider as AnchorProvider;
-      if (!provider) {
-        throw new Error('Provider not initialized');
+      if (!provider || typeof provider.sendAndConfirm !== 'function') {
+        throw new Error('Provider not initialized or missing sendAndConfirm method');
       }
 
       // Create transaction
