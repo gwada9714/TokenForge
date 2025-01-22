@@ -1,7 +1,9 @@
-import { ethers } from 'ethers';
-import { BinancePaymentContract, PaymentReceivedEvent } from './contracts/BinancePayment';
+import { ethers, BigNumber } from 'ethers';
+import { BinancePaymentContract } from './contracts/BinancePayment';
 import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus, PaymentToken } from '../payment/types/PaymentSession';
+import { PaymentNetwork, PaymentStatus } from '../payment/types/PaymentSession';
+import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
+import { validatePaymentParams } from '../payment/utils/paymentValidation';
 
 export interface BinancePaymentConfig {
   contractAddress: string;
@@ -10,7 +12,7 @@ export interface BinancePaymentConfig {
   receiverAddress: string;
 }
 
-export class BinancePaymentService {
+export class BinancePaymentService implements BasePaymentService {
   private static instance: BinancePaymentService;
   private contract: BinancePaymentContract;
   private sessionService: PaymentSessionService;
@@ -34,72 +36,31 @@ export class BinancePaymentService {
   }
 
   private setupEventListeners(): void {
-    this.contract.onPaymentReceived(this.handlePaymentReceived.bind(this));
-  }
-
-  private async handlePaymentReceived(event: PaymentReceivedEvent): Promise<void> {
-    try {
-      this.sessionService.updateSessionStatus(
-        event.sessionId,
-        PaymentStatus.CONFIRMED,
-        event.payer
-      );
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error(`Error handling payment received event: ${errorMessage}`);
-    }
-  }
-
-  public async payWithBNB(
-    amount: ethers.BigNumber,
-    serviceType: string,
-    userId: string
-  ): Promise<string> {
-    try {
-      // Create payment session
-      const session = this.sessionService.createSession(
-        userId,
-        amount,
-        {
-          symbol: 'BNB',
-          address: ethers.constants.AddressZero,
-          decimals: 18,
-          network: PaymentNetwork.BINANCE
-        },
-        serviceType as any
-      );
-
-      // Send transaction
-      const tx = await this.contract.payWithBNB(
-        amount,
-        serviceType,
-        session.id
-      );
-
-      // Update session with pending transaction
-      this.sessionService.updateSessionStatus(
-        session.id,
-        PaymentStatus.PROCESSING,
-        tx.hash
-      );
-
-      return session.id;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      throw new Error(`Failed to process BNB payment: ${errorMessage}`);
-    }
+    this.contract.on('PaymentProcessed', async (payer: string, amount: BigNumber, sessionId: string) => {
+      try {
+        await this.sessionService.updateSessionStatus(
+          sessionId,
+          PaymentStatus.CONFIRMED,
+          payer
+        );
+      } catch (error) {
+        console.error('Error updating payment status:', error);
+      }
+    });
   }
 
   public async payWithToken(
     tokenAddress: string,
-    amount: ethers.BigNumber,
+    amount: PaymentAmount,
     serviceType: string,
     userId: string,
-    token: PaymentToken
+    options: PaymentOptions
   ): Promise<string> {
+    validatePaymentParams(amount, options);
+
     try {
       // Verify token is supported
-      const isSupported = await this.contract.isTokenSupported(tokenAddress);
+      const isSupported = await this.isTokenSupported(tokenAddress);
       if (!isSupported) {
         throw new Error('Token not supported');
       }
@@ -107,65 +68,46 @@ export class BinancePaymentService {
       // Create payment session
       const session = this.sessionService.createSession(
         userId,
-        amount,
-        token,
-        serviceType as any
+        PaymentNetwork.BINANCE,
+        {
+          address: tokenAddress,
+          amount: amount instanceof BigNumber ? amount : BigNumber.from(amount.toString()),
+          serviceType
+        }
       );
 
-      // Approve token spending
-      const tokenContract = new ethers.Contract(
+      // Prepare transaction options
+      const txOptions: ethers.PayableOverrides = {
+        gasLimit: options.gasLimit,
+        gasPrice: options.gasPrice instanceof BigNumber ? 
+          options.gasPrice : 
+          options.gasPrice ? BigNumber.from(options.gasPrice.toString()) : undefined
+      };
+
+      // Process payment
+      const tx = await this.contract.processPayment(
         tokenAddress,
-        ['function approve(address spender, uint256 amount) returns (bool)'],
-        this.config.signer
-      );
-
-      const approveTx = await tokenContract.approve(
-        this.config.contractAddress,
-        amount
-      );
-      await approveTx.wait();
-
-      // Send payment transaction
-      const tx = await this.contract.payWithToken(
-        tokenAddress,
-        amount,
-        serviceType,
-        session.id
-      );
-
-      // Update session with pending transaction
-      this.sessionService.updateSessionStatus(
+        amount instanceof BigNumber ? amount : BigNumber.from(amount.toString()),
         session.id,
-        PaymentStatus.PROCESSING,
-        tx.hash
+        txOptions
       );
 
+      await tx.wait();
       return session.id;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      throw new Error(`Failed to process token payment: ${errorMessage}`);
+      console.error(`Payment failed: ${errorMessage}`);
+      throw error;
     }
   }
 
-  public async getTokenAllowance(
-    tokenAddress: string,
-    ownerAddress: string
-  ): Promise<ethers.BigNumber> {
-    const tokenContract = new ethers.Contract(
-      tokenAddress,
-      ['function allowance(address owner, address spender) view returns (uint256)'],
-      this.config.provider
-    );
-
-    return tokenContract.allowance(ownerAddress, this.config.contractAddress);
-  }
-
   public async isTokenSupported(tokenAddress: string): Promise<boolean> {
-    return this.contract.isTokenSupported(tokenAddress);
-  }
-
-  public getReceiverAddress(): Promise<string> {
-    return this.contract.getReceiverAddress();
+    try {
+      return await this.contract.isTokenSupported(tokenAddress);
+    } catch (error) {
+      console.error(`Error checking token support: ${error}`);
+      return false;
+    }
   }
 
   public cleanup(): void {

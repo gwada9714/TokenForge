@@ -1,17 +1,19 @@
-import { ethers } from 'ethers';
-import { PolygonPaymentContract, PaymentReceivedEvent } from './contracts/PolygonPayment';
+import { ethers, BigNumber } from 'ethers';
+import { PolygonPaymentContract } from './contracts/PolygonPayment';
 import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus, PaymentToken } from '../payment/types/PaymentSession';
+import { PaymentNetwork, PaymentStatus } from '../payment/types/PaymentSession';
+import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
+import { validatePaymentParams } from '../payment/utils/paymentValidation';
 
 export interface PolygonPaymentConfig {
   contractAddress: string;
   provider: ethers.providers.Provider;
   signer: ethers.Signer;
+  maxGasPrice?: BigNumber;
   receiverAddress: string;
-  maxGasPrice?: ethers.BigNumber; // Optional max gas price in wei
 }
 
-export class PolygonPaymentService {
+export class PolygonPaymentService implements BasePaymentService {
   private static instance: PolygonPaymentService;
   private contract: PolygonPaymentContract;
   private sessionService: PaymentSessionService;
@@ -35,85 +37,31 @@ export class PolygonPaymentService {
   }
 
   private setupEventListeners(): void {
-    this.contract.onPaymentReceived(this.handlePaymentReceived.bind(this));
-  }
-
-  private async handlePaymentReceived(event: PaymentReceivedEvent): Promise<void> {
-    try {
-      this.sessionService.updateSessionStatus(
-        event.sessionId,
-        PaymentStatus.CONFIRMED,
-        event.payer
-      );
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error(`Error handling payment received event: ${errorMessage}`);
-    }
-  }
-
-  private async checkGasPrice(): Promise<void> {
-    if (this.config.maxGasPrice) {
-      const currentGasPrice = await this.contract.getGasPrice();
-      if (currentGasPrice.gt(this.config.maxGasPrice)) {
-        throw new Error('Gas price too high');
+    this.contract.on('PaymentProcessed', async (payer: string, amount: BigNumber, sessionId: string) => {
+      try {
+        await this.sessionService.updateSessionStatus(
+          sessionId,
+          PaymentStatus.CONFIRMED,
+          payer
+        );
+      } catch (error) {
+        console.error('Error updating payment status:', error);
       }
-    }
-  }
-
-  public async payWithMatic(
-    amount: ethers.BigNumber,
-    serviceType: string,
-    userId: string
-  ): Promise<string> {
-    try {
-      await this.checkGasPrice();
-
-      // Create payment session
-      const session = this.sessionService.createSession(
-        userId,
-        amount,
-        {
-          symbol: 'MATIC',
-          address: ethers.constants.AddressZero,
-          decimals: 18,
-          network: PaymentNetwork.POLYGON
-        },
-        serviceType as any
-      );
-
-      // Send transaction
-      const tx = await this.contract.payWithMatic(
-        amount,
-        serviceType,
-        session.id
-      );
-
-      // Update session with pending transaction
-      this.sessionService.updateSessionStatus(
-        session.id,
-        PaymentStatus.PROCESSING,
-        tx.hash
-      );
-
-      return session.id;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      throw new Error(`Failed to process MATIC payment: ${errorMessage}`);
-    }
+    });
   }
 
   public async payWithToken(
     tokenAddress: string,
-    amount: ethers.BigNumber,
+    amount: PaymentAmount,
     serviceType: string,
     userId: string,
-    token: PaymentToken
+    options: PaymentOptions
   ): Promise<string> {
-    try {
-      await this.checkGasPrice();
+    validatePaymentParams(amount, options);
 
+    try {
       // Verify token is supported
-      const isSupported = await this.contract.isTokenSupported(tokenAddress);
+      const isSupported = await this.isTokenSupported(tokenAddress);
       if (!isSupported) {
         throw new Error('Token not supported');
       }
@@ -121,65 +69,53 @@ export class PolygonPaymentService {
       // Create payment session
       const session = this.sessionService.createSession(
         userId,
-        amount,
-        token,
-        serviceType as any
+        PaymentNetwork.POLYGON,
+        {
+          address: tokenAddress,
+          amount: amount instanceof BigNumber ? amount : BigNumber.from(amount.toString()),
+          serviceType
+        }
       );
 
-      // Approve token spending
-      const tokenContract = new ethers.Contract(
+      // Prepare transaction options
+      const txOptions: ethers.PayableOverrides = {
+        gasLimit: options.gasLimit,
+        gasPrice: options.gasPrice instanceof BigNumber ? 
+          options.gasPrice : 
+          options.gasPrice ? BigNumber.from(options.gasPrice.toString()) : undefined
+      };
+
+      // Check gas price limit
+      if (this.config.maxGasPrice && txOptions.gasPrice) {
+        if (txOptions.gasPrice.gt(this.config.maxGasPrice)) {
+          throw new Error('Gas price exceeds maximum allowed');
+        }
+      }
+
+      // Process payment
+      const tx = await this.contract.processPayment(
         tokenAddress,
-        ['function approve(address spender, uint256 amount) returns (bool)'],
-        this.config.signer
-      );
-
-      const approveTx = await tokenContract.approve(
-        this.config.contractAddress,
-        amount
-      );
-      await approveTx.wait();
-
-      // Send payment transaction
-      const tx = await this.contract.payWithToken(
-        tokenAddress,
-        amount,
-        serviceType,
-        session.id
-      );
-
-      // Update session with pending transaction
-      this.sessionService.updateSessionStatus(
+        amount instanceof BigNumber ? amount : BigNumber.from(amount.toString()),
         session.id,
-        PaymentStatus.PROCESSING,
-        tx.hash
+        txOptions
       );
 
+      await tx.wait();
       return session.id;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      throw new Error(`Failed to process token payment: ${errorMessage}`);
+      console.error(`Payment failed: ${errorMessage}`);
+      throw error;
     }
   }
 
-  public async getTokenAllowance(
-    tokenAddress: string,
-    ownerAddress: string
-  ): Promise<ethers.BigNumber> {
-    const tokenContract = new ethers.Contract(
-      tokenAddress,
-      ['function allowance(address owner, address spender) view returns (uint256)'],
-      this.config.provider
-    );
-
-    return tokenContract.allowance(ownerAddress, this.config.contractAddress);
-  }
-
   public async isTokenSupported(tokenAddress: string): Promise<boolean> {
-    return this.contract.isTokenSupported(tokenAddress);
-  }
-
-  public getReceiverAddress(): Promise<string> {
-    return this.contract.getReceiverAddress();
+    try {
+      return await this.contract.isTokenSupported(tokenAddress);
+    } catch (error) {
+      console.error(`Error checking token support: ${error}`);
+      return false;
+    }
   }
 
   public cleanup(): void {

@@ -1,37 +1,35 @@
 import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-  sendAndConfirmTransaction,
-} from '@solana/web3.js';
-import {
   Program,
   AnchorProvider,
-  BN,
+  web3,
+  BN
 } from '@project-serum/anchor';
+import {
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  Transaction
+} from '@solana/web3.js';
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
+  getAssociatedTokenAddress
 } from '@solana/spl-token';
 import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus, PaymentToken } from '../payment/types/PaymentSession';
-import { BasePaymentService, PaymentOptions } from '../payment/types/PaymentService';
+import { PaymentNetwork, PaymentStatus } from '../payment/types/PaymentSession';
+import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
+import { validatePaymentParams } from '../payment/utils/paymentValidation';
 
 export interface SolanaPaymentConfig {
   programId: PublicKey;
-  connection: Connection;
-  payer: Keypair;
-  receiver: PublicKey;
+  connection: web3.Connection;
+  wallet: web3.Keypair;
+  receiverAddress: PublicKey;
 }
 
-interface PaymentReceivedEvent {
-  payer: PublicKey;
-  token: PublicKey | null;
+export interface PaymentInstruction {
+  tokenMint: PublicKey;
   amount: BN;
-  serviceType: string;
   sessionId: string;
 }
 
@@ -40,14 +38,40 @@ export class SolanaPaymentService implements BasePaymentService {
   private program: Program;
   private sessionService: PaymentSessionService;
   private config: SolanaPaymentConfig;
-  private connection: Connection;
-  private paymentAccount: PublicKey = SystemProgram.programId; // Default initialization
+  private paymentAccount: PublicKey;
 
   private constructor(config: SolanaPaymentConfig) {
     this.config = config;
-    this.connection = config.connection;
     this.sessionService = PaymentSessionService.getInstance();
-    this.setupProgram();
+    
+    // Initialize program
+    const provider = new AnchorProvider(
+      config.connection,
+      {
+        publicKey: config.wallet.publicKey,
+        signTransaction: async (tx: Transaction) => {
+          tx.sign(config.wallet);
+          return tx;
+        },
+        signAllTransactions: async (txs: Transaction[]) => {
+          txs.forEach(tx => tx.sign(config.wallet));
+          return txs;
+        }
+      },
+      { commitment: 'confirmed' }
+    );
+
+    this.program = new Program(
+      require('./programs/solana_payment.json'),
+      config.programId,
+      provider
+    );
+
+    // Initialize payment account
+    this.paymentAccount = PublicKey.findProgramAddressSync(
+      [Buffer.from('payment'), config.wallet.publicKey.toBuffer()],
+      config.programId
+    )[0];
   }
 
   public static getInstance(config?: SolanaPaymentConfig): SolanaPaymentService {
@@ -60,162 +84,99 @@ export class SolanaPaymentService implements BasePaymentService {
     return SolanaPaymentService.instance;
   }
 
-  private async setupProgram() {
-    // Create AnchorProvider
-    const provider = new AnchorProvider(
-      this.config.connection,
-      {
-        publicKey: this.config.payer.publicKey,
-        signTransaction: async (tx: Transaction) => {
-          tx.sign(this.config.payer);
-          return tx;
-        },
-        signAllTransactions: async (txs: Transaction[]) => {
-          txs.forEach(tx => tx.sign(this.config.payer));
-          return txs;
-        },
-      },
-      { commitment: 'confirmed' }
-    );
-
-    // Get program
-    this.program = await Program.at(this.config.programId, provider);
-
-    // Subscribe to program events
-    this.program.addEventListener('PaymentReceived', this.handlePaymentReceived.bind(this));
-  }
-
-  private async handlePaymentReceived(event: PaymentReceivedEvent) {
-    try {
-      const sessionId = event.sessionId;
-      this.sessionService.updateSessionStatus(
-        sessionId,
-        PaymentStatus.CONFIRMED,
-        event.payer.toBase58()
-      );
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error(`Error handling payment received event: ${errorMessage}`);
-    }
-  }
-
-  async payWithToken(
+  public async payWithToken(
     tokenAddress: string | PublicKey,
-    amount: number,
+    amount: PaymentAmount,
     serviceType: string,
     userId: string,
     options: PaymentOptions
   ): Promise<string> {
+    validatePaymentParams(amount, options);
+
     try {
-      const provider = this.program.provider as AnchorProvider;
-      const payer = provider.wallet;
-      const tokenMint = tokenAddress instanceof PublicKey ? tokenAddress : new PublicKey(tokenAddress);
-      
-      const transaction = new Transaction();
-      // Add payment instruction to transaction
+      const tokenMint = tokenAddress instanceof PublicKey ? 
+        tokenAddress : 
+        new PublicKey(tokenAddress);
+
+      // Verify token is supported
+      const isSupported = await this.isTokenSupported(tokenMint);
+      if (!isSupported) {
+        throw new Error('Token not supported');
+      }
+
+      // Create payment session
+      const session = this.sessionService.createSession(
+        userId,
+        PaymentNetwork.SOLANA,
+        {
+          address: tokenMint.toString(),
+          amount: typeof amount === 'number' ? amount : parseFloat(amount.toString()),
+          serviceType
+        }
+      );
+
+      // Get associated token accounts
+      const payerATA = await getAssociatedTokenAddress(
+        tokenMint,
+        this.config.wallet.publicKey
+      );
+
+      const receiverATA = await getAssociatedTokenAddress(
+        tokenMint,
+        this.config.receiverAddress
+      );
+
+      // Create payment instruction
       const ix = await this.program.methods
-        .processPayment(new BN(amount))
+        .processPayment(
+          new BN(typeof amount === 'number' ? amount : amount.toString()),
+          session.id
+        )
         .accounts({
-          payer: payer.publicKey,
+          payer: this.config.wallet.publicKey,
+          receiver: this.config.receiverAddress,
+          payerTokenAccount: payerATA,
+          receiverTokenAccount: receiverATA,
           tokenMint,
-          systemProgram: PublicKey.default,
+          paymentAccount: this.paymentAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY
         })
         .instruction();
 
-      transaction.add(ix);
+      // Build and send transaction
+      const tx = new Transaction().add(ix);
+      const signature = await this.config.connection.sendTransaction(
+        tx,
+        [this.config.wallet],
+        {
+          skipPreflight: options.skipPreflight,
+          commitment: options.commitment || 'confirmed'
+        }
+      );
 
-      const signature = await provider.sendAndConfirm(transaction, [], {
-        skipPreflight: options.skipPreflight || false,
-        commitment: options.commitment || 'confirmed',
-      });
-
-      // Créer une session de paiement
-      const session = {
-        id: signature,
-        userId,
-        status: PaymentStatus.PROCESSING,
-        network: PaymentNetwork.SOLANA,
-        amount,
-        serviceType,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        expiresAt: new Date(Date.now() + 3600000), // 1 hour expiry
-        transactionHash: signature,
-      };
-
-      await this.sessionService.createSession(session);
+      await this.config.connection.confirmTransaction(signature);
       return session.id;
-    } catch (error) {
-      console.error('Solana payment failed:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error(`Payment failed: ${errorMessage}`);
       throw error;
     }
   }
 
-  public async payWithSol(
-    amount: number,
-    serviceType: string,
-    userId: string
-  ): Promise<string> {
+  public async isTokenSupported(tokenAddress: string | PublicKey): Promise<boolean> {
     try {
-      // Create payment session
-      const session = this.sessionService.createSession(
-        userId,
-        new BN(amount),
-        {
-          symbol: 'SOL',
-          address: SystemProgram.programId.toBase58(),
-          decimals: 9,
-          network: PaymentNetwork.SOLANA
-        },
-        serviceType as any
-      );
+      const tokenMint = tokenAddress instanceof PublicKey ? 
+        tokenAddress : 
+        new PublicKey(tokenAddress);
 
-      // Build transaction
-      const tx = await this.program.methods
-        .payWithSol(new BN(amount), serviceType, session.id)
-        .accounts({
-          paymentAccount: this.paymentAccount,
-          payer: this.config.payer.publicKey,
-          receiver: this.config.receiver,
-          systemProgram: SystemProgram.programId,
-        })
-        .transaction();
-
-      // Send transaction
-      const txHash = await sendAndConfirmTransaction(
-        this.config.connection,
-        tx,
-        [this.config.payer]
-      );
-
-      // Update session status
-      this.sessionService.updateSessionStatus(
-        session.id,
-        PaymentStatus.PROCESSING,
-        txHash
-      );
-
-      return session.id;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      throw new Error(`Failed to process SOL payment: ${errorMessage}`);
+      // Vérifier si le token existe et est un SPL Token valide
+      const tokenInfo = await this.config.connection.getParsedAccountInfo(tokenMint);
+      return tokenInfo.value !== null && tokenInfo.value.data !== null;
+    } catch (error) {
+      console.error(`Error checking token support: ${error}`);
+      return false;
     }
-  }
-
-  public async getBalance(address: PublicKey): Promise<number> {
-    return this.config.connection.getBalance(address);
-  }
-
-  public async getTokenBalance(
-    tokenMint: PublicKey,
-    owner: PublicKey
-  ): Promise<number> {
-    const ata = await getAssociatedTokenAddress(tokenMint, owner);
-    const balance = await this.config.connection.getTokenAccountBalance(ata);
-    return balance.value.uiAmount || 0;
-  }
-
-  public cleanup(): void {
-    this.program.removeEventListener('PaymentReceived');
   }
 }
