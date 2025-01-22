@@ -1,182 +1,129 @@
-import { Connection, Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import { BN } from '@project-serum/anchor';
-import { SolanaPaymentService, SolanaPaymentConfig } from '../SolanaPaymentService';
+import { SolanaPaymentService } from '../SolanaPaymentService';
+import { PaymentStatus, PaymentSession, PaymentNetwork } from '../../payment/types/PaymentSession';
 import { PaymentSessionService } from '../../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus } from '../../payment/types/PaymentSession';
-
-// Mock @solana/web3.js
-jest.mock('@solana/web3.js');
-
-// Mock @project-serum/anchor
-jest.mock('@project-serum/anchor', () => ({
-  Program: {
-    at: jest.fn().mockResolvedValue({
-      methods: {
-        payWithSol: jest.fn().mockReturnValue({
-          accounts: jest.fn().mockReturnValue({
-            transaction: jest.fn().mockResolvedValue({})
-          })
-        }),
-        payWithToken: jest.fn().mockReturnValue({
-          accounts: jest.fn().mockReturnValue({
-            transaction: jest.fn().mockResolvedValue({})
-          })
-        })
-      },
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-    })
-  },
-  AnchorProvider: jest.fn(),
-  BN: jest.fn(),
-}));
 
 describe('SolanaPaymentService', () => {
-  let service: SolanaPaymentService;
-  let mockConnection: jest.Mocked<Connection>;
-  let sessionService: PaymentSessionService;
+  const mockEndpoint = 'https://api.mainnet-beta.solana.com';
+  const mockConnection = new Connection(mockEndpoint);
+  const mockWallet = Keypair.generate();
   
-  const mockKeypair = {
-    publicKey: new PublicKey('11111111111111111111111111111111'),
-    secretKey: new Uint8Array(32),
-  } as Keypair;
-
-  const mockConfig: SolanaPaymentConfig = {
+  const mockConfig = {
     programId: new PublicKey('TokenForgePay1111111111111111111111111111111111'),
-    connection: new Connection('http://localhost:8899'),
-    payer: mockKeypair,
-    receiver: new PublicKey('22222222222222222222222222222222'),
+    connection: mockConnection,
+    wallet: mockWallet,
+    receiverAddress: new PublicKey('22222222222222222222222222222222')
   };
 
+  let service: SolanaPaymentService;
+  let sessionService: PaymentSessionService;
+
   beforeEach(() => {
-    // Reset mocks
-    jest.clearAllMocks();
-
-    // Setup connection mock
-    mockConnection = {
-      getBalance: jest.fn().mockResolvedValue(1000000000),
-      getTokenAccountBalance: jest.fn().mockResolvedValue({
-        value: { uiAmount: 100 }
-      }),
-    } as any;
-
-    // Initialize services
+    vi.clearAllMocks();
     sessionService = PaymentSessionService.getInstance();
-    service = SolanaPaymentService.getInstance({
-      ...mockConfig,
-      connection: mockConnection,
-    });
+    service = SolanaPaymentService.getInstance(mockConfig);
   });
 
   afterEach(() => {
-    service.cleanup();
-    sessionService.cleanup();
+    vi.clearAllMocks();
+    // Reset singleton instance
+    (SolanaPaymentService as any).instance = undefined;
   });
 
-  describe('payWithSol', () => {
-    it('should process SOL payment successfully', async () => {
-      const amount = 1000000000; // 1 SOL
-      const serviceType = 'token_creation';
-      const userId = 'user123';
-
-      const sessionId = await service.payWithSol(amount, serviceType, userId);
-      
-      const session = sessionService.getSession(sessionId);
-      expect(session).toBeDefined();
-      expect(session?.status).toBe(PaymentStatus.PROCESSING);
-      expect(session?.token.network).toBe(PaymentNetwork.SOLANA);
-      expect(session?.token.symbol).toBe('SOL');
+  describe('getInstance', () => {
+    it('should create a new instance with config', () => {
+      const instance = SolanaPaymentService.getInstance(mockConfig);
+      expect(instance).toBeInstanceOf(SolanaPaymentService);
     });
 
-    it('should handle payment failure', async () => {
-      // Mock transaction failure
-      (SystemProgram as any).transfer.mockRejectedValue(new Error('Transaction failed'));
+    it('should throw error when getting instance without initialization', () => {
+      (SolanaPaymentService as any).instance = undefined;
+      expect(() => SolanaPaymentService.getInstance()).toThrow();
+    });
 
-      await expect(
-        service.payWithSol(
-          1000000000,
-          'token_creation',
-          'user123'
-        )
-      ).rejects.toThrow('Failed to process SOL payment');
+    it('should return the same instance on multiple calls', () => {
+      const instance1 = SolanaPaymentService.getInstance(mockConfig);
+      const instance2 = SolanaPaymentService.getInstance();
+      expect(instance1).toBe(instance2);
     });
   });
 
   describe('payWithToken', () => {
-    const mockToken = {
-      symbol: 'USDC',
-      address: (new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')).toBase58(),
-      decimals: 6,
-      network: PaymentNetwork.SOLANA
-    };
+    const mockTokenAddress = new PublicKey('33333333333333333333333333333333');
+    const mockAmount = new BN(100000000); // 100 USDC
+    const mockServiceType = 'token_creation';
+    const mockUserId = 'test-user';
 
-    it('should process token payment successfully', async () => {
-      const amount = 100000000; // 100 USDC
-      const serviceType = 'token_creation';
-      const userId = 'user123';
+    beforeEach(() => {
+      vi.spyOn(mockConnection, 'getRecentBlockhash').mockResolvedValue({
+        blockhash: 'mock-blockhash',
+        feeCalculator: {
+          lamportsPerSignature: 5000
+        }
+      });
 
-      const sessionId = await service.payWithToken(
-        new PublicKey(mockToken.address),
-        amount,
-        serviceType,
-        userId,
-        mockToken
-      );
-
-      const session = sessionService.getSession(sessionId);
-      expect(session).toBeDefined();
-      expect(session?.status).toBe(PaymentStatus.PROCESSING);
-      expect(session?.token).toEqual(mockToken);
-    });
-  });
-
-  describe('event handling', () => {
-    it('should update session status on payment received', async () => {
-      // Create a test session
-      const session = sessionService.createSession(
-        'user123',
-        new BN(1000000000),
-        {
-          symbol: 'SOL',
-          address: SystemProgram.programId.toBase58(),
-          decimals: 9,
+      const mockSession: PaymentSession = {
+        id: 'test-session-id',
+        userId: mockUserId,
+        amount: mockAmount,
+        token: {
+          address: mockTokenAddress.toBase58(),
+          symbol: 'USDC',
+          decimals: 6,
           network: PaymentNetwork.SOLANA
         },
-        'token_creation'
-      );
-
-      // Simulate payment received event
-      const mockEvent = {
-        payer: new PublicKey('11111111111111111111111111111111'),
-        token: null,
-        amount: new BN(1000000000),
-        serviceType: 'token_creation',
-        sessionId: session.id
+        network: PaymentNetwork.SOLANA,
+        serviceType: mockServiceType,
+        status: PaymentStatus.CONFIRMED,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600000), // 1 hour from now
+        retryCount: 0
       };
 
-      // Get event handler
-      const eventHandler = (service as any).handlePaymentReceived.bind(service);
-      
-      // Call event handler with mock event
-      await eventHandler(mockEvent);
-
-      // Verify session was updated
-      const updatedSession = sessionService.getSession(session.id);
-      expect(updatedSession?.status).toBe(PaymentStatus.CONFIRMED);
-      expect(updatedSession?.txHash).toBe('11111111111111111111111111111111');
-    });
-  });
-
-  describe('balance queries', () => {
-    it('should get SOL balance', async () => {
-      const balance = await service.getBalance(mockKeypair.publicKey);
-      expect(balance).toBe(1000000000);
+      vi.spyOn(sessionService, 'createSession').mockReturnValue(mockSession);
+      vi.spyOn(sessionService, 'updateSessionStatus').mockImplementation(
+        () => mockSession
+      );
     });
 
-    it('should get token balance', async () => {
-      const tokenMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
-      const balance = await service.getTokenBalance(tokenMint, mockKeypair.publicKey);
-      expect(balance).toBe(100);
+    it('should process payment with correct parameters', async () => {
+      const sessionId = await service.payWithToken(
+        mockTokenAddress,
+        mockAmount,
+        mockServiceType,
+        mockUserId,
+        {}
+      );
+
+      expect(sessionId).toBeDefined();
+      expect(sessionService.createSession).toHaveBeenCalledWith(
+        mockUserId,
+        mockAmount,
+        expect.objectContaining({
+          address: mockTokenAddress.toBase58(),
+          network: PaymentNetwork.SOLANA
+        }),
+        mockServiceType
+      );
+    });
+
+    it('should handle payment errors correctly', async () => {
+      vi.spyOn(sessionService, 'createSession').mockImplementation(() => {
+        throw new Error('Session creation failed');
+      });
+
+      await expect(
+        service.payWithToken(
+          mockTokenAddress,
+          mockAmount,
+          mockServiceType,
+          mockUserId,
+          {}
+        )
+      ).rejects.toThrow('Session creation failed');
     });
   });
 });

@@ -220,6 +220,8 @@ describe('BinancePaymentService', () => {
         {}
       );
 
+      expect(mockPublicClient.getBlock).toHaveBeenCalled();
+      expect(mockPublicClient.estimateMaxPriorityFeePerGas).toHaveBeenCalled();
       expect(mockPublicClient.estimateContractGas).toHaveBeenCalled();
     });
 

@@ -1,9 +1,9 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
-import { createPublicClient, createWalletClient, http, Address } from 'viem';
+import { createPublicClient, createWalletClient, http, Address, Hash } from 'viem';
 import { mainnet } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import { EthereumPaymentService } from '../EthereumPaymentService';
-import { PaymentStatus } from '../../payment/types/PaymentSession';
+import { PaymentStatus, PaymentSession, PaymentNetwork } from '../../payment/types/PaymentSession';
 import { PaymentSessionService } from '../../payment/PaymentSessionService';
 
 describe('EthereumPaymentService', () => {
@@ -75,15 +75,40 @@ describe('EthereumPaymentService', () => {
       );
 
       vi.spyOn(mockPublicClient, 'simulateContract').mockResolvedValue({
-        request: {} as any,
-        result: '0x' // Simulated result
-      });
+        request: {
+          address: mockConfig.contractAddress,
+          functionName: 'payWithToken',
+          args: [mockTokenAddress, mockAmount]
+        },
+        result: undefined
+      } as any);
 
       vi.spyOn(mockWalletClient, 'writeContract').mockResolvedValue(
-        '0xtxhash'
+        '0xtxhash' as Hash
       );
 
-      vi.spyOn(sessionService, 'updateSessionStatus').mockImplementation(() => {});
+      const mockSession: PaymentSession = {
+        id: mockSessionId,
+        userId: 'test-user',
+        amount: mockAmount,
+        token: {
+          address: mockTokenAddress,
+          symbol: 'TEST',
+          decimals: 18,
+          network: PaymentNetwork.ETHEREUM
+        },
+        network: PaymentNetwork.ETHEREUM,
+        serviceType: mockServiceType,
+        status: PaymentStatus.CONFIRMED,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600000), // 1 hour from now
+        retryCount: 0
+      };
+
+      vi.spyOn(sessionService, 'updateSessionStatus').mockImplementation(
+        () => mockSession
+      );
     });
 
     it('should process payment with correct gas estimates', async () => {
