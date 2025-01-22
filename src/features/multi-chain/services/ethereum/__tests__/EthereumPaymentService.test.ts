@@ -1,170 +1,162 @@
-import { ethers } from 'ethers';
-import { EthereumPaymentService, EthereumPaymentConfig } from '../EthereumPaymentService';
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import { createPublicClient, createWalletClient, http, Address } from 'viem';
+import { mainnet } from 'viem/chains';
+import { privateKeyToAccount } from 'viem/accounts';
+import { EthereumPaymentService } from '../EthereumPaymentService';
+import { PaymentStatus } from '../../payment/types/PaymentSession';
 import { PaymentSessionService } from '../../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus } from '../../payment/types/PaymentSession';
-
-// Mock ethers
-jest.mock('ethers');
 
 describe('EthereumPaymentService', () => {
-  let service: EthereumPaymentService;
-  let mockProvider: jest.Mocked<ethers.providers.Provider>;
-  let mockSigner: jest.Mocked<ethers.Signer>;
-  let mockContract: any;
-  let sessionService: PaymentSessionService;
+  const mockPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+  const mockAccount = privateKeyToAccount(mockPrivateKey);
+  
+  const mockPublicClient = createPublicClient({
+    chain: mainnet,
+    transport: http()
+  });
 
-  const mockConfig: EthereumPaymentConfig = {
-    contractAddress: '0x1234567890123456789012345678901234567890',
-    receiverAddress: '0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A',
-    provider: {} as ethers.providers.Provider,
-    signer: {} as ethers.Signer
+  const mockWalletClient = createWalletClient({
+    chain: mainnet,
+    transport: http(),
+    account: mockAccount
+  });
+
+  const mockConfig = {
+    contractAddress: '0x1234567890123456789012345678901234567890' as Address,
+    receiverAddress: '0x0987654321098765432109876543210987654321' as Address,
+    publicClient: mockPublicClient,
+    walletClient: mockWalletClient
   };
 
+  let service: EthereumPaymentService;
+  let sessionService: PaymentSessionService;
+
   beforeEach(() => {
-    // Reset mocks
-    jest.clearAllMocks();
-
-    // Setup mocks
-    mockProvider = {
-      getNetwork: jest.fn().mockResolvedValue({ chainId: 1 }),
-    } as any;
-
-    mockSigner = {
-      getAddress: jest.fn().mockResolvedValue('0x1234'),
-      provider: mockProvider,
-    } as any;
-
-    mockContract = {
-      payWithEth: jest.fn().mockResolvedValue({
-        hash: '0xtxhash',
-        wait: jest.fn().mockResolvedValue(true)
-      }),
-      payWithToken: jest.fn().mockResolvedValue({
-        hash: '0xtxhash',
-        wait: jest.fn().mockResolvedValue(true)
-      }),
-      isTokenSupported: jest.fn().mockResolvedValue(true),
-      onPaymentReceived: jest.fn(),
-    };
-
-    // Initialize services
+    vi.clearAllMocks();
     sessionService = PaymentSessionService.getInstance();
-    service = EthereumPaymentService.getInstance({
-      ...mockConfig,
-      provider: mockProvider,
-      signer: mockSigner
-    });
+    service = EthereumPaymentService.getInstance(mockConfig);
   });
 
   afterEach(() => {
-    service.cleanup();
-    sessionService.cleanup();
+    EthereumPaymentService.resetInstance();
   });
 
-  describe('payWithEth', () => {
-    it('should process ETH payment successfully', async () => {
-      const amount = ethers.utils.parseEther('1');
-      const serviceType = 'token_creation';
-      const userId = 'user123';
-
-      const sessionId = await service.payWithEth(amount, serviceType, userId);
-      
-      const session = sessionService.getSession(sessionId);
-      expect(session).toBeDefined();
-      expect(session?.status).toBe(PaymentStatus.PROCESSING);
-      expect(session?.token.network).toBe(PaymentNetwork.ETHEREUM);
-      expect(session?.token.symbol).toBe('ETH');
+  describe('getInstance', () => {
+    it('should create a new instance with config', () => {
+      const instance = EthereumPaymentService.getInstance(mockConfig);
+      expect(instance).toBeInstanceOf(EthereumPaymentService);
     });
 
-    it('should handle payment failure', async () => {
-      mockContract.payWithEth.mockRejectedValue(new Error('Transaction failed'));
+    it('should throw error when getting instance without initialization', () => {
+      EthereumPaymentService.resetInstance();
+      expect(() => EthereumPaymentService.getInstance()).toThrow('EthereumPaymentService not initialized');
+    });
 
-      await expect(
-        service.payWithEth(
-          ethers.utils.parseEther('1'),
-          'token_creation',
-          'user123'
-        )
-      ).rejects.toThrow('Failed to process ETH payment');
+    it('should return the same instance on multiple calls', () => {
+      const instance1 = EthereumPaymentService.getInstance(mockConfig);
+      const instance2 = EthereumPaymentService.getInstance();
+      expect(instance1).toBe(instance2);
     });
   });
 
   describe('payWithToken', () => {
-    const mockToken = {
-      symbol: 'USDT',
-      address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-      decimals: 6,
-      network: PaymentNetwork.ETHEREUM
-    };
+    const mockTokenAddress = '0xabcdef1234567890abcdef1234567890abcdef12' as Address;
+    const mockAmount = BigInt(1000000);
+    const mockServiceType = 'TEST_SERVICE';
+    const mockSessionId = 'test-session-id';
 
-    it('should process token payment successfully', async () => {
-      const amount = ethers.utils.parseUnits('100', 6); // 100 USDT
-      const serviceType = 'token_creation';
-      const userId = 'user123';
+    beforeEach(() => {
+      vi.spyOn(mockPublicClient, 'getBlock').mockResolvedValue({
+        baseFeePerGas: BigInt(1000000000) // 1 Gwei
+      } as any);
 
-      const sessionId = await service.payWithToken(
-        mockToken.address,
-        amount,
-        serviceType,
-        userId,
-        mockToken
+      vi.spyOn(mockPublicClient, 'estimateMaxPriorityFeePerGas').mockResolvedValue(
+        BigInt(1500000000) // 1.5 Gwei
       );
 
-      const session = sessionService.getSession(sessionId);
-      expect(session).toBeDefined();
-      expect(session?.status).toBe(PaymentStatus.PROCESSING);
-      expect(session?.token).toEqual(mockToken);
+      vi.spyOn(mockPublicClient, 'simulateContract').mockResolvedValue({
+        request: {} as any,
+        result: '0x' // Simulated result
+      });
+
+      vi.spyOn(mockWalletClient, 'writeContract').mockResolvedValue(
+        '0xtxhash'
+      );
+
+      vi.spyOn(sessionService, 'updateSessionStatus').mockImplementation(() => {});
     });
 
-    it('should reject unsupported tokens', async () => {
-      mockContract.isTokenSupported.mockResolvedValue(false);
+    it('should process payment with correct gas estimates', async () => {
+      await service.payWithToken(
+        mockTokenAddress,
+        mockAmount,
+        mockServiceType,
+        mockSessionId
+      );
+
+      expect(mockPublicClient.getBlock).toHaveBeenCalled();
+      expect(mockPublicClient.estimateMaxPriorityFeePerGas).toHaveBeenCalled();
+      expect(mockPublicClient.simulateContract).toHaveBeenCalled();
+      expect(mockWalletClient.writeContract).toHaveBeenCalled();
+    });
+
+    it('should use provided gas options when available', async () => {
+      const customOptions = {
+        maxFeePerGas: BigInt(2000000000),
+        maxPriorityFeePerGas: BigInt(1000000000)
+      };
+
+      await service.payWithToken(
+        mockTokenAddress,
+        mockAmount,
+        mockServiceType,
+        mockSessionId,
+        customOptions
+      );
+
+      expect(mockPublicClient.getBlock).not.toHaveBeenCalled();
+      expect(mockPublicClient.estimateMaxPriorityFeePerGas).not.toHaveBeenCalled();
+    });
+
+    it('should handle payment errors correctly', async () => {
+      const error = new Error('Transaction failed');
+      vi.spyOn(mockWalletClient, 'writeContract').mockRejectedValue(error);
 
       await expect(
         service.payWithToken(
-          mockToken.address,
-          ethers.utils.parseUnits('100', 6),
-          'token_creation',
-          'user123',
-          mockToken
+          mockTokenAddress,
+          mockAmount,
+          mockServiceType,
+          mockSessionId
         )
-      ).rejects.toThrow('Token not supported');
+      ).rejects.toThrow('Payment failed: Transaction failed');
     });
   });
 
-  describe('event handling', () => {
+  describe('event listeners', () => {
     it('should update session status on payment received', async () => {
-      // Create a test session
-      const session = sessionService.createSession(
-        'user123',
-        ethers.utils.parseEther('1'),
-        {
-          symbol: 'ETH',
-          address: ethers.constants.AddressZero,
-          decimals: 18,
-          network: PaymentNetwork.ETHEREUM
-        },
-        'token_creation'
+      const mockSessionId = 'test-session-id';
+      const mockTxHash = '0xtxhash';
+
+      const mockLogs = [{
+        args: { sessionId: mockSessionId },
+        transactionHash: mockTxHash
+      }];
+
+      const watchSpy = vi.spyOn(mockPublicClient, 'watchContractEvent')
+        .mockImplementation(({ onLogs }: any) => {
+          onLogs(mockLogs);
+          return () => {};
+        });
+
+      service = EthereumPaymentService.getInstance(mockConfig);
+
+      expect(watchSpy).toHaveBeenCalled();
+      expect(sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        mockSessionId,
+        PaymentStatus.CONFIRMED,
+        mockTxHash
       );
-
-      // Simulate payment received event
-      const mockEvent = {
-        payer: '0x1234',
-        token: ethers.constants.AddressZero,
-        amount: ethers.utils.parseEther('1'),
-        serviceType: 'token_creation',
-        sessionId: session.id
-      };
-
-      // Get the callback function
-      const callback = mockContract.onPaymentReceived.mock.calls[0][0];
-      
-      // Call the callback with mock event
-      await callback(mockEvent);
-
-      // Verify session was updated
-      const updatedSession = sessionService.getSession(session.id);
-      expect(updatedSession?.status).toBe(PaymentStatus.CONFIRMED);
-      expect(updatedSession?.txHash).toBe('0x1234');
     });
   });
 });
