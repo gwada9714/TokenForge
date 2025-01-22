@@ -86,6 +86,15 @@ export class BinanceService extends EVMBaseService {
         throw new Error('No wallet account found');
       }
 
+      // Simuler le contrat avant le déploiement
+      await this.client.simulateContract({
+        account: this.walletClient.account,
+        abi: BEP20_ABI,
+        functionName: 'constructor',
+        args: [params.name, params.symbol, params.decimals, BigInt(params.totalSupply), params.owner],
+        address: PANCAKESWAP_ROUTER_ADDRESS,
+      });
+
       const deployRequest = {
         abi: BEP20_ABI,
         bytecode: '0x608060405234801561001057600080fd5b50610...' as `0x${string}`,
