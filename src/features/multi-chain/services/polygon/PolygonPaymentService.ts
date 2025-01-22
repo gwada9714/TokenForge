@@ -1,124 +1,185 @@
-import { ethers, BigNumber } from 'ethers';
+import { 
+  Address,
+  PublicClient,
+  WalletClient
+} from 'viem';
 import { PolygonPaymentContract } from './contracts/PolygonPayment';
 import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus } from '../payment/types/PaymentSession';
+import { PaymentNetwork, PaymentStatus, PaymentToken } from '../payment/types/PaymentSession';
 import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
 import { validatePaymentParams } from '../payment/utils/paymentValidation';
 
 export interface PolygonPaymentConfig {
-  contractAddress: string;
-  provider: ethers.providers.Provider;
-  signer: ethers.Signer;
-  maxGasPrice?: BigNumber;
-  receiverAddress: string;
+  contractAddress: Address;
+  publicClient: PublicClient;
+  walletClient: WalletClient;
+  maxFeePerGas?: bigint;
+  receiverAddress: Address;
 }
 
 export class PolygonPaymentService implements BasePaymentService {
   private static instance: PolygonPaymentService;
   private contract: PolygonPaymentContract;
   private sessionService: PaymentSessionService;
-  private config: PolygonPaymentConfig;
 
   private constructor(config: PolygonPaymentConfig) {
-    this.config = config;
-    this.contract = new PolygonPaymentContract(config.contractAddress, config.signer);
+    this.contract = new PolygonPaymentContract(
+      config.contractAddress,
+      config.publicClient,
+      config.walletClient
+    );
     this.sessionService = PaymentSessionService.getInstance();
     this.setupEventListeners();
   }
 
   public static getInstance(config?: PolygonPaymentConfig): PolygonPaymentService {
-    if (!PolygonPaymentService.instance) {
-      if (!config) {
-        throw new Error('Configuration required for initialization');
-      }
+    if (!PolygonPaymentService.instance && config) {
       PolygonPaymentService.instance = new PolygonPaymentService(config);
     }
     return PolygonPaymentService.instance;
   }
 
-  private setupEventListeners(): void {
-    this.contract.on('PaymentProcessed', async (payer: string, amount: BigNumber, sessionId: string) => {
-      try {
-        await this.sessionService.updateSessionStatus(
-          sessionId,
-          PaymentStatus.CONFIRMED,
-          payer
-        );
-      } catch (error) {
-        console.error('Error updating payment status:', error);
+  private async setupEventListeners(): Promise<void> {
+    await this.contract.watchPaymentReceived(
+      async ({ payer: _payer, token: _token, amount: _amount, sessionId }) => {
+        try {
+          await this.sessionService.updateSessionStatus(
+            sessionId,
+            PaymentStatus.CONFIRMED
+          );
+        } catch (error) {
+          console.error('Failed to update session status:', error);
+        }
       }
-    });
+    );
   }
 
   public async payWithToken(
-    tokenAddress: string,
+    tokenAddress: Address,
     amount: PaymentAmount,
     serviceType: string,
     userId: string,
     options: PaymentOptions
   ): Promise<string> {
-    validatePaymentParams(amount, options);
-
     try {
-      // Verify token is supported
-      const isSupported = await this.isTokenSupported(tokenAddress);
-      if (!isSupported) {
-        throw new Error('Token not supported');
-      }
+      // Validate parameters
+      validatePaymentParams(tokenAddress, amount, userId);
 
-      // Create payment session
-      const session = this.sessionService.createSession(
-        userId,
-        PaymentNetwork.POLYGON,
-        {
-          address: tokenAddress,
-          amount: amount instanceof BigNumber ? amount : BigNumber.from(amount.toString()),
-          serviceType
-        }
-      );
-
-      // Prepare transaction options
-      const txOptions: ethers.PayableOverrides = {
-        gasLimit: options.gasLimit,
-        gasPrice: options.gasPrice instanceof BigNumber ? 
-          options.gasPrice : 
-          options.gasPrice ? BigNumber.from(options.gasPrice.toString()) : undefined
+      // Create payment token object
+      const paymentToken: PaymentToken = {
+        address: tokenAddress,
+        network: PaymentNetwork.POLYGON,
+        symbol: '', // This should be fetched from token contract
+        decimals: 18 // This should be fetched from token contract
       };
 
-      // Check gas price limit
-      if (this.config.maxGasPrice && txOptions.gasPrice) {
-        if (txOptions.gasPrice.gt(this.config.maxGasPrice)) {
-          throw new Error('Gas price exceeds maximum allowed');
-        }
-      }
-
-      // Process payment
-      const tx = await this.contract.processPayment(
-        tokenAddress,
-        amount instanceof BigNumber ? amount : BigNumber.from(amount.toString()),
-        session.id,
-        txOptions
+      // Create payment session
+      const amountBigInt = BigInt(amount.toString());
+      const session = this.sessionService.createSession(
+        userId,
+        amountBigInt,
+        paymentToken,
+        serviceType
       );
 
-      await tx.wait();
+      if (!session) {
+        throw new Error('Failed to create payment session');
+      }
+
+      // Get current gas price and apply max fee if configured
+      const currentGasPrice = await this.contract.getGasPrice();
+      const maxFeePerGas = options.maxFeePerGas || options.gasPrice || currentGasPrice;
+
+      // Process payment and get transaction hash
+      await this.contract.payWithToken(
+        tokenAddress,
+        amountBigInt,
+        serviceType,
+        session.id,
+        {
+          gasLimit: options.gasLimit,
+          maxFeePerGas
+        }
+      );
+
+      // Update session status to processing
+      await this.sessionService.updateSessionStatus(
+        session.id,
+        PaymentStatus.PROCESSING
+      );
+
       return session.id;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error(`Payment failed: ${errorMessage}`);
-      throw error;
+      throw new Error(`Payment failed: ${errorMessage}`);
     }
   }
 
-  public async isTokenSupported(tokenAddress: string): Promise<boolean> {
+  public async payWithMatic(
+    amount: PaymentAmount,
+    serviceType: string,
+    userId: string,
+    options: PaymentOptions
+  ): Promise<string> {
+    try {
+      // Create payment token object for MATIC
+      const paymentToken: PaymentToken = {
+        address: '0x0000000000000000000000000000000000000000' as Address, // Zero address for native MATIC
+        network: PaymentNetwork.POLYGON,
+        symbol: 'MATIC',
+        decimals: 18
+      };
+
+      // Create payment session
+      const amountBigInt = BigInt(amount.toString());
+      const session = this.sessionService.createSession(
+        userId,
+        amountBigInt,
+        paymentToken,
+        serviceType
+      );
+
+      if (!session) {
+        throw new Error('Failed to create payment session');
+      }
+
+      // Get current gas price and apply max fee if configured
+      const currentGasPrice = await this.contract.getGasPrice();
+      const maxFeePerGas = options.maxFeePerGas || options.gasPrice || currentGasPrice;
+
+      // Process payment with native MATIC
+      await this.contract.payWithMatic(
+        serviceType,
+        session.id,
+        amountBigInt,
+        {
+          gasLimit: options.gasLimit,
+          maxFeePerGas
+        }
+      );
+
+      // Update session status to processing
+      await this.sessionService.updateSessionStatus(
+        session.id,
+        PaymentStatus.PROCESSING
+      );
+
+      return session.id;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      throw new Error(`Payment failed: ${errorMessage}`);
+    }
+  }
+
+  public async isTokenSupported(tokenAddress: Address): Promise<boolean> {
     try {
       return await this.contract.isTokenSupported(tokenAddress);
-    } catch (error) {
-      console.error(`Error checking token support: ${error}`);
+    } catch {
       return false;
     }
   }
 
   public cleanup(): void {
-    this.contract.removeAllListeners();
+    this.contract.cleanup();
   }
 }

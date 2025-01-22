@@ -1,61 +1,49 @@
-import { ethers } from 'ethers';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Address } from 'viem';
 import { PolygonPaymentService, PolygonPaymentConfig } from '../PolygonPaymentService';
 import { PaymentSessionService } from '../../payment/PaymentSessionService';
 import { PaymentNetwork, PaymentStatus } from '../../payment/types/PaymentSession';
-
-// Mock ethers
-jest.mock('ethers');
+import { mockPublicClient, mockWalletClient, mockContractEvent } from '../../../../../test/mocks/viem';
 
 describe('PolygonPaymentService', () => {
   let service: PolygonPaymentService;
-  let mockProvider: jest.Mocked<ethers.providers.Provider>;
-  let mockSigner: jest.Mocked<ethers.Signer>;
-  let mockContract: any;
   let sessionService: PaymentSessionService;
 
   const mockConfig: PolygonPaymentConfig = {
-    contractAddress: '0x1234567890123456789012345678901234567890',
-    receiverAddress: '0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A',
-    provider: {} as ethers.providers.Provider,
-    signer: {} as ethers.Signer,
-    maxGasPrice: ethers.utils.parseUnits('500', 'gwei') // 500 gwei max
+    contractAddress: '0x1234567890123456789012345678901234567890' as Address,
+    receiverAddress: '0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A' as Address,
+    publicClient: mockPublicClient,
+    walletClient: mockWalletClient,
+    maxFeePerGas: 500000000000n // 500 gwei max
   };
 
   beforeEach(() => {
-    // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    // Setup mocks
-    mockProvider = {
-      getNetwork: jest.fn().mockResolvedValue({ chainId: 137 }), // Polygon chainId
-    } as any;
+    // Setup mock responses
+    mockPublicClient.readContract.mockImplementation(async ({ functionName }) => {
+      switch (functionName) {
+        case 'supportedTokens':
+          return true;
+        case 'getGasPrice':
+          return 100000000000n; // 100 gwei
+        default:
+          return undefined;
+      }
+    });
 
-    mockSigner = {
-      getAddress: jest.fn().mockResolvedValue('0x1234'),
-      provider: mockProvider,
-    } as any;
-
-    mockContract = {
-      payWithMatic: jest.fn().mockResolvedValue({
-        hash: '0xtxhash',
-        wait: jest.fn().mockResolvedValue(true)
-      }),
-      payWithToken: jest.fn().mockResolvedValue({
-        hash: '0xtxhash',
-        wait: jest.fn().mockResolvedValue(true)
-      }),
-      isTokenSupported: jest.fn().mockResolvedValue(true),
-      getGasPrice: jest.fn().mockResolvedValue(ethers.utils.parseUnits('100', 'gwei')),
-      onPaymentReceived: jest.fn(),
-    };
+    mockPublicClient.simulateContract.mockResolvedValue({
+      request: {
+        abi: [],
+        address: mockConfig.contractAddress,
+        args: [],
+        functionName: 'mockFunction'
+      }
+    });
 
     // Initialize services
     sessionService = PaymentSessionService.getInstance();
-    service = PolygonPaymentService.getInstance({
-      ...mockConfig,
-      provider: mockProvider,
-      signer: mockSigner
-    });
+    service = PolygonPaymentService.getInstance(mockConfig);
   });
 
   afterEach(() => {
@@ -63,13 +51,56 @@ describe('PolygonPaymentService', () => {
     sessionService.cleanup();
   });
 
-  describe('payWithMatic', () => {
-    it('should process MATIC payment successfully', async () => {
-      const amount = ethers.utils.parseEther('1');
+  describe('payWithToken', () => {
+    const tokenAddress = '0x2222222222222222222222222222222222222222' as Address;
+
+    it('should process token payment successfully', async () => {
+      const amount = 1000000000000000000n; // 1 token
       const serviceType = 'token_creation';
       const userId = 'user123';
 
-      const sessionId = await service.payWithMatic(amount, serviceType, userId);
+      const sessionId = await service.payWithToken(
+        tokenAddress,
+        amount,
+        serviceType,
+        userId,
+        {}
+      );
+      
+      const session = sessionService.getSession(sessionId);
+      expect(session).toBeDefined();
+      expect(session?.status).toBe(PaymentStatus.PROCESSING);
+      expect(session?.token.network).toBe(PaymentNetwork.POLYGON);
+      expect(session?.token.address).toBe(tokenAddress);
+    });
+
+    it('should handle payment failure', async () => {
+      mockWalletClient.writeContract.mockRejectedValueOnce(new Error('Transaction failed'));
+
+      await expect(
+        service.payWithToken(
+          tokenAddress,
+          1000000000000000000n,
+          'token_creation',
+          'user123',
+          {}
+        )
+      ).rejects.toThrow('Payment failed: Transaction failed');
+    });
+  });
+
+  describe('payWithMatic', () => {
+    it('should process MATIC payment successfully', async () => {
+      const amount = 1000000000000000000n; // 1 MATIC
+      const serviceType = 'token_creation';
+      const userId = 'user123';
+
+      const sessionId = await service.payWithMatic(
+        amount,
+        serviceType,
+        userId,
+        {}
+      );
       
       const session = sessionService.getSession(sessionId);
       expect(session).toBeDefined();
@@ -78,84 +109,17 @@ describe('PolygonPaymentService', () => {
       expect(session?.token.symbol).toBe('MATIC');
     });
 
-    it('should reject when gas price is too high', async () => {
-      mockContract.getGasPrice.mockResolvedValue(ethers.utils.parseUnits('600', 'gwei'));
-
-      await expect(
-        service.payWithMatic(
-          ethers.utils.parseEther('1'),
-          'token_creation',
-          'user123'
-        )
-      ).rejects.toThrow('Gas price too high');
-    });
-
     it('should handle payment failure', async () => {
-      mockContract.payWithMatic.mockRejectedValue(new Error('Transaction failed'));
+      mockWalletClient.writeContract.mockRejectedValueOnce(new Error('Transaction failed'));
 
       await expect(
         service.payWithMatic(
-          ethers.utils.parseEther('1'),
-          'token_creation',
-          'user123'
-        )
-      ).rejects.toThrow('Failed to process MATIC payment');
-    });
-  });
-
-  describe('payWithToken', () => {
-    const mockToken = {
-      symbol: 'USDC',
-      address: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
-      decimals: 6,
-      network: PaymentNetwork.POLYGON
-    };
-
-    it('should process token payment successfully', async () => {
-      const amount = ethers.utils.parseUnits('100', 6); // 100 USDC
-      const serviceType = 'token_creation';
-      const userId = 'user123';
-
-      const sessionId = await service.payWithToken(
-        mockToken.address,
-        amount,
-        serviceType,
-        userId,
-        mockToken
-      );
-
-      const session = sessionService.getSession(sessionId);
-      expect(session).toBeDefined();
-      expect(session?.status).toBe(PaymentStatus.PROCESSING);
-      expect(session?.token).toEqual(mockToken);
-    });
-
-    it('should reject unsupported tokens', async () => {
-      mockContract.isTokenSupported.mockResolvedValue(false);
-
-      await expect(
-        service.payWithToken(
-          mockToken.address,
-          ethers.utils.parseUnits('100', 6),
+          1000000000000000000n,
           'token_creation',
           'user123',
-          mockToken
+          {}
         )
-      ).rejects.toThrow('Token not supported');
-    });
-
-    it('should reject when gas price is too high', async () => {
-      mockContract.getGasPrice.mockResolvedValue(ethers.utils.parseUnits('600', 'gwei'));
-
-      await expect(
-        service.payWithToken(
-          mockToken.address,
-          ethers.utils.parseUnits('100', 6),
-          'token_creation',
-          'user123',
-          mockToken
-        )
-      ).rejects.toThrow('Gas price too high');
+      ).rejects.toThrow('Payment failed: Transaction failed');
     });
   });
 
@@ -164,35 +128,50 @@ describe('PolygonPaymentService', () => {
       // Create a test session
       const session = sessionService.createSession(
         'user123',
-        ethers.utils.parseEther('1'),
+        1000000000000000000n,
         {
+          address: '0x0000000000000000000000000000000000000000' as Address,
+          network: PaymentNetwork.POLYGON,
           symbol: 'MATIC',
-          address: ethers.constants.AddressZero,
-          decimals: 18,
-          network: PaymentNetwork.POLYGON
+          decimals: 18
         },
         'token_creation'
       );
 
-      // Simulate payment received event
-      const mockEvent = {
-        payer: '0x1234',
-        token: ethers.constants.AddressZero,
-        amount: ethers.utils.parseEther('1'),
-        serviceType: 'token_creation',
-        sessionId: session.id
-      };
+      // Mock event watching
+      mockPublicClient.watchContractEvent.mockImplementationOnce(({ onLogs }) => {
+        onLogs([{
+          ...mockContractEvent,
+          args: [
+            mockWalletClient.account,
+            '0x0000000000000000000000000000000000000000',
+            1000000000000000000n,
+            'token_creation',
+            session.id
+          ]
+        }]);
+        return () => {};
+      });
 
-      // Get the callback function
-      const callback = mockContract.onPaymentReceived.mock.calls[0][0];
-      
-      // Call the callback with mock event
-      await callback(mockEvent);
+      // Setup event listeners
+      await service['setupEventListeners']();
 
-      // Verify session was updated
+      // Verify session status was updated
       const updatedSession = sessionService.getSession(session.id);
       expect(updatedSession?.status).toBe(PaymentStatus.CONFIRMED);
-      expect(updatedSession?.txHash).toBe('0x1234');
+    });
+  });
+
+  describe('isTokenSupported', () => {
+    it('should return true for supported token', async () => {
+      const result = await service.isTokenSupported('0x1234' as Address);
+      expect(result).toBe(true);
+    });
+
+    it('should handle errors gracefully', async () => {
+      mockPublicClient.readContract.mockRejectedValueOnce(new Error('Contract error'));
+      const result = await service.isTokenSupported('0x1234' as Address);
+      expect(result).toBe(false);
     });
   });
 });

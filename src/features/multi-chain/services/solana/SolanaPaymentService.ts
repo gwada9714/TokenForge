@@ -8,21 +8,19 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  Transaction
+  Transaction,
+  Commitment
 } from '@solana/web3.js';
-import {
-  TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress
-} from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork } from '../payment/types/PaymentSession';
+import { PaymentNetwork, PaymentToken } from '../payment/types/PaymentSession';
 import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
 import { validatePaymentParams } from '../payment/utils/paymentValidation';
 
 // Type personnalisé pour les options de transaction Solana
 type SolanaTransactionOptions = {
   skipPreflight?: boolean;
-  commitment?: 'processed' | 'confirmed' | 'finalized';
+  commitment?: Commitment;
 };
 
 export interface SolanaPaymentConfig {
@@ -43,7 +41,6 @@ export class SolanaPaymentService implements BasePaymentService {
   private program: Program;
   private sessionService: PaymentSessionService;
   private config: SolanaPaymentConfig;
-  private paymentAccount: PublicKey;
 
   private constructor(config: SolanaPaymentConfig) {
     this.config = config;
@@ -71,115 +68,110 @@ export class SolanaPaymentService implements BasePaymentService {
       config.programId,
       provider
     );
-
-    // Initialize payment account
-    this.paymentAccount = PublicKey.findProgramAddressSync(
-      [Buffer.from('payment'), config.wallet.publicKey.toBuffer()],
-      config.programId
-    )[0];
   }
 
   public static getInstance(config?: SolanaPaymentConfig): SolanaPaymentService {
-    if (!SolanaPaymentService.instance) {
-      if (!config) {
-        throw new Error('Configuration required for initialization');
-      }
+    if (!SolanaPaymentService.instance && config) {
       SolanaPaymentService.instance = new SolanaPaymentService(config);
     }
     return SolanaPaymentService.instance;
   }
 
   public async payWithToken(
-    tokenAddress: string | PublicKey,
+    tokenAddress: PublicKey,
     amount: PaymentAmount,
     serviceType: string,
     userId: string,
     options: PaymentOptions
   ): Promise<string> {
-    validatePaymentParams(amount, options);
-
     try {
-      const tokenMint = tokenAddress instanceof PublicKey ? 
-        tokenAddress : 
-        new PublicKey(tokenAddress);
+      // Validate parameters
+      validatePaymentParams(tokenAddress, amount, userId);
 
-      // Verify token is supported
-      const isSupported = await this.isTokenSupported(tokenMint);
-      if (!isSupported) {
-        throw new Error('Token not supported');
-      }
+      // Create payment token object
+      const paymentToken: PaymentToken = {
+        address: tokenAddress,
+        network: PaymentNetwork.SOLANA,
+        symbol: 'SOL', // This should be fetched from token mint
+        decimals: 9 // This should be fetched from token mint
+      };
 
-      // Create payment session
+      // Create payment session with correct parameters
+      const amountBigInt = BigInt(amount.toString());
       const session = this.sessionService.createSession(
         userId,
-        PaymentNetwork.SOLANA,
-        {
-          address: tokenMint.toString(),
-          amount: amount.toString(),
-        },
+        amountBigInt,
+        paymentToken,
         serviceType
       );
 
-      // Get associated token accounts
-      const payerATA = await getAssociatedTokenAddress(
-        tokenMint,
-        this.config.wallet.publicKey
-      );
+      if (!session) {
+        throw new Error('Failed to create payment session');
+      }
 
-      const receiverATA = await getAssociatedTokenAddress(
-        tokenMint,
-        this.config.receiverAddress
-      );
+      // Get provider
+      const provider = this.program.provider as AnchorProvider;
+      if (!provider) {
+        throw new Error('Provider not initialized');
+      }
 
-      // Create payment instruction
+      // Create transaction
+      const transaction = new Transaction();
+
+      // Add payment instruction
+      const instruction: PaymentInstruction = {
+        tokenMint: new PublicKey(tokenAddress),
+        amount: new BN(amount.toString()),
+        sessionId: session.id
+      };
+
       const ix = await this.program.methods
-        .processPayment(
-          new BN(amount.toString()),
-          session.id
-        )
+        .processPayment(instruction)
         .accounts({
           payer: this.config.wallet.publicKey,
           receiver: this.config.receiverAddress,
-          payerTokenAccount: payerATA,
-          receiverTokenAccount: receiverATA,
-          tokenMint,
-          paymentAccount: this.paymentAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY
+          tokenProgram: TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
         })
         .instruction();
 
-      // Build transaction
-      const transaction = new Transaction().add(ix);
+      transaction.add(ix);
 
       // Send transaction with proper options typing
       const txOptions: SolanaTransactionOptions = {
-        skipPreflight: options.skipPreflight,
-        commitment: options.commitment || 'confirmed'
+        skipPreflight: options?.skipPreflight,
+        commitment: options?.commitment || 'confirmed'
       };
-      
-      const signature = await this.program.provider.sendAndConfirm(transaction, [], txOptions);
+
+      try {
+        // Use provider's sendAndConfirm method
+        const signature = await provider.sendAndConfirm(
+          transaction,
+          [],
+          txOptions
+        );
+        
+        // Attendre la confirmation de la transaction
+        const commitment = txOptions.commitment || 'confirmed' as Commitment;
+        await this.config.connection.confirmTransaction(signature, commitment);
+      } catch (txError) {
+        throw new Error(`Transaction failed: ${txError instanceof Error ? txError.message : 'Unknown error'}`);
+      }
 
       return session.id;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error(`Payment failed: ${errorMessage}`);
-      throw error;
+      throw new Error(`Payment failed: ${errorMessage}`);
     }
   }
 
-  public async isTokenSupported(tokenAddress: string | PublicKey): Promise<boolean> {
+  public async isTokenSupported(tokenAddress: PublicKey): Promise<boolean> {
     try {
-      const tokenMint = tokenAddress instanceof PublicKey ? 
-        tokenAddress : 
-        new PublicKey(tokenAddress);
-
-      // Vérifier si le token existe et est un SPL Token valide
-      const tokenInfo = await this.config.connection.getParsedAccountInfo(tokenMint);
-      return tokenInfo.value !== null && tokenInfo.value.data !== null;
-    } catch (error) {
-      console.error(`Error checking token support: ${error}`);
+      const mint = new PublicKey(tokenAddress);
+      const info = await this.config.connection.getParsedAccountInfo(mint);
+      return info !== null;
+    } catch {
       return false;
     }
   }

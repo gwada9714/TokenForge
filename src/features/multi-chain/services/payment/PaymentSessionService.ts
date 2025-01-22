@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import { BigNumber } from 'ethers';
 import { PaymentSession, PaymentStatus, PaymentToken } from './types/PaymentSession';
 import { PaymentSyncService } from './PaymentSyncService';
 
@@ -26,27 +25,28 @@ export class PaymentSessionService {
 
   public createSession(
     userId: string,
-    amount: BigNumber,
+    amount: bigint,
     token: PaymentToken,
     serviceType: PaymentSession['serviceType']
   ): PaymentSession {
     const session: PaymentSession = {
       id: uuidv4(),
       userId,
-      amount,
-      token,
-      network: token.network,
       status: PaymentStatus.PENDING,
+      network: token.network,
+      token,
+      amount,
+      serviceType,
       createdAt: new Date(),
       updatedAt: new Date(),
       expiresAt: new Date(Date.now() + this.TIMEOUT_MS),
-      retryCount: 0,
-      serviceType
+      retryCount: 0
     };
 
     this.sessions.set(session.id, session);
-    this.startPaymentTimeout(session.id);
-    this.syncService.broadcastSessionUpdate(session.id, session);
+    this.setupTimeout(session.id);
+    this.syncService.syncSession(session);
+
     return session;
   }
 
@@ -83,7 +83,7 @@ export class PaymentSessionService {
     };
 
     this.sessions.set(sessionId, updatedSession);
-    this.syncService.broadcastSessionUpdate(sessionId, updatedSession);
+    this.syncService.syncSession(updatedSession);
     return updatedSession;
   }
 
@@ -112,12 +112,12 @@ export class PaymentSessionService {
     };
 
     this.sessions.set(sessionId, updatedSession);
-    this.syncService.broadcastSessionUpdate(sessionId, updatedSession);
-    this.startPaymentTimeout(sessionId);
+    this.syncService.syncSession(updatedSession);
+    this.setupTimeout(sessionId);
     return true;
   }
 
-  private startPaymentTimeout(sessionId: string): void {
+  private setupTimeout(sessionId: string): void {
     this.clearTimeout(sessionId);
 
     const timeout = setTimeout(() => {
@@ -149,7 +149,7 @@ export class PaymentSessionService {
       if (now - session.createdAt.getTime() > maxAgeMs) {
         this.sessions.delete(sessionId);
         this.clearTimeout(sessionId);
-        this.syncService.broadcastSessionCleanup(sessionId);
+        this.syncService.cleanupSession(sessionId);
       }
     }
   }

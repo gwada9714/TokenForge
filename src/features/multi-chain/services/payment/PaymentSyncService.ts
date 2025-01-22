@@ -97,36 +97,33 @@ export class PaymentSyncService {
     return session.expiresAt < new Date();
   }
 
-  public broadcastSessionUpdate(sessionId: string, data: Partial<PaymentSession>): void {
+  public syncSession(session: PaymentSession): void {
     const message: PaymentSyncMessage = {
       type: 'SESSION_UPDATE',
-      sessionId,
-      data,
+      sessionId: session.id,
+      data: session,
       timestamp: Date.now()
     };
-
     this.broadcastChannel.postMessage(message);
   }
 
-  public broadcastSessionCleanup(sessionId: string): void {
+  public cleanupSession(sessionId: string): void {
     const message: PaymentSyncMessage = {
       type: 'SESSION_CLEANUP',
       sessionId,
       timestamp: Date.now()
     };
-
     this.broadcastChannel.postMessage(message);
   }
 
   private async syncSessions(): Promise<void> {
     const sessions = Array.from(this.sessionService.getSessions().values());
     const pendingSessions = sessions.filter(
-      session => session.status === PaymentStatus.PENDING || 
-                 session.status === PaymentStatus.PROCESSING
+      (session: PaymentSession) => session.status === PaymentStatus.PENDING
     );
 
     for (const session of pendingSessions) {
-      this.broadcastSessionUpdate(session.id, session);
+      this.syncSession(session);
     }
   }
 

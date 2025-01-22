@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { BigNumber } from 'ethers';
+import { Address } from 'viem';
 
 export enum PaymentNetwork {
   ETHEREUM = 'ETHEREUM',
@@ -18,7 +18,7 @@ export enum PaymentStatus {
 }
 
 export interface PaymentToken {
-  address: string | PublicKey;
+  address: Address | PublicKey;
   network: PaymentNetwork;
   symbol: string;
   decimals: number;
@@ -30,7 +30,7 @@ export interface PaymentSession {
   status: PaymentStatus;
   network: PaymentNetwork;
   token: PaymentToken;
-  amount: BigNumber;
+  amount: bigint;
   serviceType: string;
   createdAt: Date;
   updatedAt: Date;

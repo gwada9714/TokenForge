@@ -1,119 +1,242 @@
-import { ethers } from 'ethers';
+import { 
+  Address, 
+  PublicClient, 
+  WalletClient,
+  Hash,
+  decodeEventLog,
+  Abi
+} from 'viem';
 
-export const POLYGON_PAYMENT_ABI = [
-  // Events
-  "event PaymentReceived(address indexed payer, address indexed token, uint256 amount, string serviceType, string sessionId)",
-  "event PaymentRefunded(address indexed recipient, address indexed token, uint256 amount, string sessionId)",
-  
-  // View functions
-  "function receiverAddress() view returns (address)",
-  "function supportedTokens(address) view returns (bool)",
-  "function getGasPrice() view returns (uint256)",
-  
-  // State changing functions
-  "function payWithToken(address tokenAddress, uint256 amount, string calldata serviceType, string calldata sessionId)",
-  "function payWithMatic(string calldata serviceType, string calldata sessionId) payable",
-  "function setTokenSupport(address tokenAddress, bool isSupported)",
-  "function refundToken(address tokenAddress, address to, uint256 amount, string calldata sessionId)",
-  "function refundMatic(address to, uint256 amount, string calldata sessionId)",
-  "function pause()",
-  "function unpause()"
-];
+const CONTRACT_ABI = [
+  {
+    type: 'event',
+    name: 'PaymentReceived',
+    inputs: [
+      { type: 'address', name: 'payer', indexed: true },
+      { type: 'address', name: 'token', indexed: true },
+      { type: 'uint256', name: 'amount', indexed: false },
+      { type: 'string', name: 'serviceType', indexed: false },
+      { type: 'string', name: 'sessionId', indexed: false }
+    ]
+  },
+  {
+    type: 'event',
+    name: 'PaymentRefunded',
+    inputs: [
+      { type: 'address', name: 'recipient', indexed: true },
+      { type: 'address', name: 'token', indexed: true },
+      { type: 'uint256', name: 'amount', indexed: false },
+      { type: 'string', name: 'sessionId', indexed: false }
+    ]
+  },
+  {
+    type: 'function',
+    name: 'receiverAddress',
+    inputs: [],
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'supportedTokens',
+    inputs: [{ type: 'address', name: 'token' }],
+    outputs: [{ type: 'bool' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'getGasPrice',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'payWithToken',
+    inputs: [
+      { type: 'address', name: 'tokenAddress' },
+      { type: 'uint256', name: 'amount' },
+      { type: 'string', name: 'serviceType' },
+      { type: 'string', name: 'sessionId' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'payWithMatic',
+    inputs: [
+      { type: 'string', name: 'serviceType' },
+      { type: 'string', name: 'sessionId' }
+    ],
+    outputs: [],
+    stateMutability: 'payable'
+  }
+] as const;
 
 export interface PaymentReceivedEvent {
-  payer: string;
-  token: string;
-  amount: ethers.BigNumber;
+  payer: Address;
+  token: Address;
+  amount: bigint;
   serviceType: string;
   sessionId: string;
 }
 
 export interface PaymentRefundedEvent {
-  recipient: string;
-  token: string;
-  amount: ethers.BigNumber;
+  recipient: Address;
+  token: Address;
+  amount: bigint;
   sessionId: string;
 }
 
 export class PolygonPaymentContract {
-  private contract: ethers.Contract;
+  private address: Address;
+  private publicClient: PublicClient;
+  private walletClient: WalletClient;
+  private abi: Abi;
 
   constructor(
-    address: string,
-    signerOrProvider: ethers.Signer | ethers.providers.Provider
+    address: Address,
+    publicClient: PublicClient,
+    walletClient: WalletClient
   ) {
-    this.contract = new ethers.Contract(
-      address,
-      POLYGON_PAYMENT_ABI,
-      signerOrProvider
-    );
+    this.address = address;
+    this.publicClient = publicClient;
+    this.walletClient = walletClient;
+    this.abi = CONTRACT_ABI;
   }
 
   public async payWithToken(
-    tokenAddress: string,
-    amount: ethers.BigNumber,
+    tokenAddress: Address,
+    amount: bigint,
     serviceType: string,
-    sessionId: string
-  ): Promise<ethers.ContractTransaction> {
-    return this.contract.payWithToken(tokenAddress, amount, serviceType, sessionId);
+    sessionId: string,
+    options: { gasLimit?: bigint; maxFeePerGas?: bigint } = {}
+  ): Promise<Hash> {
+    const account = await this.walletClient.account;
+    if (!account) throw new Error('No account connected');
+
+    const { request } = await this.publicClient.simulateContract({
+      address: this.address,
+      abi: this.abi,
+      functionName: 'payWithToken',
+      args: [tokenAddress, amount, serviceType, sessionId],
+      account,
+      ...options
+    });
+
+    return this.walletClient.writeContract(request);
   }
 
   public async payWithMatic(
-    amount: ethers.BigNumber,
     serviceType: string,
-    sessionId: string
-  ): Promise<ethers.ContractTransaction> {
-    return this.contract.payWithMatic(serviceType, sessionId, { value: amount });
+    sessionId: string,
+    value: bigint,
+    options: { gasLimit?: bigint; maxFeePerGas?: bigint } = {}
+  ): Promise<Hash> {
+    const account = await this.walletClient.account;
+    if (!account) throw new Error('No account connected');
+
+    const { request } = await this.publicClient.simulateContract({
+      address: this.address,
+      abi: this.abi,
+      functionName: 'payWithMatic',
+      args: [serviceType, sessionId],
+      account,
+      value,
+      ...options
+    });
+
+    return this.walletClient.writeContract(request);
   }
 
-  public async isTokenSupported(tokenAddress: string): Promise<boolean> {
-    return this.contract.supportedTokens(tokenAddress);
+  public async isTokenSupported(tokenAddress: Address): Promise<boolean> {
+    const result = await this.publicClient.readContract({
+      address: this.address,
+      abi: this.abi,
+      functionName: 'supportedTokens',
+      args: [tokenAddress]
+    }) as boolean;
+
+    return result;
   }
 
-  public async getReceiverAddress(): Promise<string> {
-    return this.contract.receiverAddress();
+  public async getGasPrice(): Promise<bigint> {
+    const result = await this.publicClient.readContract({
+      address: this.address,
+      abi: this.abi,
+      functionName: 'getGasPrice',
+      args: []
+    }) as bigint;
+
+    return result;
   }
 
-  public async getGasPrice(): Promise<ethers.BigNumber> {
-    return this.contract.getGasPrice();
+  public async getReceiverAddress(): Promise<Address> {
+    const result = await this.publicClient.readContract({
+      address: this.address,
+      abi: this.abi,
+      functionName: 'receiverAddress',
+      args: []
+    }) as Address;
+
+    return result;
   }
 
-  public onPaymentReceived(
-    callback: (event: PaymentReceivedEvent) => void
-  ): ethers.Contract {
-    this.contract.on(
-      'PaymentReceived',
-      (payer, token, amount, serviceType, sessionId) => {
-        callback({
-          payer,
-          token,
-          amount,
-          serviceType,
-          sessionId
-        });
+  private unsubscribeEvents?: (() => void)[];
+
+  public async watchPaymentReceived(
+    onEvent: (event: PaymentReceivedEvent) => void
+  ): Promise<() => void> {
+    const unwatch = await this.publicClient.watchContractEvent({
+      address: this.address,
+      abi: this.abi,
+      eventName: 'PaymentReceived',
+      onLogs: logs => {
+        for (const log of logs) {
+          const event = decodeEventLog({
+            abi: this.abi,
+            data: log.data,
+            topics: log.topics
+          });
+          const [payer, token, amount, serviceType, sessionId] = event.args as [Address, Address, bigint, string, string];
+          onEvent({ payer, token, amount, serviceType, sessionId });
+        }
       }
-    );
-    return this.contract;
+    });
+
+    this.unsubscribeEvents = [...(this.unsubscribeEvents || []), unwatch];
+    return unwatch;
   }
 
-  public onPaymentRefunded(
-    callback: (event: PaymentRefundedEvent) => void
-  ): ethers.Contract {
-    this.contract.on(
-      'PaymentRefunded',
-      (recipient, token, amount, sessionId) => {
-        callback({
-          recipient,
-          token,
-          amount,
-          sessionId
-        });
+  public async watchPaymentRefunded(
+    onEvent: (event: PaymentRefundedEvent) => void
+  ): Promise<() => void> {
+    const unwatch = await this.publicClient.watchContractEvent({
+      address: this.address,
+      abi: this.abi,
+      eventName: 'PaymentRefunded',
+      onLogs: logs => {
+        for (const log of logs) {
+          const event = decodeEventLog({
+            abi: this.abi,
+            data: log.data,
+            topics: log.topics
+          });
+          const [recipient, token, amount, sessionId] = event.args as [Address, Address, bigint, string];
+          onEvent({ recipient, token, amount, sessionId });
+        }
       }
-    );
-    return this.contract;
+    });
+
+    this.unsubscribeEvents = [...(this.unsubscribeEvents || []), unwatch];
+    return unwatch;
   }
 
-  public removeAllListeners(): void {
-    this.contract.removeAllListeners();
+  public cleanup(): void {
+    if (this.unsubscribeEvents) {
+      this.unsubscribeEvents.forEach(unsubscribe => unsubscribe());
+      this.unsubscribeEvents = [];
+    }
   }
 }

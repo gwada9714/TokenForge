@@ -1,30 +1,30 @@
 import { PublicKey } from '@solana/web3.js';
-import { BigNumber } from 'ethers';
-import { PaymentToken } from './PaymentSession';
+import { Address } from 'viem';
 
 export interface PaymentOptions {
-  gasLimit?: number;
-  gasPrice?: number | BigNumber;
+  gasLimit?: bigint;
+  gasPrice?: bigint;
+  maxFeePerGas?: bigint;
   slippage?: number;
   deadline?: number;
   skipPreflight?: boolean;
   commitment?: 'processed' | 'confirmed' | 'finalized';
 }
 
-export type PaymentAmount = number | BigNumber;
+export type PaymentAmount = number | bigint;
 
 export interface BasePaymentService {
   /**
    * Process a payment with a specific token
-   * @param tokenAddress - The address of the token (string for EVM chains, PublicKey for Solana)
-   * @param amount - The payment amount (number for Solana, BigNumber for EVM chains)
+   * @param tokenAddress - The address of the token (Address for EVM chains, PublicKey for Solana)
+   * @param amount - The payment amount (as bigint)
    * @param serviceType - The type of service being paid for
    * @param userId - The ID of the user making the payment
    * @param options - Additional payment options
    * @returns Promise with the transaction hash or signature
    */
   payWithToken(
-    tokenAddress: string | PublicKey,
+    tokenAddress: Address | PublicKey,
     amount: PaymentAmount,
     serviceType: string,
     userId: string,
@@ -32,9 +32,8 @@ export interface BasePaymentService {
   ): Promise<string>;
 
   /**
-   * Validate if a token is supported for payment
+   * Check if a token is supported for payments
    * @param tokenAddress - The address of the token to check
-   * @returns Promise indicating if the token is supported
    */
-  isTokenSupported?(tokenAddress: string | PublicKey): Promise<boolean>;
+  isTokenSupported(tokenAddress: Address | PublicKey): Promise<boolean>;
 }
