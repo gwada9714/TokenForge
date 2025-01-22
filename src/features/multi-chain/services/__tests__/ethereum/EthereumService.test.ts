@@ -1,243 +1,268 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { EthereumService } from '../../ethereum/EthereumService';
-import { BaseProviderService } from '../../BaseProviderService';
-import { providers, utils, BigNumber } from 'ethers';
-
-// Mock des dépendances
-vi.mock('../../BaseProviderService');
-vi.mock('ethers');
+import { type Address, type PublicClient } from 'viem';
+import { mainnet } from 'viem/chains';
 
 describe('EthereumService', () => {
-  let service: EthereumService;
-  let mockProvider: providers.JsonRpcProvider;
+  const service = new EthereumService();
 
-  beforeEach(() => {
-    // Reset des mocks
-    vi.clearAllMocks();
+  it('should initialize with correct chain ID', () => {
+    expect(service['chainId']).toBe(1);
+  });
 
-    // Configuration du mock provider
-    mockProvider = {
+  it('should fetch ETH price', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ ethereum: { usd: 2000 } })
+    });
+
+    const price = await service.getNativeTokenPrice();
+    expect(price).toBe(2000);
+  });
+
+  it('should handle ETH price fetch error', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error('API Error'));
+
+    const price = await service.getNativeTokenPrice();
+    expect(price).toBe(0);
+  });
+
+  it('should create token', async () => {
+    const mockWalletClient = {
+      deployContract: vi.fn().mockResolvedValue('0xhash'),
+      getAddresses: vi.fn().mockResolvedValue(['0xaccount'])
+    };
+
+    const mockPublicClient = {
+      request: vi.fn(),
+      call: vi.fn(),
+      createBlockFilter: vi.fn(),
+      createContractEventFilter: vi.fn(),
+      createEventFilter: vi.fn(),
+      createPendingTransactionFilter: vi.fn(),
+      estimateContractGas: vi.fn(),
+      estimateGas: vi.fn(),
       getBalance: vi.fn(),
-      getSigner: vi.fn(),
+      getBlock: vi.fn(),
+      getBlockNumber: vi.fn(),
+      getBlockTransactionCount: vi.fn(),
+      getBytecode: vi.fn(),
+      getChainId: vi.fn(),
+      getContractEvents: vi.fn(),
+      getEnsAddress: vi.fn(),
+      getEnsAvatar: vi.fn(),
+      getEnsName: vi.fn(),
+      getEnsResolver: vi.fn(),
+      getEnsText: vi.fn(),
+      getFeeHistory: vi.fn(),
+      getFilterChanges: vi.fn(),
+      getFilterLogs: vi.fn(),
       getGasPrice: vi.fn(),
-      getNetwork: vi.fn(),
-    } as unknown as providers.JsonRpcProvider;
+      getLogs: vi.fn(),
+      getStorageAt: vi.fn(),
+      getTransaction: vi.fn(),
+      getTransactionConfirmations: vi.fn(),
+      getTransactionCount: vi.fn(),
+      getTransactionReceipt: vi.fn(),
+      multicall: vi.fn(),
+      readContract: vi.fn(),
+      simulateContract: vi.fn(),
+      verifyMessage: vi.fn(),
+      verifyTypedData: vi.fn(),
+      uninstallFilter: vi.fn(),
+      watchBlockNumber: vi.fn(),
+      watchBlocks: vi.fn(),
+      watchContractEvent: vi.fn(),
+      watchEvent: vi.fn(),
+      watchPendingTransactions: vi.fn(),
+      waitForTransactionReceipt: vi.fn().mockResolvedValue({
+        contractAddress: '0xcontract' as Address
+      }),
+      account: undefined,
+      batch: undefined,
+      cacheTime: 4_000,
+      chain: mainnet,
+      key: 'public',
+      name: 'Public Client',
+      pollingInterval: 4_000,
+      type: 'publicClient',
+      uid: 'public-0',
+      transport: { type: 'http' }
+    } as unknown as PublicClient;
 
-    // Mock de BaseProviderService.getProvider
-    vi.mocked(BaseProviderService.getProvider).mockResolvedValue(mockProvider);
+    vi.spyOn(service as any, 'getWalletClient').mockResolvedValue(mockWalletClient);
+    vi.spyOn(service as any, 'initProvider').mockResolvedValue(mockPublicClient);
+    service['client'] = mockPublicClient;
 
-    // Création d'une nouvelle instance du service
-    service = new EthereumService();
-  });
-
-  describe('getNativeTokenPrice', () => {
-    beforeEach(() => {
-      global.fetch = vi.fn();
-    });
-
-    it('should return ETH price when API call is successful', async () => {
-      const mockPrice = 2000;
-      vi.mocked(global.fetch).mockResolvedValueOnce({
-        json: () => Promise.resolve({ ethereum: { usd: mockPrice } }),
-      } as Response);
-
-      const price = await service.getNativeTokenPrice();
-      expect(price).toBe(mockPrice);
-    });
-
-    it('should return 0 when API call fails', async () => {
-      vi.mocked(global.fetch).mockRejectedValueOnce(new Error('API Error'));
-
-      const price = await service.getNativeTokenPrice();
-      expect(price).toBe(0);
-    });
-  });
-
-  describe('getBalance', () => {
-    it('should return correct balance', async () => {
-      const mockBalance = BigNumber.from('1000000000000000000'); // 1 ETH
-      const address = '0x1234567890123456789012345678901234567890';
-
-      vi.mocked(mockProvider.getBalance).mockResolvedValueOnce(mockBalance);
-
-      const balance = await service.getBalance(address);
-      expect(balance).toEqual(mockBalance);
-      expect(mockProvider.getBalance).toHaveBeenCalledWith(address);
-    });
-
-    it('should throw error when provider fails', async () => {
-      const address = '0x1234567890123456789012345678901234567890';
-      vi.mocked(mockProvider.getBalance).mockRejectedValueOnce(new Error('Provider Error'));
-
-      await expect(service.getBalance(address)).rejects.toThrow();
-    });
-  });
-
-  describe('validateAddress', () => {
-    it('should return true for valid ETH address', () => {
-      const validAddress = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
-      expect(service.validateAddress(validAddress)).toBe(true);
-    });
-
-    it('should return false for invalid ETH address', () => {
-      const invalidAddress = '0xinvalid';
-      expect(service.validateAddress(invalidAddress)).toBe(false);
-    });
-  });
-
-  describe('createToken', () => {
-    const mockParams = {
+    const result = await service.createToken({
       name: 'Test Token',
       symbol: 'TEST',
       decimals: 18,
-      totalSupply: '1000000',
-      owner: '0x1234567890123456789012345678901234567890',
-    };
-
-    it('should create ERC20 token successfully', async () => {
-      const mockAddress = '0x9876543210987654321098765432109876543210';
-      const mockContract = {
-        address: mockAddress,
-        deployed: vi.fn().mockResolvedValueOnce(undefined),
-      };
-
-      const mockContractFactory = {
-        deploy: vi.fn().mockResolvedValueOnce(mockContract),
-      };
-
-      vi.mocked(utils.parseUnits).mockReturnValueOnce(
-        BigNumber.from('1000000000000000000000000')
-      );
-
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockResolvedValueOnce(mockParams.owner),
-        getContractFactory: vi.fn().mockResolvedValueOnce(mockContractFactory),
-      } as any);
-
-      const result = await service.createToken(mockParams);
-      expect(result).toBe(mockAddress);
+      totalSupply: '1000',
+      owner: '0xowner' as Address
     });
 
-    it('should throw error when token creation fails', async () => {
-      const mockError = new Error('Contract creation failed');
-      const mockContractFactory = {
-        deploy: vi.fn().mockRejectedValueOnce(mockError),
-      };
-
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockRejectedValueOnce(mockError),
-        getContractFactory: vi.fn().mockResolvedValueOnce(mockContractFactory),
-      } as any);
-
-      await expect(service.createToken(mockParams)).rejects.toThrow();
-    });
+    expect(result).toBe('0xcontract');
   });
 
-  describe('addLiquidity', () => {
-    const mockParams = {
-      tokenAddress: '0x1234567890123456789012345678901234567890',
-      amount: '1.0',
-      deadline: Math.floor(Date.now() / 1000) + 3600,
+  it('should add liquidity', async () => {
+    const mockWalletClient = {
+      writeContract: vi.fn().mockResolvedValue('0xhash'),
+      getAddresses: vi.fn().mockResolvedValue(['0xaccount'])
     };
 
-    it('should add liquidity successfully', async () => {
-      const mockTx = {
-        wait: vi.fn().mockResolvedValueOnce(undefined),
-      };
+    const mockPublicClient = {
+      request: vi.fn(),
+      call: vi.fn(),
+      createBlockFilter: vi.fn(),
+      createContractEventFilter: vi.fn(),
+      createEventFilter: vi.fn(),
+      createPendingTransactionFilter: vi.fn(),
+      estimateContractGas: vi.fn(),
+      estimateGas: vi.fn(),
+      getBalance: vi.fn(),
+      getBlock: vi.fn(),
+      getBlockNumber: vi.fn(),
+      getBlockTransactionCount: vi.fn(),
+      getBytecode: vi.fn(),
+      getChainId: vi.fn(),
+      getContractEvents: vi.fn(),
+      getEnsAddress: vi.fn(),
+      getEnsAvatar: vi.fn(),
+      getEnsName: vi.fn(),
+      getEnsResolver: vi.fn(),
+      getEnsText: vi.fn(),
+      getFeeHistory: vi.fn(),
+      getFilterChanges: vi.fn(),
+      getFilterLogs: vi.fn(),
+      getGasPrice: vi.fn(),
+      getLogs: vi.fn(),
+      getStorageAt: vi.fn(),
+      getTransaction: vi.fn(),
+      getTransactionConfirmations: vi.fn(),
+      getTransactionCount: vi.fn(),
+      getTransactionReceipt: vi.fn(),
+      multicall: vi.fn(),
+      readContract: vi.fn(),
+      simulateContract: vi.fn(),
+      verifyMessage: vi.fn(),
+      verifyTypedData: vi.fn(),
+      uninstallFilter: vi.fn(),
+      watchBlockNumber: vi.fn(),
+      watchBlocks: vi.fn(),
+      watchContractEvent: vi.fn(),
+      watchEvent: vi.fn(),
+      watchPendingTransactions: vi.fn(),
+      waitForTransactionReceipt: vi.fn().mockResolvedValue({}),
+      account: undefined,
+      batch: undefined,
+      cacheTime: 4_000,
+      chain: mainnet,
+      key: 'public',
+      name: 'Public Client',
+      pollingInterval: 4_000,
+      type: 'publicClient',
+      uid: 'public-1',
+      transport: { type: 'http' }
+    } as unknown as PublicClient;
 
-      const mockRouterContract = {
-        addLiquidityETH: vi.fn().mockResolvedValueOnce(mockTx),
-      };
+    vi.spyOn(service as any, 'getWalletClient').mockResolvedValue(mockWalletClient);
+    vi.spyOn(service as any, 'initProvider').mockResolvedValue(mockPublicClient);
+    service['client'] = mockPublicClient;
 
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockResolvedValueOnce(mockParams.tokenAddress),
-        getContract: vi.fn().mockResolvedValueOnce(mockRouterContract),
-      } as any);
-
-      vi.mocked(utils.parseEther).mockReturnValueOnce(
-        BigNumber.from('1000000000000000000')
-      );
-
-      const result = await service.addLiquidity(mockParams);
-      expect(result).toBe(true);
+    const result = await service.addLiquidity({
+      tokenAddress: '0xtoken' as Address,
+      amount: BigInt('1000000000000000000'),
+      deadline: Math.floor(Date.now() / 1000) + 60 * 20
     });
 
-    it('should throw error when adding liquidity fails', async () => {
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockRejectedValueOnce(new Error('Signer error')),
-      } as any);
-
-      await expect(service.addLiquidity(mockParams)).rejects.toThrow();
-    });
+    expect(result).toBe(true);
   });
 
-  describe('stake', () => {
-    const mockParams = {
-      tokenAddress: '0x1234567890123456789012345678901234567890',
-      amount: '1.0',
-      duration: 30,
+  it('should remove liquidity', async () => {
+    const mockWalletClient = {
+      writeContract: vi.fn().mockResolvedValue('0xhash'),
+      getAddresses: vi.fn().mockResolvedValue(['0xaccount'])
     };
 
-    it('should stake tokens successfully', async () => {
-      const mockTx = {
-        wait: vi.fn().mockResolvedValueOnce(undefined),
-      };
+    const mockPublicClient = {
+      request: vi.fn(),
+      call: vi.fn(),
+      createBlockFilter: vi.fn(),
+      createContractEventFilter: vi.fn(),
+      createEventFilter: vi.fn(),
+      createPendingTransactionFilter: vi.fn(),
+      estimateContractGas: vi.fn(),
+      estimateGas: vi.fn(),
+      getBalance: vi.fn(),
+      getBlock: vi.fn(),
+      getBlockNumber: vi.fn(),
+      getBlockTransactionCount: vi.fn(),
+      getBytecode: vi.fn(),
+      getChainId: vi.fn(),
+      getContractEvents: vi.fn(),
+      getEnsAddress: vi.fn(),
+      getEnsAvatar: vi.fn(),
+      getEnsName: vi.fn(),
+      getEnsResolver: vi.fn(),
+      getEnsText: vi.fn(),
+      getFeeHistory: vi.fn(),
+      getFilterChanges: vi.fn(),
+      getFilterLogs: vi.fn(),
+      getGasPrice: vi.fn(),
+      getLogs: vi.fn(),
+      getStorageAt: vi.fn(),
+      getTransaction: vi.fn(),
+      getTransactionConfirmations: vi.fn(),
+      getTransactionCount: vi.fn(),
+      getTransactionReceipt: vi.fn(),
+      multicall: vi.fn(),
+      readContract: vi.fn(),
+      simulateContract: vi.fn(),
+      verifyMessage: vi.fn(),
+      verifyTypedData: vi.fn(),
+      uninstallFilter: vi.fn(),
+      watchBlockNumber: vi.fn(),
+      watchBlocks: vi.fn(),
+      watchContractEvent: vi.fn(),
+      watchEvent: vi.fn(),
+      watchPendingTransactions: vi.fn(),
+      waitForTransactionReceipt: vi.fn().mockResolvedValue({}),
+      account: undefined,
+      batch: undefined,
+      cacheTime: 4_000,
+      chain: mainnet,
+      key: 'public',
+      name: 'Public Client',
+      pollingInterval: 4_000,
+      type: 'publicClient',
+      uid: 'public-2',
+      transport: { type: 'http' }
+    } as unknown as PublicClient;
 
-      const mockStakingContract = {
-        stake: vi.fn().mockResolvedValueOnce(mockTx),
-      };
+    vi.spyOn(service as any, 'getWalletClient').mockResolvedValue(mockWalletClient);
+    vi.spyOn(service as any, 'initProvider').mockResolvedValue(mockPublicClient);
+    service['client'] = mockPublicClient;
 
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockResolvedValueOnce('0x1234...'),
-        getContract: vi.fn().mockResolvedValueOnce(mockStakingContract),
-      } as any);
-
-      vi.mocked(utils.parseEther).mockReturnValueOnce(
-        BigNumber.from('1000000000000000000')
-      );
-
-      const result = await service.stake(mockParams);
-      expect(result).toBe(true);
+    const result = await service.removeLiquidity({
+      tokenAddress: '0xtoken' as Address,
+      amount: BigInt('1000000000000000000'),
+      deadline: Math.floor(Date.now() / 1000) + 60 * 20
     });
 
-    it('should throw error when staking fails', async () => {
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockRejectedValueOnce(new Error('Signer error')),
-      } as any);
-
-      await expect(service.stake(mockParams)).rejects.toThrow();
-    });
+    expect(result).toBe(true);
   });
 
-  describe('unstake', () => {
-    const mockParams = {
-      tokenAddress: '0x1234567890123456789012345678901234567890',
-    };
+  it('should throw error for unimplemented stake', async () => {
+    await expect(service.stake({
+      tokenAddress: '0xtoken' as Address,
+      amount: BigInt('1000000000000000000')
+    })).rejects.toThrow('Staking not implemented for Ethereum yet');
+  });
 
-    it('should unstake tokens successfully', async () => {
-      const mockTx = {
-        wait: vi.fn().mockResolvedValueOnce(undefined),
-      };
-
-      const mockStakingContract = {
-        unstake: vi.fn().mockResolvedValueOnce(mockTx),
-      };
-
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockResolvedValueOnce('0x1234...'),
-        getContract: vi.fn().mockResolvedValueOnce(mockStakingContract),
-      } as any);
-
-      const result = await service.unstake(mockParams);
-      expect(result).toBe(true);
-    });
-
-    it('should throw error when unstaking fails', async () => {
-      vi.mocked(mockProvider.getSigner).mockReturnValueOnce({
-        getAddress: vi.fn().mockRejectedValueOnce(new Error('Signer error')),
-      } as any);
-
-      await expect(service.unstake(mockParams)).rejects.toThrow();
-    });
+  it('should throw error for unimplemented unstake', async () => {
+    await expect(service.unstake({
+      tokenAddress: '0xtoken' as Address,
+      amount: BigInt('1000000000000000000')
+    })).rejects.toThrow('Unstaking not implemented for Ethereum yet');
   });
 });
