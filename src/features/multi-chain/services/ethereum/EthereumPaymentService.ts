@@ -1,124 +1,95 @@
-import { 
-  Address,
-  PublicClient,
-  WalletClient
-} from 'viem';
-import { EthereumPaymentContract } from './contracts/EthereumPayment';
-import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus, PaymentToken } from '../payment/types/PaymentSession';
-import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
-import { validatePaymentParams } from '../payment/utils/paymentValidation';
+import { Address } from 'viem';
+import { BaseEVMPaymentService, EVMPaymentConfig, EVMPaymentOptions } from '../payment/BaseEVMPaymentService';
+import { PaymentNetwork, PaymentStatus } from '../payment/types/PaymentSession';
+import { PAYMENT_CONTRACT_ABI } from '../payment/abis/TokenABI';
 
-export interface EthereumPaymentConfig {
-  contractAddress: Address;
-  publicClient: PublicClient;
-  walletClient: WalletClient;
-  receiverAddress: Address;
-}
+export type EthereumPaymentConfig = EVMPaymentConfig;
 
-export class EthereumPaymentService implements BasePaymentService {
-  private static instance: EthereumPaymentService;
-  private contract: EthereumPaymentContract;
-  private sessionService: PaymentSessionService;
-  private config: EthereumPaymentConfig;
+export class EthereumPaymentService extends BaseEVMPaymentService {
+  private static instance: EthereumPaymentService | null = null;
 
   private constructor(config: EthereumPaymentConfig) {
-    this.config = config;
-    this.contract = new EthereumPaymentContract(
-      config.contractAddress,
-      config.publicClient,
-      config.walletClient
-    );
-    this.sessionService = PaymentSessionService.getInstance();
+    super(config);
     this.setupEventListeners();
   }
 
   public static getInstance(config?: EthereumPaymentConfig): EthereumPaymentService {
     if (!EthereumPaymentService.instance && config) {
       EthereumPaymentService.instance = new EthereumPaymentService(config);
+    } else if (!EthereumPaymentService.instance) {
+      throw new Error('EthereumPaymentService not initialized');
     }
     return EthereumPaymentService.instance;
   }
 
-  private async setupEventListeners(): Promise<void> {
-    await this.contract.watchPaymentProcessed(
-      async (_payer: Address, _amount: bigint, sessionId: string) => {
-        try {
-          await this.sessionService.updateSessionStatus(
-            sessionId,
-            PaymentStatus.CONFIRMED
-          );
-        } catch (error) {
-          console.error('Failed to update session status:', error);
-        }
-      }
-    );
+  public getNetwork(): PaymentNetwork {
+    return PaymentNetwork.ETHEREUM;
   }
 
-  public async payWithToken(
+  public override async payWithToken(
     tokenAddress: Address,
-    amount: PaymentAmount,
+    amount: bigint,
     serviceType: string,
-    userId: string,
-    options: PaymentOptions
-  ): Promise<string> {
+    sessionId: string,
+    options: EVMPaymentOptions = {}
+  ): Promise<void> {
     try {
-      // Validate parameters
-      validatePaymentParams(tokenAddress, amount, userId);
-
-      // Create payment token object
-      const paymentToken: PaymentToken = {
-        address: tokenAddress,
-        network: PaymentNetwork.ETHEREUM,
-        symbol: '', // This should be fetched from token contract
-        decimals: 18 // This should be fetched from token contract
+      // Pour Ethereum, nous ajoutons des estimations de gas spécifiques
+      const ethOptions: EVMPaymentOptions = {
+        ...options,
+        maxFeePerGas: options.maxFeePerGas || await this.estimateMaxFeePerGas(),
+        maxPriorityFeePerGas: options.maxPriorityFeePerGas || await this.estimatePriorityFee()
       };
 
-      // Create payment session
-      const amountBigInt = BigInt(amount.toString());
-      const session = this.sessionService.createSession(
-        userId,
-        amountBigInt,
-        paymentToken,
-        serviceType
-      );
-
-      if (!session) {
-        throw new Error('Failed to create payment session');
-      }
-
-      // Process payment and get transaction hash
-      const tx = await this.contract.processPayment(
-        tokenAddress,
-        amountBigInt,
-        session.id,
-        {
-          gasLimit: options.gasLimit
-        }
-      );
-
-      // Update session status to processing
-      await this.sessionService.updateSessionStatus(
-        session.id,
-        PaymentStatus.PROCESSING
-      );
-
-      return session.id;
-    } catch (error: unknown) {
+      await super.payWithToken(tokenAddress, amount, serviceType, sessionId, ethOptions);
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       throw new Error(`Payment failed: ${errorMessage}`);
     }
   }
 
-  public async isTokenSupported(tokenAddress: Address): Promise<boolean> {
+  private async estimateMaxFeePerGas(): Promise<bigint> {
+    const block = await this.config.publicClient.getBlock();
+    // Ajouter 20% de marge au baseFeePerGas
+    return (block.baseFeePerGas || 0n) * 120n / 100n;
+  }
+
+  private async estimatePriorityFee(): Promise<bigint> {
     try {
-      return await this.contract.isTokenSupported(tokenAddress);
+      const priorityFee = await this.config.publicClient.estimateMaxPriorityFeePerGas();
+      return priorityFee;
     } catch {
-      return false;
+      // Fallback à 1.5 Gwei si l'estimation échoue
+      return 1500000000n;
     }
   }
 
-  public cleanup(): void {
-    this.contract.removeAllListeners();
+  protected override setupEventListeners(): void {
+    const unwatch = this.config.publicClient.watchContractEvent({
+      address: this.config.contractAddress,
+      abi: PAYMENT_CONTRACT_ABI,
+      eventName: 'PaymentReceived',
+      onLogs: (logs) => {
+        for (const log of logs) {
+          const { sessionId } = log.args;
+          if (sessionId) {
+            this.sessionService.updateSessionStatus(
+              sessionId,
+              PaymentStatus.CONFIRMED,
+              log.transactionHash
+            );
+          }
+        }
+      },
+    });
+
+    this.cleanupFunctions.push(unwatch);
+  }
+
+  public static resetInstance(): void {
+    if (EthereumPaymentService.instance) {
+      EthereumPaymentService.instance.cleanup();
+      EthereumPaymentService.instance = null;
+    }
   }
 }

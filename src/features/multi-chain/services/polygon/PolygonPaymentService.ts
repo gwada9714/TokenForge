@@ -1,185 +1,113 @@
-import { 
-  Address,
-  PublicClient,
-  WalletClient
-} from 'viem';
-import { PolygonPaymentContract } from './contracts/PolygonPayment';
-import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentStatus, PaymentToken } from '../payment/types/PaymentSession';
-import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
-import { validatePaymentParams } from '../payment/utils/paymentValidation';
+import { Address } from 'viem';
+import { BaseEVMPaymentService, EVMPaymentConfig, EVMPaymentOptions } from '../payment/BaseEVMPaymentService';
+import { PaymentNetwork, PaymentStatus } from '../payment/types/PaymentSession';
+import { PAYMENT_CONTRACT_ABI } from '../payment/abis/TokenABI';
 
-export interface PolygonPaymentConfig {
-  contractAddress: Address;
-  publicClient: PublicClient;
-  walletClient: WalletClient;
-  maxFeePerGas?: bigint;
-  receiverAddress: Address;
-}
+export type PolygonPaymentConfig = EVMPaymentConfig;
 
-export class PolygonPaymentService implements BasePaymentService {
-  private static instance: PolygonPaymentService;
-  private contract: PolygonPaymentContract;
-  private sessionService: PaymentSessionService;
+export class PolygonPaymentService extends BaseEVMPaymentService {
+  private static instance: PolygonPaymentService | null = null;
 
   private constructor(config: PolygonPaymentConfig) {
-    this.contract = new PolygonPaymentContract(
-      config.contractAddress,
-      config.publicClient,
-      config.walletClient
-    );
-    this.sessionService = PaymentSessionService.getInstance();
+    super(config);
     this.setupEventListeners();
   }
 
   public static getInstance(config?: PolygonPaymentConfig): PolygonPaymentService {
     if (!PolygonPaymentService.instance && config) {
       PolygonPaymentService.instance = new PolygonPaymentService(config);
+    } else if (!PolygonPaymentService.instance) {
+      throw new Error('PolygonPaymentService not initialized');
     }
     return PolygonPaymentService.instance;
   }
 
-  private async setupEventListeners(): Promise<void> {
-    await this.contract.watchPaymentReceived(
-      async ({ payer: _payer, token: _token, amount: _amount, sessionId }) => {
-        try {
-          await this.sessionService.updateSessionStatus(
-            sessionId,
-            PaymentStatus.CONFIRMED
-          );
-        } catch (error) {
-          console.error('Failed to update session status:', error);
-        }
-      }
-    );
+  public getNetwork(): PaymentNetwork {
+    return PaymentNetwork.POLYGON;
   }
 
-  public async payWithToken(
+  public override async payWithToken(
     tokenAddress: Address,
-    amount: PaymentAmount,
+    amount: bigint,
     serviceType: string,
-    userId: string,
-    options: PaymentOptions
-  ): Promise<string> {
+    sessionId: string,
+    options: EVMPaymentOptions = {}
+  ): Promise<void> {
     try {
-      // Validate parameters
-      validatePaymentParams(tokenAddress, amount, userId);
-
-      // Create payment token object
-      const paymentToken: PaymentToken = {
-        address: tokenAddress,
-        network: PaymentNetwork.POLYGON,
-        symbol: '', // This should be fetched from token contract
-        decimals: 18 // This should be fetched from token contract
+      // Pour Polygon, nous ajoutons des estimations de gas spécifiques au réseau
+      const polygonOptions: EVMPaymentOptions = {
+        ...options,
+        maxFeePerGas: options.maxFeePerGas || await this.estimateMaxFeePerGas(),
+        maxPriorityFeePerGas: options.maxPriorityFeePerGas || await this.estimatePriorityFee(),
+        gasLimit: options.gasLimit || await this.estimateGasLimit(tokenAddress, amount)
       };
 
-      // Create payment session
-      const amountBigInt = BigInt(amount.toString());
-      const session = this.sessionService.createSession(
-        userId,
-        amountBigInt,
-        paymentToken,
-        serviceType
-      );
-
-      if (!session) {
-        throw new Error('Failed to create payment session');
-      }
-
-      // Get current gas price and apply max fee if configured
-      const currentGasPrice = await this.contract.getGasPrice();
-      const maxFeePerGas = options.maxFeePerGas || options.gasPrice || currentGasPrice;
-
-      // Process payment and get transaction hash
-      await this.contract.payWithToken(
-        tokenAddress,
-        amountBigInt,
-        serviceType,
-        session.id,
-        {
-          gasLimit: options.gasLimit,
-          maxFeePerGas
-        }
-      );
-
-      // Update session status to processing
-      await this.sessionService.updateSessionStatus(
-        session.id,
-        PaymentStatus.PROCESSING
-      );
-
-      return session.id;
-    } catch (error: unknown) {
+      await super.payWithToken(tokenAddress, amount, serviceType, sessionId, polygonOptions);
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       throw new Error(`Payment failed: ${errorMessage}`);
     }
   }
 
-  public async payWithMatic(
-    amount: PaymentAmount,
-    serviceType: string,
-    userId: string,
-    options: PaymentOptions
-  ): Promise<string> {
-    try {
-      // Create payment token object for MATIC
-      const paymentToken: PaymentToken = {
-        address: '0x0000000000000000000000000000000000000000' as Address, // Zero address for native MATIC
-        network: PaymentNetwork.POLYGON,
-        symbol: 'MATIC',
-        decimals: 18
-      };
-
-      // Create payment session
-      const amountBigInt = BigInt(amount.toString());
-      const session = this.sessionService.createSession(
-        userId,
-        amountBigInt,
-        paymentToken,
-        serviceType
-      );
-
-      if (!session) {
-        throw new Error('Failed to create payment session');
-      }
-
-      // Get current gas price and apply max fee if configured
-      const currentGasPrice = await this.contract.getGasPrice();
-      const maxFeePerGas = options.maxFeePerGas || options.gasPrice || currentGasPrice;
-
-      // Process payment with native MATIC
-      await this.contract.payWithMatic(
-        serviceType,
-        session.id,
-        amountBigInt,
-        {
-          gasLimit: options.gasLimit,
-          maxFeePerGas
-        }
-      );
-
-      // Update session status to processing
-      await this.sessionService.updateSessionStatus(
-        session.id,
-        PaymentStatus.PROCESSING
-      );
-
-      return session.id;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      throw new Error(`Payment failed: ${errorMessage}`);
-    }
+  private async estimateMaxFeePerGas(): Promise<bigint> {
+    const block = await this.config.publicClient.getBlock();
+    // Ajouter 30% de marge au baseFeePerGas pour Polygon
+    return (block.baseFeePerGas || 0n) * 130n / 100n;
   }
 
-  public async isTokenSupported(tokenAddress: Address): Promise<boolean> {
+  private async estimatePriorityFee(): Promise<bigint> {
     try {
-      return await this.contract.isTokenSupported(tokenAddress);
+      const priorityFee = await this.config.publicClient.estimateMaxPriorityFeePerGas();
+      return priorityFee;
     } catch {
-      return false;
+      // Fallback à 30 Gwei si l'estimation échoue (Polygon a des gas fees plus élevés)
+      return 30000000000n;
     }
   }
 
-  public cleanup(): void {
-    this.contract.cleanup();
+  private async estimateGasLimit(tokenAddress: Address, amount: bigint): Promise<bigint> {
+    try {
+      const gasLimit = await this.config.publicClient.estimateContractGas({
+        address: this.config.contractAddress,
+        abi: ['function payWithToken(address token, uint256 amount) payable'],
+        functionName: 'payWithToken',
+        args: [tokenAddress, amount],
+        account: this.config.walletClient.account,
+      });
+      // Ajouter 20% de marge au gasLimit
+      return (gasLimit * 120n) / 100n;
+    } catch {
+      // Fallback à 300000 gas si l'estimation échoue
+      return 300000n;
+    }
+  }
+
+  protected override setupEventListeners(): void {
+    const unwatch = this.config.publicClient.watchContractEvent({
+      address: this.config.contractAddress,
+      abi: PAYMENT_CONTRACT_ABI,
+      eventName: 'PaymentReceived',
+      onLogs: (logs) => {
+        for (const log of logs) {
+          const { sessionId } = log.args;
+          if (sessionId) {
+            this.sessionService.updateSessionStatus(
+              sessionId,
+              PaymentStatus.CONFIRMED,
+              log.transactionHash
+            );
+          }
+        }
+      },
+    });
+
+    this.cleanupFunctions.push(unwatch);
+  }
+
+  public static resetInstance(): void {
+    if (PolygonPaymentService.instance) {
+      PolygonPaymentService.instance.cleanup();
+      PolygonPaymentService.instance = null;
+    }
   }
 }
