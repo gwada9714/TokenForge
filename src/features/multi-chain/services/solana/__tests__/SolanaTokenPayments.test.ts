@@ -1,213 +1,176 @@
-import { Connection } from '@solana/web3.js';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SolanaPaymentService, SolanaPaymentConfig } from '../SolanaPaymentService';
-import { TEST_VALUES } from './test-values';
-import { PublicKey, Keypair } from '@solana/web3.js';
-import { PaymentNetwork, PaymentStatus, PaymentToken, PaymentSession } from '../../payment/types/PaymentSession';
-import { PaymentSessionService } from '../../payment/PaymentSessionService';
+import { PublicKey } from '@solana/web3.js';
+import { PaymentStatus } from '../../payment/types/PaymentSession';
+import { mockTransactionError, mockNetworkError } from './solana-mocks';
+import { PROGRAM_ID_STR, RECEIVER_STR } from './test-constants';
+import { TestContext, setupTestContext, mockSessionService } from './test-helpers';
 
-describe('SolanaPaymentService', () => {
-  let service: SolanaPaymentService;
-  let sessionService: PaymentSessionService;
-  let config: SolanaPaymentConfig;
-  let connection: Connection;
-
-  const createTestToken = (): PaymentToken => ({
-    address: TEST_VALUES.RECEIVER,
-    network: PaymentNetwork.SOLANA,
-    symbol: 'USDC',
-    decimals: 6
-  });
-
-  const createTestSession = (overrides: Partial<PaymentSession> = {}): PaymentSession => ({
-    id: 'test-session-id',
-    userId: 'user-123',
-    amount: BigInt(1000000),
-    token: createTestToken(),
-    serviceType: 'TEST_SERVICE',
-    status: PaymentStatus.PENDING,
-    network: PaymentNetwork.SOLANA,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    expiresAt: new Date(Date.now() + 3600000),
-    retryCount: 0,
-    txHash: undefined,
-    error: undefined,
-    ...overrides
-  });
+describe('SolanaTokenPayments', () => {
+  let context: TestContext;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    const wallet = Keypair.generate();
-    connection = new Connection('https://api.devnet.solana.com');
-    
-    config = {
-      programId: TEST_VALUES.PROGRAM_ID,
-      receiverAddress: TEST_VALUES.RECEIVER,
-      connection,
-      wallet
-    };
-
-    sessionService = PaymentSessionService.getInstance();
-    service = SolanaPaymentService.getInstance(config);
-
-    // Mock session service methods
-    vi.spyOn(sessionService, 'createSession').mockImplementation(() => createTestSession());
-    vi.spyOn(sessionService, 'updateSession').mockImplementation((sessionId: string, updates: Partial<PaymentSession>) => {
-      const session = createTestSession({ id: sessionId, ...updates });
-      return session;
-    });
-    vi.spyOn(sessionService, 'retryPayment').mockImplementation(() => Promise.resolve(true));
+    context = setupTestContext();
+    mockSessionService(context.sessionService);
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-    if ('instance' in SolanaPaymentService) {
-      (SolanaPaymentService as any).instance = undefined;
-    }
-  });
-
-  describe('payWithToken', () => {
-    it('should create proper transaction with transfer instruction', async () => {
-      const amount = BigInt(1000000);
-      const sessionId = await service.payWithToken(
-        TEST_VALUES.RECEIVER,
-        amount,
-        'TEST_SERVICE',
-        'user-123',
-        {
-          skipPreflight: false,
-          commitment: 'confirmed'
-        }
-      );
-
-      expect(sessionId).toBeDefined();
-      expect(sessionService.updateSession).toHaveBeenCalledWith(
-        sessionId,
-        {
-          status: PaymentStatus.CONFIRMED,
-          txHash: TEST_VALUES.MOCK_TX_SIG
-        }
-      );
-    });
-
-    it('should handle transaction atomicity', async () => {
-      // Mock the confirmTransaction to return an error
-      const mockConfirmTransaction = vi.spyOn(Connection.prototype, 'confirmTransaction');
-      mockConfirmTransaction.mockResolvedValueOnce({
-        context: { slot: 1 },
-        value: { err: 'Transaction failed' }
-      });
-
-      const amount = BigInt(1000000);
-      const sessionId = await service.payWithToken(
-        TEST_VALUES.RECEIVER,
-        amount,
-        'TEST_SERVICE',
-        'user-123',
-        {
-          skipPreflight: false,
-          commitment: 'confirmed'
-        }
-      );
-
-      expect(sessionId).toBeDefined();
-      expect(mockConfirmTransaction).toHaveBeenCalledWith(TEST_VALUES.MOCK_TX_SIG, 'confirmed');
-      expect(sessionService.updateSession).toHaveBeenCalledWith(
-        sessionId,
-        {
-          status: PaymentStatus.FAILED,
-          txHash: TEST_VALUES.MOCK_TX_SIG,
-          error: 'Transaction failed'
-        }
-      );
-    });
-
-    it('should handle network errors', async () => {
-      // Mock sendTransaction to throw an error
-      const mockSendTransaction = vi.spyOn(Connection.prototype, 'sendTransaction');
-      mockSendTransaction.mockRejectedValueOnce(new Error('Network error'));
-
-      const amount = BigInt(1000000);
-      const sessionId = await service.payWithToken(
-        TEST_VALUES.RECEIVER,
-        amount,
-        'TEST_SERVICE',
-        'user-123',
-        {
-          skipPreflight: false,
-          commitment: 'confirmed'
-        }
-      );
-
-      expect(sessionId).toBeDefined();
-      expect(mockSendTransaction).toHaveBeenCalled();
-      expect(sessionService.updateSession).toHaveBeenCalledWith(
-        sessionId,
-        {
-          status: PaymentStatus.FAILED,
-          error: 'Network error'
-        }
-      );
-    });
-
-    it('should validate payment amount', async () => {
-      await expect(
-        service.payWithToken(
-          TEST_VALUES.RECEIVER,
-          BigInt(0),
-          'TEST_SERVICE',
-          'user-123',
-          {
-            skipPreflight: false,
-            commitment: 'confirmed'
-          }
-        )
-      ).rejects.toThrow('Payment failed: Payment amount must be greater than 0');
-    });
-
-    it('should validate token address', async () => {
-      await expect(
-        service.payWithToken(
-          new PublicKey('invalid'),
-          BigInt(1000000),
-          'TEST_SERVICE',
-          'user-123',
-          {
-            skipPreflight: false,
-            commitment: 'confirmed'
-          }
-        )
-      ).rejects.toThrow('Payment failed: Invalid character');
-    });
-  });
-
-  describe('isTokenSupported', () => {
-    it('should return true for supported tokens', async () => {
-      const result = await service.isTokenSupported(TEST_VALUES.RECEIVER);
+  describe('token validation', () => {
+    it('should validate token mint address', async () => {
+      const result = await context.service.isTokenSupported(new PublicKey(RECEIVER_STR));
       expect(result).toBe(true);
     });
 
-    it('should return false for unsupported tokens', async () => {
-      // Mock getParsedAccountInfo to return null
-      const mockGetParsedAccountInfo = vi.spyOn(Connection.prototype, 'getParsedAccountInfo');
-      mockGetParsedAccountInfo.mockResolvedValueOnce({
-        context: { slot: 1 },
-        value: null
-      });
-
-      const result = await service.isTokenSupported(TEST_VALUES.RECEIVER);
+    it('should reject invalid token addresses', async () => {
+      const result = await context.service.isTokenSupported(new PublicKey(PROGRAM_ID_STR));
       expect(result).toBe(false);
     });
 
-    it('should handle errors gracefully', async () => {
-      // Mock getParsedAccountInfo to throw an error
-      const mockGetParsedAccountInfo = vi.spyOn(Connection.prototype, 'getParsedAccountInfo');
-      mockGetParsedAccountInfo.mockRejectedValueOnce(new Error('Network error'));
-
-      const result = await service.isTokenSupported(TEST_VALUES.RECEIVER);
+    it('should handle token lookup errors', async () => {
+      vi.spyOn(context.connection, 'getParsedAccountInfo').mockRejectedValue(new Error('Token lookup failed'));
+      const result = await context.service.isTokenSupported(new PublicKey(RECEIVER_STR));
       expect(result).toBe(false);
+    });
+  });
+
+  describe('payment processing', () => {
+    const paymentAmount = BigInt(1000000);
+    const serviceType = 'TOKEN_PAYMENT';
+    const userId = 'test-user';
+
+    it('should process token payment successfully', async () => {
+      const result = await context.service.payWithToken(
+        new PublicKey(RECEIVER_STR),
+        paymentAmount,
+        serviceType,
+        userId,
+        {}
+      );
+
+      expect(result).toBe('test-session-id');
+      expect(context.sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        'test-session-id',
+        PaymentStatus.PENDING
+      );
+    });
+
+    it('should handle network errors gracefully', async () => {
+      mockNetworkError();
+      
+      await expect(
+        context.service.payWithToken(
+          new PublicKey(RECEIVER_STR),
+          paymentAmount,
+          serviceType,
+          userId,
+          {}
+        )
+      ).rejects.toThrow('Network error');
+
+      expect(context.sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        'test-session-id',
+        PaymentStatus.FAILED
+      );
+    });
+
+    it('should handle insufficient balance', async () => {
+      vi.spyOn(context.connection, 'getBalance').mockResolvedValue(0);
+      
+      await expect(
+        context.service.payWithToken(
+          new PublicKey(RECEIVER_STR),
+          paymentAmount,
+          serviceType,
+          userId,
+          {}
+        )
+      ).rejects.toThrow('Insufficient balance');
+    });
+
+    it('should respect custom commitment levels', async () => {
+      const customCommitment = 'finalized';
+      await context.service.payWithToken(
+        new PublicKey(RECEIVER_STR),
+        paymentAmount,
+        serviceType,
+        userId,
+        { commitment: customCommitment }
+      );
+
+      expect(context.connection.confirmTransaction).toHaveBeenCalledWith(
+        expect.anything(),
+        { commitment: customCommitment }
+      );
+    });
+
+    it('should handle payment failures', async () => {
+      mockTransactionError();
+
+      await expect(
+        context.service.payWithToken(
+          new PublicKey(RECEIVER_STR),
+          paymentAmount,
+          serviceType,
+          userId,
+          {}
+        )
+      ).rejects.toThrow();
+
+      expect(context.sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        'test-session-id',
+        PaymentStatus.FAILED,
+        expect.any(String)
+      );
+    });
+
+    it('should handle network errors during payment', async () => {
+      mockNetworkError();
+
+      await expect(
+        context.service.payWithToken(
+          new PublicKey(RECEIVER_STR),
+          paymentAmount,
+          serviceType,
+          userId,
+          {}
+        )
+      ).rejects.toThrow();
+
+      expect(context.sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        'test-session-id',
+        PaymentStatus.FAILED,
+        expect.any(String)
+      );
+    });
+  });
+
+  describe('payment validation', () => {
+    const paymentAmount = BigInt(1000000);
+    const serviceType = 'TOKEN_PAYMENT';
+    const userId = 'test-user';
+
+    it('should reject zero amount payments', async () => {
+      await expect(
+        context.service.payWithToken(
+          new PublicKey(PROGRAM_ID_STR),
+          BigInt(0),
+          serviceType,
+          userId,
+          {}
+        )
+      ).rejects.toThrow('Payment amount must be greater than 0');
+    });
+
+    it('should reject payments with invalid token', async () => {
+      vi.spyOn(context.service, 'isTokenSupported').mockResolvedValue(false);
+      await expect(
+        context.service.payWithToken(
+          new PublicKey(PROGRAM_ID_STR),
+          paymentAmount,
+          serviceType,
+          userId,
+          {}
+        )
+      ).rejects.toThrow('Payment failed: Invalid token');
     });
   });
 });

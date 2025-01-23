@@ -109,15 +109,26 @@ export class SolanaPaymentService implements BasePaymentService {
     console.log('Program class:', Program);
     console.log('Program type:', typeof Program);
 
+    // Import et validation de l'IDL
     const idl = require('./programs/solana_payment.json');
+    if (!idl || !idl.version || !idl.name || !idl.instructions) {
+      throw new Error('Invalid IDL format');
+    }
+    
     console.log('IDL:', idl);
     console.log('Provider:', provider);
+    console.log('Program ID:', config.programId.toString());
 
-    this.program = new Program(
-      idl,
-      config.programId,
-      provider
-    );
+    try {
+      this.program = new Program(
+        idl,
+        config.programId,
+        provider
+      );
+    } catch (error) {
+      console.error('Failed to create Program instance:', error);
+      throw error;
+    }
   }
 
   public static getInstance(config?: SolanaPaymentConfig): SolanaPaymentService {
