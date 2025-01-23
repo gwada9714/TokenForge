@@ -1,33 +1,65 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PublicKey } from '@solana/web3.js';
-import { PaymentStatus } from '../../payment/types/PaymentSession';
-import { mockTransactionError, mockNetworkError } from './solana-mocks';
+import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { PublicKey, AccountInfo, ParsedAccountData } from '@solana/web3.js';
+import { SolanaPaymentService } from '../SolanaPaymentService';
+import { mockWallet, createMockConnection } from './solana-mocks';
 import { PROGRAM_ID_STR, RECEIVER_STR } from './test-constants';
-import { TestContext, setupTestContext, mockSessionService } from './test-helpers';
+import { PaymentSessionService } from '../../payment/PaymentSessionService';
+import { PaymentNetwork, PaymentStatus } from '../../payment/types/PaymentSession';
+import { MockedConnection } from './test-types';
 
 describe('SolanaTokenPayments', () => {
-  let context: TestContext;
+  let connection: MockedConnection;
+  let service: SolanaPaymentService;
+  let sessionService: PaymentSessionService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    context = setupTestContext();
-    mockSessionService(context.sessionService);
+    
+    // Créer un mock de Connection avec les méthodes nécessaires
+    connection = createMockConnection();
+
+    const config = {
+      programId: new PublicKey(PROGRAM_ID_STR),
+      connection: connection as any, // Cast nécessaire car SolanaPaymentConfig attend un Keypair complet
+      wallet: mockWallet as any, // Cast nécessaire car SolanaPaymentConfig attend un Keypair complet
+      receiverAddress: new PublicKey(RECEIVER_STR)
+    };
+    
+    sessionService = PaymentSessionService.getInstance();
+    service = await SolanaPaymentService.getInstance(config);
+    
+    // Utiliser vi.spyOn pour accéder aux méthodes privées de manière sûre
+    vi.spyOn(service as any, 'sessionService', 'get').mockReturnValue(sessionService);
   });
 
   describe('token validation', () => {
     it('should validate token mint address', async () => {
-      const result = await context.service.isTokenSupported(new PublicKey(RECEIVER_STR));
+      connection.getParsedAccountInfo.mockResolvedValue({
+        context: { slot: 1 },
+        value: {
+          executable: false,
+          owner: new PublicKey(PROGRAM_ID_STR),
+          lamports: 1000000,
+          data: Buffer.from([])
+        } as AccountInfo<Buffer | ParsedAccountData>
+      });
+
+      const result = await service.isTokenSupported(new PublicKey(RECEIVER_STR));
       expect(result).toBe(true);
     });
 
     it('should reject invalid token addresses', async () => {
-      const result = await context.service.isTokenSupported(new PublicKey(PROGRAM_ID_STR));
+      connection.getParsedAccountInfo.mockResolvedValue({
+        context: { slot: 1 },
+        value: null
+      });
+      const result = await service.isTokenSupported(new PublicKey(RECEIVER_STR));
       expect(result).toBe(false);
     });
 
     it('should handle token lookup errors', async () => {
-      vi.spyOn(context.connection, 'getParsedAccountInfo').mockRejectedValue(new Error('Token lookup failed'));
-      const result = await context.service.isTokenSupported(new PublicKey(RECEIVER_STR));
+      connection.getParsedAccountInfo.mockRejectedValue(new Error('Token lookup failed'));
+      const result = await service.isTokenSupported(new PublicKey(RECEIVER_STR));
       expect(result).toBe(false);
     });
   });
@@ -37,8 +69,30 @@ describe('SolanaTokenPayments', () => {
     const serviceType = 'TOKEN_PAYMENT';
     const userId = 'test-user';
 
+    beforeEach(() => {
+      vi.spyOn(sessionService, 'createSession').mockResolvedValue({
+        id: 'test-session',
+        amount: paymentAmount,
+        userId,
+        serviceType,
+        status: PaymentStatus.PENDING,
+        network: PaymentNetwork.SOLANA,
+        token: {
+          address: new PublicKey(RECEIVER_STR),
+          network: PaymentNetwork.SOLANA,
+          symbol: 'SOL',
+          decimals: 9
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        expiresAt: new Date(),
+        retryCount: 0
+      });
+    });
+
     it('should process token payment successfully', async () => {
-      const result = await context.service.payWithToken(
+      connection.sendTransaction.mockResolvedValue('tx-hash');
+      const result = await service.payWithToken(
         new PublicKey(RECEIVER_STR),
         paymentAmount,
         serviceType,
@@ -46,18 +100,18 @@ describe('SolanaTokenPayments', () => {
         {}
       );
 
-      expect(result).toBe('test-session-id');
-      expect(context.sessionService.updateSessionStatus).toHaveBeenCalledWith(
-        'test-session-id',
+      expect(result).toBe('test-session');
+      expect(sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        'test-session',
         PaymentStatus.PENDING
       );
     });
 
     it('should handle network errors gracefully', async () => {
-      mockNetworkError();
+      connection.sendTransaction.mockRejectedValue(new Error('Network error'));
       
       await expect(
-        context.service.payWithToken(
+        service.payWithToken(
           new PublicKey(RECEIVER_STR),
           paymentAmount,
           serviceType,
@@ -66,17 +120,17 @@ describe('SolanaTokenPayments', () => {
         )
       ).rejects.toThrow('Network error');
 
-      expect(context.sessionService.updateSessionStatus).toHaveBeenCalledWith(
-        'test-session-id',
+      expect(sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        'test-session',
         PaymentStatus.FAILED
       );
     });
 
     it('should handle insufficient balance', async () => {
-      vi.spyOn(context.connection, 'getBalance').mockResolvedValue(0);
+      connection.getBalance.mockResolvedValue(0);
       
       await expect(
-        context.service.payWithToken(
+        service.payWithToken(
           new PublicKey(RECEIVER_STR),
           paymentAmount,
           serviceType,
@@ -88,7 +142,7 @@ describe('SolanaTokenPayments', () => {
 
     it('should respect custom commitment levels', async () => {
       const customCommitment = 'finalized';
-      await context.service.payWithToken(
+      await service.payWithToken(
         new PublicKey(RECEIVER_STR),
         paymentAmount,
         serviceType,
@@ -96,17 +150,17 @@ describe('SolanaTokenPayments', () => {
         { commitment: customCommitment }
       );
 
-      expect(context.connection.confirmTransaction).toHaveBeenCalledWith(
+      expect(connection.confirmTransaction).toHaveBeenCalledWith(
         expect.anything(),
         { commitment: customCommitment }
       );
     });
 
     it('should handle payment failures', async () => {
-      mockTransactionError();
-
+      connection.sendTransaction.mockRejectedValue(new Error('Transaction failed'));
+      
       await expect(
-        context.service.payWithToken(
+        service.payWithToken(
           new PublicKey(RECEIVER_STR),
           paymentAmount,
           serviceType,
@@ -115,18 +169,18 @@ describe('SolanaTokenPayments', () => {
         )
       ).rejects.toThrow();
 
-      expect(context.sessionService.updateSessionStatus).toHaveBeenCalledWith(
-        'test-session-id',
+      expect(sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        'test-session',
         PaymentStatus.FAILED,
         expect.any(String)
       );
     });
 
     it('should handle network errors during payment', async () => {
-      mockNetworkError();
-
+      connection.sendTransaction.mockRejectedValue(new Error('Network error'));
+      
       await expect(
-        context.service.payWithToken(
+        service.payWithToken(
           new PublicKey(RECEIVER_STR),
           paymentAmount,
           serviceType,
@@ -135,8 +189,8 @@ describe('SolanaTokenPayments', () => {
         )
       ).rejects.toThrow();
 
-      expect(context.sessionService.updateSessionStatus).toHaveBeenCalledWith(
-        'test-session-id',
+      expect(sessionService.updateSessionStatus).toHaveBeenCalledWith(
+        'test-session',
         PaymentStatus.FAILED,
         expect.any(String)
       );
@@ -148,9 +202,13 @@ describe('SolanaTokenPayments', () => {
     const serviceType = 'TOKEN_PAYMENT';
     const userId = 'test-user';
 
+    beforeEach(() => {
+      vi.spyOn(service, 'isTokenSupported').mockResolvedValue(true);
+    });
+
     it('should reject zero amount payments', async () => {
       await expect(
-        context.service.payWithToken(
+        service.payWithToken(
           new PublicKey(PROGRAM_ID_STR),
           BigInt(0),
           serviceType,
@@ -161,9 +219,9 @@ describe('SolanaTokenPayments', () => {
     });
 
     it('should reject payments with invalid token', async () => {
-      vi.spyOn(context.service, 'isTokenSupported').mockResolvedValue(false);
+      vi.spyOn(service, 'isTokenSupported').mockResolvedValue(false);
       await expect(
-        context.service.payWithToken(
+        service.payWithToken(
           new PublicKey(PROGRAM_ID_STR),
           paymentAmount,
           serviceType,

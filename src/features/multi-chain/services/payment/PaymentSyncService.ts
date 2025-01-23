@@ -136,8 +136,23 @@ export class PaymentSyncService {
     }
   }
 
+  public cleanupWithoutRecursion(): void {
+    // Fermer le canal de diffusion
+    if (this.broadcastChannel) {
+      this.broadcastChannel.close();
+    }
+    this.lastProcessedTimestamp = 0;
+  }
+
   public cleanup(): void {
-    this.broadcastChannel.close();
+    this.cleanupWithoutRecursion();
+    // Nettoyer le gestionnaire de session
     this.sessionManager.cleanup();
+  }
+
+  public reset(): void {
+    this.cleanupWithoutRecursion();
+    this.broadcastChannel = new BroadcastChannel(PAYMENT_SYNC_CHANNEL);
+    this.setupEventListeners();
   }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { type Address, type Chain, type PublicClient, type WalletClient } from 'viem';
 import { PolygonPaymentService } from '../PolygonPaymentService';
 import { COMMON_TOKEN_ADDRESSES } from '../../payment/types/TokenConfig';
@@ -6,40 +6,50 @@ import { PaymentSessionService } from '../../payment/PaymentSessionService';
 import { PaymentStatus } from '../../payment/types/PaymentSession';
 import { PAYMENT_CONTRACT_ABI } from '../../payment/abis/TokenABI';
 
-jest.mock('../../payment/PaymentSessionService');
+vi.mock('../../payment/PaymentSessionService');
 
 describe('PolygonPaymentService - Token Payments', () => {
   let paymentService: PolygonPaymentService;
-  let mockPublicClient: jest.Mocked<PublicClient>;
-  let mockWalletClient: jest.Mocked<WalletClient>;
-  let mockSessionService: jest.Mocked<PaymentSessionService>;
+  let mockPublicClient: PublicClient;
+  let mockWalletClient: WalletClient;
+  let mockSessionService: PaymentSessionService;
 
   beforeEach(() => {
-    mockPublicClient = {
-      chain: { id: 137 } as Chain, // Polygon Mainnet
-      watchContractEvent: jest.fn().mockReturnValue(() => {}),
-      readContract: jest.fn().mockImplementation(async (args: any) => {
-        if (args.functionName === 'isTokenSupported') {
-          return true;
-        }
-        throw new Error(`Unexpected contract function: ${args.functionName}`);
-      }),
-    } as unknown as jest.Mocked<PublicClient>;
+    // Create base mock objects
+    const mockReadContract = vi.fn().mockImplementation(async (args: any) => {
+      if (args.functionName === 'isTokenSupported') {
+        return true;
+      }
+      return BigInt(0);
+    });
 
+    const mockWatchContractEvent = vi.fn().mockReturnValue(() => {});
+
+    // Setup PublicClient mock
+    mockPublicClient = {
+      chain: { id: 137 } as Chain,
+      watchContractEvent: mockWatchContractEvent,
+      readContract: mockReadContract,
+    } as unknown as PublicClient;
+
+    // Setup WalletClient mock
     mockWalletClient = {
       account: { address: '0x1234...' as Address },
-      signMessage: jest.fn(),
-    } as unknown as jest.Mocked<WalletClient>;
+      signMessage: vi.fn(),
+    } as unknown as WalletClient;
+
+    // Setup PaymentSessionService mock
+    const mockUpdateSessionStatus = vi.fn();
+    const mockGetSession = vi.fn();
+    const mockCreateSession = vi.fn();
 
     mockSessionService = {
-      getInstance: jest.fn().mockReturnValue({
-        updateSessionStatus: jest.fn(),
-        getSession: jest.fn(),
-        createSession: jest.fn(),
-      }),
-    } as unknown as jest.Mocked<PaymentSessionService>;
+      updateSessionStatus: mockUpdateSessionStatus,
+      getSession: mockGetSession,
+      createSession: mockCreateSession,
+    } as unknown as PaymentSessionService;
 
-    (PaymentSessionService.getInstance as jest.Mock).mockReturnValue(mockSessionService);
+    vi.mocked(PaymentSessionService.getInstance).mockReturnValue(mockSessionService);
 
     paymentService = PolygonPaymentService.getInstance({
       publicClient: mockPublicClient,
@@ -54,7 +64,7 @@ describe('PolygonPaymentService - Token Payments', () => {
       const amount = BigInt(1000000); // 1 USDT (6 decimals)
       const sessionId = 'test-session-1';
 
-      mockSessionService.updateSessionStatus = jest.fn();
+      mockSessionService.updateSessionStatus = vi.fn();
 
       const result = await paymentService.payWithToken(
         COMMON_TOKEN_ADDRESSES.POLYGON_USDT,
@@ -87,7 +97,7 @@ describe('PolygonPaymentService - Token Payments', () => {
       const amount = BigInt(1000000); // 1 USDC (6 decimals)
       const sessionId = 'test-session-2';
 
-      mockSessionService.updateSessionStatus = jest.fn();
+      mockSessionService.updateSessionStatus = vi.fn();
 
       const result = await paymentService.payWithToken(
         COMMON_TOKEN_ADDRESSES.POLYGON_USDC,
@@ -120,7 +130,7 @@ describe('PolygonPaymentService - Token Payments', () => {
       const amount = BigInt('1000000000000000000'); // 1 DAI (18 decimals)
       const sessionId = 'test-session-3';
 
-      mockSessionService.updateSessionStatus = jest.fn();
+      mockSessionService.updateSessionStatus = vi.fn();
 
       const result = await paymentService.payWithToken(
         COMMON_TOKEN_ADDRESSES.POLYGON_DAI,

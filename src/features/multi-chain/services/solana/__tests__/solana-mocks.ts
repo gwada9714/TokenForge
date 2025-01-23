@@ -1,102 +1,78 @@
 import { vi } from 'vitest';
-import { PublicKey, Transaction, Connection, Commitment } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { PROGRAM_ID_STR } from './test-constants';
+import { MockKeypair, MockedConnection } from './test-types';
 
-// Create a base Connection mock with required properties
-const createConnectionMock = () => {
-  const mock = {
-    commitment: 'confirmed' as Commitment,
-    rpcEndpoint: 'http://localhost:8899',
+// Création d'un mock de wallet qui implémente l'interface MockKeypair
+export const mockWallet: MockKeypair = {
+  publicKey: new PublicKey(PROGRAM_ID_STR),
+  signTransaction: vi.fn(),
+  signAllTransactions: vi.fn()
+};
+
+// Création d'un mock de connection typé
+export function createMockConnection(): MockedConnection {
+  const connection = {
+    rpcEndpoint: 'mock-endpoint',
+    commitment: 'confirmed',
+    getBalanceAndContext: vi.fn(),
+    getBlockTime: vi.fn(),
+    getMinimumLedgerSlot: vi.fn(),
+    getFirstAvailableBlock: vi.fn(),
+    getSupply: vi.fn(),
     getParsedAccountInfo: vi.fn(),
-    confirmTransaction: vi.fn(),
+    getAccountInfo: vi.fn(),
+    getBalance: vi.fn(),
+    getLatestBlockhash: vi.fn(),
     sendTransaction: vi.fn(),
-    getLatestBlockhash: vi.fn().mockResolvedValue({
-      blockhash: 'mock-blockhash',
-      lastValidBlockHeight: 1000
-    }),
-    getBalance: vi.fn().mockResolvedValue(1000000),
-    getBalanceAndContext: vi.fn().mockResolvedValue({
-      context: { slot: 1 },
-      value: 1000000
-    }),
-    // Add methods required by @project-serum/anchor
-    getMinimumBalanceForRentExemption: vi.fn().mockResolvedValue(0),
-    getAccountInfo: vi.fn().mockResolvedValue(null),
-    getSlot: vi.fn().mockResolvedValue(1),
-    getVersion: vi.fn().mockResolvedValue({ 'solana-core': '1.7.0' })
-  };
+    confirmTransaction: vi.fn(),
+    // Ajout des autres méthodes de l'interface Connection
+    ...Object.getOwnPropertyNames(Connection.prototype)
+      .reduce((acc, method) => ({ ...acc, [method]: vi.fn() }), {})
+  } as MockedConnection;
 
-  return mock;
-};
+  return connection;
+}
 
-// Create a mock wallet that implements the necessary interface
-const createWalletMock = () => {
-  const keypair = {
-    publicKey: new PublicKey(PROGRAM_ID_STR),
-    secretKey: new Uint8Array(64).fill(1)
-  };
+// Fonctions helpers pour les tests
+export function mockSuccessfulTransaction(connection: MockedConnection) {
+  connection.getLatestBlockhash.mockResolvedValue({
+    blockhash: 'test-blockhash',
+    lastValidBlockHeight: 1000
+  });
 
-  return {
-    publicKey: keypair.publicKey,
-    secretKey: keypair.secretKey,
-    signTransaction: vi.fn().mockImplementation(async (tx: Transaction) => tx),
-    signAllTransactions: vi.fn().mockImplementation(async (txs: Transaction[]) => txs)
-  };
-};
+  connection.sendTransaction.mockResolvedValue('test-signature');
 
-export const mockWallet = createWalletMock();
-export const mockConnection = createConnectionMock();
-
-// Mock Successful Transaction
-export const mockSuccessfulTransaction = () => {
-  mockConnection.confirmTransaction.mockResolvedValue({
+  connection.confirmTransaction.mockResolvedValue({
     value: { err: null }
   });
-  mockConnection.sendTransaction.mockResolvedValue('mock-signature');
-};
 
-// Mock Transaction Error
-export const mockTransactionError = () => {
-  mockConnection.confirmTransaction.mockResolvedValue({
-    value: { err: new Error('Transaction failed') }
+  mockWallet.signTransaction.mockImplementation((tx) => Promise.resolve(tx));
+  mockWallet.signAllTransactions.mockImplementation((txs) => Promise.resolve(txs));
+}
+
+export function mockTransactionError(connection: MockedConnection, errorMessage: string) {
+  connection.getLatestBlockhash.mockResolvedValue({
+    blockhash: 'test-blockhash',
+    lastValidBlockHeight: 1000
   });
-};
 
-// Mock Network Error
-export const mockNetworkError = () => {
-  mockConnection.confirmTransaction.mockRejectedValue(new Error('Network error'));
-  mockConnection.sendTransaction.mockRejectedValue(new Error('Network error'));
-};
+  connection.sendTransaction.mockRejectedValue(new Error(errorMessage));
+}
 
-// Create a real Connection instance for testing
-export const createSolanaConnectionMock = (endpoint: string = 'http://localhost:8899'): Connection => {
-  return new Connection(endpoint, {
-    commitment: 'confirmed',
-    confirmTransactionInitialTimeout: 10000
+export function mockNetworkError(connection: MockedConnection, errorMessage: string) {
+  connection.getLatestBlockhash.mockRejectedValue(new Error(errorMessage));
+}
+
+export function mockTimeoutError(connection: MockedConnection) {
+  connection.getLatestBlockhash.mockResolvedValue({
+    blockhash: 'test-blockhash',
+    lastValidBlockHeight: 1000
   });
-};
 
-// Mock AnchorProvider
-vi.mock('@project-serum/anchor', () => ({
-  Program: vi.fn().mockImplementation(() => ({
-    provider: {
-      connection: mockConnection,
-      wallet: mockWallet,
-      sendAndConfirm: vi.fn().mockResolvedValue('mock-signature')
-    },
-    rpc: {
-      processPayment: vi.fn().mockResolvedValue('mock-signature')
-    }
-  })),
-  AnchorProvider: vi.fn().mockImplementation((connection, wallet, opts) => ({
-    connection,
-    wallet,
-    opts,
-    sendAndConfirm: vi.fn().mockResolvedValue('mock-signature')
-  })),
-  web3: {
-    Connection,
-    PublicKey,
-    Transaction
-  }
-}));
+  connection.sendTransaction.mockResolvedValue('test-signature');
+
+  connection.confirmTransaction.mockResolvedValue({
+    value: { err: 'Transaction timed out' }
+  });
+}

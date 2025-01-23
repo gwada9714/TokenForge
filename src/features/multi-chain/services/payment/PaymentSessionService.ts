@@ -143,21 +143,11 @@ export class PaymentSessionService implements IPaymentSessionManager {
       if (!currentSession) return;
 
       if (currentSession.status === PaymentStatus.PENDING) {
-        if (currentSession.retryCount < this.RETRY_LIMIT) {
-          // Retry logic
-          this.updateSession(sessionId, {
-            retryCount: currentSession.retryCount + 1,
-            expiresAt: new Date(Date.now() + this.TIMEOUT_MS)
-          });
-          this.setupSessionTimeout(sessionId);
-        } else {
-          // Max retries reached, mark as failed
-          this.updateSession(sessionId, {
-            status: PaymentStatus.TIMEOUT,
-            error: 'Payment timeout exceeded'
-          });
-          this.cleanupSession(sessionId);
-        }
+        this.updateSession(sessionId, {
+          status: PaymentStatus.TIMEOUT,
+          error: 'Payment timeout exceeded'
+        });
+        this.cleanupTimeout(sessionId);
       }
     }, this.TIMEOUT_MS);
 
@@ -174,7 +164,9 @@ export class PaymentSessionService implements IPaymentSessionManager {
     // Nettoyer toutes les sessions
     this.sessions.clear();
 
-    // Nettoyer le service de synchronisation
-    this.syncService.cleanup();
+    // Nettoyer le service de synchronisation sans déclencher une boucle
+    if (this.syncService) {
+      this.syncService.cleanupWithoutRecursion();
+    }
   }
 }

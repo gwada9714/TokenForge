@@ -1,15 +1,15 @@
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { vi } from 'vitest';
+import { PublicKey } from '@solana/web3.js';
 import { PaymentNetwork, PaymentStatus } from '../../payment/types/PaymentSession';
 import { PaymentSessionService } from '../../payment/PaymentSessionService';
-import { SolanaPaymentService } from '../SolanaPaymentService';
-import { createSolanaConnectionMock } from './solana-mocks';
-import { PROGRAM_ID_STR, RECEIVER_STR } from './test-constants';
+import { RECEIVER_STR } from './test-constants';
+import { MockedConnection } from './test-types';
 
 export interface TestContext {
-  service: SolanaPaymentService;
+  service: any;
   sessionService: PaymentSessionService;
-  connection: Connection;
-  wallet: Keypair;
+  connection: MockedConnection;
+  wallet: any;
 }
 
 export function createTestSession(overrides = {}) {
@@ -34,35 +34,14 @@ export function createTestSession(overrides = {}) {
   };
 }
 
-export function setupTestContext(): TestContext {
-  const wallet = Keypair.generate();
-  const connection = createSolanaConnectionMock();
-  
-  const config = {
-    programId: new PublicKey(PROGRAM_ID_STR),
-    connection,
-    wallet,
-    receiverAddress: new PublicKey(RECEIVER_STR)
-  };
-
-  const sessionService = PaymentSessionService.getInstance();
-  const service = SolanaPaymentService.getInstance(config);
-
-  return {
-    service,
-    sessionService,
-    connection,
-    wallet
-  };
-}
-
 export function mockSessionService(sessionService: PaymentSessionService) {
   const mockSession = createTestSession();
   const confirmedSession = createTestSession({ status: PaymentStatus.CONFIRMED });
-
-  vi.spyOn(sessionService, 'createSession').mockReturnValue(mockSession);
-  vi.spyOn(sessionService, 'updateSessionStatus').mockReturnValue(confirmedSession);
-
+  
+  vi.spyOn(sessionService, 'createSession').mockResolvedValue(mockSession);
+  vi.spyOn(sessionService, 'getSession').mockResolvedValue(mockSession);
+  vi.spyOn(sessionService, 'updateSessionStatus').mockResolvedValue(confirmedSession);
+  
   return {
     mockSession,
     confirmedSession
