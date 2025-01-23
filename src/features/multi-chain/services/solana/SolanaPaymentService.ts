@@ -41,14 +41,18 @@ export class SolanaPaymentService implements BasePaymentService {
    * Récupère l'instance unique du service de paiement Solana
    */
   public static async getInstance(config?: SolanaPaymentConfig): Promise<SolanaPaymentService> {
-    if (!SolanaPaymentService.instance && config) {
-      if (!config.connection || !config.wallet || !config.programId || !config.receiverAddress) {
-        throw new Error('Invalid configuration: missing required fields');
-      }
-      SolanaPaymentService.instance = new SolanaPaymentService(config);
-    } else if (!SolanaPaymentService.instance) {
+    if (!config) {
       throw new Error('Invalid configuration: config is required');
     }
+    
+    if (!config.connection || !config.wallet || !config.programId || !config.receiverAddress) {
+      throw new Error('Invalid configuration: missing required fields');
+    }
+
+    if (!SolanaPaymentService.instance) {
+      SolanaPaymentService.instance = new SolanaPaymentService(config);
+    }
+
     return SolanaPaymentService.instance;
   }
 
@@ -94,6 +98,7 @@ export class SolanaPaymentService implements BasePaymentService {
       }, options.commitment || 'confirmed');
 
       if (confirmation.value.err) {
+        await this.sessionService.updateSessionStatus(session.id, PaymentStatus.FAILED, signature, confirmation.value.err.toString());
         throw new Error(confirmation.value.err.toString());
       }
 
