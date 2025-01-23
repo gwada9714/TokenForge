@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { PaymentSession, PaymentStatus, PaymentToken } from './types/PaymentSession';
-import { PaymentSyncService } from './PaymentSyncService';
+import { PaymentSyncService, IPaymentSessionManager } from './PaymentSyncService';
 
-export class PaymentSessionService {
+export class PaymentSessionService implements IPaymentSessionManager {
   private static instance: PaymentSessionService;
   private sessions: Map<string, PaymentSession>;
   private timeouts: Map<string, NodeJS.Timeout>;
@@ -13,7 +13,7 @@ export class PaymentSessionService {
   private constructor() {
     this.sessions = new Map();
     this.timeouts = new Map();
-    this.syncService = PaymentSyncService.getInstance();
+    this.syncService = PaymentSyncService.getInstance(this);
   }
 
   public static getInstance(): PaymentSessionService {
@@ -29,23 +29,24 @@ export class PaymentSessionService {
     token: PaymentToken,
     serviceType: PaymentSession['serviceType']
   ): PaymentSession {
+    const now = new Date();
     const session: PaymentSession = {
       id: uuidv4(),
       userId,
-      status: PaymentStatus.PENDING,
-      network: token.network,
-      token,
       amount,
+      token,
+      network: token.network,
       serviceType,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      expiresAt: new Date(Date.now() + this.TIMEOUT_MS),
+      status: PaymentStatus.PENDING,
+      createdAt: now,
+      updatedAt: now,
+      expiresAt: new Date(now.getTime() + this.TIMEOUT_MS),
       retryCount: 0
     };
 
     this.sessions.set(session.id, session);
-    this.setupTimeout(session.id);
-    this.syncService.syncSession(session);
+    this.setupSessionTimeout(session.id);
+    this.syncService.broadcastSessionUpdate(session.id, session);
 
     return session;
   }
@@ -56,6 +57,25 @@ export class PaymentSessionService {
 
   public getSessions(): Map<string, PaymentSession> {
     return this.sessions;
+  }
+
+  public updateSession(sessionId: string, updates: Partial<PaymentSession>): void {
+    const session = this.sessions.get(sessionId);
+    if (!session) return;
+
+    const updatedSession = {
+      ...session,
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    this.sessions.set(sessionId, updatedSession);
+    this.syncService.broadcastSessionUpdate(sessionId, updates);
+
+    // Si le statut est final, nettoyer le timeout
+    if (updates.status && updates.status !== PaymentStatus.PENDING) {
+      this.cleanupTimeout(sessionId);
+    }
   }
 
   public updateSessionStatus(
@@ -69,22 +89,8 @@ export class PaymentSessionService {
       throw new Error(`Session ${sessionId} not found`);
     }
 
-    // Clear timeout if status is final
-    if (status !== PaymentStatus.PENDING) {
-      this.clearTimeout(sessionId);
-    }
-
-    const updatedSession: PaymentSession = {
-      ...session,
-      status,
-      txHash,
-      error,
-      updatedAt: new Date()
-    };
-
-    this.sessions.set(sessionId, updatedSession);
-    this.syncService.syncSession(updatedSession);
-    return updatedSession;
+    this.updateSession(sessionId, { status, txHash, error });
+    return this.sessions.get(sessionId)!;
   }
 
   public async retryPayment(sessionId: string): Promise<boolean> {
@@ -94,48 +100,25 @@ export class PaymentSessionService {
     }
 
     if (session.retryCount >= this.RETRY_LIMIT) {
-      this.updateSessionStatus(
-        sessionId,
-        PaymentStatus.FAILED,
-        undefined,
-        'Retry limit exceeded'
-      );
+      this.updateSession(sessionId, {
+        status: PaymentStatus.FAILED,
+        error: 'Retry limit exceeded'
+      });
       return false;
     }
 
-    const updatedSession: PaymentSession = {
-      ...session,
+    this.updateSession(sessionId, {
       retryCount: session.retryCount + 1,
       status: PaymentStatus.PENDING,
       error: undefined,
-      updatedAt: new Date()
-    };
+      expiresAt: new Date(Date.now() + this.TIMEOUT_MS)
+    });
 
-    this.sessions.set(sessionId, updatedSession);
-    this.syncService.syncSession(updatedSession);
-    this.setupTimeout(sessionId);
+    this.setupSessionTimeout(sessionId);
     return true;
   }
 
-  private setupTimeout(sessionId: string): void {
-    this.clearTimeout(sessionId);
-
-    const timeout = setTimeout(() => {
-      const session = this.sessions.get(sessionId);
-      if (session && session.status === PaymentStatus.PENDING) {
-        this.updateSessionStatus(
-          sessionId,
-          PaymentStatus.TIMEOUT,
-          undefined,
-          'Payment timeout'
-        );
-      }
-    }, this.TIMEOUT_MS);
-
-    this.timeouts.set(sessionId, timeout);
-  }
-
-  private clearTimeout(sessionId: string): void {
+  private cleanupTimeout(sessionId: string): void {
     const timeout = this.timeouts.get(sessionId);
     if (timeout) {
       clearTimeout(timeout);
@@ -143,21 +126,55 @@ export class PaymentSessionService {
     }
   }
 
-  public cleanupOldSessions(maxAgeMs: number = 24 * 60 * 60 * 1000): void {
-    const now = Date.now();
-    for (const [sessionId, session] of this.sessions.entries()) {
-      if (now - session.createdAt.getTime() > maxAgeMs) {
-        this.sessions.delete(sessionId);
-        this.clearTimeout(sessionId);
-        this.syncService.cleanupSession(sessionId);
+  public cleanupSession(sessionId: string): void {
+    this.cleanupTimeout(sessionId);
+    this.sessions.delete(sessionId);
+  }
+
+  private setupSessionTimeout(sessionId: string): void {
+    const session = this.sessions.get(sessionId);
+    if (!session) return;
+
+    // Nettoyer l'ancien timeout s'il existe
+    this.cleanupTimeout(sessionId);
+
+    const timeout = setTimeout(() => {
+      const currentSession = this.sessions.get(sessionId);
+      if (!currentSession) return;
+
+      if (currentSession.status === PaymentStatus.PENDING) {
+        if (currentSession.retryCount < this.RETRY_LIMIT) {
+          // Retry logic
+          this.updateSession(sessionId, {
+            retryCount: currentSession.retryCount + 1,
+            expiresAt: new Date(Date.now() + this.TIMEOUT_MS)
+          });
+          this.setupSessionTimeout(sessionId);
+        } else {
+          // Max retries reached, mark as failed
+          this.updateSession(sessionId, {
+            status: PaymentStatus.TIMEOUT,
+            error: 'Payment timeout exceeded'
+          });
+          this.cleanupSession(sessionId);
+        }
       }
-    }
+    }, this.TIMEOUT_MS);
+
+    this.timeouts.set(sessionId, timeout);
   }
 
   public cleanup(): void {
-    this.timeouts.forEach((timeout) => clearTimeout(timeout));
-    this.timeouts.clear();
+    // Nettoyer tous les timeouts
+    for (const [sessionId, timeout] of this.timeouts) {
+      clearTimeout(timeout);
+      this.timeouts.delete(sessionId);
+    }
+
+    // Nettoyer toutes les sessions
     this.sessions.clear();
+
+    // Nettoyer le service de synchronisation
     this.syncService.cleanup();
   }
 }

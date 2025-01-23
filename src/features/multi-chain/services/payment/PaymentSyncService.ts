@@ -1,5 +1,4 @@
 import { PaymentSession, PaymentStatus } from './types/PaymentSession';
-import { PaymentSessionService } from './PaymentSessionService';
 
 const PAYMENT_SYNC_CHANNEL = 'payment_sync_channel';
 
@@ -10,40 +9,52 @@ interface PaymentSyncMessage {
   timestamp: number;
 }
 
+export interface IPaymentSessionManager {
+  getSession(sessionId: string): PaymentSession | undefined;
+  getSessions(): Map<string, PaymentSession>;
+  updateSession(sessionId: string, updates: Partial<PaymentSession>): void;
+  cleanupSession(sessionId: string): void;
+  cleanup(): void;
+}
+
 export class PaymentSyncService {
   private static instance: PaymentSyncService;
-  private sessionService: PaymentSessionService;
+  private sessionManager: IPaymentSessionManager;
   private broadcastChannel: BroadcastChannel;
   private lastProcessedTimestamp: number = 0;
 
-  private constructor() {
-    this.sessionService = PaymentSessionService.getInstance();
+  private constructor(sessionManager: IPaymentSessionManager) {
+    this.sessionManager = sessionManager;
     this.broadcastChannel = new BroadcastChannel(PAYMENT_SYNC_CHANNEL);
     this.setupEventListeners();
   }
 
-  public static getInstance(): PaymentSyncService {
+  public static getInstance(sessionManager: IPaymentSessionManager): PaymentSyncService {
     if (!PaymentSyncService.instance) {
-      PaymentSyncService.instance = new PaymentSyncService();
+      PaymentSyncService.instance = new PaymentSyncService(sessionManager);
     }
     return PaymentSyncService.instance;
   }
 
   private setupEventListeners(): void {
     this.broadcastChannel.onmessage = (event: MessageEvent<PaymentSyncMessage>) => {
-      // Éviter le traitement des messages plus anciens ou des doublons
-      if (event.data.timestamp <= this.lastProcessedTimestamp) {
+      const message = event.data;
+      
+      // Ignorer les messages plus anciens que le dernier traité
+      if (message.timestamp <= this.lastProcessedTimestamp) {
         return;
       }
-
-      this.lastProcessedTimestamp = event.data.timestamp;
-
-      switch (event.data.type) {
+      
+      this.lastProcessedTimestamp = message.timestamp;
+      
+      switch (message.type) {
         case 'SESSION_UPDATE':
-          this.handleSessionUpdate(event.data.sessionId, event.data.data);
+          if (message.data) {
+            this.handleSessionUpdate(message.sessionId, message.data);
+          }
           break;
         case 'SESSION_CLEANUP':
-          this.handleSessionCleanup(event.data.sessionId);
+          this.handleSessionCleanup(message.sessionId);
           break;
       }
     };
@@ -59,24 +70,22 @@ export class PaymentSyncService {
   private async handleSessionUpdate(sessionId: string, data?: Partial<PaymentSession>): Promise<void> {
     if (!data) return;
 
-    const currentSession = this.sessionService.getSession(sessionId);
+    const currentSession = this.sessionManager.getSession(sessionId);
     if (!currentSession) return;
 
     // Ne mettre à jour que si le statut est plus récent
     if (data.status && this.isStatusUpdateValid(currentSession.status, data.status)) {
-      await this.sessionService.updateSessionStatus(
+      await this.sessionManager.updateSession(
         sessionId,
-        data.status,
-        data.txHash,
-        data.error
+        { status: data.status, txHash: data.txHash, error: data.error }
       );
     }
   }
 
   private handleSessionCleanup(sessionId: string): void {
-    const session = this.sessionService.getSession(sessionId);
+    const session = this.sessionManager.getSession(sessionId);
     if (session && this.isSessionExpired(session)) {
-      this.sessionService.cleanup();
+      this.sessionManager.cleanupSession(sessionId);
     }
   }
 
@@ -97,17 +106,17 @@ export class PaymentSyncService {
     return session.expiresAt < new Date();
   }
 
-  public syncSession(session: PaymentSession): void {
+  public broadcastSessionUpdate(sessionId: string, updates: Partial<PaymentSession>): void {
     const message: PaymentSyncMessage = {
       type: 'SESSION_UPDATE',
-      sessionId: session.id,
-      data: session,
+      sessionId,
+      data: updates,
       timestamp: Date.now()
     };
     this.broadcastChannel.postMessage(message);
   }
 
-  public cleanupSession(sessionId: string): void {
+  public broadcastSessionCleanup(sessionId: string): void {
     const message: PaymentSyncMessage = {
       type: 'SESSION_CLEANUP',
       sessionId,
@@ -117,17 +126,18 @@ export class PaymentSyncService {
   }
 
   private async syncSessions(): Promise<void> {
-    const sessions = Array.from(this.sessionService.getSessions().values());
+    const sessions = Array.from(this.sessionManager.getSessions().values());
     const pendingSessions = sessions.filter(
       (session: PaymentSession) => session.status === PaymentStatus.PENDING
     );
 
     for (const session of pendingSessions) {
-      this.syncSession(session);
+      this.broadcastSessionUpdate(session.id, session);
     }
   }
 
   public cleanup(): void {
     this.broadcastChannel.close();
+    this.sessionManager.cleanup();
   }
 }
