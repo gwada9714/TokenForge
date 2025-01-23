@@ -17,10 +17,14 @@ console.error = vi.fn();
 
 // Mock des APIs Web3
 vi.mock('@solana/web3.js', async () => {
-  const actual = await vi.importActual('@solana/web3.js');
+  const actual = await vi.importActual<typeof import('@solana/web3.js')>('@solana/web3.js');
   return {
-    ...(actual as any),
-    Connection: vi.fn(),
+    ...actual,
+    Connection: vi.fn().mockImplementation(() => ({
+      getBalance: vi.fn().mockResolvedValue(1000000000),
+      getAccountInfo: vi.fn().mockResolvedValue(null),
+      sendTransaction: vi.fn().mockResolvedValue('mock-signature'),
+    })),
     PublicKey: vi.fn().mockImplementation((key) => ({
       toString: () => key,
       toBase58: () => key,
