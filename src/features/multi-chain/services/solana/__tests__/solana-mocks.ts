@@ -1,78 +1,119 @@
 import { vi } from 'vitest';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { PROGRAM_ID_STR } from './test-constants';
-import { MockKeypair, MockedConnection } from './test-types';
+import { PublicKey, Keypair } from '@solana/web3.js';
+import { MockedConnection } from './test-types';
 
-// Création d'un mock de wallet qui implémente l'interface MockKeypair
-export const mockWallet: MockKeypair = {
-  publicKey: new PublicKey(PROGRAM_ID_STR),
-  signTransaction: vi.fn(),
-  signAllTransactions: vi.fn()
-};
+// Mock de wallet avec les bonnes signatures
+export const mockWallet = {
+  publicKey: new PublicKey('mock-wallet-pubkey'),
+  sign: vi.fn().mockImplementation((transaction: any) => {
+    return Promise.resolve(transaction);
+  }),
+  signTransaction: vi.fn().mockImplementation((transaction: any) => {
+    return Promise.resolve(transaction);
+  }),
+  signAllTransactions: vi.fn().mockImplementation((transactions: any[]) => {
+    return Promise.resolve(transactions);
+  })
+} as unknown as Keypair;
 
-// Création d'un mock de connection typé
-export function createMockConnection(): MockedConnection {
-  const connection = {
+// Création d'une connexion mockée avec les bonnes valeurs par défaut
+export const createMockConnection = (): MockedConnection => {
+  const mock = {
     rpcEndpoint: 'mock-endpoint',
     commitment: 'confirmed',
-    getBalanceAndContext: vi.fn(),
-    getBlockTime: vi.fn(),
-    getMinimumLedgerSlot: vi.fn(),
-    getFirstAvailableBlock: vi.fn(),
-    getSupply: vi.fn(),
-    getParsedAccountInfo: vi.fn(),
-    getAccountInfo: vi.fn(),
-    getBalance: vi.fn(),
     getLatestBlockhash: vi.fn(),
     sendTransaction: vi.fn(),
     confirmTransaction: vi.fn(),
-    // Ajout des autres méthodes de l'interface Connection
-    ...Object.getOwnPropertyNames(Connection.prototype)
-      .reduce((acc, method) => ({ ...acc, [method]: vi.fn() }), {})
+    getParsedAccountInfo: vi.fn()
   } as MockedConnection;
 
-  return connection;
-}
+  // Configuration par défaut
+  mockSuccessfulTransaction(mock);
+  return mock;
+};
 
 // Fonctions helpers pour les tests
 export function mockSuccessfulTransaction(connection: MockedConnection) {
-  connection.getLatestBlockhash.mockResolvedValue({
-    blockhash: 'test-blockhash',
-    lastValidBlockHeight: 1000
+  // Reset tous les mocks
+  connection.getLatestBlockhash.mockReset();
+  connection.sendTransaction.mockReset();
+  connection.confirmTransaction.mockReset();
+
+  // Configuration pour un succès
+  connection.getLatestBlockhash.mockResolvedValueOnce({
+    blockhash: 'mock-blockhash',
+    lastValidBlockHeight: 1234
   });
-
-  connection.sendTransaction.mockResolvedValue('test-signature');
-
-  connection.confirmTransaction.mockResolvedValue({
+  connection.sendTransaction.mockResolvedValueOnce('test-signature');
+  connection.confirmTransaction.mockResolvedValueOnce({
     value: { err: null }
   });
-
-  mockWallet.signTransaction.mockImplementation((tx) => Promise.resolve(tx));
-  mockWallet.signAllTransactions.mockImplementation((txs) => Promise.resolve(txs));
 }
 
-export function mockTransactionError(connection: MockedConnection, errorMessage: string) {
-  connection.getLatestBlockhash.mockResolvedValue({
-    blockhash: 'test-blockhash',
-    lastValidBlockHeight: 1000
+export function mockTransactionError(connection: MockedConnection) {
+  // Reset tous les mocks
+  connection.getLatestBlockhash.mockReset();
+  connection.sendTransaction.mockReset();
+  connection.confirmTransaction.mockReset();
+
+  // Configuration pour une erreur de transaction
+  vi.spyOn(connection, 'sendTransaction').mockImplementation(() => {
+    throw new Error('Payment failed: Transaction failed');
   });
-
-  connection.sendTransaction.mockRejectedValue(new Error(errorMessage));
-}
-
-export function mockNetworkError(connection: MockedConnection, errorMessage: string) {
-  connection.getLatestBlockhash.mockRejectedValue(new Error(errorMessage));
 }
 
 export function mockTimeoutError(connection: MockedConnection) {
-  connection.getLatestBlockhash.mockResolvedValue({
-    blockhash: 'test-blockhash',
-    lastValidBlockHeight: 1000
-  });
+  // Reset tous les mocks
+  connection.getLatestBlockhash.mockReset();
+  connection.sendTransaction.mockReset();
+  connection.confirmTransaction.mockReset();
 
-  connection.sendTransaction.mockResolvedValue('test-signature');
-
-  connection.confirmTransaction.mockResolvedValue({
-    value: { err: 'Transaction timed out' }
+  // Configuration pour un timeout
+  vi.spyOn(connection, 'sendTransaction').mockImplementation(() => {
+    throw new Error('Payment failed: timeout');
   });
+}
+
+export function mockNetworkError(connection: MockedConnection) {
+  // Reset tous les mocks
+  connection.getLatestBlockhash.mockReset();
+  connection.sendTransaction.mockReset();
+  connection.confirmTransaction.mockReset();
+
+  // Configuration pour une erreur réseau
+  vi.spyOn(connection, 'getLatestBlockhash').mockImplementation(() => {
+    throw new Error('Payment failed: Network error');
+  });
+}
+
+export function mockValidationError(connection: MockedConnection) {
+  // Reset tous les mocks
+  connection.getLatestBlockhash.mockReset();
+  connection.sendTransaction.mockReset();
+  connection.confirmTransaction.mockReset();
+
+  // Configuration pour une erreur de validation
+  connection.getLatestBlockhash.mockResolvedValueOnce({
+    blockhash: 'mock-blockhash',
+    lastValidBlockHeight: 1234
+  });
+  vi.spyOn(connection, 'sendTransaction').mockImplementation(() => {
+    throw new Error('Payment failed: Invalid blockhash');
+  });
+}
+
+export function mockValidBlockhashThenError(connection: MockedConnection) {
+  // Reset tous les mocks
+  connection.getLatestBlockhash.mockReset();
+  connection.sendTransaction.mockReset();
+  connection.confirmTransaction.mockReset();
+
+  // Configuration pour une erreur de validation après un blockhash valide
+  connection.getLatestBlockhash.mockResolvedValueOnce({
+    blockhash: 'mock-blockhash',
+    lastValidBlockHeight: 1234
+  });
+  connection.getLatestBlockhash.mockRejectedValueOnce(
+    new Error('Invalid blockhash')
+  );
 }

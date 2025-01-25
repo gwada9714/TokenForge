@@ -4,7 +4,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary/ErrorBoundary';
-import { Web3Provider } from './web3';
+import Web3Provider from './web3';
 import { ContractProvider } from './contract';
 import theme from '@/theme';
 
