@@ -1,20 +1,26 @@
-import React from 'react';
 import { RouteObject } from 'react-router-dom';
-import { HomePage } from '../../pages/home/HomePage';
-import { AboutPage } from '../../pages/about/AboutPage';
-import { ContactPage } from '../../pages/contact/ContactPage';
+import { lazy } from 'react';
+
+const Home = lazy(() => import('../../pages/Home'));
+const Login = lazy(() => import('../../pages/auth/Login'));
+const Register = lazy(() => import('../../pages/auth/Register'));
+const NotFound = lazy(() => import('../../pages/errors/NotFound'));
 
 export const publicRoutes: RouteObject[] = [
   {
-    path: '',
-    element: <HomePage />,
+    path: '/',
+    element: <Home />
   },
   {
-    path: 'about',
-    element: <AboutPage />,
+    path: '/login',
+    element: <Login />
   },
   {
-    path: 'contact',
-    element: <ContactPage />,
+    path: '/register',
+    element: <Register />
   },
+  {
+    path: '*',
+    element: <NotFound />
+  }
 ];

@@ -1,52 +1,42 @@
-import React from 'react';
 import { RouteObject } from 'react-router-dom';
-import { ProtectedRoute } from '../../features/auth';
+import { lazy } from 'react';
+import ProtectedRoute from '../guards/ProtectedRoute';
+import LazyWrapper from '../../components/LazyWrapper';
 
-// Placeholder components until they are implemented
-const MarketplaceDashboard: React.FC = () => (
-  <div>
-    <h1>Marketplace Dashboard</h1>
-    <p>Browse and trade tokens.</p>
-  </div>
-);
-
-const ListingDetails: React.FC = () => (
-  <div>
-    <h1>Listing Details</h1>
-    <p>View detailed information about this listing.</p>
-  </div>
-);
-
-const CreateListing: React.FC = () => (
-  <div>
-    <h1>Create Listing</h1>
-    <p>Create a new marketplace listing.</p>
-  </div>
-);
+const Marketplace = lazy(() => import('../../components/features/marketplace/Marketplace'));
+const ListItem = lazy(() => import('../../components/features/marketplace/ListItem'));
+const ItemDetails = lazy(() => import('../../components/features/marketplace/ItemDetails'));
 
 export const marketplaceRoutes: RouteObject[] = [
   {
-    path: 'marketplace',
-    element: (
-      <ProtectedRoute requireWallet requireCorrectNetwork>
-        <MarketplaceDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: 'marketplace/:listingId',
-    element: (
-      <ProtectedRoute requireWallet requireCorrectNetwork>
-        <ListingDetails />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: 'marketplace/create',
-    element: (
-      <ProtectedRoute requireWallet requireCorrectNetwork>
-        <CreateListing />
-      </ProtectedRoute>
-    ),
-  },
+    path: '/marketplace',
+    children: [
+      {
+        index: true,
+        element: (
+          <LazyWrapper>
+            <Marketplace />
+          </LazyWrapper>
+        )
+      },
+      {
+        path: 'list',
+        element: (
+          <ProtectedRoute>
+            <LazyWrapper>
+              <ListItem />
+            </LazyWrapper>
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: ':itemId',
+        element: (
+          <LazyWrapper>
+            <ItemDetails />
+          </LazyWrapper>
+        )
+      }
+    ]
+  }
 ];

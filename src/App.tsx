@@ -8,7 +8,7 @@ import { router } from './router/routes';
 import LoadingFallback from './components/common/LoadingFallback';
 import { GlobalStyle } from "./styles/GlobalStyle";
 import { ContractProvider } from "./contexts/ContractContext";
-import { Web3Providers } from "./providers/Web3Providers";
+import { Web3Provider } from "./providers/web3/Web3Providers";
 import '@rainbow-me/rainbowkit/styles.css';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
@@ -16,7 +16,7 @@ export function App() {
   return (
     <Provider store={store}>
       <ThemeProvider theme={forgeTheme}>
-        <Web3Providers>
+        <Web3Provider>
           <ContractProvider>
             <GlobalStyle />
             <ErrorBoundary>
@@ -25,7 +25,7 @@ export function App() {
               </Suspense>
             </ErrorBoundary>
           </ContractProvider>
-        </Web3Providers>
+        </Web3Provider>
       </ThemeProvider>
     </Provider>
   );
