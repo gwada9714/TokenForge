@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Button } from '@/components/ui/Button';
+import { StyledButton } from '@/components/ui/Button';
 
 const FooterContainer = styled.footer`
   background-color: #182038;
@@ -162,7 +162,7 @@ const NewsletterForm = styled.form`
   }
 `;
 
-export const Footer: React.FC = () => {
+const Footer: React.FC = () => {
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Gérer l'inscription à la newsletter
@@ -182,9 +182,9 @@ export const Footer: React.FC = () => {
             </p>
             <NewsletterForm onSubmit={handleNewsletterSubmit}>
               <input type="email" placeholder="Votre email" required />
-              <Button variant="primary" size="medium" type="submit">
+              <StyledButton $variant="primary" $size="medium" type="submit">
                 S'inscrire
-              </Button>
+              </StyledButton>
             </NewsletterForm>
           </BrandSection>
 
@@ -246,3 +246,5 @@ export const Footer: React.FC = () => {
     </FooterContainer>
   );
 };
+
+export default Footer;

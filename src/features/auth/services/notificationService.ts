@@ -5,6 +5,12 @@ export type NotificationType = 'success' | 'error' | 'info' | 'warning';
 export interface NotificationOptions extends ToastOptions {
   type?: NotificationType;
   toastId?: string;
+  position?: 'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left';
+  autoClose?: number | false;
+  hideProgressBar?: boolean;
+  closeOnClick?: boolean;
+  pauseOnHover?: boolean;
+  draggable?: boolean;
 }
 
 class NotificationService {

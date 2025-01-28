@@ -1,118 +1,62 @@
 import { useState, useEffect } from 'react';
 import { useWeb3Provider } from './useWeb3Provider';
-import { TKN_TOKEN_ADDRESS } from '@/constants/tokenforge';
-import { Contract } from 'ethers';
-import { TokenForgeStats, TaxCollectedEvent } from '@/types/tokenforge';
+import { TAX_SYSTEM_ADDRESS } from '@/constants/tokenforge';
+import { TokenForgeStats } from '@/types/tokenforge';
 
-const TOKEN_FORGE_ABI = [
-  'function totalTaxCollected() view returns (uint256)',
-  'function totalTaxToForge() view returns (uint256)',
-  'function totalTaxToDevFund() view returns (uint256)',
-  'function totalTaxToBuyback() view returns (uint256)',
-  'function totalTaxToStaking() view returns (uint256)',
-  'function totalTransactions() view returns (uint256)',
-  'function totalValueLocked() view returns (uint256)',
-  'event TaxCollected(address indexed from, uint256 amount, uint256 timestamp)'
+const TAX_SYSTEM_ABI = [
+  {
+    type: 'function',
+    name: 'totalTaxCollected',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }]
+  },
+  {
+    type: 'function',
+    name: 'totalTransactions',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }]
+  }
 ] as const;
 
 export const useTokenForgeStats = () => {
   const [stats, setStats] = useState<TokenForgeStats>({
-    totalTaxCollected: 0n,
-    totalTaxToForge: 0n,
-    totalTaxToDevFund: 0n,
-    totalTaxToBuyback: 0n,
-    totalTaxToStaking: 0n,
-    totalTransactions: 0,
-    totalValueLocked: 0n,
-    isLoading: true,
-    taxHistory: []
+    totalDistributed: 0n,
+    lastDistributionTime: 0n,
+    isLoading: true
   });
 
-  const { provider } = useWeb3Provider();
-  const [contract, setContract] = useState<Contract | null>(null);
+  const { publicClient } = useWeb3Provider();
 
   useEffect(() => {
-    if (!provider) return;
-    
-    const tokenContract = new Contract(
-      TKN_TOKEN_ADDRESS[1],
-      TOKEN_FORGE_ABI,
-      provider
-    );
-    
-    setContract(tokenContract);
-  }, [provider]);
-
-  useEffect(() => {
-    if (!contract) return;
-
     const fetchStats = async () => {
+      if (!publicClient) return;
+
       try {
-        const [
-          totalTaxCollected,
-          totalTaxToForge,
-          totalTaxToDevFund,
-          totalTaxToBuyback,
-          totalTaxToStaking,
-          totalTransactions,
-          totalValueLocked
-        ] = await Promise.all([
-          contract.totalTaxCollected(),
-          contract.totalTaxToForge(),
-          contract.totalTaxToDevFund(),
-          contract.totalTaxToBuyback(),
-          contract.totalTaxToStaking(),
-          contract.totalTransactions(),
-          contract.totalValueLocked()
+        const [totalDistributed, lastDistributionTime] = await Promise.all([
+          publicClient.readContract({
+            address: TAX_SYSTEM_ADDRESS as `0x${string}`,
+            abi: TAX_SYSTEM_ABI,
+            functionName: 'totalTaxCollected'
+          }),
+          Promise.resolve(0n) // Temporaire : on retourne 0 pour lastDistributionTime
         ]);
 
-        const taxEvent = contract.filters.TaxCollected();
-        const events = await contract.queryFilter(taxEvent);
-        const taxHistory = events.map((event) => {
-          const eventData = event as unknown as { args: [string, bigint, bigint] };
-          const [, amount, timestamp] = eventData.args;
-          return {
-            timestamp: Number(timestamp),
-            amount
-          };
-        });
-
-        setStats({
-          totalTaxCollected: BigInt(totalTaxCollected.toString()),
-          totalTaxToForge: BigInt(totalTaxToForge.toString()),
-          totalTaxToDevFund: BigInt(totalTaxToDevFund.toString()),
-          totalTaxToBuyback: BigInt(totalTaxToBuyback.toString()),
-          totalTaxToStaking: BigInt(totalTaxToStaking.toString()),
-          totalTransactions: Number(totalTransactions),
-          totalValueLocked: BigInt(totalValueLocked.toString()),
-          isLoading: false,
-          taxHistory
-        });
+        setStats(prev => ({
+          ...prev,
+          totalDistributed,
+          lastDistributionTime,
+          isLoading: false
+        }));
       } catch (error) {
-        console.error('Error fetching TokenForge stats:', error);
+        console.error('Error fetching contract stats:', error);
         setStats(prev => ({ ...prev, isLoading: false }));
       }
     };
 
-    fetchStats();
-
-    // Écouter les nouveaux événements
-    const handleTaxCollected = (from: string, amount: bigint, timestamp: bigint) => {
-      setStats(prev => ({
-        ...prev,
-        taxHistory: [
-          ...prev.taxHistory,
-          { timestamp: Number(timestamp), amount }
-        ]
-      }));
-    };
-
-    contract.on('TaxCollected', handleTaxCollected);
-
-    return () => {
-      contract.off('TaxCollected', handleTaxCollected);
-    };
-  }, [contract]);
+    void fetchStats();
+  }, [publicClient]);
 
   return stats;
 };

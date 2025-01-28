@@ -1,67 +1,55 @@
 import 'styled-components';
 
-type ColorSet = {
+interface ColorSet {
   main: string;
   light: string;
   dark: string;
   border?: string;
   hover?: string;
-};
+}
+
+interface ExtendedColorSet extends ColorSet {
+  metallic?: string;
+  glow?: string;
+}
 
 type BreakpointKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-
-type SpacingFunction = {
-  (value: number): string;
-  xs: string;
-  sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-  base: string;
-};
-
-type FontSizes = {
-  xs: string;
-  sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-  '2xl': string;
-  '3xl': string;
-  '4xl': string;
-  '5xl': string;
-  small: string;
-  medium: string;
-  large: string;
-  base: string;
-};
 
 declare module 'styled-components' {
   export interface DefaultTheme {
     colors: {
       primary: ColorSet;
       secondary: ColorSet;
-      success: Omit<ColorSet, 'border' | 'hover'>;
-      warning: Omit<ColorSet, 'border' | 'hover'>;
-      ember: ColorSet;
+      success: ColorSet;
+      warning: ColorSet;
+      error: ColorSet;
+      info: ColorSet;
+      grey: {
+        50: string;
+        100: string;
+        200: string;
+        300: string;
+        400: string;
+        500: string;
+        600: string;
+        700: string;
+        800: string;
+        900: string;
+      };
       text: {
         primary: string;
         secondary: string;
-        light: string;
+        disabled: string;
       };
       background: {
         default: string;
         paper: string;
-        dark: string;
       };
+      ember: ExtendedColorSet;
+      forge: ExtendedColorSet;
       gradient: {
         primary: string;
         secondary: string;
-        forge: string;
-      };
-      forge: ColorSet & {
-        metallic: string;
-        glow: string;
       };
     };
     typography: {
@@ -70,14 +58,46 @@ declare module 'styled-components' {
         body: string;
       };
       fontWeight: {
-        normal: number;
+        light: number;
+        regular: number;
         medium: number;
         semibold: number;
         bold: number;
       };
-      fontSizes: FontSizes;
+      fontSizes: {
+        xs: string;
+        small: string;
+        medium: string;
+        large: string;
+        xl: string;
+        "2xl": string;
+        "3xl": string;
+        "4xl": string;
+      };
     };
-    spacing: SpacingFunction;
+    borderRadius: {
+      none: string;
+      small: string;
+      medium: string;
+      large: string;
+      xl: string;
+      "2xl": string;
+      full: string;
+    };
+    transitions: {
+      default: string;
+      fast: string;
+      slow: string;
+    };
+    spacing: {
+      (value: number): string;
+      xs: string;
+      sm: string;
+      md: string;
+      lg: string;
+      xl: string;
+      base: string;
+    };
     breakpoints: {
       values: Record<BreakpointKey, number>;
       up: (key: BreakpointKey) => string;

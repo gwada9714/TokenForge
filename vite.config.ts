@@ -42,7 +42,8 @@ export default defineConfig(({ mode }) => {
           Buffer: true,
           global: true,
           process: true
-        }
+        },
+        protocolImports: true
       }),
       VitePWA({
         registerType: 'autoUpdate',
@@ -88,6 +89,12 @@ export default defineConfig(({ mode }) => {
         'events': 'events',
         'buffer': 'buffer',
         'process': 'process/browser',
+        'util': 'util',
+        'stream': 'stream-browserify',
+        'zlib': 'browserify-zlib',
+        'eventemitter3': path.resolve(__dirname, 'node_modules/eventemitter3/index.js'),
+        'qrcode': path.resolve(__dirname, 'node_modules/qrcode/lib/browser.js'),
+        'ua-parser-js': path.resolve(__dirname, 'node_modules/ua-parser-js/dist/ua-parser.min.js')
       },
     },
     optimizeDeps: {
@@ -96,7 +103,23 @@ export default defineConfig(({ mode }) => {
           global: 'globalThis'
         }
       },
-      include: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
+      include: [
+        'react',
+        'react-dom',
+        '@mui/material',
+        '@emotion/react',
+        '@emotion/styled',
+        'broadcast-channel',
+        'buffer',
+        'process',
+        'events',
+        'util',
+        'stream-browserify',
+        'browserify-zlib',
+        'eventemitter3',
+        'qrcode',
+        'ua-parser-js'
+      ],
       exclude: ['@rainbow-me/rainbowkit']
     },
     build: {
@@ -105,11 +128,22 @@ export default defineConfig(({ mode }) => {
         external: ['buffer'],
         output: {
           manualChunks: {
-            vendor: ['react', 'react-dom'],
-            mui: ['@mui/material', '@emotion/react', '@emotion/styled'],
-            web3: ['wagmi', 'viem', '@rainbow-me/rainbowkit']
+            'react-vendor': ['react', 'react-dom'],
+            'mui-vendor': ['@mui/material', '@emotion/react', '@emotion/styled'],
+            'web3-vendor': ['viem', 'wagmi', '@rainbow-me/rainbowkit']
           }
         }
+      },
+      commonjsOptions: {
+        transformMixedEsModules: true,
+        defaultIsModuleExports: true,
+        requireReturnsDefault: 'auto',
+        include: [
+          /node_modules/,
+          /ua-parser-js/,
+          /qrcode/,
+          /eventemitter3/
+        ]
       }
     }
   };

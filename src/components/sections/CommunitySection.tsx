@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { StyledButton } from '@/components/ui/Button';
 
 const SectionContainer = styled.section`
   padding: 6rem 2rem;
@@ -246,7 +246,7 @@ export const CommunitySection: React.FC = () => {
 
         <StatsContainer>
           {communityStats.map((stat, index) => (
-            <StatCard key={index} padding="large">
+            <StatCard key={index} $padding="large">
               <StatValue>{stat.value}</StatValue>
               <StatLabel>{stat.label}</StatLabel>
             </StatCard>
@@ -255,7 +255,7 @@ export const CommunitySection: React.FC = () => {
 
         <ChannelsGrid>
           {channels.map((channel, index) => (
-            <ChannelCard key={index} padding="large">
+            <ChannelCard key={index} $padding="large">
               <ChannelIcon>
                 {channel.icon}
               </ChannelIcon>
@@ -269,14 +269,14 @@ export const CommunitySection: React.FC = () => {
                   </ChannelStat>
                 ))}
               </ChannelStats>
-              <Button
-                variant="primary"
-                size="large"
-                fullWidth
+              <StyledButton
+                $variant="primary"
+                $size="large"
+                $fullWidth
                 onClick={() => window.open(channel.buttonLink, '_blank')}
               >
                 {channel.buttonText}
-              </Button>
+              </StyledButton>
             </ChannelCard>
           ))}
         </ChannelsGrid>

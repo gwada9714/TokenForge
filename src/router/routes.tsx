@@ -1,5 +1,5 @@
 import { createBrowserRouter, RouteObject } from 'react-router-dom';
-import Layout from '../components/Layout/Layout';
+import Layout from '../components/layouts/main/Layout';
 import { publicRoutes } from './routes/public.routes';
 import { tokenRoutes } from './routes/token.routes';
 import { marketplaceRoutes } from './routes/marketplace.routes';

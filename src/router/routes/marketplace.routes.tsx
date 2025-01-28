@@ -1,7 +1,7 @@
 import { RouteObject } from 'react-router-dom';
 import { lazy } from 'react';
 import ProtectedRoute from '../guards/ProtectedRoute';
-import LazyWrapper from '../../components/LazyWrapper';
+import LazyWrapper from '../../components/common/lazy/LazyWrapper';
 
 const Marketplace = lazy(() => import('../../components/features/marketplace/Marketplace'));
 const ListItem = lazy(() => import('../../components/features/marketplace/ListItem'));

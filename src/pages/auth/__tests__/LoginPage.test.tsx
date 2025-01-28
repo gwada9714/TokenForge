@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { LoginPage } from '../LoginPage';
+import LoginPage from '../LoginPage';
 import { TokenForgeAuthProvider } from '../../../features/auth';
 
 const mockNavigate = vi.fn();

@@ -1,7 +1,6 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import {
   Grid,
-  Paper,
   Typography,
   Chip,
   Box,
@@ -10,8 +9,8 @@ import {
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { TokenInfo } from "../../types/tokens";
-import { shortenAddress } from "../../utils/address";
+import { TokenInfo } from "../../../../types/tokens";
+import { shortenAddress } from "../../../../utils/address";
 
 interface TokenDetailsProps {
   token: TokenInfo;
@@ -19,21 +18,19 @@ interface TokenDetailsProps {
 
 interface DetailItemProps {
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
 }
 
 const DetailItem: React.FC<DetailItemProps> = ({ label, value }) => (
-  <Grid item xs={12} sm={6}>
-    <Paper sx={{ p: 2, height: "100%" }}>
-      <Typography color="textSecondary" gutterBottom>
-        {label}
-      </Typography>
-      <Typography variant="body1">{value}</Typography>
-    </Paper>
-  </Grid>
+  <Box sx={{ mb: 2 }}>
+    <Typography variant="subtitle2" color="textSecondary">
+      {label}
+    </Typography>
+    <Typography variant="body1">{value}</Typography>
+  </Box>
 );
 
-export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
+const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
@@ -126,3 +123,5 @@ export const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
     </Grid>
   );
 };
+
+export default TokenDetails;

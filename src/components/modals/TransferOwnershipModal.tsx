@@ -4,11 +4,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   TextField,
   Typography,
   Alert
 } from '@mui/material';
+import { StyledButton } from '@/components/ui/Button';
 import { isAddress } from 'viem';
 
 interface TransferOwnershipModalProps {
@@ -66,17 +66,22 @@ const TransferOwnershipModal: React.FC<TransferOwnershipModalProps> = ({
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={isLoading}>
+        <StyledButton 
+          $variant="secondary"
+          onClick={handleClose} 
+          disabled={isLoading} 
+          $isLoading={isLoading}
+        >
           Annuler
-        </Button>
-        <Button 
+        </StyledButton>
+        <StyledButton 
+          $variant="primary"
           onClick={handleConfirm} 
-          variant="contained" 
-          color="primary"
           disabled={!newAddress || isLoading}
+          $isLoading={isLoading}
         >
           {isLoading ? 'Transfert en cours...' : 'Confirmer'}
-        </Button>
+        </StyledButton>
       </DialogActions>
     </Dialog>
   );

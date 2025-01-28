@@ -1,6 +1,5 @@
 import { createTheme, Theme, ThemeOptions } from "@mui/material/styles";
 import { Components } from "@mui/material/styles";
-import { PaletteColor, PaletteColorOptions } from "@mui/material";
 
 // Extend the Material-UI theme interface
 declare module "@mui/material/styles" {
@@ -20,6 +19,7 @@ declare module "@mui/material/styles" {
       glow: string;
     };
   }
+
   interface ThemeOptions {
     gradient?: {
       primary?: string;
@@ -36,8 +36,8 @@ declare module "@mui/material/styles" {
       glow?: string;
     };
   }
+
   interface Palette {
-    success: PaletteColor;
     gradient: {
       primary: string;
       secondary: string;
@@ -53,8 +53,8 @@ declare module "@mui/material/styles" {
       glow: string;
     };
   }
+
   interface PaletteOptions {
-    success?: PaletteColorOptions;
     gradient?: {
       primary?: string;
       secondary?: string;
@@ -169,18 +169,46 @@ declare module "@mui/material/Paper" {
 const colors = {
   text: {
     primary: '#1A1A1A',
-    secondary: '#4A4A4A'
+    secondary: '#4A5568'
   },
   background: {
     primary: '#FFFFFF',
-    secondary: '#F5F5F5'
+    secondary: '#F7FAFC'
   },
-  primary: '#3B82F6',
-  secondary: '#10B981',
-  success: '#22C55E',
-  warning: '#F59E0B',
-  forge: '#6366F1',
-  ember: '#EF4444'
+  primary: {
+    main: '#182038',
+    light: '#2a3654',
+    dark: '#0f1525',
+    contrastText: '#FFFFFF'
+  },
+  secondary: {
+    main: '#D97706',
+    light: '#f59e0b',
+    dark: '#92400e',
+    contrastText: '#FFFFFF'
+  },
+  success: {
+    main: '#059669',
+    light: '#10b981',
+    dark: '#047857',
+    contrastText: '#FFFFFF'
+  },
+  warning: {
+    main: '#D97706',
+    light: '#f59e0b',
+    dark: '#92400e',
+    contrastText: '#FFFFFF'
+  },
+  forge: {
+    main: '#182038',
+    dark: '#0f1525',
+    light: '#2a3654',
+    border: '#2d3748',
+    hover: '#2a3654',
+    metallic: '#4a5568',
+    glow: '#6b7280'
+  },
+  ember: '#D97706'
 };
 
 const typography = {
@@ -229,9 +257,9 @@ const borderRadius = {
 };
 
 const shadows = {
-  small: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-  medium: '0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12)',
-  large: '0 10px 20px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.10)'
+  small: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+  medium: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  large: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
 };
 
 const transitions = {
@@ -248,56 +276,37 @@ const zIndex = {
   tooltip: 1500
 };
 
-const components: Components<Omit<Theme, "components">> = {
+const components: Components<Theme> = {
   MuiButton: {
-    styleOverrides: {
-      root: {
-        textTransform: "none",
-        borderRadius: "8px",
-        padding: "8px 16px",
-      },
-    },
     variants: [
       {
         props: { variant: "forge" },
         style: {
-          backgroundColor: colors.forge,
-          color: "#ffffff",
+          background: colors.forge.main,
+          color: "#FFFFFF",
           "&:hover": {
-            backgroundColor: colors.forge,
-          },
-          "&:active": {
-            backgroundColor: colors.forge,
+            background: colors.forge.hover,
           },
         },
       },
       {
         props: { variant: "ember" },
         style: {
-          backgroundColor: colors.ember,
-          color: "#ffffff",
+          background: colors.ember,
+          color: "#FFFFFF",
           "&:hover": {
-            backgroundColor: colors.ember,
-          },
-          "&:active": {
-            backgroundColor: colors.ember,
+            background: colors.warning.light,
           },
         },
       },
     ],
   },
   MuiPaper: {
-    styleOverrides: {
-      root: {
-        borderRadius: "16px",
-        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-      },
-    },
     variants: [
       {
         props: { variant: "forge" },
         style: {
-          borderLeft: `4px solid ${colors.forge}`,
+          borderLeft: `4px solid ${colors.forge.main}`,
         },
       },
       {
@@ -314,13 +323,13 @@ const components: Components<Omit<Theme, "components">> = {
         "& .MuiOutlinedInput-root": {
           borderRadius: "8px",
           "& fieldset": {
-            borderColor: colors.forge,
+            borderColor: colors.forge.main,
           },
           "&:hover fieldset": {
-            borderColor: colors.forge,
+            borderColor: colors.forge.hover,
           },
           "&.Mui-focused fieldset": {
-            borderColor: colors.forge,
+            borderColor: colors.forge.main,
           },
         },
       },
@@ -330,21 +339,18 @@ const components: Components<Omit<Theme, "components">> = {
 
 const themeOptions: ThemeOptions = {
   breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 960,
-      lg: 1280,
-      xl: 1920,
-    },
+    values: breakpoints.values,
   },
   palette: {
     primary: colors.primary,
     secondary: colors.secondary,
     success: colors.success,
-    background: colors.background,
-    text: colors.text,
     warning: colors.warning,
+    background: {
+      default: colors.background.primary,
+      paper: colors.background.secondary
+    },
+    text: colors.text,
     gradient: {
       primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
       secondary: "linear-gradient(135deg, #D97706 0%, #f59e0b 100%)",
@@ -353,43 +359,49 @@ const themeOptions: ThemeOptions = {
     forge: colors.forge,
   },
   typography: {
-    fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
+    fontFamily: typography.fontFamily.body,
     h1: {
-      fontSize: "2.5rem",
-      fontWeight: 700,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes["5xl"],
+      fontWeight: typography.fontWeight.bold,
     },
     h2: {
-      fontSize: "2rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes["4xl"],
+      fontWeight: typography.fontWeight.bold,
     },
     h3: {
-      fontSize: "1.75rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes["3xl"],
+      fontWeight: typography.fontWeight.semibold,
     },
     h4: {
-      fontSize: "1.5rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes["2xl"],
+      fontWeight: typography.fontWeight.semibold,
     },
     h5: {
-      fontSize: "1.25rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes.xl,
+      fontWeight: typography.fontWeight.medium,
     },
     h6: {
-      fontSize: "1rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes.lg,
+      fontWeight: typography.fontWeight.medium,
+    },
+    body1: {
+      fontSize: typography.fontSizes.md,
+    },
+    body2: {
+      fontSize: typography.fontSizes.sm,
     },
   },
   shape: {
     borderRadius: 8,
   },
   spacing: 8,
-  zIndex: {
-    appBar: 1100,
-    drawer: 1200,
-    modal: 1300,
-    snackbar: 1400,
-    tooltip: 1500,
-  },
+  zIndex,
   components,
 };
 

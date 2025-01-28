@@ -4,7 +4,6 @@ import { AuthPersistence } from '../store/authPersistence';
 import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
 import { notificationService } from './notificationService';
 import { tabSyncService } from './tabSyncService';
-import { randomUUID } from 'crypto';
 
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiry
@@ -51,7 +50,7 @@ export class SessionService {
 
   private constructor() {
     this.persistence = AuthPersistence.getInstance();
-    this.tabId = randomUUID();
+    this.tabId = self.crypto.randomUUID();
     this.initTabSync();
   }
 

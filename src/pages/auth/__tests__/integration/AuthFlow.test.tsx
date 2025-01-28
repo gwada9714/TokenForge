@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { TokenForgeAuthProvider } from '../../../../features/auth';
-import { LoginPage } from '../../LoginPage';
+import LoginPage from '../../LoginPage';
 import { SignUpPage } from '../../SignUpPage';
 import { ConnectWalletPage } from '../../ConnectWalletPage';
 import { WrongNetworkPage } from '../../WrongNetworkPage';

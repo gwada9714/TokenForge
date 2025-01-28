@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Button } from '@/components/ui/Button';
+import { StyledButton } from '@/components/ui/Button';
 
 const HeroContainer = styled.section`
   min-height: 100vh;
@@ -164,12 +164,12 @@ export const HeroSection: React.FC = () => {
             Créez, déployez et gérez vos tokens en toute simplicité. Une plateforme puissante pour donner vie à vos projets crypto.
           </Subtitle>
           <ButtonGroup>
-            <Button variant="primary" size="large">
+            <StyledButton $variant="primary" $size="large">
               Commencer à Forger
-            </Button>
-            <Button variant="secondary" size="large">
+            </StyledButton>
+            <StyledButton $variant="secondary" $size="large">
               Découvrir TokenForge
-            </Button>
+            </StyledButton>
           </ButtonGroup>
           <StatsContainer>
             <StatItem>

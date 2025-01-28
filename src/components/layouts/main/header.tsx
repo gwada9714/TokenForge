@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/Button';
+import { StyledButton } from '@/components/ui/Button';
 import { StyledProps } from '@/components/ui/types';
 import { useTokenForgeAuth } from '@/features/auth';
 import { useAccount } from 'wagmi';
@@ -113,7 +113,7 @@ const MobileNav = styled.nav`
 export const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user, signOut } = useTokenForgeAuth();
+  const { isAuthenticated, user, logout } = useTokenForgeAuth();
   const { isConnected } = useAccount();
   const navigate = useNavigate();
 
@@ -126,11 +126,12 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleAuthClick = () => {
+  const handleAuthClick = async () => {
     if (isAuthenticated) {
-      signOut();
+      await logout();
+      navigate('/');
     } else {
-      navigate('/login');
+      navigate('/auth/login');
     }
   };
 
@@ -167,22 +168,22 @@ export const Header: React.FC = () => {
             </>
           )}
           
-          <Button 
-            variant="secondary" 
-            size="medium" 
+          <StyledButton 
+            $variant="secondary" 
+            $size="medium" 
             onClick={handleAuthClick}
           >
             {isAuthenticated ? 'Déconnexion' : 'Connexion'}
-          </Button>
+          </StyledButton>
           
           {!isConnected && (
-            <Button 
-              variant="primary" 
-              size="medium"
+            <StyledButton 
+              $variant="primary" 
+              $size="medium"
               onClick={handleWalletClick}
             >
               Connecter Wallet
-            </Button>
+            </StyledButton>
           )}
         </Nav>
 
@@ -209,24 +210,24 @@ export const Header: React.FC = () => {
             </>
           )}
           
-          <Button 
-            variant="secondary" 
-            size="medium" 
+          <StyledButton 
+            $variant="secondary" 
+            $size="medium" 
             $fullWidth
             onClick={handleAuthClick}
           >
             {isAuthenticated ? 'Déconnexion' : 'Connexion'}
-          </Button>
+          </StyledButton>
           
           {!isConnected && (
-            <Button 
-              variant="primary" 
-              size="medium"
+            <StyledButton 
+              $variant="primary" 
+              $size="medium"
               $fullWidth
               onClick={handleWalletClick}
             >
               Connecter Wallet
-            </Button>
+            </StyledButton>
           )}
         </MobileNav>
       </MobileMenu>

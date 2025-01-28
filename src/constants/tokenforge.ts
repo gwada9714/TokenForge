@@ -1,5 +1,3 @@
-import { Address } from 'viem';
-
 // Adresses des contrats sur Sepolia
 export const TKN_TOKEN_ADDRESS = '0x6829C3fAdcD7a68f613b9d68a1ed873d5C2E745d' as const;
 export const TOKEN_FACTORY_ADDRESS = '0xB0B6ED3e12f9Bb24b1bBC3413E3bb374A6e8B2E5' as const;

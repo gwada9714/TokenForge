@@ -1,25 +1,30 @@
 import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
+import { createWalletClient, custom, WalletClient, createPublicClient, http } from 'viem';
+import { mainnet } from 'viem/chains';
 
 export const useWeb3Provider = () => {
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
-  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
+  const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
+  const [publicClient, setPublicClient] = useState<any | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.ethereum) {
       return;
     }
 
-    const browserProvider = new ethers.BrowserProvider(window.ethereum);
-    setProvider(browserProvider);
+    // Créer un wallet client pour interagir avec le wallet
+    const client = createWalletClient({
+      chain: mainnet,
+      transport: custom(window.ethereum)
+    });
+    setWalletClient(client);
 
-    browserProvider.getSigner()
-      .then(newSigner => setSigner(newSigner))
-      .catch(error => {
-        console.error('Failed to get signer:', error);
-        setSigner(null);
-      });
+    // Créer un public client pour les lectures de chaîne
+    const public_client = createPublicClient({
+      chain: mainnet,
+      transport: http()
+    });
+    setPublicClient(public_client);
   }, []);
 
-  return { provider, signer };
-}; 
+  return { walletClient, publicClient };
+};

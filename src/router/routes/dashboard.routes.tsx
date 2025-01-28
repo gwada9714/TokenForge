@@ -1,7 +1,7 @@
 import { RouteObject } from 'react-router-dom';
 import { lazy } from 'react';
 import ProtectedRoute from '../guards/ProtectedRoute';
-import LazyWrapper from '../../components/LazyWrapper';
+import LazyWrapper from '../../components/common/lazy/LazyWrapper';
 
 const StakingDashboard = lazy(() => import('../../components/features/dashboard/StakingDashboard'));
 const ProfitDashboard = lazy(() => import('../../components/features/dashboard/ProfitDashboard'));

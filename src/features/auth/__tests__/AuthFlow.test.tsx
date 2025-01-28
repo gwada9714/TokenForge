@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { TokenForgeAuthProvider } from '../context';
-import { LoginPage } from '../../../pages/auth/LoginPage';
+import LoginPage from '../../../pages/auth/LoginPage';
 import { SignUpPage } from '../../../pages/auth/SignUpPage';
 import { ConnectWalletPage } from '../../../pages/auth/ConnectWalletPage';
 import { WrongNetworkPage } from '../../../pages/auth/WrongNetworkPage';

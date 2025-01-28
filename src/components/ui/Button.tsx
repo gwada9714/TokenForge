@@ -1,82 +1,87 @@
 import React from "react";
 import styled, { css } from "styled-components";
-import { ButtonProps, StyledProps } from "./types";
+import { StyledButtonProps, StyledProps } from "./types";
 
-const StyledButton = styled.button<ButtonProps>`
-  font-family: ${(props: StyledProps) =>
-    props.theme.typography.fontFamily.heading};
-  font-weight: ${(props: StyledProps) =>
-    props.theme.typography.fontWeight.semibold};
-  border-radius: ${(props: StyledProps) => props.theme.borderRadius.medium};
-  transition: ${(props: StyledProps) => props.theme.transitions.default};
+type ButtonComponentProps = StyledButtonProps & StyledProps;
+
+const StyledButtonBase = styled.button<ButtonComponentProps>`
+  font-family: ${(props) => props.theme.typography.fontFamily.heading};
+  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
+  border-radius: ${(props) => props.theme.borderRadius.medium};
+  transition: ${(props) => props.theme.transitions.default};
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: ${(props: StyledProps) => props.theme.spacing(2)};
+  gap: ${(props) => props.theme.spacing(2)};
 
-  ${(props: ButtonProps & StyledProps) =>
+  ${(props) =>
     props.$fullWidth &&
     css`
       width: 100%;
     `}
 
-  ${(props: ButtonProps & StyledProps) => {
-    switch (props.size) {
+  ${(props) => {
+    switch (props.$size) {
       case "small":
         return css`
           padding: ${props.theme.spacing(1)} ${props.theme.spacing(2)};
-          font-size: ${props.theme.typography.fontSizes.small};
+          font-size: ${props.theme.typography.fontSizes.xs};
         `;
       case "large":
         return css`
           padding: ${props.theme.spacing(3)} ${props.theme.spacing(4)};
-          font-size: ${props.theme.typography.fontSizes.large};
+          font-size: ${props.theme.typography.fontSizes.xl};
         `;
       default:
         return css`
           padding: ${props.theme.spacing(2)} ${props.theme.spacing(3)};
-          font-size: ${props.theme.typography.fontSizes.medium};
+          font-size: ${props.theme.typography.fontSizes.md};
         `;
     }
   }}
 
-  ${(props: ButtonProps & StyledProps) => {
-    switch (props.variant) {
-      case "secondary":
+  ${(props) => {
+    const { colors } = props.theme;
+    
+    switch (props.$variant) {
+      case "secondary": {
         return css`
           background-color: transparent;
-          border: 2px solid ${props.theme.colors.secondary.main};
-          color: ${props.theme.colors.secondary.main};
+          border: 2px solid ${colors.secondary};
+          color: ${colors.secondary};
 
           &:hover:not(:disabled) {
-            background-color: ${props.theme.colors.secondary.main};
-            color: ${props.theme.colors.text.light};
+            background-color: ${colors.text.secondary};
+            color: ${colors.text.primary};
           }
         `;
-      case "text":
+      }
+      case "text": {
         return css`
           background-color: transparent;
           border: none;
-          color: ${props.theme.colors.secondary.main};
+          color: ${colors.primary};
           padding: ${props.theme.spacing(1)};
 
           &:hover:not(:disabled) {
-            background-color: ${props.theme.colors.secondary.main}20;
+            background-color: ${colors.text.secondary}20;
           }
         `;
-      default:
+      }
+      default: {
         return css`
-          background-color: ${props.theme.colors.primary.main};
+          background-color: ${colors.primary};
           border: none;
-          color: ${props.theme.colors.text.light};
+          color: ${colors.text.primary};
 
           &:hover:not(:disabled) {
-            background-color: ${props.theme.colors.primary.light};
+            background-color: ${colors.text.secondary};
             transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px ${props.theme.colors.primary.main}40;
+            box-shadow: 0 4px 6px -1px ${colors.primary}40;
           }
         `;
+      }
     }
   }}
 
@@ -85,8 +90,8 @@ const StyledButton = styled.button<ButtonProps>`
     cursor: not-allowed;
   }
 
-  ${(props: ButtonProps & StyledProps) =>
-    props.isLoading &&
+  ${(props) =>
+    props.$isLoading &&
     css`
       position: relative;
       color: transparent;
@@ -97,7 +102,7 @@ const StyledButton = styled.button<ButtonProps>`
         position: absolute;
         width: 1em;
         height: 1em;
-        border: 2px solid ${props.theme.colors.text.light};
+        border: 2px solid ${props.theme.colors.text.primary};
         border-radius: 50%;
         border-right-color: transparent;
         animation: spin 1s linear infinite;
@@ -114,23 +119,23 @@ const StyledButton = styled.button<ButtonProps>`
   }
 `;
 
-export const Button: React.FC<ButtonProps> = ({
+export const StyledButton: React.FC<StyledButtonProps> = ({
   children,
-  variant = "primary",
-  size = "medium",
+  $variant = "primary",
+  $size = "medium",
   $fullWidth = false,
-  isLoading = false,
+  $isLoading = false,
   ...props
 }) => {
   return (
-    <StyledButton
-      variant={variant}
-      size={size}
+    <StyledButtonBase
+      $variant={$variant}
+      $size={$size}
       $fullWidth={$fullWidth}
-      isLoading={isLoading}
+      $isLoading={$isLoading}
       {...props}
     >
       {children}
-    </StyledButton>
+    </StyledButtonBase>
   );
 };

@@ -8,6 +8,7 @@ interface TokenDeployParams {
   name: string;
   symbol: string;
   initialSupply: string;
+  decimals: number;
   isMintable: boolean;
   isBurnable: boolean;
 }
@@ -20,7 +21,7 @@ export function useTokenDeploy() {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
-  const deployToken = async ({ name, symbol, initialSupply, isMintable, isBurnable }: TokenDeployParams) => {
+  const deployToken = async ({ name, symbol, initialSupply, decimals, isMintable, isBurnable }: TokenDeployParams) => {
     try {
       setIsDeploying(true);
       setError(null);
@@ -32,7 +33,7 @@ export function useTokenDeploy() {
       const hash = await walletClient.deployContract({
         abi: CUSTOM_ERC20_ABI,
         bytecode: bytecode as `0x${string}`,
-        args: [name, symbol, parseEther(initialSupply), isMintable, isBurnable],
+        args: [name, symbol, parseEther(initialSupply), decimals, isMintable, isBurnable],
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash });

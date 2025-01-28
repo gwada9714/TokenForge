@@ -30,6 +30,7 @@ export interface TokenForgeUser extends Omit<FirebaseUser, 'metadata'> {
   canCreateToken: boolean;
   canUseServices: boolean;
   customMetadata?: Record<string, unknown>;
+  lastLoginTime?: number;
 }
 
 export interface WalletState {

@@ -1,3 +1,4 @@
+import { BroadcastChannel } from 'broadcast-channel';
 import { TokenForgeUser } from '../types';
 import { AUTH_ACTIONS } from '../actions/authActions';
 
@@ -19,16 +20,16 @@ class TabSyncService {
   private channel: BroadcastChannel;
   private tabId: string;
   private subscribers: Array<(message: SyncMessage) => void>;
-  private lastProcessedTimestamp: number;
   private stateQueue: Map<string, { message: SyncMessage; timeout: NodeJS.Timeout }>;
   private conflictResolvers: Map<string, StateConflictResolver>;
   private currentState: Map<string, any>;
 
   private constructor() {
     this.tabId = window.crypto.randomUUID();
-    this.channel = new BroadcastChannel(SYNC_CHANNEL);
+    this.channel = new BroadcastChannel(SYNC_CHANNEL, {
+      webWorkerSupport: true
+    });
     this.subscribers = [];
-    this.lastProcessedTimestamp = Date.now();
     this.stateQueue = new Map();
     this.conflictResolvers = new Map();
     this.currentState = new Map();
@@ -43,15 +44,21 @@ class TabSyncService {
     return TabSyncService.instance;
   }
 
-  private setupConflictResolvers() {
+  private setupConflictResolvers(): void {
     // Résolveur pour l'état utilisateur
     this.conflictResolvers.set(AUTH_ACTIONS.UPDATE_USER, (current: TokenForgeUser | null, incoming: TokenForgeUser | null) => {
       if (!current) return incoming;
       if (!incoming) return current;
+
+      const lastLoginTime = Math.max(
+        current.lastLoginTime ?? 0,
+        incoming.lastLoginTime ?? 0
+      );
+
       return {
         ...current,
         ...incoming,
-        lastLoginTime: Math.max(current.lastLoginTime || 0, incoming.lastLoginTime || 0)
+        lastLoginTime: lastLoginTime || undefined
       };
     });
 
@@ -65,36 +72,19 @@ class TabSyncService {
 
   private setupListeners(): void {
     this.channel.onmessage = (event) => {
-      const message: SyncMessage = event.data;
-      
-      // Ignore les messages de notre propre onglet
-      if (message.tabId === this.tabId) return;
-      
-      // Ignore les messages plus anciens que le dernier traité
-      if (message.timestamp < this.lastProcessedTimestamp) return;
-
-      this.queueStateUpdate(message);
+      const message = event.data as SyncMessage;
+      if (message.tabId !== this.tabId) {
+        this.queueStateUpdate(message);
+      }
     };
-
-    window.addEventListener('beforeunload', () => {
-      this.broadcast({
-        type: AUTH_ACTIONS.LOGOUT,
-        timestamp: Date.now(),
-        tabId: this.tabId,
-        priority: 1000 // Priorité haute pour la déconnexion
-      });
-      this.channel.close();
-    });
   }
 
   private queueStateUpdate(message: SyncMessage): void {
-    // Annuler la mise à jour précédente du même type si elle existe
     const existing = this.stateQueue.get(message.type);
     if (existing) {
       clearTimeout(existing.timeout);
     }
 
-    // Créer un nouveau timeout pour cette mise à jour
     const timeout = setTimeout(() => {
       this.processStateUpdate(message);
       this.stateQueue.delete(message.type);
@@ -104,20 +94,20 @@ class TabSyncService {
   }
 
   private processStateUpdate(message: SyncMessage): void {
-    // Mettre à jour le timestamp du dernier message traité
-    this.lastProcessedTimestamp = message.timestamp;
-
-    // Résoudre les conflits si nécessaire
     const resolver = this.conflictResolvers.get(message.type);
-    if (resolver) {
-      message.payload = resolver(this.getCurrentState(message.type), message.payload);
+    if (!resolver) {
+      this.notifySubscribers(message);
+      return;
     }
 
-    // Mettre à jour l'état actuel
-    this.updateCurrentState(message.type, message.payload);
+    const currentState = this.getCurrentState(message.type);
+    const newState = resolver(currentState, message.payload);
+    this.updateCurrentState(message.type, newState);
 
-    // Notifier les abonnés
-    this.notifySubscribers(message);
+    this.notifySubscribers({
+      ...message,
+      payload: newState
+    });
   }
 
   private getCurrentState(actionType: string): any {
@@ -129,7 +119,13 @@ class TabSyncService {
   }
 
   private notifySubscribers(message: SyncMessage): void {
-    this.subscribers.forEach(subscriber => subscriber(message));
+    this.subscribers.forEach(callback => {
+      try {
+        callback(message);
+      } catch (error) {
+        console.error('Error in tab sync subscriber:', error);
+      }
+    });
   }
 
   subscribe(callback: (message: SyncMessage) => void): () => void {
@@ -140,39 +136,15 @@ class TabSyncService {
   }
 
   broadcast(message: SyncMessage): void {
-    this.channel.postMessage({
-      ...message,
-      timestamp: Date.now(),
-      tabId: this.tabId,
-      priority: message.priority || 0
-    });
+    message.tabId = this.tabId;
+    message.timestamp = Date.now();
+    this.channel.postMessage(message);
   }
 
-  syncAuthState(state: Partial<TokenForgeUser>): void {
-    this.broadcast({
-      type: AUTH_ACTIONS.UPDATE_USER,
-      payload: state,
-      timestamp: Date.now(),
-      tabId: this.tabId,
-      priority: 500 // Priorité moyenne pour les mises à jour d'état
-    });
-  }
-
-  syncWalletState(walletState: { isConnected: boolean; address: string | null; chainId: number | null }): void {
-    this.broadcast({
-      type: AUTH_ACTIONS.WALLET_CONNECT,
-      payload: { ...walletState, timestamp: Date.now() },
-      timestamp: Date.now(),
-      tabId: this.tabId,
-      priority: 800 // Priorité haute pour les mises à jour du wallet
-    });
-  }
-
-  close(): void {
-    // Nettoyer tous les timeouts en attente
+  async close(): Promise<void> {
     this.stateQueue.forEach(({ timeout }) => clearTimeout(timeout));
     this.stateQueue.clear();
-    this.channel.close();
+    await this.channel.close();
   }
 }
 
