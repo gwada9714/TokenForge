@@ -3,8 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Import services first
 import { walletReconnectionService, AUTH_ACTIONS } from '../walletReconnectionService';
 import { networkRetryService } from '../networkRetryService';
-import { useAuthState } from '../../hooks/useAuthState';
-import { useWalletState } from '../../hooks/useWalletState';
+import { useTokenForgeAuthContext } from '../../providers/TokenForgeAuthProvider';
 import type { WalletCallbacks, BaseWalletState } from '../walletReconnectionService';
 import type { TokenForgeUser, AuthStatus } from '../../types/auth';
 import type { WalletClientType } from '../../types';
@@ -123,32 +122,18 @@ vi.mock('firebase/auth', () => ({
 }));
 
 // Mock hooks
-vi.mock('../../hooks/useAuthState', () => ({
-  useAuthState: vi.fn().mockReturnValue({
-    status: 'idle' as AuthStatus,
-    isAuthenticated: false,
-    user: null as TokenForgeUser | null,
-    error: null,
-    login: vi.fn(),
-    logout: vi.fn(),
-    dispatch: vi.fn()
-  })
-}));
-
-vi.mock('../../hooks/useWalletState', () => ({
-  useWalletState: vi.fn().mockReturnValue({
-    address: null as string | null,
-    chainId: null as number | null,
-    isConnected: false,
-    provider: null,
-    walletClient: null as WalletClientType | null,
-    isCorrectNetwork: false,
-    connectWallet: vi.fn(),
-    disconnectWallet: vi.fn(),
-    updateNetwork: vi.fn(),
-    updateProvider: vi.fn(),
-    connect: vi.fn(),
-    disconnect: vi.fn()
+vi.mock('../../providers/TokenForgeAuthProvider', () => ({
+  useTokenForgeAuthContext: vi.fn().mockReturnValue({
+    state: {
+      walletState: {
+        isConnected: true,
+        isCorrectNetwork: true,
+        address: '0x123',
+        chainId: 1,
+        provider: {},
+        walletClient: {}
+      }
+    }
   })
 }));
 
@@ -157,8 +142,7 @@ vi.mock('ethers');
 vi.mock('viem');
 
 // Mock implementations
-const mockedUseAuthState = vi.mocked(useAuthState);
-const mockedUseWalletState = vi.mocked(useWalletState);
+const mockedUseTokenForgeAuthContext = vi.mocked(useTokenForgeAuthContext);
 
 describe('Auth Integration Tests', () => {
   // Mock data
@@ -207,8 +191,11 @@ describe('Auth Integration Tests', () => {
       };
 
       // Mock des hooks
-      mockedUseAuthState.mockReturnValue(mockAuthState);
-      mockedUseWalletState.mockReturnValue(mockWalletState);
+      mockedUseTokenForgeAuthContext.mockReturnValue({
+        state: {
+          walletState: mockWalletState
+        }
+      });
 
       // Définir les callbacks
       const callbacks: WalletCallbacks = {

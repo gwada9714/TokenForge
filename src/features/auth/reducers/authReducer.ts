@@ -1,140 +1,173 @@
-import { TokenForgeAuthState } from '../types/auth';
-import { AuthAction, AUTH_ACTIONS } from '../actions/authActions';
+import { TokenForgeAuthState, TokenForgeUser } from '../types/auth';
+import { AuthError } from '../errors/AuthError';
 
 export const initialState: TokenForgeAuthState = {
   status: 'idle',
   isAuthenticated: false,
   user: null,
   error: null,
-  walletState: {
+  wallet: {
     isConnected: false,
     address: null,
     chainId: null,
     isCorrectNetwork: false,
-    provider: null,
     walletClient: null
   },
-  isAdmin: false,
-  canCreateToken: false,
-  canUseServices: false
+  loading: false
 };
 
-export const authReducer = (
-  state: TokenForgeAuthState = initialState,
-  action: AuthAction
-): TokenForgeAuthState => {
+type AuthAction =
+  | { type: 'LOGIN_START' }
+  | { type: 'LOGIN_SUCCESS'; payload: { user: TokenForgeUser; token: string } }
+  | { type: 'LOGIN_FAILURE'; payload: AuthError }
+  | { type: 'LOGOUT_START' }
+  | { type: 'LOGOUT_SUCCESS' }
+  | { type: 'LOGOUT_FAILURE'; payload: AuthError }
+  | { type: 'SIGNUP_START' }
+  | { type: 'SIGNUP_SUCCESS'; payload: TokenForgeUser }
+  | { type: 'SIGNUP_FAILURE'; payload: AuthError }
+  | { type: 'WALLET_CONNECTING' }
+  | { type: 'WALLET_CONNECTED'; payload: { address: string; chainId: number } }
+  | { type: 'WALLET_DISCONNECTED' }
+  | { type: 'WALLET_CONNECTION_FAILED'; payload: AuthError }
+  | { type: 'NETWORK_SWITCHING' }
+  | { type: 'NETWORK_CHANGED'; payload: { chainId: number } }
+  | { type: 'NETWORK_SWITCH_FAILED'; payload: AuthError }
+  | { type: 'CLEAR_ERROR' };
+
+export function authReducer(state: TokenForgeAuthState = initialState, action: AuthAction): TokenForgeAuthState {
   switch (action.type) {
-    case AUTH_ACTIONS.LOGIN_START:
+    case 'LOGIN_START':
+    case 'SIGNUP_START':
       return {
         ...state,
         status: 'loading',
+        loading: true,
         error: null
       };
 
-    case AUTH_ACTIONS.LOGIN_SUCCESS:
+    case 'LOGIN_SUCCESS':
       return {
         ...state,
-        status: state.walletState.isConnected 
-          ? state.walletState.isCorrectNetwork 
-            ? 'authenticated'
-            : 'wallet_connected_wrong_network'
-          : 'authenticated',
+        status: 'authenticated',
+        loading: false,
+        isAuthenticated: true,
+        user: action.payload.user,
+        error: null
+      };
+
+    case 'SIGNUP_SUCCESS':
+      return {
+        ...state,
+        status: 'authenticated',
+        loading: false,
         isAuthenticated: true,
         user: action.payload,
-        isAdmin: action.payload.isAdmin,
-        canCreateToken: action.payload.canCreateToken,
-        canUseServices: action.payload.canUseServices,
         error: null
       };
 
-    case AUTH_ACTIONS.LOGIN_FAILURE:
+    case 'LOGIN_FAILURE':
+    case 'SIGNUP_FAILURE':
       return {
         ...state,
         status: 'error',
-        isAuthenticated: false,
-        user: null,
+        loading: false,
         error: action.payload
       };
 
-    case AUTH_ACTIONS.LOGOUT:
-      return {
-        ...initialState,
-        status: state.walletState.isConnected ? 'wallet_connected' : 'idle',
-        walletState: state.walletState // Preserve wallet state on logout
-      };
-
-    case AUTH_ACTIONS.UPDATE_USER:
+    case 'LOGOUT_START':
       return {
         ...state,
-        user: state.user ? { ...state.user, ...action.payload } : null,
-        isAdmin: action.payload.isAdmin ?? state.isAdmin,
-        canCreateToken: action.payload.canCreateToken ?? state.canCreateToken,
-        canUseServices: action.payload.canUseServices ?? state.canUseServices
+        loading: true
       };
 
-    case AUTH_ACTIONS.SET_ERROR:
+    case 'LOGOUT_SUCCESS':
+      return {
+        ...initialState
+      };
+
+    case 'LOGOUT_FAILURE':
       return {
         ...state,
-        status: 'error',
+        loading: false,
         error: action.payload
       };
 
-    case AUTH_ACTIONS.CLEAR_ERROR:
+    case 'WALLET_CONNECTING':
       return {
         ...state,
-        status: state.isAuthenticated 
-          ? 'authenticated' 
-          : state.walletState.isConnected
-            ? 'wallet_connected'
-            : 'idle',
+        loading: true,
         error: null
       };
 
-    case AUTH_ACTIONS.WALLET_CONNECT:
+    case 'WALLET_CONNECTED':
       return {
         ...state,
-        status: state.isAuthenticated 
-          ? action.payload.isCorrectNetwork 
-            ? 'authenticated'
-            : 'wallet_connected_wrong_network'
-          : 'wallet_connected',
-        walletState: action.payload
-      };
-
-    case AUTH_ACTIONS.WALLET_DISCONNECT:
-      return {
-        ...state,
-        status: state.isAuthenticated ? 'authenticated' : 'idle',
-        walletState: {
-          ...initialState.walletState
-        }
-      };
-
-    case AUTH_ACTIONS.WALLET_NETWORK_CHANGE:
-      return {
-        ...state,
-        status: state.isAuthenticated 
-          ? action.payload.isCorrectNetwork 
-            ? 'authenticated'
-            : 'wallet_connected_wrong_network'
-          : 'wallet_connected',
-        walletState: {
-          ...state.walletState,
+        loading: false,
+        wallet: {
+          ...state.wallet,
+          isConnected: true,
+          address: action.payload.address,
           chainId: action.payload.chainId,
-          isCorrectNetwork: action.payload.isCorrectNetwork
+          isCorrectNetwork: true // Sera mis à jour par NETWORK_CHANGED si nécessaire
         }
       };
 
-    case AUTH_ACTIONS.WALLET_UPDATE_PROVIDER:
+    case 'WALLET_DISCONNECTED':
       return {
         ...state,
-        walletState: {
-          ...state.walletState,
-          provider: action.payload.provider
+        loading: false,
+        wallet: {
+          isConnected: false,
+          address: null,
+          chainId: null,
+          isCorrectNetwork: false,
+          walletClient: null
         }
+      };
+
+    case 'WALLET_CONNECTION_FAILED':
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+        wallet: {
+          ...initialState.wallet
+        }
+      };
+
+    case 'NETWORK_SWITCHING':
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+
+    case 'NETWORK_CHANGED':
+      return {
+        ...state,
+        loading: false,
+        wallet: {
+          ...state.wallet,
+          chainId: action.payload.chainId,
+          isCorrectNetwork: true // Vous pouvez ajouter une vérification ici si nécessaire
+        }
+      };
+
+    case 'NETWORK_SWITCH_FAILED':
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
+
+    case 'CLEAR_ERROR':
+      return {
+        ...state,
+        error: null
       };
 
     default:
       return state;
   }
-};
+}

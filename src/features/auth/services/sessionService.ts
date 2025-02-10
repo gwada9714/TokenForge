@@ -312,21 +312,21 @@ export class SessionService {
   async updateUserSession(uid: string, updates: Partial<SessionData>): Promise<void> {
     try {
       const currentData = await this.getUserSession(uid);
-      const updatedData = {
+      const newData: SessionData = {
+        isAdmin: false,
+        canCreateToken: false,
+        canUseServices: true,
+        metadata: {},
         ...currentData,
-        ...updates,
-        metadata: {
-          ...currentData?.metadata,
-          ...updates.metadata
-        }
+        ...updates
       };
-      await this.persistence.setData(`users/${uid}`, updatedData);
-      this.notifySessionUpdate(uid, updatedData);
+      await this.persistence.setData(`session_${uid}`, newData);
+      this.notifySessionUpdate(uid, newData);
     } catch (error) {
       throw createAuthError(
-        AUTH_ERROR_CODES.SESSION_ERROR,
+        AUTH_ERROR_CODES.SESSION_UPDATE_FAILED,
         'Failed to update user session',
-        { userId: uid, updates, error }
+        { uid, updates }
       );
     }
   }

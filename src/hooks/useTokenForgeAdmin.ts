@@ -1,14 +1,15 @@
-import { useMemo, useState } from 'react';
-import { useAccount, useContractRead, useContractWrite, useTransaction } from 'wagmi';
-import { type Address } from 'viem';
+import { useState } from 'react';
+import { useAccount, useContractRead, useContractWrite, usePublicClient } from 'wagmi';
+import { type Address, type Hash } from 'viem';
 import { TokenForgeFactoryABI } from '../abi/TokenForgeFactory';
 import { useContract } from '../contexts/ContractContext';
 import type { TokenForgeAdminHookReturn } from '../types/hooks';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
   const { address } = useAccount();
-  const { contractAddress, networkStatus: contractNetworkStatus } = useContract();
+  const { contractAddress, networkStatus } = useContract();
+  const publicClient = usePublicClient();
   const [isPausing, setIsPausing] = useState(false);
   const [isUnpausing, setIsUnpausing] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
@@ -20,7 +21,8 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     abi: TokenForgeFactoryABI.abi,
     functionName: 'owner',
     query: {
-      enabled: !!contractAddress && contractNetworkStatus.isConnected,
+      enabled: !!contractAddress && networkStatus === 'connected',
+      staleTime: 30_000,
     }
   });
 
@@ -30,42 +32,62 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     abi: TokenForgeFactoryABI.abi,
     functionName: 'paused',
     query: {
-      enabled: !!contractAddress && contractNetworkStatus.isConnected,
+      enabled: !!contractAddress && networkStatus === 'connected',
+      staleTime: 30_000,
     }
   });
 
-  // Écriture pour la pause
-  const { writeContract: pauseContract } = useContractWrite();
-  const { writeContract: unpauseContract } = useContractWrite();
-  const { writeContract: transferContract } = useContractWrite();
-  const { waitForTransaction } = useTransaction();
+  // Hooks d'écriture
+  const { writeAsync: pauseContract } = useContractWrite({
+    address: contractAddress as Address,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'pause',
+  });
+
+  const { writeAsync: unpauseContract } = useContractWrite({
+    address: contractAddress as Address,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'unpause',
+  });
+
+  const { writeAsync: transferContract } = useContractWrite({
+    address: contractAddress as Address,
+    abi: TokenForgeFactoryABI.abi,
+    functionName: 'transferOwnership',
+  });
+
+  const waitForTransaction = async (hash: Hash) => {
+    if (!publicClient) throw new Error('Public client not available');
+    await publicClient.waitForTransactionReceipt({ hash });
+  };
 
   // Gestion de la pause
   const handleTogglePause = async () => {
-    if (!contractAddress) return;
+    if (!contractAddress || !pauseContract || !unpauseContract) return;
 
     try {
       setIsProcessing(true);
       if (isPaused) {
         setIsUnpausing(true);
-        const { hash } = await unpauseContract({
-          abi: TokenForgeFactoryABI.abi,
+        const tx = await unpauseContract({
           address: contractAddress as Address,
-          functionName: 'unpause',
         });
-        await waitForTransaction({ hash });
+        if (tx?.hash) {
+          await waitForTransaction(tx.hash);
+        }
         setIsUnpausing(false);
+        toast.success('Contract unpaused');
       } else {
         setIsPausing(true);
-        const { hash } = await pauseContract({
-          abi: TokenForgeFactoryABI.abi,
+        const tx = await pauseContract({
           address: contractAddress as Address,
-          functionName: 'pause',
         });
-        await waitForTransaction({ hash });
+        if (tx?.hash) {
+          await waitForTransaction(tx.hash);
+        }
         setIsPausing(false);
+        toast.success('Contract paused');
       }
-      toast.success(isPaused ? 'Contract unpaused' : 'Contract paused');
     } catch (error) {
       console.error('Error toggling pause:', error);
       toast.error('Failed to toggle pause state');
@@ -78,17 +100,17 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
 
   // Transfert de propriété
   const transferOwnership = async (newOwner: Address) => {
-    if (!contractAddress) return;
+    if (!contractAddress || !transferContract) return;
 
     try {
       setIsTransferring(true);
-      const { hash } = await transferContract({
-        abi: TokenForgeFactoryABI.abi,
+      const tx = await transferContract({
         address: contractAddress as Address,
-        functionName: 'transferOwnership',
         args: [newOwner],
       });
-      await waitForTransaction({ hash });
+      if (tx?.hash) {
+        await waitForTransaction(tx.hash);
+      }
       toast.success('Ownership transferred successfully');
     } catch (error) {
       console.error('Error transferring ownership:', error);
@@ -103,7 +125,13 @@ export const useTokenForgeAdmin = (): TokenForgeAdminHookReturn => {
     isPaused,
     isOwner: ownerAddress === address,
     owner: ownerAddress as Address | undefined,
-    networkStatus: contractNetworkStatus,
+    networkStatus: {
+      isConnected: networkStatus === 'connected',
+      isCorrectNetwork: networkStatus === 'connected',
+      requiredNetwork: 'mainnet',
+      networkName: networkStatus === 'connected' ? 'mainnet' : undefined,
+      error: networkStatus === 'wrong_network' ? 'Wrong network' : undefined
+    },
     isLoading: ownerLoading || isPausing || isUnpausing || isTransferring || isProcessing,
     transferOwnership,
     isTransferring,

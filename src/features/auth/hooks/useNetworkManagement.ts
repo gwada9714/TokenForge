@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
-import { BrowserProvider } from 'ethers';
-import { mainnet, sepolia } from '../../../config/chains';
+import { WalletClient } from 'viem';
+import { mainnet, sepolia } from 'viem/chains';
 import { createAuthError } from '../errors/AuthError';
+import { AUTH_ERROR_CODES } from '../errors/AuthError';
 
 export const SUPPORTED_NETWORKS = {
   [mainnet.id]: {
@@ -28,7 +29,7 @@ interface NetworkState {
   lastAttemptedChainId: SupportedChainId | null;
 }
 
-export const useNetworkManagement = (provider: BrowserProvider | null) => {
+export const useNetworkManagement = (walletClient: WalletClient | null) => {
   const [state, setState] = useState<NetworkState>({
     isChanging: false,
     error: null,
@@ -36,11 +37,11 @@ export const useNetworkManagement = (provider: BrowserProvider | null) => {
   });
 
   const switchNetwork = useCallback(async (targetChainId: SupportedChainId) => {
-    if (!provider || !window.ethereum) {
+    if (!walletClient || !window.ethereum) {
       setState(prev => ({
         ...prev,
         error: createAuthError(
-          'NETWORK_001',
+          AUTH_ERROR_CODES.PROVIDER_NOT_FOUND,
           'No provider available for network switching'
         ),
       }));
@@ -89,7 +90,7 @@ export const useNetworkManagement = (provider: BrowserProvider | null) => {
             ...prev,
             isChanging: false,
             error: createAuthError(
-              'NETWORK_002',
+              AUTH_ERROR_CODES.PROVIDER_ERROR,
               'Failed to add network',
               { originalError: addError }
             ),
@@ -102,24 +103,23 @@ export const useNetworkManagement = (provider: BrowserProvider | null) => {
         ...prev,
         isChanging: false,
         error: createAuthError(
-          'NETWORK_002',
+          AUTH_ERROR_CODES.NETWORK_MISMATCH,
           'Failed to switch network',
           { originalError: error }
         ),
       }));
       return false;
     }
-  }, [provider]);
+  }, [walletClient]);
 
   const ensureNetwork = useCallback(async (requiredChainId: SupportedChainId) => {
-    if (!provider) return false;
+    if (!walletClient) return false;
 
     try {
-      const network = await provider.getNetwork();
-      const currentChainId = Number(network.chainId) as SupportedChainId;
+      const chainId = await walletClient.getChainId();
 
-      if (currentChainId !== requiredChainId) {
-        return switchNetwork(requiredChainId);
+      if (chainId !== requiredChainId) {
+        return await switchNetwork(requiredChainId);
       }
 
       return true;
@@ -127,14 +127,14 @@ export const useNetworkManagement = (provider: BrowserProvider | null) => {
       setState(prev => ({
         ...prev,
         error: createAuthError(
-          'NETWORK_002',
-          'Failed to verify network',
+          AUTH_ERROR_CODES.PROVIDER_ERROR,
+          'Failed to check network',
           { originalError: error }
         ),
       }));
       return false;
     }
-  }, [provider, switchNetwork]);
+  }, [walletClient, switchNetwork]);
 
   const resetError = useCallback(() => {
     setState(prev => ({

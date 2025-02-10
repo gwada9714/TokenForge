@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ChainId } from '../types/Chain';
 import { getChainConfig } from '../config/chains';
-import { useWalletState } from '../../auth/hooks/useWalletState';
+import { useTokenForgeAuthContext } from '../../auth/providers/TokenForgeAuthProvider';
 
 export const useChainConnection = (targetChainId: ChainId) => {
-  const { provider, isConnected } = useWalletState();
+  const { state } = useTokenForgeAuthContext();
+  const { provider, isConnected } = state.walletState;
   const [isCorrectChain, setIsCorrectChain] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

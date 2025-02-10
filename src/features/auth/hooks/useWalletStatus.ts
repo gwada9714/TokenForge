@@ -1,14 +1,23 @@
-import { useTokenForgeAuthContext } from '../context/TokenForgeAuthProvider';
+import { useTokenForgeAuth } from '../providers/TokenForgeAuthProvider';
+import { WalletState } from '../types/wallet';
 
-export const useWalletStatus = () => {
-  const { isConnected, address, chainId, isCorrectNetwork, provider } = useTokenForgeAuthContext();
+export function useWalletStatus(): {
+  wallet: WalletState;
+  isConnected: boolean;
+  isCorrectNetwork: boolean;
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  switchNetwork: (chainId: number) => Promise<void>;
+} {
+  const { state, actions } = useTokenForgeAuth();
+  const { wallet } = state;
 
   return {
-    isConnected,
-    address,
-    chainId,
-    isCorrectNetwork,
-    provider,
-    isReady: isConnected && isCorrectNetwork,
+    wallet,
+    isConnected: wallet.isConnected,
+    isCorrectNetwork: wallet.isCorrectNetwork,
+    connect: actions.connectWallet,
+    disconnect: actions.disconnectWallet,
+    switchNetwork: actions.switchNetwork
   };
-};
+}

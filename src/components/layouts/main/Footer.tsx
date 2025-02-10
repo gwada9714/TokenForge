@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { StyledButton } from '@/components/ui/Button';
+import Button from "@/components/ui/Button";
 
 const FooterContainer = styled.footer`
   background-color: #182038;
@@ -182,9 +182,9 @@ const Footer: React.FC = () => {
             </p>
             <NewsletterForm onSubmit={handleNewsletterSubmit}>
               <input type="email" placeholder="Votre email" required />
-              <StyledButton $variant="primary" $size="medium" type="submit">
+              <Button $variant="primary" $size="medium" type="submit">
                 S'inscrire
-              </StyledButton>
+              </Button>
             </NewsletterForm>
           </BrandSection>
 

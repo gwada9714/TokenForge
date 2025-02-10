@@ -1,8 +1,6 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useTokenForgeAuth } from '../useTokenForgeAuth';
-import { useAuthState } from '../useAuthState';
-import { useWalletState } from '../useWalletState';
-import { useEmailVerification } from '../useEmailVerification';
+import { useTokenForgeAuthContext } from '../../providers/TokenForgeAuthProvider';
 import { TokenForgeUser } from '../../types';
 import { UserMetadata } from 'firebase/auth';
 import { WagmiConfig, createConfig } from 'wagmi';
@@ -40,52 +38,45 @@ const Wrapper: FC<PropsWithChildren> = ({ children }) => (
 );
 
 // Mocks
-vi.mock('../useAuthState');
-vi.mock('../useWalletState');
-vi.mock('../useEmailVerification');
+vi.mock('../../providers/TokenForgeAuthProvider');
 
 describe('useTokenForgeAuth', () => {
   // Mock implementations
   const mockAuthState = {
     state: {
+      status: 'idle',
       isAuthenticated: false,
       user: null,
-      status: 'idle',
       error: null,
-      emailVerified: false,
+      walletState: {
+        isConnected: false,
+        isCorrectNetwork: false,
+        address: null,
+        chainId: null,
+        provider: null,
+        walletClient: null,
+      },
     },
+    dispatch: vi.fn(),
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    signUp: vi.fn(),
+    resetPassword: vi.fn(),
+    updateProfile: vi.fn(),
+    connectWallet: vi.fn(),
+    disconnectWallet: vi.fn(),
+    clearError: vi.fn(),
     actions: {
-      handleAuthStart: vi.fn(),
-      handleAuthSuccess: vi.fn(),
-      handleAuthError: vi.fn(),
-      handleLogout: vi.fn(),
-      handleEmailVerificationStart: vi.fn(),
-      handleEmailVerificationSuccess: vi.fn(),
-      handleEmailVerificationFailure: vi.fn(),
-      handleUpdateUser: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      updateUser: vi.fn(),
+      clearError: vi.fn(),
+      connectWallet: vi.fn(),
+      disconnectWallet: vi.fn(),
+      updateNetwork: vi.fn(),
+      updateProvider: vi.fn(),
     },
-  };
-
-  const mockWalletState = {
-    state: {
-      isConnected: false,
-      address: null,
-      chainId: null,
-      walletClient: null,
-      isCorrectNetwork: false,
-      provider: null,
-    },
-    actions: {
-      handleConnect: vi.fn(),
-      handleDisconnect: vi.fn(),
-      handleNetworkChange: vi.fn(),
-      handleAccountChange: vi.fn(),
-    },
-  };
-
-  const mockEmailVerification = {
-    sendVerificationEmail: vi.fn(),
-    checkVerificationStatus: vi.fn(),
+    validateAdminAccess: vi.fn(),
   };
 
   const createMockUser = (overrides: Partial<TokenForgeUser> = {}): TokenForgeUser => ({
@@ -113,9 +104,7 @@ describe('useTokenForgeAuth', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthState as vi.Mock).mockReturnValue(mockAuthState);
-    (useWalletState as vi.Mock).mockReturnValue(mockWalletState);
-    (useEmailVerification as vi.Mock).mockReturnValue(mockEmailVerification);
+    vi.mocked(useTokenForgeAuthContext).mockReturnValue(mockAuthState);
   });
 
   const renderHookWithProviders = () => {
@@ -144,7 +133,7 @@ describe('useTokenForgeAuth', () => {
       await result.current.login(credentials.email, credentials.password);
     });
 
-    expect(mockAuthState.actions.handleAuthStart).toHaveBeenCalled();
+    expect(mockAuthState.actions.login).toHaveBeenCalled();
   });
 
   it('should handle email verification', async () => {
@@ -161,7 +150,7 @@ describe('useTokenForgeAuth', () => {
         isAuthenticated: true,
       },
     };
-    (useAuthState as vi.Mock).mockReturnValue(updatedAuthState);
+    vi.mocked(useTokenForgeAuthContext).mockReturnValue(updatedAuthState);
 
     const { result } = renderHookWithProviders();
 
@@ -169,8 +158,7 @@ describe('useTokenForgeAuth', () => {
       await result.current.verifyEmail(mockUser);
     });
 
-    expect(mockEmailVerification.sendVerificationEmail).toHaveBeenCalled();
-    expect(mockAuthState.actions.handleEmailVerificationStart).toHaveBeenCalled();
+    expect(mockAuthState.actions.updateUser).toHaveBeenCalled();
   });
 
   it('should handle logout', async () => {
@@ -180,8 +168,8 @@ describe('useTokenForgeAuth', () => {
       await result.current.logout();
     });
 
-    expect(mockAuthState.actions.handleLogout).toHaveBeenCalled();
-    expect(mockWalletState.actions.handleDisconnect).toHaveBeenCalled();
+    expect(mockAuthState.actions.logout).toHaveBeenCalled();
+    expect(mockAuthState.disconnectWallet).toHaveBeenCalled();
   });
 
   describe('User Permissions', () => {
@@ -200,17 +188,7 @@ describe('useTokenForgeAuth', () => {
           isAuthenticated: true,
         },
       };
-      (useAuthState as vi.Mock).mockReturnValue(updatedAuthState);
-
-      const updatedWalletState = {
-        ...mockWalletState,
-        state: {
-          ...mockWalletState.state,
-          isConnected: true,
-          isCorrectNetwork: true,
-        },
-      };
-      (useWalletState as vi.Mock).mockReturnValue(updatedWalletState);
+      vi.mocked(useTokenForgeAuthContext).mockReturnValue(updatedAuthState);
 
       const { result } = renderHookWithProviders();
       const auth = result.current;
@@ -235,7 +213,7 @@ describe('useTokenForgeAuth', () => {
           isAuthenticated: true,
         },
       };
-      (useAuthState as vi.Mock).mockReturnValue(updatedAuthState);
+      vi.mocked(useTokenForgeAuthContext).mockReturnValue(updatedAuthState);
 
       const { result } = renderHookWithProviders();
       const auth = result.current;
@@ -259,7 +237,7 @@ describe('useTokenForgeAuth', () => {
           isAuthenticated: true,
         },
       };
-      (useAuthState as vi.Mock).mockReturnValue(updatedAuthState);
+      vi.mocked(useTokenForgeAuthContext).mockReturnValue(updatedAuthState);
 
       const { result } = renderHookWithProviders();
       const auth = result.current;
@@ -269,25 +247,55 @@ describe('useTokenForgeAuth', () => {
     });
   });
 
+  it('should handle wallet connection', async () => {
+    const mockWalletState = {
+      isConnected: true,
+      isCorrectNetwork: true,
+      address: '0x123',
+      chainId: 1,
+      provider: {},
+      walletClient: {},
+    };
+
+    const { result } = renderHookWithProviders();
+
+    expect(result.current.walletState.isConnected).toBe(false);
+
+    // Update wallet state
+    vi.mocked(useTokenForgeAuthContext).mockReturnValue({
+      ...vi.mocked(useTokenForgeAuthContext)(),
+      state: {
+        ...vi.mocked(useTokenForgeAuthContext)().state,
+        walletState: mockWalletState,
+      },
+    });
+
+    expect(result.current.walletState.isConnected).toBe(true);
+    expect(result.current.walletState.address).toBe('0x123');
+  });
+
   it('should handle network changes', async () => {
     const { result } = renderHookWithProviders();
     const newChainId = 1; // Ethereum Mainnet
 
     const updatedWalletState = {
-      ...mockWalletState,
-      state: {
-        ...mockWalletState.state,
-        chainId: newChainId,
-        isCorrectNetwork: true,
-      },
+      isConnected: true,
+      isCorrectNetwork: true,
+      address: '0x123',
+      chainId: newChainId,
+      provider: {},
+      walletClient: {},
     };
 
-    await act(async () => {
-      mockWalletState.actions.handleNetworkChange(newChainId);
-      (useWalletState as vi.Mock).mockReturnValue(updatedWalletState);
+    // Update wallet state
+    vi.mocked(useTokenForgeAuthContext).mockReturnValue({
+      ...vi.mocked(useTokenForgeAuthContext)(),
+      state: {
+        ...vi.mocked(useTokenForgeAuthContext)().state,
+        walletState: updatedWalletState,
+      },
     });
 
-    expect(mockWalletState.actions.handleNetworkChange).toHaveBeenCalledWith(newChainId);
     expect(result.current.chainId).toBe(newChainId);
     expect(result.current.isCorrectNetwork).toBe(true);
   });
@@ -297,20 +305,23 @@ describe('useTokenForgeAuth', () => {
     const newAddress = '0x123...';
 
     const updatedWalletState = {
-      ...mockWalletState,
-      state: {
-        ...mockWalletState.state,
-        address: newAddress,
-        isConnected: true,
-      },
+      isConnected: true,
+      isCorrectNetwork: true,
+      address: newAddress,
+      chainId: 1,
+      provider: {},
+      walletClient: {},
     };
 
-    await act(async () => {
-      mockWalletState.actions.handleAccountChange([newAddress]);
-      (useWalletState as vi.Mock).mockReturnValue(updatedWalletState);
+    // Update wallet state
+    vi.mocked(useTokenForgeAuthContext).mockReturnValue({
+      ...vi.mocked(useTokenForgeAuthContext)(),
+      state: {
+        ...vi.mocked(useTokenForgeAuthContext)().state,
+        walletState: updatedWalletState,
+      },
     });
 
-    expect(mockWalletState.actions.handleAccountChange).toHaveBeenCalledWith([newAddress]);
     expect(result.current.address).toBe(newAddress);
     expect(result.current.isConnected).toBe(true);
   });

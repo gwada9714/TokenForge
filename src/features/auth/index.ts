@@ -10,7 +10,6 @@ export {
 // Hooks
 export {
   useAuthState,
-  useWalletState,
   useTokenForgeAuth,
 } from './hooks';
 

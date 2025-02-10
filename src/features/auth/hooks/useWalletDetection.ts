@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
-import { BrowserProvider } from 'ethers';
+import { createWalletClient, custom, WalletClient } from 'viem';
+import { mainnet, sepolia } from 'viem/chains';
 import { createAuthError } from '../errors/AuthError';
-import { mainnet, sepolia } from '../../../config/chains';
 
 // Type explicite pour les chaînes supportées
 const SUPPORTED_CHAIN_IDS = [mainnet.id, sepolia.id] as const;
 type SupportedChainId = typeof SUPPORTED_CHAIN_IDS[number];
 
 interface WalletState {
-  provider: BrowserProvider | null;
+  walletClient: WalletClient | null;
   account: string | null;
   chainId: SupportedChainId | null;
   isConnecting: boolean;
@@ -17,7 +17,7 @@ interface WalletState {
 
 export const useWalletDetection = () => {
   const [state, setState] = useState<WalletState>({
-    provider: null,
+    walletClient: null,
     account: null,
     chainId: null,
     isConnecting: true,
@@ -38,16 +38,17 @@ export const useWalletDetection = () => {
     }
 
     try {
-      const provider = new BrowserProvider(window.ethereum, 'any');
-      const signer = await provider.getSigner();
-      const signerAddress = await signer.getAddress();
-      const network = await provider.getNetwork();
-      const chainId = Number(network.chainId);
+      const walletClient = createWalletClient({
+        transport: custom(window.ethereum)
+      });
 
-      if (!signerAddress) {
+      const [address] = await walletClient.requestAddresses();
+      const chainId = await walletClient.getChainId();
+
+      if (!address) {
         setState(prev => ({
           ...prev,
-          provider,
+          walletClient,
           isConnecting: false,
         }));
         return;
@@ -56,7 +57,7 @@ export const useWalletDetection = () => {
       if (!SUPPORTED_CHAIN_IDS.includes(chainId as SupportedChainId)) {
         setState(prev => ({
           ...prev,
-          provider,
+          walletClient,
           isConnecting: false,
           error: createAuthError(
             'AUTH_002',
@@ -68,8 +69,8 @@ export const useWalletDetection = () => {
       }
 
       setState({
-        provider,
-        account: signerAddress,
+        walletClient,
+        account: address,
         chainId: chainId as SupportedChainId,
         isConnecting: false,
         error: null,
@@ -99,7 +100,7 @@ export const useWalletDetection = () => {
           account: null,
           error: createAuthError(
             'AUTH_008',
-            'Wallet disconnected'
+            'Wallet disconnected',
           ),
         }));
       });

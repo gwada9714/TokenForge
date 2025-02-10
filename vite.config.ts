@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
       'process.env': env,
       global: 'globalThis',
     },
-    base: '/',
+    base: './',
     server: {
       open: true,
       port: 3001,
@@ -76,16 +76,32 @@ export default defineConfig(({ mode }) => {
         }
       })
     ],
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'es2020',
+      },
+      include: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        '@emotion/react',
+        '@emotion/styled',
+        '@mui/material',
+        '@rainbow-me/rainbowkit',
+        'eventemitter3',
+        'qrcode'
+      ]
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-        '@components': path.resolve(__dirname, './src/components'),
-        '@features': path.resolve(__dirname, './src/components/features'),
-        '@common': path.resolve(__dirname, './src/components/common'),
-        '@hooks': path.resolve(__dirname, './src/hooks'),
-        '@providers': path.resolve(__dirname, './src/providers'),
-        '@utils': path.resolve(__dirname, './src/utils'),
-        '@types': path.resolve(__dirname, './src/types'),
+        '@components': './src/components',
+        '@features': './src/components/features',
+        '@common': './src/components/common',
+        '@hooks': './src/hooks',
+        '@providers': './src/providers',
+        '@utils': './src/utils',
+        '@types': './src/types',
         'events': 'events',
         'buffer': 'buffer',
         'process': 'process/browser',
@@ -94,33 +110,8 @@ export default defineConfig(({ mode }) => {
         'zlib': 'browserify-zlib',
         'eventemitter3': path.resolve(__dirname, 'node_modules/eventemitter3/index.js'),
         'qrcode': path.resolve(__dirname, 'node_modules/qrcode/lib/browser.js'),
-        'ua-parser-js': path.resolve(__dirname, 'node_modules/ua-parser-js/dist/ua-parser.min.js')
+        'ua-parser-js': './node_modules/ua-parser-js/dist/ua-parser.min.js'
       },
-    },
-    optimizeDeps: {
-      esbuildOptions: {
-        define: {
-          global: 'globalThis'
-        }
-      },
-      include: [
-        'react',
-        'react-dom',
-        '@mui/material',
-        '@emotion/react',
-        '@emotion/styled',
-        'broadcast-channel',
-        'buffer',
-        'process',
-        'events',
-        'util',
-        'stream-browserify',
-        'browserify-zlib',
-        'eventemitter3',
-        'qrcode',
-        'ua-parser-js'
-      ],
-      exclude: ['@rainbow-me/rainbowkit']
     },
     build: {
       sourcemap: true,

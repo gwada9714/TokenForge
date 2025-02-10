@@ -15,6 +15,8 @@ export interface StyledButtonProps extends ButtonHTMLAttributes<HTMLButtonElemen
   $size?: 'small' | 'medium' | 'large';
   $fullWidth?: boolean;
   $isLoading?: boolean;
+  to?: string;
+  onClick?: () => void;
 }
 
 export interface CardProps extends BaseProps {
@@ -36,5 +38,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement>, BaseP
 
 // This is used internally by styled-components
 export interface StyledProps {
-  theme: DefaultTheme;
+  theme?: any;
+  as?: any;
+  forwardedAs?: any;
 }

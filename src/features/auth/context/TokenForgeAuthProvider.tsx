@@ -29,10 +29,10 @@ export const TokenForgeAuthProvider: React.FC<Props> = ({
   );
 }
 
-export function useTokenForgeAuthContext() {
+export const useTokenForgeAuthContext = () => {
   const context = useContext(TokenForgeAuthContext);
   if (context === undefined) {
     throw new Error('useTokenForgeAuthContext must be used within a TokenForgeAuthProvider');
   }
   return context;
-}
+};

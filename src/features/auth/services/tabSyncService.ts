@@ -1,6 +1,7 @@
 import { BroadcastChannel } from 'broadcast-channel';
 import { TokenForgeUser } from '../types';
 import { AUTH_ACTIONS } from '../actions/authActions';
+import { AuthState } from '../types';
 
 const SYNC_CHANNEL = 'tokenforge_auth_sync';
 const STATE_DEBOUNCE_MS = 100;
@@ -145,6 +146,10 @@ class TabSyncService {
     this.stateQueue.forEach(({ timeout }) => clearTimeout(timeout));
     this.stateQueue.clear();
     await this.channel.close();
+  }
+
+  syncAuthState(state: AuthState) {
+    this.broadcast({ type: 'auth_state_change', payload: state, timestamp: Date.now(), tabId: this.tabId });
   }
 }
 

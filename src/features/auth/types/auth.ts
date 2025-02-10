@@ -1,5 +1,7 @@
 import { User as FirebaseUser } from 'firebase/auth';
 import { AuthError } from '../errors/AuthError';
+import { TokenForgeAuthActions } from '../actions/authActions';
+import { WalletClient } from 'viem';
 
 export type AuthStatus = 
   | 'idle'
@@ -29,8 +31,7 @@ export interface WalletState {
   address: string | null;
   chainId: number | null;
   isCorrectNetwork: boolean;
-  provider: any;
-  walletClient: any;
+  walletClient: WalletClient | null;
 }
 
 export interface TokenForgeAuthState {
@@ -38,7 +39,7 @@ export interface TokenForgeAuthState {
   isAuthenticated: boolean;
   user: TokenForgeUser | null;
   error: AuthError | null;
-  walletState: WalletState;
+  wallet: WalletState;
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
@@ -48,11 +49,9 @@ export interface SessionData {
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
-  metadata?: {
-    walletAddress?: string;
-    chainId?: number;
-    customMetadata?: Record<string, any>;
-  };
+  walletAddress?: string;
+  chainId?: number;
+  lastLoginTime?: number;
 }
 
 export interface NotificationEvent {
@@ -62,6 +61,22 @@ export interface NotificationEvent {
   data?: any;
 }
 
-export interface AuthContextValue extends TokenForgeAuthState {
+export interface TokenForgeAuthContextValue {
+  state: TokenForgeAuthState;
+  dispatch: React.Dispatch<any>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateProfile: (displayName?: string, photoURL?: string) => Promise<void>;
+  updateUser: (updates: Partial<TokenForgeUser>) => Promise<void>;
+  connectWallet: (address: string, chainId: number, walletClient: WalletClient) => Promise<void>;
+  disconnectWallet: () => Promise<void>;
+  clearError: () => void;
+  actions: TokenForgeAuthActions;
+  validateAdminAccess: () => boolean;
+}
+
+export interface AuthContextValue {
   dispatch: React.Dispatch<any>;
 }

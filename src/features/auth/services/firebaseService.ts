@@ -12,12 +12,13 @@ import { TokenForgeUser } from '../types';
 import { errorService } from './errorService';
 import { AUTH_ERROR_CODES } from '../errors/AuthError';
 import { logService } from './logService';
+import { app } from '../../../config/firebase';
 
 const LOG_CATEGORY = 'FirebaseService';
 
 class FirebaseService {
   private static instance: FirebaseService;
-  private auth = getAuth();
+  private auth = getAuth(app);
 
   private constructor() {}
 
@@ -37,10 +38,7 @@ class FirebaseService {
     }
 
     return {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email || '',
-      displayName: firebaseUser.displayName || '',
-      photoURL: firebaseUser.photoURL || '',
+      ...firebaseUser,
       metadata: {
         creationTime: firebaseUser.metadata?.creationTime || '',
         lastSignInTime: firebaseUser.metadata?.lastSignInTime || '',

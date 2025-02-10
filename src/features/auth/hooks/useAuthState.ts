@@ -6,6 +6,7 @@ import { TokenForgeUser, AuthStatus } from '../types/auth';
 import { authActions, AuthAction } from '../actions/authActions';
 import { authReducer, initialState } from '../reducers/authReducer';
 import { AuthError } from '../errors/AuthError';
+import { User as FirebaseUser } from 'firebase/auth';
 
 interface AuthStateHook {
   status: AuthStatus;
@@ -28,7 +29,7 @@ export const useAuthState = (): AuthStateHook => {
 
   // Gérer les changements de session Firebase
   useEffect(() => {
-    const unsubscribe = firebaseAuth.onAuthStateChanged(async (user) => {
+    const handleAuthStateChange = async (user: FirebaseUser | null) => {
       if (user) {
         try {
           const sessionData = await sessionService.getUserSession(user.uid);
@@ -43,7 +44,7 @@ export const useAuthState = (): AuthStateHook => {
               lastSignInTime: user.metadata.lastSignInTime || '',
               lastLoginTime: Date.now()
             }
-          };
+          } as TokenForgeUser;
           dispatch(authActions.loginSuccess(tokenForgeUser));
         } catch (error) {
           const authError = errorService.handleError(error) as AuthError;
@@ -52,36 +53,39 @@ export const useAuthState = (): AuthStateHook => {
       } else {
         dispatch(authActions.logout());
       }
-    });
+    };
 
+    const unsubscribe = firebaseAuth.onAuthStateChanged(handleAuthStateChange);
     return () => unsubscribe();
   }, []);
 
-  // Login avec email/password
-  const login = useCallback(async (email: string, password: string): Promise<void> => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       dispatch(authActions.loginStart());
       await firebaseAuth.signInWithEmailAndPassword(email, password);
-      // Le succès sera géré par l'effet onAuthStateChanged
     } catch (error) {
       const authError = errorService.handleError(error) as AuthError;
       dispatch(authActions.loginFailure(authError));
+      throw authError;
     }
   }, []);
 
-  // Logout
-  const logout = useCallback(async (): Promise<void> => {
+  const logout = useCallback(async () => {
     try {
       await firebaseAuth.signOut();
-      // Le logout sera géré par l'effet onAuthStateChanged
+      dispatch(authActions.logout());
     } catch (error) {
       const authError = errorService.handleError(error) as AuthError;
-      dispatch(authActions.setError(authError));
+      dispatch(authActions.loginFailure(authError));
+      throw authError;
     }
   }, []);
 
   return {
-    ...state,
+    status: state.status,
+    isAuthenticated: state.isAuthenticated,
+    user: state.user,
+    error: state.error,
     login,
     logout,
     dispatch

@@ -1,4 +1,5 @@
 import { createAuthError, AuthError } from '../errors/AuthError';
+import { SessionData } from '../types';
 
 const STORAGE_KEY = 'tokenforge_auth';
 const VERSION = 1;
@@ -121,6 +122,24 @@ export class AuthPersistence {
       }));
     } catch (error) {
       throw createAuthError(AuthError.CODES.STORAGE_ERROR, 'Failed to store data', { error });
+    }
+  }
+
+  getData<T>(key: string): T | null {
+    const data = this.storage.getItem(key);
+    if (!data) return null;
+    try {
+      return JSON.parse(data) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  setData<T>(key: string, data: T): void {
+    try {
+      this.storage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+      console.error('Error saving to storage:', error);
     }
   }
 

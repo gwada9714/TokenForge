@@ -4,6 +4,7 @@ import { routes, RouteConfig } from '../../config/routes';
 import { Layout } from '../Layout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { Box, CircularProgress } from '@mui/material';
+import { routerConfig } from '../../router/router.config';
 
 const LoadingFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -49,7 +50,7 @@ const renderRoutes = (routes: RouteConfig[]) => {
 const AppRouter: React.FC = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <Routes>
+      <Routes {...routerConfig.future}>
         {renderRoutes(routes)}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

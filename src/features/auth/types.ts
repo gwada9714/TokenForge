@@ -67,7 +67,8 @@ export interface TokenForgeAuth extends TokenForgeAuthState {
   validateAdminAccess: () => boolean;
 }
 
-export interface TokenForgeAuthContextValue extends TokenForgeAuthState {
+export interface TokenForgeAuthContextValue {
+  state: AuthState;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -76,6 +77,8 @@ export interface TokenForgeAuthContextValue extends TokenForgeAuthState {
   connectWallet: () => Promise<boolean>;
   disconnectWallet: () => Promise<void>;
   clearError: () => void;
+  actions: TokenForgeAuthActions;
+  validateAdminAccess: () => boolean;
 }
 
 export interface AuthError {
