@@ -24,7 +24,14 @@ export default defineConfig(({ mode }) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        "Content-Security-Policy": `
+          default-src 'self';
+          connect-src 'self' https://*.walletconnect.org https://*.infura.io https://*.alchemyapi.io wss://*.walletconnect.org;
+          font-src 'self' data: https://fonts.gstatic.com;
+          style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+          img-src 'self' data: https: blob:;
+        `
       }
     },
     plugins: [
