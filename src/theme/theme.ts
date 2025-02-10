@@ -27,7 +27,12 @@ export const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: 'Open Sans, system-ui, sans-serif',
+    fontFamily: [
+      'Montserrat',
+      'Open Sans',
+      'Roboto',
+      'sans-serif'
+    ].join(','),
     h1: {
       fontFamily: 'Montserrat, system-ui, sans-serif',
       fontWeight: 'bold',
@@ -104,5 +109,23 @@ export const theme = createTheme({
         },
       },
     },
-  },
+    MuiCssBaseline: {
+      styleOverrides: `
+        @font-face {
+          font-family: 'Montserrat';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 400;
+          src: local('Montserrat'), local('Montserrat-Regular');
+        }
+        @font-face {
+          font-family: 'Open Sans';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 400;
+          src: local('Open Sans'), local('OpenSans-Regular');
+        }
+      `
+    }
+  }
 });

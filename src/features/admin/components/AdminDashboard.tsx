@@ -1,66 +1,46 @@
-import React, { useState, useCallback } from 'react';
-import { Box, Container, Alert, Snackbar, Tab, Tabs } from '@mui/material';
-import { TabPanel } from '../../../components/common/TabPanel';
-import ContractControls from './ContractControls';
-import OwnershipManagement from './OwnershipManagement';
-import AlertsManagement from './AlertsManagement';
-import AuditLogs from './AuditLogs';
+import React from 'react';
+import { Box, Grid, Paper, Typography } from '@mui/material';
+import { AuditLogs } from './AuditLogs';
+import { TokenStats } from './TokenStats';
+import { UserManagement } from './UserManagement';
 
 export const AdminDashboard: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  }, []);
-
-  const handleError = useCallback((message: string) => {
-    setError(message);
-  }, []);
-
-  const handleCloseError = useCallback(() => {
-    setError(null);
-  }, []);
-
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ width: '100%', mt: 3 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-          <Tabs value={tabValue} onChange={handleTabChange} aria-label="admin tabs">
-            <Tab label="Contract Controls" id="admin-tab-0" aria-controls="admin-tabpanel-0" />
-            <Tab label="Ownership" id="admin-tab-1" aria-controls="admin-tabpanel-1" />
-            <Tab label="Alerts" id="admin-tab-2" aria-controls="admin-tabpanel-2" />
-            <Tab label="Audit Logs" id="admin-tab-3" aria-controls="admin-tabpanel-3" />
-          </Tabs>
-        </Box>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Tableau de bord administrateur
+          </Typography>
+        </Grid>
+        
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Statistiques des tokens
+            </Typography>
+            <TokenStats />
+          </Paper>
+        </Grid>
 
-        <TabPanel value={tabValue} index={0}>
-          <ContractControls onError={handleError} />
-        </TabPanel>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Gestion des utilisateurs
+            </Typography>
+            <UserManagement />
+          </Paper>
+        </Grid>
 
-        <TabPanel value={tabValue} index={1}>
-          <OwnershipManagement onError={handleError} />
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={2}>
-          <AlertsManagement onError={handleError} />
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={3}>
-          <AuditLogs onError={handleError} />
-        </TabPanel>
-      </Box>
-
-      <Snackbar 
-        open={!!error} 
-        autoHideDuration={6000} 
-        onClose={handleCloseError}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
-    </Container>
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Logs d'audit
+            </Typography>
+            <AuditLogs />
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
