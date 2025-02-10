@@ -1,66 +1,39 @@
-import { useEffect, useState } from 'react';
-import { WalletState } from '../../../types/wallet';
-import { serviceRegistry } from '../../../services/ServiceRegistry';
-import { ErrorService, NotificationService, WalletReconnectionService } from '../../../types/services';
+import { useEffect } from 'react';
+import { useAccount, useDisconnect } from 'wagmi';
+import { useTokenForgeAuth } from '../providers/TokenForgeAuthProvider';
+import { authActions } from '../store/authActions';
+import { errorService } from '../services/errorService';
 
-const initialState: WalletState = {
-  isConnected: false,
-  address: null,
-  chainId: null,
-  isCorrectNetwork: false,
-  walletClient: null
-};
+interface WalletState {
+  address: `0x${string}` | null;
+  isConnected: boolean;
+  chainId?: number;
+  loading: boolean;
+  error: Error | null;
+}
 
-export const useWalletState = () => {
-  const [state, setState] = useState<WalletState>(initialState);
+export function useWalletState() {
+  const { wallet, dispatch } = useTokenForgeAuth();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
-    const walletReconnectionService = serviceRegistry.get<WalletReconnectionService>('walletReconnection');
-    const notificationService = serviceRegistry.get<NotificationService>('notification');
-    const errorService = serviceRegistry.get<ErrorService>('error');
+    dispatch(authActions.updateWallet({
+      address: address || null,
+      isConnected
+    }));
+  }, [address, isConnected, dispatch]);
 
-    const callbacks = {
-      onConnect: (address: string, chainId: number) => {
-        setState(prev => ({
-          ...prev,
-          isConnected: true,
-          address,
-          chainId,
-        }));
-      },
-      onDisconnect: () => {
-        setState(initialState);
-      },
-      onNetworkChange: (chainId: number) => {
-        setState(prev => ({
-          ...prev,
-          chainId,
-        }));
-      },
-      onWalletStateSync: (newState: Partial<WalletState>) => {
-        setState(prev => ({
-          ...prev,
-          ...newState
-        }));
-      },
-      onError: (error: unknown) => {
-        errorService.handle(error);
-        notificationService.error('Erreur de connexion au wallet');
-      }
-    };
-
-    walletReconnectionService.setCallbacks(callbacks);
-
-    // Récupérer l'état initial du wallet
-    const currentState = walletReconnectionService.getWalletState();
-    if (currentState) {
-      setState(currentState);
+  const handleDisconnect = async () => {
+    try {
+      await disconnect();
+    } catch (error) {
+      dispatch(authActions.setError(errorService.handleError(error)));
     }
+  };
 
-    return () => {
-      walletReconnectionService.cleanup();
-    };
-  }, []);
-
-  return state;
-};
+  return {
+    ...wallet,
+    disconnect: handleDisconnect
+  };
+}

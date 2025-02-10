@@ -4,125 +4,145 @@ Le système d'authentification de TokenForge combine l'authentification Web3 (wa
 
 ## Architecture
 
+### Hooks Principaux
+
+#### useTokenForgeAuth (Hook Principal)
+- Gère l'état global de l'authentification
+- Synchronise l'état du wallet avec Wagmi
+- Expose l'interface TokenForgeAuthState complète
+- Centralise la logique métier
+
+#### Hooks Spécialisés
+- `useAuthState` : Gestion pure de l'état Firebase
+- `useWalletState` : Gestion pure de l'état du wallet
+- `useNetworkManagement` : Gestion du réseau
+- `useWalletDetection` : Détection du wallet
+
 ### Services
 
-- `firebaseAuth` : Service singleton gérant l'authentification Firebase
-  - Connexion avec signature de wallet
-  - Gestion des sessions
-  - Vérification d'email
-  - Gestion des claims personnalisés
+- `firebaseAuth` : Authentification Firebase
+- `sessionService` : Gestion des sessions utilisateur
+- `secureStorageService` : Stockage sécurisé des tokens
+- `errorService` : Gestion centralisée des erreurs
+- `securityHeadersService` : Vérification des headers de sécurité
+- `authSyncService` : Synchronisation multi-onglets
 
-### Hooks
+### Store
 
-- `useFirebaseAuth` : Hook React pour l'authentification Firebase
-  - État de la session
-  - Connexion/déconnexion
-  - Vérification d'email
-  - Gestion des erreurs
+#### Actions
+Actions unifiées dans `authReducer.ts` :
+- LOGIN_START, LOGIN_SUCCESS, LOGIN_FAILURE
+- LOGOUT
+- UPDATE_USER, UPDATE_WALLET
+- SET_ERROR, CLEAR_ERROR
+
+#### État
+```typescript
+interface TokenForgeAuthState {
+  user: TokenForgeUser | null;
+  wallet: {
+    address: `0x${string}` | null;
+    isConnected: boolean;
+    chainId?: number;
+  };
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: AuthError | null;
+}
+```
 
 ### Composants
 
-- `AuthContainer` : Conteneur principal d'authentification
-  - Intègre le bouton de connexion et le sélecteur de réseau
-  - Gère la vérification d'email
-  - Affiche les messages d'erreur
+- `TokenForgeAuthProvider` : Provider principal
+  - Gestion de l'état global
+  - Synchronisation wallet/auth
+  - Gestion des sessions
+  - Vérification des headers de sécurité
 
-- `AuthButton` : Bouton de connexion/déconnexion
-  - États multiples (non connecté, connecté wallet, connecté Firebase)
-  - Gestion des états de chargement
-  - Affichage de l'adresse du wallet
+## Tests
 
-- `EmailVerification` : Dialog de vérification d'email
-  - Envoi d'email de vérification
-  - Gestion des erreurs
-  - États de chargement
+### Tests Unitaires
+- Tests des reducers
+- Tests des hooks
+- Tests des services
+- Tests des providers
+
+### Tests d'Intégration
+- Flux d'authentification complet
+- Interaction wallet-auth
+- Gestion des erreurs
+
+### Couverture
+Configuration Vitest avec seuils :
+- Branches : 80%
+- Fonctions : 80%
+- Lignes : 80%
+- Statements : 80%
 
 ## Utilisation
 
-### Configuration
+### Configuration de Base
 
-1. Configurer Firebase dans `config/firebase.ts`
-2. Déployer la Cloud Function d'authentification
-3. Configurer la variable d'environnement `VITE_API_URL`
-
-### Intégration basique
-
-```tsx
-import { AuthContainer } from 'features/auth/components/AuthContainer';
+```typescript
+import { TokenForgeAuthProvider } from 'features/auth/providers';
 
 function App() {
   return (
-    <AuthContainer
-      requireEmailVerification={true}
-      showNetworkSelector={true}
-    />
+    <TokenForgeAuthProvider>
+      <YourApp />
+    </TokenForgeAuthProvider>
   );
 }
 ```
 
-### Utilisation avancée
+### Utilisation dans les Composants
 
-```tsx
-import { useFirebaseAuth } from 'features/auth/hooks/useFirebaseAuth';
+```typescript
+import { useTokenForgeAuth } from 'features/auth/providers';
 
-function ProtectedComponent() {
-  const { session, isLoading } = useFirebaseAuth();
+function YourComponent() {
+  const { isAuthenticated, user, wallet } = useTokenForgeAuth();
 
-  if (isLoading) return <Loading />;
-  if (!session) return <NotAuthenticated />;
-  if (!session.emailVerified) return <EmailNotVerified />;
+  if (!isAuthenticated) {
+    return <div>Please connect your wallet and sign in</div>;
+  }
 
-  return <YourComponent />;
+  return (
+    <div>
+      <p>Welcome {user?.email}</p>
+      <p>Wallet: {wallet.address}</p>
+    </div>
+  );
+}
+```
+
+### Gestion des Erreurs
+
+```typescript
+import { useTokenForgeAuth } from 'features/auth/providers';
+import { errorService } from 'features/auth/services';
+
+function YourComponent() {
+  const { dispatch } = useTokenForgeAuth();
+
+  const handleError = (error: unknown) => {
+    dispatch(authActions.setError(errorService.handleError(error)));
+  };
 }
 ```
 
 ## Sécurité
 
-1. Les signatures de wallet sont vérifiées côté serveur
-2. Les sessions sont gérées par Firebase Auth
-3. Les claims personnalisés sont utilisés pour stocker l'adresse du wallet
-4. Les emails sont vérifiés avant l'accès complet
+- Stockage sécurisé des tokens
+- Vérification des headers de sécurité
+- Validation des signatures wallet
+- Protection contre les attaques CSRF
+- Gestion sécurisée des sessions
 
-## Tests
+## Bonnes Pratiques
 
-Les tests sont organisés en trois catégories :
-
-1. Tests de service (`firebaseAuth.test.ts`)
-   - Authentification wallet
-   - Gestion des sessions
-   - Vérification d'email
-
-2. Tests de hook (`useFirebaseAuth.test.tsx`)
-   - États de connexion
-   - Gestion des erreurs
-   - Cycle de vie
-
-3. Tests de composants (`EmailVerification.test.tsx`)
-   - Rendu conditionnel
-   - Interactions utilisateur
-   - États de chargement
-
-## Gestion des erreurs
-
-Les erreurs sont centralisées dans `errors/AuthError.ts` avec des codes spécifiques :
-
-- `AUTH_001` : Wallet non connecté
-- `AUTH_003` : Échec d'authentification wallet
-- `AUTH_004` : Erreur de session
-- `AUTH_005` : Échec d'envoi d'email
-
-## Cloud Function
-
-La Cloud Function `authenticateWallet` gère :
-
-1. Validation de la signature
-2. Création/mise à jour de l'utilisateur Firebase
-3. Génération du token JWT
-4. Gestion des claims personnalisés
-
-## À faire
-
-- [ ] Ajouter la récupération de mot de passe
-- [ ] Implémenter la déconnexion automatique
-- [ ] Ajouter des tests E2E
-- [ ] Améliorer la gestion des erreurs réseau
+1. Toujours utiliser `useTokenForgeAuth` pour accéder à l'état d'authentification
+2. Gérer les erreurs via `errorService`
+3. Utiliser les hooks spécialisés pour des cas d'usage spécifiques
+4. Suivre le pattern d'actions unifiées pour les modifications d'état
+5. Maintenir une couverture de tests adéquate

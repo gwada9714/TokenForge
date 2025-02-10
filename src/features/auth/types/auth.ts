@@ -40,6 +40,7 @@ export interface TokenForgeAuthState {
   user: TokenForgeUser | null;
   error: AuthError | null;
   wallet: WalletState;
+  loading: boolean;
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
