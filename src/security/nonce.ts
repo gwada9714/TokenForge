@@ -1,8 +1,8 @@
-import { randomBytes } from 'crypto';
+import crypto from 'crypto';
 
-export function generateNonce(): string {
-  return randomBytes(16).toString('base64');
-}
+export const generateNonce = () => {
+  return crypto.randomBytes(16).toString('base64');
+};
 
 export function validateNonce(nonce: string): boolean {
   // Vérifie que le nonce est une chaîne base64 valide de 24 caractères

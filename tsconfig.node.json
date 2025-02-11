@@ -7,12 +7,5 @@
     "allowSyntheticDefaultImports": true,
     "strict": true
   },
-  "include": [
-    "vite.config.ts",
-    "vite.config.dev.ts",
-    "vite-plugin-nonce.ts",
-    "vitest.config.ts",
-    "src/utils/**/*.ts",
-    "src/security/**/*.ts"
-  ]
+  "include": ["vite.config.ts"]
 }

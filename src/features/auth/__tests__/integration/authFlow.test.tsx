@@ -1,194 +1,239 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, act, waitFor, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import { BrowserRouter } from 'react-router-dom';
+import authReducer from '../../store/authSlice';
 import { TokenForgeAuthProvider } from '../../providers/TokenForgeAuthProvider';
-import { useTokenForgeAuth } from '../../providers/TokenForgeAuthProvider';
-import { firebaseAuth } from '../../services/firebaseAuth';
-import { sessionService } from '../../services/sessionService';
-import { secureStorageService } from '../../services/secureStorageService';
-import { useAccount, useDisconnect } from 'wagmi';
+import { LoginPage } from '../../pages/LoginPage';
+import { ConnectWalletPage } from '../../pages/ConnectWalletPage';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { createPublicClient, createWalletClient } from 'viem';
 
-// Mocks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useDisconnect: vi.fn()
+// Mock Firebase
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  onAuthStateChanged: vi.fn()
 }));
 
-vi.mock('../../services/firebaseAuth');
-vi.mock('../../services/sessionService');
-vi.mock('../../services/secureStorageService');
-
-// Composant de test pour simuler l'interface utilisateur
-const AuthTestComponent = () => {
-  const { isAuthenticated, user, wallet } = useTokenForgeAuth();
-  
-  return (
-    <div>
-      <div data-testid="auth-status">
-        Status: {isAuthenticated ? 'authenticated' : 'idle'}
-      </div>
-      <div data-testid="wallet-status">
-        Wallet: {wallet.isConnected ? 'Connected' : 'Disconnected'}
-      </div>
-      <div data-testid="user-status">
-        User: {user ? user.email : 'Not logged in'}
-      </div>
-      <button
-        data-testid="login-button"
-        onClick={() => {
-          firebaseAuth.signInWithEmailAndPassword('test@example.com', 'password');
-        }}
-      >
-        Login
-      </button>
-      <button
-        data-testid="connect-wallet-button"
-        onClick={() => {
-          (useAccount as any).mockReturnValue({
-            address: '0x123' as `0x${string}`,
-            isConnected: true
-          });
-        }}
-      >
-        Connect Wallet
-      </button>
-    </div>
-  );
-};
+// Mock Viem
+vi.mock('viem', () => ({
+  createPublicClient: vi.fn(),
+  createWalletClient: vi.fn(),
+  http: vi.fn()
+}));
 
 describe('Authentication Flow Integration', () => {
+  let mockStore: any;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAccount as any).mockReturnValue({ address: null, isConnected: false });
-    (useDisconnect as any).mockReturnValue({ disconnect: vi.fn() });
-  });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  describe('Complete Authentication Flow', () => {
-    it('should handle the complete authentication flow with wallet connection', async () => {
-      // Configuration des mocks
-      const mockUser = {
-        uid: 'test-uid',
-        email: 'test@example.com',
-        getIdToken: vi.fn().mockResolvedValue('mock-token')
-      };
-
-      const mockSessionData = {
-        isAdmin: true,
-        canCreateToken: true,
-        canUseServices: true
-      };
-
-      // Setup des services mockés
-      (firebaseAuth.signInWithEmailAndPassword as any).mockResolvedValue({ user: mockUser });
-      (sessionService.getUserSession as any).mockResolvedValue(mockSessionData);
-      (secureStorageService.setAuthToken as any).mockResolvedValue(undefined);
-
-      // Rendu du composant
-      render(
-        <TokenForgeAuthProvider>
-          <AuthTestComponent />
-        </TokenForgeAuthProvider>
-      );
-
-      // Vérification de l'état initial
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('Status: idle');
-      expect(screen.getByTestId('wallet-status')).toHaveTextContent('Wallet: Disconnected');
-      expect(screen.getByTestId('user-status')).toHaveTextContent('User: Not logged in');
-
-      // Test de la connexion utilisateur
-      await act(async () => {
-        fireEvent.click(screen.getByTestId('login-button'));
-      });
-
-      await waitFor(() => {
-        expect(screen.getByTestId('auth-status')).toHaveTextContent('Status: authenticated');
-        expect(screen.getByTestId('user-status')).toHaveTextContent('test@example.com');
-      });
-
-      // Test de la connexion wallet
-      await act(async () => {
-        fireEvent.click(screen.getByTestId('connect-wallet-button'));
-      });
-
-      await waitFor(() => {
-        expect(screen.getByTestId('wallet-status')).toHaveTextContent('Wallet: Connected');
-      });
-
-      // Vérification des appels de service
-      expect(secureStorageService.setAuthToken).toHaveBeenCalledWith('mock-token');
-      expect(sessionService.getUserSession).toHaveBeenCalledWith('test-uid');
+    mockStore = configureStore({
+      reducer: {
+        auth: authReducer
+      }
     });
 
-    it('should handle authentication errors gracefully', async () => {
-      // Setup des erreurs
-      (firebaseAuth.signInWithEmailAndPassword as any).mockRejectedValue(
-        new Error('Invalid credentials')
-      );
+    // Setup Firebase mocks
+    vi.mocked(getAuth).mockReturnValue({
+      currentUser: null,
+      onAuthStateChanged: vi.fn()
+    } as any);
 
-      render(
-        <TokenForgeAuthProvider>
-          <AuthTestComponent />
-        </TokenForgeAuthProvider>
-      );
+    vi.mocked(signInWithEmailAndPassword).mockResolvedValue({
+      user: {
+        uid: 'test-uid',
+        email: 'test@example.com',
+        emailVerified: true
+      }
+    } as any);
 
-      // Test de la tentative de connexion
-      await act(async () => {
-        fireEvent.click(screen.getByTestId('login-button'));
-      });
+    // Setup Viem mocks
+    vi.mocked(createPublicClient).mockReturnValue({
+      chain: { id: 1, name: 'Ethereum' },
+      request: vi.fn()
+    } as any);
+
+    vi.mocked(createWalletClient).mockReturnValue({
+      account: {
+        address: '0x1234...',
+        type: 'json-rpc'
+      },
+      chain: { id: 1, name: 'Ethereum' },
+      request: vi.fn()
+    } as any);
+  });
+
+  const renderWithProviders = (component: React.ReactNode) => {
+    return render(
+      <Provider store={mockStore}>
+        <BrowserRouter>
+          <TokenForgeAuthProvider>
+            {component}
+          </TokenForgeAuthProvider>
+        </BrowserRouter>
+      </Provider>
+    );
+  };
+
+  describe('Email Authentication Flow', () => {
+    it('completes the email login flow successfully', async () => {
+      renderWithProviders(<LoginPage />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /login/i });
+
+      await userEvent.type(emailInput, 'test@example.com');
+      await userEvent.type(passwordInput, 'password123');
+      fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByTestId('auth-status')).toHaveTextContent('Status: idle');
+        expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
+          expect.any(Object),
+          'test@example.com',
+          'password123'
+        );
+      });
+
+      // Verify redirect or success state
+      await waitFor(() => {
+        expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+      });
+    });
+
+    it('displays error messages for invalid credentials', async () => {
+      const mockError = new Error('Invalid credentials');
+      vi.mocked(signInWithEmailAndPassword).mockRejectedValueOnce(mockError);
+
+      renderWithProviders(<LoginPage />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /login/i });
+
+      await userEvent.type(emailInput, 'wrong@example.com');
+      await userEvent.type(passwordInput, 'wrongpass');
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
       });
     });
   });
 
-  describe('Wallet-Auth Integration', () => {
-    it('should synchronize wallet state with authentication', async () => {
-      const mockUser = {
-        uid: 'test-uid',
-        email: 'test@example.com',
-        getIdToken: vi.fn().mockResolvedValue('mock-token')
-      };
+  describe('Wallet Connection Flow', () => {
+    it('connects wallet successfully', async () => {
+      renderWithProviders(<ConnectWalletPage />);
 
-      // Setup initial avec utilisateur connecté
-      (firebaseAuth.signInWithEmailAndPassword as any).mockResolvedValue({ user: mockUser });
-      
-      render(
-        <TokenForgeAuthProvider>
-          <AuthTestComponent />
-        </TokenForgeAuthProvider>
+      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
+      fireEvent.click(connectButton);
+
+      await waitFor(() => {
+        expect(createWalletClient).toHaveBeenCalled();
+      });
+
+      // Verify wallet connected state
+      await waitFor(() => {
+        expect(screen.getByText(/0x1234.../i)).toBeInTheDocument();
+      });
+    });
+
+    it('handles wallet connection errors', async () => {
+      const mockError = new Error('Wallet connection failed');
+      vi.mocked(createWalletClient).mockRejectedValueOnce(mockError);
+
+      renderWithProviders(<ConnectWalletPage />);
+
+      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
+      fireEvent.click(connectButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/wallet connection failed/i)).toBeInTheDocument();
+      });
+    });
+
+    it('detects network changes', async () => {
+      renderWithProviders(<ConnectWalletPage />);
+
+      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
+      fireEvent.click(connectButton);
+
+      await waitFor(() => {
+        expect(createWalletClient).toHaveBeenCalled();
+      });
+
+      // Simulate network change
+      window.dispatchEvent(new Event('chainChanged'));
+
+      await waitFor(() => {
+        expect(screen.getByText(/network changed/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Combined Authentication Flow', () => {
+    it('maintains authentication state between email and wallet connection', async () => {
+      renderWithProviders(
+        <>
+          <LoginPage />
+          <ConnectWalletPage />
+        </>
       );
 
-      // Connexion utilisateur
-      await act(async () => {
-        fireEvent.click(screen.getByTestId('login-button'));
-      });
+      // First login with email
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const loginButton = screen.getByRole('button', { name: /login/i });
 
-      // Simulation de la connexion wallet
-      await act(async () => {
-        (useAccount as any).mockReturnValue({
-          address: '0x123' as `0x${string}`,
-          isConnected: true
-        });
-      });
+      await userEvent.type(emailInput, 'test@example.com');
+      await userEvent.type(passwordInput, 'password123');
+      fireEvent.click(loginButton);
 
       await waitFor(() => {
-        expect(screen.getByTestId('wallet-status')).toHaveTextContent('Wallet: Connected');
+        expect(signInWithEmailAndPassword).toHaveBeenCalled();
       });
 
-      // Simulation de la déconnexion wallet
-      await act(async () => {
-        (useAccount as any).mockReturnValue({
-          address: null,
-          isConnected: false
-        });
-      });
+      // Then connect wallet
+      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
+      fireEvent.click(connectButton);
 
       await waitFor(() => {
-        expect(screen.getByTestId('wallet-status')).toHaveTextContent('Wallet: Disconnected');
+        expect(createWalletClient).toHaveBeenCalled();
+      });
+
+      // Verify both states are maintained
+      expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+      expect(screen.getByText(/0x1234.../i)).toBeInTheDocument();
+    });
+
+    it('handles session persistence', async () => {
+      // First render and login
+      const { unmount } = renderWithProviders(<LoginPage />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const loginButton = screen.getByRole('button', { name: /login/i });
+
+      await userEvent.type(emailInput, 'test@example.com');
+      await userEvent.type(passwordInput, 'password123');
+      fireEvent.click(loginButton);
+
+      await waitFor(() => {
+        expect(signInWithEmailAndPassword).toHaveBeenCalled();
+      });
+
+      // Unmount and remount to simulate page refresh
+      unmount();
+
+      renderWithProviders(<LoginPage />);
+
+      // Verify authentication state is preserved
+      await waitFor(() => {
+        expect(screen.getByText(/welcome/i)).toBeInTheDocument();
       });
     });
   });

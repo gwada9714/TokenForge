@@ -1,13 +1,39 @@
+import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
-import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+import { cleanup } from '@testing-library/react';
+import { mockResizeObserver } from './mocks/resizeObserver';
+import { mockIntersectionObserver } from './mocks/intersectionObserver';
 
-// Polyfills nécessaires pour les tests
-if (typeof global.TextEncoder === 'undefined') {
-  const { TextEncoder, TextDecoder } = require('util');
-  global.TextEncoder = TextEncoder;
-  global.TextDecoder = TextDecoder;
-  global.Uint8Array = Uint8Array;
-}
+// Setup global mocks
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+global.ResizeObserver = mockResizeObserver;
+global.IntersectionObserver = mockIntersectionObserver;
+
+// Setup Firebase mocks
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(),
+  onAuthStateChanged: vi.fn()
+}));
+
+vi.mock('firebase/firestore', () => ({
+  getFirestore: vi.fn(),
+  collection: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  setDoc: vi.fn()
+}));
+
+// Setup Viem mocks
+vi.mock('viem', () => ({
+  createPublicClient: vi.fn(),
+  createWalletClient: vi.fn(),
+  http: vi.fn()
+}));
 
 // Mock de fetch pour les tests
 global.fetch = vi.fn();
@@ -61,42 +87,6 @@ vi.mock('firebase/app', () => {
   };
 });
 
-// Mock de firebase/auth
-vi.mock('firebase/auth', () => {
-  return {
-    getAuth: vi.fn(() => ({
-      currentUser: null,
-      onAuthStateChanged: vi.fn(),
-      signInWithEmailAndPassword: vi.fn(),
-      signOut: vi.fn(),
-    })),
-    signInWithEmailAndPassword: vi.fn(),
-    signOut: vi.fn(),
-    onAuthStateChanged: vi.fn(),
-  };
-});
-
-// Mock de firebase/firestore
-vi.mock('firebase/firestore', () => ({
-  getFirestore: vi.fn(() => ({
-    collection: vi.fn(),
-    doc: vi.fn(),
-    on: vi.fn()
-  }))
-}));
-
-// Mock de firebase/functions
-vi.mock('firebase/functions', () => ({
-  getFunctions: vi.fn(() => ({
-    app: {
-      name: '[DEFAULT]',
-      options: {},
-      on: vi.fn(),
-      automaticDataCollectionEnabled: false
-    }
-  }))
-}));
-
 // Mock de react-router-dom
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -117,7 +107,8 @@ afterAll(() => {
   vi.useRealTimers();
 });
 
-// Nettoyage après chaque test
+// Cleanup after each test
 afterEach(() => {
+  cleanup();
   vi.clearAllMocks();
 });
