@@ -151,3 +151,18 @@ class TokenForgeMonitor {
 }
 
 export const monitor = TokenForgeMonitor.getInstance();
+
+export const logger = {
+  error: (message: string, metadata?: Record<string, unknown>) => {
+    console.error(message, metadata);
+  },
+  warn: (message: string, metadata?: Record<string, unknown>) => {
+    console.warn(message, metadata);
+  },
+  info: (message: string, metadata?: Record<string, unknown>) => {
+    console.info(message, metadata);
+  },
+  debug: (message: string, metadata?: Record<string, unknown>) => {
+    console.debug(message, metadata);
+  }
+};

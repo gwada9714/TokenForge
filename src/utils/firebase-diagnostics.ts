@@ -3,6 +3,7 @@ import { Auth, getAuth, signInAnonymously } from 'firebase/auth';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { Functions, getFunctions } from 'firebase/functions';
 import { logger, LogLevel } from './firebase-logger';
+import { Performance } from 'firebase/performance';
 
 interface FirebaseServiceStatus {
   isInitialized: boolean;
@@ -14,6 +15,7 @@ interface FirebaseDiagnostics {
   auth: FirebaseServiceStatus;
   firestore: FirebaseServiceStatus;
   functions: FirebaseServiceStatus;
+  performance: FirebaseServiceStatus;
   configPresent: boolean;
   emulatorsConfigured: boolean;
 }
@@ -37,6 +39,13 @@ export class FirebaseDiagnosticsService {
     return {
       isInitialized: !!functions,
       error: !functions ? 'Service Functions non initialisé' : undefined
+    };
+  }
+
+  getPerformanceStatus(performance: Performance | null): FirebaseServiceStatus {
+    return {
+      isInitialized: !!performance,
+      error: !performance ? 'Service Performance non initialisé' : undefined
     };
   }
 
@@ -76,6 +85,7 @@ export class FirebaseDiagnosticsService {
       auth: { isInitialized: false },
       firestore: { isInitialized: false },
       functions: { isInitialized: false },
+      performance: { isInitialized: false },
       configPresent: false,
       emulatorsConfigured: false
     };
@@ -122,6 +132,15 @@ export class FirebaseDiagnosticsService {
       } catch (error) {
         diagnostics.functions.error = error instanceof Error ? error.message : 'Erreur inconnue';
         logger.log(LogLevel.ERROR, 'Firebase Functions check failed', { error });
+      }
+
+      // Vérifier Performance
+      try {
+        const performance = getPerformance(app);
+        diagnostics.performance.isInitialized = !!performance;
+      } catch (error) {
+        diagnostics.performance.error = error instanceof Error ? error.message : 'Erreur inconnue';
+        logger.log(LogLevel.ERROR, 'Firebase Performance check failed', { error });
       }
 
       // Vérifier les émulateurs

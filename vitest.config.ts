@@ -4,27 +4,32 @@ import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+  plugins: [react(), tsconfigPaths()],
+  define: {
+    'process.env': {}
+  },
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/__tests__/setup.ts'],
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.{ts,tsx}'],
+      reporter: ['text', 'json', 'html'],
       exclude: [
-        'src/**/*.d.ts',
-        'src/**/types.ts',
-        'src/test/**/*'
+        'node_modules/**',
+        'src/__tests__/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/types/**'
       ]
     },
     deps: {
       inline: [
         'viem',
-        '@wagmi/core',
-        '@firebase/auth',
-        '@firebase/firestore'
+        'firebase/app',
+        'firebase/auth'
       ]
     }
-  },
-  plugins: [react(), tsconfigPaths()]
-})
+  }
+});

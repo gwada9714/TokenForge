@@ -1,33 +1,34 @@
 // Chargement synchrone des modules critiques
-import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { initializeApp, FirebaseApp } from 'firebase/app';
 import { 
+  Auth,
   getAuth,
-  type Auth,
+  setPersistence,
+  browserLocalPersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  browserLocalPersistence,
-  inMemoryPersistence,
-  indexedDBLocalPersistence,
-  setPersistence,
-  connectAuthEmulator,
   User,
 } from 'firebase/auth';
 import { 
-  getFirestore, 
-  type Firestore, 
+  Firestore,
+  getFirestore,
   connectFirestoreEmulator,
   enableMultiTabIndexedDbPersistence
 } from 'firebase/firestore';
 import { 
-  getFunctions, 
-  type Functions, 
-  connectFunctionsEmulator, 
+  Functions,
+  getFunctions,
+  connectFunctionsEmulator,
   httpsCallable
 } from 'firebase/functions';
-import { AuthComponentNotRegisteredError, AuthIntegrityError } from '../features/auth/errors/AuthError';
+import { 
+  Performance,
+  getPerformance
+} from 'firebase/performance';
 import { logger, LogLevel } from '../utils/firebase-logger';
+import { AuthComponentNotRegisteredError, AuthIntegrityError } from '../features/auth/errors/AuthError';
 import { FirebaseDiagnosticsService } from '../utils/firebase-diagnostics';
 
 // Configuration Firebase
@@ -37,7 +38,8 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Singleton pour l'application Firebase
@@ -45,20 +47,19 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 let functions: Functions | null = null;
+let performance: Performance | null = null;
 
 // Types pour les services Firebase
 interface FirebaseServices {
+  app: FirebaseApp;
   auth: Auth;
-  db: Firestore | null;
-  functions: Functions | null;
+  firestore: Firestore;
+  functions: Functions;
+  performance: Performance;
 }
 
 // État global des services
-const services: FirebaseServices = {
-  auth: null,
-  db: null,
-  functions: null
-};
+let services: FirebaseServices | null = null;
 
 // Initialisation de Firebase
 export const initializeFirebase = async (): Promise<void> => {
@@ -76,15 +77,19 @@ export const initializeFirebase = async (): Promise<void> => {
       auth = getAuth(app);
       firestore = getFirestore(app);
       functions = getFunctions(app);
+      performance = getPerformance(app);
 
       // Configurer la persistence Auth
       await configureAuthPersistence(auth);
 
       // Initialiser Firestore avec persistence optimisée
-      services.db = await initializeFirestore(app);
+      services = await initializeFirebaseServices(app);
 
       // Initialiser Functions
       services.functions = initializeFunctions(app);
+
+      // Initialiser Performance
+      services.performance = performance;
 
       // Observer les changements d'état d'authentification
       setupAuthStateObserver(auth);
@@ -116,25 +121,37 @@ const configureAuthPersistence = async (auth: Auth): Promise<void> => {
 };
 
 // Initialiser Firestore avec persistence optimisée
-const initializeFirestore = async (app: FirebaseApp): Promise<Firestore> => {
+const initializeFirebaseServices = async (app: FirebaseApp): Promise<FirebaseServices> => {
   logger.log(LogLevel.INFO, 'Initialisation de Firestore');
   
   try {
-    const db = getFirestore(app);
+    const firestore = getFirestore(app);
 
     // Activer la persistence multi-onglets en production
     if (import.meta.env.PROD) {
-      await enableMultiTabIndexedDbPersistence(db);
+      await enableMultiTabIndexedDbPersistence(firestore);
       logger.log(LogLevel.INFO, 'Persistence Firestore activée');
     }
 
     // Configurer l'émulateur en développement
     if (import.meta.env.DEV) {
-      connectFirestoreEmulator(db, 'localhost', 8080);
+      connectFirestoreEmulator(firestore, 'localhost', 8080);
       logger.log(LogLevel.INFO, 'Émulateur Firestore configuré');
     }
 
-    return db;
+    const services: FirebaseServices = {
+      app,
+      auth: getAuth(app),
+      firestore,
+      functions: getFunctions(app),
+      performance: getPerformance(app)
+    };
+
+    // Configure auth persistence
+    await setPersistence(services.auth, browserLocalPersistence);
+
+    logger.log(LogLevel.INFO, 'Firebase services initialized successfully');
+    return services;
   } catch (error) {
     logger.log(LogLevel.ERROR, 'Erreur lors de l\'initialisation de Firestore:', error);
     throw error;
@@ -176,16 +193,24 @@ const setupAuthStateObserver = (auth: Auth): void => {
 const verifyFirebaseServices = (): void => {
   logger.log(LogLevel.INFO, 'Vérification des services Firebase');
   
+  if (!services) {
+    throw new AuthComponentNotRegisteredError('Les services Firebase ne sont pas initialisés');
+  }
+
   if (!services.auth) {
     throw new AuthComponentNotRegisteredError('Le service Auth n\'est pas initialisé');
   }
 
-  if (!services.db) {
+  if (!services.firestore) {
     logger.log(LogLevel.WARN, 'Le service Firestore n\'est pas initialisé');
   }
 
   if (!services.functions) {
     logger.log(LogLevel.WARN, 'Le service Functions n\'est pas initialisé');
+  }
+
+  if (!services.performance) {
+    logger.log(LogLevel.WARN, 'Le service Performance n\'est pas initialisé');
   }
 };
 
@@ -211,6 +236,13 @@ export const getFirebaseFunctions = (): Functions => {
   return functions;
 };
 
+export const getFirebasePerformance = (): Performance => {
+  if (!performance) {
+    throw new Error('Firebase Performance n\'est pas initialisé');
+  }
+  return performance;
+};
+
 // Export des fonctions d'authentification
 export {
   signInWithEmailAndPassword,
@@ -223,9 +255,10 @@ export {
 export const getDiagnostics = () => {
   const diagnostics = new FirebaseDiagnosticsService();
   return {
-    authStatus: diagnostics.getAuthStatus(services.auth),
-    dbStatus: diagnostics.getFirestoreStatus(services.db),
-    functionsStatus: diagnostics.getFunctionsStatus(services.functions),
+    authStatus: diagnostics.getAuthStatus(services?.auth),
+    dbStatus: diagnostics.getFirestoreStatus(services?.firestore),
+    functionsStatus: diagnostics.getFunctionsStatus(services?.functions),
+    performanceStatus: diagnostics.getPerformanceStatus(services?.performance),
     environment: diagnostics.getEnvironmentInfo(),
     configuration: diagnostics.getConfigurationStatus()
   };
@@ -234,9 +267,14 @@ export const getDiagnostics = () => {
 // Export de l'état des services
 export const getFirebaseStatus = () => {
   return {
-    auth: !!services.auth,
-    db: !!services.db,
-    functions: !!services.functions,
-    initialized: services.auth && services.db && services.functions
+    auth: !!services?.auth,
+    db: !!services?.firestore,
+    functions: !!services?.functions,
+    performance: !!services?.performance,
+    initialized: services?.auth && services?.firestore && services?.functions && services?.performance
   };
+};
+
+export const getFirebaseServices = () => {
+  return services;
 };
