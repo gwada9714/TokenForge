@@ -4,15 +4,52 @@ import type { PublicClient } from 'viem';
 import { AuthError } from '../errors/AuthError';
 import type { Dispatch } from 'react';
 
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error';
+export * from '../schemas/auth.schema';
 
-export interface TokenForgeMetadata {
-  creationTime: string;
-  lastSignInTime: string;
-  lastLoginTime?: number;
-  walletAddress?: string;
-  chainId?: number;
-  customMetadata: Record<string, unknown>;
+export enum AuthProvider {
+  EMAIL = 'email',
+  GOOGLE = 'google',
+  GITHUB = 'github',
+  METAMASK = 'metamask'
+}
+
+export enum AuthEventType {
+  SIGN_IN = 'sign_in',
+  SIGN_OUT = 'sign_out',
+  TOKEN_REFRESH = 'token_refresh',
+  SESSION_EXPIRED = 'session_expired',
+  PROFILE_UPDATE = 'profile_update'
+}
+
+export interface AuthEvent {
+  type: AuthEventType;
+  timestamp: number;
+  userId?: string;
+  provider?: AuthProvider;
+  metadata?: Record<string, unknown>;
+}
+
+export interface AuthConfig {
+  sessionTimeout: number;
+  refreshThreshold: number;
+  maxRetries: number;
+  retryDelay: number;
+  persistenceType: 'local' | 'session' | 'none';
+}
+
+export interface UseAuthReturn {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  error: AuthError | null;
+  signIn: (provider: AuthProvider, credentials?: any) => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshSession: () => Promise<void>;
+}
+
+export interface UseAuthStateReturn {
+  state: AuthState;
+  dispatch: React.Dispatch<AuthAction>;
 }
 
 export interface TokenForgeUser extends Omit<FirebaseUser, 'metadata'> {

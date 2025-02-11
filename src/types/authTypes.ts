@@ -22,6 +22,32 @@ export interface AuthError {
   details?: any;
 }
 
+export interface WalletConnectionState {
+  isConnected: boolean;
+  address: string | null;
+  chainId: number | null;
+}
+
+export interface AuthState {
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  isAuthenticated: boolean;
+  user: TokenForgeUser | null;
+  error: AuthError | null;
+  walletState: WalletConnectionState;
+}
+
+export const toAuthState = (user: TokenForgeUser | null): AuthState => ({
+  status: user ? 'succeeded' : 'idle',
+  isAuthenticated: !!user,
+  user,
+  error: null,
+  walletState: {
+    isConnected: false,
+    address: null,
+    chainId: null
+  }
+});
+
 export type AuthAction =
   | { type: 'LOGIN_START' }
   | { type: 'LOGIN_SUCCESS'; payload: TokenForgeUser }
