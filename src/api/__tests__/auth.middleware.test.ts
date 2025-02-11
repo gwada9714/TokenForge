@@ -1,114 +1,140 @@
-import { Response, NextFunction } from 'express';
-import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
-import { verifyMessage } from 'ethers';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { verifyMessage } from 'viem';
+import { type NextFunction, type Request, type Response } from 'express';
+import { authMiddleware, type AuthenticatedRequest } from '../middleware/auth';
 
-vi.mock('ethers', () => ({
-  verifyMessage: vi.fn(),
+vi.mock('viem', () => ({
+  verifyMessage: vi.fn()
 }));
 
 describe('Auth Middleware', () => {
   let mockReq: Partial<AuthenticatedRequest>;
   let mockRes: Partial<Response>;
   let mockNext: NextFunction;
-  const mockJson = vi.fn();
-  const mockStatus = vi.fn().mockReturnValue({ json: mockJson });
 
   beforeEach(() => {
     mockReq = {
       headers: {},
     };
     mockRes = {
-      status: mockStatus,
-      json: mockJson,
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
     };
     mockNext = vi.fn();
-    mockJson.mockClear();
-    mockStatus.mockClear();
-    (verifyMessage as vi.Mock).mockClear();
+
+    vi.mocked(verifyMessage).mockClear();
   });
 
-  it('should return 401 when no authorization header', async () => {
-    await authMiddleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
+  it('should return 401 if no authorization header', async () => {
+    await authMiddleware(
+      mockReq as AuthenticatedRequest,
+      mockRes as Response,
+      mockNext
+    );
 
-    expect(mockStatus).toHaveBeenCalledWith(401);
-    expect(mockJson).toHaveBeenCalledWith({
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
       success: false,
-      error: 'No authorization header',
+      error: 'No authorization header'
     });
   });
 
-  it('should return 401 when invalid authorization format', async () => {
-    mockReq.headers = { authorization: 'Invalid Format' };
-
-    await authMiddleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
-
-    expect(mockStatus).toHaveBeenCalledWith(401);
-    expect(mockJson).toHaveBeenCalledWith({
-      success: false,
-      error: 'Invalid authorization header format',
-    });
-  });
-
-  it('should return 401 when invalid token format', async () => {
-    mockReq.headers = { authorization: 'Bearer invalid.token' };
-
-    await authMiddleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
-
-    expect(mockStatus).toHaveBeenCalledWith(401);
-    expect(mockJson).toHaveBeenCalledWith({
-      success: false,
-      error: 'Invalid token format',
-    });
-  });
-
-  it('should return 401 when token is expired', async () => {
-    const expiredTimestamp = Date.now() - 20 * 60 * 1000; // 20 minutes ago
+  it('should return 401 if invalid authorization format', async () => {
     mockReq.headers = {
-      authorization: `Bearer 0x1234.${expiredTimestamp}.signature`,
+      authorization: 'InvalidFormat'
     };
 
-    await authMiddleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
+    await authMiddleware(
+      mockReq as AuthenticatedRequest,
+      mockRes as Response,
+      mockNext
+    );
 
-    expect(mockStatus).toHaveBeenCalledWith(401);
-    expect(mockJson).toHaveBeenCalledWith({
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
       success: false,
-      error: 'Token expired',
+      error: 'Invalid authorization format'
     });
   });
 
-  it('should return 401 when signature is invalid', async () => {
+  it('should return 401 if missing authentication parameters', async () => {
+    mockReq.headers = {
+      authorization: 'Bearer invalid'
+    };
+
+    await authMiddleware(
+      mockReq as AuthenticatedRequest,
+      mockRes as Response,
+      mockNext
+    );
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      success: false,
+      error: 'Missing authentication parameters'
+    });
+  });
+
+  it('should return 401 if signature is expired', async () => {
+    const oldTimestamp = Date.now() - 6 * 60 * 1000; // 6 minutes ago
+    mockReq.headers = {
+      authorization: `Bearer address:signature:${oldTimestamp}`
+    };
+
+    await authMiddleware(
+      mockReq as AuthenticatedRequest,
+      mockRes as Response,
+      mockNext
+    );
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      success: false,
+      error: 'Signature expired'
+    });
+  });
+
+  it('should return 401 if signature is invalid', async () => {
     const timestamp = Date.now();
     const address = '0x1234567890123456789012345678901234567890';
     mockReq.headers = {
-      authorization: `Bearer ${address}.${timestamp}.invalid_signature`,
+      authorization: `Bearer ${address}:invalid-signature:${timestamp}`
     };
 
-    (verifyMessage as vi.Mock).mockReturnValue('0x9999999999999999999999999999999999999999');
+    vi.mocked(verifyMessage).mockResolvedValue(false);
 
-    await authMiddleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
+    await authMiddleware(
+      mockReq as AuthenticatedRequest,
+      mockRes as Response,
+      mockNext
+    );
 
-    expect(mockStatus).toHaveBeenCalledWith(401);
-    expect(mockJson).toHaveBeenCalledWith({
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
       success: false,
-      error: 'Invalid signature',
+      error: 'Invalid signature'
     });
   });
 
-  it('should call next() when authentication is successful', async () => {
+  it('should call next() if signature is valid', async () => {
     const timestamp = Date.now();
     const address = '0x1234567890123456789012345678901234567890';
     mockReq.headers = {
-      authorization: `Bearer ${address}.${timestamp}.valid_signature`,
+      authorization: `Bearer ${address}:valid-signature:${timestamp}`
     };
 
-    (verifyMessage as vi.Mock).mockReturnValue(address);
+    vi.mocked(verifyMessage).mockResolvedValue(true);
 
-    await authMiddleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
+    await authMiddleware(
+      mockReq as AuthenticatedRequest,
+      mockRes as Response,
+      mockNext
+    );
 
     expect(mockNext).toHaveBeenCalled();
     expect(mockReq.user).toEqual({
-      address,
-      timestamp,
+      address: address.toLowerCase(),
+      timestamp
     });
   });
 });

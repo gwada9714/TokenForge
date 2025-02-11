@@ -4,13 +4,13 @@ import { getAuth } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAWCGLD1B4aTGRdasA-Xa-anx4EjE0ZAA0",
-  authDomain: "tokenforge-4028e.firebaseapp.com",
-  projectId: "tokenforge-4028e",
-  storageBucket: "tokenforge-4028e.firebasestorage.app",
-  messagingSenderId: "351014652393",
-  appId: "1:351014465239:web:ca7600eae9b1c32a22e378",
-  measurementId: "G-VDPGL09402"
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VITE_FIREBASE_APP_ID,
+  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

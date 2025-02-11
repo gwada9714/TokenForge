@@ -1,15 +1,17 @@
-import { Request, Response } from 'express';
-import { Contract, JsonRpcProvider, parseUnits } from 'ethers';
+import { type PublicClient, type WalletClient } from 'viem';
+import { getContract, parseEther } from 'viem';
 import { AuthenticatedRequest } from '../middleware/auth';
 import type { MarketplaceData, MarketplaceFilters, ApiResponse } from '../types';
 
 export class MarketplaceController {
-  private marketplaceContract: Contract;
-  private provider: JsonRpcProvider;
+  private marketplaceContract: ReturnType<typeof getContract>;
+  private publicClient: PublicClient;
+  private walletClient: WalletClient;
 
-  constructor(marketplaceContract: Contract) {
+  constructor(marketplaceContract: ReturnType<typeof getContract>, publicClient: PublicClient, walletClient: WalletClient) {
     this.marketplaceContract = marketplaceContract;
-    this.provider = marketplaceContract.provider as JsonRpcProvider;
+    this.publicClient = publicClient;
+    this.walletClient = walletClient;
   }
 
   // Récupérer les items du marketplace
@@ -44,8 +46,8 @@ export class MarketplaceController {
         // Appliquer les filtres
         if (seller && item.seller.toLowerCase() !== seller.toLowerCase()) continue;
         if (status && itemStatus !== status) continue;
-        if (minPrice && parseUnits(itemPrice, 18).lt(parseUnits(minPrice, 18))) continue;
-        if (maxPrice && parseUnits(itemPrice, 18).gt(parseUnits(maxPrice, 18))) continue;
+        if (minPrice && parseEther(itemPrice).lt(parseEther(minPrice))) continue;
+        if (maxPrice && parseEther(itemPrice).gt(parseEther(maxPrice))) continue;
 
         items.push({
           id: i.toString(),
@@ -59,8 +61,8 @@ export class MarketplaceController {
 
       // Trier les items
       items.sort((a, b) => {
-        const aValue = sortBy === 'price' ? parseUnits(a.price, 18) : BigInt(a.id);
-        const bValue = sortBy === 'price' ? parseUnits(b.price, 18) : BigInt(b.id);
+        const aValue = sortBy === 'price' ? parseEther(a.price) : BigInt(a.id);
+        const bValue = sortBy === 'price' ? parseEther(b.price) : BigInt(b.id);
         return sortDirection === 'asc' 
           ? Number(aValue - bValue)
           : Number(bValue - aValue);
@@ -134,7 +136,7 @@ export class MarketplaceController {
       }
 
       // Vérifier que l'utilisateur a approuvé le marketplace
-      const token = new Contract(tokenAddress, [], this.provider);
+      const token = getContract(tokenAddress, [], this.publicClient);
       const allowance = await token.allowance(req.user.address, this.marketplaceContract.address);
       
       if (allowance.lt(amount)) {

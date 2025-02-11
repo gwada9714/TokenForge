@@ -1,56 +1,44 @@
 import { Contract, JsonRpcProvider } from 'ethers';
+import { type PublicClient } from 'viem';
+import { vi } from 'vitest';
 
 export const mockProvider = {
-  getNetwork: jest.fn(),
-  getBlockNumber: jest.fn(),
-  destroy: jest.fn(),
-} as unknown as JsonRpcProvider;
+  getNetwork: vi.fn(),
+  getBlockNumber: vi.fn(),
+  destroy: vi.fn(),
+} as unknown as PublicClient;
 
 export const mockTokenContract = {
-  name: jest.fn().mockResolvedValue('Test Token'),
-  symbol: jest.fn().mockResolvedValue('TEST'),
-  decimals: jest.fn().mockResolvedValue(18),
-  totalSupply: jest.fn().mockResolvedValue(1000000),
-  owner: jest.fn().mockResolvedValue('0x1234567890123456789012345678901234567890'),
-  allowance: jest.fn().mockResolvedValue(1000),
+  name: vi.fn().mockResolvedValue('Test Token'),
+  symbol: vi.fn().mockResolvedValue('TEST'),
+  decimals: vi.fn().mockResolvedValue(18),
+  totalSupply: vi.fn().mockResolvedValue(1000000),
+  owner: vi.fn().mockResolvedValue('0x1234567890123456789012345678901234567890'),
+  allowance: vi.fn().mockResolvedValue(1000),
   runner: mockProvider,
 } as unknown as Contract;
 
 export const mockTokenForgeFactory = {
-  getUserTokens: jest.fn().mockResolvedValue([
-    '0x1111111111111111111111111111111111111111',
-    '0x2222222222222222222222222222222222222222',
+  getUserTokens: vi.fn().mockResolvedValue([
+    '0x1234567890123456789012345678901234567890',
+    '0x0987654321098765432109876543210987654321',
   ]),
   runner: mockProvider,
 } as unknown as Contract;
 
 export const mockMarketplaceContract = {
-  getItemCount: jest.fn().mockResolvedValue(2),
-  getItem: jest.fn().mockImplementation(async (id: number) => {
-    const items = [
-      {
-        tokenAddress: '0x1111111111111111111111111111111111111111',
-        price: 100,
-        amount: 1,
-        seller: '0x1234567890123456789012345678901234567890',
-        active: true,
-      },
-      {
-        tokenAddress: '0x2222222222222222222222222222222222222222',
-        price: 200,
-        amount: 2,
-        seller: '0x0987654321098765432109876543210987654321',
-        active: false,
-      },
-    ];
-    return items[id];
-  }),
-  listItem: jest.fn().mockImplementation(async () => ({
-    wait: jest.fn().mockResolvedValue({
-      events: [{
-        event: 'ItemListed',
-        args: { itemId: 1 },
-      }],
+  getItemCount: vi.fn().mockResolvedValue(2),
+  getItem: vi.fn().mockImplementation(async (id: number) => ({
+    id,
+    seller: '0x1234567890123456789012345678901234567890',
+    tokenAddress: '0x0987654321098765432109876543210987654321',
+    amount: 1000,
+    price: '1000000000000000000',
+    status: 'active',
+  })),
+  listItem: vi.fn().mockImplementation(async () => ({
+    wait: vi.fn().mockResolvedValue({
+      events: [{ event: 'ItemListed' }],
     }),
   })),
   runner: mockProvider,

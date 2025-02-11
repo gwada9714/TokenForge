@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyMessage } from 'ethers';
+import { verifyMessage } from 'viem';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -29,59 +29,66 @@ export const authMiddleware = async (
     if (!authHeader) {
       return res.status(401).json({
         success: false,
-        error: 'No authorization header',
+        error: 'No authorization header'
       });
     }
 
-    const [bearer, token] = authHeader.split(' ');
-    if (bearer !== 'Bearer' || !token) {
+    // Format attendu: "Bearer address:signature:timestamp"
+    const [, credentials] = authHeader.split(' ');
+    if (!credentials) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid authorization header format',
+        error: 'Invalid authorization format'
       });
     }
 
-    // Le token est au format: address.timestamp.signature
-    const [address, timestamp, signature] = token.split('.');
-    if (!address || !timestamp || !signature) {
+    const [address, signature, timestamp] = credentials.split(':');
+    if (!address || !signature || !timestamp) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid token format',
+        error: 'Missing authentication parameters'
       });
     }
 
-    // Vérifier que le timestamp n'est pas expiré (15 minutes)
-    const ts = parseInt(timestamp);
-    if (Date.now() - ts > 15 * 60 * 1000) {
+    // Vérifier que le timestamp n'est pas trop ancien (5 minutes max)
+    const timestampNum = parseInt(timestamp);
+    const now = Date.now();
+    if (now - timestampNum > 5 * 60 * 1000) {
       return res.status(401).json({
         success: false,
-        error: 'Token expired',
+        error: 'Signature expired'
       });
     }
 
     // Message à vérifier
     const message = `TokenForge API Authentication\nTimestamp: ${timestamp}`;
 
-    // Vérifier la signature
-    const recoveredAddress = verifyMessage(message, signature);
-    if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
+    // Vérifier la signature avec viem
+    const isValid = await verifyMessage({
+      address,
+      message,
+      signature
+    });
+
+    if (!isValid) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid signature',
+        error: 'Invalid signature'
       });
     }
 
     // Ajouter les informations de l'utilisateur à la requête
     req.user = {
-      address,
-      timestamp: ts,
+      address: address.toLowerCase(),
+      timestamp: timestampNum
     };
 
     next();
   } catch (error) {
-    return res.status(401).json({
+    console.error('Auth middleware error:', error);
+    return res.status(500).json({
       success: false,
-      error: 'Authentication failed',
+      error: 'Internal server error'
     });
   }
 };

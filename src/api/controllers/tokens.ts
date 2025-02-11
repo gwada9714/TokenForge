@@ -1,15 +1,18 @@
 import { Request, Response } from 'express';
-import { Contract, JsonRpcProvider } from 'ethers';
+import { getContract } from 'viem';
+import { type PublicClient, type WalletClient } from 'viem';
 import { AuthenticatedRequest } from '../middleware/auth';
 import type { TokenData, TokenFilters, ApiResponse } from '../types';
 
 export class TokensController {
-  private tokenForgeFactory: Contract;
-  private provider: JsonRpcProvider;
+  private tokenForgeFactory: ReturnType<typeof getContract>;
+  private publicClient: PublicClient;
+  private walletClient: WalletClient;
 
-  constructor(factoryContract: Contract) {
+  constructor(factoryContract: ReturnType<typeof getContract>, publicClient: PublicClient, walletClient: WalletClient) {
     this.tokenForgeFactory = factoryContract;
-    this.provider = factoryContract.provider as JsonRpcProvider;
+    this.publicClient = publicClient;
+    this.walletClient = walletClient;
   }
 
   // Récupérer les tokens d'un utilisateur
@@ -37,7 +40,7 @@ export class TokensController {
       const tokenAddresses = await this.tokenForgeFactory.getUserTokens(address);
       const tokens: TokenData[] = await Promise.all(
         tokenAddresses.map(async (tokenAddress: string) => {
-          const token = new Contract(tokenAddress, [], this.provider);
+          const token = getContract(tokenAddress, this.publicClient);
           const [name, symbol, decimals, totalSupply, owner] = await Promise.all([
             token.name(),
             token.symbol(),
@@ -76,7 +79,7 @@ export class TokensController {
   ) => {
     try {
       const { address } = req.params;
-      const token = new Contract(address, [], this.provider);
+      const token = getContract(address, this.publicClient);
 
       const [name, symbol, decimals, totalSupply, owner] = await Promise.all([
         token.name(),
@@ -123,7 +126,7 @@ export class TokensController {
 
         tokens = await Promise.all(
           paginatedAddresses.map(async (addr: string) => {
-            const token = new Contract(addr, [], this.provider);
+            const token = getContract(addr, this.publicClient);
             const [name, tokenSymbol, decimals, totalSupply, tokenOwner] = await Promise.all([
               token.name(),
               token.symbol(),
