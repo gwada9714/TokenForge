@@ -54,13 +54,10 @@ jobs:
         uses: returntocorp/semgrep-action@v1
         with:
           config: auto
-          outputFormat: sarif
-          sarifOutput: semgrep-results.sarif
+          output: semgrep-results.sarif
+          format: sarif
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-        permissions:
-          contents: read
-          security-events: write
 
       - name: Run Tests
         run: |
