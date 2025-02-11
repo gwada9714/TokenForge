@@ -32,8 +32,36 @@ const config = getDefaultConfig({
   }
 });
 
+const initializeProvider = () => {
+  if (typeof window !== 'undefined' && window.ethereum) {
+    const provider = window.ethereum;
+    
+    provider.on('disconnect', (error: Error) => {
+      console.error('MetaMask disconnect:', error);
+      // Attendre un peu avant de recharger pour laisser le temps aux états de se mettre à jour
+      setTimeout(() => window.location.reload(), 3000);
+    });
+
+    provider.on('chainChanged', () => {
+      window.location.reload();
+    });
+
+    provider.on('accountsChanged', (accounts: string[]) => {
+      if (accounts.length === 0) {
+        console.log('Please connect to MetaMask.');
+      }
+    });
+
+    return provider;
+  }
+  return null;
+};
+
 export function Web3Providers({ children }: Web3ProvidersProps) {
   useEffect(() => {
+    // Initialisation du provider
+    const provider = initializeProvider();
+    
     // Vérification de la sécurité des extensions
     const checkWalletSecurity = () => {
       if (typeof window !== 'undefined' && 'chrome' in window) {
@@ -46,48 +74,21 @@ export function Web3Providers({ children }: Web3ProvidersProps) {
       }
     };
 
-    // Gestion des changements de réseau
-    const handleNetworkChange = (chainId: string) => {
-      console.log(`Réseau changé: ${chainId}`);
-    };
-
-    // Gestion des changements de compte
-    const handleAccountsChange = (accounts: string[]) => {
-      if (accounts.length === 0) {
-        console.log('Déconnecté du wallet');
-      } else {
-        console.log(`Compte connecté: ${accounts[0]}`);
-      }
-    };
-
     checkWalletSecurity();
-
-    // Setup des listeners
-    if (typeof window !== 'undefined' && window.ethereum) {
-      window.ethereum.on('networkChanged', handleNetworkChange);
-      window.ethereum.on('accountsChanged', handleAccountsChange);
-    }
 
     // Cleanup
     return () => {
-      if (typeof window !== 'undefined' && window.ethereum) {
-        window.ethereum.removeListener('networkChanged', handleNetworkChange);
-        window.ethereum.removeListener('accountsChanged', handleAccountsChange);
+      if (provider) {
+        provider.removeListener('disconnect', () => {});
+        provider.removeListener('chainChanged', () => {});
+        provider.removeListener('accountsChanged', () => {});
       }
     };
   }, []);
 
   return (
     <WagmiConfig config={config}>
-      <RainbowKitProvider 
-        theme={darkTheme({
-          accentColor: '#7b3fe4',
-          accentColorForeground: 'white',
-          borderRadius: 'medium'
-        })}
-        modalSize="compact"
-        initialChain={mainnet.id}
-      >
+      <RainbowKitProvider theme={darkTheme()}>
         {children}
       </RainbowKitProvider>
     </WagmiConfig>
