@@ -1,70 +1,138 @@
 /// <reference lib="webworker" />
+declare const self: ServiceWorkerGlobalScope;
 
+import { clientsClaim } from 'workbox-core';
 import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
-import { ExpirationPlugin } from 'workbox-expiration';
+import { StaleWhileRevalidate } from 'workbox-strategies';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
+import { getCSPDirectives } from './security/csp';
 
-declare let self: ServiceWorkerGlobalScope;
+clientsClaim();
+self.skipWaiting();
 
-// Précache tous les assets listés par Vite
+// Précache des ressources statiques
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Cache les pages HTML avec Network First
-registerRoute(
-  ({ request }) => request.mode === 'navigate',
-  new NetworkFirst({
-    cacheName: 'pages',
-    plugins: [
-      new CacheableResponsePlugin({
-        statuses: [200],
-      }),
-    ],
-  }),
-);
+// Liste des domaines WalletConnect
+const walletConnectDomains = [
+  'walletconnect.org',
+  'walletconnect.com',
+  'explorer-api.walletconnect.com',
+  'pulse.walletconnect.org',
+  'verify.walletconnect.org',
+  'verify.walletconnect.com'
+];
 
-// Cache les assets statiques avec Cache First
+// Cache pour les ressources statiques
 registerRoute(
-  ({ request }) =>
+  ({ request }) => 
     request.destination === 'style' ||
     request.destination === 'script' ||
-    request.destination === 'image',
-  new CacheFirst({
-    cacheName: 'assets',
-    plugins: [
-      new CacheableResponsePlugin({
-        statuses: [200],
-      }),
-      new ExpirationPlugin({
-        maxEntries: 50,
-        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 jours
-      }),
-    ],
-  }),
-);
-
-// Cache les requêtes API avec Stale While Revalidate
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/'),
+    request.destination === 'font',
   new StaleWhileRevalidate({
-    cacheName: 'api-cache',
+    cacheName: 'static-resources',
     plugins: [
       new CacheableResponsePlugin({
-        statuses: [200],
-      }),
-      new ExpirationPlugin({
-        maxEntries: 100,
-        maxAgeSeconds: 24 * 60 * 60, // 24 heures
-      }),
-    ],
-  }),
+        statuses: [0, 200]
+      })
+    ]
+  })
 );
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(self.skipWaiting());
+// Gestion des erreurs
+self.addEventListener('error', (event) => {
+  // Ignorer les erreurs des extensions Chrome
+  if (event.filename?.startsWith('chrome-extension://')) {
+    event.preventDefault();
+    return;
+  }
+
+  // Log détaillé des violations CSP
+  if (event.message.includes('Content Security Policy')) {
+    console.error('CSP Violation:', {
+      violatedDirective: event.message,
+      sourceFile: event.filename,
+      lineNumber: event.lineno,
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    console.error('Service Worker error:', event.error);
+  }
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+// Écoute spécifique des violations CSP
+self.addEventListener('securitypolicyviolation', (event) => {
+  console.error('CSP Violation:', {
+    blockedURI: event.blockedURI,
+    violatedDirective: event.violatedDirective,
+    originalPolicy: event.originalPolicy,
+    disposition: event.disposition,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Gestion des requêtes
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Ignorer les requêtes chrome-extension
+  if (url.protocol === 'chrome-extension:') {
+    return;
+  }
+
+  // Gestion spéciale pour WalletConnect
+  if (walletConnectDomains.some(domain => url.hostname.includes(domain))) {
+    event.respondWith(
+      fetch(event.request, {
+        mode: 'cors',
+        credentials: 'omit'
+      })
+      .catch(error => {
+        console.error('WalletConnect fetch error:', error);
+        return new Response(null, {
+          status: 200,
+          headers: new Headers({
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          })
+        });
+      })
+    );
+    return;
+  }
+
+  // Pour les autres requêtes
+  if (event.request.method === 'GET') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => {
+          return new Response('', {
+            status: 200,
+            headers: new Headers({
+              'Content-Type': event.request.headers.get('Content-Type') || 'text/plain',
+              'Access-Control-Allow-Origin': '*'
+            })
+          });
+        })
+    );
+  }
+
+  // Ajoute les headers CSP à toutes les réponses
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        const response = await fetch(event.request);
+        const cspConfig = await getCSPDirectives();
+        const newHeaders = new Headers(response.headers);
+        newHeaders.set('Content-Security-Policy', cspConfig.directives.join('; '));
+        
+        return new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: newHeaders
+        });
+      })()
+    );
+  }
 });

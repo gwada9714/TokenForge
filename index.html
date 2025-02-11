@@ -4,23 +4,41 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="TokenForge - Créez et déployez vos tokens en toute simplicité. Une plateforme complète pour donner vie à vos projets blockchain." />
-    <meta name="theme-color" content="#182038" />
+    <meta name="theme-color" content="#7b3fe4" />
     <meta name="keywords" content="token, blockchain, crypto, ethereum, binance, polygon, forge, création token" />
     
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/logo192.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
     
-    <!-- Polices Google -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>TokenForge | Créez vos tokens en toute simplicité</title>
     
-    <title>TokenForge | Forgez votre Avenir Crypto</title>
+    <!-- Style de base pour éviter le FOUC -->
+    <style nonce="%%VITE_NONCE%%">
+      @font-face {
+        font-family: 'Montserrat';
+        src: local('Montserrat'), local('Segoe UI'), local('Helvetica Neue'), local('Arial'), sans-serif;
+      }
+      @font-face {
+        font-family: 'Open Sans';
+        src: local('Open Sans'), local('Segoe UI'), local('Helvetica Neue'), local('Arial'), sans-serif;
+      }
+      body { 
+        background: #1a1b1e; 
+        margin: 0;
+        font-family: 'Montserrat', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      }
+      #root { min-height: 100vh; }
+    </style>
   </head>
   <body>
-    <noscript>Vous devez activer JavaScript pour utiliser cette application.</noscript>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" nonce="%%VITE_NONCE%%"></script>
+    <noscript>
+      <div style="text-align: center; padding: 2rem;">
+        <h1>JavaScript est requis</h1>
+        <p>Vous devez activer JavaScript pour utiliser TokenForge. Cette application nécessite JavaScript pour fonctionner correctement.</p>
+      </div>
+    </noscript>
   </body>
 </html>
