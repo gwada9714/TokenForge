@@ -1,8 +1,7 @@
 import { 
-  getAuth, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
+  signInWithEmailAndPassword as firebaseSignInWithEmail,
+  createUserWithEmailAndPassword as firebaseCreateUser,
+  sendPasswordResetEmail as firebaseSendReset,
   updateProfile as firebaseUpdateProfile,
   signOut as firebaseSignOut,
   onAuthStateChanged,
@@ -10,115 +9,149 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   NextOrObserver,
-  Unsubscribe
+  Unsubscribe,
+  Auth
 } from 'firebase/auth';
-import { app } from '../../../config/firebase';
-import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
-import { TokenForgeUser } from '../types';
+import { getFirebaseServices, initializeFirebaseServices } from '../../../config/firebase';
+import { createAuthError, AuthComponentNotRegisteredError } from '../errors/AuthError';
+import { TokenForgeUser, TokenForgeUserMetadata } from '../../../types/authTypes';
+import { logger, LogLevel } from '../../../utils/firebase-logger';
 
 export class FirebaseAuthService {
-  private static instance: FirebaseAuthService;
-  private auth = getAuth(app);
+  private static instance: FirebaseAuthService | null = null;
+  private auth: Auth;
   private googleProvider: GoogleAuthProvider;
   private currentUser: FirebaseUser | null = null;
+  private authStateUnsubscribe: Unsubscribe | null = null;
 
-  private constructor() {
+  private constructor(authInstance: Auth) {
+    this.auth = authInstance;
+    this.validateAuthReady();
     this.googleProvider = new GoogleAuthProvider();
-    onAuthStateChanged(this.auth, (user) => {
-      this.currentUser = user;
-    });
+    this.setupAuthStateListener();
   }
 
-  static getInstance(): FirebaseAuthService {
+  private validateAuthReady() {
+    if (!this.auth || !this.auth.app) {
+      throw new AuthComponentNotRegisteredError('Le service d\'authentification n\'est pas initialisé correctement');
+    }
+  }
+
+  static async getInstance(): Promise<FirebaseAuthService> {
     if (!FirebaseAuthService.instance) {
-      FirebaseAuthService.instance = new FirebaseAuthService();
+      // Initialiser les services Firebase si ce n'est pas déjà fait
+      await initializeFirebaseServices();
+      const { auth } = getFirebaseServices();
+      FirebaseAuthService.instance = new FirebaseAuthService(auth);
     }
     return FirebaseAuthService.instance;
   }
 
-  onAuthStateChanged(callback: NextOrObserver<FirebaseUser>): Unsubscribe {
-    return onAuthStateChanged(this.auth, callback);
-  }
-
-  async signInWithEmailAndPassword(email: string, password: string): Promise<TokenForgeUser> {
+  async signInWithEmail(email: string, password: string): Promise<TokenForgeUser> {
     try {
-      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
-      return this.transformToTokenForgeUser(userCredential.user);
-    } catch (error: any) {
-      throw createAuthError(error);
+      const userCredential = await firebaseSignInWithEmail(this.auth, email, password);
+      return this.mapFirebaseUser(userCredential.user);
+    } catch (error) {
+      throw createAuthError('AUTH/SIGN_IN_ERROR', error);
     }
   }
 
-  async signUp(email: string, password: string): Promise<TokenForgeUser> {
+  async signInWithGoogle(): Promise<TokenForgeUser> {
     try {
-      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
-      return this.transformToTokenForgeUser(userCredential.user);
-    } catch (error: any) {
-      throw createAuthError(error);
+      const userCredential = await signInWithPopup(this.auth, this.googleProvider);
+      return this.mapFirebaseUser(userCredential.user);
+    } catch (error) {
+      throw createAuthError('AUTH/GOOGLE_SIGN_IN_ERROR', error);
+    }
+  }
+
+  async createUser(email: string, password: string): Promise<TokenForgeUser> {
+    try {
+      const userCredential = await firebaseCreateUser(this.auth, email, password);
+      return this.mapFirebaseUser(userCredential.user);
+    } catch (error) {
+      throw createAuthError('AUTH/CREATE_USER_ERROR', error);
+    }
+  }
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      await firebaseSendReset(this.auth, email);
+    } catch (error) {
+      throw createAuthError('AUTH/RESET_PASSWORD_ERROR', error);
+    }
+  }
+
+  async updateUserProfile(displayName: string): Promise<void> {
+    if (!this.currentUser) {
+      throw createAuthError('AUTH/USER_NOT_FOUND');
+    }
+
+    try {
+      await firebaseUpdateProfile(this.currentUser, { displayName });
+    } catch (error) {
+      throw createAuthError('AUTH/UPDATE_PROFILE_ERROR', error);
     }
   }
 
   async signOut(): Promise<void> {
     try {
       await firebaseSignOut(this.auth);
-    } catch (error: any) {
-      throw createAuthError(error);
+    } catch (error) {
+      throw createAuthError('AUTH/SIGN_OUT_ERROR', error);
     }
   }
 
-  async resetPassword(email: string): Promise<void> {
-    try {
-      await sendPasswordResetEmail(this.auth, email);
-    } catch (error: any) {
-      throw createAuthError(error);
-    }
+  getCurrentUser(): TokenForgeUser | null {
+    return this.currentUser ? this.mapFirebaseUser(this.currentUser) : null;
   }
 
-  async updateProfile(updates: Partial<TokenForgeUser>): Promise<void> {
-    if (!this.currentUser) {
-      throw createAuthError(AUTH_ERROR_CODES.USER_NOT_FOUND);
-    }
-
-    try {
-      const { displayName, photoURL } = updates;
-      if (displayName !== undefined || photoURL !== undefined) {
-        await firebaseUpdateProfile(this.currentUser, { 
-          displayName: displayName ?? this.currentUser.displayName,
-          photoURL: photoURL ?? this.currentUser.photoURL
-        });
+  onAuthStateChanged(observer: NextOrObserver<TokenForgeUser | null>): Unsubscribe {
+    return onAuthStateChanged(this.auth, (user) => {
+      this.currentUser = user;
+      if (typeof observer === 'function') {
+        observer(user ? this.mapFirebaseUser(user) : null);
+      } else {
+        if (observer.next) {
+          observer.next(user ? this.mapFirebaseUser(user) : null);
+        }
       }
-    } catch (error: any) {
-      throw createAuthError(error);
-    }
+    });
   }
 
-  async updateProfileWithUser(user: FirebaseUser, displayName?: string, photoURL?: string): Promise<void> {
-    try {
-      await firebaseUpdateProfile(user, { displayName, photoURL });
-    } catch (error: any) {
-      throw createAuthError(error);
-    }
-  }
-
-  private transformToTokenForgeUser(user: FirebaseUser): TokenForgeUser {
+  private mapFirebaseUser(user: FirebaseUser): TokenForgeUser {
     return {
       uid: user.uid,
-      email: user.email || '',
-      displayName: user.displayName || '',
-      photoURL: user.photoURL || '',
+      email: user.email,
       emailVerified: user.emailVerified,
-      isAdmin: false,
-      canCreateToken: false,
-      canUseServices: true,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      phoneNumber: user.phoneNumber,
       metadata: {
-        creationTime: user.metadata.creationTime || '',
-        lastSignInTime: user.metadata.lastSignInTime || '',
-        lastLoginTime: Date.now(),
-        walletAddress: undefined,
-        chainId: undefined
-      }
+        creationTime: user.metadata.creationTime,
+        lastSignInTime: user.metadata.lastSignInTime
+      },
+      providerData: user.providerData.map(provider => ({
+        providerId: provider.providerId,
+        uid: provider.uid,
+        displayName: provider.displayName,
+        email: provider.email,
+        phoneNumber: provider.phoneNumber,
+        photoURL: provider.photoURL
+      }))
     };
   }
 }
 
-export const firebaseAuth = FirebaseAuthService.getInstance();
+// Export d'une fonction pour obtenir l'instance
+export const getFirebaseAuthService = FirebaseAuthService.getInstance;
+
+// Export d'une instance par défaut (initialisée de manière asynchrone)
+let defaultInstance: FirebaseAuthService | null = null;
+getFirebaseAuthService().then(instance => {
+  defaultInstance = instance;
+}).catch(error => {
+  console.error('Erreur lors de l\'initialisation du service Firebase Auth:', error);
+});
+
+export { defaultInstance as firebaseAuth };
