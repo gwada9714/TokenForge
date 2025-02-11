@@ -1,0 +1,86 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ main, release/* ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_ENV: production
+  FIREBASE_PROJECT_ID: tokenforge-4028e
+  VAULT_URL: https://vault.tokenforge.com
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security checks
+        run: npm run security:check
+
+  deploy-prod:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Vault
+        id: vault
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ env.VAULT_URL }}
+          method: token
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          secrets: |
+            secret/data/tokenforge/production/vault token | VAULT_TOKEN ;
+            secret/data/tokenforge/production/firebase token | FIREBASE_TOKEN ;
+            secret/data/tokenforge/production/slack webhook | SLACK_WEBHOOK
+
+      - name: Configure Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ steps.vault.outputs.FIREBASE_TOKEN }}'
+          projectId: ${{ env.FIREBASE_PROJECT_ID }}
+          channelId: live
+
+      - name: Deploy to production
+        run: npm run deploy -- --prod
+
+      - name: Notify deployment status
+        if: always()
+        uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: ${{ steps.vault.outputs.SLACK_WEBHOOK }}
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+          channel: '#deployments'
+          username: 'GitHub Actions'
+          icon_emoji: ':rocket:'
