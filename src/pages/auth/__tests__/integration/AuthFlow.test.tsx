@@ -1,108 +1,133 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { TokenForgeAuthProvider } from '../../../../features/auth';
-import LoginPage from '../../LoginPage';
+import { LoginPage } from '../../LoginPage';
 import { SignUpPage } from '../../SignUpPage';
-import { ConnectWalletPage } from '../../ConnectWalletPage';
-import { WrongNetworkPage } from '../../WrongNetworkPage';
-import { UnauthorizedPage } from '../../UnauthorizedPage';
 
-// Mock Firebase Auth
-vi.mock('firebase/auth', () => ({
-  getAuth: vi.fn(),
-  signInWithEmailAndPassword: vi.fn(),
-  createUserWithEmailAndPassword: vi.fn(),
-  signOut: vi.fn(),
+vi.mock('../../../../features/auth/hooks/useTokenForgeAuth', () => ({
+  useTokenForgeAuth: vi.fn()
 }));
 
-// Mock RainbowKit
-vi.mock('@rainbow-me/rainbowkit', () => ({
-  ConnectButton: () => <button>Connect Wallet</button>,
-}));
-
-const mockNavigate = vi.fn();
-
-vi.mock('react-router-dom', () => ({
-  ...vi.importActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
-
-describe('Authentication Flow', () => {
-  const renderAuthFlow = () => {
-    render(
-      <BrowserRouter>
-        <TokenForgeAuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/connect-wallet" element={<ConnectWalletPage />} />
-            <Route path="/wrong-network" element={<WrongNetworkPage />} />
-            <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          </Routes>
-        </TokenForgeAuthProvider>
-      </BrowserRouter>
-    );
-  };
-
+describe('Authentication Flow Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('allows navigation between login and signup pages', () => {
-    renderAuthFlow();
-    
-    // Start at login page
-    expect(screen.getByText('Sign In')).toBeTruthy();
+  it('allows user to navigate between login and signup pages', () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <TokenForgeAuthProvider>
+          <LoginPage />
+        </TokenForgeAuthProvider>
+      </MemoryRouter>
+    );
+
+    // Check initial login page
+    expect(screen.getByText(/sign in/i)).toBeInTheDocument();
     
     // Navigate to signup
-    const signUpLink = screen.getByText(/don't have an account\?/i);
-    fireEvent.click(signUpLink);
-    
-    // Should navigate to signup page
-    expect(mockNavigate).toHaveBeenCalledWith('/signup');
+    const signupLink = screen.getByText(/don't have an account/i);
+    fireEvent.click(signupLink);
+
+    // Verify signup page content
+    expect(screen.getByText(/create account/i)).toBeInTheDocument();
   });
 
-  it('shows wallet connection flow after login', async () => {
-    const mockSignIn = vi.fn().mockResolvedValue({});
-    (require('firebase/auth') as any).signInWithEmailAndPassword.mockImplementation(mockSignIn);
-    
-    renderAuthFlow();
-    
-    // Fill and submit login form
+  it('handles successful login flow', async () => {
+    const mockLogin = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useTokenForgeAuth).mockReturnValue({
+      login: mockLogin,
+      isLoading: false,
+      error: null
+    });
+
+    render(
+      <MemoryRouter>
+        <TokenForgeAuthProvider>
+          <LoginPage />
+        </TokenForgeAuthProvider>
+      </MemoryRouter>
+    );
+
+    // Fill login form
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' },
+      target: { value: 'test@example.com' }
     });
     fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'password123' },
+      target: { value: 'password123' }
     });
-    fireEvent.submit(screen.getByRole('form'));
-    
+
+    // Submit form
+    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+
     await waitFor(() => {
-      expect(mockSignIn).toHaveBeenCalledWith(
-        expect.anything(),
-        'test@example.com',
-        'password123'
-      );
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
     });
   });
 
-  it('shows error message on login failure', async () => {
-    const mockError = { code: 'auth/wrong-password', message: 'Invalid password' };
-    (require('firebase/auth') as any).signInWithEmailAndPassword.mockRejectedValue(mockError);
-    
-    renderAuthFlow();
-    
-    // Fill and submit login form
+  it('handles successful signup flow', async () => {
+    const mockSignup = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useTokenForgeAuth).mockReturnValue({
+      signup: mockSignup,
+      isLoading: false,
+      error: null
+    });
+
+    render(
+      <MemoryRouter>
+        <TokenForgeAuthProvider>
+          <SignUpPage />
+        </TokenForgeAuthProvider>
+      </MemoryRouter>
+    );
+
+    // Fill signup form
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' },
+      target: { value: 'newuser@example.com' }
     });
     fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'wrongpassword' },
+      target: { value: 'newpassword123' }
     });
-    fireEvent.submit(screen.getByRole('form'));
-    
+    fireEvent.change(screen.getByLabelText(/confirm password/i), {
+      target: { value: 'newpassword123' }
+    });
+
+    // Submit form
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+
     await waitFor(() => {
-      expect(screen.getByText('Invalid password')).toBeTruthy();
+      expect(mockSignup).toHaveBeenCalledWith('newuser@example.com', 'newpassword123');
+    });
+  });
+
+  it('displays error messages on failed authentication', async () => {
+    const errorMessage = 'Invalid credentials';
+    vi.mocked(useTokenForgeAuth).mockReturnValue({
+      login: vi.fn().mockRejectedValue(new Error(errorMessage)),
+      isLoading: false,
+      error: new Error(errorMessage)
+    });
+
+    render(
+      <MemoryRouter>
+        <TokenForgeAuthProvider>
+          <LoginPage />
+        </TokenForgeAuthProvider>
+      </MemoryRouter>
+    );
+
+    // Fill and submit form
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'test@example.com' }
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'wrongpassword' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
   });
 });

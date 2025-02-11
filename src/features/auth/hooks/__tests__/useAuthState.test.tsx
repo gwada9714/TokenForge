@@ -1,180 +1,122 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import React from 'react';
-import { renderHook, act } from '@testing-library/react-hooks';
-
-// Mocks
-import { mockFirebaseAuth } from '../../__tests__/mocks/firebase';
-import { mockSessionService, mockErrorService } from '../../__tests__/mocks/services';
-
-// Mock modules
-vi.mock('../../services/firebaseAuth', () => ({
-  firebaseAuth: mockFirebaseAuth
-}));
-
-vi.mock('../../services/sessionService', () => ({
-  sessionService: mockSessionService
-}));
-
-vi.mock('../../services/errorService', () => ({
-  errorService: mockErrorService
-}));
-
-// Imports after mocks
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import { useAuthState } from '../useAuthState';
-import { TokenForgeUser, AuthStatus } from '../../types/auth';
-import { AuthError } from '../../errors/AuthError';
-import { TokenForgeAuthContext } from '../../context/TokenForgeAuthContext';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from '../../store/authSlice';
 
-const mockDispatch = vi.fn();
-
-const mockUser: TokenForgeUser = {
-  uid: 'test-uid',
-  email: 'test@example.com',
-  emailVerified: true,
-  isAdmin: true,
-  canCreateToken: true,
-  canUseServices: true,
-  isAnonymous: false,
-  providerData: [],
-  refreshToken: 'test-refresh-token',
-  tenantId: null,
-  displayName: null,
-  photoURL: null,
-  phoneNumber: null,
-  providerId: 'firebase',
-  metadata: {
-    creationTime: '2025-01-21T01:48:12.000Z',
-    lastSignInTime: '2025-01-21T01:48:12.000Z',
-    lastLoginTime: Date.now(),
-    walletAddress: undefined,
-    chainId: undefined,
-    customMetadata: {}
-  },
-  delete: vi.fn(),
-  getIdToken: vi.fn(),
-  getIdTokenResult: vi.fn(),
-  reload: vi.fn(),
-  toJSON: vi.fn()
-} as unknown as TokenForgeUser;
-
-const mockAuthState = {
-  dispatch: mockDispatch,
-  walletState: {
-    isConnected: false,
-    address: null,
-    chainId: null,
-    isCorrectNetwork: false,
-    provider: null,
-    walletClient: null
-  },
-  status: 'idle' as AuthStatus,
-  isAuthenticated: false,
-  user: null,
-  error: null,
-  isAdmin: false,
-  canCreateToken: false,
-  canUseServices: false
-};
-
-const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <TokenForgeAuthContext.Provider value={mockAuthState}>
-    {children}
-  </TokenForgeAuthContext.Provider>
-);
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  onAuthStateChanged: vi.fn()
+}));
 
 describe('useAuthState', () => {
+  let mockAuth: any;
+  let mockStore: any;
+  let mockUnsubscribe: vi.Mock;
+
+  const mockUser: Partial<User> = {
+    uid: 'test-uid',
+    email: 'test@example.com',
+    emailVerified: true
+  };
+
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockSessionService.getUserSession.mockResolvedValue({
-      isAdmin: true,
-      canCreateToken: true,
-      canUseServices: true
-    });
-    mockFirebaseAuth.onAuthStateChanged.mockImplementation((callback) => {
-      callback(null);
-      return () => {};
-    });
-  });
+    mockUnsubscribe = vi.fn();
+    mockAuth = {
+      currentUser: null
+    };
 
-  it('devrait initialiser avec l\'état par défaut', () => {
-    const { result } = renderHook(() => useAuthState(), { wrapper: Wrapper });
-    
-    expect(result.current).toEqual({
-      status: 'idle',
-      isAuthenticated: false,
-      user: null,
-      error: null,
-      isAdmin: false,
-      canCreateToken: false,
-      canUseServices: false,
-      walletState: {
-        isConnected: false,
-        address: null,
-        chainId: null,
-        isCorrectNetwork: false,
-        provider: null,
-        walletClient: null
-      },
-      login: expect.any(Function),
-      logout: expect.any(Function),
-      dispatch: expect.any(Function)
-    });
-  });
-
-  it('devrait gérer une authentification réussie', async () => {
-    mockFirebaseAuth.signInWithEmailAndPassword.mockResolvedValue({ user: mockUser });
-    mockFirebaseAuth.onAuthStateChanged.mockImplementation((callback) => {
-      callback(mockUser);
-      return () => {};
-    });
-    
-    const { result } = renderHook(() => useAuthState(), { wrapper: Wrapper });
-
-    await act(async () => {
-      await result.current.login('test@example.com', 'password');
+    vi.mocked(getAuth).mockReturnValue(mockAuth);
+    vi.mocked(onAuthStateChanged).mockImplementation((auth, callback) => {
+      callback(mockAuth.currentUser);
+      return mockUnsubscribe;
     });
 
-    expect(mockFirebaseAuth.signInWithEmailAndPassword).toHaveBeenCalledWith(
-      'test@example.com',
-      'password'
-    );
-  });
-
-  it('devrait gérer une erreur d\'authentification', async () => {
-    const error = new AuthError('AUTH_016', 'Invalid credentials');
-    mockFirebaseAuth.signInWithEmailAndPassword.mockRejectedValue(error);
-    mockErrorService.handleError.mockReturnValue(error);
-
-    const { result } = renderHook(() => useAuthState(), { wrapper: Wrapper });
-
-    await act(async () => {
-      try {
-        await result.current.login('test@example.com', 'wrong-password');
-      } catch (e) {
-        expect(e).toEqual(error);
+    mockStore = configureStore({
+      reducer: {
+        auth: authReducer
       }
     });
   });
 
-  it('devrait gérer la déconnexion', async () => {
-    mockFirebaseAuth.signOut.mockResolvedValue(undefined);
-    
-    const { result } = renderHook(() => useAuthState(), { wrapper: Wrapper });
-
-    await act(async () => {
-      await result.current.logout();
+  it('initializes with loading state', () => {
+    const { result } = renderHook(() => useAuthState(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
     });
 
-    expect(mockFirebaseAuth.signOut).toHaveBeenCalled();
+    expect(result.current.loading).toBe(true);
+    expect(result.current.user).toBeNull();
+    expect(result.current.error).toBeNull();
   });
 
-  it('devrait nettoyer l\'abonnement Firebase à la déconnexion', () => {
-    const unsubscribeMock = vi.fn();
-    mockFirebaseAuth.onAuthStateChanged.mockReturnValue(unsubscribeMock);
+  it('updates state when user signs in', async () => {
+    mockAuth.currentUser = mockUser;
 
-    const { unmount } = renderHook(() => useAuthState(), { wrapper: Wrapper });
+    const { result } = renderHook(() => useAuthState(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    await act(async () => {
+      const authStateCallback = vi.mocked(onAuthStateChanged).mock.calls[0][1];
+      authStateCallback(mockUser as User);
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.user).toEqual(mockUser);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('updates state when user signs out', async () => {
+    const { result } = renderHook(() => useAuthState(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    await act(async () => {
+      const authStateCallback = vi.mocked(onAuthStateChanged).mock.calls[0][1];
+      authStateCallback(null);
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(result.current.error).toBeNull();
+  });
+
+  it('handles authentication errors', async () => {
+    const mockError = new Error('Auth error');
+
+    const { result } = renderHook(() => useAuthState(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    await act(async () => {
+      const authStateCallback = vi.mocked(onAuthStateChanged).mock.calls[0][1];
+      authStateCallback(null, mockError);
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(result.current.error).toEqual(mockError);
+  });
+
+  it('unsubscribes from auth state changes on unmount', () => {
+    const { unmount } = renderHook(() => useAuthState(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
     unmount();
 
-    expect(unsubscribeMock).toHaveBeenCalled();
+    expect(mockUnsubscribe).toHaveBeenCalled();
   });
 });

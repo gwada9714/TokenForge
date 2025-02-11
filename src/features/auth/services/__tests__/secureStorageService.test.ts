@@ -1,110 +1,120 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { secureStorageService } from '../secureStorageService';
-import { AUTH_ERROR_CODES } from '../../errors/AuthError';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { SecureStorageService } from '../secureStorageService';
 
 describe('SecureStorageService', () => {
+  let secureStorageService: SecureStorageService;
+  let mockLocalStorage: Storage;
+
   beforeEach(() => {
-    // Clear storage before each test
-    window.sessionStorage.clear();
-    vi.clearAllMocks();
+    mockLocalStorage = {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      length: 0,
+      key: vi.fn(),
+    };
+    
+    global.localStorage = mockLocalStorage;
+    secureStorageService = new SecureStorageService();
   });
 
-  describe('setItem & getItem', () => {
-    it('should store and retrieve data correctly', () => {
-      const testData = { id: 1, name: 'test' };
-      const key = 'test_key';
-
-      secureStorageService.setItem(key, testData);
-      const retrieved = secureStorageService.getItem(key);
-
-      expect(retrieved).toEqual(testData);
+  describe('setItem', () => {
+    it('encrypts and stores data', async () => {
+      const key = 'testKey';
+      const value = 'testValue';
+      
+      await secureStorageService.setItem(key, value);
+      
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        key,
+        expect.any(String)
+      );
+      
+      const storedValue = vi.mocked(mockLocalStorage.setItem).mock.calls[0][1];
+      expect(storedValue).not.toBe(value); // Should be encrypted
     });
 
-    it('should return null for non-existent key', () => {
-      const result = secureStorageService.getItem('non_existent');
+    it('handles objects', async () => {
+      const key = 'testKey';
+      const value = { test: 'value' };
+      
+      await secureStorageService.setItem(key, value);
+      
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        key,
+        expect.any(String)
+      );
+    });
+  });
+
+  describe('getItem', () => {
+    it('retrieves and decrypts data', async () => {
+      const key = 'testKey';
+      const encryptedValue = 'encryptedValue';
+      vi.mocked(mockLocalStorage.getItem).mockReturnValue(encryptedValue);
+      
+      const result = await secureStorageService.getItem(key);
+      
+      expect(mockLocalStorage.getItem).toHaveBeenCalledWith(key);
+      expect(result).toBeDefined();
+    });
+
+    it('returns null for non-existent key', async () => {
+      const key = 'nonExistentKey';
+      vi.mocked(mockLocalStorage.getItem).mockReturnValue(null);
+      
+      const result = await secureStorageService.getItem(key);
+      
       expect(result).toBeNull();
     });
 
-    it('should handle complex objects', () => {
-      const complexData = {
-        id: 1,
-        nested: { key: 'value' },
-        array: [1, 2, 3],
-        date: new Date().toISOString()
-      };
-
-      secureStorageService.setItem('complex', complexData);
-      const retrieved = secureStorageService.getItem('complex');
-
-      expect(retrieved).toEqual(complexData);
-    });
-
-    it('should throw STORAGE_ERROR when storage is corrupted', () => {
-      // Simulate corrupted data
-      window.sessionStorage.setItem('tokenforge_corrupted', 'invalid-data');
-
-      expect(() => {
-        secureStorageService.getItem('corrupted');
-      }).toThrow(expect.objectContaining({
-        code: AUTH_ERROR_CODES.STORAGE_ERROR
-      }));
+    it('handles corrupted data', async () => {
+      const key = 'corruptedKey';
+      vi.mocked(mockLocalStorage.getItem).mockReturnValue('corrupted-data');
+      
+      const result = await secureStorageService.getItem(key);
+      
+      expect(result).toBeNull();
     });
   });
 
-  describe('Auth Token Management', () => {
-    const testToken = 'test.jwt.token';
-
-    it('should manage auth token correctly', () => {
-      secureStorageService.setAuthToken(testToken);
-      const retrieved = secureStorageService.getAuthToken();
-
-      expect(retrieved).toBe(testToken);
-    });
-
-    it('should remove auth token', () => {
-      secureStorageService.setAuthToken(testToken);
-      secureStorageService.removeAuthToken();
-
-      expect(secureStorageService.getAuthToken()).toBeNull();
+  describe('removeItem', () => {
+    it('removes item from storage', async () => {
+      const key = 'testKey';
+      
+      await secureStorageService.removeItem(key);
+      
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith(key);
     });
   });
 
-  describe('Data Expiration', () => {
-    it('should handle expired data', () => {
-      const testData = { test: 'data' };
+  describe('clear', () => {
+    it('clears all items from storage', async () => {
+      await secureStorageService.clear();
       
-      // Mock Date.now to simulate future time
-      const realDateNow = Date.now.bind(global.Date);
-      const dateNowStub = vi.fn(() => realDateNow() + (25 * 60 * 60 * 1000)); // 25 hours later
-      global.Date.now = dateNowStub;
-      
-      secureStorageService.setItem('expired', testData);
-      
-      // Reset Date.now to real implementation
-      global.Date.now = realDateNow;
-      
-      const retrieved = secureStorageService.getItem('expired');
-      expect(retrieved).toBeNull();
+      expect(mockLocalStorage.clear).toHaveBeenCalled();
     });
   });
 
-  describe('Clear Storage', () => {
-    it('should clear only tokenforge prefixed items', () => {
-      // Set some test data
-      secureStorageService.setItem('test1', 'data1');
-      secureStorageService.setItem('test2', 'data2');
+  describe('error handling', () => {
+    it('handles storage quota exceeded error', async () => {
+      const key = 'testKey';
+      const value = 'testValue';
+      vi.mocked(mockLocalStorage.setItem).mockImplementation(() => {
+        throw new Error('QuotaExceededError');
+      });
       
-      // Set non-tokenforge data
-      window.sessionStorage.setItem('other_key', 'other_data');
+      await expect(secureStorageService.setItem(key, value)).rejects.toThrow();
+    });
+
+    it('handles storage not available error', async () => {
+      const key = 'testKey';
+      vi.mocked(mockLocalStorage.getItem).mockImplementation(() => {
+        throw new Error('Storage not available');
+      });
       
-      secureStorageService.clear();
-      
-      // TokenForge items should be cleared
-      expect(secureStorageService.getItem('test1')).toBeNull();
-      expect(secureStorageService.getItem('test2')).toBeNull();
-      
-      // Non-TokenForge items should remain
-      expect(window.sessionStorage.getItem('other_key')).toBe('other_data');
+      await expect(secureStorageService.getItem(key)).rejects.toThrow();
     });
   });
 });

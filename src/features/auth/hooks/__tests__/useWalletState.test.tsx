@@ -50,7 +50,7 @@ vi.mock('../../../config/chains', () => {
 // Imports nécessaires pour les tests
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react';
 import type { WalletState, TokenForgeAuthState } from '../../types/auth';
 import { TokenForgeAuthContext } from '../../context/TokenForgeAuthContext';
 import { useWalletState } from '../useWalletState';
@@ -165,107 +165,222 @@ const Wrapper = ({ children }: WrapperProps) => (
   </TokenForgeAuthContext.Provider>
 );
 
+import { useAccount, useNetwork, useSignMessage } from 'wagmi';
+
+vi.mock('wagmi', () => ({
+  useAccount: vi.fn(),
+  useNetwork: vi.fn(),
+  useSignMessage: vi.fn(),
+}));
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { useWalletState } from '../useWalletState';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from '../../store/authSlice';
+import { createPublicClient, createWalletClient, http, custom } from 'viem';
+import { mainnet } from 'viem/chains';
+import { WalletClient, PublicClient, Address, Chain } from 'viem';
+
+// Mock Viem
+vi.mock('viem', () => ({
+  createPublicClient: vi.fn(),
+  createWalletClient: vi.fn(),
+  http: vi.fn(),
+  custom: vi.fn()
+}));
+
+vi.mock('viem/chains', () => ({
+  mainnet: { id: 1, name: 'Ethereum' }
+}));
+
 describe('useWalletState', () => {
+  let mockStore: any;
+  let mockPublicClient: Partial<PublicClient>;
+  let mockWalletClient: Partial<WalletClient>;
+  const mockAddress = '0x1234567890123456789012345678901234567890' as Address;
+  const mockChainId = 1;
+
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    mockPublicClient = {
+      chain: mainnet,
+      request: vi.fn()
+    };
 
-  it('should initialize with default state', () => {
-    const { result } = renderHook(() => useWalletState(), {
-      wrapper: Wrapper
-    });
-
-    // Vérifier que les fonctions sont présentes
-    expect(typeof result.current.connectWallet).toBe('function');
-    expect(typeof result.current.disconnectWallet).toBe('function');
-    expect(typeof result.current.updateNetwork).toBe('function');
-    expect(typeof result.current.updateProvider).toBe('function');
-  });
-
-  it('should handle wallet connection', () => {
-    const { result } = renderHook(() => useWalletState(), {
-      wrapper: Wrapper
-    });
-
-    const mockAddress = '0x1234567890123456789012345678901234567890';
-    const mockChainId = 1;
-    const mockWalletClient = {};
-    const mockProvider = {};
-
-    result.current.connectWallet(mockAddress, mockChainId, mockWalletClient, mockProvider);
-
-    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
-      authActions.connectWallet({
-        isConnected: true,
+    mockWalletClient = {
+      account: {
         address: mockAddress,
-        chainId: mockChainId,
-        walletClient: mockWalletClient,
-        provider: mockProvider,
-        isCorrectNetwork: true
-      })
-    );
+        type: 'json-rpc'
+      },
+      chain: mainnet,
+      request: vi.fn()
+    };
+
+    vi.mocked(createPublicClient).mockReturnValue(mockPublicClient as PublicClient);
+    vi.mocked(createWalletClient).mockReturnValue(mockWalletClient as WalletClient);
+    vi.mocked(http).mockReturnValue({} as any);
+    vi.mocked(custom).mockReturnValue({} as any);
+
+    mockStore = configureStore({
+      reducer: {
+        auth: authReducer
+      },
+      preloadedState: {
+        auth: {
+          walletState: {
+            isConnected: false,
+            address: null,
+            chainId: null,
+            isCorrectNetwork: false
+          }
+        }
+      }
+    });
   });
 
-  it('should handle wallet disconnection', () => {
+  it('initializes with disconnected state', () => {
     const { result } = renderHook(() => useWalletState(), {
-      wrapper: Wrapper
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
     });
 
-    result.current.disconnectWallet();
-
-    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
-      authActions.disconnectWallet()
-    );
+    expect(result.current.isConnected).toBe(false);
+    expect(result.current.address).toBeNull();
+    expect(result.current.chainId).toBeNull();
+    expect(result.current.isCorrectNetwork).toBe(false);
   });
 
-  it('should handle network update with supported chain', () => {
+  it('connects wallet successfully', async () => {
     const { result } = renderHook(() => useWalletState(), {
-      wrapper: Wrapper
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
     });
 
-    const supportedChainId = 1; // mainnet
-    result.current.updateNetwork(supportedChainId);
+    await act(async () => {
+      await result.current.connect();
+    });
 
-    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
-      authActions.updateNetwork(supportedChainId, true)
-    );
+    expect(result.current.isConnected).toBe(true);
+    expect(result.current.address).toBe(mockAddress);
+    expect(result.current.chainId).toBe(mockChainId);
+    expect(result.current.isCorrectNetwork).toBe(true);
   });
 
-  it('should handle network update with unsupported chain', () => {
+  it('handles wallet connection errors', async () => {
+    const mockError = new Error('Connection failed');
+    vi.mocked(createWalletClient).mockRejectedValueOnce(mockError);
+
     const { result } = renderHook(() => useWalletState(), {
-      wrapper: Wrapper
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
     });
 
-    const unsupportedChainId = 999; // chaîne non supportée
-    result.current.updateNetwork(unsupportedChainId);
+    await act(async () => {
+      try {
+        await result.current.connect();
+      } catch (error) {
+        expect(error).toEqual(mockError);
+      }
+    });
 
-    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
-      authActions.updateNetwork(unsupportedChainId, false)
-    );
+    expect(result.current.isConnected).toBe(false);
+    expect(result.current.error).toBeDefined();
   });
 
-  it('should handle provider update', () => {
+  it('disconnects wallet', async () => {
     const { result } = renderHook(() => useWalletState(), {
-      wrapper: Wrapper
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
     });
 
-    const mockProvider = { provider: 'test' };
-    result.current.updateProvider(mockProvider);
+    // First connect
+    await act(async () => {
+      await result.current.connect();
+    });
 
-    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
-      authActions.updateProvider(mockProvider)
-    );
+    // Then disconnect
+    await act(async () => {
+      await result.current.disconnect();
+    });
+
+    expect(result.current.isConnected).toBe(false);
+    expect(result.current.address).toBeNull();
+    expect(result.current.chainId).toBeNull();
+    expect(result.current.isCorrectNetwork).toBe(false);
   });
 
-  it('should handle null provider update', () => {
+  it('handles network changes', async () => {
     const { result } = renderHook(() => useWalletState(), {
-      wrapper: Wrapper
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
     });
 
-    result.current.updateProvider(null);
+    // Connect first
+    await act(async () => {
+      await result.current.connect();
+    });
 
-    expect(mockContextValue.dispatch).toHaveBeenCalledWith(
-      authActions.updateProvider(null)
-    );
+    // Simulate network change
+    const newChain: Chain = {
+      ...mainnet,
+      id: 5, // Goerli testnet
+      name: 'Goerli'
+    };
+
+    await act(async () => {
+      mockWalletClient.chain = newChain;
+      // Trigger network change event
+      window.dispatchEvent(new Event('chainChanged'));
+    });
+
+    expect(result.current.chainId).toBe(5);
+    expect(result.current.isCorrectNetwork).toBe(false);
+  });
+
+  it('handles account changes', async () => {
+    const { result } = renderHook(() => useWalletState(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    // Connect first
+    await act(async () => {
+      await result.current.connect();
+    });
+
+    // Simulate account change
+    const newAddress = '0x9876543210987654321098765432109876543210' as Address;
+
+    await act(async () => {
+      if (mockWalletClient.account) {
+        mockWalletClient.account.address = newAddress;
+      }
+      // Trigger account change event
+      window.dispatchEvent(new Event('accountsChanged'));
+    });
+
+    expect(result.current.address).toBe(newAddress);
+  });
+
+  it('cleans up event listeners on unmount', () => {
+    const removeEventListener = vi.spyOn(window, 'removeEventListener');
+
+    const { unmount } = renderHook(() => useWalletState(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    unmount();
+
+    expect(removeEventListener).toHaveBeenCalledWith('chainChanged', expect.any(Function));
+    expect(removeEventListener).toHaveBeenCalledWith('accountsChanged', expect.any(Function));
   });
 });

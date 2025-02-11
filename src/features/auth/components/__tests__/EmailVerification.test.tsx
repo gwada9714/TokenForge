@@ -1,129 +1,124 @@
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { EmailVerification } from '../EmailVerification';
-import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
+import { useTokenForgeAuth } from '../../hooks/useTokenForgeAuth';
 
-// Mock des dépendances
-vi.mock('../../hooks/useFirebaseAuth');
+vi.mock('../../hooks/useTokenForgeAuth', () => ({
+  useTokenForgeAuth: vi.fn()
+}));
 
 describe('EmailVerification', () => {
-  const mockSession = {
-    uid: '0x123',
-    emailVerified: false,
-    email: 'test@tokenforge.eth',
-  };
-
   const mockSendVerificationEmail = vi.fn();
-  const mockOnClose = vi.fn();
+  const mockVerifyEmail = vi.fn();
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    (useFirebaseAuth as vi.Mock).mockReturnValue({
-      session: mockSession,
+    vi.mocked(useTokenForgeAuth).mockReturnValue({
       sendVerificationEmail: mockSendVerificationEmail,
+      verifyEmail: mockVerifyEmail,
+      isLoading: false,
+      error: null
     });
   });
 
-  it('should render nothing when no session exists', () => {
-    (useFirebaseAuth as vi.Mock).mockReturnValue({
-      session: null,
-    });
-
-    const { container } = render(
-      <EmailVerification open={true} onClose={mockOnClose} />
-    );
-
-    expect(container.firstChild).toBeNull();
+  it('renders verification form', () => {
+    render(<EmailVerification />);
+    
+    expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send verification email/i })).toBeInTheDocument();
   });
 
-  it('should render nothing when email is verified', () => {
-    (useFirebaseAuth as vi.Mock).mockReturnValue({
-      session: { ...mockSession, emailVerified: true },
-    });
-
-    const { container } = render(
-      <EmailVerification open={true} onClose={mockOnClose} />
-    );
-
-    expect(container.firstChild).toBeNull();
-  });
-
-  it('should render verification dialog when email is not verified', () => {
-    render(<EmailVerification open={true} onClose={mockOnClose} />);
-
-    expect(screen.getByText('Email Verification Required')).toBeTruthy();
-    expect(screen.getByText(mockSession.email!)).toBeTruthy();
-  });
-
-  it('should handle send verification email click', async () => {
-    mockSendVerificationEmail.mockResolvedValue(undefined);
-
-    render(<EmailVerification open={true} onClose={mockOnClose} />);
-
-    const sendButton = screen.getByText('Send Verification Email');
+  it('sends verification email when button is clicked', async () => {
+    render(<EmailVerification />);
+    
+    const sendButton = screen.getByRole('button', { name: /send verification email/i });
     fireEvent.click(sendButton);
-
+    
     expect(mockSendVerificationEmail).toHaveBeenCalled();
-    await waitFor(() => {
-      expect(screen.getByText('Verification email sent successfully')).toBeTruthy();
+  });
+
+  it('shows loading state while sending email', () => {
+    vi.mocked(useTokenForgeAuth).mockReturnValue({
+      sendVerificationEmail: mockSendVerificationEmail,
+      verifyEmail: mockVerifyEmail,
+      isLoading: true,
+      error: null
     });
+
+    render(<EmailVerification />);
+    
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send verification email/i })).toBeDisabled();
   });
 
-  it('should handle send verification email error', async () => {
-    const mockError = new Error('Failed to send email');
-    mockSendVerificationEmail.mockRejectedValue(mockError);
-
-    render(<EmailVerification open={true} onClose={mockOnClose} />);
-
-    const sendButton = screen.getByText('Send Verification Email');
-    fireEvent.click(sendButton);
-
-    await waitFor(() => {
-      expect(screen.getByText('Failed to send verification email')).toBeTruthy();
+  it('displays error message when sending fails', () => {
+    const errorMessage = 'Failed to send verification email';
+    vi.mocked(useTokenForgeAuth).mockReturnValue({
+      sendVerificationEmail: mockSendVerificationEmail,
+      verifyEmail: mockVerifyEmail,
+      isLoading: false,
+      error: new Error(errorMessage)
     });
+
+    render(<EmailVerification />);
+    
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 
-  it('should handle close button click', () => {
-    render(<EmailVerification open={true} onClose={mockOnClose} />);
-
-    const laterButton = screen.getByText('Later');
-    fireEvent.click(laterButton);
-
-    expect(mockOnClose).toHaveBeenCalled();
-  });
-
-  it('should show loading state while sending email', async () => {
-    mockSendVerificationEmail.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100))
-    );
-
-    render(<EmailVerification open={true} onClose={mockOnClose} />);
-
-    const sendButton = screen.getByText('Send Verification Email');
-    fireEvent.click(sendButton);
-
-    expect(screen.getByText('Sending...')).toBeTruthy();
-    expect(sendButton).toBeDisabled();
-
-    await waitFor(() => {
-      expect(screen.getByText('Resend Email')).toBeTruthy();
-      expect(sendButton).not.toBeDisabled();
-    });
-  });
-
-  it('should allow resending email after success', async () => {
+  it('shows success message after sending email', async () => {
     mockSendVerificationEmail.mockResolvedValue(undefined);
 
-    render(<EmailVerification open={true} onClose={mockOnClose} />);
-
-    const sendButton = screen.getByText('Send Verification Email');
+    render(<EmailVerification />);
+    
+    const sendButton = screen.getByRole('button', { name: /send verification email/i });
     fireEvent.click(sendButton);
-
+    
     await waitFor(() => {
-      expect(screen.getByText('Resend Email')).toBeTruthy();
+      expect(screen.getByText(/verification email sent/i)).toBeInTheDocument();
     });
+  });
 
-    // Tenter de renvoyer l'email
-    fireEvent.click(screen.getByText('Resend Email'));
-    expect(mockSendVerificationEmail).toHaveBeenCalledTimes(2);
+  it('verifies email with code', async () => {
+    render(<EmailVerification />);
+    
+    const codeInput = screen.getByLabelText(/verification code/i);
+    const verifyButton = screen.getByRole('button', { name: /verify/i });
+    
+    fireEvent.change(codeInput, { target: { value: '123456' } });
+    fireEvent.click(verifyButton);
+    
+    expect(mockVerifyEmail).toHaveBeenCalledWith('123456');
+  });
+
+  it('shows success message after verification', async () => {
+    mockVerifyEmail.mockResolvedValue(undefined);
+
+    render(<EmailVerification />);
+    
+    const codeInput = screen.getByLabelText(/verification code/i);
+    const verifyButton = screen.getByRole('button', { name: /verify/i });
+    
+    fireEvent.change(codeInput, { target: { value: '123456' } });
+    fireEvent.click(verifyButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText(/email verified successfully/i)).toBeInTheDocument();
+    });
+  });
+
+  it('handles verification errors', async () => {
+    const errorMessage = 'Invalid verification code';
+    mockVerifyEmail.mockRejectedValue(new Error(errorMessage));
+
+    render(<EmailVerification />);
+    
+    const codeInput = screen.getByLabelText(/verification code/i);
+    const verifyButton = screen.getByRole('button', { name: /verify/i });
+    
+    fireEvent.change(codeInput, { target: { value: '123456' } });
+    fireEvent.click(verifyButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    });
   });
 });

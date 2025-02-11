@@ -8,7 +8,7 @@ import { authSyncService } from '../services/authSyncService';
 import { errorService } from '../services/errorService';
 import { secureStorageService } from '../services/secureStorageService';
 import { securityHeadersService } from '../services/securityHeadersService';
-import { AuthAction } from '../store/authReducer';
+import { AuthAction, TokenForgeUser } from '../../../types/authTypes';
 
 interface TokenForgeAuthContextValue extends TokenForgeAuthState {
   dispatch: React.Dispatch<AuthAction>;
@@ -29,52 +29,58 @@ export const TokenForgeAuthProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Synchroniser l'état du wallet
   useEffect(() => {
-    dispatch(authActions.updateWallet({
-      address: address || null,
-      isConnected
-    }));
+    if (address !== undefined) {
+      dispatch(authActions.updateWallet({
+        address: address || null,
+        isConnected: isConnected || false
+      }));
+    }
   }, [address, isConnected]);
 
   // Firebase Auth listener avec stockage sécurisé
   useEffect(() => {
+    let mounted = true;
     const unsubscribe = firebaseAuth.onAuthStateChanged(async (firebaseUser) => {
+      if (!mounted) return;
+
       if (firebaseUser) {
         try {
           const token = await firebaseUser.getIdToken();
-          secureStorageService.setAuthToken(token);
+          await secureStorageService.setAuthToken(token);
 
           const sessionData = await sessionService.getUserSession(firebaseUser.uid);
-          const user = {
+          const user: TokenForgeUser = {
             ...firebaseUser,
             isAdmin: sessionData?.isAdmin ?? false,
             canCreateToken: sessionData?.canCreateToken ?? false,
             canUseServices: sessionData?.canUseServices ?? false,
             metadata: {
-              ...sessionData?.metadata,
               creationTime: firebaseUser.metadata.creationTime || '',
               lastSignInTime: firebaseUser.metadata.lastSignInTime || '',
-              lastLoginTime: Date.now()
+              lastLoginTime: Date.now(),
+              walletAddress: address || undefined,
+              chainId: undefined
             }
           };
 
           dispatch(authActions.loginSuccess(user));
           await authSyncService.startTokenRefresh();
         } catch (error) {
-          secureStorageService.removeAuthToken();
-          dispatch(authActions.loginFailure(errorService.handleError(error)));
+          const authError = errorService.handleError(error);
+          dispatch(authActions.loginFailure(authError));
         }
       } else {
-        secureStorageService.removeAuthToken();
         dispatch(authActions.logout());
+        secureStorageService.removeAuthToken();
         authSyncService.stopTokenRefresh();
       }
     });
 
     return () => {
+      mounted = false;
       unsubscribe();
-      secureStorageService.removeAuthToken();
     };
-  }, []);
+  }, [address]);
 
   return (
     <TokenForgeAuthContext.Provider value={{ ...state, dispatch }}>

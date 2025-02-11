@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { authSyncService } from '../authSyncService';
 import { firebaseService } from '../firebaseService';
 import { errorService } from '../errorService';

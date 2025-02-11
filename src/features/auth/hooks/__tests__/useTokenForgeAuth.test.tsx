@@ -1,328 +1,264 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import { useTokenForgeAuth } from '../useTokenForgeAuth';
-import { useTokenForgeAuthContext } from '../../providers/TokenForgeAuthProvider';
-import { TokenForgeUser } from '../../types';
-import { UserMetadata } from 'firebase/auth';
-import { WagmiConfig, createConfig } from 'wagmi';
-import { http, Chain } from 'viem';
-import { FC, PropsWithChildren } from 'react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from '../../store/authSlice';
+import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { createPublicClient, createWalletClient, http } from 'viem';
+import { mainnet } from 'viem/chains';
+import { AuthSyncService } from '@/services/authSyncService';
+import { SecureStorageService } from '@/services/secureStorageService';
 
-// Configuration de la chaîne Ethereum pour les tests
-const testChain = {
-  id: 1,
-  name: 'Ethereum',
-  nativeCurrency: {
-    decimals: 18,
-    name: 'Ethereum',
-    symbol: 'ETH',
-  },
-  rpcUrls: {
-    public: { http: ['https://eth-mainnet.g.alchemy.com/v2'] },
-    default: { http: ['https://eth-mainnet.g.alchemy.com/v2'] },
-  },
-} as const satisfies Chain;
+// Mock Firebase
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(),
+  onAuthStateChanged: vi.fn()
+}));
 
-// Configuration Wagmi pour les tests
-const config = createConfig({
-  chains: [testChain],
-  transports: {
-    [testChain.id]: http(),
-  },
-});
+// Mock Viem
+vi.mock('viem', () => ({
+  createPublicClient: vi.fn(),
+  createWalletClient: vi.fn(),
+  http: vi.fn()
+}));
 
-// Wrapper pour les providers
-const Wrapper: FC<PropsWithChildren> = ({ children }) => (
-  <WagmiConfig config={config}>
-    {children}
-  </WagmiConfig>
-);
+// Mock Services
+vi.mock('@/services/authSyncService', () => ({
+  AuthSyncService: vi.fn(() => ({
+    subscribeToAuthChanges: vi.fn(),
+    broadcastAuthState: vi.fn(),
+    unsubscribeFromAuthChanges: vi.fn(),
+    cleanup: vi.fn()
+  }))
+}));
 
-// Mocks
-vi.mock('../../providers/TokenForgeAuthProvider');
+vi.mock('@/services/secureStorageService', () => ({
+  SecureStorageService: vi.fn(() => ({
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn()
+  }))
+}));
 
 describe('useTokenForgeAuth', () => {
-  // Mock implementations
-  const mockAuthState = {
-    state: {
-      status: 'idle',
-      isAuthenticated: false,
-      user: null,
-      error: null,
-      walletState: {
-        isConnected: false,
-        isCorrectNetwork: false,
-        address: null,
-        chainId: null,
-        provider: null,
-        walletClient: null,
-      },
-    },
-    dispatch: vi.fn(),
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    signUp: vi.fn(),
-    resetPassword: vi.fn(),
-    updateProfile: vi.fn(),
-    connectWallet: vi.fn(),
-    disconnectWallet: vi.fn(),
-    clearError: vi.fn(),
-    actions: {
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-      clearError: vi.fn(),
-      connectWallet: vi.fn(),
-      disconnectWallet: vi.fn(),
-      updateNetwork: vi.fn(),
-      updateProvider: vi.fn(),
-    },
-    validateAdminAccess: vi.fn(),
-  };
-
-  const createMockUser = (overrides: Partial<TokenForgeUser> = {}): TokenForgeUser => ({
+  let mockStore: any;
+  let mockAuthSync: any;
+  let mockSecureStorage: any;
+  const mockUser = {
     uid: 'test-uid',
     email: 'test@example.com',
-    emailVerified: false,
-    isAnonymous: false,
-    metadata: {} as UserMetadata,
-    providerData: [],
-    refreshToken: '',
-    tenantId: null,
-    delete: vi.fn(),
-    getIdToken: vi.fn(),
-    getIdTokenResult: vi.fn(),
-    reload: vi.fn(),
-    toJSON: vi.fn(),
-    displayName: null,
-    phoneNumber: null,
-    photoURL: null,
-    providerId: 'firebase',
-    isAdmin: false,
-    customMetadata: {},
-    ...overrides,
-  });
+    emailVerified: true
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useTokenForgeAuthContext).mockReturnValue(mockAuthState);
-  });
 
-  const renderHookWithProviders = () => {
-    return renderHook(() => useTokenForgeAuth(), { wrapper: Wrapper });
-  };
-
-  it('should initialize with correct state', () => {
-    const { result } = renderHookWithProviders();
-    const auth = result.current;
-
-    expect(auth.isAuthenticated).toBe(false);
-    expect(auth.user).toBeNull();
-    expect(auth.status).toBe('idle');
-    expect(auth.error).toBeNull();
-    expect(auth.emailVerified).toBe(false);
-    expect(auth.isAdmin).toBe(false);
-    expect(auth.canCreateToken).toBe(false);
-    expect(auth.canUseServices).toBe(false);
-  });
-
-  it('should handle login process', async () => {
-    const { result } = renderHookWithProviders();
-    const credentials = { email: 'test@example.com', password: 'password123' };
-
-    await act(async () => {
-      await result.current.login(credentials.email, credentials.password);
+    // Setup Redux store
+    mockStore = configureStore({
+      reducer: {
+        auth: authReducer
+      }
     });
 
-    expect(mockAuthState.actions.login).toHaveBeenCalled();
-  });
+    // Setup Firebase mocks
+    vi.mocked(getAuth).mockReturnValue({
+      currentUser: null,
+      onAuthStateChanged: vi.fn()
+    } as any);
 
-  it('should handle email verification', async () => {
-    const mockUser = createMockUser({
-      email: 'test@example.com',
-      emailVerified: false,
-    });
+    vi.mocked(signInWithEmailAndPassword).mockResolvedValue({
+      user: mockUser
+    } as any);
 
-    const updatedAuthState = {
-      ...mockAuthState,
-      state: {
-        ...mockAuthState.state,
-        user: mockUser,
-        isAuthenticated: true,
+    vi.mocked(signOut).mockResolvedValue();
+
+    // Setup Viem mocks
+    vi.mocked(createPublicClient).mockReturnValue({
+      chain: mainnet,
+      request: vi.fn()
+    } as any);
+
+    vi.mocked(createWalletClient).mockReturnValue({
+      account: {
+        address: '0x1234...',
+        type: 'json-rpc'
       },
-    };
-    vi.mocked(useTokenForgeAuthContext).mockReturnValue(updatedAuthState);
+      chain: mainnet,
+      request: vi.fn()
+    } as any);
 
-    const { result } = renderHookWithProviders();
-
-    await act(async () => {
-      await result.current.verifyEmail(mockUser);
-    });
-
-    expect(mockAuthState.actions.updateUser).toHaveBeenCalled();
+    // Setup service mocks
+    mockAuthSync = new AuthSyncService();
+    mockSecureStorage = new SecureStorageService('test-key');
   });
 
-  it('should handle logout', async () => {
-    const { result } = renderHookWithProviders();
+  it('initializes with loading state', () => {
+    const { result } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
 
+    expect(result.current.loading).toBe(true);
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(result.current.error).toBeNull();
+  });
+
+  it('handles email login successfully', async () => {
+    const { result } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    await act(async () => {
+      await result.current.loginWithEmail('test@example.com', 'password');
+    });
+
+    expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
+      expect.any(Object),
+      'test@example.com',
+      'password'
+    );
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(mockUser);
+    expect(mockAuthSync.broadcastAuthState).toHaveBeenCalled();
+  });
+
+  it('handles wallet connection and authentication', async () => {
+    const { result } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    await act(async () => {
+      await result.current.connectWallet();
+    });
+
+    expect(createWalletClient).toHaveBeenCalled();
+    expect(result.current.walletState.isConnected).toBe(true);
+    expect(result.current.walletState.address).toBeTruthy();
+  });
+
+  it('handles logout', async () => {
+    const { result } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    // First login
+    await act(async () => {
+      await result.current.loginWithEmail('test@example.com', 'password');
+    });
+
+    // Then logout
     await act(async () => {
       await result.current.logout();
     });
 
-    expect(mockAuthState.actions.logout).toHaveBeenCalled();
-    expect(mockAuthState.disconnectWallet).toHaveBeenCalled();
+    expect(signOut).toHaveBeenCalled();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(mockSecureStorage.removeItem).toHaveBeenCalledWith('auth_session');
+    expect(mockAuthSync.broadcastAuthState).toHaveBeenCalled();
   });
 
-  describe('User Permissions', () => {
-    it('should handle admin permissions correctly', () => {
-      const adminUser = createMockUser({
-        email: 'admin@example.com',
-        emailVerified: true,
-        isAdmin: true,
-      });
-
-      const updatedAuthState = {
-        ...mockAuthState,
-        state: {
-          ...mockAuthState.state,
-          user: adminUser,
-          isAuthenticated: true,
-        },
-      };
-      vi.mocked(useTokenForgeAuthContext).mockReturnValue(updatedAuthState);
-
-      const { result } = renderHookWithProviders();
-      const auth = result.current;
-
-      expect(auth.isAdmin).toBe(true);
-      expect(auth.canCreateToken).toBe(true);
-      expect(auth.canUseServices).toBe(true);
+  it('synchronizes state across tabs', async () => {
+    const { result } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
     });
 
-    it('should handle regular user permissions correctly', () => {
-      const regularUser = createMockUser({
-        email: 'user@example.com',
-        emailVerified: true,
-        isAdmin: false,
-      });
-
-      const updatedAuthState = {
-        ...mockAuthState,
-        state: {
-          ...mockAuthState.state,
-          user: regularUser,
-          isAuthenticated: true,
-        },
-      };
-      vi.mocked(useTokenForgeAuthContext).mockReturnValue(updatedAuthState);
-
-      const { result } = renderHookWithProviders();
-      const auth = result.current;
-
-      expect(auth.isAdmin).toBe(false);
-      expect(auth.canCreateToken).toBe(true);
-      expect(auth.canUseServices).toBe(true);
-    });
-
-    it('should handle unverified user permissions', () => {
-      const unverifiedUser = createMockUser({
-        email: 'unverified@example.com',
-        emailVerified: false,
-      });
-
-      const updatedAuthState = {
-        ...mockAuthState,
-        state: {
-          ...mockAuthState.state,
-          user: unverifiedUser,
-          isAuthenticated: true,
-        },
-      };
-      vi.mocked(useTokenForgeAuthContext).mockReturnValue(updatedAuthState);
-
-      const { result } = renderHookWithProviders();
-      const auth = result.current;
-
-      expect(auth.canCreateToken).toBe(false);
-      expect(auth.canUseServices).toBe(false);
-    });
-  });
-
-  it('should handle wallet connection', async () => {
-    const mockWalletState = {
-      isConnected: true,
-      isCorrectNetwork: true,
-      address: '0x123',
-      chainId: 1,
-      provider: {},
-      walletClient: {},
+    const mockAuthState = {
+      isAuthenticated: true,
+      user: mockUser,
+      loading: false,
+      error: null
     };
 
-    const { result } = renderHookWithProviders();
-
-    expect(result.current.walletState.isConnected).toBe(false);
-
-    // Update wallet state
-    vi.mocked(useTokenForgeAuthContext).mockReturnValue({
-      ...vi.mocked(useTokenForgeAuthContext)(),
-      state: {
-        ...vi.mocked(useTokenForgeAuthContext)().state,
-        walletState: mockWalletState,
-      },
+    await act(async () => {
+      // Simulate receiving auth state from another tab
+      const callback = vi.mocked(mockAuthSync.subscribeToAuthChanges).mock.calls[0][0];
+      callback(mockAuthState);
     });
 
-    expect(result.current.walletState.isConnected).toBe(true);
-    expect(result.current.walletState.address).toBe('0x123');
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(mockUser);
   });
 
-  it('should handle network changes', async () => {
-    const { result } = renderHookWithProviders();
-    const newChainId = 1; // Ethereum Mainnet
+  it('handles authentication errors', async () => {
+    const mockError = new Error('Invalid credentials');
+    vi.mocked(signInWithEmailAndPassword).mockRejectedValueOnce(mockError);
 
-    const updatedWalletState = {
-      isConnected: true,
-      isCorrectNetwork: true,
-      address: '0x123',
-      chainId: newChainId,
-      provider: {},
-      walletClient: {},
-    };
-
-    // Update wallet state
-    vi.mocked(useTokenForgeAuthContext).mockReturnValue({
-      ...vi.mocked(useTokenForgeAuthContext)(),
-      state: {
-        ...vi.mocked(useTokenForgeAuthContext)().state,
-        walletState: updatedWalletState,
-      },
+    const { result } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
     });
 
-    expect(result.current.chainId).toBe(newChainId);
-    expect(result.current.isCorrectNetwork).toBe(true);
+    await act(async () => {
+      try {
+        await result.current.loginWithEmail('test@example.com', 'wrong-password');
+      } catch (error) {
+        expect(error).toEqual(mockError);
+      }
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.error).toBeDefined();
+    expect(mockAuthSync.broadcastAuthState).toHaveBeenCalled();
   });
 
-  it('should handle account changes', async () => {
-    const { result } = renderHookWithProviders();
-    const newAddress = '0x123...';
-
-    const updatedWalletState = {
-      isConnected: true,
-      isCorrectNetwork: true,
-      address: newAddress,
-      chainId: 1,
-      provider: {},
-      walletClient: {},
-    };
-
-    // Update wallet state
-    vi.mocked(useTokenForgeAuthContext).mockReturnValue({
-      ...vi.mocked(useTokenForgeAuthContext)(),
-      state: {
-        ...vi.mocked(useTokenForgeAuthContext)().state,
-        walletState: updatedWalletState,
-      },
+  it('persists authentication state', async () => {
+    vi.mocked(mockSecureStorage.getItem).mockReturnValue({
+      user: mockUser,
+      timestamp: Date.now()
     });
 
-    expect(result.current.address).toBe(newAddress);
-    expect(result.current.isConnected).toBe(true);
+    const { result } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(mockUser);
+  });
+
+  it('handles session expiration', async () => {
+    vi.mocked(mockSecureStorage.getItem).mockReturnValue({
+      user: mockUser,
+      timestamp: Date.now() - (25 * 60 * 60 * 1000) // 25 hours old
+    });
+
+    const { result } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(mockSecureStorage.removeItem).toHaveBeenCalledWith('auth_session');
+  });
+
+  it('cleans up resources on unmount', () => {
+    const { unmount } = renderHook(() => useTokenForgeAuth(), {
+      wrapper: ({ children }) => (
+        <Provider store={mockStore}>{children}</Provider>
+      )
+    });
+
+    unmount();
+
+    expect(mockAuthSync.cleanup).toHaveBeenCalled();
+    expect(mockAuthSync.unsubscribeFromAuthChanges).toHaveBeenCalled();
   });
 });
