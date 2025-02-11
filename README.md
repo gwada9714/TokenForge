@@ -95,6 +95,25 @@ L'application utilise le lazy loading pour optimiser les performances :
 - `/admin/alerts` - Configuration des alertes
 - `/admin/audit` - Logs d'audit
 
+## ⚙️ Configuration environnement
+
+1. Copiez `.env.example` en `.env` :
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Renseignez les valeurs réelles dans `.env` :
+   - Firebase : [Firebase Console](https://console.firebase.google.com/)
+   - WalletConnect : [WalletConnect Cloud](https://cloud.walletconnect.com/)
+   - Contrats Sepolia : Déployez vos contrats ou utilisez les adresses de test
+
+3. Variables importantes :
+   - `VITE_FIREBASE_*` : Configuration Firebase (Auth, Storage)
+   - `VITE_WALLET_CONNECT_PROJECT_ID` : ID projet WalletConnect
+   - `VITE_*_SEPOLIA` : Adresses des contrats sur Sepolia
+
+⚠️ **Important** : Ne jamais commiter le fichier `.env` qui contient vos clés privées.
+
 ## 🛠️ Installation
 
 1. Cloner le repository
