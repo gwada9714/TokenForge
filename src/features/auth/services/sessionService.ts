@@ -1,58 +1,52 @@
-import { auth } from '../../../config/firebase';
-import { User as FirebaseUser } from 'firebase/auth';
-import { AuthPersistence } from '../store/authPersistence';
-import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
-import { notificationService } from './notificationService';
-import { tabSyncService } from './tabSyncService';
+import { getFirebaseAuth } from '@/config/firebase';
+import { 
+  setAuthUser, 
+  setSessionInfo, 
+  setAuthError,
+  resetAuthState 
+} from '../store/authSlice';
+import { store, type RootState } from '@/store';
+import { logger } from '@/utils/logger';
+import { AUTH_ERROR_CODES, type AuthErrorCode } from '../errors/AuthError';
+import type { User } from '../schemas/auth.schema';
+import type { SessionInfo as AuthSchemaSessionInfo } from '../schemas/auth.schema';
 
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-const REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiry
-
-interface SessionInfo {
-  expiresAt: number;
-  lastActivity: number;
-  refreshToken: string | null;
-  tabId?: string;
-  lastSync?: number;
+interface TokenForgeMetadata {
+  creationTime: string;
+  lastSignInTime: string;
+  lastLoginTime?: number;
+  walletAddress?: string;
+  chainId?: number;
+  customMetadata: Record<string, unknown>;
 }
 
 interface TokenForgeUser {
   uid: string;
   email: string | null;
   emailVerified: boolean;
-  lastLoginTime?: number;
-  provider?: string;
-}
-
-interface SyncMessage {
-  type: string;
-  timestamp: number;
-  tabId: string;
-  payload?: any;
-  priority?: number;
-}
-
-interface SessionData {
+  isAnonymous: boolean;
+  metadata: TokenForgeMetadata;
+  refreshToken: string;
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
-  metadata: any;
+  walletAddress?: string;
+  chainId?: number;
+  customClaims?: Record<string, unknown>;
+}
+
+interface SessionInfo {
+  expiresAt: number;
+  lastActivity: number;
+  refreshToken: string;
 }
 
 export class SessionService {
   private static instance: SessionService;
-  private persistence: AuthPersistence;
-  private sessionCheckInterval: NodeJS.Timeout | null = null;
-  private activeTimeouts: Set<NodeJS.Timeout> = new Set();
-  private currentUser: TokenForgeUser | null = null;
-  private tabId: string;
-  private lastSync: number = 0;
+  private checkSessionTimeout: NodeJS.Timeout | null = null;
+  private readonly CHECK_INTERVAL = 60000; // 1 minute
 
-  private constructor() {
-    this.persistence = AuthPersistence.getInstance();
-    this.tabId = self.crypto.randomUUID();
-    this.initTabSync();
-  }
+  private constructor() {}
 
   static getInstance(): SessionService {
     if (!SessionService.instance) {
@@ -61,279 +55,174 @@ export class SessionService {
     return SessionService.instance;
   }
 
-  private initTabSync() {
-    tabSyncService.subscribe((message: SyncMessage) => {
-      if (message.type === 'session' && message.tabId !== this.tabId) {
-        void this.handleTabSync(message);
-      }
+  startSessionCheck(): void {
+    if (this.checkSessionTimeout) {
+      clearInterval(this.checkSessionTimeout);
+    }
+
+    this.checkSessionTimeout = setInterval(() => {
+      this.checkSession().catch(error => {
+        logger.error('Erreur lors de la vérification de session:', {
+          error,
+          component: 'SessionService',
+          action: 'checkSession'
+        });
+        
+        store.dispatch(setAuthError({
+          code: AUTH_ERROR_CODES.SESSION_CHECK_ERROR as AuthErrorCode,
+          message: error instanceof Error ? error.message : 'Erreur lors de la vérification de session'
+        }));
+      });
+    }, this.CHECK_INTERVAL);
+
+    logger.info('Vérification de session démarrée', {
+      component: 'SessionService',
+      action: 'startSessionCheck'
     });
   }
 
-  private async handleTabSync(message: SyncMessage) {
-    if (message.timestamp > this.lastSync) {
-      this.lastSync = message.timestamp;
-      await this.refreshSession();
-      notificationService.info('Session synchronized across tabs');
+  stopSessionCheck(): void {
+    if (this.checkSessionTimeout) {
+      clearInterval(this.checkSessionTimeout);
+      this.checkSessionTimeout = null;
+      logger.info('Vérification de session arrêtée', {
+        component: 'SessionService',
+        action: 'stopSessionCheck'
+      });
     }
   }
 
-  async initSession(): Promise<void> {
+  async checkSession(): Promise<void> {
     try {
+      const auth = getFirebaseAuth();
       const currentUser = auth.currentUser;
+
       if (!currentUser) {
-        throw createAuthError(
-          AUTH_ERROR_CODES.NO_USER,
-          'No user found'
-        );
+        store.dispatch(resetAuthState());
+        return;
       }
 
-      const state = await this.persistence.load();
-      const sessionInfo: SessionInfo = {
-        expiresAt: Date.now() + SESSION_TIMEOUT,
-        lastActivity: Date.now(),
-        refreshToken: await currentUser.getIdToken(),
-        tabId: this.tabId,
-        lastSync: Date.now()
-      };
+      const sessionInfo = await this.getSessionInfo();
+      if (!sessionInfo || this.isSessionExpired(sessionInfo)) {
+        await this.handleExpiredSession();
+        return;
+      }
 
-      // Récupérer les données stockées précédemment pour préserver isAdmin et customMetadata
-      const storedUser = state.user;
-      
-      await this.persistence.save({
-        ...state,
-        sessionInfo,
-        lastLogin: Date.now(),
-        user: {
-          uid: currentUser.uid,
-          email: currentUser.email,
-          emailVerified: currentUser.emailVerified,
-          isAdmin: storedUser?.isAdmin,
-          customMetadata: storedUser?.customMetadata,
-        }
-      });
-      this.startSessionMonitoring();
+      store.dispatch(setAuthUser(this.mapFirebaseUser(currentUser)));
+      store.dispatch(setSessionInfo(sessionInfo));
+
     } catch (error) {
-      throw createAuthError(
-        AUTH_ERROR_CODES.SESSION_ERROR,
-        'Failed to initialize session',
-        { originalError: error }
-      );
-    }
-  }
-
-  public startSessionMonitoring(): void {
-    if (!this.sessionCheckInterval) {
-      this.sessionCheckInterval = setInterval(() => {
-        void this.refreshSession();
-      }, REFRESH_THRESHOLD);
-    }
-  }
-
-  public stopSessionMonitoring(): void {
-    if (this.sessionCheckInterval) {
-      clearInterval(this.sessionCheckInterval);
-      this.sessionCheckInterval = null;
+      logger.error('Erreur lors de la vérification de session:', {
+        error,
+        component: 'SessionService',
+        action: 'checkSession'
+      });
+      
+      store.dispatch(setAuthError({
+        code: AUTH_ERROR_CODES.SESSION_CHECK_ERROR as AuthErrorCode,
+        message: error instanceof Error ? error.message : 'Erreur lors de la vérification de session'
+      }));
     }
   }
 
   async refreshSession(): Promise<void> {
     try {
-      const currentTime = Date.now();
-      const state = await this.persistence.load();
-      
-      if (!state || !state.sessionInfo || currentTime >= state.sessionInfo.expiresAt) {
-        await this.endSession();
+      const auth = getFirebaseAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        store.dispatch(setAuthError({
+          code: AUTH_ERROR_CODES.USER_NOT_FOUND as AuthErrorCode,
+          message: 'Aucun utilisateur connecté'
+        }));
         return;
       }
 
-      if (currentTime >= state.sessionInfo.expiresAt - REFRESH_THRESHOLD) {
-        const newSessionInfo: SessionInfo = {
-          ...state.sessionInfo,
-          expiresAt: currentTime + SESSION_TIMEOUT,
-          lastActivity: currentTime,
-          tabId: this.tabId,
-          lastSync: Date.now()
-        };
-
-        await this.persistence.save({
-          ...state,
-          sessionInfo: newSessionInfo
-        });
-
-        tabSyncService.broadcast({
-          type: 'session',
-          timestamp: Date.now(),
-          tabId: this.tabId,
-          payload: { action: 'refresh' }
-        });
-      }
-    } catch (error) {
-      console.error('Error refreshing session:', error);
-      notificationService.error('Error refreshing session');
-    }
-  }
-
-  async updateActivity(): Promise<void> {
-    try {
-      const state = await this.persistence.load();
-      if (state?.sessionInfo) {
-        await this.persistence.save({
-          ...state,
-          sessionInfo: {
-            ...state.sessionInfo,
-            lastActivity: Date.now(),
-          },
-        });
-      }
-    } catch (error) {
-      console.error('Failed to update activity:', error);
-    }
-  }
-
-  async endSession(): Promise<void> {
-    try {
-      if (this.sessionCheckInterval) {
-        clearInterval(this.sessionCheckInterval);
-        this.sessionCheckInterval = null;
-      }
-
-      this.activeTimeouts.forEach(timeout => clearTimeout(timeout));
-      this.activeTimeouts.clear();
-
-      await this.persistence.clear();
-      await auth.signOut();
-      this.clearSession();
-    } catch (error) {
-      throw createAuthError(
-        AUTH_ERROR_CODES.SESSION_ERROR,
-        'Failed to end session',
-        { originalError: error }
-      );
-    }
-  }
-
-  clearSession(): void {
-    try {
-      this.persistence.clear();
-      this.currentUser = null;
-      this.stopSessionMonitoring();
-      // Notifier les autres onglets de la déconnexion
-      tabSyncService.broadcast({
-        type: 'session',
-        timestamp: Date.now(),
-        tabId: this.tabId,
-        payload: { action: 'logout' }
-      });
-    } catch (error) {
-      console.error('Error clearing session:', error);
-    }
-  }
-
-  isSessionValid(): Promise<boolean> {
-    return new Promise(async (resolve) => {
-      try {
-        const state = await this.persistence.load();
-        const sessionInfo = state.sessionInfo as SessionInfo;
-
-        if (!sessionInfo) {
-          resolve(false);
-          return;
-        }
-
-        const now = Date.now();
-        resolve(sessionInfo.expiresAt > now);
-      } catch (error) {
-        console.error('Session validation error:', error);
-        resolve(false);
-      }
-    });
-  }
-
-  updateSession(user: TokenForgeUser): void {
-    this.currentUser = user;
-    this.startSessionMonitoring();
-    // Synchroniser l'état avec les autres onglets
-    tabSyncService.syncAuthState(user);
-  }
-
-  getCurrentUser(): TokenForgeUser | null {
-    return this.currentUser;
-  }
-
-  startActivityMonitoring(): void {
-    // Implement activity monitoring logic here
-  }
-
-  stopActivityMonitoring(): void {
-    // Implement stopping activity monitoring logic here
-  }
-
-  startSessionTimeout(onTimeout: () => void): { clear: () => void } {
-    const timeoutId = setTimeout(() => {
-      this.clearSession();
-      onTimeout();
-    }, SESSION_TIMEOUT);
-
-    this.activeTimeouts.add(timeoutId);
-
-    return {
-      clear: () => {
-        clearTimeout(timeoutId);
-        this.activeTimeouts.delete(timeoutId);
-      }
-    };
-  }
-
-  initializeSession(callback: (user: FirebaseUser | null) => void): () => void {
-    return auth.onAuthStateChanged(callback);
-  }
-
-  async getUserSession(uid: string): Promise<SessionData | null> {
-    try {
-      const sessionData = await this.persistence.getData(`users/${uid}`);
-      if (!sessionData) {
-        return {
-          isAdmin: false,
-          canCreateToken: false,
-          canUseServices: false,
-          metadata: {}
-        };
-      }
-      return sessionData as SessionData;
-    } catch (error) {
-      throw createAuthError(
-        AUTH_ERROR_CODES.SESSION_ERROR,
-        'Failed to get user session',
-        { userId: uid, error }
-      );
-    }
-  }
-
-  async updateUserSession(uid: string, updates: Partial<SessionData>): Promise<void> {
-    try {
-      const currentData = await this.getUserSession(uid);
-      const newData: SessionData = {
-        isAdmin: false,
-        canCreateToken: false,
-        canUseServices: true,
-        metadata: {},
-        ...currentData,
-        ...updates
+      const now = Date.now();
+      const sessionInfo: SessionInfo = {
+        expiresAt: now + 30 * 60 * 1000, // 30 minutes
+        lastActivity: now,
+        refreshToken: currentUser.refreshToken || ''
       };
-      await this.persistence.setData(`session_${uid}`, newData);
-      this.notifySessionUpdate(uid, newData);
+
+      store.dispatch(setAuthUser(this.mapFirebaseUser(currentUser)));
+      store.dispatch(setSessionInfo(sessionInfo));
+
+      logger.info('Session rafraîchie avec succès', {
+        component: 'SessionService',
+        action: 'refreshSession'
+      });
+
     } catch (error) {
-      throw createAuthError(
-        AUTH_ERROR_CODES.SESSION_UPDATE_FAILED,
-        'Failed to update user session',
-        { uid, updates }
-      );
+      logger.error('Erreur lors du rafraîchissement de la session:', {
+        error,
+        component: 'SessionService',
+        action: 'refreshSession'
+      });
+
+      store.dispatch(setAuthError({
+        code: AUTH_ERROR_CODES.SESSION_REFRESH_ERROR as AuthErrorCode,
+        message: error instanceof Error ? error.message : 'Erreur lors du rafraîchissement de la session'
+      }));
     }
   }
 
-  private notifySessionUpdate(uid: string, data: SessionData) {
-    // Implement notification logic here
+  private async handleExpiredSession(): Promise<void> {
+    try {
+      const auth = getFirebaseAuth();
+      await auth.signOut();
+      store.dispatch(resetAuthState());
+      store.dispatch(setAuthError({
+        code: AUTH_ERROR_CODES.SESSION_EXPIRED as AuthErrorCode,
+        message: 'Votre session a expiré. Veuillez vous reconnecter.'
+      }));
+    } catch (error) {
+      logger.error('Erreur lors de la déconnexion:', {
+        error,
+        component: 'SessionService',
+        action: 'handleExpiredSession'
+      });
+    }
+  }
+
+  private async getSessionInfo(): Promise<SessionInfo | null> {
+    try {
+      const state = store.getState() as RootState;
+      return state.auth.sessionInfo;
+    } catch (error) {
+      logger.error('Erreur lors de la récupération des informations de session:', {
+        error,
+        component: 'SessionService',
+        action: 'getSessionInfo'
+      });
+      return null;
+    }
+  }
+
+  private isSessionExpired(sessionInfo: SessionInfo): boolean {
+    return sessionInfo.expiresAt < Date.now();
+  }
+
+  private mapFirebaseUser(firebaseUser: any): TokenForgeUser {
+    return {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      emailVerified: firebaseUser.emailVerified,
+      isAnonymous: firebaseUser.isAnonymous,
+      metadata: {
+        creationTime: firebaseUser.metadata.creationTime,
+        lastSignInTime: firebaseUser.metadata.lastSignInTime,
+        lastLoginTime: Date.now(),
+        customMetadata: {}
+      },
+      refreshToken: firebaseUser.refreshToken || '',
+      isAdmin: false,
+      canCreateToken: false,
+      canUseServices: true,
+      customClaims: firebaseUser.customClaims || {}
+    };
   }
 }
 
+// Créer une instance unique du service de session
 export const sessionService = SessionService.getInstance();

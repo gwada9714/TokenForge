@@ -1,4 +1,4 @@
-import React, { createContext, useReducer, useEffect, useContext } from 'react';
+import React, { createContext, useReducer, useEffect, useContext, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { authReducer, initialState, TokenForgeAuthState } from '../store/authReducer';
 import { authActions } from '../store/authActions';
@@ -9,81 +9,128 @@ import { errorService } from '../services/errorService';
 import { secureStorageService } from '../services/secureStorageService';
 import { securityHeadersService } from '../services/securityHeadersService';
 import { AuthAction, TokenForgeUser } from '../../../types/authTypes';
+import { User as FirebaseUser } from 'firebase/auth';
 
 interface TokenForgeAuthContextValue extends TokenForgeAuthState {
   dispatch: React.Dispatch<AuthAction>;
+  isInitialized: boolean;
 }
 
 export const TokenForgeAuthContext = createContext<TokenForgeAuthContextValue | null>(null);
 
 export const TokenForgeAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { address, isConnected } = useAccount();
 
-  // Vérifier les headers de sécurité au montage
+  // Initialisation de Firebase Auth
   useEffect(() => {
-    if (!securityHeadersService.verifySecurityHeaders()) {
-      console.error('Security headers are not properly configured');
-    }
+    const initializeAuth = async () => {
+      try {
+        await firebaseAuth.waitForAuthInit();
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation de Firebase Auth:', error);
+        dispatch(authActions.loginFailure(error as Error));
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   // Synchroniser l'état du wallet
   useEffect(() => {
+    if (!isInitialized) return;
+
     if (address !== undefined) {
       dispatch(authActions.updateWallet({
         address: address || null,
         isConnected: isConnected || false
       }));
     }
-  }, [address, isConnected]);
+  }, [address, isConnected, isInitialized]);
 
   // Firebase Auth listener avec stockage sécurisé
   useEffect(() => {
+    if (!isInitialized) return;
+
     let mounted = true;
-    const unsubscribe = firebaseAuth.onAuthStateChanged(async (firebaseUser) => {
-      if (!mounted) return;
+    let unsubscribe: (() => void) | undefined;
 
-      if (firebaseUser) {
-        try {
-          const token = await firebaseUser.getIdToken();
-          await secureStorageService.setAuthToken(token);
+    const setupAuthListener = async () => {
+      try {
+        unsubscribe = firebaseAuth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
+          if (!mounted) return;
 
-          const sessionData = await sessionService.getUserSession(firebaseUser.uid);
-          const user: TokenForgeUser = {
-            ...firebaseUser,
-            isAdmin: sessionData?.isAdmin ?? false,
-            canCreateToken: sessionData?.canCreateToken ?? false,
-            canUseServices: sessionData?.canUseServices ?? false,
-            metadata: {
-              creationTime: firebaseUser.metadata.creationTime || '',
-              lastSignInTime: firebaseUser.metadata.lastSignInTime || '',
-              lastLoginTime: Date.now(),
-              walletAddress: address || undefined,
-              chainId: undefined
+          if (firebaseUser) {
+            try {
+              const token = await firebaseUser.getIdToken();
+              await secureStorageService.setAuthToken(token);
+
+              const sessionData = await sessionService.getUserSession(firebaseUser.uid);
+              const user: TokenForgeUser = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                displayName: firebaseUser.displayName || '',
+                photoURL: firebaseUser.photoURL || '',
+                emailVerified: firebaseUser.emailVerified,
+                isAdmin: sessionData?.isAdmin ?? false,
+                canCreateToken: sessionData?.canCreateToken ?? false,
+                canUseServices: sessionData?.canUseServices ?? false,
+                metadata: {
+                  creationTime: firebaseUser.metadata.creationTime || '',
+                  lastSignInTime: firebaseUser.metadata.lastSignInTime || '',
+                  lastLoginTime: Date.now(),
+                  walletAddress: address || undefined,
+                  chainId: undefined
+                }
+              };
+
+              dispatch(authActions.loginSuccess(user));
+              await authSyncService.startTokenRefresh();
+            } catch (error) {
+              const authError = errorService.handleError(error);
+              dispatch(authActions.loginFailure(authError));
             }
-          };
-
-          dispatch(authActions.loginSuccess(user));
-          await authSyncService.startTokenRefresh();
-        } catch (error) {
-          const authError = errorService.handleError(error);
-          dispatch(authActions.loginFailure(authError));
-        }
-      } else {
-        dispatch(authActions.logout());
-        secureStorageService.removeAuthToken();
-        authSyncService.stopTokenRefresh();
+          } else {
+            dispatch(authActions.logout());
+            secureStorageService.removeAuthToken();
+            authSyncService.stopTokenRefresh();
+          }
+        });
+      } catch (error) {
+        console.error('Erreur lors de la configuration du listener Auth:', error);
+        dispatch(authActions.loginFailure(error as Error));
       }
-    });
+    };
+
+    setupAuthListener();
 
     return () => {
       mounted = false;
-      unsubscribe();
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-  }, [address]);
+  }, [address, isInitialized]);
+
+  // Vérification des headers de sécurité
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (!securityHeadersService.verifySecurityHeaders()) {
+      console.error('Security headers are not properly configured');
+    }
+  }, [isInitialized]);
+
+  const contextValue: TokenForgeAuthContextValue = {
+    ...state,
+    dispatch,
+    isInitialized
+  };
 
   return (
-    <TokenForgeAuthContext.Provider value={{ ...state, dispatch }}>
+    <TokenForgeAuthContext.Provider value={contextValue}>
       {children}
     </TokenForgeAuthContext.Provider>
   );

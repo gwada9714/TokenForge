@@ -1,5 +1,6 @@
-import { createAuthError, AuthError } from '../errors/AuthError';
-import { SessionData } from '../types';
+import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
+import { SessionState } from '../types/session';
+import { cryptoService } from '@/utils/crypto';
 
 const STORAGE_KEY = 'tokenforge_auth';
 const VERSION = 1;
@@ -8,6 +9,8 @@ export interface SessionInfo {
   expiresAt: number;
   lastActivity: number;
   refreshToken: string | null;
+  tabId?: string;
+  lastSync?: number;
 }
 
 export interface StoredAuthState {
@@ -31,6 +34,7 @@ export interface StoredAuthState {
 export class AuthPersistence {
   private static instance: AuthPersistence;
   private storage: Storage;
+  private initialized: boolean = false;
 
   private constructor() {
     this.storage = window.localStorage;
@@ -43,103 +47,96 @@ export class AuthPersistence {
     return AuthPersistence.instance;
   }
 
+  async initialize(): Promise<void> {
+    if (!this.initialized) {
+      await cryptoService.initialize();
+      this.initialized = true;
+    }
+  }
+
+  async getSessionInfo(): Promise<SessionInfo | null> {
+    try {
+      await this.initialize();
+      const state = await this.load();
+      return state.sessionInfo || null;
+    } catch (error) {
+      throw createAuthError(
+        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        error instanceof Error ? error.message : 'Erreur lors de la récupération des informations de session'
+      );
+    }
+  }
+
+  async setSessionInfo(sessionInfo: SessionInfo): Promise<void> {
+    try {
+      await this.initialize();
+      const state = await this.load();
+      await this.save({
+        ...state,
+        sessionInfo,
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      throw createAuthError(
+        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        error instanceof Error ? error.message : 'Erreur lors de la sauvegarde des informations de session'
+      );
+    }
+  }
+
   async save(state: Partial<StoredAuthState>): Promise<void> {
     try {
+      await this.initialize();
       const currentState = await this.load();
       const newState: StoredAuthState = {
         ...currentState,
         ...state,
         version: VERSION,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
 
-      const encrypted = await this.encrypt(JSON.stringify(newState));
-      this.storage.setItem(STORAGE_KEY, encrypted);
+      const encryptedData = await cryptoService.encryptData(JSON.stringify(newState));
+      this.storage.setItem(STORAGE_KEY, encryptedData);
     } catch (error) {
       throw createAuthError(
-        'AUTH_004',
-        'Failed to save auth state',
-        { originalError: error }
-      );
-    }
-  }
-
-  async remove(key: string): Promise<void> {
-    try {
-      this.storage.removeItem(`${STORAGE_KEY}_${key}`);
-    } catch (error) {
-      throw createAuthError(
-        AuthError.CODES.FIREBASE_ERROR,
-        'Erreur lors de la suppression des données de stockage',
-        { key, error: String(error) }
+        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        error instanceof Error ? error.message : 'Erreur lors de la sauvegarde de l\'état'
       );
     }
   }
 
   async load(): Promise<StoredAuthState> {
     try {
-      const encrypted = this.storage.getItem(STORAGE_KEY);
-      if (!encrypted) {
+      await this.initialize();
+      const encryptedData = this.storage.getItem(STORAGE_KEY);
+      if (!encryptedData) {
         return this.getInitialState();
       }
 
-      const decrypted = await this.decrypt(encrypted);
-      const state = JSON.parse(decrypted) as StoredAuthState;
-
+      const decryptedData = await cryptoService.decryptData(encryptedData);
+      const state = JSON.parse(decryptedData) as StoredAuthState;
+      
       if (state.version !== VERSION) {
-        await this.migrate(state);
-      }
-
-      if (this.isExpired(state)) {
-        await this.clear();
-        throw createAuthError('AUTH_004', 'Session expired');
+        return this.migrateState(state);
       }
 
       return state;
     } catch (error) {
-      if (error instanceof Error && error.name === 'AuthError') {
-        throw error;
-      }
       throw createAuthError(
-        'AUTH_004',
-        'Failed to load auth state',
-        { originalError: error }
+        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        error instanceof Error ? error.message : 'Erreur lors du chargement de l\'état'
       );
     }
   }
 
   async clear(): Promise<void> {
-    this.storage.removeItem(STORAGE_KEY);
-  }
-
-  setItem<T>(key: string, value: T): void {
     try {
-      const storageKey = `${STORAGE_KEY}_${key}`;
-      localStorage.setItem(storageKey, JSON.stringify({
-        version: VERSION,
-        timestamp: Date.now(),
-        data: value
-      }));
+      this.storage.removeItem(STORAGE_KEY);
     } catch (error) {
-      throw createAuthError(AuthError.CODES.STORAGE_ERROR, 'Failed to store data', { error });
-    }
-  }
-
-  getData<T>(key: string): T | null {
-    const data = this.storage.getItem(key);
-    if (!data) return null;
-    try {
-      return JSON.parse(data) as T;
-    } catch {
-      return null;
-    }
-  }
-
-  setData<T>(key: string, data: T): void {
-    try {
-      this.storage.setItem(key, JSON.stringify(data));
-    } catch (error) {
-      console.error('Error saving to storage:', error);
+      throw createAuthError(
+        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        error instanceof Error ? error.message : 'Erreur lors de la suppression de l\'état'
+      );
     }
   }
 
@@ -149,36 +146,17 @@ export class AuthPersistence {
       timestamp: Date.now(),
       account: null,
       lastProvider: null,
-      trustedDevices: [],
       user: null,
-      lastLogin: 0,
+      lastLogin: 0
     };
   }
 
-  private async encrypt(data: string): Promise<string> {
-    // TODO: Implement actual encryption
-    // For now, we'll use base64 encoding as a placeholder
-    return btoa(data);
-  }
-
-  private async decrypt(encrypted: string): Promise<string> {
-    // TODO: Implement actual decryption
-    // For now, we'll use base64 decoding as a placeholder
-    return atob(encrypted);
-  }
-
-  private async migrate(state: StoredAuthState): Promise<void> {
-    // TODO: Implement migration logic for future versions
-    await this.save({
-      ...state,
-      version: VERSION,
-    });
-  }
-
-  private isExpired(state: StoredAuthState): boolean {
-    if (!state.sessionExpiry) {
-      return false;
-    }
-    return Date.now() > state.sessionExpiry;
+  private migrateState(oldState: StoredAuthState): StoredAuthState {
+    // Implémentation de la migration si nécessaire
+    return {
+      ...this.getInitialState(),
+      ...oldState,
+      version: VERSION
+    };
   }
 }
