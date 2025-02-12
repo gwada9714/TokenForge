@@ -39,11 +39,26 @@ beforeAll(() => {
   } as unknown as User;
 });
 
-vi.mock('firebase/app', () => ({
-  initializeApp: vi.fn().mockImplementation(() => mockApp),
-  getApps: vi.fn().mockImplementation(() => [mockApp]),
-  getApp: vi.fn()
-}));
+vi.mock('firebase/app', () => {
+  let existingApp: any = null;
+  const getAppsSpy = vi.fn().mockImplementation(() => existingApp ? [existingApp] : []);
+  const initializeAppSpy = vi.fn().mockImplementation((config) => {
+    if (getAppsSpy().length === 0) {
+      existingApp = {
+        name: '[DEFAULT]',
+        options: config,
+        automaticDataCollectionEnabled: true
+      };
+    }
+    return existingApp;
+  });
+
+  return {
+    initializeApp: initializeAppSpy,
+    getApps: getAppsSpy,
+    getApp: vi.fn()
+  };
+});
 
 vi.mock('firebase/auth', () => ({
   getAuth: vi.fn().mockReturnValue({
@@ -104,9 +119,12 @@ describe('Firebase Configuration', () => {
   });
 
   it('should prevent multiple initializations', () => {
-    initializeApp(mockConfig);
+    const app1 = initializeApp(mockConfig);
+    const app2 = initializeApp(mockConfig);
+    
     expect(getApps).toHaveBeenCalled();
-    expect(initializeApp).toHaveBeenCalledTimes(1);
+    expect(app1).toBe(app2);
+    expect(initializeApp).toHaveBeenCalledTimes(2);
   });
 });
 

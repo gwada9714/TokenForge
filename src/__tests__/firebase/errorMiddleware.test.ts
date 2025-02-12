@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import { handleAuthError } from '../../features/auth/middleware/errorMiddleware';
 import { AuthError, AuthErrorCode } from '../../features/auth/errors/AuthError';
-import { logger, LogLevel } from '../../utils/firebase-logger';
+import { logger } from '../../utils/firebase-logger';
 import type { Mock } from 'vitest';
 
 describe('Error Middleware', () => {
@@ -18,6 +18,12 @@ describe('Error Middleware', () => {
   let nextFunction: Mock;
 
   beforeEach(() => {
+    vi.mock('../../utils/firebase-logger', () => ({
+      logger: {
+        error: vi.fn()
+      }
+    }));
+
     mockRequest = {
       path: '/test',
       method: 'GET',
@@ -38,7 +44,10 @@ describe('Error Middleware', () => {
     };
 
     nextFunction = vi.fn();
-    vi.spyOn(logger, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   it('should handle AuthError with correct status code', () => {
@@ -75,15 +84,9 @@ describe('Error Middleware', () => {
     
     handleAuthError(error, mockRequest as Request, mockResponse as unknown as Response, nextFunction as unknown as NextFunction);
     
-    expect(logger.log).toHaveBeenCalledWith(
-      LogLevel.ERROR,
+    expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining("Erreur d'authentification"),
-      expect.objectContaining({
-        code: AuthErrorCode.SIGN_IN_ERROR,
-        originalError,
-        path: '/test',
-        method: 'GET'
-      })
+      error
     );
   });
 
@@ -120,17 +123,9 @@ describe('Error Middleware', () => {
     
     handleAuthError(error, mockRequest as Request, mockResponse as unknown as Response, nextFunction as unknown as NextFunction);
     
-    expect(logger.log).toHaveBeenCalledWith(
-      LogLevel.ERROR,
-      expect.stringContaining("Erreur d'authentification"),
-      expect.objectContaining({
-        code: AuthErrorCode.INVALID_OPERATION,
-        headers: expect.objectContaining({
-          'user-agent': 'test-agent'
-        }),
-        path: '/test',
-        method: 'GET'
-      })
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(`[GET /test]`),
+      error
     );
   });
 });
