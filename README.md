@@ -114,6 +114,40 @@ L'application utilise le lazy loading pour optimiser les performances :
 
 ⚠️ **Important** : Ne jamais commiter le fichier `.env` qui contient vos clés privées.
 
+## Variables d'environnement requises
+
+Pour la sécurité de l'application, les variables d'environnement suivantes doivent être configurées :
+
+### Sécurité et Authentication
+```env
+# Firebase App Check
+VITE_RECAPTCHA_SITE_KEY=votre_cle_recaptcha
+
+# Session et Timeout
+VITE_SESSION_TIMEOUT=3600 # Durée de session en secondes
+VITE_ENABLE_DEBUG_LOGS=false # Activer les logs de debug
+
+# CSP et Sécurité
+VITE_CSP_NONCE_LENGTH=32
+VITE_STRICT_CSP=true
+VITE_CSP_REPORT_URI=/api/csp-report
+VITE_CONTENT_TYPE_OPTIONS=nosniff
+VITE_XSS_PROTECTION=1; mode=block
+
+# RPC et API
+VITE_MAINNET_RPC_URL=https://mainnet.infura.io/v3/votre_cle
+VITE_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/votre_cle
+VITE_API_URL=https://api.votre-domaine.com
+```
+
+### Configuration recommandée pour la production
+
+1. Activez Firebase App Check avec reCAPTCHA v3
+2. Définissez un timeout de session approprié (3600s = 1h recommandé)
+3. Activez les CSP strictes en production
+4. Utilisez des URLs HTTPS pour tous les endpoints
+5. Configurez les rapports CSP pour monitorer les violations
+
 ## 🛠️ Installation
 
 1. Cloner le repository
