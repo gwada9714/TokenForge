@@ -1,167 +1,266 @@
+import { FirebaseError } from 'firebase/app';
 import { 
+  Auth, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
-  sendPasswordResetEmail, 
-  AuthErrorCodes, 
-  updateProfile,
-  Auth,
   User,
-  UserCredential
-} from "firebase/auth";
-import { FirebaseError } from 'firebase/app';
-import { getFirebaseServices } from "../../../config/firebase";
-import { errorService } from "./errorService";
-import { logService } from "./logService";
-import { AuthErrorCode } from '../errors/AuthError';
-import { TokenForgeUser } from '../types';
+  sendEmailVerification,
+  updateProfile,
+  getIdToken,
+  onIdTokenChanged
+} from 'firebase/auth';
+import { Firestore, collection, doc, setDoc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
+import { Functions, httpsCallable } from 'firebase/functions';
+import { firebaseApp, auth, firestore, functions } from '../../../config/firebase';
+import { AuthError, AuthErrorCode } from '../errors/AuthError';
+import { ErrorService } from './errorService';
+import { logger } from '../../../utils/firebase-logger';
+import { TokenEncryption } from '../../../utils/token-encryption';
+import * as Sentry from '@sentry/react';
 
 const LOG_CATEGORY = 'FirebaseService';
-const AUTH_ERROR_CODES = AuthErrorCodes;
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY = 1000; // 1 second
 
-class FirebaseService {
+export class FirebaseService {
+  private static instance: FirebaseService | null = null;
   private auth: Auth;
+  private firestore: Firestore;
+  private functions: Functions;
+  private tokenRefreshTimer: NodeJS.Timeout | null = null;
+  private tokenEncryption: TokenEncryption;
 
-  constructor() {
-    const { auth } = getFirebaseServices();
-    if (!auth) throw errorService.createAuthError(AuthErrorCode.INVALID_OPERATION, 'Firebase Auth not initialized');
+  private constructor() {
     this.auth = auth;
+    this.firestore = firestore;
+    this.functions = functions;
+    this.tokenEncryption = TokenEncryption.getInstance();
+    this.setupTokenRefresh();
   }
 
-  private convertToTokenForgeUser(userCredential: UserCredential | { user: User }): TokenForgeUser {
-    const { user } = userCredential;
-    if (!user) {
-      throw errorService.createAuthError(AuthErrorCode.INVALID_OPERATION, 'User not found in credentials');
+  public static getInstance(): FirebaseService {
+    if (!this.instance) {
+      this.instance = new FirebaseService();
+      logger.info(LOG_CATEGORY, 'FirebaseService initialized successfully');
     }
+    return this.instance;
+  }
 
-    // Étendre l'objet User avec les propriétés spécifiques de TokenForgeUser
-    return Object.assign(Object.create(Object.getPrototypeOf(user)), {
-      ...user,
-      isAdmin: false,
-      canCreateToken: false,
-      canUseServices: true,
-      metadata: {
-        creationTime: user.metadata.creationTime || '',
-        lastSignInTime: user.metadata.lastSignInTime || ''
+  private setupTokenRefresh(): void {
+    onIdTokenChanged(this.auth, async (user) => {
+      if (user) {
+        try {
+          const token = await getIdToken(user, true);
+          await this.tokenEncryption.encryptAndStoreToken(token);
+          await this.updateSessionToken(token);
+          await this.updateUserLastActivity(user.uid);
+        } catch (error) {
+          logger.error(LOG_CATEGORY, 'Error refreshing token', error);
+          Sentry.captureException(error);
+        }
+      } else {
+        this.tokenEncryption.clearStoredToken();
       }
-    }) as TokenForgeUser;
+    });
   }
 
-  private formatFirebaseError(error: FirebaseError): Record<string, unknown> {
-    return {
-      code: error.code,
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    };
-  }
-
-  async signInWithEmail(email: string, password: string): Promise<TokenForgeUser> {
+  private async updateSessionToken(token: string): Promise<void> {
     try {
-      logService.info(LOG_CATEGORY, 'Tentative de connexion par email', { email });
-      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
-      return this.convertToTokenForgeUser(userCredential);
+      const updateSession = httpsCallable(this.functions, 'updateSessionToken');
+      await updateSession({ token });
     } catch (error) {
-      const firebaseError = error as FirebaseError;
-      logService.error(LOG_CATEGORY, 'Erreur lors de la connexion par email', this.formatFirebaseError(firebaseError));
-
-      if (firebaseError.code === AUTH_ERROR_CODES.INVALID_EMAIL) {
-        throw errorService.createAuthError(
-          AuthErrorCode.INVALID_EMAIL,
-          firebaseError.message
-        );
-      }
-
-      if (firebaseError.code === AUTH_ERROR_CODES.USER_DISABLED) {
-        throw errorService.createAuthError(
-          AuthErrorCode.USER_DISABLED,
-          firebaseError.message
-        );
-      }
-
-      if (firebaseError.code === AUTH_ERROR_CODES.INVALID_PASSWORD) {
-        throw errorService.createAuthError(
-          AuthErrorCode.WRONG_PASSWORD,
-          firebaseError.message
-        );
-      }
-
-      throw errorService.createAuthError(AuthErrorCode.SIGN_IN_ERROR, firebaseError.message);
+      logger.error(LOG_CATEGORY, 'Error updating session token', error);
+      Sentry.captureException(error);
     }
   }
 
-  async createUser(email: string, password: string): Promise<TokenForgeUser> {
+  private async updateUserLastActivity(userId: string): Promise<void> {
     try {
-      logService.info(LOG_CATEGORY, 'Tentative de création de compte', { email });
-      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
-      return this.convertToTokenForgeUser(userCredential);
+      const userRef = doc(collection(firestore, 'users'), userId);
+      await updateDoc(userRef, {
+        lastActivity: serverTimestamp(),
+        lastTokenRefresh: serverTimestamp()
+      });
     } catch (error) {
-      const firebaseError = error as FirebaseError;
-      logService.error(LOG_CATEGORY, 'Erreur lors de la création du compte', this.formatFirebaseError(firebaseError));
-
-      if (firebaseError.code === AUTH_ERROR_CODES.EMAIL_EXISTS) {
-        throw errorService.createAuthError(
-          AuthErrorCode.EMAIL_ALREADY_IN_USE,
-          firebaseError.message
-        );
-      }
-
-      throw errorService.createAuthError(AuthErrorCode.CREATE_USER_ERROR, firebaseError.message);
+      logger.error(LOG_CATEGORY, 'Error updating user activity', error);
+      Sentry.captureException(error);
     }
   }
 
-  async resetPassword(email: string): Promise<void> {
-    try {
-      logService.info(LOG_CATEGORY, 'Demande de réinitialisation du mot de passe', { email });
-      await sendPasswordResetEmail(this.auth, email);
-    } catch (error) {
-      const firebaseError = error as FirebaseError;
-      logService.error(LOG_CATEGORY, 'Erreur lors de la réinitialisation du mot de passe', this.formatFirebaseError(firebaseError));
+  private async retryOperation<T>(operation: () => Promise<T>, attempts: number = MAX_RETRY_ATTEMPTS): Promise<T> {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await operation();
+      } catch (error) {
+        if (i === attempts - 1) throw error;
+        const delay = RETRY_DELAY * Math.pow(2, i); // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, delay));
+        logger.warn(LOG_CATEGORY, `Retry attempt ${i + 1}/${attempts}`, { error });
+      }
+    }
+    throw new Error('Max retry attempts reached');
+  }
 
-      if (firebaseError.code === AUTH_ERROR_CODES.INVALID_EMAIL) {
-        throw errorService.createAuthError(
-          AuthErrorCode.INVALID_EMAIL,
-          firebaseError.message
+  public async signInWithEmail(email: string, password: string): Promise<User> {
+    const startTime = Date.now();
+    try {
+      const userCredential = await this.retryOperation(() => 
+        signInWithEmailAndPassword(this.auth, email, password)
+      );
+      
+      if (!userCredential.user.emailVerified) {
+        await sendEmailVerification(userCredential.user);
+        throw ErrorService.createAuthError(
+          AuthErrorCode.EMAIL_NOT_VERIFIED,
+          'Veuillez vérifier votre email avant de vous connecter'
         );
       }
 
-      throw errorService.createAuthError(AuthErrorCode.RESET_PASSWORD_ERROR, firebaseError.message);
-    }
-  }
+      // Métriques de performance
+      const authTime = Date.now() - startTime;
+      Sentry.metrics.distribution('auth.signin_time', authTime);
 
-  async updateUserProfile(displayName: string): Promise<void> {
-    try {
-      const currentUser = this.auth.currentUser;
-      if (!currentUser) {
-        throw errorService.createAuthError(AuthErrorCode.INVALID_OPERATION, 'No user is currently signed in');
-      }
-
-      logService.info(LOG_CATEGORY, 'Mise à jour du profil utilisateur', { 
-        userId: currentUser.uid,
-        displayName 
+      // Log successful login attempt
+      logger.info(LOG_CATEGORY, 'User signed in successfully', {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        authTime
       });
 
-      await updateProfile(currentUser, { displayName });
-    } catch (error) {
-      const firebaseError = error as FirebaseError;
-      logService.error(LOG_CATEGORY, 'Erreur lors de la mise à jour du profil', {
-        ...this.formatFirebaseError(firebaseError),
-        userId: this.auth.currentUser?.uid
-      });
+      // Mise à jour des tentatives de connexion
+      await this.updateLoginAttempts(userCredential.user.uid, true);
 
-      throw errorService.createAuthError(AuthErrorCode.UPDATE_PROFILE_ERROR, firebaseError.message);
+      return userCredential.user;
+    } catch (error) {
+      // Mise à jour des tentatives de connexion en cas d'échec
+      if (error instanceof FirebaseError) {
+        await this.updateLoginAttempts(error.code === 'auth/user-not-found' ? 'unknown' : email, false);
+      }
+
+      if (error instanceof FirebaseError) {
+        throw ErrorService.handleFirebaseAuthError(error);
+      }
+      throw ErrorService.createAuthError(
+        AuthErrorCode.INTERNAL_ERROR,
+        'Une erreur inattendue est survenue lors de la connexion',
+        error
+      );
     }
   }
 
-  async signOut(): Promise<void> {
+  private async updateLoginAttempts(identifier: string, success: boolean): Promise<void> {
     try {
-      await signOut(this.auth);
+      const attemptsRef = doc(collection(firestore, 'userAttempts'), identifier);
+      const now = serverTimestamp();
+      
+      if (success) {
+        // Réinitialiser les tentatives en cas de succès
+        await setDoc(attemptsRef, {
+          attempts: 0,
+          lastAttempt: now,
+          lastSuccess: now
+        }, { merge: true });
+      } else {
+        // Incrémenter les tentatives en cas d'échec
+        await setDoc(attemptsRef, {
+          attempts: increment(1),
+          lastAttempt: now,
+          lastFailure: now
+        }, { merge: true });
+      }
     } catch (error) {
-      const firebaseError = error as FirebaseError;
-      logService.error(LOG_CATEGORY, 'Erreur lors de la déconnexion', this.formatFirebaseError(firebaseError));
-      throw errorService.createAuthError(AuthErrorCode.SIGN_OUT_ERROR, firebaseError.message);
+      logger.error(LOG_CATEGORY, 'Error updating login attempts', error);
+      Sentry.captureException(error);
     }
+  }
+
+  public async createUserWithEmail(email: string, password: string): Promise<User> {
+    const startTime = Date.now();
+    try {
+      const userCredential = await this.retryOperation(() =>
+        createUserWithEmailAndPassword(this.auth, email, password)
+      );
+
+      // Envoyer l'email de vérification
+      await sendEmailVerification(userCredential.user);
+
+      // Créer le profil utilisateur dans Firestore
+      await setDoc(doc(collection(firestore, 'users'), userCredential.user.uid), {
+        email: userCredential.user.email,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+        emailVerified: false,
+        attempts: 0
+      });
+
+      // Métriques de performance
+      const registrationTime = Date.now() - startTime;
+      Sentry.metrics.distribution('auth.registration_time', registrationTime);
+
+      logger.info(LOG_CATEGORY, 'User created successfully', {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        registrationTime
+      });
+
+      return userCredential.user;
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        throw ErrorService.handleFirebaseAuthError(error);
+      }
+      throw ErrorService.createAuthError(
+        AuthErrorCode.INTERNAL_ERROR,
+        'Une erreur inattendue est survenue lors de la création du compte',
+        error
+      );
+    }
+  }
+
+  public async signOut(): Promise<void> {
+    try {
+      await this.retryOperation(() => signOut(this.auth));
+      if (this.tokenRefreshTimer) {
+        clearInterval(this.tokenRefreshTimer);
+        this.tokenRefreshTimer = null;
+      }
+      this.tokenEncryption.clearStoredToken();
+      logger.info(LOG_CATEGORY, 'User signed out successfully');
+    } catch (error) {
+      logger.error(LOG_CATEGORY, 'Error during sign out', error);
+      Sentry.captureException(error);
+      throw ErrorService.createAuthError(
+        AuthErrorCode.SIGN_OUT_ERROR,
+        'Une erreur est survenue lors de la déconnexion',
+        error
+      );
+    }
+  }
+
+  public async resendVerificationEmail(user: User): Promise<void> {
+    try {
+      await this.retryOperation(() => sendEmailVerification(user));
+      logger.info(LOG_CATEGORY, 'Verification email sent', { uid: user.uid });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, 'Error sending verification email', error);
+      Sentry.captureException(error);
+      throw ErrorService.createAuthError(
+        AuthErrorCode.EMAIL_VERIFICATION_ERROR,
+        'Erreur lors de l\'envoi de l\'email de vérification',
+        error
+      );
+    }
+  }
+
+  public getAuth(): Auth {
+    return this.auth;
+  }
+
+  public getFirestore(): Firestore {
+    return this.firestore;
+  }
+
+  public getFunctions(): Functions {
+    return this.functions;
   }
 }
-
-export const firebaseService = new FirebaseService();

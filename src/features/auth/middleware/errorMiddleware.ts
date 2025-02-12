@@ -1,7 +1,10 @@
+import { FirebaseError } from 'firebase/app';
 import { Request, Response, NextFunction } from 'express';
 import { Middleware } from '@reduxjs/toolkit';
 import { AuthError, AuthErrorCode, handleUnknownError } from '../errors/AuthError';
 import { logger, LogLevel } from '../../../utils/firebase-logger';
+
+const LOG_CATEGORY = 'ErrorMiddleware';
 
 // Express middleware pour gérer les erreurs d'authentification
 export const handleAuthError = (
@@ -14,40 +17,50 @@ export const handleAuthError = (
     error = handleUnknownError(error);
   }
 
-  const authError = error as AuthError;
-  
-  // Log l'erreur avec les détails appropriés
-  logger.error(`Erreur d'authentification: ${authError.message} [${req.method} ${req.path}]`, authError);
-
-  // Déterminer le code HTTP approprié
   let statusCode = 500;
-  switch (authError.code) {
-    case AuthErrorCode.INVALID_EMAIL:
-    case AuthErrorCode.WRONG_PASSWORD:
-    case AuthErrorCode.USER_NOT_FOUND:
-      statusCode = 401;
-      break;
-    case AuthErrorCode.USER_DISABLED:
-    case AuthErrorCode.TOO_MANY_REQUESTS:
-      statusCode = 403;
-      break;
-    case AuthErrorCode.EMAIL_ALREADY_IN_USE:
-      statusCode = 409;
-      break;
-    case AuthErrorCode.OPERATION_NOT_ALLOWED:
-    case AuthErrorCode.INVALID_OPERATION:
-      statusCode = 400;
-      break;
-    case AuthErrorCode.INTERNAL_ERROR:
-    default:
-      statusCode = 500;
+  let errorResponse: AuthError;
+
+  if (error instanceof AuthError) {
+    errorResponse = error;
+    switch (error.code) {
+      case AuthErrorCode.INVALID_EMAIL:
+      case AuthErrorCode.USER_NOT_FOUND:
+      case AuthErrorCode.WRONG_PASSWORD:
+        statusCode = 401;
+        break;
+      case AuthErrorCode.TOO_MANY_REQUESTS:
+        statusCode = 403;
+        break;
+      case AuthErrorCode.EMAIL_ALREADY_IN_USE:
+        statusCode = 409;
+        break;
+      default:
+        statusCode = 500;
+    }
+  } else if (error instanceof FirebaseError) {
+    errorResponse = new AuthError(
+      AuthErrorCode.INTERNAL_ERROR,
+      error.message,
+      error
+    );
+  } else {
+    errorResponse = new AuthError(
+      AuthErrorCode.INTERNAL_ERROR,
+      'Une erreur inattendue est survenue',
+      error
+    );
   }
 
-  // Envoyer la réponse
+  logger.error(`${LOG_CATEGORY}: [${req.method} ${req.path}]`, {
+    code: errorResponse.code,
+    message: errorResponse.message,
+    originalError: error
+  });
+
   res.status(statusCode).json({
     error: {
-      code: authError.code,
-      message: authError.message
+      code: errorResponse.code,
+      message: errorResponse.message
     }
   });
 };
@@ -70,7 +83,14 @@ export const errorMiddleware: Middleware = (store) => (next) => (action) => {
   try {
     return next(action);
   } catch (error) {
-    logger.log(LogLevel.ERROR, 'Erreur Redux Auth:', { error, action });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const stack = error instanceof Error ? error.stack : undefined;
+    
+    logger.error('Erreur Redux Auth:', { 
+      error: errorMessage,
+      actionType: (action as { type?: string }).type || 'unknown',
+      stack
+    });
     
     if (error instanceof AuthError) {
       store.dispatch({
