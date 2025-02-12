@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { authReducer, initialState } from '../authReducer';
 import { authActions } from '../authActions';
-import { AUTH_ERROR_CODES } from '../../errors/AuthError';
+import { AuthErrorCode } from '../../errors/AuthError';
 import { TokenForgeUser } from '../../types/auth';
 import { User as FirebaseUser } from 'firebase/auth';
 
@@ -67,7 +67,7 @@ describe('authReducer', () => {
 
     it('should handle login failure', () => {
       const mockError = {
-        code: AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+        code: AuthErrorCode.INVALID_CREDENTIALS,
         message: 'Invalid credentials'
       };
 
@@ -120,7 +120,7 @@ describe('authReducer', () => {
   describe('Error Handling', () => {
     it('should handle set error', () => {
       const mockError = {
-        code: AUTH_ERROR_CODES.NETWORK_MISMATCH,
+        code: AuthErrorCode.NETWORK_MISMATCH,
         message: 'Wrong network'
       };
 
@@ -132,7 +132,7 @@ describe('authReducer', () => {
       const stateWithError = {
         ...initialState,
         error: {
-          code: AUTH_ERROR_CODES.NETWORK_MISMATCH,
+          code: AuthErrorCode.NETWORK_MISMATCH,
           message: 'Wrong network'
         }
       };

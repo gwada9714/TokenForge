@@ -1,73 +1,155 @@
 import { 
-  getAuth, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
   sendPasswordResetEmail, 
-  updateProfile as firebaseUpdateProfile,
-  onAuthStateChanged,
-  User as FirebaseUser
-} from 'firebase/auth';
+  AuthErrorCodes, 
+  updateProfile,
+  Auth,
+  User,
+  UserCredential
+} from "firebase/auth";
+import { FirebaseError } from 'firebase/app';
+import { getFirebaseServices } from "../../../config/firebase";
+import { errorService } from "./errorService";
+import { logService } from "./logService";
+import { AuthErrorCode } from '../errors/AuthError';
 import { TokenForgeUser } from '../types';
-import { errorService } from './errorService';
-import { AUTH_ERROR_CODES } from '../errors/AuthError';
-import { logService } from './logService';
-import { app } from '../../../config/firebase';
 
 const LOG_CATEGORY = 'FirebaseService';
+const AUTH_ERROR_CODES = AuthErrorCodes;
 
 class FirebaseService {
-  private static instance: FirebaseService;
-  private auth = getAuth(app);
+  private auth: Auth;
 
-  private constructor() {}
-
-  static getInstance(): FirebaseService {
-    if (!FirebaseService.instance) {
-      FirebaseService.instance = new FirebaseService();
-    }
-    return FirebaseService.instance;
+  constructor() {
+    const { auth } = getFirebaseServices();
+    if (!auth) throw errorService.createAuthError(AuthErrorCode.INVALID_OPERATION, 'Firebase Auth not initialized');
+    this.auth = auth;
   }
 
-  private convertToTokenForgeUser(firebaseUser: FirebaseUser): TokenForgeUser {
-    if (!firebaseUser) {
-      throw errorService.createAuthError(
-        AUTH_ERROR_CODES.USER_NOT_FOUND,
-        'User not found'
-      );
+  private convertToTokenForgeUser(userCredential: UserCredential | { user: User }): TokenForgeUser {
+    const { user } = userCredential;
+    if (!user) {
+      throw errorService.createAuthError(AuthErrorCode.INVALID_OPERATION, 'User not found in credentials');
     }
 
-    return {
-      ...firebaseUser,
-      metadata: {
-        creationTime: firebaseUser.metadata?.creationTime || '',
-        lastSignInTime: firebaseUser.metadata?.lastSignInTime || '',
-      },
-      isAdmin: firebaseUser.email?.endsWith('@tokenforge.com') || false,
+    // Étendre l'objet User avec les propriétés spécifiques de TokenForgeUser
+    return Object.assign(Object.create(Object.getPrototypeOf(user)), {
+      ...user,
+      isAdmin: false,
       canCreateToken: false,
       canUseServices: true,
+      metadata: {
+        creationTime: user.metadata.creationTime || '',
+        lastSignInTime: user.metadata.lastSignInTime || ''
+      }
+    }) as TokenForgeUser;
+  }
+
+  private formatFirebaseError(error: FirebaseError): Record<string, unknown> {
+    return {
+      code: error.code,
+      message: error.message,
+      stack: error.stack,
+      name: error.name
     };
   }
 
-  async signIn(email: string, password: string): Promise<TokenForgeUser> {
+  async signInWithEmail(email: string, password: string): Promise<TokenForgeUser> {
     try {
+      logService.info(LOG_CATEGORY, 'Tentative de connexion par email', { email });
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
-      return this.convertToTokenForgeUser(userCredential.user);
+      return this.convertToTokenForgeUser(userCredential);
     } catch (error) {
-      const authError = errorService.handleError(error);
-      logService.error(LOG_CATEGORY, 'Sign in failed', authError);
-      throw authError;
+      const firebaseError = error as FirebaseError;
+      logService.error(LOG_CATEGORY, 'Erreur lors de la connexion par email', this.formatFirebaseError(firebaseError));
+
+      if (firebaseError.code === AUTH_ERROR_CODES.INVALID_EMAIL) {
+        throw errorService.createAuthError(
+          AuthErrorCode.INVALID_EMAIL,
+          firebaseError.message
+        );
+      }
+
+      if (firebaseError.code === AUTH_ERROR_CODES.USER_DISABLED) {
+        throw errorService.createAuthError(
+          AuthErrorCode.USER_DISABLED,
+          firebaseError.message
+        );
+      }
+
+      if (firebaseError.code === AUTH_ERROR_CODES.INVALID_PASSWORD) {
+        throw errorService.createAuthError(
+          AuthErrorCode.WRONG_PASSWORD,
+          firebaseError.message
+        );
+      }
+
+      throw errorService.createAuthError(AuthErrorCode.SIGN_IN_ERROR, firebaseError.message);
     }
   }
 
-  async signUp(email: string, password: string): Promise<TokenForgeUser> {
+  async createUser(email: string, password: string): Promise<TokenForgeUser> {
     try {
+      logService.info(LOG_CATEGORY, 'Tentative de création de compte', { email });
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
-      return this.convertToTokenForgeUser(userCredential.user);
+      return this.convertToTokenForgeUser(userCredential);
     } catch (error) {
-      const authError = errorService.handleError(error);
-      logService.error(LOG_CATEGORY, 'Sign up failed', authError);
-      throw authError;
+      const firebaseError = error as FirebaseError;
+      logService.error(LOG_CATEGORY, 'Erreur lors de la création du compte', this.formatFirebaseError(firebaseError));
+
+      if (firebaseError.code === AUTH_ERROR_CODES.EMAIL_EXISTS) {
+        throw errorService.createAuthError(
+          AuthErrorCode.EMAIL_ALREADY_IN_USE,
+          firebaseError.message
+        );
+      }
+
+      throw errorService.createAuthError(AuthErrorCode.CREATE_USER_ERROR, firebaseError.message);
+    }
+  }
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      logService.info(LOG_CATEGORY, 'Demande de réinitialisation du mot de passe', { email });
+      await sendPasswordResetEmail(this.auth, email);
+    } catch (error) {
+      const firebaseError = error as FirebaseError;
+      logService.error(LOG_CATEGORY, 'Erreur lors de la réinitialisation du mot de passe', this.formatFirebaseError(firebaseError));
+
+      if (firebaseError.code === AUTH_ERROR_CODES.INVALID_EMAIL) {
+        throw errorService.createAuthError(
+          AuthErrorCode.INVALID_EMAIL,
+          firebaseError.message
+        );
+      }
+
+      throw errorService.createAuthError(AuthErrorCode.RESET_PASSWORD_ERROR, firebaseError.message);
+    }
+  }
+
+  async updateUserProfile(displayName: string): Promise<void> {
+    try {
+      const currentUser = this.auth.currentUser;
+      if (!currentUser) {
+        throw errorService.createAuthError(AuthErrorCode.INVALID_OPERATION, 'No user is currently signed in');
+      }
+
+      logService.info(LOG_CATEGORY, 'Mise à jour du profil utilisateur', { 
+        userId: currentUser.uid,
+        displayName 
+      });
+
+      await updateProfile(currentUser, { displayName });
+    } catch (error) {
+      const firebaseError = error as FirebaseError;
+      logService.error(LOG_CATEGORY, 'Erreur lors de la mise à jour du profil', {
+        ...this.formatFirebaseError(firebaseError),
+        userId: this.auth.currentUser?.uid
+      });
+
+      throw errorService.createAuthError(AuthErrorCode.UPDATE_PROFILE_ERROR, firebaseError.message);
     }
   }
 
@@ -75,80 +157,11 @@ class FirebaseService {
     try {
       await signOut(this.auth);
     } catch (error) {
-      const authError = errorService.handleError(error);
-      logService.error(LOG_CATEGORY, 'Sign out failed', authError);
-      throw authError;
+      const firebaseError = error as FirebaseError;
+      logService.error(LOG_CATEGORY, 'Erreur lors de la déconnexion', this.formatFirebaseError(firebaseError));
+      throw errorService.createAuthError(AuthErrorCode.SIGN_OUT_ERROR, firebaseError.message);
     }
-  }
-
-  async updateProfile(displayName?: string, photoURL?: string): Promise<TokenForgeUser> {
-    try {
-      const user = this.auth.currentUser;
-      if (!user) {
-        throw errorService.createAuthError(
-          AUTH_ERROR_CODES.USER_NOT_FOUND,
-          'No user is currently signed in'
-        );
-      }
-
-      const updateData: { displayName?: string; photoURL?: string } = {};
-      if (displayName !== undefined) updateData.displayName = displayName;
-      if (photoURL !== undefined) updateData.photoURL = photoURL;
-
-      await firebaseUpdateProfile(user, updateData);
-      return this.convertToTokenForgeUser(user);
-    } catch (error) {
-      const authError = errorService.handleError(error);
-      logService.error(LOG_CATEGORY, 'Profile update failed', authError);
-      throw authError;
-    }
-  }
-
-  async resetPassword(email: string): Promise<void> {
-    try {
-      await sendPasswordResetEmail(this.auth, email);
-    } catch (error) {
-      const authError = errorService.handleError(error);
-      logService.error(LOG_CATEGORY, 'Password reset failed', authError);
-      throw authError;
-    }
-  }
-
-  onAuthStateChanged(callback: (user: TokenForgeUser | null) => void): () => void {
-    return onAuthStateChanged(this.auth, (user) => {
-      callback(user ? this.convertToTokenForgeUser(user) : null);
-    });
-  }
-
-  async getUserData(uid: string): Promise<TokenForgeUser> {
-    try {
-      const user = this.auth.currentUser;
-      if (!user || user.uid !== uid) {
-        throw errorService.createAuthError(
-          AUTH_ERROR_CODES.USER_NOT_FOUND,
-          'User not found'
-        );
-      }
-      return this.convertToTokenForgeUser(user);
-    } catch (error) {
-      const authError = errorService.handleError(error);
-      logService.error(LOG_CATEGORY, 'Get user data failed', authError);
-      throw authError;
-    }
-  }
-
-  getCurrentUser(): TokenForgeUser | null {
-    const user = this.auth.currentUser;
-    return user ? this.convertToTokenForgeUser(user) : null;
-  }
-
-  public async refreshToken(): Promise<void> {
-    const user = this.auth.currentUser;
-    if (!user) {
-      throw new Error('No user logged in');
-    }
-    await user.getIdToken(true); // Force refresh du token
   }
 }
 
-export const firebaseService = FirebaseService.getInstance();
+export const firebaseService = new FirebaseService();

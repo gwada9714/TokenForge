@@ -1,13 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AuthState, User, SessionInfo } from '../schemas/auth.schema';
-import { AUTH_ERROR_CODES } from '../errors/AuthError';
+import { AuthErrorCode } from '../errors/AuthError';
+
+export type AuthError = {
+  code: keyof typeof AuthErrorCode;
+  message: string;
+};
 
 const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: true,
   user: null,
   sessionInfo: null,
-  error: null
+  error: undefined
 };
 
 const authSlice = createSlice({
@@ -20,21 +25,21 @@ const authSlice = createSlice({
     setAuthUser: (state, action: PayloadAction<User | null>) => {
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
-      state.error = null;
+      state.error = undefined;
     },
     setSessionInfo: (state, action: PayloadAction<SessionInfo | null>) => {
       state.sessionInfo = action.payload;
     },
-    setAuthError: (state, action: PayloadAction<{ code: keyof typeof AUTH_ERROR_CODES; message: string }>) => {
+    setAuthError: (state, action: PayloadAction<AuthError>) => {
       state.error = action.payload;
-      if (action.payload.code === AUTH_ERROR_CODES.SESSION_EXPIRED) {
+      if (action.payload.code === 'USER_NOT_FOUND') {
         state.isAuthenticated = false;
         state.user = null;
         state.sessionInfo = null;
       }
     },
     clearAuthError: (state) => {
-      state.error = null;
+      state.error = undefined;
     },
     resetAuthState: () => initialState
   }

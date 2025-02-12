@@ -2,7 +2,7 @@ import { TokenForgeAuthState, WalletState } from '../types';
 import { firebaseService } from './firebaseService';
 import { walletReconnectionService } from './walletReconnectionService';
 import { errorService } from './errorService';
-import { AUTH_ERROR_CODES } from '../errors/AuthError';
+import { AuthErrorCode } from '../errors/AuthError';
 
 class AuthSyncService {
   private static instance: AuthSyncService;
@@ -31,7 +31,7 @@ class AuthSyncService {
         // on vérifie d'abord le réseau
         if (!walletState.isCorrectNetwork) {
           throw errorService.createAuthError(
-            AUTH_ERROR_CODES.NETWORK_MISMATCH,
+            AuthErrorCode.NETWORK_MISMATCH,
             'Please switch to the correct network before connecting.'
           );
         }
@@ -39,7 +39,7 @@ class AuthSyncService {
         // Vérifier si le wallet est valide
         if (!walletState.address) {
           throw errorService.createAuthError(
-            AUTH_ERROR_CODES.WALLET_NOT_FOUND,
+            AuthErrorCode.WALLET_NOT_FOUND,
             'No wallet address found.'
           );
         }
@@ -72,7 +72,7 @@ class AuthSyncService {
       const provider = window.ethereum;
       if (!provider) {
         throw errorService.createAuthError(
-          AUTH_ERROR_CODES.PROVIDER_ERROR,
+          AuthErrorCode.PROVIDER_ERROR,
           'No Ethereum provider found'
         );
       }

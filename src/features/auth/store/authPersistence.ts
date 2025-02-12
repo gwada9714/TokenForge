@@ -1,4 +1,4 @@
-import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
+import { createAuthError, AuthErrorCode } from '../errors/AuthError';
 import { SessionState } from '../types/session';
 import { cryptoService } from '@/utils/crypto';
 
@@ -61,7 +61,7 @@ export class AuthPersistence {
       return state.sessionInfo || null;
     } catch (error) {
       throw createAuthError(
-        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        AuthErrorCode.PERSISTENCE_ERROR,
         error instanceof Error ? error.message : 'Erreur lors de la récupération des informations de session'
       );
     }
@@ -78,7 +78,7 @@ export class AuthPersistence {
       });
     } catch (error) {
       throw createAuthError(
-        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        AuthErrorCode.PERSISTENCE_ERROR,
         error instanceof Error ? error.message : 'Erreur lors de la sauvegarde des informations de session'
       );
     }
@@ -99,7 +99,7 @@ export class AuthPersistence {
       this.storage.setItem(STORAGE_KEY, encryptedData);
     } catch (error) {
       throw createAuthError(
-        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        AuthErrorCode.PERSISTENCE_ERROR,
         error instanceof Error ? error.message : 'Erreur lors de la sauvegarde de l\'état'
       );
     }
@@ -123,7 +123,7 @@ export class AuthPersistence {
       return state;
     } catch (error) {
       throw createAuthError(
-        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        AuthErrorCode.PERSISTENCE_ERROR,
         error instanceof Error ? error.message : 'Erreur lors du chargement de l\'état'
       );
     }
@@ -134,7 +134,7 @@ export class AuthPersistence {
       this.storage.removeItem(STORAGE_KEY);
     } catch (error) {
       throw createAuthError(
-        AUTH_ERROR_CODES.PERSISTENCE_ERROR,
+        AuthErrorCode.PERSISTENCE_ERROR,
         error instanceof Error ? error.message : 'Erreur lors de la suppression de l\'état'
       );
     }

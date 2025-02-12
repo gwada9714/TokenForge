@@ -2,7 +2,7 @@ import { TokenForgeUser } from '../types';
 import { storageService } from './storageService';
 import { logService } from './logService';
 import { errorService } from './errorService';
-import { AUTH_ERROR_CODES } from '../errors/AuthError';
+import { AuthErrorCode } from '../errors/AuthError';
 
 const LOG_CATEGORY = 'AdminService';
 
@@ -29,7 +29,7 @@ class AdminService {
       const storedData = await storageService.getUserData(user.uid);
       if (!storedData) {
         throw errorService.createAuthError(
-          AUTH_ERROR_CODES.USER_NOT_FOUND,
+          AuthErrorCode.USER_NOT_FOUND,
           'User data not found'
         );
       }
@@ -63,7 +63,7 @@ class AdminService {
       const currentData = await storageService.getUserData(userId);
       if (!currentData) {
         throw errorService.createAuthError(
-          AUTH_ERROR_CODES.USER_NOT_FOUND,
+          AuthErrorCode.USER_NOT_FOUND,
           'User data not found'
         );
       }
@@ -103,28 +103,28 @@ class AdminService {
     if (!isAuthenticated) {
       return {
         canAccess: false,
-        reason: errorService.getLocalizedMessage(AUTH_ERROR_CODES.USER_NOT_FOUND)
+        reason: errorService.getLocalizedMessage(AuthErrorCode.USER_NOT_FOUND)
       };
     }
 
     if (!isAdmin) {
       return {
         canAccess: false,
-        reason: errorService.getLocalizedMessage(AUTH_ERROR_CODES.OPERATION_NOT_ALLOWED)
+        reason: errorService.getLocalizedMessage(AuthErrorCode.OPERATION_NOT_ALLOWED)
       };
     }
 
     if (!isConnected) {
       return {
         canAccess: false,
-        reason: errorService.getLocalizedMessage(AUTH_ERROR_CODES.WALLET_NOT_FOUND)
+        reason: errorService.getLocalizedMessage(AuthErrorCode.WALLET_NOT_FOUND)
       };
     }
 
     if (!isCorrectNetwork) {
       return {
         canAccess: false,
-        reason: errorService.getLocalizedMessage(AUTH_ERROR_CODES.NETWORK_MISMATCH)
+        reason: errorService.getLocalizedMessage(AuthErrorCode.NETWORK_MISMATCH)
       };
     }
 

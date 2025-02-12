@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
+import { Middleware } from '@reduxjs/toolkit';
 import { AuthError, AuthErrorCode, handleUnknownError } from '../errors/AuthError';
 import { logger, LogLevel } from '../../../utils/firebase-logger';
 
+// Express middleware pour gérer les erreurs d'authentification
 export const handleAuthError = (
   error: unknown,
   req: Request,
@@ -15,13 +17,7 @@ export const handleAuthError = (
   const authError = error as AuthError;
   
   // Log l'erreur avec les détails appropriés
-  logger.log(LogLevel.ERROR, `Erreur d'authentification: ${authError.message}`, {
-    code: authError.code,
-    originalError: authError.originalError,
-    path: req.path,
-    method: req.method,
-    headers: req.headers // Ajout des headers dans les logs
-  });
+  logger.error(`Erreur d'authentification: ${authError.message} [${req.method} ${req.path}]`, authError);
 
   // Déterminer le code HTTP approprié
   let statusCode = 500;
@@ -56,7 +52,7 @@ export const handleAuthError = (
   });
 };
 
-// Middleware pour gérer les erreurs d'authentification non attrapées
+// Express middleware pour attraper les erreurs non gérées
 export const authErrorHandler = (
   req: Request,
   res: Response,
@@ -68,3 +64,26 @@ export const authErrorHandler = (
     handleAuthError(error, req, res, next);
   }
 };
+
+// Redux middleware pour la gestion des erreurs d'authentification
+export const errorMiddleware: Middleware = (store) => (next) => (action) => {
+  try {
+    return next(action);
+  } catch (error) {
+    logger.log(LogLevel.ERROR, 'Erreur Redux Auth:', { error, action });
+    
+    if (error instanceof AuthError) {
+      store.dispatch({
+        type: 'auth/setAuthError',
+        payload: {
+          code: error.code,
+          message: error.message
+        }
+      });
+    }
+    
+    throw error;
+  }
+};
+
+export default errorMiddleware;

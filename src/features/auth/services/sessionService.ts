@@ -7,7 +7,7 @@ import {
 } from '../store/authSlice';
 import { store, type RootState } from '@/store';
 import { logger } from '@/utils/logger';
-import { AUTH_ERROR_CODES, type AuthErrorCode } from '../errors/AuthError';
+import { AuthErrorCode } from '../errors/AuthError';
 import type { User } from '../schemas/auth.schema';
 import type { SessionInfo as AuthSchemaSessionInfo } from '../schemas/auth.schema';
 
@@ -38,7 +38,9 @@ interface TokenForgeUser {
 interface SessionInfo {
   expiresAt: number;
   lastActivity: number;
-  refreshToken: string;
+  refreshToken: string | null;
+  tabId?: string;
+  lastSync?: number;
 }
 
 export class SessionService {
@@ -69,7 +71,7 @@ export class SessionService {
         });
         
         store.dispatch(setAuthError({
-          code: AUTH_ERROR_CODES.SESSION_CHECK_ERROR as AuthErrorCode,
+          code: AuthErrorCode.SESSION_CHECK_ERROR,
           message: error instanceof Error ? error.message : 'Erreur lors de la vérification de session'
         }));
       });
@@ -119,7 +121,7 @@ export class SessionService {
       });
       
       store.dispatch(setAuthError({
-        code: AUTH_ERROR_CODES.SESSION_CHECK_ERROR as AuthErrorCode,
+        code: AuthErrorCode.SESSION_CHECK_ERROR,
         message: error instanceof Error ? error.message : 'Erreur lors de la vérification de session'
       }));
     }
@@ -132,7 +134,7 @@ export class SessionService {
 
       if (!currentUser) {
         store.dispatch(setAuthError({
-          code: AUTH_ERROR_CODES.USER_NOT_FOUND as AuthErrorCode,
+          code: AuthErrorCode.USER_NOT_FOUND,
           message: 'Aucun utilisateur connecté'
         }));
         return;
@@ -142,7 +144,7 @@ export class SessionService {
       const sessionInfo: SessionInfo = {
         expiresAt: now + 30 * 60 * 1000, // 30 minutes
         lastActivity: now,
-        refreshToken: currentUser.refreshToken || ''
+        refreshToken: currentUser.refreshToken || null
       };
 
       store.dispatch(setAuthUser(this.mapFirebaseUser(currentUser)));
@@ -161,7 +163,7 @@ export class SessionService {
       });
 
       store.dispatch(setAuthError({
-        code: AUTH_ERROR_CODES.SESSION_REFRESH_ERROR as AuthErrorCode,
+        code: AuthErrorCode.SESSION_REFRESH_ERROR,
         message: error instanceof Error ? error.message : 'Erreur lors du rafraîchissement de la session'
       }));
     }
@@ -173,8 +175,8 @@ export class SessionService {
       await auth.signOut();
       store.dispatch(resetAuthState());
       store.dispatch(setAuthError({
-        code: AUTH_ERROR_CODES.SESSION_EXPIRED as AuthErrorCode,
-        message: 'Votre session a expiré. Veuillez vous reconnecter.'
+        code: AuthErrorCode.SESSION_EXPIRED,
+        message: 'La session a expiré. Veuillez vous reconnecter.'
       }));
     } catch (error) {
       logger.error('Erreur lors de la déconnexion:', {

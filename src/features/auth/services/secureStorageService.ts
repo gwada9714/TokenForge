@@ -1,6 +1,6 @@
 import { AES, enc } from 'crypto-js';
 import { errorService } from './errorService';
-import { AUTH_ERROR_CODES } from '../errors/AuthError';
+import { AuthErrorCode } from '../errors/AuthError';
 
 const STORAGE_PREFIX = 'tokenforge_';
 const ENCRYPTION_KEY = process.env.REACT_APP_STORAGE_KEY || 'default-dev-key';
@@ -40,7 +40,7 @@ class SecureStorageService {
       return bytes.toString(enc.Utf8);
     } catch (error) {
       throw errorService.createAuthError(
-        AUTH_ERROR_CODES.STORAGE_ERROR,
+        AuthErrorCode.STORAGE_ERROR,
         'Failed to decrypt data. Storage might be compromised.',
         {
           context: 'secureStorageService.decrypt',
@@ -62,7 +62,7 @@ class SecureStorageService {
       this.storage.setItem(this.getFullKey(key), encrypted);
     } catch (error) {
       throw errorService.createAuthError(
-        AUTH_ERROR_CODES.STORAGE_ERROR,
+        AuthErrorCode.STORAGE_ERROR,
         'Failed to store data',
         {
           context: 'secureStorageService.setItem',
@@ -90,7 +90,7 @@ class SecureStorageService {
       return item.data;
     } catch (error) {
       throw errorService.createAuthError(
-        AUTH_ERROR_CODES.STORAGE_ERROR,
+        AuthErrorCode.STORAGE_ERROR,
         'Failed to retrieve data',
         {
           context: 'secureStorageService.getItem',

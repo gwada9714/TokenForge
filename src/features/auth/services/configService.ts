@@ -1,35 +1,75 @@
-import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
+import { AuthErrorCode } from '../errors/AuthError';
+import { errorService } from './errorService';
+import { logService } from './logService';
 
-const REQUIRED_CHAIN_ID = 1; // Ethereum Mainnet
+const LOG_CATEGORY = 'ConfigService';
 
 class ConfigService {
-  private static instance: ConfigService;
+  private config: Record<string, any> = {};
 
-  private constructor() {}
-
-  static getInstance(): ConfigService {
-    if (!ConfigService.instance) {
-      ConfigService.instance = new ConfigService();
-    }
-    return ConfigService.instance;
+  constructor() {
+    this.loadConfig();
   }
 
-  public getRequiredChainId(): number {
-    return REQUIRED_CHAIN_ID;
-  }
-
-  public async getCurrentChainId(): Promise<number | null> {
-    if (!window.ethereum) {
-      throw createAuthError(AUTH_ERROR_CODES.PROVIDER_ERROR, 'No Ethereum provider found', { error: 'Provider not available' });
-    }
-
+  private loadConfig(): void {
     try {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      return parseInt(chainId as string, 16);
+      // Chargement de la configuration depuis l'environnement
+      this.config = {
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+      };
+
+      logService.info(LOG_CATEGORY, 'Configuration loaded successfully');
     } catch (error) {
-      throw createAuthError(AUTH_ERROR_CODES.PROVIDER_ERROR, 'Failed to get current chain ID', { error });
+      logService.error(LOG_CATEGORY, 'Failed to load configuration', { 
+        details: error instanceof Error ? error.message : String(error)
+      });
+      throw errorService.createAuthError(
+        AuthErrorCode.INTERNAL_ERROR,
+        'Failed to load configuration'
+      );
+    }
+  }
+
+  getConfig<T>(key: string): T {
+    try {
+      const value = this.config[key];
+      if (value === undefined) {
+        throw errorService.createAuthError(
+          AuthErrorCode.INTERNAL_ERROR,
+          `Configuration key not found: ${key}`
+        );
+      }
+      return value as T;
+    } catch (error) {
+      logService.error(LOG_CATEGORY, 'Failed to get configuration value', { 
+        key,
+        details: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
+  }
+
+  setConfig<T>(key: string, value: T): void {
+    try {
+      this.config[key] = value;
+      logService.info(LOG_CATEGORY, 'Configuration value set successfully', { key });
+    } catch (error) {
+      logService.error(LOG_CATEGORY, 'Failed to set configuration value', { 
+        key,
+        details: error instanceof Error ? error.message : String(error)
+      });
+      throw errorService.createAuthError(
+        AuthErrorCode.INTERNAL_ERROR,
+        `Failed to set configuration value for key: ${key}`
+      );
     }
   }
 }
 
-export const configService = ConfigService.getInstance();
+export const configService = new ConfigService();
