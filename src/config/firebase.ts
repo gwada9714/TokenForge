@@ -1,36 +1,15 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { 
-  Auth,
-  initializeAuth,
-  browserLocalPersistence,
-  indexedDBLocalPersistence,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  User,
-} from 'firebase/auth';
-import { 
-  Firestore,
-  initializeFirestore,
-  FirestoreSettings,
-  connectFirestoreEmulator,
-  persistentLocalCache,
-  persistentMultipleTabManager
-} from 'firebase/firestore';
-import { 
-  Functions,
-  getFunctions,
-  connectFunctionsEmulator,
-  httpsCallable
-} from 'firebase/functions';
-import { 
-  getPerformance
-} from 'firebase/performance';
-import { logger } from '../utils/firebase-logger';
+import { getAnalytics, Analytics } from 'firebase/analytics';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
+import { initializeAppCheck, ReCaptchaV3Provider, AppCheckOptions } from 'firebase/app-check';
+import { logger } from '../utils/logger';
+import { FirebaseError, handleFirebaseError } from '../utils/error-handler';
+import type { FirebaseConfig } from '../types/firebase';
 
-// Configuration Firebase
-const firebaseConfig = {
+const LOG_CATEGORY = 'Firebase';
+
+const firebaseConfig: FirebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -40,121 +19,134 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Singleton pour l'application Firebase
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let firestore: Firestore | null = null;
-let functions: Functions | null = null;
-let performance: ReturnType<typeof getPerformance> | null = null;
-
-// Initialisation de l'application Firebase
-try {
-  app = initializeApp(firebaseConfig);
-  logger.info('Firebase App initialized successfully');
-} catch (error) {
-  logger.error('Failed to initialize Firebase App', error);
-  throw new Error('Critical: Firebase App initialization failed');
+interface FirebaseServices {
+  app: FirebaseApp;
+  auth: Auth;
+  db: Firestore;
+  analytics: Analytics;
 }
 
-// Initialisation de Auth avec gestion d'erreur explicite
-try {
-  auth = initializeAuth(app, {
-    persistence: [indexedDBLocalPersistence, browserLocalPersistence]
-  });
-  logger.info('Auth initialized successfully');
-} catch (error) {
-  logger.error('Failed to initialize Auth', error);
-  // Tentative de fallback avec une configuration minimale
-  try {
-    auth = initializeAuth(app, { persistence: [] });
-    logger.warn('Auth initialized in fallback mode');
-  } catch (fallbackError) {
-    logger.error('Auth fallback initialization failed', fallbackError);
-  }
-}
+const validateConfig = (config: FirebaseConfig): void => {
+  const requiredFields: (keyof FirebaseConfig)[] = [
+    'apiKey',
+    'authDomain',
+    'projectId',
+    'storageBucket',
+    'messagingSenderId',
+    'appId'
+  ];
 
-// Initialisation de Firestore avec la nouvelle configuration de cache
-try {
-  const firestoreSettings: FirestoreSettings = {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager(),
-      cacheSizeBytes: 40 * 1024 * 1024 // 40 MB
-    })
-  };
-
-  firestore = initializeFirestore(app, firestoreSettings);
+  const missingFields = requiredFields.filter(field => !config[field]);
   
-  if (import.meta.env.DEV) {
-    connectFirestoreEmulator(firestore, 'localhost', 8080);
+  if (missingFields.length > 0) {
+    throw new FirebaseError(
+      'CONFIG_ERROR',
+      'Configuration Firebase incomplète',
+      { missingFields }
+    );
   }
-  
-  logger.info('Firestore initialized successfully');
-} catch (error) {
-  logger.error('Failed to initialize Firestore', error);
-}
-
-// Initialisation de Functions avec gestion d'erreur explicite
-try {
-  functions = getFunctions(app);
-  if (import.meta.env.DEV) {
-    connectFunctionsEmulator(functions, 'localhost', 5001);
-  }
-  logger.info('Functions initialized successfully');
-} catch (error) {
-  logger.error('Failed to initialize Functions', error);
-}
-
-// Initialisation de Performance uniquement en production
-if (import.meta.env.PROD) {
-  try {
-    performance = getPerformance(app);
-    logger.info('Performance initialized successfully');
-  } catch (error) {
-    logger.error('Failed to initialize Performance', error);
-  }
-}
-
-// Récupération des services Firebase avec vérification
-export function getFirebaseServices() {
-  if (!app) {
-    throw new Error('Firebase App not initialized');
-  }
-  return {
-    app,
-    auth,
-    firestore,
-    functions,
-    performance
-  };
-}
-
-// Récupération spécifique de Auth avec fallback
-export function getFirebaseAuth(): Auth {
-  if (!app) {
-    throw new Error('Firebase App not initialized');
-  }
-  if (!auth) {
-    // Tentative de réinitialisation
-    auth = initializeAuth(app, { persistence: [] });
-    logger.warn('Auth re-initialized in fallback mode');
-  }
-  return auth;
-}
-
-// Export des fonctions Firebase
-export {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  httpsCallable
 };
 
-// Export des types Firebase
-export type {
-  User,
-  Auth,
-  Firestore,
-  Functions,
-  FirebaseApp
+const initializeFirebaseServices = async (): Promise<FirebaseServices> => {
+  try {
+    validateConfig(firebaseConfig);
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const analytics = getAnalytics(app);
+
+    logger.info(LOG_CATEGORY, {
+      message: 'Services Firebase initialisés avec succès',
+      context: {
+        projectId: firebaseConfig.projectId,
+        env: import.meta.env.VITE_ENV
+      }
+    });
+
+    return { app, auth, db, analytics };
+  } catch (error) {
+    const firebaseError = handleFirebaseError(error);
+    logger.error(LOG_CATEGORY, {
+      message: 'Échec de l\'initialisation des services Firebase',
+      error: firebaseError,
+      context: {
+        config: {
+          ...firebaseConfig,
+          apiKey: '[REDACTED]' // Ne pas logger la clé API
+        }
+      }
+    });
+    throw firebaseError;
+  }
+};
+
+const initializeAppCheckService = (app: FirebaseApp): void => {
+  const isDevelopment = import.meta.env.VITE_ENV?.toLowerCase() === 'development';
+
+  if (isDevelopment) {
+    if (typeof window !== 'undefined') {
+      // @ts-ignore
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      logger.info(LOG_CATEGORY, {
+        message: 'App Check en mode debug pour le développement local',
+        context: { debugToken: true }
+      });
+    }
+    return;
+  }
+
+  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+  
+  if (!recaptchaKey && !isDevelopment) {
+    logger.warn(LOG_CATEGORY, {
+      message: 'App Check non configuré en production',
+      context: { env: import.meta.env.VITE_ENV }
+    });
+    return;
+  }
+
+  try {
+    if (!recaptchaKey) {
+      throw new FirebaseError(
+        'APPCHECK_CONFIG_ERROR',
+        'Clé reCAPTCHA manquante pour App Check'
+      );
+    }
+
+    const provider = new ReCaptchaV3Provider(recaptchaKey);
+    const appCheckConfig: AppCheckOptions = {
+      provider,
+      isTokenAutoRefreshEnabled: true
+    };
+
+    initializeAppCheck(app, appCheckConfig);
+    
+    logger.info(LOG_CATEGORY, {
+      message: 'App Check initialisé avec succès',
+      context: { provider: 'reCAPTCHA v3' }
+    });
+  } catch (error) {
+    const appCheckError = handleFirebaseError(error);
+    logger.error(LOG_CATEGORY, {
+      message: 'Échec de l\'initialisation d\'App Check',
+      error: appCheckError
+    });
+
+    if (isDevelopment) {
+      // Fallback en mode debug pour le développement
+      // @ts-ignore
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      logger.warn(LOG_CATEGORY, {
+        message: 'Fallback vers le mode debug App Check',
+        context: { debugToken: true }
+      });
+    }
+  }
+};
+
+export const initializeFirebase = async (): Promise<FirebaseServices> => {
+  const services = await initializeFirebaseServices();
+  initializeAppCheckService(services.app);
+  return services;
 };
