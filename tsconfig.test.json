@@ -7,7 +7,7 @@
     "isolatedModules": false,
     "noEmit": false,
     "jsx": "react-jsx",
-    "types": ["vitest/globals", "node"],
+    "types": ["vite/client", "node", "vitest/globals"],
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
@@ -26,9 +26,13 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx",
+    "src/**/__tests__/**/*.ts",
+    "src/**/__tests__/**/*.tsx",
     "src/test/setup.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/security/**/*"
+  ]
 }

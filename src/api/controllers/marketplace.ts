@@ -1,174 +1,144 @@
-import { type PublicClient, type WalletClient } from 'viem';
-import { getContract, parseEther } from 'viem';
-import { AuthenticatedRequest } from '../middleware/auth';
-import type { MarketplaceData, MarketplaceFilters, ApiResponse } from '../types';
+/// <reference path="../../types/express.d.ts" />
+
+import { Request, Response } from 'express-serve-static-core';
+import { BigNumberish } from 'ethers';
+import { Web3Contract } from '../../types/web3';
+import { MarketplaceFilters, MarketplaceData, ApiResponse } from '../../types/marketplace';
 
 export class MarketplaceController {
-  private marketplaceContract: ReturnType<typeof getContract>;
-  private publicClient: PublicClient;
-  private walletClient: WalletClient;
+  private marketplaceContract: Web3Contract;
+  private publicClient: any;
 
-  constructor(marketplaceContract: ReturnType<typeof getContract>, publicClient: PublicClient, walletClient: WalletClient) {
+  constructor(marketplaceContract: Web3Contract, publicClient: any) {
     this.marketplaceContract = marketplaceContract;
     this.publicClient = publicClient;
-    this.walletClient = walletClient;
   }
 
-  // Récupérer les items du marketplace
-  public getItems = async (
-    req: Request<{}, {}, {}, MarketplaceFilters>,
+  async getItems(
+    req: Request<{}, any, any, MarketplaceFilters>,
     res: Response<ApiResponse<MarketplaceData[]>>
-  ) => {
+  ) {
     try {
-      const {
-        seller,
-        status,
-        minPrice,
-        maxPrice,
-        page = 1,
-        limit = 10,
-        sortBy = 'price',
-        sortDirection = 'asc'
-      } = req.query;
+      const { minPrice, maxPrice, seller, status } = req.query;
 
-      // Récupération des items depuis le contrat
-      const itemCount = await this.marketplaceContract.getItemCount();
-      let items: MarketplaceData[] = [];
+      const itemCount = await this.marketplaceContract.getItemCount?.();
+      if (!itemCount) throw new Error('Failed to get item count');
 
-      // Récupérer tous les items qui correspondent aux filtres
+      const items: MarketplaceData[] = [];
+
       for (let i = 0; i < itemCount; i++) {
-        const item = await this.marketplaceContract.getItem(i);
+        const item = await this.marketplaceContract.getItem?.(i);
         if (!item) continue;
 
-        const itemStatus = item.active ? 'active' : 'sold';
-        const itemPrice = item.price.toString();
+        const [tokenId, seller, price, sold, active] = item;
+        const itemPrice = price.toString();
 
-        // Appliquer les filtres
-        if (seller && item.seller.toLowerCase() !== seller.toLowerCase()) continue;
-        if (status && itemStatus !== status) continue;
-        if (minPrice && parseEther(itemPrice).lt(parseEther(minPrice))) continue;
-        if (maxPrice && parseEther(itemPrice).gt(parseEther(maxPrice))) continue;
+        // Apply filters
+        if (seller && seller.toLowerCase() !== seller.toLowerCase()) continue;
+        if (status === 'active' && !active) continue;
+        if (status === 'inactive' && active) continue;
+        if (status === 'sold' && !sold) continue;
+        if (status === 'unsold' && sold) continue;
+        if (minPrice && BigInt(itemPrice) < BigInt(minPrice)) continue;
+        if (maxPrice && BigInt(itemPrice) > BigInt(maxPrice)) continue;
 
         items.push({
           id: i.toString(),
-          tokenAddress: item.tokenAddress,
-          price: itemPrice,
-          amount: item.amount.toString(),
-          seller: item.seller,
-          status: itemStatus,
+          tokenId: tokenId.toString(),
+          seller,
+          price: BigInt(itemPrice),
+          sold,
+          active
         });
       }
 
-      // Trier les items
-      items.sort((a, b) => {
-        const aValue = sortBy === 'price' ? parseEther(a.price) : BigInt(a.id);
-        const bValue = sortBy === 'price' ? parseEther(b.price) : BigInt(b.id);
-        return sortDirection === 'asc' 
-          ? Number(aValue - bValue)
-          : Number(bValue - aValue);
-      });
-
-      // Appliquer la pagination
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      items = items.slice(startIndex, endIndex);
-
-      res.json({
+      return res.json({
         success: true,
-        data: items,
+        data: items
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
-        error: 'Failed to fetch marketplace items',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
-  };
+  }
 
-  // Récupérer les détails d'un item
-  public getItemDetails = async (
-    req: Request,
+  async getItem(
+    req: Request<{ id: string }>,
     res: Response<ApiResponse<MarketplaceData>>
-  ) => {
+  ) {
     try {
       const { id } = req.params;
-      const item = await this.marketplaceContract.getItem(id);
+      const item = await this.marketplaceContract.getItem?.(id);
+      if (!item) throw new Error('Item not found');
 
-      if (!item) {
-        return res.status(404).json({
-          success: false,
-          error: 'Item not found',
-        });
-      }
+      const [tokenId, seller, price, sold, active] = item;
 
-      res.json({
+      return res.json({
         success: true,
         data: {
           id,
-          tokenAddress: item.tokenAddress,
-          price: item.price.toString(),
-          amount: item.amount.toString(),
-          seller: item.seller,
-          status: item.active ? 'active' : 'sold',
-        },
+          tokenId: tokenId.toString(),
+          seller,
+          price: BigInt(price.toString()),
+          sold,
+          active
+        }
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
-        error: 'Failed to fetch item details',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
-  };
+  }
 
-  // Créer un nouvel item
-  public createItem = async (
-    req: AuthenticatedRequest,
+  async listItem(
+    req: Request<{}, any, { tokenAddress: string; amount: string; price: string }>,
     res: Response<ApiResponse<MarketplaceData>>
-  ) => {
+  ) {
     try {
       const { tokenAddress, amount, price } = req.body;
-      
-      if (!req.user?.address) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-        });
+      if (!req.user?.address) throw new Error('User not authenticated');
+
+      // Check token allowance
+      const token = this.publicClient.getContract(tokenAddress);
+      const allowance = await token.allowance?.(req.user.address, this.marketplaceContract.address);
+      if (!allowance || BigInt(allowance) < BigInt(amount)) {
+        throw new Error('Insufficient token allowance');
       }
 
-      // Vérifier que l'utilisateur a approuvé le marketplace
-      const token = getContract(tokenAddress, [], this.publicClient);
-      const allowance = await token.allowance(req.user.address, this.marketplaceContract.address);
-      
-      if (allowance.lt(amount)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Insufficient allowance',
-        });
-      }
+      // List item
+      const tx = await this.marketplaceContract.listItem?.(tokenAddress, amount, price);
+      if (!tx) throw new Error('Failed to list item');
 
-      const tx = await this.marketplaceContract.listItem(tokenAddress, amount, price);
       const receipt = await tx.wait();
+      const event = receipt.events?.find((e: any) => e.event === 'ItemListed');
+      if (!event) throw new Error('Failed to get item listed event');
 
-      // Récupérer l'ID de l'item depuis les événements
-      const event = receipt.events?.find(e => e.event === 'ItemListed');
-      const itemId = event?.args?.itemId;
+      const [itemId] = event.args;
+      const listedItem = await this.marketplaceContract.getItem?.(itemId);
+      if (!listedItem) throw new Error('Failed to get listed item');
 
-      res.json({
+      const [tokenId, seller, itemPrice, sold, active] = listedItem;
+
+      return res.json({
         success: true,
         data: {
           id: itemId.toString(),
-          tokenAddress,
-          price: price.toString(),
-          amount: amount.toString(),
-          seller: req.user.address,
-          status: 'active',
-        },
+          tokenId: tokenId.toString(),
+          seller,
+          price: BigInt(itemPrice.toString()),
+          sold,
+          active
+        }
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
-        error: 'Failed to create marketplace item',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
-  };
+  }
 }

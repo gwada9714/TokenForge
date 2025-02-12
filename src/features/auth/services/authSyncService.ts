@@ -1,8 +1,12 @@
 import { TokenForgeAuthState, WalletState } from '../types';
+import { Auth, onAuthStateChanged } from 'firebase/auth';
 import { firebaseService } from './firebaseService';
 import { walletReconnectionService } from './walletReconnectionService';
 import { errorService } from './errorService';
 import { AuthErrorCode } from '../errors/AuthError';
+import { logger } from '@/utils/firebase-logger';
+
+const LOG_CATEGORY = 'AuthSyncService';
 
 class AuthSyncService {
   private static instance: AuthSyncService;
@@ -13,6 +17,7 @@ class AuthSyncService {
   static getInstance(): AuthSyncService {
     if (!AuthSyncService.instance) {
       AuthSyncService.instance = new AuthSyncService();
+      logger.info(LOG_CATEGORY, { message: 'AuthSyncService instance created' });
     }
     return AuthSyncService.instance;
   }
@@ -22,14 +27,27 @@ class AuthSyncService {
     authState: TokenForgeAuthState
   ): Promise<void> {
     try {
+      logger.debug(LOG_CATEGORY, { 
+        message: ' Synchronisation Wallet et Auth',
+        walletConnected: walletState.isConnected,
+        authState: authState.isAuthenticated
+      });
+
       if (!walletState.isConnected && authState.isAuthenticated) {
         // Si le wallet est déconnecté mais l'utilisateur est authentifié,
         // on déconnecte l'authentification
+        logger.debug(LOG_CATEGORY, { 
+          message: ' Déconnexion de l\'authentification (wallet déconnecté)' 
+        });
         await firebaseService.signOut();
       } else if (walletState.isConnected && !authState.isAuthenticated) {
         // Si le wallet est connecté mais l'utilisateur n'est pas authentifié,
         // on vérifie d'abord le réseau
         if (!walletState.isCorrectNetwork) {
+          logger.error(LOG_CATEGORY, { 
+            message: ' Réseau incorrect',
+            currentNetwork: walletState.network 
+          });
           throw errorService.createAuthError(
             AuthErrorCode.NETWORK_MISMATCH,
             'Please switch to the correct network before connecting.'
@@ -38,6 +56,7 @@ class AuthSyncService {
 
         // Vérifier si le wallet est valide
         if (!walletState.address) {
+          logger.error(LOG_CATEGORY, { message: ' Adresse wallet non trouvée' });
           throw errorService.createAuthError(
             AuthErrorCode.WALLET_NOT_FOUND,
             'No wallet address found.'
@@ -45,77 +64,86 @@ class AuthSyncService {
         }
 
         // Tout est bon, on peut procéder à l'authentification
+        logger.debug(LOG_CATEGORY, { 
+          message: ' Authentification avec le wallet',
+          address: walletState.address 
+        });
         await this.authenticateWithWallet(walletState.address);
       }
     } catch (error) {
-      throw errorService.handleAuthError(error);
+      logger.error(LOG_CATEGORY, {
+        message: ' Erreur lors de la synchronisation',
+        error: error as Error
+      });
+      throw error;
     }
   }
 
   private async authenticateWithWallet(address: string): Promise<void> {
     try {
-      // Ici, implémentez la logique d'authentification avec le wallet
-      // Par exemple, signer un message et vérifier la signature
-      const message = `Welcome to TokenForge! Please sign this message to authenticate.\n\nNonce: ${Date.now()}`;
-      const signature = await this.signMessage(message, address);
-      
-      // Vérifier la signature côté serveur et obtenir un token JWT
-      // Cette partie dépendra de votre backend
-      await this.verifySignature(message, signature, address);
-    } catch (error) {
-      throw errorService.handleAuthError(error);
-    }
-  }
-
-  private async signMessage(message: string, address: string): Promise<string> {
-    try {
-      const provider = window.ethereum;
-      if (!provider) {
-        throw errorService.createAuthError(
-          AuthErrorCode.PROVIDER_ERROR,
-          'No Ethereum provider found'
-        );
-      }
-
-      const signature = await provider.request({
-        method: 'personal_sign',
-        params: [message, address],
+      logger.debug(LOG_CATEGORY, { 
+        message: ' Début de l\'authentification avec le wallet',
+        address 
       });
-
-      return signature;
+      
+      // Vérifier si une reconnexion est nécessaire
+      const shouldReconnect = await walletReconnectionService.checkReconnection(address);
+      
+      if (shouldReconnect) {
+        logger.info(LOG_CATEGORY, { 
+          message: ' Reconnexion du wallet nécessaire',
+          address 
+        });
+        await walletReconnectionService.handleReconnection(address);
+      }
+      
+      logger.info(LOG_CATEGORY, { 
+        message: ' Authentification avec le wallet réussie',
+        address 
+      });
     } catch (error) {
-      throw errorService.handleAuthError(error);
+      logger.error(LOG_CATEGORY, {
+        message: ' Erreur lors de l\'authentification avec le wallet',
+        address,
+        error: error as Error
+      });
+      throw error;
     }
-  }
-
-  private async verifySignature(
-    message: string,
-    signature: string,
-    address: string
-  ): Promise<void> {
-    // Implémenter la vérification de signature
-    // Cette méthode devrait faire un appel à votre backend
   }
 
   startTokenRefresh(): void {
-    this.stopTokenRefresh(); // Arrêter l'intervalle existant s'il y en a un
+    logger.debug(LOG_CATEGORY, { message: ' Démarrage du rafraîchissement du token' });
+    
+    // Nettoyer l'intervalle existant s'il y en a un
+    if (this.refreshTokenInterval) {
+      clearInterval(this.refreshTokenInterval);
+    }
 
+    // Créer un nouvel intervalle
     this.refreshTokenInterval = setInterval(async () => {
       try {
-        const user = await firebaseService.getCurrentUser();
+        const user = firebaseService.auth.currentUser;
         if (user) {
-          await firebaseService.refreshToken();
+          const token = await user.getIdToken(true);
+          logger.debug(LOG_CATEGORY, { 
+            message: ' Token rafraîchi avec succès',
+            userId: user.uid 
+          });
         }
       } catch (error) {
-        console.error('Token refresh failed:', error);
+        logger.error(LOG_CATEGORY, {
+          message: ' Erreur lors du rafraîchissement du token',
+          error: error as Error
+        });
       }
-    }, 55 * 60 * 1000); // Refresh toutes les 55 minutes
+    }, 3600000); // Rafraîchir toutes les heures
   }
 
   stopTokenRefresh(): void {
     if (this.refreshTokenInterval) {
       clearInterval(this.refreshTokenInterval);
       this.refreshTokenInterval = undefined;
+      logger.debug(LOG_CATEGORY, { message: ' Arrêt du rafraîchissement du token' });
     }
   }
 }

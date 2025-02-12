@@ -1,21 +1,15 @@
-import { auth } from '../../../config/firebase';
-import { TokenEncryption } from '../../../utils/token-encryption';
-import { logger } from '../../../utils/firebase-logger';
-import * as Sentry from '@sentry/react';
+import { User } from 'firebase/auth';
+import { getFirebaseAuth } from '@/lib/firebase';
+import { logger } from '@/utils/firebase-logger';
 
 const LOG_CATEGORY = 'SessionService';
 
 export class SessionService {
   private static instance: SessionService;
-  private sessionTimeout: NodeJS.Timeout | null = null;
-  private activityTimeout: NodeJS.Timeout | null = null;
-  private readonly SESSION_DURATION = parseInt(import.meta.env.VITE_SESSION_TIMEOUT || '3600') * 1000;
-  private readonly ACTIVITY_CHECK_INTERVAL = 60000; // 1 minute
-  private lastActivity: number = Date.now();
+  private currentUser: User | null = null;
+  private authInitialized: boolean = false;
 
-  private constructor() {
-    this.setupActivityListeners();
-  }
+  private constructor() {}
 
   public static getInstance(): SessionService {
     if (!SessionService.instance) {
@@ -24,117 +18,66 @@ export class SessionService {
     return SessionService.instance;
   }
 
-  private setupActivityListeners(): void {
-    if (typeof window !== 'undefined') {
-      // Liste des événements à surveiller pour l'activité utilisateur
-      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-      
-      events.forEach(event => {
-        window.addEventListener(event, () => this.resetActivityTimer());
-      });
-
-      // Démarrer la vérification périodique de l'activité
-      this.startActivityCheck();
-    }
-  }
-
-  private startActivityCheck(): void {
-    this.activityTimeout = setInterval(() => {
-      const inactiveTime = Date.now() - this.lastActivity;
-      
-      if (inactiveTime >= this.SESSION_DURATION) {
-        this.endSession('inactivity');
-      }
-
-      // Métriques d'activité
-      Sentry.metrics.distribution('session.inactive_time', inactiveTime, {
-        tags: { 
-          env: import.meta.env.VITE_ENV,
-          threshold: this.SESSION_DURATION.toString()
-        }
-      });
-    }, this.ACTIVITY_CHECK_INTERVAL);
-  }
-
-  private resetActivityTimer(): void {
-    this.lastActivity = Date.now();
-    
-    if (this.sessionTimeout) {
-      clearTimeout(this.sessionTimeout);
-    }
-
-    this.sessionTimeout = setTimeout(() => {
-      this.endSession('timeout');
-    }, this.SESSION_DURATION);
-
-    // Log de réinitialisation du timer pour debug
-    if (import.meta.env.VITE_ENABLE_DEBUG_LOGS === 'true') {
-      logger.debug(LOG_CATEGORY, 'Session timer reset', {
-        lastActivity: new Date(this.lastActivity).toISOString(),
-        expiresAt: new Date(this.lastActivity + this.SESSION_DURATION).toISOString()
-      });
-    }
-  }
-
-  private async endSession(reason: 'timeout' | 'inactivity' | 'manual'): Promise<void> {
+  public async initialize(): Promise<void> {
     try {
-      // Nettoyage des timeouts
-      if (this.sessionTimeout) {
-        clearTimeout(this.sessionTimeout);
-        this.sessionTimeout = null;
-      }
+      logger.debug(LOG_CATEGORY, { message: ' Initialisation du service de session' });
+      const auth = await getFirebaseAuth();
       
-      if (this.activityTimeout) {
-        clearInterval(this.activityTimeout);
-        this.activityTimeout = null;
-      }
-
-      // Nettoyage du token
-      TokenEncryption.getInstance().clearStoredToken();
-
-      // Déconnexion Firebase
-      if (auth.currentUser) {
-        await auth.signOut();
-      }
-
-      // Métriques de fin de session
-      Sentry.metrics.increment('session.end', 1, {
-        tags: { 
-          reason,
-          env: import.meta.env.VITE_ENV
+      // Écouter les changements d'état d'authentification
+      auth.onAuthStateChanged((user) => {
+        this.currentUser = user;
+        this.authInitialized = true;
+        
+        if (user) {
+          logger.info(LOG_CATEGORY, { 
+            message: 'Utilisateur connecté',
+            userId: user.uid,
+            email: user.email 
+          });
+        } else {
+          logger.info(LOG_CATEGORY, { message: 'Aucun utilisateur connecté' });
         }
       });
 
-      logger.info(LOG_CATEGORY, 'Session ended', { reason });
+      logger.info(LOG_CATEGORY, { message: 'Service de session initialisé' });
     } catch (error) {
-      logger.error(LOG_CATEGORY, 'Error ending session', error);
-      Sentry.captureException(error);
+      logger.error(LOG_CATEGORY, { message: 'Erreur lors de l\'initialisation du service de session', error });
+      throw error;
     }
   }
 
-  public startSession(): void {
-    this.resetActivityTimer();
-    logger.info(LOG_CATEGORY, 'Session started', {
-      duration: this.SESSION_DURATION,
-      checkInterval: this.ACTIVITY_CHECK_INTERVAL
-    });
+  public isAuthenticated(): boolean {
+    return !!this.currentUser;
+  }
+
+  public isAuthInitialized(): boolean {
+    return this.authInitialized;
+  }
+
+  public getCurrentUser(): User | null {
+    return this.currentUser;
+  }
+
+  public async startSession(): Promise<void> {
+    if (!this.authInitialized) {
+      await this.initialize();
+    }
   }
 
   public async logout(): Promise<void> {
-    await this.endSession('manual');
+    const auth = await getFirebaseAuth();
+    await auth.signOut();
   }
 
   public isSessionActive(): boolean {
-    return Date.now() - this.lastActivity < this.SESSION_DURATION;
+    return this.isAuthenticated();
   }
 
   public getSessionInfo(): { lastActivity: Date; expiresAt: Date } {
-    return {
-      lastActivity: new Date(this.lastActivity),
-      expiresAt: new Date(this.lastActivity + this.SESSION_DURATION)
-    };
+    // TODO: Implementer la logique pour récupérer les informations de session
+    throw new Error('Method not implemented.');
   }
 }
 
-// Créer une instance unique du service de session
+// Export une instance unique
 export const sessionService = SessionService.getInstance();

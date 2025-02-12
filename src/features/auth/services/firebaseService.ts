@@ -10,11 +10,10 @@ import {
   getIdToken,
   onIdTokenChanged
 } from 'firebase/auth';
-import { Firestore, collection, doc, setDoc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
-import { Functions, httpsCallable } from 'firebase/functions';
-import { firebaseApp, auth, firestore, functions } from '../../../config/firebase';
-import { AuthError, AuthErrorCode } from '../errors/AuthError';
-import { ErrorService } from './errorService';
+import { httpsCallable } from "firebase/functions";
+import { getFirebaseManager, firestoreService } from "@/lib/firebase";
+import { AuthErrorCode } from "../errors/AuthError";
+import { ErrorService } from "./errorService";
 import { logger } from '../../../utils/firebase-logger';
 import { TokenEncryption } from '../../../utils/token-encryption';
 import * as Sentry from '@sentry/react';
@@ -25,26 +24,38 @@ const RETRY_DELAY = 1000; // 1 second
 
 export class FirebaseService {
   private static instance: FirebaseService | null = null;
-  private auth: Auth;
-  private firestore: Firestore;
-  private functions: Functions;
+  private _auth: Auth | null = null;
+  private _db: any | null = null;
+  private _functions: any | null = null;
   private tokenRefreshTimer: NodeJS.Timeout | null = null;
   private tokenEncryption: TokenEncryption;
 
   private constructor() {
-    this.auth = auth;
-    this.firestore = firestore;
-    this.functions = functions;
     this.tokenEncryption = TokenEncryption.getInstance();
-    this.setupTokenRefresh();
   }
 
-  public static getInstance(): FirebaseService {
-    if (!this.instance) {
-      this.instance = new FirebaseService();
+  public static async getInstance(): Promise<FirebaseService> {
+    if (!FirebaseService.instance) {
+      FirebaseService.instance = new FirebaseService();
+      await FirebaseService.instance.initialize();
       logger.info(LOG_CATEGORY, 'FirebaseService initialized successfully');
     }
-    return this.instance;
+    return FirebaseService.instance;
+  }
+
+  public async initialize(): Promise<void> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '🔄 Initialisation des services Firebase' });
+      const firebaseManager = await getFirebaseManager();
+      this._auth = firebaseManager.auth;
+      this._db = firebaseManager.db;
+      this._functions = firebaseManager.functions;
+      this.setupTokenRefresh();
+      logger.info(LOG_CATEGORY, { message: '✅ Services Firebase initialisés' });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de l\'initialisation des services Firebase', error });
+      throw error;
+    }
   }
 
   private setupTokenRefresh(): void {
@@ -77,10 +88,10 @@ export class FirebaseService {
 
   private async updateUserLastActivity(userId: string): Promise<void> {
     try {
-      const userRef = doc(collection(firestore, 'users'), userId);
-      await updateDoc(userRef, {
-        lastActivity: serverTimestamp(),
-        lastTokenRefresh: serverTimestamp()
+      const userRef = this.firestoreService.doc('users', userId);
+      await this.firestoreService.updateDoc(userRef, {
+        lastActivity: this.firestoreService.serverTimestamp(),
+        lastTokenRefresh: this.firestoreService.serverTimestamp()
       });
     } catch (error) {
       logger.error(LOG_CATEGORY, 'Error updating user activity', error);
@@ -151,20 +162,20 @@ export class FirebaseService {
 
   private async updateLoginAttempts(identifier: string, success: boolean): Promise<void> {
     try {
-      const attemptsRef = doc(collection(firestore, 'userAttempts'), identifier);
-      const now = serverTimestamp();
+      const attemptsRef = this.firestoreService.doc('userAttempts', identifier);
+      const now = this.firestoreService.serverTimestamp();
       
       if (success) {
         // Réinitialiser les tentatives en cas de succès
-        await setDoc(attemptsRef, {
+        await this.firestoreService.setDoc(attemptsRef, {
           attempts: 0,
           lastAttempt: now,
           lastSuccess: now
         }, { merge: true });
       } else {
         // Incrémenter les tentatives en cas d'échec
-        await setDoc(attemptsRef, {
-          attempts: increment(1),
+        await this.firestoreService.setDoc(attemptsRef, {
+          attempts: this.firestoreService.increment(1),
           lastAttempt: now,
           lastFailure: now
         }, { merge: true });
@@ -186,10 +197,10 @@ export class FirebaseService {
       await sendEmailVerification(userCredential.user);
 
       // Créer le profil utilisateur dans Firestore
-      await setDoc(doc(collection(firestore, 'users'), userCredential.user.uid), {
+      await this.firestoreService.setDoc(this.firestoreService.doc('users', userCredential.user.uid), {
         email: userCredential.user.email,
-        createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp(),
+        createdAt: this.firestoreService.serverTimestamp(),
+        lastLogin: this.firestoreService.serverTimestamp(),
         emailVerified: false,
         attempts: 0
       });
@@ -252,15 +263,26 @@ export class FirebaseService {
     }
   }
 
-  public getAuth(): Auth {
-    return this.auth;
+  get auth(): Auth {
+    if (!this._auth) {
+      throw new Error('Firebase Auth n\'est pas encore initialisé');
+    }
+    return this._auth;
   }
 
-  public getFirestore(): Firestore {
-    return this.firestore;
+  get db(): any {
+    if (!this._db) {
+      throw new Error('Firebase Firestore n\'est pas encore initialisé');
+    }
+    return this._db;
   }
 
-  public getFunctions(): Functions {
-    return this.functions;
+  get functions(): any {
+    if (!this._functions) {
+      throw new Error('Firebase Functions n\'est pas encore initialisé');
+    }
+    return this._functions;
   }
 }
+
+export const firebaseService = FirebaseService.getInstance();

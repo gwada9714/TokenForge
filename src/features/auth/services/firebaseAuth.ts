@@ -1,136 +1,130 @@
-import { 
-  signInWithEmailAndPassword as firebaseSignInWithEmail,
-  createUserWithEmailAndPassword as firebaseCreateUser,
-  signInWithPopup,
-  GoogleAuthProvider,
-  sendPasswordResetEmail as firebaseSendReset,
-  updateProfile as firebaseUpdateProfile,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  NextOrObserver,
-  User as FirebaseUser
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile,
+  updatePassword,
+  User,
+  UserCredential,
+  Auth
 } from 'firebase/auth';
-import { getFirebaseServices } from '@/config/firebase';
-import { AuthErrorCode, createAuthError } from '../errors/AuthError';
-import { TokenForgeUser } from '../../../types/authTypes';
+import { getFirebaseAuth } from '@/lib/firebase';
+import { logger } from '@/utils/firebase-logger';
 
-export const firebaseAuth = {
-  async waitForAuthInit() {
-    const { auth } = getFirebaseServices();
-    if (!auth) throw createAuthError(AuthErrorCode.INVALID_OPERATION, 'Firebase Auth n\'est pas initialisé');
-    return new Promise((resolve) => onAuthStateChanged(auth, resolve));
-  },
+const LOG_CATEGORY = 'FirebaseAuth';
 
-  async signInWithEmail(email: string, password: string): Promise<TokenForgeUser> {
-    try {
-      const { auth } = getFirebaseServices();
-      if (!auth) throw createAuthError(AuthErrorCode.INVALID_OPERATION);
-      const userCredential = await firebaseSignInWithEmail(auth, email, password);
-      return mapFirebaseUser(userCredential.user);
-    } catch (error) {
-      throw createAuthError(AuthErrorCode.SIGN_IN_ERROR, error);
+export class FirebaseAuth {
+  private static instance: FirebaseAuth;
+  private _auth: Auth | null = null;
+
+  private constructor() {}
+
+  public static getInstance(): FirebaseAuth {
+    if (!FirebaseAuth.instance) {
+      FirebaseAuth.instance = new FirebaseAuth();
     }
-  },
-
-  async signInWithGoogle(): Promise<TokenForgeUser> {
-    try {
-      const { auth } = getFirebaseServices();
-      if (!auth) throw createAuthError(AuthErrorCode.INVALID_OPERATION);
-      const googleProvider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, googleProvider);
-      return mapFirebaseUser(userCredential.user);
-    } catch (error) {
-      throw createAuthError(AuthErrorCode.GOOGLE_SIGN_IN_ERROR, error);
-    }
-  },
-
-  async createUser(email: string, password: string): Promise<TokenForgeUser> {
-    try {
-      const { auth } = getFirebaseServices();
-      if (!auth) throw createAuthError(AuthErrorCode.INVALID_OPERATION);
-      const userCredential = await firebaseCreateUser(auth, email, password);
-      return mapFirebaseUser(userCredential.user);
-    } catch (error) {
-      throw createAuthError(AuthErrorCode.CREATE_USER_ERROR, error);
-    }
-  },
-
-  async resetPassword(email: string): Promise<void> {
-    try {
-      const { auth } = getFirebaseServices();
-      if (!auth) throw createAuthError(AuthErrorCode.INVALID_OPERATION);
-      await firebaseSendReset(auth, email);
-    } catch (error) {
-      throw createAuthError(AuthErrorCode.RESET_PASSWORD_ERROR, error);
-    }
-  },
-
-  async updateUserProfile(displayName: string): Promise<void> {
-    try {
-      const { auth } = getFirebaseServices();
-      if (!auth) throw createAuthError(AuthErrorCode.INVALID_OPERATION);
-      const user = auth.currentUser;
-      if (!user) {
-        throw createAuthError(AuthErrorCode.USER_NOT_FOUND);
-      }
-      await firebaseUpdateProfile(user, { displayName });
-    } catch (error) {
-      throw createAuthError(AuthErrorCode.UPDATE_PROFILE_ERROR, error);
-    }
-  },
-
-  async signOut(): Promise<void> {
-    try {
-      const { auth } = getFirebaseServices();
-      if (!auth) throw createAuthError(AuthErrorCode.INVALID_OPERATION);
-      await firebaseSignOut(auth);
-    } catch (error) {
-      throw createAuthError(AuthErrorCode.SIGN_OUT_ERROR, error);
-    }
-  },
-
-  getCurrentUser(): TokenForgeUser | null {
-    const { auth } = getFirebaseServices();
-    if (!auth) return null;
-    const user = auth.currentUser;
-    return user ? mapFirebaseUser(user) : null;
-  },
-
-  onAuthStateChanged(observer: NextOrObserver<TokenForgeUser | null>): () => void {
-    const { auth } = getFirebaseServices();
-    if (!auth) throw createAuthError(AuthErrorCode.INVALID_OPERATION);
-    return onAuthStateChanged(auth, (user) => {
-      if (typeof observer === 'function') {
-        observer(user ? mapFirebaseUser(user) : null);
-      } else {
-        if (observer.next) {
-          observer.next(user ? mapFirebaseUser(user) : null);
-        }
-      }
-    });
+    return FirebaseAuth.instance;
   }
-};
 
-const mapFirebaseUser = (user: FirebaseUser): TokenForgeUser => {
-  return {
-    uid: user.uid,
-    email: user.email || '',
-    displayName: user.displayName || '',
-    phoneNumber: user.phoneNumber || null,
-    photoURL: user.photoURL || null,
-    emailVerified: user.emailVerified,
-    isAnonymous: user.isAnonymous,
-    metadata: {
-      creationTime: user.metadata.creationTime || '',
-      lastSignInTime: user.metadata.lastSignInTime || ''
-    },
-    providerData: user.providerData.map(provider => ({
-      providerId: provider?.providerId || '',
-      uid: provider?.uid || '',
-      displayName: provider?.displayName || '',
-      email: provider?.email || '',
-      phoneNumber: provider?.phoneNumber || null,
-      photoURL: provider?.photoURL || null
-    }))
-  };
-};
+  public async initialize(): Promise<void> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '🔄 Initialisation de Firebase Auth' });
+      this._auth = await getFirebaseAuth();
+      logger.info(LOG_CATEGORY, { message: '✅ Firebase Auth initialisé' });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de l\'initialisation de Firebase Auth', error });
+      throw error;
+    }
+  }
+
+  private get auth(): Auth {
+    if (!this._auth) {
+      throw new Error('Firebase Auth n\'est pas encore initialisé');
+    }
+    return this._auth;
+  }
+
+  public async signIn(email: string, password: string): Promise<UserCredential> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '🔐 Tentative de connexion', email });
+      const result = await signInWithEmailAndPassword(this.auth, email, password);
+      logger.info(LOG_CATEGORY, { message: '✅ Connexion réussie', email });
+      return result;
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de la connexion', email, error });
+      throw error;
+    }
+  }
+
+  public async signOut(): Promise<void> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '🚪 Déconnexion' });
+      await signOut(this.auth);
+      logger.info(LOG_CATEGORY, { message: '✅ Déconnexion réussie' });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de la déconnexion', error });
+      throw error;
+    }
+  }
+
+  public async createUser(email: string, password: string): Promise<UserCredential> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '👤 Création d\'un nouvel utilisateur', email });
+      const result = await createUserWithEmailAndPassword(this.auth, email, password);
+      logger.info(LOG_CATEGORY, { message: '✅ Utilisateur créé avec succès', email });
+      return result;
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de la création de l\'utilisateur', email, error });
+      throw error;
+    }
+  }
+
+  public async sendVerificationEmail(user: User): Promise<void> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '📧 Envoi de l\'email de vérification', email: user.email });
+      await sendEmailVerification(user);
+      logger.info(LOG_CATEGORY, { message: '✅ Email de vérification envoyé', email: user.email });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de l\'envoi de l\'email de vérification', email: user.email, error });
+      throw error;
+    }
+  }
+
+  public async resetPassword(email: string): Promise<void> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '🔑 Demande de réinitialisation du mot de passe', email });
+      await sendPasswordResetEmail(this.auth, email);
+      logger.info(LOG_CATEGORY, { message: '✅ Email de réinitialisation envoyé', email });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de la demande de réinitialisation', email, error });
+      throw error;
+    }
+  }
+
+  public async updateUserProfile(user: User, displayName: string): Promise<void> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '📝 Mise à jour du profil utilisateur', email: user.email });
+      await updateProfile(user, { displayName });
+      logger.info(LOG_CATEGORY, { message: '✅ Profil utilisateur mis à jour', email: user.email });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de la mise à jour du profil', email: user.email, error });
+      throw error;
+    }
+  }
+
+  public async updateUserPassword(user: User, newPassword: string): Promise<void> {
+    try {
+      logger.debug(LOG_CATEGORY, { message: '🔒 Mise à jour du mot de passe', email: user.email });
+      await updatePassword(user, newPassword);
+      logger.info(LOG_CATEGORY, { message: '✅ Mot de passe mis à jour', email: user.email });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de la mise à jour du mot de passe', email: user.email, error });
+      throw error;
+    }
+  }
+}
+
+// Export une instance unique
+export const firebaseAuth = FirebaseAuth.getInstance();
