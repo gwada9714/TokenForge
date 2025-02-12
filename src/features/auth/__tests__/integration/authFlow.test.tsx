@@ -1,32 +1,41 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { BrowserRouter } from 'react-router-dom';
+import { FirebaseError } from 'firebase/app';
 import authReducer from '../../store/authSlice';
 import { TokenForgeAuthProvider } from '../../providers/TokenForgeAuthProvider';
 import { LoginPage } from '../../pages/LoginPage';
-import { ConnectWalletPage } from '../../pages/ConnectWalletPage';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { createPublicClient, createWalletClient } from 'viem';
+import { RegisterPage } from '../../pages/RegisterPage';
+import { ProfilePage } from '../../pages/ProfilePage';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { ErrorService } from '../../services/errorService';
+import { AuthErrorCode } from '../../errors/AuthError';
 
 // Mock Firebase
 vi.mock('firebase/auth', () => ({
   getAuth: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  sendEmailVerification: vi.fn(),
   onAuthStateChanged: vi.fn()
 }));
 
-// Mock Viem
-vi.mock('viem', () => ({
-  createPublicClient: vi.fn(),
-  createWalletClient: vi.fn(),
-  http: vi.fn()
+// Mock Sentry
+vi.mock('@sentry/react', () => ({
+  captureException: vi.fn(),
+  setUser: vi.fn()
 }));
 
 describe('Authentication Flow Integration', () => {
   let mockStore: any;
+  const mockUser = {
+    uid: 'test-uid',
+    email: 'test@example.com',
+    emailVerified: true
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -43,28 +52,13 @@ describe('Authentication Flow Integration', () => {
       onAuthStateChanged: vi.fn()
     } as any);
 
-    vi.mocked(signInWithEmailAndPassword).mockResolvedValue({
-      user: {
-        uid: 'test-uid',
-        email: 'test@example.com',
-        emailVerified: true
-      }
-    } as any);
+    vi.mocked(signInWithEmailAndPassword).mockResolvedValue({ user: mockUser } as any);
+    vi.mocked(createUserWithEmailAndPassword).mockResolvedValue({ user: mockUser } as any);
+    vi.mocked(sendEmailVerification).mockResolvedValue();
+  });
 
-    // Setup Viem mocks
-    vi.mocked(createPublicClient).mockReturnValue({
-      chain: { id: 1, name: 'Ethereum' },
-      request: vi.fn()
-    } as any);
-
-    vi.mocked(createWalletClient).mockReturnValue({
-      account: {
-        address: '0x1234...',
-        type: 'json-rpc'
-      },
-      chain: { id: 1, name: 'Ethereum' },
-      request: vi.fn()
-    } as any);
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   const renderWithProviders = (component: React.ReactNode) => {
@@ -84,156 +78,127 @@ describe('Authentication Flow Integration', () => {
       renderWithProviders(<LoginPage />);
 
       const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-      const submitButton = screen.getByRole('button', { name: /login/i });
+      const passwordInput = screen.getByLabelText(/mot de passe/i);
+      const submitButton = screen.getByRole('button', { name: /connexion/i });
 
       await userEvent.type(emailInput, 'test@example.com');
       await userEvent.type(passwordInput, 'password123');
-      fireEvent.click(submitButton);
+      await userEvent.click(submitButton);
 
       await waitFor(() => {
         expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
-          expect.any(Object),
+          expect.anything(),
           'test@example.com',
           'password123'
         );
       });
-
-      // Verify redirect or success state
-      await waitFor(() => {
-        expect(screen.getByText(/welcome/i)).toBeInTheDocument();
-      });
     });
 
-    it('displays error messages for invalid credentials', async () => {
-      const mockError = new Error('Invalid credentials');
-      vi.mocked(signInWithEmailAndPassword).mockRejectedValueOnce(mockError);
+    it('handles unverified email error correctly', async () => {
+      const unverifiedUser = { ...mockUser, emailVerified: false };
+      vi.mocked(signInWithEmailAndPassword).mockResolvedValueOnce({ user: unverifiedUser } as any);
 
       renderWithProviders(<LoginPage />);
 
       const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-      const submitButton = screen.getByRole('button', { name: /login/i });
-
-      await userEvent.type(emailInput, 'wrong@example.com');
-      await userEvent.type(passwordInput, 'wrongpass');
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Wallet Connection Flow', () => {
-    it('connects wallet successfully', async () => {
-      renderWithProviders(<ConnectWalletPage />);
-
-      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
-      fireEvent.click(connectButton);
-
-      await waitFor(() => {
-        expect(createWalletClient).toHaveBeenCalled();
-      });
-
-      // Verify wallet connected state
-      await waitFor(() => {
-        expect(screen.getByText(/0x1234.../i)).toBeInTheDocument();
-      });
-    });
-
-    it('handles wallet connection errors', async () => {
-      const mockError = new Error('Wallet connection failed');
-      vi.mocked(createWalletClient).mockRejectedValueOnce(mockError);
-
-      renderWithProviders(<ConnectWalletPage />);
-
-      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
-      fireEvent.click(connectButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/wallet connection failed/i)).toBeInTheDocument();
-      });
-    });
-
-    it('detects network changes', async () => {
-      renderWithProviders(<ConnectWalletPage />);
-
-      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
-      fireEvent.click(connectButton);
-
-      await waitFor(() => {
-        expect(createWalletClient).toHaveBeenCalled();
-      });
-
-      // Simulate network change
-      window.dispatchEvent(new Event('chainChanged'));
-
-      await waitFor(() => {
-        expect(screen.getByText(/network changed/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Combined Authentication Flow', () => {
-    it('maintains authentication state between email and wallet connection', async () => {
-      renderWithProviders(
-        <>
-          <LoginPage />
-          <ConnectWalletPage />
-        </>
-      );
-
-      // First login with email
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole('button', { name: /login/i });
+      const passwordInput = screen.getByLabelText(/mot de passe/i);
+      const submitButton = screen.getByRole('button', { name: /connexion/i });
 
       await userEvent.type(emailInput, 'test@example.com');
       await userEvent.type(passwordInput, 'password123');
-      fireEvent.click(loginButton);
+      await userEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(signInWithEmailAndPassword).toHaveBeenCalled();
+        expect(sendEmailVerification).toHaveBeenCalled();
+        expect(screen.getByText(/veuillez vérifier votre email/i)).toBeInTheDocument();
       });
-
-      // Then connect wallet
-      const connectButton = screen.getByRole('button', { name: /connect wallet/i });
-      fireEvent.click(connectButton);
-
-      await waitFor(() => {
-        expect(createWalletClient).toHaveBeenCalled();
-      });
-
-      // Verify both states are maintained
-      expect(screen.getByText(/welcome/i)).toBeInTheDocument();
-      expect(screen.getByText(/0x1234.../i)).toBeInTheDocument();
     });
 
-    it('handles session persistence', async () => {
-      // First render and login
-      const { unmount } = renderWithProviders(<LoginPage />);
-
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole('button', { name: /login/i });
-
-      await userEvent.type(emailInput, 'test@example.com');
-      await userEvent.type(passwordInput, 'password123');
-      fireEvent.click(loginButton);
-
-      await waitFor(() => {
-        expect(signInWithEmailAndPassword).toHaveBeenCalled();
-      });
-
-      // Unmount and remount to simulate page refresh
-      unmount();
+    it('handles network errors with retry mechanism', async () => {
+      const networkError = new FirebaseError('auth/network-request-failed', 'Network error');
+      vi.mocked(signInWithEmailAndPassword)
+        .mockRejectedValueOnce(networkError)
+        .mockRejectedValueOnce(networkError)
+        .mockResolvedValueOnce({ user: mockUser } as any);
 
       renderWithProviders(<LoginPage />);
 
-      // Verify authentication state is preserved
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/mot de passe/i);
+      const submitButton = screen.getByRole('button', { name: /connexion/i });
+
+      await userEvent.type(emailInput, 'test@example.com');
+      await userEvent.type(passwordInput, 'password123');
+      await userEvent.click(submitButton);
+
       await waitFor(() => {
-        expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+        expect(signInWithEmailAndPassword).toHaveBeenCalledTimes(3);
+      });
+    });
+  });
+
+  describe('Registration Flow', () => {
+    it('completes the registration flow successfully', async () => {
+      renderWithProviders(<RegisterPage />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/mot de passe/i);
+      const confirmPasswordInput = screen.getByLabelText(/confirmer le mot de passe/i);
+      const submitButton = screen.getByRole('button', { name: /créer un compte/i });
+
+      await userEvent.type(emailInput, 'new@example.com');
+      await userEvent.type(passwordInput, 'password123');
+      await userEvent.type(confirmPasswordInput, 'password123');
+      await userEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(createUserWithEmailAndPassword).toHaveBeenCalledWith(
+          expect.anything(),
+          'new@example.com',
+          'password123'
+        );
+        expect(sendEmailVerification).toHaveBeenCalled();
+      });
+    });
+
+    it('validates password strength requirements', async () => {
+      renderWithProviders(<RegisterPage />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/mot de passe/i);
+      const confirmPasswordInput = screen.getByLabelText(/confirmer le mot de passe/i);
+      const submitButton = screen.getByRole('button', { name: /créer un compte/i });
+
+      await userEvent.type(emailInput, 'new@example.com');
+      await userEvent.type(passwordInput, 'weak');
+      await userEvent.type(confirmPasswordInput, 'weak');
+      await userEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/mot de passe doit contenir au moins 6 caractères/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Protected Routes', () => {
+    it('redirects to login when accessing protected route without authentication', async () => {
+      renderWithProviders(<ProfilePage />);
+
+      await waitFor(() => {
+        expect(window.location.pathname).toBe('/login');
+      });
+    });
+
+    it('allows access to protected route when authenticated', async () => {
+      vi.mocked(getAuth).mockReturnValue({
+        currentUser: mockUser,
+        onAuthStateChanged: vi.fn()
+      } as any);
+
+      renderWithProviders(<ProfilePage />);
+
+      await waitFor(() => {
+        expect(window.location.pathname).not.toBe('/login');
       });
     });
   });

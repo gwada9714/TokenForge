@@ -5,6 +5,10 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { logger, LogLevel } from './utils/firebase-logger';
 import App from './App';
+import { ErrorMonitoring } from './utils/error-monitoring';
+import { SessionService } from './features/auth/services/sessionService';
+import { store } from './store';
+import { Provider } from 'react-redux';
 
 // Vérification de l'environnement
 if (typeof window !== 'undefined') {
@@ -21,6 +25,12 @@ if (typeof window !== 'undefined') {
 
       logger.log(LogLevel.INFO, 'Chargement de l\'application');
 
+      // Initialisation du monitoring des erreurs
+      ErrorMonitoring.getInstance().initialize();
+
+      // Initialisation du service de session
+      SessionService.getInstance().startSession();
+
       logger.log(LogLevel.INFO, 'Rendu de l\'application');
       const container = document.getElementById('root');
       if (!container) {
@@ -30,7 +40,9 @@ if (typeof window !== 'undefined') {
       const root = createRoot(container);
       root.render(
         <StrictMode>
-          <App />
+          <Provider store={store}>
+            <App />
+          </Provider>
         </StrictMode>
       );
 

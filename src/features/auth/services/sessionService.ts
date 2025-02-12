@@ -1,227 +1,137 @@
-import { getFirebaseAuth } from '@/config/firebase';
-import { 
-  setAuthUser, 
-  setSessionInfo, 
-  setAuthError,
-  resetAuthState 
-} from '../store/authSlice';
-import { store, type RootState } from '@/store';
-import { logger } from '@/utils/logger';
-import { AuthErrorCode } from '../errors/AuthError';
-import type { User } from '../schemas/auth.schema';
-import type { SessionInfo as AuthSchemaSessionInfo } from '../schemas/auth.schema';
+import { auth } from '../../../config/firebase';
+import { TokenEncryption } from '../../../utils/token-encryption';
+import { logger } from '../../../utils/firebase-logger';
+import * as Sentry from '@sentry/react';
 
-interface TokenForgeMetadata {
-  creationTime: string;
-  lastSignInTime: string;
-  lastLoginTime?: number;
-  walletAddress?: string;
-  chainId?: number;
-  customMetadata: Record<string, unknown>;
-}
-
-interface TokenForgeUser {
-  uid: string;
-  email: string | null;
-  emailVerified: boolean;
-  isAnonymous: boolean;
-  metadata: TokenForgeMetadata;
-  refreshToken: string;
-  isAdmin: boolean;
-  canCreateToken: boolean;
-  canUseServices: boolean;
-  walletAddress?: string;
-  chainId?: number;
-  customClaims?: Record<string, unknown>;
-}
-
-interface SessionInfo {
-  expiresAt: number;
-  lastActivity: number;
-  refreshToken: string | null;
-  tabId?: string;
-  lastSync?: number;
-}
+const LOG_CATEGORY = 'SessionService';
 
 export class SessionService {
   private static instance: SessionService;
-  private checkSessionTimeout: NodeJS.Timeout | null = null;
-  private readonly CHECK_INTERVAL = 60000; // 1 minute
+  private sessionTimeout: NodeJS.Timeout | null = null;
+  private activityTimeout: NodeJS.Timeout | null = null;
+  private readonly SESSION_DURATION = parseInt(import.meta.env.VITE_SESSION_TIMEOUT || '3600') * 1000;
+  private readonly ACTIVITY_CHECK_INTERVAL = 60000; // 1 minute
+  private lastActivity: number = Date.now();
 
-  private constructor() {}
+  private constructor() {
+    this.setupActivityListeners();
+  }
 
-  static getInstance(): SessionService {
+  public static getInstance(): SessionService {
     if (!SessionService.instance) {
       SessionService.instance = new SessionService();
     }
     return SessionService.instance;
   }
 
-  startSessionCheck(): void {
-    if (this.checkSessionTimeout) {
-      clearInterval(this.checkSessionTimeout);
+  private setupActivityListeners(): void {
+    if (typeof window !== 'undefined') {
+      // Liste des événements à surveiller pour l'activité utilisateur
+      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+      
+      events.forEach(event => {
+        window.addEventListener(event, () => this.resetActivityTimer());
+      });
+
+      // Démarrer la vérification périodique de l'activité
+      this.startActivityCheck();
+    }
+  }
+
+  private startActivityCheck(): void {
+    this.activityTimeout = setInterval(() => {
+      const inactiveTime = Date.now() - this.lastActivity;
+      
+      if (inactiveTime >= this.SESSION_DURATION) {
+        this.endSession('inactivity');
+      }
+
+      // Métriques d'activité
+      Sentry.metrics.distribution('session.inactive_time', inactiveTime, {
+        tags: { 
+          env: import.meta.env.VITE_ENV,
+          threshold: this.SESSION_DURATION.toString()
+        }
+      });
+    }, this.ACTIVITY_CHECK_INTERVAL);
+  }
+
+  private resetActivityTimer(): void {
+    this.lastActivity = Date.now();
+    
+    if (this.sessionTimeout) {
+      clearTimeout(this.sessionTimeout);
     }
 
-    this.checkSessionTimeout = setInterval(() => {
-      this.checkSession().catch(error => {
-        logger.error('Erreur lors de la vérification de session:', {
-          error,
-          component: 'SessionService',
-          action: 'checkSession'
-        });
-        
-        store.dispatch(setAuthError({
-          code: AuthErrorCode.SESSION_CHECK_ERROR,
-          message: error instanceof Error ? error.message : 'Erreur lors de la vérification de session'
-        }));
-      });
-    }, this.CHECK_INTERVAL);
+    this.sessionTimeout = setTimeout(() => {
+      this.endSession('timeout');
+    }, this.SESSION_DURATION);
 
-    logger.info('Vérification de session démarrée', {
-      component: 'SessionService',
-      action: 'startSessionCheck'
+    // Log de réinitialisation du timer pour debug
+    if (import.meta.env.VITE_ENABLE_DEBUG_LOGS === 'true') {
+      logger.debug(LOG_CATEGORY, 'Session timer reset', {
+        lastActivity: new Date(this.lastActivity).toISOString(),
+        expiresAt: new Date(this.lastActivity + this.SESSION_DURATION).toISOString()
+      });
+    }
+  }
+
+  private async endSession(reason: 'timeout' | 'inactivity' | 'manual'): Promise<void> {
+    try {
+      // Nettoyage des timeouts
+      if (this.sessionTimeout) {
+        clearTimeout(this.sessionTimeout);
+        this.sessionTimeout = null;
+      }
+      
+      if (this.activityTimeout) {
+        clearInterval(this.activityTimeout);
+        this.activityTimeout = null;
+      }
+
+      // Nettoyage du token
+      TokenEncryption.getInstance().clearStoredToken();
+
+      // Déconnexion Firebase
+      if (auth.currentUser) {
+        await auth.signOut();
+      }
+
+      // Métriques de fin de session
+      Sentry.metrics.increment('session.end', 1, {
+        tags: { 
+          reason,
+          env: import.meta.env.VITE_ENV
+        }
+      });
+
+      logger.info(LOG_CATEGORY, 'Session ended', { reason });
+    } catch (error) {
+      logger.error(LOG_CATEGORY, 'Error ending session', error);
+      Sentry.captureException(error);
+    }
+  }
+
+  public startSession(): void {
+    this.resetActivityTimer();
+    logger.info(LOG_CATEGORY, 'Session started', {
+      duration: this.SESSION_DURATION,
+      checkInterval: this.ACTIVITY_CHECK_INTERVAL
     });
   }
 
-  stopSessionCheck(): void {
-    if (this.checkSessionTimeout) {
-      clearInterval(this.checkSessionTimeout);
-      this.checkSessionTimeout = null;
-      logger.info('Vérification de session arrêtée', {
-        component: 'SessionService',
-        action: 'stopSessionCheck'
-      });
-    }
+  public async logout(): Promise<void> {
+    await this.endSession('manual');
   }
 
-  async checkSession(): Promise<void> {
-    try {
-      const auth = getFirebaseAuth();
-      const currentUser = auth.currentUser;
-
-      if (!currentUser) {
-        store.dispatch(resetAuthState());
-        return;
-      }
-
-      const sessionInfo = await this.getSessionInfo();
-      if (!sessionInfo || this.isSessionExpired(sessionInfo)) {
-        await this.handleExpiredSession();
-        return;
-      }
-
-      store.dispatch(setAuthUser(this.mapFirebaseUser(currentUser)));
-      store.dispatch(setSessionInfo(sessionInfo));
-
-    } catch (error) {
-      logger.error('Erreur lors de la vérification de session:', {
-        error,
-        component: 'SessionService',
-        action: 'checkSession'
-      });
-      
-      store.dispatch(setAuthError({
-        code: AuthErrorCode.SESSION_CHECK_ERROR,
-        message: error instanceof Error ? error.message : 'Erreur lors de la vérification de session'
-      }));
-    }
+  public isSessionActive(): boolean {
+    return Date.now() - this.lastActivity < this.SESSION_DURATION;
   }
 
-  async refreshSession(): Promise<void> {
-    try {
-      const auth = getFirebaseAuth();
-      const currentUser = auth.currentUser;
-
-      if (!currentUser) {
-        store.dispatch(setAuthError({
-          code: AuthErrorCode.USER_NOT_FOUND,
-          message: 'Aucun utilisateur connecté'
-        }));
-        return;
-      }
-
-      const now = Date.now();
-      const sessionInfo: SessionInfo = {
-        expiresAt: now + 30 * 60 * 1000, // 30 minutes
-        lastActivity: now,
-        refreshToken: currentUser.refreshToken || null
-      };
-
-      store.dispatch(setAuthUser(this.mapFirebaseUser(currentUser)));
-      store.dispatch(setSessionInfo(sessionInfo));
-
-      logger.info('Session rafraîchie avec succès', {
-        component: 'SessionService',
-        action: 'refreshSession'
-      });
-
-    } catch (error) {
-      logger.error('Erreur lors du rafraîchissement de la session:', {
-        error,
-        component: 'SessionService',
-        action: 'refreshSession'
-      });
-
-      store.dispatch(setAuthError({
-        code: AuthErrorCode.SESSION_REFRESH_ERROR,
-        message: error instanceof Error ? error.message : 'Erreur lors du rafraîchissement de la session'
-      }));
-    }
-  }
-
-  private async handleExpiredSession(): Promise<void> {
-    try {
-      const auth = getFirebaseAuth();
-      await auth.signOut();
-      store.dispatch(resetAuthState());
-      store.dispatch(setAuthError({
-        code: AuthErrorCode.SESSION_EXPIRED,
-        message: 'La session a expiré. Veuillez vous reconnecter.'
-      }));
-    } catch (error) {
-      logger.error('Erreur lors de la déconnexion:', {
-        error,
-        component: 'SessionService',
-        action: 'handleExpiredSession'
-      });
-    }
-  }
-
-  private async getSessionInfo(): Promise<SessionInfo | null> {
-    try {
-      const state = store.getState() as RootState;
-      return state.auth.sessionInfo;
-    } catch (error) {
-      logger.error('Erreur lors de la récupération des informations de session:', {
-        error,
-        component: 'SessionService',
-        action: 'getSessionInfo'
-      });
-      return null;
-    }
-  }
-
-  private isSessionExpired(sessionInfo: SessionInfo): boolean {
-    return sessionInfo.expiresAt < Date.now();
-  }
-
-  private mapFirebaseUser(firebaseUser: any): TokenForgeUser {
+  public getSessionInfo(): { lastActivity: Date; expiresAt: Date } {
     return {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      emailVerified: firebaseUser.emailVerified,
-      isAnonymous: firebaseUser.isAnonymous,
-      metadata: {
-        creationTime: firebaseUser.metadata.creationTime,
-        lastSignInTime: firebaseUser.metadata.lastSignInTime,
-        lastLoginTime: Date.now(),
-        customMetadata: {}
-      },
-      refreshToken: firebaseUser.refreshToken || '',
-      isAdmin: false,
-      canCreateToken: false,
-      canUseServices: true,
-      customClaims: firebaseUser.customClaims || {}
+      lastActivity: new Date(this.lastActivity),
+      expiresAt: new Date(this.lastActivity + this.SESSION_DURATION)
     };
   }
 }

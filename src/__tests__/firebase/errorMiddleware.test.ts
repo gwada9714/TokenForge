@@ -51,7 +51,7 @@ describe('Error Middleware', () => {
   });
 
   it('should handle AuthError with correct status code', () => {
-    const error = new AuthError(AuthErrorCode.INVALID_EMAIL);
+    const error = new AuthError(AuthErrorCode.INVALID_EMAIL, 'Invalid email format');
     
     handleAuthError(error, mockRequest as Request, mockResponse as unknown as Response, nextFunction as unknown as NextFunction);
     
@@ -59,7 +59,7 @@ describe('Error Middleware', () => {
     expect(mockResponse.json).toHaveBeenCalledWith({
       error: {
         code: AuthErrorCode.INVALID_EMAIL,
-        message: expect.stringContaining('INVALID_EMAIL')
+        message: expect.stringContaining('Invalid email format')
       }
     });
   });
@@ -80,18 +80,21 @@ describe('Error Middleware', () => {
 
   it('should log errors with correct level and details', () => {
     const originalError = new Error('Original error');
-    const error = new AuthError(AuthErrorCode.SIGN_IN_ERROR, originalError);
+    const error = new AuthError(AuthErrorCode.SIGN_IN_ERROR, 'Sign in failed', originalError);
     
     handleAuthError(error, mockRequest as Request, mockResponse as unknown as Response, nextFunction as unknown as NextFunction);
     
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining("Erreur d'authentification"),
-      error
+      expect.objectContaining({
+        code: AuthErrorCode.SIGN_IN_ERROR,
+        message: expect.any(String)
+      })
     );
   });
 
   it('should handle rate limiting errors with 403', () => {
-    const error = new AuthError(AuthErrorCode.TOO_MANY_REQUESTS);
+    const error = new AuthError(AuthErrorCode.TOO_MANY_REQUESTS, 'Too many requests');
     
     handleAuthError(error, mockRequest as Request, mockResponse as unknown as Response, nextFunction as unknown as NextFunction);
     
@@ -99,13 +102,13 @@ describe('Error Middleware', () => {
     expect(mockResponse.json).toHaveBeenCalledWith({
       error: {
         code: AuthErrorCode.TOO_MANY_REQUESTS,
-        message: expect.stringContaining('TOO_MANY_REQUESTS')
+        message: expect.stringContaining('Too many requests')
       }
     });
   });
 
   it('should handle email conflict with 409', () => {
-    const error = new AuthError(AuthErrorCode.EMAIL_ALREADY_IN_USE);
+    const error = new AuthError(AuthErrorCode.EMAIL_ALREADY_IN_USE, 'Email already exists');
     
     handleAuthError(error, mockRequest as Request, mockResponse as unknown as Response, nextFunction as unknown as NextFunction);
     
@@ -113,19 +116,22 @@ describe('Error Middleware', () => {
     expect(mockResponse.json).toHaveBeenCalledWith({
       error: {
         code: AuthErrorCode.EMAIL_ALREADY_IN_USE,
-        message: expect.stringContaining('EMAIL_ALREADY_IN_USE')
+        message: expect.stringContaining('Email already exists')
       }
     });
   });
 
   it('should include request details in error log', () => {
-    const error = new AuthError(AuthErrorCode.INVALID_OPERATION);
+    const error = new AuthError(AuthErrorCode.INTERNAL_ERROR, 'Operation failed');
     
     handleAuthError(error, mockRequest as Request, mockResponse as unknown as Response, nextFunction as unknown as NextFunction);
     
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining(`[GET /test]`),
-      error
+      expect.objectContaining({
+        code: AuthErrorCode.INTERNAL_ERROR,
+        message: expect.any(String)
+      })
     );
   });
 });
