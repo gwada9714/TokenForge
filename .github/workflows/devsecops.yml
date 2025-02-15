@@ -51,11 +51,7 @@ jobs:
           scanners: "vuln,config,secret"
 
       - name: Run Semgrep SAST
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: auto
-          output: semgrep-results.sarif
-          format: sarif
+        run: semgrep --config auto
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 

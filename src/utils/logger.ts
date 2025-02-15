@@ -7,6 +7,17 @@ interface Logger {
   debug(category: string, message: LogMessage): void;
 }
 
+interface LogMetadata {
+    [key: string]: unknown;
+}
+
+interface LogEntry {
+    category: string;
+    message: string;
+    error?: Error;
+    metadata?: LogMetadata;
+}
+
 const formatLogMessage = (category: string, message: LogMessage): string => {
   const timestamp = new Date().toISOString();
   const context = message.context ? `\nContext: ${JSON.stringify(message.context, null, 2)}` : '';
@@ -17,28 +28,26 @@ const formatLogMessage = (category: string, message: LogMessage): string => {
 
 const isDevelopment = import.meta.env.VITE_ENV === 'development';
 
-export const logger: Logger = {
-  info: (category: string, message: LogMessage) => {
-    console.info(formatLogMessage(category, message));
-  },
-  
-  warn: (category: string, message: LogMessage) => {
-    console.warn(formatLogMessage(category, message));
-  },
-  
-  error: (category: string, message: LogMessage & { error?: Error }) => {
-    console.error(formatLogMessage(category, message));
+export const logger = {
+    debug: (entry: LogEntry) => {
+        if (import.meta.env.DEV) {
+            console.debug(`[${entry.category}] ${entry.message}`, {
+                error: entry.error,
+                metadata: entry.metadata
+            });
+        }
+    },
     
-    // En production, on pourrait envoyer à Sentry ou autre service de monitoring
-    if (!isDevelopment && message.error) {
-      // TODO: Intégrer Sentry ou autre service
-      console.error('Error details:', message.error);
+    info: (entry: LogEntry) => {
+        console.info(`[${entry.category}] ${entry.message}`, {
+            metadata: entry.metadata
+        });
+    },
+    
+    error: (entry: LogEntry) => {
+        console.error(`[${entry.category}] ${entry.message}`, {
+            error: entry.error,
+            metadata: entry.metadata
+        });
     }
-  },
-  
-  debug: (category: string, message: LogMessage) => {
-    if (isDevelopment) {
-      console.debug(formatLogMessage(category, message));
-    }
-  }
 };
