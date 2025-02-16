@@ -1,38 +1,64 @@
-import { Auth, User, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { firebaseManager } from '@/services/firebase';
+import { Auth, getAuth, User, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { app } from '@/config/firebase';
 import { logger } from '@/core/logger/BaseLogger';
 import { AuthError } from '@/core/types/errors';
 import type { LoginCredentials, AuthResponse } from '../types/auth.types';
 
 export class AuthService {
-  private static instance: AuthService | null = null;
+  private static instance: AuthService;
   private auth: Auth;
   private readonly TOKEN_REFRESH_INTERVAL = 55 * 60 * 1000;
 
   private constructor() {
-    this.auth = firebaseManager.getAuth();
-    this.setupTokenRefresh();
+    this.auth = getAuth(app);
+    this.setupAuthListeners();
   }
 
-  static getInstance(): AuthService {
-    if (!this.instance) {
-      this.instance = new AuthService();
+  private setupAuthListeners(): void {
+    this.auth.onAuthStateChanged(
+      (user) => this.handleAuthStateChange(user),
+      (error) => this.handleAuthError(error)
+    );
+  }
+
+  private async handleAuthStateChange(user: User | null): Promise<void> {
+    if (user) {
+      await this.setupTokenRefresh(user);
     }
-    return this.instance;
   }
 
-  private async getAuth(): Promise<Auth> {
-    if (!this.auth) {
-      this.auth = await firebaseManager.getAuth();
-    }
-    return this.auth;
-  }
-
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+  private async setupTokenRefresh(user: User): Promise<void> {
     try {
-      const auth = await this.getAuth();
+      await user.getIdToken(true);
+      setInterval(async () => {
+        await user.getIdToken(true);
+      }, this.TOKEN_REFRESH_INTERVAL);
+    } catch (error) {
+      logger.error({
+        message: 'Token refresh failed',
+        error
+      });
+    }
+  }
+
+  private handleAuthError(error: Error): void {
+    logger.error({
+      message: 'Auth state change error',
+      error
+    });
+  }
+
+  public static getInstance(): AuthService {
+    if (!AuthService.instance) {
+      AuthService.instance = new AuthService();
+    }
+    return AuthService.instance;
+  }
+
+  public async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    try {
       const userCredential = await signInWithEmailAndPassword(
-        auth,
+        this.auth,
         credentials.email,
         credentials.password
       );
@@ -69,8 +95,7 @@ export class AuthService {
 
   async logout(): Promise<void> {
     try {
-      const auth = await this.getAuth();
-      await signOut(auth);
+      await signOut(this.auth);
     } catch (error) {
       logger.error({
         category: 'AuthService',
@@ -82,8 +107,7 @@ export class AuthService {
   }
 
   onAuthStateChanged(callback: (user: User | null) => void): () => void {
-    const auth = firebaseManager.getAuth(); // Correction : utilisation de firebaseManager au lieu de firebaseService
-    return auth.onAuthStateChanged(callback);
+    return this.auth.onAuthStateChanged(callback);
   }
 }
 

@@ -13,6 +13,8 @@ import { store } from './store';
 import { Provider } from 'react-redux';
 import { getFirebaseManager } from './lib/firebase/services';
 import { initializeAuth } from './lib/firebase/auth';
+import { serviceManager } from '@/core/services/ServiceManager';
+import { firebaseInitializer } from '@/lib/firebase/initialization';
 
 const LOG_CATEGORY = 'Application';
 
@@ -120,3 +122,26 @@ if (typeof window !== 'undefined') {
 } else {
   console.error('Environnement non supporté: window n\'est pas défini');
 }
+
+async function initializeApp() {
+  try {
+    // Register core services
+    serviceManager.registerService(firebaseInitializer);
+    
+    // Initialize all services
+    await serviceManager.initialize();
+
+    logger.info({
+      category: 'App',
+      message: 'Application initialized successfully'
+    });
+  } catch (error) {
+    logger.error({
+      category: 'App',
+      message: 'Application initialization failed',
+      error: error as Error
+    });
+  }
+}
+
+initializeApp();

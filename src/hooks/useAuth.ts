@@ -1,39 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User } from 'firebase/auth';
-import { authService } from '../services/auth/AuthService';
-
-interface AuthState {
-  user: User | null;
-  loading: boolean;
-  error: Error | null;
-}
+import { AuthService } from '@/services/auth/AuthService';
+import { AuthState } from '@/types/auth';
 
 export const useAuth = () => {
-  const [authState, setAuthState] = useState<AuthState>({
+  const [state, setState] = useState<AuthState>({
     user: null,
     loading: true,
     error: null
   });
 
   useEffect(() => {
-    const unsubscribe = authService.onAuthStateChanged((user) => {
-      setAuthState({
-        user,
-        loading: false,
-        error: null
-      });
-    });
+    const unsubscribe = AuthService.getInstance().onAuthStateChanged(
+      (user) => setState({ user, loading: false, error: null }),
+      (error) => setState(prev => ({ ...prev, loading: false, error }))
+    );
 
     return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      setAuthState(prev => ({ ...prev, loading: true, error: null }));
-      const user = await authService.login(email, password);
-      setAuthState({ user, loading: false, error: null });
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      const user = await AuthService.getInstance().login(email, password);
+      setState({ user, loading: false, error: null });
     } catch (error) {
-      setAuthState(prev => ({
+      setState(prev => ({
         ...prev,
         loading: false,
         error: error as Error
@@ -43,10 +35,10 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      setAuthState(prev => ({ ...prev, loading: true, error: null }));
-      await authService.logout();
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      await AuthService.getInstance().logout();
     } catch (error) {
-      setAuthState(prev => ({
+      setState(prev => ({
         ...prev,
         loading: false,
         error: error as Error
@@ -55,7 +47,7 @@ export const useAuth = () => {
   };
 
   return {
-    ...authState,
+    ...state,
     login,
     logout
   };

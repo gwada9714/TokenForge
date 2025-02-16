@@ -32,6 +32,9 @@ export class FirebaseService {
 
   private constructor() {
     this.tokenEncryption = TokenEncryption.getInstance();
+    logger.info(LOG_CATEGORY, {
+      message: 'Initializing FirebaseService'
+    });
   }
 
   public static async getInstance(): Promise<FirebaseService> {

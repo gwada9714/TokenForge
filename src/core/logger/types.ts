@@ -1,15 +1,21 @@
-export interface LogMetadata extends Record<string, unknown> {
-  timestamp?: number;
-  service?: string;
-  errorCode?: string;
+export enum LogLevel {
+  DEBUG = 'DEBUG',
+  INFO = 'INFO',
+  WARN = 'WARN',
+  ERROR = 'ERROR'
+}
+
+export interface LogMetadata {
+  [key: string]: unknown;
 }
 
 export interface LogEntry {
   category: string;
   message: string;
-  error?: Error;
+  level: LogLevel;
   metadata?: LogMetadata;
-  level?: 'debug' | 'info' | 'warn' | 'error';
+  timestamp?: string;
+  error?: Error;
 }
 
 export interface Logger {

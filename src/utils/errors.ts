@@ -151,3 +151,41 @@ export const handleError = (error: unknown): TokenForgeError => {
 
   return new TokenForgeError(message, TokenForgeErrorCode.UNKNOWN_ERROR, error);
 };
+
+export class ErrorHandler {
+  private static instance: ErrorHandler;
+
+  public static getInstance(): ErrorHandler {
+    if (!ErrorHandler.instance) {
+      ErrorHandler.instance = new ErrorHandler();
+    }
+    return ErrorHandler.instance;
+  }
+
+  handleError(error: unknown, context?: string): Error {
+    const normalizedError = this.normalizeError(error);
+    this.logError(normalizedError, context);
+    return normalizedError;
+  }
+
+  private normalizeError(error: unknown): Error {
+    if (error instanceof Error) {
+      return error;
+    }
+    if (typeof error === 'string') {
+      return new Error(error);
+    }
+    return new Error('An unknown error occurred');
+  }
+
+  private logError(error: Error, context?: string): void {
+    console.error(`[${context || 'TokenForge'}]`, {
+      message: error.message,
+      timestamp: new Date().toISOString(),
+      context,
+      stack: error.stack
+    });
+  }
+}
+
+export const errorHandler = ErrorHandler.getInstance();
