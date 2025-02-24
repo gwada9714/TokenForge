@@ -1,13 +1,24 @@
-import { User } from 'firebase/auth';
-import { getFirebaseAuth } from '@/lib/firebase';
 import { logger } from '@/utils/firebase-logger';
+import { secureStorageService } from './secureStorageService';
+import { firebaseAuth } from './firebaseAuth';
+import { AuthError, AuthErrorCode } from '../errors/AuthError';
 
 const LOG_CATEGORY = 'SessionService';
 
+export interface SessionInfo {
+  sessionId: string;
+  createdAt: number;
+  expiresAt: number;
+  lastActivity: number;
+  deviceId: string;
+}
+
 export class SessionService {
   private static instance: SessionService;
-  private currentUser: User | null = null;
-  private authInitialized: boolean = false;
+  private currentSession: SessionInfo | null = null;
+  private sessionCheckInterval: NodeJS.Timeout | null = null;
+  private readonly SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 heures
+  private readonly SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
   private constructor() {}
 
@@ -18,66 +29,126 @@ export class SessionService {
     return SessionService.instance;
   }
 
-  public async initialize(): Promise<void> {
+  public async startSession(): Promise<void> {
     try {
-      logger.debug(LOG_CATEGORY, { message: ' Initialisation du service de session' });
-      const auth = await getFirebaseAuth();
-      
-      // Écouter les changements d'état d'authentification
-      auth.onAuthStateChanged((user) => {
-        this.currentUser = user;
-        this.authInitialized = true;
-        
-        if (user) {
-          logger.info(LOG_CATEGORY, { 
-            message: 'Utilisateur connecté',
-            userId: user.uid,
-            email: user.email 
-          });
-        } else {
-          logger.info(LOG_CATEGORY, { message: 'Aucun utilisateur connecté' });
-        }
-      });
+      const user = await firebaseAuth.getCurrentUser();
+      if (!user) {
+        throw new AuthError('SESSION_NOT_FOUND' as AuthErrorCode, 'Aucun utilisateur connecté');
+      }
 
-      logger.info(LOG_CATEGORY, { message: 'Service de session initialisé' });
+      const token = await user.getIdToken();
+      const deviceId = await this.getOrCreateDeviceId();
+
+      this.currentSession = {
+        sessionId: crypto.randomUUID(),
+        createdAt: Date.now(),
+        expiresAt: Date.now() + this.SESSION_DURATION,
+        lastActivity: Date.now(),
+        deviceId
+      };
+
+      await secureStorageService.setItem('session_info', this.currentSession);
+      await secureStorageService.setAuthToken(token);
+
+      this.startSessionCheck();
+      logger.info('Session démarrée', { sessionId: this.currentSession.sessionId });
     } catch (error) {
-      logger.error(LOG_CATEGORY, { message: 'Erreur lors de l\'initialisation du service de session', error });
+      logger.error('Erreur lors du démarrage de la session', { error });
       throw error;
     }
   }
 
-  public isAuthenticated(): boolean {
-    return !!this.currentUser;
-  }
+  public async validateSession(): Promise<boolean> {
+    try {
+      if (!this.currentSession) {
+        const storedSession = await secureStorageService.getItem('session_info') as SessionInfo | null;
+        if (!storedSession) return false;
+        this.currentSession = storedSession;
+      }
 
-  public isAuthInitialized(): boolean {
-    return this.authInitialized;
-  }
+      const isValid = Date.now() < this.currentSession.expiresAt;
+      if (isValid) {
+        this.currentSession.lastActivity = Date.now();
+        await secureStorageService.setItem('session_info', this.currentSession);
+      }
 
-  public getCurrentUser(): User | null {
-    return this.currentUser;
-  }
-
-  public async startSession(): Promise<void> {
-    if (!this.authInitialized) {
-      await this.initialize();
+      return isValid;
+    } catch (error) {
+      logger.error('Erreur lors de la validation de la session', { error });
+      return false;
     }
   }
 
-  public async logout(): Promise<void> {
-    const auth = await getFirebaseAuth();
-    await auth.signOut();
+  public async refreshSession(): Promise<void> {
+    try {
+      const user = await firebaseAuth.getCurrentUser();
+      if (!user || !this.currentSession) {
+        throw new AuthError('SESSION_INVALID' as AuthErrorCode, 'Session invalide');
+      }
+
+      const token = await user.getIdToken(true);
+      this.currentSession.expiresAt = Date.now() + this.SESSION_DURATION;
+      this.currentSession.lastActivity = Date.now();
+
+      await secureStorageService.setAuthToken(token);
+      await secureStorageService.setItem('session_info', this.currentSession);
+
+      logger.info('Session rafraîchie', { sessionId: this.currentSession.sessionId });
+    } catch (error) {
+      logger.error('Erreur lors du rafraîchissement de la session', { error });
+      throw error;
+    }
   }
 
-  public isSessionActive(): boolean {
-    return this.isAuthenticated();
+  public async endSession(): Promise<void> {
+    try {
+      if (this.sessionCheckInterval) {
+        clearInterval(this.sessionCheckInterval);
+        this.sessionCheckInterval = null;
+      }
+
+      await secureStorageService.removeItem('session_info');
+      await secureStorageService.removeItem('auth_token');
+      this.currentSession = null;
+
+      logger.info('Session terminée');
+    } catch (error) {
+      logger.error('Erreur lors de la fin de la session', { error });
+      throw error;
+    }
   }
 
-  public getSessionInfo(): { lastActivity: Date; expiresAt: Date } {
-    // TODO: Implementer la logique pour récupérer les informations de session
-    throw new Error('Method not implemented.');
+  private async getOrCreateDeviceId(): Promise<string> {
+    const deviceId = await secureStorageService.getItem('device_id');
+    if (deviceId) return deviceId as string;
+
+    const newDeviceId = crypto.randomUUID();
+    await secureStorageService.setItem('device_id', newDeviceId);
+    return newDeviceId;
+  }
+
+  private startSessionCheck(): void {
+    if (this.sessionCheckInterval) {
+      clearInterval(this.sessionCheckInterval);
+    }
+
+    this.sessionCheckInterval = setInterval(async () => {
+      const isValid = await this.validateSession();
+      if (!isValid) {
+        await this.endSession();
+        window.dispatchEvent(new CustomEvent('sessionExpired'));
+      } else if (this.shouldRefreshSession()) {
+        await this.refreshSession();
+      }
+    }, this.SESSION_CHECK_INTERVAL);
+  }
+
+  private shouldRefreshSession(): boolean {
+    if (!this.currentSession) return false;
+    const timeUntilExpiry = this.currentSession.expiresAt - Date.now();
+    return timeUntilExpiry < this.SESSION_DURATION / 4;
   }
 }
 
-// Export une instance unique
 export const sessionService = SessionService.getInstance();
+

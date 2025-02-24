@@ -3,7 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": false,
+    "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -18,13 +18,18 @@
     "types": ["vite/client", "node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["src/*"]
+    },
+    "sourceMap": true
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "scripts/**/*.ts",
+    "hardhat/**/*.ts",
+    "contracts/**/*.sol",
+    "vite.config.ts"
   ],
   "exclude": [
     "node_modules",
@@ -32,7 +37,10 @@
     "**/*.test.ts",
     "**/*.spec.ts",
     "src/security/**/*",
-    "src/__tests__/**/*"
+    "src/__tests__/**/*",
+    "build"
   ],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
 }

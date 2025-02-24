@@ -1,147 +1,94 @@
-import { Link } from 'react-router-dom';
-import React from "react";
-import styled, { css } from "styled-components";
-import { StyledButtonProps, StyledProps } from "./types";
+import React from 'react';
+import styled from 'styled-components';
+import { SPACING } from '@/config/constants/theme';
 
-type ButtonComponentProps = StyledButtonProps & StyledProps & {
-  to?: string;
-  component?: React.ElementType;
-};
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'small' | 'medium' | 'large';
+  fullWidth?: boolean;
+}
 
-const baseStyles = css<ButtonComponentProps>`
-  font-family: ${(props) => props.theme.typography.fontFamily.heading};
-  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
-  border-radius: ${(props) => props.theme.borderRadius.medium};
-  transition: ${(props) => props.theme.transitions.default};
+const StyledButton = styled.button<ButtonProps>`
+  padding: ${props => {
+    switch (props.size) {
+      case 'small':
+        return `${SPACING.xs} ${SPACING.sm}`;
+      case 'large':
+        return `${SPACING.md} ${SPACING.xl}`;
+      default:
+        return `${SPACING.sm} ${SPACING.lg}`;
+    }
+  }};
+  
+  font-size: ${props => {
+    switch (props.size) {
+      case 'small':
+        return '0.875rem';
+      case 'large':
+        return '1.125rem';
+      default:
+        return '1rem';
+    }
+  }};
+  
+  width: ${props => props.fullWidth ? '100%' : 'auto'};
+  border-radius: ${props => props.theme.borderRadius};
+  border: none;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${(props) => props.theme.spacing(2)};
-  text-decoration: none;
-
-  ${(props) =>
-    props.$fullWidth &&
-    css`
-      width: 100%;
-    `}
-
-  ${(props) => {
-    switch (props.$size) {
-      case "small":
-        return css`
-          padding: ${props.theme.spacing(1)} ${props.theme.spacing(2)};
-          font-size: ${props.theme.typography.fontSizes.xs};
-        `;
-      case "large":
-        return css`
-          padding: ${props.theme.spacing(3)} ${props.theme.spacing(4)};
-          font-size: ${props.theme.typography.fontSizes.xl};
-        `;
-      default:
-        return css`
-          padding: ${props.theme.spacing(2)} ${props.theme.spacing(3)};
-          font-size: ${props.theme.typography.fontSizes.md};
-        `;
-    }
-  }}
-
-  ${(props) => {
-    const { colors } = props.theme;
-    
-    switch (props.$variant) {
-      case "secondary":
-        return css`
-          background-color: transparent;
-          border: 2px solid ${colors.secondary};
-          color: ${colors.secondary};
-          
+  transition: ${props => props.theme.transition};
+  
+  ${props => {
+    switch (props.variant) {
+      case 'secondary':
+        return `
+          background-color: ${props.theme.colors.secondary};
+          color: ${props.theme.colors.background.primary};
           &:hover {
-            background-color: ${colors.secondary};
-            color: ${colors.white};
-          }
-          
-          &:disabled {
-            border-color: ${colors.disabled};
-            color: ${colors.disabled};
+            opacity: 0.9;
           }
         `;
-      case "text":
-        return css`
+      case 'outline':
+        return `
           background-color: transparent;
-          border: none;
-          color: ${colors.text};
-          
+          border: 1px solid ${props.theme.colors.primary};
+          color: ${props.theme.colors.primary};
           &:hover {
-            background-color: ${colors.hover};
-          }
-          
-          &:disabled {
-            color: ${colors.disabled};
+            background-color: ${props.theme.colors.primary};
+            color: ${props.theme.colors.background.primary};
           }
         `;
       default:
-        return css`
-          background-color: ${colors.primary};
-          border: none;
-          color: ${colors.white};
-          
+        return `
+          background-color: ${props.theme.colors.primary};
+          color: ${props.theme.colors.background.primary};
           &:hover {
-            background-color: ${colors.primaryDark};
-          }
-          
-          &:disabled {
-            background-color: ${colors.disabled};
+            opacity: 0.9;
           }
         `;
     }
   }}
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
-const StyledButtonBase = styled.button<ButtonComponentProps>`
-  ${baseStyles}
-`;
-
-const StyledLink = styled(Link)<ButtonComponentProps>`
-  ${baseStyles}
-`;
-
-export const StyledButton: React.FC<ButtonComponentProps> = ({
+export const Button: React.FC<ButtonProps> = ({
   children,
-  $variant = "primary",
-  $size = "medium",
-  $fullWidth = false,
-  $isLoading = false,
-  to,
-  component,
+  variant = 'primary',
+  size = 'medium',
+  fullWidth = false,
   ...props
 }) => {
-  const buttonProps = {
-    $variant,
-    $size,
-    $fullWidth,
-    $isLoading,
-    ...props,
-  };
-
-  if (component) {
-    const Component = component;
-    return <Component {...buttonProps}>{children}</Component>;
-  }
-
-  if (to) {
-    return (
-      <StyledLink to={to} {...buttonProps}>
-        {children}
-      </StyledLink>
-    );
-  }
-
   return (
-    <StyledButtonBase {...buttonProps}>
+    <StyledButton
+      variant={variant}
+      size={size}
+      fullWidth={fullWidth}
+      {...props}
+    >
       {children}
-    </StyledButtonBase>
+    </StyledButton>
   );
 };
-
-export default StyledButton;

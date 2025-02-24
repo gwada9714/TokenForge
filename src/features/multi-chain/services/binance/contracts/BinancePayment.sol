@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -11,164 +11,89 @@ import "@openzeppelin/contracts/security/Pausable.sol";
  * @dev Contract for handling payments in BNB and BEP20 tokens for TokenForge services
  */
 contract BinancePayment is Ownable, ReentrancyGuard, Pausable {
-    // Events
-    event PaymentReceived(
-        address indexed payer,
-        address indexed token,
-        uint256 amount,
-        string serviceType,
-        string sessionId
-    );
+    address public constant TREASURY = 0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A;
     
-    event PaymentRefunded(
-        address indexed recipient,
+    event PaymentProcessed(
+        string sessionId,
+        address indexed from,
         address indexed token,
         uint256 amount,
-        string sessionId
+        uint256 timestamp
     );
 
-    // Trusted receiver address
-    address public immutable receiverAddress;
+    event PaymentFailed(
+        string sessionId,
+        address indexed from,
+        address indexed token,
+        uint256 amount,
+        string reason
+    );
 
-    // Supported tokens mapping
+    mapping(string => bool) public processedSessions;
     mapping(address => bool) public supportedTokens;
 
-    // Constructor
-    constructor(address _receiverAddress) {
-        require(_receiverAddress != address(0), "Invalid receiver address");
-        receiverAddress = _receiverAddress;
+    constructor() Ownable(msg.sender) {
+        // Ajouter les tokens supportés par défaut
+        supportedTokens[address(0)] = true; // BNB natif
+        supportedTokens[0x55d398326f99059fF775485246999027B3197955] = true; // USDT
+        supportedTokens[0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d] = true; // USDC
+        supportedTokens[0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56] = true; // BUSD
     }
 
-    /**
-     * @dev Add or remove supported token
-     * @param tokenAddress The address of the BEP20 token
-     * @param isSupported Whether the token should be supported
-     */
-    function setTokenSupport(address tokenAddress, bool isSupported) external onlyOwner {
-        require(tokenAddress != address(0), "Invalid token address");
-        supportedTokens[tokenAddress] = isSupported;
+    function processPayment(
+        string calldata sessionId,
+        address token,
+        uint256 amount
+    ) external payable nonReentrant {
+        require(!processedSessions[sessionId], "Session deja traitee");
+        require(supportedTokens[token], "Token non supporte");
+        require(amount > 0, "Montant invalide");
+
+        try {
+            if (token == address(0)) {
+                require(msg.value == amount, "Montant BNB incorrect");
+                (bool success, ) = TREASURY.call{value: amount}("");
+                require(success, "Transfert BNB echoue");
+            } else {
+                IERC20 tokenContract = IERC20(token);
+                require(
+                    tokenContract.transferFrom(msg.sender, TREASURY, amount),
+                    "Transfert token echoue"
+                );
+            }
+
+            processedSessions[sessionId] = true;
+            emit PaymentProcessed(sessionId, msg.sender, token, amount, block.timestamp);
+        } catch (bytes memory reason) {
+            emit PaymentFailed(sessionId, msg.sender, token, amount, string(reason));
+            revert("Paiement echoue");
+        }
     }
 
-    /**
-     * @dev Make a payment with BEP20 token
-     * @param tokenAddress The address of the BEP20 token
-     * @param amount The amount to pay
-     * @param serviceType The type of service being paid for
-     * @param sessionId The unique session ID for this payment
-     */
-    function payWithToken(
-        address tokenAddress,
-        uint256 amount,
-        string calldata serviceType,
-        string calldata sessionId
-    ) external nonReentrant whenNotPaused {
-        require(supportedTokens[tokenAddress], "Token not supported");
-        require(amount > 0, "Amount must be greater than 0");
-        
-        IERC20 token = IERC20(tokenAddress);
-        
-        // Transfer tokens from user to this contract
-        require(
-            token.transferFrom(msg.sender, address(this), amount),
-            "Token transfer failed"
-        );
-        
-        // Transfer tokens to receiver
-        require(
-            token.transfer(receiverAddress, amount),
-            "Transfer to receiver failed"
-        );
-        
-        emit PaymentReceived(
-            msg.sender,
-            tokenAddress,
-            amount,
-            serviceType,
-            sessionId
-        );
+    function addSupportedToken(address token) external onlyOwner {
+        supportedTokens[token] = true;
     }
 
-    /**
-     * @dev Make a payment with BNB
-     * @param serviceType The type of service being paid for
-     * @param sessionId The unique session ID for this payment
-     */
-    function payWithBNB(
-        string calldata serviceType,
-        string calldata sessionId
-    ) external payable nonReentrant whenNotPaused {
-        require(msg.value > 0, "Amount must be greater than 0");
-        
-        // Transfer BNB to receiver
-        (bool sent, ) = receiverAddress.call{value: msg.value}("");
-        require(sent, "BNB transfer failed");
-        
-        emit PaymentReceived(
-            msg.sender,
-            address(0),
-            msg.value,
-            serviceType,
-            sessionId
-        );
+    function removeSupportedToken(address token) external onlyOwner {
+        require(token != address(0), "Impossible de supprimer BNB");
+        supportedTokens[token] = false;
     }
 
-    /**
-     * @dev Emergency refund of BEP20 tokens
-     * @param tokenAddress The address of the BEP20 token
-     * @param to The address to refund to
-     * @param amount The amount to refund
-     * @param sessionId The session ID of the payment being refunded
-     */
-    function refundToken(
-        address tokenAddress,
-        address to,
-        uint256 amount,
-        string calldata sessionId
-    ) external onlyOwner nonReentrant {
-        require(to != address(0), "Invalid recipient address");
-        require(amount > 0, "Amount must be greater than 0");
-        
-        IERC20 token = IERC20(tokenAddress);
-        require(token.transfer(to, amount), "Refund transfer failed");
-        
-        emit PaymentRefunded(to, tokenAddress, amount, sessionId);
+    function withdrawStuckTokens(address token) external onlyOwner {
+        if (token == address(0)) {
+            (bool success, ) = TREASURY.call{value: address(this).balance}("");
+            require(success, "Retrait BNB echoue");
+        } else {
+            IERC20 tokenContract = IERC20(token);
+            uint256 balance = tokenContract.balanceOf(address(this));
+            require(
+                tokenContract.transfer(TREASURY, balance),
+                "Retrait token echoue"
+            );
+        }
     }
 
-    /**
-     * @dev Emergency refund of BNB
-     * @param to The address to refund to
-     * @param amount The amount to refund
-     * @param sessionId The session ID of the payment being refunded
-     */
-    function refundBNB(
-        address payable to,
-        uint256 amount,
-        string calldata sessionId
-    ) external onlyOwner nonReentrant {
-        require(to != address(0), "Invalid recipient address");
-        require(amount > 0, "Amount must be greater than 0");
-        require(address(this).balance >= amount, "Insufficient balance");
-        
-        (bool sent, ) = to.call{value: amount}("");
-        require(sent, "BNB refund failed");
-        
-        emit PaymentRefunded(to, address(0), amount, sessionId);
+    receive() external payable {
+        revert("Utiliser processPayment()");
     }
-
-    /**
-     * @dev Pause the contract
-     */
-    function pause() external onlyOwner {
-        _pause();
-    }
-
-    /**
-     * @dev Unpause the contract
-     */
-    function unpause() external onlyOwner {
-        _unpause();
-    }
-
-    // Allow the contract to receive BNB
-    receive() external payable {}
 }

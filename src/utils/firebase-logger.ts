@@ -1,56 +1,45 @@
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
-export interface LogOptions {
-  category?: string;
-  metadata?: Record<string, unknown>;
-}
+import { LogLevel, LogMessage } from '@/features/auth/types/ethereum';
 
 class Logger {
-  private static instance: Logger;
-  private readonly isDevelopment: boolean;
-
-  private constructor() {
-    this.isDevelopment = import.meta.env.MODE === 'development';
-  }
-
-  static getInstance(): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
-    }
-    return Logger.instance;
-  }
-
-  private formatMessage(message: string, options?: LogOptions): string {
-    const timestamp = new Date().toISOString();
-    const category = options?.category ? `[${options.category}]` : '';
-    const metadata = options?.metadata ? 
-      `\n${JSON.stringify(options.metadata, null, 2)}` : '';
-
-    return `[${timestamp}] ${category} ${message}${metadata}`;
-  }
-
-  debug(message: string, options?: LogOptions): void {
-    if (this.isDevelopment) {
-      console.debug(this.formatMessage(message, options));
-    }
-  }
-
-  info(message: string, options?: LogOptions): void {
-    console.info(this.formatMessage(message, options));
-  }
-
-  warn(message: string, options?: LogOptions): void {
-    console.warn(this.formatMessage(message, options));
-  }
-
-  error(message: string, error?: Error, options?: LogOptions): void {
-    const metadata = {
-      ...options?.metadata,
-      errorMessage: error?.message,
-      stack: error?.stack
+  private logToConsole(level: LogLevel, message: string, data?: Record<string, unknown>) {
+    const logMessage: LogMessage = {
+      level,
+      message,
+      data,
+      timestamp: new Date().toISOString()
     };
-    console.error(this.formatMessage(message, { ...options, metadata }));
+
+    switch (level) {
+      case 'info':
+        console.info(logMessage);
+        break;
+      case 'warn':
+        console.warn(logMessage);
+        break;
+      case 'error':
+        console.error(logMessage);
+        break;
+      case 'debug':
+        console.debug(logMessage);
+        break;
+    }
+  }
+
+  info(message: string, data?: Record<string, unknown>) {
+    this.logToConsole('info', message, data);
+  }
+
+  warn(message: string, data?: Record<string, unknown>) {
+    this.logToConsole('warn', message, data);
+  }
+
+  error(message: string, data?: Record<string, unknown>) {
+    this.logToConsole('error', message, data);
+  }
+
+  debug(message: string, data?: Record<string, unknown>) {
+    this.logToConsole('debug', message, data);
   }
 }
 
-export const logger = Logger.getInstance();
+export const logger = new Logger();

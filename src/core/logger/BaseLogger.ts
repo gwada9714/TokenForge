@@ -1,47 +1,46 @@
-import type { Logger, LogEntry, LogMetadata } from './types';
+import { LogLevel, Logger, LogEntry } from './types';
 
 export class BaseLogger implements Logger {
-  private static instance: BaseLogger;
+  private readonly category: string;
+  private logLevel: LogLevel = LogLevel.INFO;
 
-  private constructor() {}
-
-  static getInstance(): BaseLogger {
-    if (!BaseLogger.instance) {
-      BaseLogger.instance = new BaseLogger();
+  constructor(category: string, level?: LogLevel) {
+    this.category = category;
+    if (level !== undefined) {
+      this.logLevel = level;
     }
-    return BaseLogger.instance;
-  }
-
-  private formatEntry(entry: LogEntry): LogEntry {
-    return {
-      ...entry,
-      metadata: {
-        ...entry.metadata,
-        timestamp: Date.now(),
-        errorName: entry.error?.name,
-        errorMessage: entry.error?.message,
-        errorStack: entry.error?.stack
-      }
-    };
   }
 
   debug(entry: LogEntry): void {
-    if (import.meta.env.DEV) {
-      console.debug(this.formatEntry(entry));
-    }
+    this.log(LogLevel.DEBUG, entry);
   }
 
   info(entry: LogEntry): void {
-    console.info(this.formatEntry(entry));
+    this.log(LogLevel.INFO, entry);
   }
 
   warn(entry: LogEntry): void {
-    console.warn(this.formatEntry(entry));
+    this.log(LogLevel.WARN, entry);
   }
 
   error(entry: LogEntry): void {
-    console.error(this.formatEntry(entry));
+    this.log(LogLevel.ERROR, entry);
+  }
+
+  setLogLevel(level: LogLevel): void {
+    this.logLevel = level;
+  }
+
+  private log(level: LogLevel, entry: LogEntry): void {
+    if (level < this.logLevel) {
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const metadata = entry.metadata ? `\nMetadata: ${JSON.stringify(entry.metadata, null, 2)}` : '';
+    const errorInfo = entry.error ? 
+      `\nError: ${entry.error.message}${entry.error.stack ? `\nStack: ${entry.error.stack}` : ''}` : '';
+    
+    console.log(`[${timestamp}] [${level}] [${this.category}]: ${entry.message}${metadata}${errorInfo}`);
   }
 }
-
-export const logger = BaseLogger.getInstance();

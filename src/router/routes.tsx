@@ -19,6 +19,17 @@ const TokenCreationPage = lazy(() => import("@/features/token/pages/TokenCreatio
 const TokenPreviewPage = lazy(() => import("@/features/token/pages/TokenPreviewPage").then(module => ({ default: module.TokenPreviewPage })));
 const ServicesPage = lazy(() => import("@/features/services/pages/ServicesPage").then(module => ({ default: module.ServicesPage })));
 
+// Pages principales
+const Home = lazy(() => import('@/pages/Home'));
+const Plans = lazy(() => import('@/pages/Plans'));
+const Services = lazy(() => import('@/pages/Services'));
+
+// Pages de configuration des services
+const LaunchpadConfig = lazy(() => import('@/features/services/pages/LaunchpadConfig'));
+const StakingConfig = lazy(() => import('@/features/services/pages/StakingConfig'));
+const MarketingConfig = lazy(() => import('@/features/services/pages/MarketingConfig'));
+const KYCConfig = lazy(() => import('@/features/services/pages/KYCConfig'));
+
 // Configure future flags for React Router v7
 export const future = {
   v7_normalizeFormMethod: true,
@@ -81,7 +92,49 @@ export const routes: RouteObject[] = [
         ]
       }
     ]
-  }
+  },
+  {
+    path: '/plans',
+    Component: Plans,
+  },
+  {
+    path: '/services',
+    Component: Services,
+  },
+  {
+    path: '/services/launchpad/config',
+    Component: LaunchpadConfig,
+  },
+  {
+    path: '/services/staking/config',
+    Component: StakingConfig,
+  },
+  {
+    path: '/services/marketing/config',
+    Component: MarketingConfig,
+  },
+  {
+    path: '/services/kyc/config',
+    Component: KYCConfig,
+  },
+];
+
+export const navigationRoutes: NavigationRoute[] = [
+  {
+    path: '/',
+    title: 'Accueil',
+    isPublic: true,
+  },
+  {
+    path: '/plans',
+    title: 'Plans & Tarifs',
+    isPublic: true,
+  },
+  {
+    path: '/services',
+    title: 'Services',
+    isPublic: true,
+  },
 ];
 
 export const router = createBrowserRouter(routes, { future });

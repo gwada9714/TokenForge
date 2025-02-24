@@ -1,104 +1,138 @@
 import React from 'react';
-import { PaymentNetwork } from '../../../multi-chain/services/payment/types/PaymentSession';
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Alert,
+  AlertTitle,
+  Chip,
+  Paper,
+  useTheme
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
+import TimerIcon from '@mui/icons-material/Timer';
+import { PaymentStatus as Status, PaymentSession } from '@/features/multi-chain/services/payment/types';
 
 interface PaymentStatusProps {
-  status: 'idle' | 'validating' | 'processing' | 'success' | 'error';
-  error?: Error;
-  network?: PaymentNetwork;
-  transactionHash?: string;
-  onClose?: () => void;
-  onRetry?: () => void;
+  session: PaymentSession;
+  onComplete?: () => void;
 }
 
-export const PaymentStatus: React.FC<PaymentStatusProps> = ({
-  status,
-  error,
-  network,
-  transactionHash,
-  onClose,
-  onRetry,
-}) => {
-  const getExplorerUrl = () => {
-    if (!transactionHash || !network) return '';
-    
-    switch (network) {
-      case PaymentNetwork.ETHEREUM:
-        return `https://etherscan.io/tx/${transactionHash}`;
-      case PaymentNetwork.POLYGON:
-        return `https://polygonscan.com/tx/${transactionHash}`;
-      case PaymentNetwork.BINANCE:
-        return `https://bscscan.com/tx/${transactionHash}`;
-      case PaymentNetwork.SOLANA:
-        return `https://solscan.io/tx/${transactionHash}`;
-      default:
-        return '';
-    }
-  };
+/**
+ * Composant affichant l'état actuel d'un paiement
+ * @component
+ */
+export const PaymentStatus: React.FC<PaymentStatusProps> = ({ session, onComplete }) => {
+  const theme = useTheme();
 
-  const renderContent = () => {
+  React.useEffect(() => {
+    if (session.status === Status.CONFIRMED && onComplete) {
+      onComplete();
+    }
+  }, [session.status, onComplete]);
+
+  const getStatusConfig = (status: Status) => {
     switch (status) {
-      case 'validating':
-        return (
-          <div className="status-validating">
-            <div className="spinner" />
-            <p>Validation de la transaction...</p>
-          </div>
-        );
-
-      case 'processing':
-        return (
-          <div className="status-processing">
-            <div className="spinner" />
-            <p>Transaction en cours...</p>
-            <p className="subtitle">Veuillez patienter et ne pas fermer cette fenêtre</p>
-          </div>
-        );
-
-      case 'success':
-        return (
-          <div className="status-success">
-            <div className="success-icon">✓</div>
-            <h3>Transaction réussie !</h3>
-            {transactionHash && (
-              <a 
-                href={getExplorerUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transaction-link"
-              >
-                Voir la transaction
-              </a>
-            )}
-            {onClose && (
-              <button onClick={onClose} className="close-button">
-                Fermer
-              </button>
-            )}
-          </div>
-        );
-
-      case 'error':
-        return (
-          <div className="status-error">
-            <div className="error-icon">✗</div>
-            <h3>Erreur lors de la transaction</h3>
-            {error && <p className="error-message">{error.message}</p>}
-            {onRetry && (
-              <button onClick={onRetry} className="retry-button">
-                Réessayer
-              </button>
-            )}
-          </div>
-        );
-
+      case Status.PENDING:
+        return {
+          color: 'warning',
+          icon: <TimerIcon />,
+          message: 'En attente de confirmation...',
+          description: 'Veuillez confirmer la transaction dans votre wallet'
+        };
+      case Status.PROCESSING:
+        return {
+          color: 'info',
+          icon: <CircularProgress size={20} />,
+          message: 'Transaction en cours...',
+          description: 'Veuillez patienter pendant le traitement de votre paiement'
+        };
+      case Status.CONFIRMED:
+        return {
+          color: 'success',
+          icon: <CheckCircleIcon />,
+          message: 'Paiement confirmé !',
+          description: 'Votre transaction a été validée avec succès'
+        };
+      case Status.FAILED:
+        return {
+          color: 'error',
+          icon: <ErrorIcon />,
+          message: 'Échec du paiement',
+          description: session.error || 'Une erreur est survenue lors du traitement'
+        };
+      case Status.TIMEOUT:
+        return {
+          color: 'error',
+          icon: <TimerIcon />,
+          message: 'Délai dépassé',
+          description: 'La transaction a pris trop de temps'
+        };
       default:
-        return null;
+        return {
+          color: 'default',
+          icon: null,
+          message: 'Statut inconnu',
+          description: 'Impossible de déterminer l\'état du paiement'
+        };
     }
   };
+
+  const config = getStatusConfig(session.status);
 
   return (
-    <div className="payment-status">
-      {renderContent()}
-    </div>
+    <Paper 
+      elevation={0}
+      sx={{ 
+        p: 3,
+        bgcolor: theme.palette.background.default,
+        borderRadius: 2
+      }}
+    >
+      <Box sx={{ textAlign: 'center', mb: 2 }}>
+        <Chip
+          icon={config.icon}
+          label={config.message}
+          color={config.color as any}
+          sx={{ mb: 2 }}
+        />
+        
+        <Typography variant="body1" color="textSecondary">
+          {config.description}
+        </Typography>
+      </Box>
+
+      {session.txHash && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          <AlertTitle>Hash de transaction</AlertTitle>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              wordBreak: 'break-all',
+              fontFamily: 'monospace'
+            }}
+          >
+            {session.txHash}
+          </Typography>
+        </Alert>
+      )}
+
+      {session.status === Status.PROCESSING && (
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <CircularProgress size={40} />
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            Confirmation en cours...
+          </Typography>
+        </Box>
+      )}
+
+      {session.error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          <AlertTitle>Erreur</AlertTitle>
+          {session.error}
+        </Alert>
+      )}
+    </Paper>
   );
 };

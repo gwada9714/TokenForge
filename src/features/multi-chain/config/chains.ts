@@ -1,4 +1,5 @@
 import { ChainId, EVMChainConfig, SolanaChainConfig } from '../types/Chain';
+import { PaymentNetwork } from '../types/PaymentNetwork';
 
 export const ethereumConfig: EVMChainConfig = {
   id: ChainId.ETH,
@@ -74,4 +75,109 @@ export const supportedChains = {
 
 export const getChainConfig = (chainId: ChainId) => {
   return supportedChains[chainId];
+};
+
+interface ChainConfig {
+  name: string;
+  rpcUrl: string;
+  chainId: number;
+  blockExplorer: string;
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+  contracts: {
+    payment: string;
+    treasury: string;
+  };
+}
+
+export const CHAIN_CONFIG: Record<PaymentNetwork, ChainConfig> = {
+  [PaymentNetwork.ETHEREUM]: {
+    name: 'Ethereum Mainnet',
+    rpcUrl: process.env.VITE_ETH_RPC_URL || 'https://eth-mainnet.g.alchemy.com/v2/your-api-key',
+    chainId: 1,
+    blockExplorer: 'https://etherscan.io',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18
+    },
+    contracts: {
+      payment: process.env.VITE_ETH_PAYMENT_CONTRACT || '0x...',
+      treasury: process.env.VITE_ETH_TREASURY_ADDRESS || '0x...'
+    }
+  },
+  [PaymentNetwork.POLYGON]: {
+    name: 'Polygon Mainnet',
+    rpcUrl: process.env.VITE_POLYGON_RPC_URL || 'https://polygon-mainnet.g.alchemy.com/v2/your-api-key',
+    chainId: 137,
+    blockExplorer: 'https://polygonscan.com',
+    nativeCurrency: {
+      name: 'MATIC',
+      symbol: 'MATIC',
+      decimals: 18
+    },
+    contracts: {
+      payment: process.env.VITE_POLYGON_PAYMENT_CONTRACT || '0x...',
+      treasury: process.env.VITE_POLYGON_TREASURY_ADDRESS || '0x...'
+    }
+  },
+  [PaymentNetwork.BSC]: {
+    name: 'BNB Smart Chain',
+    rpcUrl: process.env.VITE_BSC_RPC_URL || 'https://bsc-dataseed.binance.org',
+    chainId: 56,
+    blockExplorer: 'https://bscscan.com',
+    nativeCurrency: {
+      name: 'BNB',
+      symbol: 'BNB',
+      decimals: 18
+    },
+    contracts: {
+      payment: process.env.VITE_BSC_PAYMENT_CONTRACT || '0x...',
+      treasury: process.env.VITE_BSC_TREASURY_ADDRESS || '0x...'
+    }
+  },
+  [PaymentNetwork.SOLANA]: {
+    name: 'Solana Mainnet',
+    rpcUrl: process.env.VITE_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
+    chainId: 101,
+    blockExplorer: 'https://explorer.solana.com',
+    nativeCurrency: {
+      name: 'SOL',
+      symbol: 'SOL',
+      decimals: 9
+    },
+    contracts: {
+      payment: process.env.VITE_SOLANA_PAYMENT_PROGRAM || 'PayXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+      treasury: process.env.VITE_SOLANA_TREASURY_ADDRESS || '0x...'
+    }
+  }
+};
+
+export const getChainConfig = (network: PaymentNetwork): ChainConfig => {
+  const config = CHAIN_CONFIG[network];
+  if (!config) {
+    throw new Error(`Configuration non trouvée pour le réseau ${network}`);
+  }
+  return config;
+};
+
+export const validateChainConfig = (network: PaymentNetwork): boolean => {
+  const config = CHAIN_CONFIG[network];
+  if (!config) return false;
+
+  // Vérifier que les valeurs requises sont définies
+  const requiredValues = [
+    config.rpcUrl,
+    config.contracts.payment,
+    config.contracts.treasury
+  ];
+
+  return requiredValues.every(value => 
+    value && 
+    value !== '0x...' && 
+    !value.includes('your-api-key')
+  );
 };

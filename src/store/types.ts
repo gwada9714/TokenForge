@@ -1,7 +1,25 @@
 import { TokenConfig } from '@/types/token';
-import { AuthState } from './slices/authSlice';
-import { AnalyticsState } from './slices/analyticsSlice';
-import { UserTokensState } from './slices/userTokensSlice';
+import { store } from './index';
+
+// Base types
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+// State interfaces
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: {
+    id: string;
+    email: string;
+  } | null;
+}
+
+export interface SerializedError {
+  name?: string;
+  message?: string;
+  code?: string;
+  stack?: string;
+}
 
 export interface TokenCreationState {
   currentStep: number;
@@ -31,11 +49,13 @@ export interface UIState {
   isLoading: boolean;
 }
 
-export interface RootState {
-  tokenCreation: TokenCreationState;
-  wallet: WalletState;
-  ui: UIState;
-  analytics: AnalyticsState;
-  userTokens: UserTokensState;
-  auth: AuthState;
+// Ajout du type StakingState manquant
+export interface StakingState {
+  stakes: Array<{
+    id: string;
+    amount: string;
+    timestamp: number;
+  }>;
+  totalStaked: string;
+  rewards: string;
 }

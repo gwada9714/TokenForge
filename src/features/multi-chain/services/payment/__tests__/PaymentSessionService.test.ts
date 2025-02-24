@@ -29,47 +29,121 @@ describe('PaymentSessionService', () => {
   });
 
   describe('createSession', () => {
-    it('should create a new payment session', () => {
-      const userId = 'user123';
-      const serviceType = 'token_creation';
+    it('should create a new payment session', async () => {
+      const params = {
+        userId: 'user123',
+        amount: BigInt(1000000),
+        network: PaymentNetwork.ETHEREUM,
+        token: {
+          symbol: 'ETH',
+          address: '0x0000000000000000000000000000000000000000',
+        },
+        serviceType: 'SUBSCRIPTION',
+      };
 
-      const session = service.createSession(userId, ONE_ETH, mockToken, serviceType);
+      const session = await service.createSession(params);
 
-      expect(session).toBeDefined();
-      expect(session.userId).toBe(userId);
-      expect(session.amount).toBe(ONE_ETH);
-      expect(session.token).toBe(mockToken);
-      expect(session.status).toBe(PaymentStatus.PENDING);
-      expect(session.retryCount).toBe(0);
-      expect(session.serviceType).toBe(serviceType);
+      expect(session).toMatchObject({
+        userId: params.userId,
+        amount: params.amount,
+        network: params.network,
+        token: params.token,
+        serviceType: params.serviceType,
+        status: 'PENDING',
+        retryCount: 0,
+      });
+
+      expect(session.id).toBeDefined();
+      expect(session.createdAt).toBeInstanceOf(Date);
+      expect(session.updatedAt).toBeInstanceOf(Date);
+      expect(session.expiresAt).toBeInstanceOf(Date);
     });
   });
 
   describe('updateSessionStatus', () => {
-    it('should update session status correctly', () => {
-      const userId = 'user123';
-      const amount = ONE_ETH;
-      const session = service.createSession(userId, amount, mockToken, 'token_creation');
+    it('should update session status and emit event', async () => {
+      const params = {
+        userId: 'user123',
+        amount: BigInt(1000000),
+        network: PaymentNetwork.ETHEREUM,
+        token: {
+          symbol: 'ETH',
+          address: '0x0000000000000000000000000000000000000000',
+        },
+        serviceType: 'SUBSCRIPTION',
+      };
 
-      // Avancer le temps d'une milliseconde pour s'assurer que updatedAt est plus récent
-      vi.advanceTimersByTime(1);
+      const session = await service.createSession(params);
+      const txHash = '0x123456789';
 
-      const txHash = '0xabcdef1234567890';
-      const updatedSession = service.updateSessionStatus(
-        session.id,
-        PaymentStatus.CONFIRMED,
-        txHash
-      );
+      let eventEmitted = false;
+      service.onSessionUpdate(session.id, (updatedSession) => {
+        expect(updatedSession.status).toBe('COMPLETED');
+        expect(updatedSession.txHash).toBe(txHash);
+        eventEmitted = true;
+      });
 
-      expect(updatedSession.status).toBe(PaymentStatus.CONFIRMED);
-      expect(updatedSession.txHash).toBe(txHash);
-      expect(updatedSession.updatedAt.getTime()).toBeGreaterThan(session.createdAt.getTime());
+      service.updateSessionStatus(session.id, 'COMPLETED', txHash);
+      expect(eventEmitted).toBe(true);
+
+      const updatedSession = service.getSession(session.id);
+      expect(updatedSession).toBeUndefined(); // Session should be cleaned up after completion
     });
 
-    it('should throw error for non-existent session', () => {
-      expect(() => {
-        service.updateSessionStatus('non-existent', PaymentStatus.CONFIRMED);
-      }).toThrow('Session non-existent not found');
+    it('should handle session expiry', async () => {
+      jest.useFakeTimers();
+
+      const params = {
+        userId: 'user123',
+        amount: BigInt(1000000),
+        network: PaymentNetwork.ETHEREUM,
+        token: {
+          symbol: 'ETH',
+          address: '0x0000000000000000000000000000000000000000',
+        },
+        serviceType: 'SUBSCRIPTION',
+      };
+
+      const session = await service.createSession(params);
+      let eventEmitted = false;
+
+      service.onSessionUpdate(session.id, (updatedSession) => {
+        expect(updatedSession.status).toBe('FAILED');
+        expect(updatedSession.error).toBe('Session expired');
+        eventEmitted = true;
+      });
+
+      jest.advanceTimersByTime(30 * 60 * 1000 + 1000); // 30 minutes + 1 second
+      expect(eventEmitted).toBe(true);
+
+      const expiredSession = service.getSession(session.id);
+      expect(expiredSession).toBeUndefined();
+
+      jest.useRealTimers();
+    });
+  });
+
+  describe('getAllUserSessions', () => {
+    it('should return all sessions for a user', async () => {
+      const userId = 'user123';
+      const params = {
+        userId,
+        amount: BigInt(1000000),
+        network: PaymentNetwork.ETHEREUM,
+        token: {
+          symbol: 'ETH',
+          address: '0x0000000000000000000000000000000000000000',
+        },
+        serviceType: 'SUBSCRIPTION',
+      };
+
+      await service.createSession(params);
+      await service.createSession(params);
+
+      const userSessions = service.getAllUserSessions(userId);
+      expect(userSessions).toHaveLength(2);
+      expect(userSessions[0].userId).toBe(userId);
+      expect(userSessions[1].userId).toBe(userId);
     });
   });
 

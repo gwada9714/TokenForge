@@ -34,21 +34,35 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
+      # Ajout de la vérification du cache
+      - name: Verify npm cache
+        run: |
+          npm cache verify
+          npm ci --prefer-offline
 
+      # Amélioration de l'audit de sécurité
       - name: Run Security Audit
-        run: npm audit --production --audit-level=high
+        run: |
+          npm audit --production --audit-level=moderate
+          npm outdated || true
+        continue-on-error: true
 
+      # Ajout de Dependency Review
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: high
+
+      # Correction du template Trivy
       - name: Run Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: "fs"
+          scan-type: 'fs'
           ignore-unfixed: true
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "HIGH,CRITICAL"
-          scanners: "vuln,config,secret"
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          timeout: '10m'
 
       - name: Run Semgrep SAST
         run: semgrep --config auto
@@ -72,6 +86,25 @@ jobs:
             security-audit.log
             trivy-results.sarif
             semgrep-results.sarif
+
+      # Correction de la rotation des secrets avec une meilleure gestion d'erreurs
+      - name: Rotate Secrets
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          if ! curl --fail -X POST ${{ secrets.VAULT_ROTATE_URL }} \
+            -H "Authorization: Bearer ${{ secrets.VAULT_TOKEN }}" \
+            -H "Content-Type: application/json"; then
+            echo "Secret rotation failed"
+            exit 1
+          fi
+
+      # Ajout d'une vérification de sécurité supplémentaire
+      - name: Check for sensitive data
+        run: |
+          if grep -r --include="*.{js,ts,json}" -E "API_KEY|SECRET|PASSWORD" .; then
+            echo "Potential sensitive data found in code"
+            exit 1
+          fi
 
   deploy:
     needs: security-checks

@@ -1,19 +1,30 @@
 import { v4 as uuidv4 } from 'uuid';
-import { PaymentSession, PaymentStatus, PaymentToken } from './types/PaymentSession';
-import { PaymentSyncService, IPaymentSessionManager } from './PaymentSyncService';
+import { PaymentSession, PaymentStatus, PaymentNetwork, PaymentToken } from './types/PaymentSession';
+import EventEmitter from 'events';
 
-export class PaymentSessionService implements IPaymentSessionManager {
+interface CreateSessionParams {
+  network: PaymentNetwork;
+  token: PaymentToken;
+  amount: bigint;
+  serviceType: string;
+  userId: string;
+}
+
+type SessionUpdateCallback = (session: PaymentSession) => void;
+
+export class PaymentSessionService {
   private static instance: PaymentSessionService;
   private sessions: Map<string, PaymentSession>;
   private timeouts: Map<string, NodeJS.Timeout>;
-  private syncService: PaymentSyncService;
+  private eventEmitter: EventEmitter;
   private readonly RETRY_LIMIT = 3;
   private readonly TIMEOUT_MS = 10000; // 10 seconds
+  private readonly SESSION_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
 
   private constructor() {
     this.sessions = new Map();
     this.timeouts = new Map();
-    this.syncService = PaymentSyncService.getInstance(this);
+    this.eventEmitter = new EventEmitter();
   }
 
   public static getInstance(): PaymentSessionService {
@@ -23,30 +34,26 @@ export class PaymentSessionService implements IPaymentSessionManager {
     return PaymentSessionService.instance;
   }
 
-  public createSession(
-    userId: string,
-    amount: bigint,
-    token: PaymentToken,
-    serviceType: PaymentSession['serviceType']
-  ): PaymentSession {
+  public async createSession(params: CreateSessionParams): Promise<PaymentSession> {
+    const sessionId = uuidv4();
     const now = new Date();
+    
     const session: PaymentSession = {
-      id: uuidv4(),
-      userId,
-      amount,
-      token,
-      network: token.network,
-      serviceType,
-      status: PaymentStatus.PENDING,
+      id: sessionId,
+      userId: params.userId,
+      status: 'PENDING',
+      network: params.network,
+      token: params.token,
+      amount: params.amount,
+      serviceType: params.serviceType,
       createdAt: now,
       updatedAt: now,
-      expiresAt: new Date(now.getTime() + this.TIMEOUT_MS),
-      retryCount: 0
+      expiresAt: new Date(now.getTime() + this.SESSION_EXPIRY_MS),
+      retryCount: 0,
     };
 
-    this.sessions.set(session.id, session);
-    this.setupSessionTimeout(session.id);
-    this.syncService.broadcastSessionUpdate(session.id, session);
+    this.sessions.set(sessionId, session);
+    this.setupSessionTimeout(sessionId);
 
     return session;
   }
@@ -55,27 +62,9 @@ export class PaymentSessionService implements IPaymentSessionManager {
     return this.sessions.get(sessionId);
   }
 
-  public getSessions(): Map<string, PaymentSession> {
-    return this.sessions;
-  }
-
-  public updateSession(sessionId: string, updates: Partial<PaymentSession>): void {
-    const session = this.sessions.get(sessionId);
-    if (!session) return;
-
-    const updatedSession = {
-      ...session,
-      ...updates,
-      updatedAt: new Date()
-    };
-
-    this.sessions.set(sessionId, updatedSession);
-    this.syncService.broadcastSessionUpdate(sessionId, updates);
-
-    // Si le statut est final, nettoyer le timeout
-    if (updates.status && updates.status !== PaymentStatus.PENDING) {
-      this.cleanupTimeout(sessionId);
-    }
+  public getAllUserSessions(userId: string): PaymentSession[] {
+    return Array.from(this.sessions.values())
+      .filter(session => session.userId === userId);
   }
 
   public updateSessionStatus(
@@ -83,90 +72,57 @@ export class PaymentSessionService implements IPaymentSessionManager {
     status: PaymentStatus,
     txHash?: string,
     error?: string
-  ): PaymentSession {
+  ): void {
     const session = this.sessions.get(sessionId);
-    if (!session) {
-      throw new Error(`Session ${sessionId} not found`);
-    }
+    if (!session) return;
 
-    this.updateSession(sessionId, { status, txHash, error });
-    return this.sessions.get(sessionId)!;
+    const updatedSession: PaymentSession = {
+      ...session,
+      status,
+      txHash,
+      error,
+      updatedAt: new Date(),
+    };
+
+    this.sessions.set(sessionId, updatedSession);
+    this.eventEmitter.emit(`session:${sessionId}`, updatedSession);
+
+    if (status === 'COMPLETED' || status === 'FAILED') {
+      this.cleanupSession(sessionId);
+    }
   }
 
-  public async retryPayment(sessionId: string): Promise<boolean> {
-    const session = this.sessions.get(sessionId);
-    if (!session) {
-      throw new Error(`Session ${sessionId} not found`);
-    }
-
-    if (session.retryCount >= this.RETRY_LIMIT) {
-      this.updateSession(sessionId, {
-        status: PaymentStatus.FAILED,
-        error: 'Retry limit exceeded'
-      });
-      return false;
-    }
-
-    this.updateSession(sessionId, {
-      retryCount: session.retryCount + 1,
-      status: PaymentStatus.PENDING,
-      error: undefined,
-      expiresAt: new Date(Date.now() + this.TIMEOUT_MS)
-    });
-
-    this.setupSessionTimeout(sessionId);
-    return true;
+  public onSessionUpdate(sessionId: string, callback: SessionUpdateCallback): () => void {
+    const eventName = `session:${sessionId}`;
+    this.eventEmitter.on(eventName, callback);
+    return () => this.eventEmitter.off(eventName, callback);
   }
 
-  private cleanupTimeout(sessionId: string): void {
+  private setupSessionTimeout(sessionId: string): void {
+    const timeout = setTimeout(() => {
+      const session = this.sessions.get(sessionId);
+      if (session && session.status === 'PENDING') {
+        this.updateSessionStatus(sessionId, 'FAILED', undefined, 'Session expired');
+      }
+    }, this.SESSION_EXPIRY_MS);
+
+    this.timeouts.set(sessionId, timeout);
+  }
+
+  public cleanupSession(sessionId: string): void {
     const timeout = this.timeouts.get(sessionId);
     if (timeout) {
       clearTimeout(timeout);
       this.timeouts.delete(sessionId);
     }
-  }
-
-  public cleanupSession(sessionId: string): void {
-    this.cleanupTimeout(sessionId);
     this.sessions.delete(sessionId);
-  }
-
-  private setupSessionTimeout(sessionId: string): void {
-    const session = this.sessions.get(sessionId);
-    if (!session) return;
-
-    // Nettoyer l'ancien timeout s'il existe
-    this.cleanupTimeout(sessionId);
-
-    const timeout = setTimeout(() => {
-      const currentSession = this.sessions.get(sessionId);
-      if (!currentSession) return;
-
-      if (currentSession.status === PaymentStatus.PENDING) {
-        this.updateSession(sessionId, {
-          status: PaymentStatus.TIMEOUT,
-          error: 'Payment timeout exceeded'
-        });
-        this.cleanupTimeout(sessionId);
-      }
-    }, this.TIMEOUT_MS);
-
-    this.timeouts.set(sessionId, timeout);
+    this.eventEmitter.removeAllListeners(`session:${sessionId}`);
   }
 
   public cleanup(): void {
-    // Nettoyer tous les timeouts
-    for (const [sessionId, timeout] of this.timeouts) {
-      clearTimeout(timeout);
-      this.timeouts.delete(sessionId);
-    }
-
-    // Nettoyer toutes les sessions
+    this.timeouts.forEach(timeout => clearTimeout(timeout));
+    this.timeouts.clear();
     this.sessions.clear();
-
-    // Nettoyer le service de synchronisation sans déclencher une boucle
-    if (this.syncService) {
-      this.syncService.cleanupWithoutRecursion();
-    }
+    this.eventEmitter.removeAllListeners();
   }
 }

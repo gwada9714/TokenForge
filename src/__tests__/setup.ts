@@ -1,5 +1,47 @@
-import { vi, beforeAll, afterAll } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { expect, vi, beforeAll, afterAll, beforeEach, afterEach, describe, it } from 'vitest';
 import type { WalletClient } from 'viem';
+import { cleanup } from '@testing-library/react';
+import * as matchers from '@testing-library/jest-dom/matchers';
+
+// Polyfills pour Node.js
+const nodeCrypto = require('crypto');
+global.crypto = {
+  getRandomValues: function(buffer) {
+    return nodeCrypto.randomFillSync(buffer);
+  }
+};
+
+// Fix pour TextEncoder/TextDecoder
+const util = require('util');
+global.TextEncoder = util.TextEncoder;
+global.TextDecoder = util.TextDecoder;
+
+// Autres polyfills nécessaires
+global.ArrayBuffer = ArrayBuffer;
+global.Uint8Array = Uint8Array;
+global.fetch = vi.fn();
+global.Request = vi.fn();
+global.Response = vi.fn();
+global.Headers = vi.fn();
+
+// Étend les matchers de test
+expect.extend(matchers);
+
+// Mock de matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
 
 // Mock environment variables
 vi.stubEnv('VITE_FIREBASE_API_KEY', 'test-api-key');
@@ -11,7 +53,7 @@ vi.stubEnv('VITE_FIREBASE_APP_ID', '1:123456789:web:abcdef');
 vi.stubEnv('VITE_FIREBASE_MEASUREMENT_ID', 'G-TEST123456');
 
 // Mock window.ethereum
-vi.stubGlobal('ethereum', {
+const mockEthereum = {
   request: vi.fn(),
   on: vi.fn(),
   removeListener: vi.fn(),
@@ -20,7 +62,9 @@ vi.stubGlobal('ethereum', {
   networkVersion: '1',
   isConnected: vi.fn().mockReturnValue(true),
   enable: vi.fn().mockResolvedValue(['0x1234567890123456789012345678901234567890'])
-});
+};
+
+vi.stubGlobal('ethereum', mockEthereum);
 
 // Mock viem
 vi.mock('viem', () => {
@@ -52,7 +96,7 @@ vi.mock('viem', () => {
   };
 });
 
-// Mock Firebase
+// Mock Firebase avec plus de fonctionnalités
 vi.mock('firebase/app', () => ({
   initializeApp: vi.fn().mockReturnValue({
     name: '[DEFAULT]',
@@ -60,32 +104,51 @@ vi.mock('firebase/app', () => ({
     automaticDataCollectionEnabled: true
   }),
   getApp: vi.fn(),
-  getApps: vi.fn().mockReturnValue([])
+  getApps: vi.fn().mockReturnValue([]),
+  deleteApp: vi.fn(),
+  onLog: vi.fn(),
+  setLogLevel: vi.fn()
 }));
 
-vi.mock('firebase/auth', () => ({
-  getAuth: vi.fn().mockReturnValue({
-    currentUser: null,
-    signInWithEmailAndPassword: vi.fn(),
-    signInWithPopup: vi.fn(),
-    createUserWithEmailAndPassword: vi.fn(),
-    signOut: vi.fn(),
+vi.mock('firebase/auth', () => {
+  const mockUser = {
+    uid: 'test-uid',
+    email: 'test@example.com',
+    emailVerified: true,
+    displayName: 'Test User',
+    photoURL: null,
+    phoneNumber: null,
+    isAnonymous: false,
+    metadata: {
+      creationTime: new Date().toISOString(),
+      lastSignInTime: new Date().toISOString()
+    }
+  };
+
+  return {
+    getAuth: vi.fn().mockReturnValue({
+      currentUser: mockUser,
+      signInWithEmailAndPassword: vi.fn().mockResolvedValue({ user: mockUser }),
+      signInWithPopup: vi.fn().mockResolvedValue({ user: mockUser }),
+      createUserWithEmailAndPassword: vi.fn().mockResolvedValue({ user: mockUser }),
+      signOut: vi.fn().mockResolvedValue(undefined),
+      onAuthStateChanged: vi.fn(),
+      sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+      updateProfile: vi.fn().mockResolvedValue(undefined),
+      verifyBeforeUpdateEmail: vi.fn().mockResolvedValue(undefined),
+      sendEmailVerification: vi.fn().mockResolvedValue(undefined)
+    }),
+    signInWithEmailAndPassword: vi.fn().mockResolvedValue({ user: mockUser }),
+    signInWithPopup: vi.fn().mockResolvedValue({ user: mockUser }),
+    createUserWithEmailAndPassword: vi.fn().mockResolvedValue({ user: mockUser }),
+    signOut: vi.fn().mockResolvedValue(undefined),
     onAuthStateChanged: vi.fn(),
-    sendPasswordResetEmail: vi.fn(),
-    updateProfile: vi.fn(),
     GoogleAuthProvider: vi.fn().mockImplementation(() => ({
-      addScope: vi.fn()
+      addScope: vi.fn(),
+      setCustomParameters: vi.fn()
     }))
-  }),
-  signInWithEmailAndPassword: vi.fn(),
-  signInWithPopup: vi.fn(),
-  createUserWithEmailAndPassword: vi.fn(),
-  signOut: vi.fn(),
-  onAuthStateChanged: vi.fn(),
-  GoogleAuthProvider: vi.fn().mockImplementation(() => ({
-    addScope: vi.fn()
-  }))
-}));
+  };
+});
 
 // Mock console methods
 const originalConsole = { ...console };
@@ -101,4 +164,12 @@ afterAll(() => {
   console.error = originalConsole.error;
   console.warn = originalConsole.warn;
   console.debug = originalConsole.debug;
+});
+
+// Nettoyage après chaque test
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+  localStorage.clear();
+  sessionStorage.clear();
 });

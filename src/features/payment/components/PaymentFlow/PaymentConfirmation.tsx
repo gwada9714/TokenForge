@@ -1,79 +1,149 @@
 import React from 'react';
-import { PaymentNetwork } from '../../../multi-chain/services/payment/types/PaymentSession';
-import { SUPPORTED_NETWORKS } from '../../../multi-chain/services/payment/config/SupportedTokens';
-import { DEFAULT_RECEIVER_ADDRESS } from '../../../multi-chain/services/payment/config/PaymentAddresses';
+import {
+  Box,
+  Button,
+  Typography,
+  Paper,
+  Divider,
+  Stack,
+  Alert,
+  useTheme,
+  CircularProgress
+} from '@mui/material';
+import { PaymentSession, PaymentNetwork } from '@/features/multi-chain/services/payment/types';
 
 interface PaymentConfirmationProps {
-  network: PaymentNetwork;
-  tokenAddress: string;
-  amount: string;
-  onConfirm: () => void;
+  session: PaymentSession;
+  isProcessing: boolean;
+  onConfirm: () => Promise<void>;
   onCancel: () => void;
-  isProcessing?: boolean;
+  estimatedGas?: string;
+  estimatedTime?: number;
 }
 
+/**
+ * Composant de confirmation de paiement
+ * Affiche un récapitulatif et permet de confirmer/annuler
+ * @component
+ */
 export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
-  network,
-  tokenAddress,
-  amount,
+  session,
+  isProcessing,
   onConfirm,
   onCancel,
-  isProcessing = false,
+  estimatedGas,
+  estimatedTime
 }) => {
-  const networkConfig = SUPPORTED_NETWORKS.find(n => n.network === network);
-  const token = networkConfig?.tokens.find(t => t.address.toString() === tokenAddress);
+  const theme = useTheme();
+  const [error, setError] = React.useState<string | null>(null);
 
-  if (!networkConfig || !token) {
-    return null;
-  }
+  const handleConfirm = async () => {
+    try {
+      setError(null);
+      await onConfirm();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  const getNetworkIcon = (network: PaymentNetwork) => {
+    switch (network) {
+      case PaymentNetwork.ETHEREUM:
+        return '🔷';
+      case PaymentNetwork.POLYGON:
+        return '💜';
+      case PaymentNetwork.BINANCE:
+        return '💛';
+      case PaymentNetwork.SOLANA:
+        return '🟣';
+      default:
+        return '🔗';
+    }
+  };
+
+  const getEstimatedTimeText = (minutes: number) => {
+    if (minutes < 1) return 'Moins d\'une minute';
+    if (minutes === 1) return 'Environ 1 minute';
+    return `Environ ${minutes} minutes`;
+  };
 
   return (
-    <div className="payment-confirmation">
-      <h3>Confirmer le paiement</h3>
-      
-      <div className="confirmation-details">
-        <div className="detail-row">
-          <span>Réseau:</span>
-          <span>{networkConfig.network}</span>
-        </div>
-        
-        <div className="detail-row">
-          <span>Token:</span>
-          <span>{token.symbol} ({token.name})</span>
-        </div>
-        
-        <div className="detail-row">
-          <span>Montant:</span>
-          <span>{amount} {token.symbol}</span>
-        </div>
-        
-        <div className="detail-row">
-          <span>Destinataire:</span>
-          <span className="address">{DEFAULT_RECEIVER_ADDRESS}</span>
-        </div>
-      </div>
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        p: 3,
+        bgcolor: theme.palette.background.default,
+        borderRadius: 2
+      }}
+    >
+      <Typography variant="h6" gutterBottom>
+        Confirmation du Paiement
+      </Typography>
 
-      <div className="confirmation-warning">
-        <p>⚠️ Vérifiez bien les détails avant de confirmer la transaction</p>
-      </div>
+      <Stack spacing={2} sx={{ mt: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography color="textSecondary">Réseau</Typography>
+          <Typography>
+            {getNetworkIcon(session.network)} {session.network}
+          </Typography>
+        </Box>
 
-      <div className="confirmation-actions">
-        <button 
-          className="cancel-button"
-          onClick={onCancel}
-          disabled={isProcessing}
-        >
-          Annuler
-        </button>
-        
-        <button 
-          className="confirm-button"
-          onClick={onConfirm}
-          disabled={isProcessing}
-        >
-          {isProcessing ? 'Transaction en cours...' : 'Confirmer le paiement'}
-        </button>
-      </div>
-    </div>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography color="textSecondary">Token</Typography>
+          <Typography>{session.token.symbol}</Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography color="textSecondary">Montant</Typography>
+          <Typography>
+            {session.amount} {session.token.symbol}
+          </Typography>
+        </Box>
+
+        {estimatedGas && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography color="textSecondary">Frais estimés</Typography>
+            <Typography>{estimatedGas}</Typography>
+          </Box>
+        )}
+
+        <Divider />
+
+        {estimatedTime && (
+          <Typography variant="body2" color="textSecondary" align="center">
+            Temps estimé : {getEstimatedTimeText(estimatedTime)}
+          </Typography>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+          <Button
+            variant="outlined"
+            onClick={onCancel}
+            disabled={isProcessing}
+            fullWidth
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirm}
+            disabled={isProcessing}
+            fullWidth
+          >
+            {isProcessing ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Confirmer'
+            )}
+          </Button>
+        </Stack>
+      </Stack>
+    </Paper>
   );
 };

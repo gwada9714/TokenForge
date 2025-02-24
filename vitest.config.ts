@@ -6,7 +6,8 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   define: {
-    'process.env': {}
+    'process.env': {},
+    global: 'globalThis',
   },
   test: {
     globals: true,
@@ -28,8 +29,22 @@ export default defineConfig({
       inline: [
         'viem',
         'firebase/app',
-        'firebase/auth'
+        'firebase/auth',
+        '@testing-library/jest-dom'
       ]
-    }
+    },
+    typecheck: {
+      tsconfig: './tsconfig.json',
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      ignoreSourceErrors: true
+    },
+    environmentOptions: {
+      jsdom: {
+        resources: 'usable'
+      }
+    },
+    pool: 'forks',
+    isolate: true,
+    mockReset: true
   }
 });

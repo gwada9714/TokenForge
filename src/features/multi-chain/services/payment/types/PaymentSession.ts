@@ -8,20 +8,12 @@ export enum PaymentNetwork {
   SOLANA = 'SOLANA',
 }
 
-export enum PaymentStatus {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  CONFIRMED = 'CONFIRMED',
-  FAILED = 'FAILED',
-  EXPIRED = 'EXPIRED',
-  TIMEOUT = 'TIMEOUT'
-}
+export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
 export interface PaymentToken {
-  address: Address | PublicKey;
-  network: PaymentNetwork;
   symbol: string;
-  decimals: number;
+  address: string;
+  decimals?: number;
 }
 
 export interface PaymentSession {

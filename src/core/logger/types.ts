@@ -1,20 +1,13 @@
 export enum LogLevel {
-  DEBUG = 'DEBUG',
-  INFO = 'INFO',
-  WARN = 'WARN',
-  ERROR = 'ERROR'
-}
-
-export interface LogMetadata {
-  [key: string]: unknown;
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3
 }
 
 export interface LogEntry {
-  category: string;
   message: string;
-  level: LogLevel;
-  metadata?: LogMetadata;
-  timestamp?: string;
+  metadata?: Record<string, unknown>;
   error?: Error;
 }
 
@@ -23,4 +16,5 @@ export interface Logger {
   info(entry: LogEntry): void;
   warn(entry: LogEntry): void;
   error(entry: LogEntry): void;
+  setLogLevel(level: LogLevel): void;
 }
