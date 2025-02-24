@@ -1,6 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 
-const theme = createTheme({
+export const theme = createTheme({
   palette: {
     primary: {
       main: '#182038',
@@ -27,7 +27,12 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: 'Open Sans, system-ui, sans-serif',
+    fontFamily: [
+      'Montserrat',
+      'Open Sans',
+      'Roboto',
+      'sans-serif'
+    ].join(','),
     h1: {
       fontFamily: 'Montserrat, system-ui, sans-serif',
       fontWeight: 'bold',
@@ -52,51 +57,75 @@ const theme = createTheme({
       fontFamily: 'Montserrat, system-ui, sans-serif',
       fontWeight: 'bold',
     },
+    subtitle1: {
+      fontFamily: 'Open Sans, system-ui, sans-serif',
+      fontWeight: 600,
+    },
+    subtitle2: {
+      fontFamily: 'Open Sans, system-ui, sans-serif',
+      fontWeight: 600,
+    },
+    body1: {
+      fontFamily: 'Open Sans, system-ui, sans-serif',
+    },
+    body2: {
+      fontFamily: 'Open Sans, system-ui, sans-serif',
+    },
+    button: {
+      fontFamily: 'Open Sans, system-ui, sans-serif',
+      fontWeight: 600,
+      textTransform: 'none',
+    },
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          fontWeight: 'semibold',
-          borderRadius: '8px',
-          transition: 'all 0.2s',
+          borderRadius: 8,
+          padding: '8px 16px',
         },
-      },
-      variants: {
-        primary: {
-          styleOverrides: {
-            root: {
-              backgroundColor: '#182038',
-              color: '#FFFFFF',
-              '&:hover': {
-                backgroundColor: '#0c1019',
-                transform: 'translateY(-1px)',
-              },
-            },
-          },
-        },
-        secondary: {
-          styleOverrides: {
-            root: {
-              backgroundColor: '#D97706',
-              color: '#FFFFFF',
-              '&:hover': {
-                backgroundColor: '#b45309',
-                transform: 'translateY(-1px)',
-              },
-            },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
           },
         },
       },
     },
-    MuiTypography: {
+    MuiCard: {
       styleOverrides: {
         root: {
-          color: '#1F2937',
+          borderRadius: 12,
+          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
         },
       },
     },
-  },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 8,
+          },
+        },
+      },
+    },
+    MuiCssBaseline: {
+      styleOverrides: `
+        @font-face {
+          font-family: 'Montserrat';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 400;
+          src: local('Montserrat'), local('Montserrat-Regular');
+        }
+        @font-face {
+          font-family: 'Open Sans';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 400;
+          src: local('Open Sans'), local('OpenSans-Regular');
+        }
+      `
+    }
+  }
 });
-
-export default theme;

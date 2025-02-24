@@ -1,47 +1,51 @@
-import React from "react";
-import { Provider } from "react-redux";
-import { store } from "./store/store";
-import { Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@mui/material/styles";
-import { forgeTheme } from "./theme/forge-theme";
-import { GlobalStyle } from "./styles/GlobalStyle";
-import { AuthProvider } from "./contexts/AuthContext";
-import { ContractProvider } from "./contexts/ContractContext";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { LoginForm } from "./components/auth/LoginForm";
-import { SignUpForm } from "./components/auth/SignUpForm";
-import HomePage from "./pages/Home";
-import TokenWizard from "./components/TokenWizard/TokenWizard";
-import StakingDashboard from "./components/Staking/StakingDashboard";
-import ProfitDashboard from "./components/Dashboard/ProfitDashboard";
-import LaunchpadPage from "./pages/Launchpad";
-import MyTokens from "./pages/MyTokens";
-import Pricing from "./pages/Pricing";
-import AdminDashboard from "./pages/admin/AdminDashboard";
+import React, { Suspense } from 'react';
+import { Provider } from 'react-redux';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'styled-components';
+import { store, queryClient } from './store';
+import { Router } from './router';
+import { theme } from './theme';
+import { AuthProvider } from './auth/AuthProvider';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { LoadingSpinner } from './components/ui/LoadingSpinner';
+import { Alert } from './components/ui/Alert';
+import { GlobalStyle } from './theme/styles/global';
 
-const App: React.FC = () => {
+const AppContent = () => {
+  const [error, setError] = React.useState<string | null>(null);
+
   return (
-    <Provider store={store}>
-      <ThemeProvider theme={forgeTheme}>
-        <AuthProvider>
-          <ContractProvider>
-            <GlobalStyle />
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/signup" element={<SignUpForm />} />
-              <Route path="/create" element={<ProtectedRoute><TokenWizard /></ProtectedRoute>} />
-              <Route path="/staking" element={<ProtectedRoute><StakingDashboard /></ProtectedRoute>} />
-              <Route path="/profit" element={<ProtectedRoute><ProfitDashboard /></ProtectedRoute>} />
-              <Route path="/launchpad" element={<LaunchpadPage />} />
-              <Route path="/my-tokens" element={<ProtectedRoute><MyTokens /></ProtectedRoute>} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
-            </Routes>
-          </ContractProvider>
-        </AuthProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <GlobalStyle />
+        <Provider store={store}>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              {error && (
+                <Alert 
+                  type="error" 
+                  title="Erreur" 
+                  onClose={() => setError(null)}
+                >
+                  {error}
+                </Alert>
+              )}
+              <Suspense fallback={<LoadingSpinner />}>
+                <Router />
+              </Suspense>
+            </AuthProvider>
+          </QueryClientProvider>
+        </Provider>
       </ThemeProvider>
-    </Provider>
+    </ErrorBoundary>
+  );
+};
+
+const App = () => {
+  return (
+    <React.StrictMode>
+      <AppContent />
+    </React.StrictMode>
   );
 };
 

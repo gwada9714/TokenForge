@@ -1,6 +1,8 @@
 import { Chain } from "viem";
 import { mainnet, sepolia, bsc, bscTestnet, polygon, polygonMumbai, avalanche, avalancheFuji } from "viem/chains";
 
+const SUPPORTED_CHAINS = (import.meta.env.VITE_SUPPORTED_CHAINS || '1,11155111,56,97,137,80001,43114,43113').split(',').map(Number);
+
 export interface NetworkConfig {
   name: string;
   chain: Chain;
@@ -14,49 +16,72 @@ export interface NetworkConfig {
   icon?: string;
 }
 
-// Récupération des variables d'environnement
-const SEPOLIA_RPC_URL = import.meta.env.VITE_SEPOLIA_RPC_URL;
-const TOKEN_FACTORY_SEPOLIA = import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA;
-const LIQUIDITY_LOCKER_SEPOLIA = import.meta.env.VITE_LIQUIDITY_LOCKER_SEPOLIA;
+const getContractAddress = (contractName: string, chainId: number): string => {
+  const network = getNetworkName(chainId);
+  const envVar = `VITE_${contractName}_${network}`;
+  return import.meta.env[envVar] || '';
+};
 
-const MAINNET_RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL;
-const TOKEN_FACTORY_MAINNET = import.meta.env.VITE_TOKEN_FACTORY_MAINNET;
-const LIQUIDITY_LOCKER_MAINNET = import.meta.env.VITE_LIQUIDITY_LOCKER_MAINNET;
+const getRpcUrl = (chainId: number): string => {
+  switch (chainId) {
+    case 1:
+      return import.meta.env.VITE_MAINNET_RPC_URL;
+    case 11155111:
+      return import.meta.env.VITE_SEPOLIA_RPC_URL;
+    case 56:
+      return import.meta.env.VITE_BSC_RPC_URL;
+    case 97:
+      return import.meta.env.VITE_BSC_TESTNET_RPC_URL;
+    case 137:
+      return import.meta.env.VITE_POLYGON_RPC_URL;
+    case 80001:
+      return import.meta.env.VITE_POLYGON_MUMBAI_RPC_URL;
+    case 43114:
+      return import.meta.env.VITE_AVALANCHE_RPC_URL;
+    case 43113:
+      return import.meta.env.VITE_AVALANCHE_FUJI_RPC_URL;
+    default:
+      return '';
+  }
+};
 
-const BSC_RPC_URL = import.meta.env.VITE_BSC_RPC_URL;
-const TOKEN_FACTORY_BSC = import.meta.env.VITE_TOKEN_FACTORY_BSC;
-const LIQUIDITY_LOCKER_BSC = import.meta.env.VITE_LIQUIDITY_LOCKER_BSC;
+const getNetworkName = (chainId: number): string => {
+  switch (chainId) {
+    case 1:
+      return 'MAINNET';
+    case 11155111:
+      return 'SEPOLIA';
+    case 56:
+      return 'BSC';
+    case 97:
+      return 'BSC_TESTNET';
+    case 137:
+      return 'POLYGON';
+    case 80001:
+      return 'POLYGON_MUMBAI';
+    case 43114:
+      return 'AVALANCHE';
+    case 43113:
+      return 'AVALANCHE_FUJI';
+    default:
+      return '';
+  }
+};
 
-const BSC_TESTNET_RPC_URL = import.meta.env.VITE_BSC_TESTNET_RPC_URL;
-const TOKEN_FACTORY_BSC_TESTNET = import.meta.env.VITE_TOKEN_FACTORY_BSC_TESTNET;
-const LIQUIDITY_LOCKER_BSC_TESTNET = import.meta.env.VITE_LIQUIDITY_LOCKER_BSC_TESTNET;
-
-const POLYGON_RPC_URL = import.meta.env.VITE_POLYGON_RPC_URL;
-const TOKEN_FACTORY_POLYGON = import.meta.env.VITE_TOKEN_FACTORY_POLYGON;
-const LIQUIDITY_LOCKER_POLYGON = import.meta.env.VITE_LIQUIDITY_LOCKER_POLYGON;
-
-const POLYGON_MUMBAI_RPC_URL = import.meta.env.VITE_POLYGON_MUMBAI_RPC_URL;
-const TOKEN_FACTORY_POLYGON_MUMBAI = import.meta.env.VITE_TOKEN_FACTORY_POLYGON_MUMBAI;
-const LIQUIDITY_LOCKER_POLYGON_MUMBAI = import.meta.env.VITE_LIQUIDITY_LOCKER_POLYGON_MUMBAI;
-
-const AVALANCHE_RPC_URL = import.meta.env.VITE_AVALANCHE_RPC_URL;
-const TOKEN_FACTORY_AVALANCHE = import.meta.env.VITE_TOKEN_FACTORY_AVALANCHE;
-const LIQUIDITY_LOCKER_AVALANCHE = import.meta.env.VITE_LIQUIDITY_LOCKER_AVALANCHE;
-
-const AVALANCHE_FUJI_RPC_URL = import.meta.env.VITE_AVALANCHE_FUJI_RPC_URL;
-const TOKEN_FACTORY_AVALANCHE_FUJI = import.meta.env.VITE_TOKEN_FACTORY_AVALANCHE_FUJI;
-const LIQUIDITY_LOCKER_AVALANCHE_FUJI = import.meta.env.VITE_LIQUIDITY_LOCKER_AVALANCHE_FUJI;
+const isChainSupported = (chainId: number): boolean => {
+  return SUPPORTED_CHAINS.includes(chainId);
+};
 
 export const networks: Record<number, NetworkConfig> = {
   [mainnet.id]: {
     name: "Ethereum Mainnet",
     chain: mainnet,
     contracts: {
-      liquidityLocker: LIQUIDITY_LOCKER_MAINNET as `0x${string}`,
-      tokenFactory: TOKEN_FACTORY_MAINNET as `0x${string}`,
+      liquidityLocker: getContractAddress('LIQUIDITY_LOCKER', mainnet.id) as `0x${string}`,
+      tokenFactory: getContractAddress('TOKEN_FACTORY', mainnet.id) as `0x${string}`,
     },
     explorerUrl: "https://etherscan.io",
-    rpcUrl: MAINNET_RPC_URL,
+    rpcUrl: getRpcUrl(mainnet.id),
     isTestnet: false,
     icon: "/images/networks/ethereum.svg"
   },
@@ -64,11 +89,11 @@ export const networks: Record<number, NetworkConfig> = {
     name: "Sepolia Testnet",
     chain: sepolia,
     contracts: {
-      liquidityLocker: LIQUIDITY_LOCKER_SEPOLIA as `0x${string}`,
-      tokenFactory: TOKEN_FACTORY_SEPOLIA as `0x${string}`,
+      liquidityLocker: getContractAddress('LIQUIDITY_LOCKER', sepolia.id) as `0x${string}`,
+      tokenFactory: getContractAddress('TOKEN_FACTORY', sepolia.id) as `0x${string}`,
     },
     explorerUrl: "https://sepolia.etherscan.io",
-    rpcUrl: SEPOLIA_RPC_URL,
+    rpcUrl: getRpcUrl(sepolia.id),
     isTestnet: true,
     icon: "/images/networks/ethereum.svg"
   },
@@ -76,11 +101,11 @@ export const networks: Record<number, NetworkConfig> = {
     name: "BNB Smart Chain",
     chain: bsc,
     contracts: {
-      liquidityLocker: LIQUIDITY_LOCKER_BSC as `0x${string}`,
-      tokenFactory: TOKEN_FACTORY_BSC as `0x${string}`,
+      liquidityLocker: getContractAddress('LIQUIDITY_LOCKER', bsc.id) as `0x${string}`,
+      tokenFactory: getContractAddress('TOKEN_FACTORY', bsc.id) as `0x${string}`,
     },
     explorerUrl: "https://bscscan.com",
-    rpcUrl: BSC_RPC_URL,
+    rpcUrl: getRpcUrl(bsc.id),
     isTestnet: false,
     icon: "/images/networks/bsc.svg"
   },
@@ -88,11 +113,11 @@ export const networks: Record<number, NetworkConfig> = {
     name: "BSC Testnet",
     chain: bscTestnet,
     contracts: {
-      liquidityLocker: LIQUIDITY_LOCKER_BSC_TESTNET as `0x${string}`,
-      tokenFactory: TOKEN_FACTORY_BSC_TESTNET as `0x${string}`,
+      liquidityLocker: getContractAddress('LIQUIDITY_LOCKER', bscTestnet.id) as `0x${string}`,
+      tokenFactory: getContractAddress('TOKEN_FACTORY', bscTestnet.id) as `0x${string}`,
     },
     explorerUrl: "https://testnet.bscscan.com",
-    rpcUrl: BSC_TESTNET_RPC_URL,
+    rpcUrl: getRpcUrl(bscTestnet.id),
     isTestnet: true,
     icon: "/images/networks/bsc.svg"
   },
@@ -100,11 +125,11 @@ export const networks: Record<number, NetworkConfig> = {
     name: "Polygon",
     chain: polygon,
     contracts: {
-      liquidityLocker: LIQUIDITY_LOCKER_POLYGON as `0x${string}`,
-      tokenFactory: TOKEN_FACTORY_POLYGON as `0x${string}`,
+      liquidityLocker: getContractAddress('LIQUIDITY_LOCKER', polygon.id) as `0x${string}`,
+      tokenFactory: getContractAddress('TOKEN_FACTORY', polygon.id) as `0x${string}`,
     },
     explorerUrl: "https://polygonscan.com",
-    rpcUrl: POLYGON_RPC_URL,
+    rpcUrl: getRpcUrl(polygon.id),
     isTestnet: false,
     icon: "/images/networks/polygon.svg"
   },
@@ -112,11 +137,11 @@ export const networks: Record<number, NetworkConfig> = {
     name: "Mumbai Testnet",
     chain: polygonMumbai,
     contracts: {
-      liquidityLocker: LIQUIDITY_LOCKER_POLYGON_MUMBAI as `0x${string}`,
-      tokenFactory: TOKEN_FACTORY_POLYGON_MUMBAI as `0x${string}`,
+      liquidityLocker: getContractAddress('LIQUIDITY_LOCKER', polygonMumbai.id) as `0x${string}`,
+      tokenFactory: getContractAddress('TOKEN_FACTORY', polygonMumbai.id) as `0x${string}`,
     },
     explorerUrl: "https://mumbai.polygonscan.com",
-    rpcUrl: POLYGON_MUMBAI_RPC_URL,
+    rpcUrl: getRpcUrl(polygonMumbai.id),
     isTestnet: true,
     icon: "/images/networks/polygon.svg"
   },
@@ -124,11 +149,11 @@ export const networks: Record<number, NetworkConfig> = {
     name: "Avalanche",
     chain: avalanche,
     contracts: {
-      liquidityLocker: LIQUIDITY_LOCKER_AVALANCHE as `0x${string}`,
-      tokenFactory: TOKEN_FACTORY_AVALANCHE as `0x${string}`,
+      liquidityLocker: getContractAddress('LIQUIDITY_LOCKER', avalanche.id) as `0x${string}`,
+      tokenFactory: getContractAddress('TOKEN_FACTORY', avalanche.id) as `0x${string}`,
     },
     explorerUrl: "https://snowtrace.io",
-    rpcUrl: AVALANCHE_RPC_URL,
+    rpcUrl: getRpcUrl(avalanche.id),
     isTestnet: false,
     icon: "/images/networks/avalanche.svg"
   },
@@ -136,22 +161,33 @@ export const networks: Record<number, NetworkConfig> = {
     name: "Fuji Testnet",
     chain: avalancheFuji,
     contracts: {
-      liquidityLocker: LIQUIDITY_LOCKER_AVALANCHE_FUJI as `0x${string}`,
-      tokenFactory: TOKEN_FACTORY_AVALANCHE_FUJI as `0x${string}`,
+      liquidityLocker: getContractAddress('LIQUIDITY_LOCKER', avalancheFuji.id) as `0x${string}`,
+      tokenFactory: getContractAddress('TOKEN_FACTORY', avalancheFuji.id) as `0x${string}`,
     },
     explorerUrl: "https://testnet.snowtrace.io",
-    rpcUrl: AVALANCHE_FUJI_RPC_URL,
+    rpcUrl: getRpcUrl(avalancheFuji.id),
     isTestnet: true,
     icon: "/images/networks/avalanche.svg"
   }
 };
+
+export const SUPPORTED_NETWORKS = {
+  MAINNET: mainnet.id,
+  SEPOLIA: sepolia.id,
+  BSC: bsc.id,
+  BSC_TESTNET: bscTestnet.id,
+  POLYGON: polygon.id,
+  POLYGON_MUMBAI: polygonMumbai.id,
+  AVALANCHE: avalanche.id,
+  AVALANCHE_FUJI: avalancheFuji.id
+} as const;
 
 export const getNetwork = (chainId: number): NetworkConfig | undefined => {
   return networks[chainId];
 };
 
 export const getSupportedChains = (): Chain[] => {
-  return Object.values(networks).map((network) => network.chain);
+  return Object.values(networks).map((network) => network.chain).filter((chain) => isChainSupported(chain.id));
 };
 
 export const getMainnetNetworks = (): NetworkConfig[] => {

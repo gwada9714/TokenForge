@@ -15,7 +15,16 @@ const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // 24 heures
+}));
+
 app.use(express.json());
 
 // Rate limiting

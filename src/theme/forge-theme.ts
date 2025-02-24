@@ -1,6 +1,5 @@
 import { createTheme, Theme, ThemeOptions } from "@mui/material/styles";
 import { Components } from "@mui/material/styles";
-import { PaletteColor, PaletteColorOptions } from "@mui/material";
 
 // Extend the Material-UI theme interface
 declare module "@mui/material/styles" {
@@ -20,6 +19,7 @@ declare module "@mui/material/styles" {
       glow: string;
     };
   }
+
   interface ThemeOptions {
     gradient?: {
       primary?: string;
@@ -36,8 +36,8 @@ declare module "@mui/material/styles" {
       glow?: string;
     };
   }
+
   interface Palette {
-    success: PaletteColor;
     gradient: {
       primary: string;
       secondary: string;
@@ -53,8 +53,8 @@ declare module "@mui/material/styles" {
       glow: string;
     };
   }
+
   interface PaletteOptions {
-    success?: PaletteColorOptions;
     gradient?: {
       primary?: string;
       secondary?: string;
@@ -75,7 +75,22 @@ declare module "@mui/material/styles" {
 // Extend styled-components theme
 declare module "styled-components" {
   export interface DefaultTheme {
-    colors: typeof colors;
+    colors: {
+      text: {
+        primary: string;
+        secondary: string;
+      };
+      background: {
+        primary: string;
+        secondary: string;
+      };
+      primary: string;
+      secondary: string;
+      success: string;
+      warning: string;
+      forge: string;
+      ember: string;
+    };
     typography: {
       fontFamily: {
         heading: string;
@@ -88,12 +103,30 @@ declare module "styled-components" {
         bold: number;
       };
       fontSizes: {
-        small: string;
-        medium: string;
-        large: string;
+        xs: string;
+        sm: string;
+        md: string;
+        lg: string;
+        xl: string;
+        '2xl': string;
+        '3xl': string;
+        '4xl': string;
+        '5xl': string;
       };
     };
     spacing: (value: number) => string;
+    breakpoints: {
+      values: {
+        xs: number;
+        sm: number;
+        md: number;
+        lg: number;
+        xl: number;
+      };
+      up: (key: string) => string;
+      down: (key: string) => string;
+      between: (start: string, end: string) => string;
+    };
     borderRadius: {
       small: string;
       medium: string;
@@ -116,18 +149,6 @@ declare module "styled-components" {
       snackbar: number;
       tooltip: number;
     };
-    breakpoints: {
-      values: {
-        xs: number;
-        sm: number;
-        md: number;
-        lg: number;
-        xl: number;
-      };
-      up: (key: string) => string;
-      down: (key: string) => string;
-      between: (start: string, end: string) => string;
-    };
   }
 }
 
@@ -146,116 +167,141 @@ declare module "@mui/material/Paper" {
 }
 
 const colors = {
-  primary: {
-    main: "#182038",
-    light: "#2a3654",
-    dark: "#0c1019",
-  },
-  secondary: {
-    main: "#D97706",
-    light: "#f59e0b",
-    dark: "#b45309",
-  },
-  success: {
-    main: "#059669",
-    light: "#34d399",
-    dark: "#047857",
-  },
-  forge: {
-    main: "#FF6B2B",
-    dark: "#E65A1F",
-    light: "#FF8C5A",
-    border: "#FFE0B2",
-    hover: "#FF7A40",
-    metallic: "#FFC107",
-    glow: "#FFD700",
-  },
-  ember: {
-    main: "#FF4B2B",
-    dark: "#E63A1F",
-    light: "#FF6C5A",
-    border: "#FFCDD2",
-    hover: "#FF5A40",
+  text: {
+    primary: '#1A1A1A',
+    secondary: '#4A5568'
   },
   background: {
-    default: "#F5F5F5",
-    paper: "#FFFFFF",
-    dark: "#1e293b",
+    primary: '#FFFFFF',
+    secondary: '#F7FAFC'
   },
-  text: {
-    primary: "#1F2937",
-    secondary: "#6B7280",
-    light: "#f8fafc",
+  primary: {
+    main: '#182038',
+    light: '#2a3654',
+    dark: '#0f1525',
+    contrastText: '#FFFFFF'
   },
-  gradient: {
-    primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
-    secondary: "linear-gradient(135deg, #D97706 0%, #f59e0b 100%)",
-    forge: "linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%)",
+  secondary: {
+    main: '#D97706',
+    light: '#f59e0b',
+    dark: '#92400e',
+    contrastText: '#FFFFFF'
+  },
+  success: {
+    main: '#059669',
+    light: '#10b981',
+    dark: '#047857',
+    contrastText: '#FFFFFF'
   },
   warning: {
-    main: "#f59e0b",
-    light: "#fbbf24",
-    dark: "#d97706",
+    main: '#D97706',
+    light: '#f59e0b',
+    dark: '#92400e',
+    contrastText: '#FFFFFF'
   },
+  forge: {
+    main: '#182038',
+    dark: '#0f1525',
+    light: '#2a3654',
+    border: '#2d3748',
+    hover: '#2a3654',
+    metallic: '#4a5568',
+    glow: '#6b7280'
+  },
+  ember: '#D97706'
 };
 
-const spacing = {
-  sm: '0.5rem',
-  md: '1rem',
-  lg: '1.5rem',
-  xl: '2rem',
-  '2xl': '3rem',
-  '3xl': '4rem',
-  '4xl': '6rem',
+const typography = {
+  fontFamily: {
+    heading: '"Inter", sans-serif',
+    body: '"Inter", sans-serif'
+  },
+  fontWeight: {
+    normal: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700
+  },
+  fontSizes: {
+    xs: '0.75rem',
+    sm: '0.875rem',
+    md: '1rem',
+    lg: '1.125rem',
+    xl: '1.25rem',
+    '2xl': '1.5rem',
+    '3xl': '1.875rem',
+    '4xl': '2.25rem',
+    '5xl': '3rem'
+  }
 };
 
-const spacingFunction = (value: number): string => `${value * 0.25}rem`;
+const breakpoints = {
+  values: {
+    xs: 0,
+    sm: 600,
+    md: 960,
+    lg: 1280,
+    xl: 1920
+  },
+  up: (key: string) => `@media (min-width: ${breakpoints.values[key as keyof typeof breakpoints.values]}px)`,
+  down: (key: string) => `@media (max-width: ${breakpoints.values[key as keyof typeof breakpoints.values] - 0.05}px)`,
+  between: (start: string, end: string) => `@media (min-width: ${breakpoints.values[start as keyof typeof breakpoints.values]}px) and (max-width: ${breakpoints.values[end as keyof typeof breakpoints.values] - 0.05}px)`
+};
 
-const components: Components<Omit<Theme, "components">> = {
+const spacing = (value: number) => `${value * 0.25}rem`;
+
+const borderRadius = {
+  small: '0.25rem',
+  medium: '0.5rem',
+  large: '1rem'
+};
+
+const shadows = {
+  small: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+  medium: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  large: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+};
+
+const transitions = {
+  default: '0.3s ease-in-out',
+  fast: '0.15s ease-in-out',
+  slow: '0.5s ease-in-out'
+};
+
+const zIndex = {
+  appBar: 1100,
+  drawer: 1200,
+  modal: 1300,
+  snackbar: 1400,
+  tooltip: 1500
+};
+
+const components: Components<Theme> = {
   MuiButton: {
-    styleOverrides: {
-      root: {
-        textTransform: "none",
-        borderRadius: "8px",
-        padding: "8px 16px",
-      },
-    },
     variants: [
       {
         props: { variant: "forge" },
         style: {
-          backgroundColor: colors.forge.main,
-          color: "#ffffff",
+          background: colors.forge.main,
+          color: "#FFFFFF",
           "&:hover": {
-            backgroundColor: colors.forge.hover,
-          },
-          "&:active": {
-            backgroundColor: colors.forge.dark,
+            background: colors.forge.hover,
           },
         },
       },
       {
         props: { variant: "ember" },
         style: {
-          backgroundColor: colors.ember.main,
-          color: "#ffffff",
+          background: colors.ember,
+          color: "#FFFFFF",
           "&:hover": {
-            backgroundColor: colors.ember.hover,
-          },
-          "&:active": {
-            backgroundColor: colors.ember.dark,
+            background: colors.warning.light,
           },
         },
       },
     ],
   },
   MuiPaper: {
-    styleOverrides: {
-      root: {
-        borderRadius: "16px",
-        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-      },
-    },
     variants: [
       {
         props: { variant: "forge" },
@@ -266,7 +312,7 @@ const components: Components<Omit<Theme, "components">> = {
       {
         props: { variant: "ember" },
         style: {
-          borderLeft: `4px solid ${colors.ember.main}`,
+          borderLeft: `4px solid ${colors.ember}`,
         },
       },
     ],
@@ -277,7 +323,7 @@ const components: Components<Omit<Theme, "components">> = {
         "& .MuiOutlinedInput-root": {
           borderRadius: "8px",
           "& fieldset": {
-            borderColor: colors.forge.border,
+            borderColor: colors.forge.main,
           },
           "&:hover fieldset": {
             borderColor: colors.forge.hover,
@@ -293,62 +339,69 @@ const components: Components<Omit<Theme, "components">> = {
 
 const themeOptions: ThemeOptions = {
   breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 960,
-      lg: 1280,
-      xl: 1920,
-    },
+    values: breakpoints.values,
   },
   palette: {
     primary: colors.primary,
     secondary: colors.secondary,
     success: colors.success,
-    background: colors.background,
-    text: colors.text,
     warning: colors.warning,
-    gradient: colors.gradient,
+    background: {
+      default: colors.background.primary,
+      paper: colors.background.secondary
+    },
+    text: colors.text,
+    gradient: {
+      primary: "linear-gradient(135deg, #182038 0%, #2a3654 100%)",
+      secondary: "linear-gradient(135deg, #D97706 0%, #f59e0b 100%)",
+      forge: "linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%)",
+    },
     forge: colors.forge,
   },
   typography: {
-    fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
+    fontFamily: typography.fontFamily.body,
     h1: {
-      fontSize: "2.5rem",
-      fontWeight: 700,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes["5xl"],
+      fontWeight: typography.fontWeight.bold,
     },
     h2: {
-      fontSize: "2rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes["4xl"],
+      fontWeight: typography.fontWeight.bold,
     },
     h3: {
-      fontSize: "1.75rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes["3xl"],
+      fontWeight: typography.fontWeight.semibold,
     },
     h4: {
-      fontSize: "1.5rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes["2xl"],
+      fontWeight: typography.fontWeight.semibold,
     },
     h5: {
-      fontSize: "1.25rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes.xl,
+      fontWeight: typography.fontWeight.medium,
     },
     h6: {
-      fontSize: "1rem",
-      fontWeight: 600,
+      fontFamily: typography.fontFamily.heading,
+      fontSize: typography.fontSizes.lg,
+      fontWeight: typography.fontWeight.medium,
+    },
+    body1: {
+      fontSize: typography.fontSizes.md,
+    },
+    body2: {
+      fontSize: typography.fontSizes.sm,
     },
   },
   shape: {
     borderRadius: 8,
   },
   spacing: 8,
-  zIndex: {
-    appBar: 1100,
-    drawer: 1200,
-    modal: 1300,
-    snackbar: 1400,
-    tooltip: 1500,
-  },
+  zIndex,
   components,
 };
 
@@ -356,64 +409,11 @@ export const forgeTheme = createTheme(themeOptions);
 
 export const styledTheme = {
   colors,
-  typography: {
-    fontFamily: {
-      heading: '"Inter", "Helvetica", "Arial", sans-serif',
-      body: '"Inter", "Helvetica", "Arial", sans-serif',
-    },
-    fontWeight: {
-      normal: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
-    },
-    fontSizes: {
-      small: '0.875rem',
-      medium: '1rem',
-      large: '1.125rem',
-    },
-  },
-  spacing: spacingFunction,
-  borderRadius: {
-    small: '4px',
-    medium: '8px',
-    large: '12px',
-  },
-  shadows: {
-    small: '0 2px 4px rgba(0,0,0,0.1)',
-    medium: '0 4px 8px rgba(0,0,0,0.1)',
-    large: '0 8px 16px rgba(0,0,0,0.1)',
-  },
-  transitions: {
-    default: '0.3s ease-in-out',
-    fast: '0.15s ease-in-out',
-    slow: '0.5s ease-in-out',
-  },
-  zIndex: {
-    appBar: 1100,
-    drawer: 1200,
-    modal: 1300,
-    snackbar: 1400,
-    tooltip: 1500,
-  },
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 960,
-      lg: 1280,
-      xl: 1920,
-    },
-    up: (key: string) => `@media (min-width: ${
-      key === 'xs' ? 0 : key === 'sm' ? 600 : key === 'md' ? 960 : key === 'lg' ? 1280 : 1920
-    }px)`,
-    down: (key: string) => `@media (max-width: ${
-      key === 'xs' ? 599 : key === 'sm' ? 959 : key === 'md' ? 1279 : key === 'lg' ? 1919 : 9999
-    }px)`,
-    between: (start: string, end: string) => {
-      const min = start === 'xs' ? 0 : start === 'sm' ? 600 : start === 'md' ? 960 : start === 'lg' ? 1280 : 1920;
-      const max = end === 'xs' ? 599 : end === 'sm' ? 959 : end === 'md' ? 1279 : end === 'lg' ? 1919 : 9999;
-      return `@media (min-width: ${min}px) and (max-width: ${max}px)`;
-    },
-  },
+  typography,
+  spacing,
+  breakpoints,
+  borderRadius,
+  shadows,
+  transitions,
+  zIndex
 };

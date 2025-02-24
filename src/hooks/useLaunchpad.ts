@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useContractWrite, useContractRead, useAccount, useWaitForTransaction, useNetwork } from 'wagmi';
-import { parseEther, formatEther, Address } from 'viem';
-import { getContractAddress } from '../config/contracts';
-import { launchpadABI } from '../contracts/abis';
+import { useState, useEffect } from 'react';
+import { useContractWrite, useContractRead } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useNetwork } from '../hooks/useNetwork';
+import { type Address } from 'viem';
+import { LAUNCHPAD_ABI } from '../contracts/abis/Launchpad';
+
+const LAUNCHPAD_ADDRESS = process.env.NEXT_PUBLIC_LAUNCHPAD_ADDRESS as `0x${string}`;
 
 interface PoolInfo {
   token: Address;
@@ -16,158 +19,117 @@ interface PoolInfo {
   cancelled: boolean;
 }
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-
-export function useLaunchpad(poolId?: number) {
-  const { address } = useAccount();
-  const { chain } = useNetwork();
-  const [enabled, setEnabled] = useState(false);
+export const useLaunchpad = (poolId?: string, address?: `0x${string}`) => {
   const [error, setError] = useState<string | null>(null);
+  const [poolInfoState, setPoolInfoState] = useState<PoolInfo | null>(null);
+  const [userContribution, setUserContribution] = useState<bigint>(0n);
+  const [createPoolHash, setCreatePoolHash] = useState<`0x${string}` | undefined>(undefined);
+  const [contributeHash, setContributeHash] = useState<`0x${string}` | undefined>(undefined);
+  const [claimTokensHash, setClaimTokensHash] = useState<`0x${string}` | undefined>(undefined);
+  
+  const { address: userAddress } = useAccount();
+  const { chain } = useNetwork();
 
-  // Vérification du réseau
-  useEffect(() => {
-    if (chain?.id !== 11155111) {
-      setError('Please connect to Sepolia network');
-      setEnabled(false);
-      return;
-    }
-    setError(null);
-  }, [chain?.id]);
-
-  const launchpadAddress = getContractAddress('TOKEN_FACTORY', chain?.id ?? 11155111) as Address;
-
-  useEffect(() => {
-    if (error) return;
-    setEnabled(Boolean(poolId !== undefined && launchpadAddress));
-  }, [poolId, launchpadAddress, error]);
-
-  // Read pool info with error handling
-  const { data: poolInfo, error: poolError } = useContractRead({
-    address: launchpadAddress,
-    abi: launchpadABI,
+  const { data: poolInfo } = useContractRead({
+    address: LAUNCHPAD_ADDRESS,
+    abi: LAUNCHPAD_ABI,
     functionName: 'getPoolInfo',
     args: poolId !== undefined ? [BigInt(poolId)] : undefined,
-    enabled,
-    onError: (error: unknown) => {
-      console.error('Pool info error:', error);
-      if (error instanceof Error) {
-        setError(`Failed to read pool info: ${error.message}`);
-      } else {
-        setError('Failed to read pool info: Unknown error');
-      }
+    query: {
+      enabled: !!poolId
     }
-  }) as { data: PoolInfo | undefined; error: unknown };
+  });
 
-  // Read user contribution with error handling
-  const { data: userContributionData, error: userContributionError } = useContractRead({
-    address: launchpadAddress,
-    abi: launchpadABI,
+  const { data: userContributionData } = useContractRead({
+    address: LAUNCHPAD_ADDRESS,
+    abi: LAUNCHPAD_ABI,
     functionName: 'getUserContribution',
     args: poolId !== undefined && address ? [BigInt(poolId), address] : undefined,
-    enabled: enabled && Boolean(address),
-    onError: (error: unknown) => {
-      console.error('User contribution error:', error);
-      if (error instanceof Error) {
-        setError(`Failed to read user contribution: ${error.message}`);
-      } else {
-        setError('Failed to read user contribution: Unknown error');
-      }
+    query: {
+      enabled: !!poolId && !!address
     }
   });
 
-  // Create pool
-  const { write: createPool, data: createPoolData } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'createPool',
+  const { writeContract: createPool, isPending: isCreatingPool } = useContractWrite({
+    abi: LAUNCHPAD_ABI,
+    functionName: 'createPool'
   });
 
-  // Invest in pool
-  const { write: invest, data: investData } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'invest',
+  const { writeContract: contribute, isPending: isContributing } = useContractWrite({
+    abi: LAUNCHPAD_ABI,
+    functionName: 'contribute'
   });
 
-  // Claim
-  const { write: claim, data: claimData } = useContractWrite({
-    address: launchpadAddress,
-    abi: launchpadABI,
-    functionName: 'claim',
+  const { writeContract: claimTokens, isPending: isClaiming } = useContractWrite({
+    abi: LAUNCHPAD_ABI,
+    functionName: 'claimTokens'
   });
 
-  const [poolInfoState, setPoolInfoState] = useState<PoolInfo>({
-    token: ZERO_ADDRESS,
-    tokenPrice: 0n,
-    hardCap: 0n,
-    softCap: 0n,
-    totalRaised: 0n,
-    startTime: 0n,
-    endTime: 0n,
-    finalized: false,
-    cancelled: false,
-  });
-
-  const [userContribution, setUserContribution] = useState<bigint>(0n);
-
-  const handleCreatePool = useCallback(async (
-    token: `0x${string}`,
-    tokenPrice: string,
-    hardCap: string,
-    softCap: string,
-    startTime: number,
-    endTime: number
-  ) => {
-    if (!createPool) return;
-    
+  const handleCreatePool = async (params: {
+    token: `0x${string}`;
+    startTime: bigint;
+    endTime: bigint;
+    tokenPrice: bigint;
+    softCap: bigint;
+    hardCap: bigint;
+  }) => {
+    if (!LAUNCHPAD_ADDRESS) return;
     try {
-      await createPool({
-        args: [
-          token,
-          BigInt(parseEther(tokenPrice)),
-          BigInt(parseEther(hardCap)),
-          BigInt(parseEther(softCap)),
-          BigInt(startTime),
-          BigInt(endTime)
-        ],
+      const hash = await createPool({
+        address: LAUNCHPAD_ADDRESS,
+        args: [params.token, params.startTime, params.endTime, params.tokenPrice, params.softCap, params.hardCap]
       });
-    } catch (error) {
-      console.error('Error creating pool:', error);
-      if (error instanceof Error) {
-        setError(`Failed to create pool: ${error.message}`);
-      } else {
-        setError('Failed to create pool: Unknown error');
-      }
-      throw error;
+      setCreatePoolHash(hash);
+      return hash;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
     }
-  }, [createPool]);
+  };
 
-  // Wait for transactions
-  const { isLoading: isCreating } = useWaitForTransaction({
-    hash: createPoolData?.hash,
-  });
+  const handleContribute = async (amount: bigint) => {
+    if (!LAUNCHPAD_ADDRESS || !poolId) return;
+    try {
+      const hash = await contribute({
+        address: LAUNCHPAD_ADDRESS,
+        args: [BigInt(poolId), amount]
+      });
+      setContributeHash(hash);
+      return hash;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
 
-  const { isLoading: isInvesting } = useWaitForTransaction({
-    hash: investData?.hash,
-  });
+  const handleClaim = async () => {
+    if (!LAUNCHPAD_ADDRESS || !poolId) return;
+    try {
+      const hash = await claimTokens({
+        address: LAUNCHPAD_ADDRESS,
+        args: [BigInt(poolId)]
+      });
+      setClaimTokensHash(hash);
+      return hash;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
 
-  const { isLoading: isClaiming } = useWaitForTransaction({
-    hash: claimData?.hash,
-  });
-
-  // Update states when data changes
   useEffect(() => {
-    if (poolInfo) {
+    if (poolInfo && typeof poolInfo === 'object') {
+      const typedPoolInfo = poolInfo as unknown as PoolInfo;
       setPoolInfoState({
-        token: poolInfo.token,
-        tokenPrice: poolInfo.tokenPrice,
-        hardCap: poolInfo.hardCap,
-        softCap: poolInfo.softCap,
-        totalRaised: poolInfo.totalRaised,
-        startTime: poolInfo.startTime,
-        endTime: poolInfo.endTime,
-        finalized: poolInfo.finalized,
-        cancelled: poolInfo.cancelled,
+        token: typedPoolInfo.token,
+        tokenPrice: typedPoolInfo.tokenPrice,
+        hardCap: typedPoolInfo.hardCap,
+        softCap: typedPoolInfo.softCap,
+        totalRaised: typedPoolInfo.totalRaised,
+        startTime: typedPoolInfo.startTime,
+        endTime: typedPoolInfo.endTime,
+        finalized: typedPoolInfo.finalized,
+        cancelled: typedPoolInfo.cancelled,
       });
     }
   }, [poolInfo]);
@@ -178,22 +140,41 @@ export function useLaunchpad(poolId?: number) {
     }
   }, [userContributionData]);
 
+  useEffect(() => {
+    if (chain?.id !== 11155111) {
+      setError('Please connect to Sepolia network');
+    } else {
+      setError(null);
+    }
+  }, [chain?.id]);
+
+  useEffect(() => {
+    if (createPoolHash) {
+      // refetchPools?.();
+    }
+  }, [createPoolHash]);
+
+  useEffect(() => {
+    if (contributeHash) {
+      // refetchUserContribution?.();
+    }
+  }, [contributeHash]);
+
+  useEffect(() => {
+    if (claimTokensHash) {
+      // refetchUserContribution?.();
+    }
+  }, [claimTokensHash]);
+
   return {
-    // Pool info
     poolInfo: poolInfoState,
     userContribution,
-
-    // Actions
     createPool: handleCreatePool,
-    invest,
-    claim,
-
-    // Loading states
-    isCreating,
-    isInvesting,
+    contribute: handleContribute,
+    claim: handleClaim,
+    isCreatingPool,
+    isContributing,
     isClaiming,
-
-    // Error state
     error,
   };
-}
+};

@@ -1,16 +1,7 @@
 export interface TokenForgeStats {
-  totalTaxCollected: bigint;
-  totalTaxToForge: bigint;
-  totalTaxToDevFund: bigint;
-  totalTaxToBuyback: bigint;
-  totalTaxToStaking: bigint;
-  totalTransactions: number;
-  totalValueLocked: bigint;
+  totalDistributed: bigint;
+  lastDistributionTime: bigint;
   isLoading: boolean;
-  taxHistory: Array<{
-    timestamp: number;
-    amount: bigint;
-  }>;
 }
 
 export interface TaxCollectedEvent {
@@ -42,4 +33,7 @@ export interface TokenForgeService {
     setupFee: bigint;
     monthlyFee: bigint;
   };
+  basePrice: bigint;
+  setupFee: bigint;
+  monthlyFee: bigint;
 }

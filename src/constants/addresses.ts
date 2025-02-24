@@ -6,36 +6,39 @@ interface NetworkAddresses {
     tokenForge: Address;
     staking: Address;
     treasury: Address;
+    chainName: string;
+    chainId: number;
   };
 }
 
 export const CONTRACT_ADDRESSES: NetworkAddresses = {
   1: {
-    // Mainnet
-    tokenForge: '0x1234567890123456789012345678901234567890' as Address, // À remplacer par l'adresse réelle
-    staking: '0x0987654321098765432109876543210987654321' as Address, // À remplacer par l'adresse réelle
-    treasury: '0x5432109876543210987654321098765432109876' as Address, // À remplacer par l'adresse réelle
-  },
-  5: {
-    // Goerli testnet
-    tokenForge: '0x9876543210987654321098765432109876543210' as Address, // À remplacer par l'adresse réelle
-    staking: '0x8765432109876543210987654321098765432109' as Address, // À remplacer par l'adresse réelle
-    treasury: '0x7654321098765432109876543210987654321098' as Address, // À remplacer par l'adresse réelle
+    // Mainnet - À ne pas utiliser en production sans audit
+    tokenForge: '0x0000000000000000000000000000000000000000' as Address, // Non déployé
+    staking: '0x0000000000000000000000000000000000000000' as Address, // Non déployé
+    treasury: '0x0000000000000000000000000000000000000000' as Address, // Non déployé
+    chainName: 'Ethereum Mainnet',
+    chainId: 1
   },
   11155111: {
-    // Sepolia testnet
-    tokenForge: '0x5FbDB2315678afecb367f032d93F642f64180aa3' as Address, // Nouvelle adresse déployée
-    staking: '0x0000000000000000000000000000000000000000' as Address, // À déployer plus tard
-    treasury: '0x0000000000000000000000000000000000000000' as Address, // À déployer plus tard
+    // Sepolia testnet (réseau de test actif)
+    tokenForge: '0xE2b29a1D3021027aF7AC8dAe5e230922F3247a0A' as Address, // TokenForgeFactory vérifié sur Etherscan
+    staking: '0xF8ee9A71f42a35A6d18677629Ef6B4A7dE9d4Cb7' as Address,
+    treasury: '0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A' as Address,
+    chainName: 'Sepolia',
+    chainId: 11155111
   }
 };
 
-// Export des adresses individuelles
-export const STAKING_CONTRACT_ADDRESS = CONTRACT_ADDRESSES[1].staking; // Utiliser l'adresse mainnet par défaut
-export const TOKEN_FORGE_ADDRESS = CONTRACT_ADDRESSES[1].tokenForge;
-export const TREASURY_ADDRESS = CONTRACT_ADDRESSES[1].treasury;
+// Export des adresses par défaut (utilise Sepolia)
+export const TOKEN_FORGE_ADDRESS = CONTRACT_ADDRESSES[11155111].tokenForge;
+export const STAKING_CONTRACT_ADDRESS = CONTRACT_ADDRESSES[11155111].staking;
+export const TREASURY_ADDRESS = CONTRACT_ADDRESSES[11155111].treasury;
 
-// Export des adresses individuelles pour Sepolia (réseau de test)
-export const SEPOLIA_STAKING_CONTRACT_ADDRESS = CONTRACT_ADDRESSES[11155111].staking;
-export const SEPOLIA_TOKEN_FORGE_ADDRESS = CONTRACT_ADDRESSES[11155111].tokenForge;
-export const SEPOLIA_TREASURY_ADDRESS = CONTRACT_ADDRESSES[11155111].treasury;
+// Alias pour clarté
+export const SEPOLIA_TOKEN_FORGE_ADDRESS = TOKEN_FORGE_ADDRESS;
+export const SEPOLIA_STAKING_CONTRACT_ADDRESS = STAKING_CONTRACT_ADDRESS;
+export const SEPOLIA_TREASURY_ADDRESS = TREASURY_ADDRESS;
+
+// ID du réseau Sepolia
+export const SEPOLIA_CHAIN_ID = 11155111;

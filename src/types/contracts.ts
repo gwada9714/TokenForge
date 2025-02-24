@@ -1,4 +1,5 @@
 import { ethers, ContractTransaction } from 'ethers';
+import { type Address } from 'viem';
 
 export interface TokenContractMethods {
   transfer: (to: string, amount: bigint) => Promise<ContractTransaction>;
@@ -47,5 +48,89 @@ export interface TokenData extends TokenConfig {
   burned: boolean;
 }
 
+export type TokenForgeWriteFunction = 
+  | 'renounceOwnership'
+  | 'transferOwnership'
+  | 'addAlertRule'
+  | 'toggleAlertRule'
+  | 'deleteAlertRule'
+  | 'purgeAuditLogs';
+
+export type TokenForgeReadFunction =
+  | 'paused'
+  | 'owner'
+  | 'getAlertRules'
+  | 'getAuditLogs';
+
+export interface TokenForgeReadFunctionReturns {
+  paused: boolean;
+  owner: Address;
+  getAlertRules: AlertRule[];
+  getAuditLogs: AuditLog[];
+}
+
+export type LogLevel = 'error' | 'warning' | 'info' | 'debug';
+export type LogCategory = 'contract' | 'ownership' | 'alerts' | 'system';
+
+export interface AuditLog {
+  id: string;
+  timestamp: number;
+  level: LogLevel;
+  category: LogCategory;
+  message: string;
+  data?: Record<string, unknown>;
+}
+
+export interface AlertRule {
+  id: string;
+  name: string;
+  condition: string;
+  enabled: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface TokenForgeAdminMethods {
+  getAlertRules: () => Promise<AlertRule[]>;
+  addAlertRule: (name: string, condition: string) => Promise<ContractTransaction>;
+  toggleAlertRule: (id: string) => Promise<ContractTransaction>;
+  deleteAlertRule: (id: string) => Promise<ContractTransaction>;
+  getAuditLogs: () => Promise<AuditLog[]>;
+  purgeAuditLogs: () => Promise<ContractTransaction>;
+  owner: () => Promise<Address>;
+  paused: () => Promise<boolean>;
+  renounceOwnership: () => Promise<ContractTransaction>;
+  transferOwnership: (newOwner: string) => Promise<ContractTransaction>;
+}
+
+// Types pour la configuration des contrats
+export interface ChainContract {
+  address: Address;
+  blockCreated?: number;
+}
+
+export interface NetworkContract {
+  tokenFactory: ChainContract;
+  platformToken: ChainContract;
+  plans: ChainContract;
+  liquidityLocker: ChainContract;
+  staking: ChainContract;
+  launchpad: ChainContract;
+}
+
+export interface ContractAddresses {
+  mainnet: NetworkContract;
+  sepolia: NetworkContract;
+}
+
+// Type pour la configuration des chaînes
+export interface ExtendedChain {
+  id: number;
+  name: string;
+  network: string;
+  contracts?: NetworkContract;
+}
+
 export type TokenContract = ethers.Contract & TokenContractMethods;
 export type FactoryContract = ethers.Contract & FactoryContractMethods;
+export type TokenForgeContract = ethers.Contract & TokenForgeAdminMethods;

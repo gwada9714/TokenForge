@@ -1,106 +1,64 @@
 const { task } = require("hardhat/config");
 require("@nomicfoundation/hardhat-ethers");
-const { TokenForgeToken__factory, TokenForgeFactory__factory, TokenForgeLaunchpad__factory } = require("../typechain-types");
+require("dotenv").config();
+const { HardhatRuntimeEnvironment } = require("hardhat/types");
+const { TaskArguments } = require("hardhat/types");
 
 task("deploy", "Deploy the TokenForge contracts")
-  .setAction(async (args: any, hre: any) => {
+  .setAction(async (args: typeof TaskArguments, hre: typeof HardhatRuntimeEnvironment) => {
     const [deployer] = await hre.ethers.getSigners();
     console.log("Deploying contracts with the account:", await deployer.getAddress());
 
-    // Configuration addresses
-    const TREASURY_ADDRESS = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"; // Test address on Sepolia
-    const STAKING_POOL_ADDRESS = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"; // Test address on Sepolia
-    const PLATFORM_FEE = 500; // 5% platform fee
+    // Configuration addresses from .env
+    const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS;
+    const TAX_SYSTEM_ADDRESS = process.env.TAX_SYSTEM_ADDRESS;
+    const TKN_TOKEN_ADDRESS = process.env.TKN_TOKEN_ADDRESS;
+
+    if (!TREASURY_ADDRESS || !TAX_SYSTEM_ADDRESS || !TKN_TOKEN_ADDRESS) {
+      throw new Error("Missing required environment variables");
+    }
 
     try {
-      // Deploy TokenForgeToken
-      const TokenForgeToken = new TokenForgeToken__factory(deployer);
-      const token = await TokenForgeToken.deploy(
-        "TokenForge",                  // name
-        "TKN",                        // symbol
-        18,                          // decimals
-        BigInt("1000000000000000000000000"), // initialSupply (1 million tokens)
-        BigInt("10000000000000000000000"),   // maxTxAmount (10k tokens)
-        BigInt("50000000000000000000000"),   // maxWalletSize (50k tokens)
-        500,                         // taxFee (5%)
-        TREASURY_ADDRESS             // taxDistributor
-      );
+      // Get the ContractFactory
+      const TokenForgeFactory = await hre.ethers.getContractFactory("TokenForgeFactory");
+      
+      console.log("Deploying TokenForgeFactory with parameters:");
+      console.log("TKN Token:", TKN_TOKEN_ADDRESS);
+      console.log("Treasury:", TREASURY_ADDRESS);
+      console.log("Tax System:", TAX_SYSTEM_ADDRESS);
 
-      await token.waitForDeployment();
-      const tokenAddress = await token.getAddress();
-      console.log("TokenForgeToken deployed to:", tokenAddress);
-
-      // Deploy TokenForgeFactory
-      const TokenForgeFactory = new TokenForgeFactory__factory(deployer);
+      // Deploy the contract
       const factory = await TokenForgeFactory.deploy(
-        tokenAddress,
+        TKN_TOKEN_ADDRESS,
         TREASURY_ADDRESS,
-        STAKING_POOL_ADDRESS
+        TAX_SYSTEM_ADDRESS
       );
 
       await factory.waitForDeployment();
       const factoryAddress = await factory.getAddress();
+      
       console.log("TokenForgeFactory deployed to:", factoryAddress);
+      console.log("Owner address:", TREASURY_ADDRESS);
 
-      // Deploy TokenForgeLaunchpad with platform fee
-      const TokenForgeLaunchpad = new TokenForgeLaunchpad__factory(deployer);
-      const launchpad = await TokenForgeLaunchpad.deploy(PLATFORM_FEE);
-
-      await launchpad.waitForDeployment();
-      const launchpadAddress = await launchpad.getAddress();
-      console.log("TokenForgeLaunchpad deployed to:", launchpadAddress);
-
-      // Configuration summary
-      console.log("\nContract deployment and configuration summary:");
-      console.log("-------------------------------------------");
-      console.log("Token Address:", tokenAddress);
-      console.log("Factory Address:", factoryAddress);
-      console.log("Launchpad Address:", launchpadAddress);
-      console.log("Treasury:", TREASURY_ADDRESS);
-      console.log("Staking Pool:", STAKING_POOL_ADDRESS);
-      console.log("Platform Fee:", PLATFORM_FEE / 100, "%");
-
-      // Verify contracts on non-local networks
-      if (hre.network.name !== "hardhat" && hre.network.name !== "localhost") {
-        console.log("\nVerifying contracts...");
+      // Verify contract on Etherscan
+      if (process.env.ETHERSCAN_API_KEY) {
+        console.log("Waiting for a few block confirmations...");
+        await factory.deploymentTransaction()?.wait(5);
         
-        try {
-          await hre.run("verify:verify", {
-            address: tokenAddress,
-            constructorArguments: [
-              "TokenForge",
-              "TKN",
-              18,
-              BigInt("1000000000000000000000000"),
-              BigInt("10000000000000000000000"),
-              BigInt("50000000000000000000000"),
-              500,
-              TREASURY_ADDRESS
-            ],
-          });
-          console.log("TokenForgeToken verified successfully");
-
-          await hre.run("verify:verify", {
-            address: factoryAddress,
-            constructorArguments: [
-              tokenAddress,
-              TREASURY_ADDRESS,
-              STAKING_POOL_ADDRESS
-            ],
-          });
-          console.log("TokenForgeFactory verified successfully");
-
-          await hre.run("verify:verify", {
-            address: launchpadAddress,
-            constructorArguments: [PLATFORM_FEE],
-          });
-          console.log("TokenForgeLaunchpad verified successfully");
-        } catch (error) {
-          console.error("Error during contract verification:", error);
-        }
+        console.log("Verifying contract on Etherscan...");
+        await hre.run("verify:verify", {
+          address: factoryAddress,
+          constructorArguments: [
+            TKN_TOKEN_ADDRESS,
+            TREASURY_ADDRESS,
+            TAX_SYSTEM_ADDRESS
+          ],
+        });
+        console.log("Contract verified on Etherscan");
       }
+
     } catch (error) {
-      console.error("Error during deployment:", error);
-      throw error;
+      console.error("Deployment failed:", error);
+      process.exit(1);
     }
   });

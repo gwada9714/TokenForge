@@ -1,24 +1,32 @@
-import { extendTheme } from '@chakra-ui/react';
+import { DefaultTheme } from 'styled-components';
+import { COLORS, SPACING, THEME_CONFIG } from '@/config/constants/theme';
 
-const theme = extendTheme({
+const getSpacing = (value: number): string => {
+  const base = 0.25; // 4px
+  return `${base * value}rem`;
+};
+
+export const theme: DefaultTheme = {
   colors: {
-    blue: {
-      50: '#E5F0FF',
-      100: '#B8D5FF',
-      200: '#8ABBFF',
-      300: '#5CA0FF',
-      400: '#2E86FF',
-      500: '#006BFF',
-      600: '#0054CC',
-      700: '#003D99',
-      800: '#002766',
-      900: '#001233',
+    ...COLORS,
+    forge: '#FF6B6B',  // Custom color for forge
+    ember: '#4ECDC4',  // Custom color for ember
+    severity: {
+      success: COLORS.success,
+      warning: COLORS.warning,
+      error: COLORS.error,
+      info: COLORS.info,
     },
+    border: '#e5e7eb'
   },
-  config: {
-    initialColorMode: 'light',
-    useSystemColorMode: false,
+  spacing: getSpacing,
+  borderRadius: {
+    small: '0.25rem',
+    medium: '0.375rem',
+    large: '0.5rem'
   },
-});
+  boxShadow: THEME_CONFIG.boxShadow,
+  transition: THEME_CONFIG.transition,
+};
 
-export default theme;
+export * from './styles/global';

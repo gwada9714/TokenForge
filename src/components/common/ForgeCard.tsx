@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { css } from 'styled-components';
 import { fadeIn } from './styles/animations';
 
-interface ForgeCardProps {
+export interface ForgeCardProps {
   variant?: 'default' | 'elevated' | 'outlined';
   $isAnimated?: boolean;
   $hasShadow?: boolean;

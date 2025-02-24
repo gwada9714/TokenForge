@@ -1,64 +1,46 @@
-import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
-import { WagmiConfig } from 'wagmi';
-import wagmiConfig, { chains } from '../config/web3Config';
+import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StyledEngineProvider, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
-import { memo } from 'react';
-import { muiTheme } from '../theme/mui';
-import { Web3Provider } from './Web3Provider';
-import { ThemeProvider } from 'styled-components';
-import { styledTheme } from '../theme/forge-theme';
-import { StyleSheetManager } from 'styled-components';
-import isPropValid from '@emotion/is-prop-valid';
-import { AuthProvider } from '../contexts/AuthContext';
+import { Provider as ReduxProvider } from 'react-redux';
+import { store } from '../store/store';
 import { ContractProvider } from './ContractProvider';
+import { WagmiProvider, createConfig } from 'wagmi';
+import { TokenForgeAuthProvider } from '../features/auth/providers/TokenForgeAuthProvider';
+import ErrorBoundary from '../components/common/ErrorBoundary';
+import { web3Config } from '../config/web3Config';
 
 // Configuration du client de requête avec mise en cache optimisée
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 30, // 30 minutes
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: false,
-      refetchOnMount: false
+      retry: false,
+      staleTime: 5000,
     },
   },
 });
+
+const wagmiConfig = createConfig(web3Config);
 
 interface ProvidersProps {
   children: React.ReactNode;
 }
 
-const Providers = memo<ProvidersProps>(({ children }) => {
+const Providers: React.FC<ProvidersProps> = ({ children }) => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <WagmiConfig config={wagmiConfig}>
-        <RainbowKitProvider chains={chains} theme={lightTheme()}>
-          <StyledEngineProvider injectFirst>
-            <MuiThemeProvider theme={muiTheme}>
-              <ThemeProvider theme={styledTheme}>
-                <StyleSheetManager enableVendorPrefixes shouldForwardProp={isPropValid}>
-                  <CssBaseline />
-                  <Web3Provider>
-                    <ContractProvider>
-                      <AuthProvider>
-                        {children}
-                      </AuthProvider>
-                    </ContractProvider>
-                  </Web3Provider>
-                </StyleSheetManager>
-              </ThemeProvider>
-            </MuiThemeProvider>
-          </StyledEngineProvider>
-        </RainbowKitProvider>
-      </WagmiConfig>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <WagmiProvider config={wagmiConfig}>
+        <QueryClientProvider client={queryClient}>
+          <TokenForgeAuthProvider>
+            <ContractProvider>
+              <ReduxProvider store={store}>
+                {children}
+              </ReduxProvider>
+            </ContractProvider>
+          </TokenForgeAuthProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </ErrorBoundary>
   );
-});
-
-Providers.displayName = 'Providers';
+};
 
 export default Providers;

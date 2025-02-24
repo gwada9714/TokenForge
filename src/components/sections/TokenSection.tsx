@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { StyledButton } from '@/components/ui/Button';
 
 const TokenSection: React.FC = () => {
   // Données de tokenomics
@@ -141,13 +140,13 @@ const TokenSection: React.FC = () => {
           variants={itemVariants}
           className="mt-16 text-center"
         >
-          <Button
-            variant="primary"
-            size="large"
+          <StyledButton
+            $variant="primary"
+            $size="large"
             className="bg-gradient-to-r from-secondary to-secondary-light hover:from-secondary-light hover:to-secondary transform hover:scale-105 transition-all duration-300"
           >
             Découvrir le Token $TKN
-          </Button>
+          </StyledButton>
         </motion.div>
       </motion.div>
     </section>

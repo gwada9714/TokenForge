@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useContractWrite, useContractRead, useAccount, useNetwork, useWaitForTransaction, useContractEvent, useBalance } from 'wagmi';
+import { useContractWrite, useContractRead, useAccount, useWaitForTransaction, useContractEvent, useBalance } from 'wagmi';
+import { useNetwork } from '/useNetwork';
 import { TokenForgePlansABI } from '../contracts/abis';
 import { PlanType, PLAN_PRICES, validatePlanPrice, formatPlanPrice } from '../types/plans';
 import { type Address } from 'viem';

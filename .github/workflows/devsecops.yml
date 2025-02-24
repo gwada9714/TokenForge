@@ -1,0 +1,155 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  security-events: write
+  actions: write
+  checks: write
+
+env:
+  NODE_VERSION: "18.x"
+  DEPLOYMENT_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+  NODE_ENV: production
+  FIREBASE_PROJECT_ID: tokenforge-4028e
+  VITE_API_URL: https://api.tokenforge.com
+  VITE_SUPPORTED_CHAINS: 1,11155111
+
+jobs:
+  security-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      # Ajout de la vérification du cache
+      - name: Verify npm cache
+        run: |
+          npm cache verify
+          npm ci --prefer-offline
+
+      # Amélioration de l'audit de sécurité
+      - name: Run Security Audit
+        run: |
+          npm audit --production --audit-level=moderate
+          npm outdated || true
+        continue-on-error: true
+
+      # Ajout de Dependency Review
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: high
+
+      # Correction du template Trivy
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          timeout: '10m'
+
+      - name: Run Semgrep SAST
+        run: semgrep --config auto
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Run Tests
+        run: |
+          npm run test:unit -- --silent
+          npm run test:integration -- --silent
+          npm run test:security -- --detectOpenHandles --forceExit
+        env:
+          NODE_ENV: test
+          TEST_ENV: ci
+
+      - name: Archive Security Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            security-audit.log
+            trivy-results.sarif
+            semgrep-results.sarif
+
+      # Correction de la rotation des secrets avec une meilleure gestion d'erreurs
+      - name: Rotate Secrets
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          if ! curl --fail -X POST ${{ secrets.VAULT_ROTATE_URL }} \
+            -H "Authorization: Bearer ${{ secrets.VAULT_TOKEN }}" \
+            -H "Content-Type: application/json"; then
+            echo "Secret rotation failed"
+            exit 1
+          fi
+
+      # Ajout d'une vérification de sécurité supplémentaire
+      - name: Check for sensitive data
+        run: |
+          if grep -r --include="*.{js,ts,json}" -E "API_KEY|SECRET|PASSWORD" .; then
+            echo "Potential sensitive data found in code"
+            exit 1
+          fi
+
+  deploy:
+    needs: security-checks
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.tokenforge.com
+          VITE_SUPPORTED_CHAINS: 1,11155111
+          VITE_FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG_JSON }}
+          VITE_ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          VITE_MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+          VITE_SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          VITE_WALLET_CONNECT_PROJECT_ID: ${{ secrets.WALLET_CONNECT_PROJECT_ID }}
+          VITE_VAULT_API_URL: ${{ secrets.VAULT_API_URL }}
+          VITE_VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+          VITE_CSP_NONCE: ${{ secrets.CSP_NONCE_SECRET }}
+
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_ADMIN_KEY }}
+          projectId: tokenforge-4028e
+          channelId: ${{ env.DEPLOYMENT_ENV }}
+
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Button } from '@/components/ui/Button';
+import { StyledButton } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
 const SectionContainer = styled.section`
@@ -217,7 +217,7 @@ export const PricingSection: React.FC = () => {
 
         <PricingGrid>
           {plans.map((plan, index) => (
-            <PricingCard key={index} isPopular={plan.isPopular} padding="large">
+            <PricingCard key={index} $padding="large" isPopular={plan.isPopular}>
               <PlanName isPopular={plan.isPopular}>{plan.name}</PlanName>
               <PlanPrice isPopular={plan.isPopular}>
                 {isAnnual ? plan.price.annual : plan.price.monthly}€
@@ -231,13 +231,13 @@ export const PricingSection: React.FC = () => {
                   </FeatureItem>
                 ))}
               </FeaturesList>
-              <Button
-                variant={plan.isPopular ? 'primary' : 'secondary'}
-                size="large"
-                fullWidth
+              <StyledButton
+                $variant={plan.isPopular ? 'primary' : 'secondary'}
+                $size="large"
+                $fullWidth
               >
                 Choisir ce plan
-              </Button>
+              </StyledButton>
             </PricingCard>
           ))}
         </PricingGrid>

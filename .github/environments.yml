@@ -1,0 +1,9 @@
+environments:
+  production:
+    secrets:
+      required:
+        - VAULT_TOKEN
+        - SLACK_WEBHOOK_URL
+    variables:
+      required:
+        - VAULT_URL

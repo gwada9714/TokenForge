@@ -1,0 +1,47 @@
+config:
+  target: "http://localhost:5173"  # URL de l'application en développement
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 20
+      name: "Ramp up load"
+    - duration: 300
+      arrivalRate: 20
+      name: "Sustained load"
+
+  environments:
+    production:
+      target: "https://your-production-url.com"
+    staging:
+      target: "https://your-staging-url.com"
+
+scenarios:
+  - name: "Authentication flow"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "password123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      
+      - think: 2
+
+      - get:
+          url: "/api/user/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "User registration"
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            email: "{{ $randomEmail() }}"
+            password: "password123"
+            name: "Test User"

@@ -1,133 +1,91 @@
-import React from "react";
-import styled, { css } from "styled-components";
-import { ButtonProps, StyledProps } from "./types";
+import React from 'react';
+import styled from 'styled-components';
+import { SPACING } from '@/config/constants/theme';
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'small' | 'medium' | 'large';
+  fullWidth?: boolean;
+}
 
 const StyledButton = styled.button<ButtonProps>`
-  font-family: ${(props: StyledProps) =>
-    props.theme.typography.fontFamily.heading};
-  font-weight: ${(props: StyledProps) =>
-    props.theme.typography.fontWeight.semibold};
-  border-radius: ${(props: StyledProps) => props.theme.borderRadius.medium};
-  transition: ${(props: StyledProps) => props.theme.transitions.default};
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${(props: StyledProps) => props.theme.spacing(2)};
-
-  ${(props: ButtonProps & StyledProps) =>
-    props.$fullWidth &&
-    css`
-      width: 100%;
-    `}
-
-  ${(props: ButtonProps & StyledProps) => {
+  padding: ${props => {
     switch (props.size) {
-      case "small":
-        return css`
-          padding: ${props.theme.spacing(1)} ${props.theme.spacing(2)};
-          font-size: ${props.theme.typography.fontSizes.small};
-        `;
-      case "large":
-        return css`
-          padding: ${props.theme.spacing(3)} ${props.theme.spacing(4)};
-          font-size: ${props.theme.typography.fontSizes.large};
-        `;
+      case 'small':
+        return `${SPACING.xs} ${SPACING.sm}`;
+      case 'large':
+        return `${SPACING.md} ${SPACING.xl}`;
       default:
-        return css`
-          padding: ${props.theme.spacing(2)} ${props.theme.spacing(3)};
-          font-size: ${props.theme.typography.fontSizes.medium};
-        `;
+        return `${SPACING.sm} ${SPACING.lg}`;
     }
-  }}
-
-  ${(props: ButtonProps & StyledProps) => {
+  }};
+  
+  font-size: ${props => {
+    switch (props.size) {
+      case 'small':
+        return '0.875rem';
+      case 'large':
+        return '1.125rem';
+      default:
+        return '1rem';
+    }
+  }};
+  
+  width: ${props => props.fullWidth ? '100%' : 'auto'};
+  border-radius: ${props => props.theme.borderRadius};
+  border: none;
+  cursor: pointer;
+  transition: ${props => props.theme.transition};
+  
+  ${props => {
     switch (props.variant) {
-      case "secondary":
-        return css`
-          background-color: transparent;
-          border: 2px solid ${props.theme.colors.secondary.main};
-          color: ${props.theme.colors.secondary.main};
-
-          &:hover:not(:disabled) {
-            background-color: ${props.theme.colors.secondary.main};
-            color: ${props.theme.colors.text.light};
+      case 'secondary':
+        return `
+          background-color: ${props.theme.colors.secondary};
+          color: ${props.theme.colors.background.primary};
+          &:hover {
+            opacity: 0.9;
           }
         `;
-      case "text":
-        return css`
+      case 'outline':
+        return `
           background-color: transparent;
-          border: none;
-          color: ${props.theme.colors.secondary.main};
-          padding: ${props.theme.spacing(1)};
-
-          &:hover:not(:disabled) {
-            background-color: ${props.theme.colors.secondary.main}20;
+          border: 1px solid ${props.theme.colors.primary};
+          color: ${props.theme.colors.primary};
+          &:hover {
+            background-color: ${props.theme.colors.primary};
+            color: ${props.theme.colors.background.primary};
           }
         `;
       default:
-        return css`
-          background-color: ${props.theme.colors.primary.main};
-          border: none;
-          color: ${props.theme.colors.text.light};
-
-          &:hover:not(:disabled) {
-            background-color: ${props.theme.colors.primary.light};
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px ${props.theme.colors.primary.main}40;
+        return `
+          background-color: ${props.theme.colors.primary};
+          color: ${props.theme.colors.background.primary};
+          &:hover {
+            opacity: 0.9;
           }
         `;
     }
   }}
-
+  
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  ${(props: ButtonProps & StyledProps) =>
-    props.isLoading &&
-    css`
-      position: relative;
-      color: transparent;
-      pointer-events: none;
-
-      &::after {
-        content: "";
-        position: absolute;
-        width: 1em;
-        height: 1em;
-        border: 2px solid ${props.theme.colors.text.light};
-        border-radius: 50%;
-        border-right-color: transparent;
-        animation: spin 1s linear infinite;
-      }
-    `}
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
   }
 `;
 
 export const Button: React.FC<ButtonProps> = ({
   children,
-  variant = "primary",
-  size = "medium",
-  $fullWidth = false,
-  isLoading = false,
+  variant = 'primary',
+  size = 'medium',
+  fullWidth = false,
   ...props
 }) => {
   return (
     <StyledButton
       variant={variant}
       size={size}
-      $fullWidth={$fullWidth}
-      isLoading={isLoading}
+      fullWidth={fullWidth}
       {...props}
     >
       {children}

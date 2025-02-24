@@ -14,14 +14,19 @@ export enum TokenForgeErrorCode {
   CONTRACT_NOT_FOUND = 'CONTRACT_NOT_FOUND',
   CONTRACT_CALL_FAILED = "CONTRACT_CALL_FAILED",
   DEPLOYMENT_FAILED = "DEPLOYMENT_FAILED",
+  CONTRACT_PAUSED = "CONTRACT_PAUSED",
   
   // Erreurs de transaction
   TX_FAILED = 'TX_FAILED',
   TX_REJECTED = 'TX_REJECTED',
   TX_PREPARATION_FAILED = 'TX_PREPARATION_FAILED',
   TX_TIMEOUT = "TX_TIMEOUT",
-  TX_IN_PROGRESS = 'TX_IN_PROGRESS', // Ajout du nouveau code d'erreur
+  TX_IN_PROGRESS = 'TX_IN_PROGRESS',
   INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
+  
+  // Erreurs de connexion
+  NOT_CONNECTED = 'NOT_CONNECTED',
+  WALLET_NOT_CONNECTED = 'WALLET_NOT_CONNECTED',
   
   // Erreurs de réseau
   WRONG_NETWORK = 'WRONG_NETWORK',
@@ -29,6 +34,7 @@ export enum TokenForgeErrorCode {
   
   // Erreurs de permission
   UNAUTHORIZED = 'UNAUTHORIZED',
+  NOT_ADMIN = 'NOT_ADMIN',
   
   // Autres erreurs
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
@@ -45,6 +51,11 @@ export class TokenForgeError extends Error {
     this.name = 'TokenForgeError';
     this.code = code;
     this.originalError = originalError;
+    
+    // Capture de la stack trace
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, TokenForgeError);
+    }
   }
 }
 
@@ -55,16 +66,6 @@ export const getErrorMessage = (error: unknown): string => {
   }
   
   if (error instanceof Error) {
-    // Handle specific Ethereum errors
-    if (error.message.includes("user rejected")) {
-      return "Transaction rejected by user";
-    }
-    if (error.message.includes("insufficient funds")) {
-      return "Insufficient funds for transaction";
-    }
-    if (error.message.includes("network changed")) {
-      return "Network changed unexpectedly";
-    }
     return error.message;
   }
   
@@ -72,51 +73,119 @@ export const getErrorMessage = (error: unknown): string => {
     return error;
   }
   
-  return "Une erreur inconnue est survenue";
+  return 'Une erreur inconnue est survenue';
+};
+
+import { memoize } from './memoize';
+
+// Memoize les fonctions de vérification d'erreur pour de meilleures performances
+export const isUserRejection = memoize((error: unknown): boolean => {
+  const message = getErrorMessage(error).toLowerCase();
+  return message.includes('user rejected') || 
+         message.includes('user denied') || 
+         message.includes('user cancelled');
+});
+
+export const isNetworkError = memoize((error: unknown): boolean => {
+  const message = getErrorMessage(error).toLowerCase();
+  return message.includes('network') || 
+         message.includes('connection') || 
+         message.includes('timeout') ||
+         message.includes('disconnected');
+});
+
+// Optimisation du withRetry avec exponential backoff et jitter
+export const withRetry = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> => {
+  let lastError: unknown;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (!isNetworkError(error)) throw error;
+      
+      // Exponential backoff with jitter
+      const jitter = Math.random() * 0.3 - 0.15; // ±15%
+      const delay = baseDelay * Math.pow(2, i) * (1 + jitter);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
 };
 
 // Fonction utilitaire pour gérer les erreurs
 export const handleError = (error: unknown): TokenForgeError => {
+  // Log l'erreur pour le debugging
+  console.error('[TokenForge Error]:', error);
+
   if (error instanceof TokenForgeError) {
     return error;
   }
 
   const message = getErrorMessage(error);
+  
+  // Catégorisation améliorée des erreurs
+  if (isUserRejection(error)) {
+    return new TokenForgeError(message, TokenForgeErrorCode.TX_REJECTED, error);
+  }
+  
+  if (isNetworkError(error)) {
+    return new TokenForgeError(message, TokenForgeErrorCode.NETWORK_ERROR, error);
+  }
 
-  if (error instanceof Error) {
-    // Conversion des erreurs courantes en TokenForgeError
-    if (message.includes("user rejected")) {
-      return new TokenForgeError(message, TokenForgeErrorCode.TX_REJECTED);
-    }
-    if (message.includes("insufficient funds")) {
-      return new TokenForgeError(message, TokenForgeErrorCode.INSUFFICIENT_FUNDS);
-    }
-    if (message.includes("network changed")) {
-      return new TokenForgeError(message, TokenForgeErrorCode.WRONG_NETWORK);
-    }
-    if (message.includes("contract not deployed")) {
-      return new TokenForgeError(message, TokenForgeErrorCode.CONTRACT_NOT_FOUND);
-    }
+  // Gestion des erreurs de contrat
+  if (message.includes("execution reverted")) {
+    return new TokenForgeError(
+      "L'exécution du contrat a échoué",
+      TokenForgeErrorCode.CONTRACT_CALL_FAILED,
+      error
+    );
   }
 
   return new TokenForgeError(message, TokenForgeErrorCode.UNKNOWN_ERROR, error);
 };
 
-export const isUserRejection = (error: unknown): boolean => {
-  if (error instanceof TokenForgeError) {
-    return error.code === TokenForgeErrorCode.TX_REJECTED;
-  }
-  const message = getErrorMessage(error).toLowerCase();
-  return message.includes("user rejected") || message.includes("user denied");
-};
+export class ErrorHandler {
+  private static instance: ErrorHandler;
 
-export const isNetworkError = (error: unknown): boolean => {
-  if (error instanceof TokenForgeError) {
-    return [
-      TokenForgeErrorCode.WRONG_NETWORK,
-      TokenForgeErrorCode.NETWORK_ERROR,
-    ].includes(error.code);
+  public static getInstance(): ErrorHandler {
+    if (!ErrorHandler.instance) {
+      ErrorHandler.instance = new ErrorHandler();
+    }
+    return ErrorHandler.instance;
   }
-  const message = getErrorMessage(error).toLowerCase();
-  return message.includes("network") || message.includes("chain");
-};
+
+  handleError(error: unknown, context?: string): Error {
+    const normalizedError = this.normalizeError(error);
+    this.logError(normalizedError, context);
+    return normalizedError;
+  }
+
+  private normalizeError(error: unknown): Error {
+    if (error instanceof Error) {
+      return error;
+    }
+    if (typeof error === 'string') {
+      return new Error(error);
+    }
+    return new Error('An unknown error occurred');
+  }
+
+  private logError(error: Error, context?: string): void {
+    console.error(`[${context || 'TokenForge'}]`, {
+      message: error.message,
+      timestamp: new Date().toISOString(),
+      context,
+      stack: error.stack
+    });
+  }
+}
+
+export const errorHandler = ErrorHandler.getInstance();

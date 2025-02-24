@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { isAddress, getAddress } from "viem";
 import { type Address } from 'viem';
 
 /**
@@ -6,13 +6,8 @@ import { type Address } from 'viem';
  * @param address Adresse à valider
  * @returns boolean
  */
-export const validateAddress = (address: string | null | undefined): boolean => {
-  if (!address) return false;
-  try {
-    return ethers.isAddress(address);
-  } catch {
-    return false;
-  }
+export const validateAddress = (address: string): boolean => {
+  return isAddress(address);
 };
 
 /**
@@ -22,7 +17,7 @@ export const validateAddress = (address: string | null | undefined): boolean => 
  */
 export const checksumAddress = (address: string): string => {
   try {
-    return ethers.getAddress(address);
+    return getAddress(address);
   } catch {
     return address;
   }
@@ -63,7 +58,7 @@ export const formatAddress = (address: string): Address => {
   
   // Return checksummed address
   try {
-    return ethers.getAddress(prefixedAddress) as Address;
+    return getAddress(prefixedAddress) as Address;
   } catch (e) {
     const error = e as Error;
     throw new Error(`Erreur lors du formatage de l'adresse: ${error.message}`);

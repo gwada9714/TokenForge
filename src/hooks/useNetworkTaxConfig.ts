@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNetwork } from 'wagmi';
+import { useNetwork } from '/useNetwork';
 import { NetworkTaxConfig } from '@/types/network';
 import { ethers } from 'ethers';
 

@@ -1,0 +1,70 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "tokenId",
+          "type": "string"
+        }
+      ],
+      "name": "getTokenData",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "address",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "uint8",
+              "name": "decimals",
+              "type": "uint8"
+            },
+            {
+              "internalType": "string",
+              "name": "totalSupply",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "mintable",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "burnable",
+              "type": "bool"
+            },
+            {
+              "internalType": "string",
+              "name": "maxSupply",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct TokenInfo",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

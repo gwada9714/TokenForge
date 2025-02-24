@@ -8,11 +8,11 @@ import { theme } from "../../styles/theme";
 import { Web3Provider } from "../../contexts/Web3Provider";
 
 // Mock des composants de formulaire
-jest.mock("../../components/CreateTokenForm/BasicTokenForm", () => ({
+vi.mock("../../components/CreateTokenForm/BasicTokenForm", () => ({
   BasicTokenForm: () => <div data-testid="basic-form">Basic Form</div>,
 }));
 
-jest.mock("../../components/CreateTokenForm/AdvancedTokenForm", () => ({
+vi.mock("../../components/CreateTokenForm/AdvancedTokenForm", () => ({
   AdvancedTokenForm: () => <div data-testid="advanced-form">Advanced Form</div>,
 }));
 
@@ -32,27 +32,27 @@ describe("CreateToken Page", () => {
   });
 
   it("renders the page title", () => {
-    expect(screen.getByText("Create Your Token")).toBeInTheDocument();
+    expect(screen.getByText("Create Your Token")).toBeTruthy();
   });
 
   it("displays all token types", () => {
-    expect(screen.getByText("ERC20 Token")).toBeInTheDocument();
-    expect(screen.getByText("ERC721 NFT")).toBeInTheDocument();
-    expect(screen.getByText("ERC1155 Multi Token")).toBeInTheDocument();
-    expect(screen.getByText("ERC777 Advanced Token")).toBeInTheDocument();
-    expect(screen.getByText("ERC4626 Tokenized Vault")).toBeInTheDocument();
+    expect(screen.getByText("ERC20 Token")).toBeTruthy();
+    expect(screen.getByText("ERC721 NFT")).toBeTruthy();
+    expect(screen.getByText("ERC1155 Multi Token")).toBeTruthy();
+    expect(screen.getByText("ERC777 Advanced Token")).toBeTruthy();
+    expect(screen.getByText("ERC4626 Tokenized Vault")).toBeTruthy();
   });
 
   it("shows difficulty levels for each token type", () => {
-    expect(screen.getByText("Beginner Level")).toBeInTheDocument();
-    expect(screen.getByText("Intermediate Level")).toBeInTheDocument();
-    expect(screen.getByText("Advanced Level")).toBeInTheDocument();
-    expect(screen.getByText("Expert Level")).toBeInTheDocument();
+    expect(screen.getByText("Beginner Level")).toBeTruthy();
+    expect(screen.getByText("Intermediate Level")).toBeTruthy();
+    expect(screen.getByText("Advanced Level")).toBeTruthy();
+    expect(screen.getByText("Expert Level")).toBeTruthy();
   });
 
   it("allows token type selection", async () => {
     const erc20Card = screen.getByText("ERC20 Token").closest(".MuiCard-root");
-    expect(erc20Card).toBeInTheDocument();
+    expect(erc20Card).toBeTruthy();
 
     if (erc20Card) {
       fireEvent.click(erc20Card);
@@ -63,9 +63,9 @@ describe("CreateToken Page", () => {
   });
 
   it("shows stepper with correct steps", () => {
-    expect(screen.getByText("Select Token Type")).toBeInTheDocument();
-    expect(screen.getByText("Configure Token")).toBeInTheDocument();
-    expect(screen.getByText("Review & Deploy")).toBeInTheDocument();
+    expect(screen.getByText("Select Token Type")).toBeTruthy();
+    expect(screen.getByText("Configure Token")).toBeTruthy();
+    expect(screen.getByText("Review & Deploy")).toBeTruthy();
   });
 
   it("disables Next button until token type is selected", () => {
@@ -91,14 +91,14 @@ describe("CreateToken Page", () => {
     fireEvent.click(nextButton);
 
     // Check basic form is shown by default
-    expect(screen.getByTestId("basic-form")).toBeInTheDocument();
+    expect(screen.getByTestId("basic-form")).toBeTruthy();
 
     // Switch to advanced mode
     const switchModeButton = screen.getByText("Switch to Advanced Mode");
     fireEvent.click(switchModeButton);
 
     // Check advanced form is shown
-    expect(screen.getByTestId("advanced-form")).toBeInTheDocument();
+    expect(screen.getByTestId("advanced-form")).toBeTruthy();
   });
 
   it("allows navigation between steps", async () => {
@@ -113,14 +113,14 @@ describe("CreateToken Page", () => {
     fireEvent.click(nextButton);
 
     // Check we're on the second step
-    expect(screen.getByTestId("basic-form")).toBeInTheDocument();
+    expect(screen.getByTestId("basic-form")).toBeTruthy();
 
     // Go back
     const backButton = screen.getByText("Back");
     fireEvent.click(backButton);
 
     // Check we're back on the first step
-    expect(screen.getByText("ERC20 Token")).toBeInTheDocument();
+    expect(screen.getByText("ERC20 Token")).toBeTruthy();
   });
 
   it("shows deploy button on final step", async () => {
@@ -136,7 +136,7 @@ describe("CreateToken Page", () => {
     fireEvent.click(nextButton);
 
     // Check deploy button is shown
-    expect(screen.getByText("Deploy")).toBeInTheDocument();
+    expect(screen.getByText("Deploy")).toBeTruthy();
   });
 });
 
@@ -152,7 +152,7 @@ describe("CreateToken Web3 Integration", () => {
     // const connectButton = screen.getByText('Connect Wallet');
     // fireEvent.click(connectButton);
     // await waitFor(() => {
-    //   expect(screen.getByText('Connected')).toBeInTheDocument();
+    //   expect(screen.getByText('Connected')).toBeTruthy();
     // });
   });
 });

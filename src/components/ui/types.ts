@@ -3,20 +3,20 @@ import { DefaultTheme } from 'styled-components';
 import { Tokens } from '@/theme/tokens';
 
 declare module 'styled-components' {
-  export interface DefaultTheme extends Tokens {
-    // Add any additional theme properties here if needed
-  }
+  export interface DefaultTheme extends Tokens {}
 }
 
 export interface BaseProps {
   className?: string;
 }
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, BaseProps {
-  variant?: 'primary' | 'secondary' | 'text';
-  size?: 'small' | 'medium' | 'large';
+export interface StyledButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, BaseProps {
+  $variant?: 'primary' | 'secondary' | 'text';
+  $size?: 'small' | 'medium' | 'large';
   $fullWidth?: boolean;
-  isLoading?: boolean;
+  $isLoading?: boolean;
+  to?: string;
+  onClick?: () => void;
 }
 
 export interface CardProps extends BaseProps {
@@ -38,5 +38,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement>, BaseP
 
 // This is used internally by styled-components
 export interface StyledProps {
-  theme: DefaultTheme;
+  theme?: any;
+  as?: any;
+  forwardedAs?: any;
 }
