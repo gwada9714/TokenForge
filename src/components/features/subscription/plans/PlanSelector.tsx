@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Card, CardContent, Typography, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { useTokenForgePlans } from '../../hooks/useTokenForgePlans';
-import { PlanType, DEFAULT_PLANS, PLAN_PRICES, formatPlanPrice } from '../../types/plans';
-import { getContractAddress } from '../../config/contracts';
+import { useTokenForgePlans } from '@/hooks/useTokenForgePlans';
+import { PlanType, DEFAULT_PLANS, PLAN_PRICES, formatPlanPrice } from '@/types/plans';
+import { getContractAddress } from '@/config/contracts';
 import { toast } from 'react-hot-toast';
-import { useAccount } from 'wagmi';
-import { useNetwork } from '../hooks/useNetwork';
+import { useAccount, useConnect } from 'wagmi';
+import { useNetwork } from '@/hooks/useNetwork';
+import { SUPPORTED_CHAINS } from '@/types/common';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 export const PlanSelector: React.FC = () => {
-  useEffect(() => {
-    console.log('PlanSelector monté !');
-  }, []);
-
   const { isConnected, address } = useAccount();
+  const { connect, connectors } = useConnect();
   const { chain } = useNetwork();
   const { buyPlan, isLoading: planLoading, userPlan } = useTokenForgePlans();
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
@@ -21,35 +19,29 @@ export const PlanSelector: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Log l'état de la connexion à chaque changement
-  useEffect(() => {
-    console.log('État de la connexion:', {
-      isConnected,
-      address,
-      chainId: chain?.id,
-      chainName: chain?.name,
-      userPlan,
-      planLoading
-    });
-  }, [isConnected, address, chain, userPlan, planLoading]);
-
   const handlePlanClick = async (planType: PlanType) => {
     try {
-      console.log('Clic sur le plan:', {
-        planType,
-        isConnected,
-        address,
-        chain: chain?.id
-      });
-
       if (planType === PlanType.MaitreForgeron) {
         window.location.href = '/contact';
         return;
       }
 
       if (!isConnected) {
-        toast.error('Veuillez connecter votre wallet pour choisir un plan');
-        return;
+        try {
+          const connector = connectors[0]; // MetaMask par défaut
+          if (!connector) {
+            throw new Error('Aucun wallet disponible');
+          }
+          await connect({ connector });
+          // Attendre que la connexion soit établie
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          if (!isConnected) {
+            throw new Error('La connexion du wallet a échoué');
+          }
+        } catch (error) {
+          toast.error('Échec de la connexion du wallet');
+          return;
+        }
       }
 
       if (!chain) {
@@ -57,13 +49,8 @@ export const PlanSelector: React.FC = () => {
         return;
       }
 
-      const supportedNetworks = {
-        11155111: 'Sepolia Testnet',
-        1: 'Ethereum Mainnet'
-      };
-
-      if (!(chain.id in supportedNetworks)) {
-        toast.error(`Réseau non supporté. Veuillez vous connecter à ${supportedNetworks[chain.id === 1 ? 1 : 11155111]}`);
+      if (!(chain.id in SUPPORTED_CHAINS)) {
+        toast.error(`Réseau non supporté. Veuillez vous connecter à ${SUPPORTED_CHAINS[chain.id as keyof typeof SUPPORTED_CHAINS]}`);
         return;
       }
 
@@ -210,19 +197,9 @@ export const PlanSelector: React.FC = () => {
                   variant={type === PlanType.Forgeron ? "contained" : "outlined"}
                   fullWidth
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
-                    console.log('Button clicked:', type);
-                    if (!address) {
-                      // Connecter le wallet
-                    } else {
-                      handlePlanClick(type);
-                    }
-                  }}
-                  onMouseDown={(e) => {
-                    console.log('Button mouse down:', type);
-                  }}
-                  onMouseUp={(e) => {
-                    console.log('Button mouse up:', type);
+                    handlePlanClick(type);
                   }}
                   disabled={disabled}
                   sx={{

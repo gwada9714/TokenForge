@@ -1,4 +1,5 @@
-export * from './services';
-export * from './types';
-export { initializeFirebase } from './firebase-init';
-export { firebaseManager as default } from './services';
+import { app, auth, db, storage } from '@/config/firebase';
+import { firebaseManager } from './services';
+
+export { app, auth, db, storage };
+export { firebaseManager as default };

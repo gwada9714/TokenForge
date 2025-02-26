@@ -1,13 +1,20 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import {
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import type {
   TokenForgeToken,
   TokenForgeFactory,
   TokenForgeTaxSystem
-} from "../typechain-types";
+} from "../../../typechain-types";
+import { ZeroAddress } from "ethers";
+import {
+  INITIAL_SUPPLY,
+  MAX_TX_AMOUNT,
+  MAX_WALLET_SIZE,
+  TEST_TOKEN_PARAMS
+} from "./constants";
 
-describe("TokenForge Anti-Whale Features", () => {
+describe("Fonctionnalités Anti-Whale de TokenForge", () => {
   let token: TokenForgeToken;
   let factory: TokenForgeFactory;
   let taxSystem: TokenForgeTaxSystem;
@@ -18,97 +25,98 @@ describe("TokenForge Anti-Whale Features", () => {
   let user2: SignerWithAddress;
   let whale: SignerWithAddress;
 
-  const TOKEN_NAME = "Anti Whale Token";
-  const TOKEN_SYMBOL = "AWT";
-  const INITIAL_SUPPLY = ethers.utils.parseEther("1000000");
-  const MAX_TX_AMOUNT = ethers.utils.parseEther("10000"); // 1% of total supply
-  const MAX_WALLET_SIZE = ethers.utils.parseEther("20000"); // 2% of total supply
-
   beforeEach(async () => {
-    // Get signers
+    // Récupération des signers
     [owner, treasury, creator, user1, user2, whale] = await ethers.getSigners();
 
-    // Deploy TaxSystem
+    // Déploiement du système de taxe
     const TaxSystem = await ethers.getContractFactory("TokenForgeTaxSystem");
-    taxSystem = await TaxSystem.deploy(treasury.address);
-    await taxSystem.deployed();
+    taxSystem = (await TaxSystem.deploy(treasury.address)) as unknown as TokenForgeTaxSystem;
+    await taxSystem.waitForDeployment();
 
-    // Deploy Factory
+    // Déploiement de la Factory
     const Factory = await ethers.getContractFactory("TokenForgeFactory");
-    factory = await Factory.deploy(
-      ethers.constants.AddressZero, // TKN token not needed for tests
+    factory = (await Factory.deploy(
+      ZeroAddress,
       treasury.address,
-      taxSystem.address
-    );
-    await factory.deployed();
+      await taxSystem.getAddress()
+    )) as unknown as TokenForgeFactory;
+    await factory.waitForDeployment();
 
-    // Create a test token with anti-whale features
+    // Création d'un token de test avec les fonctionnalités anti-whale
     const createTx = await factory.connect(creator).createToken(
-      TOKEN_NAME,
-      TOKEN_SYMBOL,
-      18,
-      INITIAL_SUPPLY,
-      MAX_TX_AMOUNT,
-      MAX_WALLET_SIZE,
-      0 // no additional tax
+      TEST_TOKEN_PARAMS.name,
+      TEST_TOKEN_PARAMS.symbol,
+      TEST_TOKEN_PARAMS.totalSupply,
+      TEST_TOKEN_PARAMS.maxTxAmount,
+      TEST_TOKEN_PARAMS.maxWalletSize,
+      TEST_TOKEN_PARAMS.additionalTaxRate
     );
     const receipt = await createTx.wait();
-    const event = receipt.events?.find(e => e.event === "TokenCreated");
-    const tokenAddress = event?.args?.tokenAddress;
-    token = await ethers.getContractAt("TokenForgeToken", tokenAddress);
+    if (!receipt) throw new Error("Transaction receipt not found");
 
-    // Transfer some tokens to users for testing
-    await token.connect(creator).transfer(user1.address, ethers.utils.parseEther("5000"));
-    await token.connect(creator).transfer(user2.address, ethers.utils.parseEther("5000"));
-    await token.connect(creator).transfer(whale.address, ethers.utils.parseEther("15000"));
+    const event = receipt.logs.find(
+      log => log instanceof ethers.EventLog && log.eventName === "TokenCreated"
+    );
+    if (!event || !(event instanceof ethers.EventLog)) {
+      throw new Error("TokenCreated event not found");
+    }
+
+    const tokenAddress = event.args[0] as string;
+    if (!tokenAddress) throw new Error("Token address not found in event");
+
+    token = (await ethers.getContractAt("TokenForgeToken", tokenAddress)) as unknown as TokenForgeToken;
+
+    // Transfert de tokens aux utilisateurs pour les tests
+    await token.connect(creator).transfer(user1.address, MAX_TX_AMOUNT / 2n);
+    await token.connect(creator).transfer(user2.address, MAX_TX_AMOUNT / 2n);
+    await token.connect(creator).transfer(whale.address, MAX_WALLET_SIZE / 2n);
   });
 
-  describe("Max Transaction Amount", () => {
-    it("should enforce max transaction amount", async () => {
-      // Try to transfer more than max tx amount
+  describe("Montant Maximum de Transaction", () => {
+    it("devrait imposer le montant maximum de transaction", async () => {
+      // Tentative de transfert supérieur au montant maximum
       await expect(
-        token.connect(creator).transfer(user1.address, MAX_TX_AMOUNT.add(1))
-      ).to.be.revertedWith("Transfer amount exceeds maxTxAmount");
+        token.connect(creator).transfer(user1.address, MAX_TX_AMOUNT + 1n)
+      ).to.be.revertedWith("Le montant du transfert dépasse maxTxAmount");
     });
 
-    it("should allow transfer at max transaction amount", async () => {
+    it("devrait autoriser un transfert au montant maximum", async () => {
       await expect(
         token.connect(creator).transfer(user1.address, MAX_TX_AMOUNT)
       ).to.not.be.reverted;
     });
 
-    it("should allow multiple transfers under max amount", async () => {
-      const amount = ethers.utils.parseEther("5000");
+    it("devrait autoriser plusieurs transferts sous le montant maximum", async () => {
+      const amount = MAX_TX_AMOUNT / 2n;
       await token.connect(creator).transfer(user1.address, amount);
       await token.connect(creator).transfer(user1.address, amount);
-      // If no revert, test passes
     });
   });
 
-  describe("Max Wallet Size", () => {
-    it("should enforce max wallet size", async () => {
-      // Try to transfer amount that would exceed max wallet size
+  describe("Taille Maximum du Portefeuille", () => {
+    it("devrait imposer la taille maximum du portefeuille", async () => {
       const currentBalance = await token.balanceOf(user1.address);
-      const amountToExceed = MAX_WALLET_SIZE.sub(currentBalance).add(1);
+      const amountToExceed = MAX_WALLET_SIZE - currentBalance + 1n;
 
       await expect(
         token.connect(creator).transfer(user1.address, amountToExceed)
-      ).to.be.revertedWith("Transfer would exceed maxWalletSize");
+      ).to.be.revertedWith("Le transfert dépasserait maxWalletSize");
     });
 
-    it("should allow transfer up to max wallet size", async () => {
+    it("devrait autoriser un transfert jusqu'à la taille maximum", async () => {
       const currentBalance = await token.balanceOf(user1.address);
-      const amountToMax = MAX_WALLET_SIZE.sub(currentBalance);
+      const amountToMax = MAX_WALLET_SIZE - currentBalance;
 
       await expect(
         token.connect(creator).transfer(user1.address, amountToMax)
       ).to.not.be.reverted;
     });
 
-    it("should track wallet size correctly after multiple transfers", async () => {
-      const amount = ethers.utils.parseEther("1000");
+    it("devrait suivre correctement la taille du portefeuille après plusieurs transferts", async () => {
+      const amount = MAX_WALLET_SIZE / 20n; // 5% de la taille maximum
       
-      // Multiple transfers to same wallet
+      // Plusieurs transferts vers le même portefeuille
       await token.connect(creator).transfer(user1.address, amount);
       await token.connect(creator).transfer(user1.address, amount);
       
@@ -118,65 +126,65 @@ describe("TokenForge Anti-Whale Features", () => {
   });
 
   describe("Configuration", () => {
-    it("should allow owner to update max transaction amount", async () => {
-      const newMaxTx = ethers.utils.parseEther("15000");
+    it("devrait permettre au propriétaire de mettre à jour le montant maximum de transaction", async () => {
+      const newMaxTx = BigInt("15000000000000000000000"); // 15,000 tokens
       await token.connect(creator).setMaxTxAmount(newMaxTx);
       expect(await token.maxTxAmount()).to.equal(newMaxTx);
     });
 
-    it("should allow owner to update max wallet size", async () => {
-      const newMaxWallet = ethers.utils.parseEther("25000");
+    it("devrait permettre au propriétaire de mettre à jour la taille maximum du portefeuille", async () => {
+      const newMaxWallet = BigInt("25000000000000000000000"); // 25,000 tokens
       await token.connect(creator).setMaxWalletSize(newMaxWallet);
       expect(await token.maxWalletSize()).to.equal(newMaxWallet);
     });
 
-    it("should not allow non-owner to update limits", async () => {
+    it("ne devrait pas permettre à un non-propriétaire de mettre à jour les limites", async () => {
       const newAmount = ethers.utils.parseEther("15000");
       await expect(
         token.connect(user1).setMaxTxAmount(newAmount)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWith("Ownable: l'appelant n'est pas le propriétaire");
       
       await expect(
         token.connect(user1).setMaxWalletSize(newAmount)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWith("Ownable: l'appelant n'est pas le propriétaire");
     });
   });
 
-  describe("Edge Cases", () => {
-    it("should handle transfers that exactly match limits", async () => {
-      // Clear user1's balance
+  describe("Cas Limites", () => {
+    it("devrait gérer les transferts qui correspondent exactement aux limites", async () => {
+      // Vider le solde de user1
       const user1Balance = await token.balanceOf(user1.address);
       await token.connect(user1).transfer(creator.address, user1Balance);
 
-      // Transfer exactly max wallet size
+      // Transfert exactement égal à la taille maximum du portefeuille
       await expect(
         token.connect(creator).transfer(user1.address, MAX_WALLET_SIZE)
       ).to.not.be.reverted;
     });
 
-    it("should handle multiple small transfers approaching limits", async () => {
-      const smallAmount = ethers.utils.parseEther("1000");
-      const iterations = 19; // Should get close to max wallet size
+    it("devrait gérer plusieurs petits transferts approchant les limites", async () => {
+      const smallAmount = BigInt("1000000000000000000000"); // 1,000 tokens
+      const iterations = 19; // Devrait s'approcher de la taille maximum du portefeuille
 
       for (let i = 0; i < iterations; i++) {
         await token.connect(creator).transfer(user1.address, smallAmount);
       }
 
-      // Next transfer should fail
+      // Le prochain transfert devrait échouer
       await expect(
         token.connect(creator).transfer(user1.address, smallAmount)
-      ).to.be.revertedWith("Transfer would exceed maxWalletSize");
+      ).to.be.revertedWith("Le transfert dépasserait maxWalletSize");
     });
 
-    it("should maintain limits after token burns", async () => {
-      // Burn some tokens
-      const burnAmount = ethers.utils.parseEther("100000");
+    it("devrait maintenir les limites après les destructions de tokens", async () => {
+      // Destruction de tokens
+      const burnAmount = BigInt("100000000000000000000000"); // 100,000 tokens
       await token.connect(creator).burn(burnAmount);
 
-      // Limits should still be enforced
+      // Les limites devraient toujours être appliquées
       await expect(
-        token.connect(creator).transfer(user1.address, MAX_TX_AMOUNT.add(1))
-      ).to.be.revertedWith("Transfer amount exceeds maxTxAmount");
+        token.connect(creator).transfer(user1.address, MAX_TX_AMOUNT + 1n)
+      ).to.be.revertedWith("Le montant du transfert dépasse maxTxAmount");
     });
   });
 });

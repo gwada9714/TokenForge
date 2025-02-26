@@ -3,7 +3,7 @@ import { Auth } from 'firebase/auth';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { Functions, getFunctions } from 'firebase/functions';
 import { logger } from '../../utils/firebase-logger';
-import { app } from '../../config/firebase-init';
+import { app } from '@/config/firebase';
 
 const LOG_CATEGORY = 'FirebaseManager';
 

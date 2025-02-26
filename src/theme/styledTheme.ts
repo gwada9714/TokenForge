@@ -34,7 +34,7 @@ const createSpacing = () => {
   return spacing;
 };
 
-export const theme: DefaultTheme = {
+export const styledTheme: DefaultTheme = {
   colors: {
     primary: {
       main: "#f97316",
@@ -42,34 +42,34 @@ export const theme: DefaultTheme = {
       dark: "#c2410c",
       border: "#fdba74",
       hover: "#c2410c"
-    } as ColorSet,
+    },
     secondary: {
       main: "#3b82f6",
       light: "#93c5fd",
       dark: "#1d4ed8",
       border: "#93c5fd",
       hover: "#1d4ed8"
-    } as ColorSet,
+    },
     success: {
       main: "#22c55e",
       light: "#86efac",
       dark: "#15803d"
-    } as ColorSet,
+    },
     warning: {
       main: "#f59e0b",
       light: "#fcd34d",
       dark: "#b45309"
-    } as ColorSet,
+    },
     error: {
       main: "#ef4444",
       light: "#fca5a5",
       dark: "#b91c1c"
-    } as ColorSet,
+    },
     info: {
       main: "#3b82f6",
       light: "#93c5fd",
       dark: "#1d4ed8"
-    } as ColorSet,
+    },
     grey: {
       50: "#f9fafb",
       100: "#f3f4f6",
@@ -99,7 +99,7 @@ export const theme: DefaultTheme = {
       hover: "#c2410c",
       metallic: "#B87333",
       glow: "#FFA500"
-    } as ExtendedColorSet,
+    },
     forge: {
       main: "#f97316",
       light: "#fdba74",
@@ -108,7 +108,7 @@ export const theme: DefaultTheme = {
       hover: "#c2410c",
       metallic: "#B87333",
       glow: "#FFA500"
-    } as ExtendedColorSet,
+    },
     gradient: {
       primary: "linear-gradient(45deg, #f97316 30%, #fdba74 90%)",
       secondary: "linear-gradient(45deg, #3b82f6 30%, #93c5fd 90%)",
@@ -129,9 +129,9 @@ export const theme: DefaultTheme = {
     },
     fontSizes: {
       xs: "0.75rem",
-      small: "0.875rem",
-      medium: "1rem",
-      large: "1.125rem",
+      sm: "0.875rem",
+      md: "1rem",
+      lg: "1.125rem",
       xl: "1.25rem",
       "2xl": "1.5rem",
       "3xl": "1.875rem",
@@ -161,5 +161,3 @@ export const theme: DefaultTheme = {
       `@media (min-width: ${breakpointValues[start]}px) and (max-width: ${breakpointValues[end] - 0.05}px)`
   }
 };
-
-export default theme;

@@ -1,7 +1,7 @@
 import { User as FirebaseUser } from 'firebase/auth';
 import { AuthError } from '../errors/AuthError';
-import { TokenForgeAuthActions } from '../actions/authActions';
 import { WalletClient } from 'viem';
+import { AuthAction } from '../../../types/authTypes';
 
 export type AuthStatus = 
   | 'idle'
@@ -27,11 +27,11 @@ export interface TokenForgeUser extends FirebaseUser {
 }
 
 export interface WalletState {
+  address: `0x${string}` | null;
   isConnected: boolean;
-  address: string | null;
-  chainId: number | null;
+  chainId?: number;
   isCorrectNetwork: boolean;
-  walletClient: WalletClient | null;
+  walletClient?: WalletClient;
 }
 
 export interface TokenForgeAuthState {
@@ -62,9 +62,9 @@ export interface NotificationEvent {
   data?: any;
 }
 
-export interface TokenForgeAuthContextValue {
-  state: TokenForgeAuthState;
-  dispatch: React.Dispatch<any>;
+export interface TokenForgeAuthContextValue extends TokenForgeAuthState {
+  isInitialized: boolean;
+  dispatch: React.Dispatch<AuthAction>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -74,10 +74,5 @@ export interface TokenForgeAuthContextValue {
   connectWallet: (address: string, chainId: number, walletClient: WalletClient) => Promise<void>;
   disconnectWallet: () => Promise<void>;
   clearError: () => void;
-  actions: TokenForgeAuthActions;
   validateAdminAccess: () => boolean;
-}
-
-export interface AuthContextValue {
-  dispatch: React.Dispatch<any>;
 }

@@ -23,6 +23,9 @@ import {
 } from '@mui/material';
 import { formatValue } from '@/utils/web3Adapters';
 import { useStakingManager } from '@/hooks/useStakingManager';
+import { useAccount } from 'wagmi';
+import { useNetwork } from '@/hooks/useNetwork';
+import { StakingState, SUPPORTED_CHAINS } from '@/types/common';
 import TokenIcon from '@mui/icons-material/Token';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -127,41 +130,114 @@ const StakingDashboard: React.FC = () => {
     isLoading,
     stake,
     unstake,
-    claimRewards
+    claimRewards,
+    refreshBalances
   } = useStakingManager();
+
+  const { isConnected } = useAccount();
+  const { chain } = useNetwork();
+  const stakedBalance = Number(formatValue(stakedAmount));
 
   const [stakeAmount, setStakeAmount] = React.useState('');
   const [unstakeAmount, setUnstakeAmount] = React.useState('');
+  const [isStaking, setIsStaking] = React.useState(false);
+  const [isUnstaking, setIsUnstaking] = React.useState(false);
+  const [isClaiming, setIsClaiming] = React.useState(false);
 
   const handleStake = async () => {
     try {
-      await stake(stakeAmount);
+      if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
+        toast.error('Veuillez entrer un montant valide');
+        return;
+      }
+
+      if (!isConnected) {
+        toast.error('Veuillez connecter votre wallet');
+        return;
+      }
+
+      if (!chain || !(chain.id in SUPPORTED_CHAINS)) {
+        toast.error('Veuillez vous connecter à un réseau supporté');
+        return;
+      }
+
+      setIsStaking(true);
+      const tx = await stake(parseFloat(stakeAmount));
+      await tx.wait();
+      toast.success('Staking effectué avec succès');
       setStakeAmount('');
-      toast.success('Stake successful!');
+      await refreshBalances();
     } catch (error) {
-      console.error('Stake error:', error);
-      toast.error('Failed to stake tokens');
+      console.error('Erreur de staking:', error);
+      toast.error(error instanceof Error ? error.message : 'Une erreur est survenue lors du staking');
+    } finally {
+      setIsStaking(false);
     }
   };
 
   const handleUnstake = async () => {
     try {
-      await unstake(unstakeAmount);
+      if (!unstakeAmount || parseFloat(unstakeAmount) <= 0) {
+        toast.error('Veuillez entrer un montant valide');
+        return;
+      }
+
+      if (parseFloat(unstakeAmount) > stakedBalance) {
+        toast.error('Montant supérieur à votre balance stakée');
+        return;
+      }
+
+      if (!isConnected) {
+        toast.error('Veuillez connecter votre wallet');
+        return;
+      }
+
+      if (!chain || !(chain.id in SUPPORTED_CHAINS)) {
+        toast.error('Veuillez vous connecter à un réseau supporté');
+        return;
+      }
+
+      setIsUnstaking(true);
+      const tx = await unstake(parseFloat(unstakeAmount));
+      await tx.wait();
+      toast.success('Unstaking effectué avec succès');
       setUnstakeAmount('');
-      toast.success('Unstake successful!');
+      await refreshBalances();
     } catch (error) {
-      console.error('Unstake error:', error);
-      toast.error('Failed to unstake tokens');
+      console.error('Erreur d\'unstaking:', error);
+      toast.error(error instanceof Error ? error.message : 'Une erreur est survenue lors de l\'unstaking');
+    } finally {
+      setIsUnstaking(false);
     }
   };
 
   const handleClaim = async () => {
     try {
-      await claimRewards();
-      toast.success('Rewards claimed successfully!');
+      if (rewards <= 0n) {
+        toast.error('Aucune récompense à réclamer');
+        return;
+      }
+
+      if (!isConnected) {
+        toast.error('Veuillez connecter votre wallet');
+        return;
+      }
+
+      if (!chain || !(chain.id in SUPPORTED_CHAINS)) {
+        toast.error('Veuillez vous connecter à un réseau supporté');
+        return;
+      }
+
+      setIsClaiming(true);
+      const tx = await claimRewards();
+      await tx.wait();
+      toast.success('Récompenses réclamées avec succès');
+      await refreshBalances();
     } catch (error) {
-      console.error('Claim error:', error);
-      toast.error('Failed to claim rewards');
+      console.error('Erreur de claim:', error);
+      toast.error(error instanceof Error ? error.message : 'Une erreur est survenue lors de la réclamation');
+    } finally {
+      setIsClaiming(false);
     }
   };
 

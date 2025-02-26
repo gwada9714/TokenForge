@@ -1,70 +1,104 @@
-import { createPublicClient, createWalletClient, http, type TransactionReceipt } from 'viem';
+import { PublicClient, WalletClient } from 'viem';
+import { TokenConfig, DeploymentResult, ValidationResult, CostEstimation, TokenDeploymentOptions } from '../../../types/deployment';
 import { BlockchainNetwork } from '../components/DeploymentOptions';
 import { PaymentProcessor } from '@/features/payment/services/paymentProcessor';
 import { ErrorService } from '@/services/errorService';
 import { TokenFactoryABI } from '../abis/TokenFactoryABI';
 
-interface TokenConfig {
-  name: string;
-  symbol: string;
-  decimals: number;
-  initialSupply: bigint;
-  mintable: boolean;
-  burnable: boolean;
-  blacklist: boolean;
-  customTaxPercentage: number;
-}
-
-interface DeploymentResult {
-  success: boolean;
-  tokenAddress?: `0x${string}`;
-  transactionHash?: `0x${string}`;
-  error?: string;
-}
-
 export class TokenDeploymentService {
   private paymentProcessor: PaymentProcessor;
 
-  constructor() {
+  constructor(
+    private readonly publicClient: PublicClient,
+    private readonly walletClient: WalletClient
+  ) {
     this.paymentProcessor = new PaymentProcessor();
   }
 
+  async validateTokenConfig(config: TokenConfig): Promise<ValidationResult> {
+    const errors: string[] = [];
+
+    if (!config.name || config.name.length < 3) {
+      errors.push('Le nom du token doit faire au moins 3 caractères');
+    }
+
+    if (!config.symbol || config.symbol.length < 2) {
+      errors.push('Le symbole du token doit faire au moins 2 caractères');
+    }
+
+    if (config.initialSupply <= BigInt(0)) {
+      errors.push('Le supply initial doit être supérieur à 0');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  async estimateDeploymentCost(config: TokenConfig): Promise<CostEstimation> {
+    // Estimation des coûts de déploiement
+    const gasEstimate = await this.publicClient.estimateContractGas({
+      abi: [], // TODO: Add ABI
+      bytecode: '', // TODO: Add bytecode
+      args: [
+        config.name,
+        config.symbol,
+        config.decimals,
+        config.initialSupply
+      ]
+    });
+
+    return {
+      gasCost: gasEstimate,
+      tokenPrice: BigInt(0), // TODO: Add token price calculation
+      totalCost: gasEstimate // TODO: Add total cost calculation
+    };
+  }
+
   async deployToken(
-    network: BlockchainNetwork,
     config: TokenConfig,
-    walletAddress: `0x${string}`
+    options: TokenDeploymentOptions = { chain: 'bsc' }
   ): Promise<DeploymentResult> {
     try {
-      // Vérifier le paiement des frais de déploiement
-      const deploymentFee = await this.calculateDeploymentFee(network);
-      
-      // Créer le client pour interagir avec la blockchain
-      const publicClient = createPublicClient({
-        transport: http(this.getNetworkRPC(network))
+      // Validation de la configuration
+      const validation = await this.validateTokenConfig(config);
+      if (!validation.isValid) {
+        return {
+          success: false,
+          error: validation.errors.join(', ')
+        };
+      }
+
+      // Déploiement du contrat
+      const hash = await this.walletClient.deployContract({
+        abi: [], // TODO: Add ABI
+        bytecode: '', // TODO: Add bytecode
+        args: [
+          config.name,
+          config.symbol,
+          config.decimals,
+          config.initialSupply
+        ]
       });
 
-      // Préparer les arguments du contrat
-      const contractArgs = this.prepareContractArguments(config);
+      // Attente de la confirmation
+      const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
 
-      // Déployer le contrat
-      const deploymentResult = await this.deployContract(network, contractArgs, walletAddress);
-
-      // Vérifier le succès du déploiement
-      if (!deploymentResult.success) {
-        throw new Error(deploymentResult.error || 'Échec du déploiement');
+      if (!receipt.contractAddress) {
+        throw new Error('Adresse du contrat non trouvée dans le reçu');
       }
 
       return {
         success: true,
-        tokenAddress: deploymentResult.tokenAddress,
-        transactionHash: deploymentResult.transactionHash
+        tokenAddress: receipt.contractAddress,
+        transactionHash: hash
       };
 
     } catch (error) {
-      console.error('Erreur lors du déploiement:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erreur inconnue'
+        error: error instanceof Error ? error.message : 'Erreur inconnue lors du déploiement'
       };
     }
   }
@@ -119,15 +153,10 @@ export class TokenDeploymentService {
     const errorService = ErrorService.getInstance();
     try {
       // Créer le client avec le bon RPC
-      const client = createPublicClient({
-        transport: http(this.getNetworkRPC(network))
-      });
+      const client = this.publicClient;
 
       // Créer le wallet client
-      const walletClient = createWalletClient({
-        transport: http(this.getNetworkRPC(network)),
-        account: walletAddress
-      });
+      const walletClient = this.walletClient;
 
       // Vérifier les fonds
       const balance = await client.getBalance({ address: walletAddress });

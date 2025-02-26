@@ -7,23 +7,10 @@
     <meta name="theme-color" content="#7b3fe4" />
     <meta name="keywords" content="token, blockchain, crypto, ethereum, binance, polygon, forge, création token" />
     
-    <!-- Configuration CSP sécurisée pour Firebase -->
+    <!-- Configuration CSP sécurisée pour le développement -->
     <meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self';
-              script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://*.firebase.com;
-              connect-src 'self' 
-                https://*.firebase.app 
-                https://*.firebaseio.com 
-                https://*.cloudfunctions.net 
-                https://firebaseinstallations.googleapis.com 
-                https://*.google-analytics.com 
-                https://*.analytics.google.com 
-                wss://*.firebaseio.com;
-              style-src 'self' 'unsafe-inline';
-              img-src 'self' data: https://*.google-analytics.com https://*.googleapis.com;
-              frame-src 'self' https://*.firebaseapp.com;
-              object-src 'none';
-              base-uri 'self'">
+      content="default-src 'self' 'unsafe-inline' 'unsafe-eval' http: https: ws: wss: data: blob:;
+              connect-src 'self' http: https: ws: wss:;">
     
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/logo192.png" />

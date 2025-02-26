@@ -87,7 +87,7 @@ vi.mock('firebase/auth', () => ({
   }))
 }));
 
-describe('Firebase Configuration', () => {
+describe('Configuration Firebase', () => {
   const mockConfig = {
     apiKey: 'test-api-key',
     authDomain: 'test.firebaseapp.com',
@@ -102,7 +102,7 @@ describe('Firebase Configuration', () => {
     vi.clearAllMocks();
   });
 
-  it('should initialize Firebase with correct config', () => {
+  it('devrait initialiser Firebase avec la bonne configuration', () => {
     const app = initializeApp(mockConfig);
     expect(initializeApp).toHaveBeenCalledWith(mockConfig);
     expect(app).toBeDefined();
@@ -110,7 +110,7 @@ describe('Firebase Configuration', () => {
     expect(app.automaticDataCollectionEnabled).toBe(true);
   });
 
-  it('should get auth instance successfully', () => {
+  it('devrait obtenir l\'instance d\'authentification avec succès', () => {
     const app = initializeApp(mockConfig);
     const auth = getAuth(app);
     expect(getAuth).toHaveBeenCalledWith(app);
@@ -118,7 +118,7 @@ describe('Firebase Configuration', () => {
     expect(auth.currentUser).toBeNull();
   });
 
-  it('should prevent multiple initializations', () => {
+  it('devrait empêcher les initialisations multiples', () => {
     const app1 = initializeApp(mockConfig);
     const app2 = initializeApp(mockConfig);
     
@@ -128,7 +128,7 @@ describe('Firebase Configuration', () => {
   });
 });
 
-describe('Authentication', () => {
+describe('Authentification', () => {
   let auth: ReturnType<typeof getAuth>;
 
   beforeEach(() => {
@@ -140,7 +140,7 @@ describe('Authentication', () => {
     vi.clearAllMocks();
   });
 
-  it('should handle email/password sign in', async () => {
+  it('devrait gérer la connexion par email/mot de passe', async () => {
     const result = await signInWithEmailAndPassword(auth, 'test@test.com', 'password');
     expect(signInWithEmailAndPassword).toHaveBeenCalledWith(auth, 'test@test.com', 'password');
     expect(result).toEqual({
@@ -150,7 +150,7 @@ describe('Authentication', () => {
     });
   });
 
-  it('should handle Google sign in', async () => {
+  it('devrait gérer la connexion Google', async () => {
     const provider = new GoogleAuthProvider();
     provider.addScope('email');
     
@@ -167,7 +167,7 @@ describe('Authentication', () => {
     });
   });
 
-  it('should handle sign in errors', async () => {
+  it('devrait gérer les erreurs de connexion', async () => {
     const mockError = new Error('auth/invalid-email');
     vi.mocked(signInWithEmailAndPassword).mockRejectedValueOnce(mockError);
 
@@ -177,18 +177,18 @@ describe('Authentication', () => {
   });
 });
 
-describe('Error Handling', () => {
-  it('should handle AuthError correctly', () => {
-    const originalError = new Error('Test error');
-    const authError = new AuthError(AuthErrorCode.SIGN_IN_ERROR, originalError);
+describe('Gestion des Erreurs', () => {
+  it('devrait gérer correctement AuthError', () => {
+    const originalError = new Error('Erreur de test');
+    const authError = new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Erreur d\'authentification', originalError);
     
-    expect(authError.code).toBe(AuthErrorCode.SIGN_IN_ERROR);
+    expect(authError.code).toBe(AuthErrorCode.INVALID_CREDENTIALS);
     expect(authError.originalError).toBe(originalError);
-    expect(authError.message).toContain('SIGN_IN_ERROR');
+    expect(authError.message).toBe('Erreur d\'authentification');
   });
 
-  it('should handle unknown errors', () => {
-    const unknownError = new Error('Unknown error');
+  it('devrait gérer les erreurs inconnues', () => {
+    const unknownError = new Error('Erreur inconnue');
     const handledError = handleUnknownError(unknownError);
     
     expect(handledError).toBeInstanceOf(AuthError);
@@ -196,18 +196,18 @@ describe('Error Handling', () => {
     expect(handledError.originalError).toBe(unknownError);
   });
 
-  it('should pass through existing AuthErrors', () => {
-    const originalError = new AuthError(AuthErrorCode.INVALID_EMAIL);
+  it('devrait transmettre les AuthErrors existantes', () => {
+    const originalError = new AuthError(AuthErrorCode.INVALID_EMAIL, 'Email invalide');
     const handledError = handleUnknownError(originalError);
     
     expect(handledError).toBe(originalError);
     expect(handledError.code).toBe(AuthErrorCode.INVALID_EMAIL);
   });
 
-  it('should handle Firebase errors', () => {
+  it('devrait gérer les erreurs Firebase', () => {
     const firebaseError = {
       code: 'auth/invalid-email',
-      message: 'The email address is badly formatted.'
+      message: 'L\'adresse email est mal formatée.'
     };
     const handledError = handleUnknownError(firebaseError);
     

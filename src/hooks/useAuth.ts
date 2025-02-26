@@ -1,54 +1,44 @@
-import { useState, useEffect, useCallback } from 'react';
-import { User } from 'firebase/auth';
-import { AuthService } from '@/services/auth/AuthService';
-import { AuthState } from '@/types/auth';
+import { useState, useEffect } from 'react';
+
+interface AuthUser {
+  address: string;
+  isAdmin: boolean;
+}
 
 export const useAuth = () => {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    loading: true,
-    error: null
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = AuthService.getInstance().onAuthStateChanged(
-      (user) => setState({ user, loading: false, error: null }),
-      (error) => setState(prev => ({ ...prev, loading: false, error }))
-    );
+    // Logique d'authentification à implémenter
+    const checkAuth = async () => {
+      try {
+        setLoading(true);
+        // Implémentation à compléter selon vos besoins
+      } catch (error) {
+        console.error('Erreur d\'authentification:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => unsubscribe();
+    checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-      const user = await AuthService.getInstance().login(email, password);
-      setState({ user, loading: false, error: null });
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: error as Error
-      }));
-    }
+  const login = async () => {
+    // Implémenter la logique de connexion
   };
 
   const logout = async () => {
-    try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-      await AuthService.getInstance().logout();
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: error as Error
-      }));
-    }
+    // Implémenter la logique de déconnexion
   };
 
   return {
-    ...state,
+    user,
+    loading,
     login,
-    logout
+    logout,
   };
 };
+
+export default useAuth;

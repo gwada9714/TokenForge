@@ -1,45 +1,49 @@
 import { LogLevel, LogMessage } from '@/features/auth/types/ethereum';
 
-class Logger {
-  private logToConsole(level: LogLevel, message: string, data?: Record<string, unknown>) {
-    const logMessage: LogMessage = {
-      level,
-      message,
-      data,
-      timestamp: new Date().toISOString()
-    };
+interface LogEntry {
+  message: string;
+  category: string;
+  error?: Error;
+  userId?: string;
+  timestamp?: string;
+  level?: 'info' | 'error' | 'warn' | 'debug';
+  [key: string]: any;
+}
 
-    switch (level) {
-      case 'info':
-        console.info(logMessage);
-        break;
-      case 'warn':
-        console.warn(logMessage);
-        break;
-      case 'error':
-        console.error(logMessage);
-        break;
-      case 'debug':
-        console.debug(logMessage);
-        break;
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogMessage {
+  message: string;
+  [key: string]: any;
+}
+
+class FirebaseLogger {
+  private static instance: FirebaseLogger;
+
+  private constructor() {}
+
+  static getInstance(): FirebaseLogger {
+    if (!this.instance) {
+      this.instance = new FirebaseLogger();
     }
+    return this.instance;
   }
 
-  info(message: string, data?: Record<string, unknown>) {
-    this.logToConsole('info', message, data);
+  debug(message: LogMessage): void {
+    console.debug('[DEBUG]', message);
   }
 
-  warn(message: string, data?: Record<string, unknown>) {
-    this.logToConsole('warn', message, data);
+  info(message: LogMessage): void {
+    console.info('[INFO]', message);
   }
 
-  error(message: string, data?: Record<string, unknown>) {
-    this.logToConsole('error', message, data);
+  warn(message: LogMessage): void {
+    console.warn('[WARN]', message);
   }
 
-  debug(message: string, data?: Record<string, unknown>) {
-    this.logToConsole('debug', message, data);
+  error(message: LogMessage): void {
+    console.error('[ERROR]', message);
   }
 }
 
-export const logger = new Logger();
+export const logger = FirebaseLogger.getInstance();

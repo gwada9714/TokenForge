@@ -27,6 +27,38 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "stakingPools",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "network",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "apr",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stakingRewards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "poolId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "claimed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

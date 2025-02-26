@@ -8,10 +8,9 @@ export enum ServiceType {
   KYC = 'KYC'
 }
 
-export interface ServicePrice {
-  baseFee: number;
-  currency: PaymentCurrency;
-  percentageFee?: number;
+export interface NetworkFees {
+  launchpadPercentage: number;
+  stakingPercentage: number;
 }
 
 export interface ServiceFeature {
@@ -19,6 +18,31 @@ export interface ServiceFeature {
   name: string;
   description: string;
 }
+
+export interface BaseServicePrice {
+  currency: PaymentCurrency | 'USD';
+}
+
+export interface LaunchpadPrice extends BaseServicePrice {
+  baseFee: number;
+  networkFees: Record<string, NetworkFees>;
+}
+
+export interface StakingPrice extends BaseServicePrice {
+  baseFee: number;
+  rewardPercentage: number;
+}
+
+export interface MarketingPrice extends BaseServicePrice {
+  baseFee: number;
+  listingCommission: number;
+}
+
+export interface KYCPrice extends BaseServicePrice {
+  verificationFee: number;
+}
+
+export type ServicePrice = LaunchpadPrice | StakingPrice | MarketingPrice | KYCPrice;
 
 export interface Service {
   id: ServiceType;
@@ -81,7 +105,7 @@ export interface ServiceRequest {
   config: LaunchpadConfig | StakingConfig | MarketingConfig | KYCConfig;
   payment: {
     amount: number;
-    currency: PaymentCurrency;
+    currency: PaymentCurrency | 'USD';
   };
   status: 'pending' | 'processing' | 'completed' | 'failed';
   createdAt: number;

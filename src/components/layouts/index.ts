@@ -1,3 +1,5 @@
 // Layout components exports
-export * from './AdminLayout';
-export * from '../common/Layout/AppLayout';
+export * from './main';
+export * from './footer';
+export * from './header';
+export * from './dashboard';

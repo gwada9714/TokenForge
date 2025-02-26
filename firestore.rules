@@ -116,5 +116,43 @@ service cloud.firestore {
       allow create: if true; // Permettre les rapports anonymes
       allow update, delete: if false;
     }
+
+    // Règles pour la collection stakingPools
+    match /stakingPools/{poolId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+                   isEmailVerified() &&
+                   request.resource.data.keys().hasAll(['network', 'tokenAddress', 'apr', 'stakingPeriod', 'minStakeAmount', 'isFlexible']) &&
+                   isValidWalletAddress(request.resource.data.tokenAddress) &&
+                   request.resource.data.apr >= 0 &&
+                   request.resource.data.stakingPeriod > 0 &&
+                   request.resource.data.minStakeAmount >= 0;
+      allow update: if isAuthenticated() && 
+                   isEmailVerified() &&
+                   !request.resource.data.diff(resource.data).affectedKeys().hasAny(['network', 'tokenAddress']) &&
+                   request.resource.data.apr >= 0 &&
+                   request.resource.data.stakingPeriod > 0 &&
+                   request.resource.data.minStakeAmount >= 0;
+      allow delete: if false;
+    }
+
+    // Règles pour la collection stakingRewards
+    match /stakingRewards/{rewardId} {
+      allow read: if isAuthenticated() && 
+                 (isOwner(resource.data.userAddress) || isLocalhost());
+      allow create: if isAuthenticated() && 
+                   isEmailVerified() &&
+                   request.resource.data.keys().hasAll(['poolId', 'userAddress', 'amount', 'timestamp', 'claimed']) &&
+                   isValidWalletAddress(request.resource.data.userAddress) &&
+                   request.resource.data.amount >= 0 &&
+                   request.resource.data.claimed == false &&
+                   isValidTimestamp(request.resource.data.timestamp);
+      allow update: if isAuthenticated() && 
+                   isEmailVerified() &&
+                   (isOwner(resource.data.userAddress) || isLocalhost()) &&
+                   !request.resource.data.diff(resource.data).affectedKeys().hasAny(['poolId', 'userAddress', 'timestamp']) &&
+                   request.resource.data.amount >= 0;
+      allow delete: if false;
+    }
   }
 }

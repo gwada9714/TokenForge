@@ -26,28 +26,52 @@ const formatLogMessage = (category: string, message: LogMessage): string => {
   return `[${timestamp}] [${category}] ${message.message}${context}${error}`;
 };
 
-const isDevelopment = import.meta.env.VITE_ENV === 'development';
+interface LogData {
+  message: string;
+  [key: string]: unknown;
+}
 
-export const logger = {
-    debug: (entry: LogEntry) => {
-        if (import.meta.env.DEV) {
-            console.debug(`[${entry.category}] ${entry.message}`, {
-                error: entry.error,
-                metadata: entry.metadata
-            });
-        }
-    },
-    
-    info: (entry: LogEntry) => {
-        console.info(`[${entry.category}] ${entry.message}`, {
-            metadata: entry.metadata
-        });
-    },
-    
-    error: (entry: LogEntry) => {
-        console.error(`[${entry.category}] ${entry.message}`, {
-            error: entry.error,
-            metadata: entry.metadata
-        });
+class Logger {
+  private static instance: Logger;
+  private isDevelopment: boolean;
+
+  private constructor() {
+    this.isDevelopment = process.env.NODE_ENV === 'development';
+  }
+
+  static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
     }
-};
+    return Logger.instance;
+  }
+
+  debug(category: string, data: LogData): void {
+    if (this.isDevelopment) {
+      console.debug(`[${category}]`, data);
+    }
+  }
+
+  info(category: string, data: LogData): void {
+    if (this.isDevelopment) {
+      console.info(`[${category}]`, data);
+    }
+  }
+
+  warn(category: string, data: LogData): void {
+    console.warn(`[${category}]`, data);
+  }
+
+  error(category: string, data: LogData & { error?: unknown }): void {
+    console.error(`[${category}]`, {
+      ...data,
+      error: data.error instanceof Error ? {
+        message: data.error.message,
+        stack: data.error.stack,
+        name: data.error.name
+      } : data.error
+    });
+  }
+}
+
+export const logger = Logger.getInstance();

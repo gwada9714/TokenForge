@@ -1,14 +1,17 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { Navbar } from '@/components/navigation/Navbar';
+import { Box } from '@mui/material';
+import { Navbar } from '../components/layouts/main/Navbar';
 
-export const MainLayout: React.FC = () => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
+
+export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
-    <div className="min-h-screen">
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
-        <Outlet />
-      </main>
-    </div>
+      <Box component="main" sx={{ flexGrow: 1, pt: 8 }}>
+        {children}
+      </Box>
+    </Box>
   );
 };

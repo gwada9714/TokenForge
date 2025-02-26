@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Polices système de secours */
 @font-face {
   font-family: 'Montserrat';
@@ -48,6 +52,12 @@
   src: local('Open Sans SemiBold'), local('OpenSans-SemiBold'), local('Arial');
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@layer base {
+  html {
+    @apply bg-gray-900;
+  }
+  
+  body {
+    @apply text-gray-100;
+  }
+}

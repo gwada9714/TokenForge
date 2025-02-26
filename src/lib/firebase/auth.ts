@@ -1,5 +1,5 @@
 import { Auth, getAuth } from 'firebase/auth';
-import { app } from '../../config/firebase-init';
+import { app } from '@/config/firebase';
 import { logger } from '../../utils/firebase-logger';
 
 const LOG_CATEGORY = 'FirebaseAuth';

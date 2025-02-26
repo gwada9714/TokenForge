@@ -1,10 +1,81 @@
 import { Address, Hash } from "viem";
 
+export enum TokenType {
+  STANDARD = "STANDARD",
+  TAX = "TAX",
+  LIQUIDITY = "LIQUIDITY",
+  STAKING = "STAKING"
+}
+
 export interface TokenBaseConfig {
   name: string;
   symbol: string;
   decimals: number;
-  initialSupply: number;
+  initialSupply: bigint;
+  maxSupply: bigint;
+  isBurnable: boolean;
+  isMintable: boolean;
+  isPausable: boolean;
+}
+
+export interface TaxConfig {
+  buyTax: number;
+  sellTax: number;
+  transferTax: number;
+  taxRecipient: Address;
+}
+
+export interface LiquidityConfig {
+  router: Address;
+  pair: Address;
+  lockDuration: number;
+}
+
+export interface StakingConfig {
+  rewardRate: number;
+  stakingDuration: number;
+  earlyWithdrawalPenalty: number;
+}
+
+export interface TokenDeploymentConfig extends TokenBaseConfig {
+  tokenType: TokenType;
+  options?: {
+    taxConfig?: TaxConfig;
+    liquidityConfig?: LiquidityConfig;
+    stakingConfig?: StakingConfig;
+  };
+}
+
+export interface TokenDeploymentResult {
+  address: Address;
+  tokenType: TokenType;
+  chain: {
+    id: number;
+    name: string;
+  };
+  deploymentTx: `0x${string}`;
+  timestamp: number;
+}
+
+export interface TokenVerificationResult {
+  isVerified: boolean;
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSupply: bigint;
+  features: {
+    isBurnable: boolean;
+    isMintable: boolean;
+    isPausable: boolean;
+    hasTax?: boolean;
+    hasLiquidity?: boolean;
+    hasStaking?: boolean;
+  };
+  config?: {
+    taxConfig?: TaxConfig;
+    liquidityConfig?: LiquidityConfig;
+    stakingConfig?: StakingConfig;
+  };
 }
 
 export interface TokenAdvancedConfig {
@@ -19,7 +90,6 @@ export interface TokenAdvancedConfig {
   accessControl: "none" | "ownable" | "roles";
   baseURI: string;
   asset: string;
-  maxSupply: string;
   depositLimit: string;
 }
 

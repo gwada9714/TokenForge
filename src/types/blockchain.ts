@@ -1,17 +1,22 @@
-export enum BlockchainNetwork {
-  ETHEREUM = 'ethereum',
-  BSC = 'bsc',
-  POLYGON = 'polygon',
-  AVALANCHE = 'avalanche'
-}
+export type BlockchainNetwork = 'ethereum' | 'bsc' | 'polygon' | 'avalanche' | 'solana' | 'arbitrum';
 
 export interface NetworkConfig {
   chainId: number;
-  name: string;
-  symbol: string;
+  name: BlockchainNetwork;
   rpcUrl: string;
   explorerUrl: string;
-  isTestnet: boolean;
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+}
+
+export interface NetworkFees {
+  launchpad: number;
+  staking: number;
+  marketing?: number;
+  kyc?: number;
 }
 
 export interface NetworkStats {

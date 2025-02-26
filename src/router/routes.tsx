@@ -1,125 +1,152 @@
-import { lazy, Suspense } from 'react';
-import { createBrowserRouter, RouteObject } from 'react-router-dom';
-import Layout from "@/components/layouts/main/Layout";
-import { AdminRoute } from "@/features/auth/components/AdminRoute";
-import { ProtectedRoute } from './guards/ProtectedRoute';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import React from 'react';
+import { lazy } from 'react';
+import { RouteObject } from 'react-router-dom';
+import { AuthGuard } from '@/guards/AuthGuard';
+import { AdminGuard } from '@/guards/AdminGuard';
+import { PublicGuard } from '@/guards/PublicGuard';
+import { Layout } from '@/layouts/Layout';
 
-// Lazy loading with named exports
-const HomePage = lazy(() => import("@/features/home/pages/HomePage").then(module => ({ default: module.HomePage })));
-const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage").then(module => ({ default: module.LoginPage })));
-const SignUpPage = lazy(() => import("@/features/auth/pages/SignUpPage").then(module => ({ default: module.SignUpPage })));
-const UnauthorizedPage = lazy(() => import("@/features/auth/pages/UnauthorizedPage").then(module => ({ default: module.UnauthorizedPage })));
-const ConnectWalletPage = lazy(() => import("@/features/wallet/pages/ConnectWalletPage").then(module => ({ default: module.ConnectWalletPage })));
-const WrongNetworkPage = lazy(() => import("@/features/wallet/pages/WrongNetworkPage").then(module => ({ default: module.WrongNetworkPage })));
-const DashboardLayout = lazy(() => import("@/components/layouts/dashboard/DashboardLayout").then(module => ({ default: module.DashboardLayout })));
-const DashboardHome = lazy(() => import("@/features/dashboard/components/DashboardHome").then(module => ({ default: module.DashboardHome })));
-const AdminDashboard = lazy(() => import("@/features/admin/components/AdminDashboard").then(module => ({ default: module.AdminDashboard })));
-const TokenCreationPage = lazy(() => import("@/features/token/pages/TokenCreationPage").then(module => ({ default: module.TokenCreationPage })));
-const TokenPreviewPage = lazy(() => import("@/features/token/pages/TokenPreviewPage").then(module => ({ default: module.TokenPreviewPage })));
-const ServicesPage = lazy(() => import("@/features/services/pages/ServicesPage").then(module => ({ default: module.ServicesPage })));
+// Lazy loading des pages
+const Home = lazy(() => import('@/features/home/pages/HomePage').then(module => ({ default: module.HomePage })));
+const Dashboard = lazy(() => import('@/features/dashboard/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
+const Profile = lazy(() => import('@/features/auth/pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
+const Auth = lazy(() => import('@/features/auth/pages/AuthPage').then(module => ({ default: module.AuthPage })));
+const NotFound = lazy(() => import('@/features/common/pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })));
+const Documentation = lazy(() => import('@/features/docs/pages/DocumentationPage').then(module => ({ default: module.DocumentationPage })));
+const CreateToken = lazy(() => import('@/features/token/pages/CreateTokenPage').then(module => ({ default: module.CreateTokenPage })));
+const TokenList = lazy(() => import('@/features/token/pages/TokenListPage').then(module => ({ default: module.TokenListPage })));
+const TokenDetails = lazy(() => import('@/features/token/pages/TokenDetailsPage').then(module => ({ default: module.TokenDetailsPage })));
+const Services = lazy(() => import('@/features/services/pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
+const Plans = lazy(() => import('@/features/pricing/pages/PlansPage').then(module => ({ default: module.PlansPage })));
+const Learn = lazy(() => import('@/features/learn/pages/LearnPage').then(module => ({ default: module.LearnPage })));
+const Blog = lazy(() => import('@/features/blog/pages/BlogPage').then(module => ({ default: module.BlogPage })));
+const Partnership = lazy(() => import('@/features/partnership/pages/PartnershipPage').then(module => ({ default: module.PartnershipPage })));
 
-// Pages principales
-const Home = lazy(() => import('@/pages/Home'));
-const Plans = lazy(() => import('@/pages/Plans'));
-const Services = lazy(() => import('@/pages/Services'));
+// Pages admin
+const AdminDashboard = lazy(() => import('@/features/admin/pages/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })));
+const UsersManagement = lazy(() => import('@/features/admin/pages/UsersManagementPage').then(module => ({ default: module.UsersManagementPage })));
+const TokensManagement = lazy(() => import('@/features/admin/pages/TokensManagementPage').then(module => ({ default: module.TokensManagementPage })));
+const SystemSettings = lazy(() => import('@/features/admin/pages/SystemSettingsPage').then(module => ({ default: module.SystemSettingsPage })));
 
 // Pages de configuration des services
-const LaunchpadConfig = lazy(() => import('@/features/services/pages/LaunchpadConfig'));
-const StakingConfig = lazy(() => import('@/features/services/pages/StakingConfig'));
-const MarketingConfig = lazy(() => import('@/features/services/pages/MarketingConfig'));
-const KYCConfig = lazy(() => import('@/features/services/pages/KYCConfig'));
+const LaunchpadConfig = lazy(() => import('@/features/services/pages/LaunchpadConfigPage').then(module => ({ default: module.LaunchpadConfigPage })));
+const MarketingConfig = lazy(() => import('@/features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
+const KYCConfig = lazy(() => import('@/features/services/pages/KYCConfigPage').then(module => ({ default: module.KYCConfigPage })));
 
-// Configure future flags for React Router v7
-export const future = {
-  v7_normalizeFormMethod: true,
-  v7_prependBasename: true,
-};
+// Types
+export interface RouteConfig {
+  path: string;
+  title: string;
+  icon?: string;
+  isProtected?: boolean;
+  isPublic?: boolean;
+}
 
-const withSuspense = (Component: React.ComponentType) => (
-  <Suspense fallback={<LoadingScreen />}>
-    <Component />
-  </Suspense>
-);
-
+// Configuration des routes
 export const routes: RouteObject[] = [
   {
     path: '/',
     element: <Layout />,
     children: [
-      // Public Routes
-      { index: true, element: withSuspense(HomePage) },
-      { path: 'login', element: withSuspense(LoginPage) },
-      { path: 'signup', element: withSuspense(SignUpPage) },
-      { path: 'unauthorized', element: withSuspense(UnauthorizedPage) },
-      { path: 'connect-wallet', element: withSuspense(ConnectWalletPage) },
-      { path: 'wrong-network', element: withSuspense(WrongNetworkPage) },
-      
-      // Token Creation Routes
+      // Routes Publiques
       {
-        path: 'create',
-        element: <ProtectedRoute>{withSuspense(TokenCreationPage)}</ProtectedRoute>,
+        index: true,
+        element: <Home />
       },
       {
-        path: 'preview/:tokenId',
-        element: <ProtectedRoute>{withSuspense(TokenPreviewPage)}</ProtectedRoute>,
+        path: 'auth',
+        element: <PublicGuard><Auth /></PublicGuard>
       },
-      
-      // Services Routes
+      {
+        path: 'docs',
+        element: <Documentation />
+      },
+      {
+        path: 'learn',
+        element: <Learn />
+      },
+      {
+        path: 'blog',
+        element: <Blog />
+      },
+      {
+        path: 'partnership',
+        element: <Partnership />
+      },
+      {
+        path: 'plans',
+        element: <Plans />
+      },
       {
         path: 'services',
-        element: withSuspense(ServicesPage),
+        element: <Services />
       },
-      
-      // Protected Dashboard Routes
+
+      // Routes Protégées
       {
         path: 'dashboard',
-        element: <ProtectedRoute>{withSuspense(DashboardLayout)}</ProtectedRoute>,
-        children: [
-          { index: true, element: withSuspense(DashboardHome) },
-          { path: 'tokens', element: withSuspense(lazy(() => import("@/features/token/pages/TokenListPage").then(module => ({ default: module.TokenListPage })))) },
-          { path: 'analytics', element: withSuspense(lazy(() => import("@/features/analytics/pages/AnalyticsPage").then(module => ({ default: module.AnalyticsPage })))) }
-        ]
+        element: <AuthGuard><Dashboard /></AuthGuard>
       },
-      
-      // Admin Routes
+      {
+        path: 'profile',
+        element: <AuthGuard><Profile /></AuthGuard>
+      },
+      {
+        path: 'create-token',
+        element: <AuthGuard><CreateToken /></AuthGuard>
+      },
+      {
+        path: 'tokens',
+        element: <AuthGuard><TokenList /></AuthGuard>
+      },
+      {
+        path: 'tokens/:id',
+        element: <AuthGuard><TokenDetails /></AuthGuard>
+      },
+
+      // Routes de Services Protégées
+      {
+        path: 'services/launchpad/config',
+        element: <AuthGuard><LaunchpadConfig /></AuthGuard>
+      },
+      {
+        path: 'services/marketing/config',
+        element: <AuthGuard><MarketingConfig /></AuthGuard>
+      },
+      {
+        path: 'services/kyc/config',
+        element: <AuthGuard><KYCConfig /></AuthGuard>
+      },
+
+      // Routes Admin
       {
         path: 'admin',
-        element: <AdminRoute>{withSuspense(AdminDashboard)}</AdminRoute>,
-        children: [
-          { path: 'users', element: withSuspense(lazy(() => import("@/features/admin/pages/UsersManagementPage").then(module => ({ default: module.UsersManagementPage })))) },
-          { path: 'tokens', element: withSuspense(lazy(() => import("@/features/admin/pages/TokensManagementPage").then(module => ({ default: module.TokensManagementPage })))) }
-        ]
+        element: <AdminGuard><AdminDashboard /></AdminGuard>
+      },
+      {
+        path: 'admin/users',
+        element: <AdminGuard><UsersManagement /></AdminGuard>
+      },
+      {
+        path: 'admin/tokens',
+        element: <AdminGuard><TokensManagement /></AdminGuard>
+      },
+      {
+        path: 'admin/settings',
+        element: <AdminGuard><SystemSettings /></AdminGuard>
+      },
+
+      // Route 404
+      {
+        path: '*',
+        element: <NotFound />
       }
     ]
-  },
-  {
-    path: '/plans',
-    Component: Plans,
-  },
-  {
-    path: '/services',
-    Component: Services,
-  },
-  {
-    path: '/services/launchpad/config',
-    Component: LaunchpadConfig,
-  },
-  {
-    path: '/services/staking/config',
-    Component: StakingConfig,
-  },
-  {
-    path: '/services/marketing/config',
-    Component: MarketingConfig,
-  },
-  {
-    path: '/services/kyc/config',
-    Component: KYCConfig,
-  },
+  }
 ];
 
-export const navigationRoutes: NavigationRoute[] = [
+// Configuration des routes pour la navigation
+export const navigationRoutes: RouteConfig[] = [
   {
     path: '/',
     title: 'Accueil',
@@ -131,10 +158,28 @@ export const navigationRoutes: NavigationRoute[] = [
     isPublic: true,
   },
   {
+    path: '/dashboard',
+    title: 'Tableau de bord',
+    isProtected: true,
+  },
+  {
+    path: '/create-token',
+    title: 'Créer un Token',
+    isProtected: true,
+  },
+  {
+    path: '/tokens',
+    title: 'Mes Tokens',
+    isProtected: true,
+  },
+  {
     path: '/services',
     title: 'Services',
     isPublic: true,
   },
-];
-
-export const router = createBrowserRouter(routes, { future });
+  {
+    path: '/docs',
+    title: 'Documentation',
+    isPublic: true,
+  },
+]; 

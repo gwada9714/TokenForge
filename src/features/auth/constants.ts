@@ -1,0 +1,13 @@
+export const AUTH_ACTIONS = {
+  WALLET_CONNECT: 'auth/walletConnect',
+  WALLET_DISCONNECT: 'auth/walletDisconnect',
+  WALLET_NETWORK_CHANGE: 'auth/walletNetworkChange',
+  WALLET_STATE_CHANGE: 'auth/walletStateChange'
+} as const;
+
+export const AUTH_ERRORS = {
+  WALLET_NOT_FOUND: 'WALLET_NOT_FOUND',
+  NETWORK_MISMATCH: 'NETWORK_MISMATCH',
+  WALLET_CONNECTION_ERROR: 'WALLET_CONNECTION_ERROR',
+  FIREBASE_CONNECTION_ERROR: 'FIREBASE_CONNECTION_ERROR'
+} as const; 

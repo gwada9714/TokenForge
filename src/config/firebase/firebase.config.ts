@@ -6,18 +6,20 @@ const configSchema = z.object({
   apiKey: z.string().min(1),
   authDomain: z.string().min(1),
   projectId: z.string().min(1),
+  storageBucket: z.string().min(1),
+  messagingSenderId: z.string().min(1),
   appId: z.string().min(1)
 });
 
-export class FirebaseConfig {
-  private static instance: FirebaseConfig;
+class FirebaseService {
+  private static instance: FirebaseService;
   private app: FirebaseApp | null = null;
 
   private constructor() {}
 
-  static getInstance(): FirebaseConfig {
+  static getInstance(): FirebaseService {
     if (!this.instance) {
-      this.instance = new FirebaseConfig();
+      this.instance = new FirebaseService();
     }
     return this.instance;
   }
@@ -28,11 +30,18 @@ export class FirebaseConfig {
         apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
         authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
         projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
         appId: import.meta.env.VITE_FIREBASE_APP_ID
       };
 
-      const validatedConfig = configSchema.parse(config);
-      this.app = initializeApp(validatedConfig);
+      try {
+        const validatedConfig = configSchema.parse(config);
+        this.app = initializeApp(validatedConfig);
+      } catch (error) {
+        console.error('Configuration Firebase invalide:', error);
+        throw error;
+      }
     }
     return this.app;
   }
@@ -45,4 +54,4 @@ export class FirebaseConfig {
   }
 }
 
-export const firebaseConfig = FirebaseConfig.getInstance();
+export const firebaseService = FirebaseService.getInstance();

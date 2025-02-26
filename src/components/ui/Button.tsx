@@ -1,6 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
-import { SPACING } from '@/config/constants/theme';
+import styled, { DefaultTheme } from 'styled-components';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline';
@@ -8,70 +7,105 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-const StyledButton = styled.button<ButtonProps>`
-  padding: ${props => {
-    switch (props.size) {
-      case 'small':
-        return `${SPACING.xs} ${SPACING.sm}`;
-      case 'large':
-        return `${SPACING.md} ${SPACING.xl}`;
-      default:
-        return `${SPACING.sm} ${SPACING.lg}`;
+interface StyledButtonProps extends ButtonProps {
+  theme: DefaultTheme;
+  $variant: ButtonProps['variant'];
+  $size: ButtonProps['size'];
+  $fullWidth: boolean;
+}
+
+type ColorSet = {
+  main: string;
+  light: string;
+  dark: string;
+  border?: string;
+  hover?: string;
+};
+
+type Colors = {
+  primary: ColorSet;
+  secondary: ColorSet;
+  text: {
+    primary: string;
+    secondary: string;
+    disabled: string;
+  };
+  grey: {
+    [key: number]: string;
+  };
+};
+
+const getButtonStyles = (props: StyledButtonProps) => {
+  const { theme, $variant, $size, $fullWidth } = props;
+  const { colors, typography, borderRadius, transitions } = theme;
+  const themeColors = colors as unknown as Colors;
+
+  const sizeStyles = {
+    small: {
+      padding: theme.spacing(2),
+      fontSize: typography.fontSizes.xs
+    },
+    medium: {
+      padding: theme.spacing(3),
+      fontSize: typography.fontSizes.md
+    },
+    large: {
+      padding: theme.spacing(4),
+      fontSize: typography.fontSizes.lg
     }
-  }};
-  
-  font-size: ${props => {
-    switch (props.size) {
-      case 'small':
-        return '0.875rem';
-      case 'large':
-        return '1.125rem';
-      default:
-        return '1rem';
+  };
+
+  const variantStyles = {
+    primary: {
+      backgroundColor: themeColors.primary.main,
+      color: themeColors.text.primary,
+      '&:hover': {
+        backgroundColor: themeColors.primary.dark
+      }
+    },
+    secondary: {
+      backgroundColor: themeColors.secondary.main,
+      color: themeColors.text.primary,
+      '&:hover': {
+        backgroundColor: themeColors.secondary.dark
+      }
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      border: `1px solid ${themeColors.primary.main}`,
+      color: themeColors.primary.main,
+      '&:hover': {
+        backgroundColor: themeColors.primary.main,
+        color: themeColors.text.primary
+      }
     }
-  }};
-  
-  width: ${props => props.fullWidth ? '100%' : 'auto'};
-  border-radius: ${props => props.theme.borderRadius};
-  border: none;
-  cursor: pointer;
-  transition: ${props => props.theme.transition};
-  
-  ${props => {
-    switch (props.variant) {
-      case 'secondary':
-        return `
-          background-color: ${props.theme.colors.secondary};
-          color: ${props.theme.colors.background.primary};
-          &:hover {
-            opacity: 0.9;
-          }
-        `;
-      case 'outline':
-        return `
-          background-color: transparent;
-          border: 1px solid ${props.theme.colors.primary};
-          color: ${props.theme.colors.primary};
-          &:hover {
-            background-color: ${props.theme.colors.primary};
-            color: ${props.theme.colors.background.primary};
-          }
-        `;
-      default:
-        return `
-          background-color: ${props.theme.colors.primary};
-          color: ${props.theme.colors.background.primary};
-          &:hover {
-            opacity: 0.9;
-          }
-        `;
+  };
+
+  const size = $size || 'medium';
+  const variant = $variant || 'primary';
+
+  return {
+    ...sizeStyles[size],
+    ...variantStyles[variant],
+    width: $fullWidth ? '100%' : 'auto',
+    borderRadius: borderRadius.medium,
+    border: 'none',
+    cursor: 'pointer',
+    transition: transitions.default,
+    fontFamily: typography.fontFamily.body,
+    fontWeight: typography.fontWeight.medium,
+    '&:disabled': {
+      opacity: 0.5,
+      cursor: 'not-allowed',
+      backgroundColor: themeColors.grey[300],
+      color: themeColors.text.disabled,
+      border: 'none'
     }
-  }}
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  };
+};
+
+const StyledButton = styled.button<StyledButtonProps>`
+  ${getButtonStyles}
 `;
 
 export const Button: React.FC<ButtonProps> = ({
@@ -79,13 +113,23 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'medium',
   fullWidth = false,
+  onClick,
+  disabled,
   ...props
 }) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (onClick && !disabled) {
+      onClick(e);
+    }
+  };
+
   return (
     <StyledButton
-      variant={variant}
-      size={size}
-      fullWidth={fullWidth}
+      $variant={variant}
+      $size={size}
+      $fullWidth={fullWidth}
+      onClick={handleClick}
+      disabled={disabled}
       {...props}
     >
       {children}

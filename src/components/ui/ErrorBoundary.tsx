@@ -1,7 +1,9 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo } from 'react';
+import { Box, Typography, Button } from '@mui/material';
+import { logger } from '@/utils/logger';
 
 interface Props {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 interface State {
@@ -10,45 +12,63 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error,
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
     };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-    // Ici, vous pouvez ajouter une logique pour envoyer l'erreur à un service de monitoring
+  static getDerivedStateFromError(error: Error): State {
+    return {
+      hasError: true,
+      error
+    };
   }
 
-  public render() {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    logger.error({
+      message: 'Erreur non gérée dans l\'application',
+      category: 'ErrorBoundary',
+      error,
+      errorInfo
+    });
+  }
+
+  handleReset = (): void => {
+    this.setState({
+      hasError: false,
+      error: null
+    });
+  };
+
+  render(): React.ReactNode {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-          <div className="max-w-xl w-full bg-white shadow-lg rounded-lg p-8">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">
-              Une erreur est survenue
-            </h1>
-            <p className="text-gray-600 mb-4">
-              Nous nous excusons pour ce désagrément. Veuillez rafraîchir la page ou contacter le support si le problème persiste.
-            </p>
-            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
-              {this.state.error?.message}
-            </pre>
-            <button
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              onClick={() => window.location.reload()}
-            >
-              Rafraîchir la page
-            </button>
-          </div>
-        </div>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="100vh"
+          p={3}
+          textAlign="center"
+        >
+          <Typography variant="h4" gutterBottom>
+            Oups ! Quelque chose s'est mal passé.
+          </Typography>
+          <Typography variant="body1" color="text.secondary" paragraph>
+            {this.state.error?.message || 'Une erreur inattendue est survenue.'}
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={this.handleReset}
+          >
+            Réessayer
+          </Button>
+        </Box>
       );
     }
 

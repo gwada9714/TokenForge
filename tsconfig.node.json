@@ -3,10 +3,16 @@
     "composite": true,
     "skipLibCheck": true,
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "types": ["node", "crypto-js", "react-transition-group"]
+    "types": ["node", "crypto-js", "react-transition-group"],
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext"],
+    "target": "ESNext"
   },
   "include": [
     "vite.config.ts",

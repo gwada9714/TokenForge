@@ -4,7 +4,9 @@ import { mainnet, polygon } from 'viem/chains';
 import { 
   getDefaultConfig,
   RainbowKitProvider,
-  darkTheme
+  darkTheme,
+  connectorsForWallets,
+  wallet
 } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { isAllowedWalletExtension } from '../../utils/security';
@@ -18,7 +20,21 @@ if (!WALLET_CONNECT_PROJECT_ID) {
 
 interface Web3ProvidersProps {
   children: ReactNode;
+  autoConnect?: boolean;
 }
+
+// Configuration des wallets supportés
+const connectors = connectorsForWallets([
+  {
+    groupName: 'Recommandés',
+    wallets: [
+      wallet.metaMask({ projectId: WALLET_CONNECT_PROJECT_ID }),
+      wallet.walletConnect({ projectId: WALLET_CONNECT_PROJECT_ID }),
+      wallet.coinbase(),
+      wallet.trust({ projectId: WALLET_CONNECT_PROJECT_ID })
+    ],
+  },
+]);
 
 // Configuration avec RainbowKit
 const config = getDefaultConfig({
@@ -26,6 +42,7 @@ const config = getDefaultConfig({
   projectId: WALLET_CONNECT_PROJECT_ID,
   chains: [mainnet, polygon],
   ssr: false,
+  connectors,
   transports: {
     [mainnet.id]: http(`https://mainnet.infura.io/v3/${import.meta.env.VITE_INFURA_PROJECT_ID}`),
     [polygon.id]: http(`https://polygon-mainnet.infura.io/v3/${import.meta.env.VITE_INFURA_PROJECT_ID}`)
@@ -49,6 +66,11 @@ const initializeProvider = () => {
     provider.on('accountsChanged', (accounts: string[]) => {
       if (accounts.length === 0) {
         console.log('Please connect to MetaMask.');
+        // Tentative de reconnexion automatique
+        if (window.ethereum?.request) {
+          window.ethereum.request({ method: 'eth_requestAccounts' })
+            .catch(err => console.error('Erreur de reconnexion automatique:', err));
+        }
       }
     });
 
@@ -57,11 +79,22 @@ const initializeProvider = () => {
   return null;
 };
 
-export function Web3Providers({ children }: Web3ProvidersProps) {
+export function Web3Providers({ children, autoConnect = true }: Web3ProvidersProps) {
   useEffect(() => {
     // Initialisation du provider
     const provider = initializeProvider();
     
+    // Tentative de connexion automatique si activée
+    const attemptAutoConnect = async () => {
+      if (autoConnect && window.ethereum?.request) {
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+        } catch (error) {
+          console.warn('Échec de la connexion automatique:', error);
+        }
+      }
+    };
+
     // Vérification de la sécurité des extensions
     const checkWalletSecurity = () => {
       if (typeof window !== 'undefined' && 'chrome' in window) {
@@ -75,6 +108,7 @@ export function Web3Providers({ children }: Web3ProvidersProps) {
     };
 
     checkWalletSecurity();
+    attemptAutoConnect();
 
     // Cleanup
     return () => {
@@ -84,11 +118,19 @@ export function Web3Providers({ children }: Web3ProvidersProps) {
         provider.removeListener('accountsChanged', () => {});
       }
     };
-  }, []);
+  }, [autoConnect]);
 
   return (
     <WagmiConfig config={config}>
-      <RainbowKitProvider theme={darkTheme()}>
+      <RainbowKitProvider
+        theme={darkTheme()}
+        modalSize="compact"
+        showRecentTransactions={true}
+        appInfo={{
+          appName: 'TokenForge',
+          learnMoreUrl: 'https://docs.tokenforge.com',
+        }}
+      >
         {children}
       </RainbowKitProvider>
     </WagmiConfig>

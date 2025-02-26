@@ -1,6 +1,10 @@
 export const THEME = {
   PRIMARY: '#6366f1',
+  PRIMARY_LIGHT: '#818cf8',
+  PRIMARY_DARK: '#4f46e5',
   SECONDARY: '#4f46e5',
+  SECONDARY_LIGHT: '#6366f1',
+  SECONDARY_DARK: '#4338ca',
   SUCCESS: '#22c55e',
   WARNING: '#eab308',
   ERROR: '#ef4444',
@@ -8,44 +12,61 @@ export const THEME = {
 };
 
 export const BREAKPOINTS = {
-  sm: '640px',
-  md: '768px',
-  lg: '1024px',
-  xl: '1280px',
-  '2xl': '1536px',
+  xs: 0,
+  sm: 600,
+  md: 900,
+  lg: 1200,
+  xl: 1536,
 };
 
 export const COLORS = {
-  text: {
-    primary: '#111827',
-    secondary: '#4b5563',
-  },
-  background: {
-    primary: '#ffffff',
-    secondary: '#f9fafb',
-  },
-  border: '#e5e7eb',
   primary: THEME.PRIMARY,
+  primaryLight: THEME.PRIMARY_LIGHT,
+  primaryDark: THEME.PRIMARY_DARK,
   secondary: THEME.SECONDARY,
+  secondaryLight: THEME.SECONDARY_LIGHT,
+  secondaryDark: THEME.SECONDARY_DARK,
   success: THEME.SUCCESS,
   warning: THEME.WARNING,
   error: THEME.ERROR,
   info: THEME.INFO,
+  text: '#111827',
+  textSecondary: '#4b5563',
+  background: '#ffffff',
+  surface: '#f9fafb',
 };
 
 export const SPACING = {
-  xs: '0.5rem',
-  sm: '0.75rem',
-  md: '1rem',
-  lg: '1.5rem',
-  xl: '2rem',
-  '2xl': '4rem',
+  unit: 8, // 8px base unit
 };
 
 export const THEME_CONFIG = {
-  colors: COLORS,
-  spacing: SPACING,
-  borderRadius: '0.375rem',
-  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-  transition: 'all 0.2s ease-in-out',
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontSize: 16,
+    fontWeightLight: 300,
+    fontWeightRegular: 400,
+    fontWeightMedium: 500,
+    fontWeightBold: 700,
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  transitions: {
+    duration: {
+      shortest: 150,
+      shorter: 200,
+      short: 250,
+      standard: 300,
+      complex: 375,
+      enteringScreen: 225,
+      leavingScreen: 195,
+    },
+    easing: {
+      easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      easeOut: 'cubic-bezier(0.0, 0, 0.2, 1)',
+      easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
+      sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
+    },
+  },
 }; 

@@ -1,4 +1,4 @@
-import { Service, ServiceType, ServiceFeature } from '../types/services';
+import { Service, ServiceType, ServiceFeature, NetworkFees } from '../types/services';
 import { SUPPORTED_CHAINS } from '@/config/constants/chains';
 
 export const SERVICE_FEATURES = {
@@ -49,47 +49,46 @@ export const SERVICE_FEATURES = {
   MARKETING: {
     SOCIAL: {
       id: 'social',
-      name: 'Gestion des réseaux sociaux',
-      description: 'Gestion professionnelle de vos réseaux sociaux'
+      name: 'Marketing Social',
+      description: 'Gestion des réseaux sociaux et communauté'
     },
     INFLUENCERS: {
       id: 'influencers',
-      name: 'Partenariats influenceurs',
+      name: 'Partenariats Influenceurs',
       description: 'Mise en relation avec des influenceurs crypto'
     },
     PR: {
       id: 'pr',
-      name: 'Relations publiques',
+      name: 'Relations Publiques',
       description: 'Articles et communiqués de presse'
     },
     LISTING: {
       id: 'listing',
-      name: 'Listing sur CoinGecko/CMC',
-      description: 'Accompagnement pour le listing sur les agrégateurs'
+      name: 'Listing CEX/DEX',
+      description: 'Assistance pour le listing sur les exchanges'
     }
   },
   KYC: {
-    INDIVIDUAL: {
-      id: 'individual',
-      name: 'Vérification individuelle',
-      description: 'KYC pour les particuliers'
+    BASIC: {
+      id: 'basic_kyc',
+      name: 'KYC Standard',
+      description: 'Vérification d\'identité standard'
     },
-    TEAM: {
-      id: 'team',
-      name: 'Vérification de l\'équipe',
-      description: 'KYC pour les membres de l\'équipe'
-    },
-    COMPANY: {
-      id: 'company',
-      name: 'Vérification d\'entreprise',
-      description: 'KYC pour les entités juridiques'
-    },
-    AUDIT: {
-      id: 'audit',
-      name: 'Audit de conformité',
-      description: 'Vérification complète de la conformité réglementaire'
+    ADVANCED: {
+      id: 'advanced_kyc',
+      name: 'KYC Avancé',
+      description: 'Vérification d\'identité approfondie avec validation supplémentaire'
     }
   }
+};
+
+export const NETWORK_FEES: Record<string, NetworkFees> = {
+  ethereum: { launchpadPercentage: 3, stakingPercentage: 5 },
+  bsc: { launchpadPercentage: 2, stakingPercentage: 5 },
+  polygon: { launchpadPercentage: 2, stakingPercentage: 5 },
+  avalanche: { launchpadPercentage: 2, stakingPercentage: 5 },
+  solana: { launchpadPercentage: 1.5, stakingPercentage: 5 },
+  arbitrum: { launchpadPercentage: 1.5, stakingPercentage: 5 }
 };
 
 export const SERVICES: Service[] = [
@@ -98,67 +97,66 @@ export const SERVICES: Service[] = [
     name: 'Launchpad',
     description: 'Lancez votre token avec une presale sécurisée et professionnelle',
     price: {
-      baseFee: 2,
-      currency: 'ETH',
-      percentageFee: 2, // 2% des fonds levés
+      baseFee: 0.1, // BNB
+      networkFees: NETWORK_FEES,
+      currency: 'BNB'
     },
     features: [
       SERVICE_FEATURES.LAUNCHPAD.PRESALE,
       SERVICE_FEATURES.LAUNCHPAD.VESTING,
       SERVICE_FEATURES.LAUNCHPAD.WHITELIST,
-      SERVICE_FEATURES.LAUNCHPAD.AUDIT,
+      SERVICE_FEATURES.LAUNCHPAD.AUDIT
     ],
-    networks: Object.values(SUPPORTED_CHAINS).map(chain => chain.name),
+    networks: Object.values(SUPPORTED_CHAINS).map(chain => chain.name)
   },
   {
     id: ServiceType.STAKING,
     name: 'Staking',
     description: 'Créez votre propre plateforme de staking personnalisée',
     price: {
-      baseFee: 1.5,
-      currency: 'ETH',
-      percentageFee: 1, // 1% des récompenses
+      baseFee: 0.05, // BNB par pool
+      rewardPercentage: 5, // 5% des récompenses générées
+      currency: 'BNB'
     },
     features: [
       SERVICE_FEATURES.STAKING.FLEXIBLE,
       SERVICE_FEATURES.STAKING.LOCKED,
       SERVICE_FEATURES.STAKING.REWARDS,
-      SERVICE_FEATURES.STAKING.MULTI_TOKEN,
+      SERVICE_FEATURES.STAKING.MULTI_TOKEN
     ],
-    networks: Object.values(SUPPORTED_CHAINS).map(chain => chain.name),
+    networks: Object.values(SUPPORTED_CHAINS).map(chain => chain.name)
   },
   {
     id: ServiceType.MARKETING,
     name: 'Marketing',
     description: 'Boostez la visibilité de votre projet avec notre expertise marketing',
     price: {
-      baseFee: 5,
-      currency: 'ETH',
+      baseFee: 0.5, // BNB minimum
+      listingCommission: 5, // 5% sur les listings réussis
+      currency: 'BNB'
     },
     features: [
       SERVICE_FEATURES.MARKETING.SOCIAL,
       SERVICE_FEATURES.MARKETING.INFLUENCERS,
       SERVICE_FEATURES.MARKETING.PR,
-      SERVICE_FEATURES.MARKETING.LISTING,
+      SERVICE_FEATURES.MARKETING.LISTING
     ],
-    networks: Object.values(SUPPORTED_CHAINS).map(chain => chain.name),
+    networks: Object.values(SUPPORTED_CHAINS).map(chain => chain.name)
   },
   {
     id: ServiceType.KYC,
-    name: 'KYC & Audit',
-    description: 'Renforcez la confiance avec une vérification KYC complète',
+    name: 'KYC',
+    description: 'Service de vérification d\'identité pour votre projet',
     price: {
-      baseFee: 1,
-      currency: 'ETH',
+      verificationFee: 50, // USD par vérification
+      currency: 'USD'
     },
     features: [
-      SERVICE_FEATURES.KYC.INDIVIDUAL,
-      SERVICE_FEATURES.KYC.TEAM,
-      SERVICE_FEATURES.KYC.COMPANY,
-      SERVICE_FEATURES.KYC.AUDIT,
+      SERVICE_FEATURES.KYC.BASIC,
+      SERVICE_FEATURES.KYC.ADVANCED
     ],
-    networks: Object.values(SUPPORTED_CHAINS).map(chain => chain.name),
-  },
+    networks: Object.values(SUPPORTED_CHAINS).map(chain => chain.name)
+  }
 ];
 
 // Utilitaires pour la gestion des services

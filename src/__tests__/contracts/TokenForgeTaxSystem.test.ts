@@ -1,101 +1,103 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import {
+import type {
   TokenForgeTaxSystem,
-  TokenForgeToken
-} from "../typechain-types";
-import { parseEther } from "ethers";
+  TokenForgeToken,
+  TaxDistributor
+} from "../../../typechain-types";
+import { ZeroAddress } from "ethers";
+import {
+  INITIAL_SUPPLY,
+  BASE_TAX_RATE,
+  MAX_ADDITIONAL_TAX_RATE,
+  TEST_TOKEN_PARAMS
+} from "./constants";
 
-describe("TokenForgeTaxSystem", () => {
+describe("Système de Taxe TokenForge", () => {
   let taxSystem: TokenForgeTaxSystem;
   let token: TokenForgeToken;
+  let taxDistributor: TaxDistributor;
   let owner: SignerWithAddress;
   let treasury: SignerWithAddress;
   let creator: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
 
-  const TOKEN_NAME = "Test Token";
-  const TOKEN_SYMBOL = "TEST";
-  const INITIAL_SUPPLY = parseEther("1000000"); // 1M tokens
-  const BASE_TAX_RATE = 50n; // 0.5%
-  const MAX_ADDITIONAL_TAX_RATE = 150n; // 1.5%
-
   beforeEach(async () => {
     [owner, treasury, creator, user1, user2] = await ethers.getSigners();
 
-    // Deploy TaxSystem
+    // Déploiement du système de taxe
     const TaxSystem = await ethers.getContractFactory("TokenForgeTaxSystem");
-    taxSystem = await TaxSystem.deploy(treasury.address);
+    taxSystem = (await TaxSystem.deploy(treasury.address)) as unknown as TokenForgeTaxSystem;
     await taxSystem.waitForDeployment();
 
-    // Deploy Token
+    // Déploiement du token
     const Token = await ethers.getContractFactory("TokenForgeToken");
-    token = await Token.deploy(
-      TOKEN_NAME,
-      TOKEN_SYMBOL,
-      18,
-      INITIAL_SUPPLY,
-      INITIAL_SUPPLY, // maxTxAmount
-      INITIAL_SUPPLY, // maxWalletSize
+    token = (await Token.deploy(
+      TEST_TOKEN_PARAMS.name,
+      TEST_TOKEN_PARAMS.symbol,
+      TEST_TOKEN_PARAMS.decimals,
+      TEST_TOKEN_PARAMS.totalSupply,
+      TEST_TOKEN_PARAMS.maxTxAmount,
+      TEST_TOKEN_PARAMS.maxWalletSize,
       await taxSystem.getAddress()
-    );
+    )) as unknown as TokenForgeToken;
     await token.waitForDeployment();
 
-    // Configure tax for the token
-    await taxSystem.configureTax(await token.getAddress(), 100n, creator.address); // 1% additional tax
+    // Configuration de la taxe pour le token
+    await taxSystem.configureTax(await token.getAddress(), 100n, creator.address); // 1% de taxe additionnelle
 
-    // Transfer some tokens to users for testing
+    // Transfert de tokens aux utilisateurs pour les tests
     await token.transfer(user1.address, INITIAL_SUPPLY / 10n);
     await token.transfer(user2.address, INITIAL_SUPPLY / 10n);
   });
 
-  describe("Tax Configuration", () => {
-    it("should have correct base tax rate", async () => {
+  describe("Configuration de la Taxe", () => {
+    it("devrait avoir le bon taux de taxe de base", async () => {
       expect(await taxSystem.BASE_TAX_RATE()).to.equal(BASE_TAX_RATE);
     });
 
-    it("should have correct max additional tax rate", async () => {
+    it("devrait avoir le bon taux de taxe additionnel maximum", async () => {
       expect(await taxSystem.MAX_ADDITIONAL_TAX_RATE()).to.equal(MAX_ADDITIONAL_TAX_RATE);
     });
 
-    it("should not allow additional tax rate above maximum", async () => {
+    it("ne devrait pas permettre un taux de taxe additionnel supérieur au maximum", async () => {
       await expect(
         taxSystem.configureTax(await token.getAddress(), MAX_ADDITIONAL_TAX_RATE + 1n, creator.address)
-      ).to.be.rejectedWith("Tax rate too high");
+      ).to.be.rejectedWith("Taux de taxe trop élevé");
     });
   });
 
-  describe("Tax Calculation", () => {
-    it("should calculate correct tax amounts", async () => {
-      const amount = INITIAL_SUPPLY / 100n; // 1% of total supply
+  describe("Calcul de la Taxe", () => {
+    it("devrait calculer correctement les montants de taxe", async () => {
+      const amount = INITIAL_SUPPLY / 100n; // 1% du supply total
       const [baseTax, additionalTax] = await taxSystem.calculateTaxAmounts(await token.getAddress(), amount);
       
-      // Base tax should be 0.5%
+      // La taxe de base devrait être de 0.5%
       expect(baseTax).to.equal(amount * BASE_TAX_RATE / 10000n);
       
-      // Additional tax should be 1%
+      // La taxe additionnelle devrait être de 1%
       expect(additionalTax).to.equal(amount * 100n / 10000n);
     });
   });
 
-  describe("Tax Collection", () => {
-    it("should collect and distribute taxes correctly", async () => {
-      const transferAmount = INITIAL_SUPPLY / 100n; // 1% of total supply
+  describe("Collection des Taxes", () => {
+    it("devrait collecter et distribuer correctement les taxes", async () => {
+      const transferAmount = INITIAL_SUPPLY / 100n; // 1% du supply total
       const expectedBaseTax = (transferAmount * BASE_TAX_RATE) / 10000n;
       const expectedAdditionalTax = (transferAmount * 100n) / 10000n;
       const expectedTransferAmount = transferAmount - expectedBaseTax - expectedAdditionalTax;
 
-      // Get initial balances
+      // Obtention des soldes initiaux
       const initialTreasuryBalance = await token.balanceOf(treasury.address);
       const initialCreatorBalance = await token.balanceOf(creator.address);
       const initialUser2Balance = await token.balanceOf(user2.address);
 
-      // Perform transfer
+      // Exécution du transfert
       await token.connect(user1).transfer(user2.address, transferAmount);
 
-      // Check final balances
+      // Vérification des soldes finaux
       expect(await token.balanceOf(treasury.address)).to.equal(
         initialTreasuryBalance + expectedBaseTax
       );
@@ -107,12 +109,12 @@ describe("TokenForgeTaxSystem", () => {
       );
     });
 
-    it("should handle zero additional tax correctly", async () => {
-      // Deploy new token with no additional tax
+    it("devrait gérer correctement l'absence de taxe additionnelle", async () => {
+      // Déploiement d'un nouveau token sans taxe additionnelle
       const Token = await ethers.getContractFactory("TokenForgeToken");
       const noTaxToken = await Token.deploy(
-        "No Additional Tax Token",
-        "NAT",
+        "Token Sans Taxe Additionnelle",
+        "TST",
         18,
         INITIAL_SUPPLY,
         INITIAL_SUPPLY,
@@ -121,21 +123,21 @@ describe("TokenForgeTaxSystem", () => {
       );
       await noTaxToken.waitForDeployment();
 
-      // Transfer tokens to user1
+      // Transfert de tokens à user1
       await noTaxToken.transfer(user1.address, INITIAL_SUPPLY / 10n);
 
       const transferAmount = INITIAL_SUPPLY / 100n;
       const expectedBaseTax = (transferAmount * BASE_TAX_RATE) / 10000n;
       const expectedTransferAmount = transferAmount - expectedBaseTax;
 
-      // Get initial balances
+      // Obtention des soldes initiaux
       const initialTreasuryBalance = await noTaxToken.balanceOf(treasury.address);
       const initialUser2Balance = await noTaxToken.balanceOf(user2.address);
 
-      // Perform transfer
+      // Exécution du transfert
       await noTaxToken.connect(user1).transfer(user2.address, transferAmount);
 
-      // Check final balances
+      // Vérification des soldes finaux
       expect(await noTaxToken.balanceOf(treasury.address)).to.equal(
         initialTreasuryBalance + expectedBaseTax
       );
@@ -145,23 +147,23 @@ describe("TokenForgeTaxSystem", () => {
     });
   });
 
-  describe("Edge Cases", () => {
-    it("should handle minimum transfer amount", async () => {
+  describe("Cas Limites", () => {
+    it("devrait gérer le montant de transfert minimum", async () => {
       const minAmount = 1000n;
       await token.connect(user1).transfer(user2.address, minAmount);
-      // If no revert, test passes
+      // Si pas de revert, le test passe
     });
 
-    it("should handle maximum transfer amount", async () => {
+    it("devrait gérer le montant de transfert maximum", async () => {
       const maxAmount = INITIAL_SUPPLY / 10n;
       await token.connect(user1).transfer(user2.address, maxAmount);
-      // If no revert, test passes
+      // Si pas de revert, le test passe
     });
 
-    it("should revert on zero address recipient", async () => {
+    it("devrait échouer pour un destinataire à l'adresse zéro", async () => {
       await expect(
         token.connect(user1).transfer(ethers.ZeroAddress, INITIAL_SUPPLY / 100n)
-      ).to.be.rejectedWith("Transfer to zero address");
+      ).to.be.rejectedWith("Transfert vers l'adresse zéro");
     });
   });
 });

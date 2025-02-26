@@ -3,78 +3,105 @@ import { createTheme } from '@mui/material/styles';
 export const theme = createTheme({
   palette: {
     primary: {
-      main: '#182038',
-      light: '#2a3654',
-      dark: '#0c1019',
+      main: '#FF8C00',
+      light: '#FFA333',
+      dark: '#E67E00',
+      contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#D97706',
-      light: '#f59e0b',
-      dark: '#b45309',
+      main: '#8E44AD',
+      light: '#A569BD',
+      dark: '#703688',
+      contrastText: '#FFFFFF',
     },
     background: {
-      default: '#F5F5F5',
+      default: '#F5F7FA',
       paper: '#FFFFFF',
     },
     text: {
-      primary: '#182038',
-      secondary: '#666666',
+      primary: '#2C3E50',
+      secondary: '#7F8C8D',
+    },
+    error: {
+      main: '#E74C3C',
+      light: '#FF6B6B',
+      dark: '#C0392B',
+    },
+    warning: {
+      main: '#F39C12',
+      light: '#FDB846',
+      dark: '#D68910',
     },
     success: {
-      main: '#22C55E',
-      light: '#4ADE80',
-      dark: '#16A34A',
+      main: '#27AE60',
+      light: '#2ECC71',
+      dark: '#219A52',
+    },
+    info: {
+      main: '#3498DB',
+      light: '#5DADE2',
+      dark: '#2980B9',
     },
   },
   typography: {
-    fontFamily: [
-      'Montserrat',
-      'Open Sans',
-      'Roboto',
-      'sans-serif'
-    ].join(','),
+    fontFamily: "'Montserrat', 'Roboto', 'Arial', sans-serif",
     h1: {
-      fontFamily: 'Montserrat, system-ui, sans-serif',
-      fontWeight: 'bold',
+      fontSize: '3.5rem',
+      fontWeight: 700,
     },
     h2: {
-      fontFamily: 'Montserrat, system-ui, sans-serif',
-      fontWeight: 'bold',
+      fontSize: '2.25rem',
+      fontWeight: 700,
     },
     h3: {
-      fontFamily: 'Montserrat, system-ui, sans-serif',
-      fontWeight: 'bold',
-    },
-    h4: {
-      fontFamily: 'Montserrat, system-ui, sans-serif',
-      fontWeight: 'bold',
-    },
-    h5: {
-      fontFamily: 'Montserrat, system-ui, sans-serif',
-      fontWeight: 'bold',
-    },
-    h6: {
-      fontFamily: 'Montserrat, system-ui, sans-serif',
-      fontWeight: 'bold',
-    },
-    subtitle1: {
-      fontFamily: 'Open Sans, system-ui, sans-serif',
+      fontSize: '1.5rem',
       fontWeight: 600,
     },
-    subtitle2: {
-      fontFamily: 'Open Sans, system-ui, sans-serif',
+    h4: {
+      fontSize: '1.25rem',
       fontWeight: 600,
     },
     body1: {
-      fontFamily: 'Open Sans, system-ui, sans-serif',
+      fontSize: '1rem',
+      lineHeight: 1.6,
     },
     body2: {
-      fontFamily: 'Open Sans, system-ui, sans-serif',
+      fontSize: '0.875rem',
+      lineHeight: 1.6,
     },
     button: {
-      fontFamily: 'Open Sans, system-ui, sans-serif',
-      fontWeight: 600,
       textTransform: 'none',
+      fontWeight: 600,
+    },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  spacing: 8,
+  transitions: {
+    duration: {
+      shortest: 150,
+      shorter: 200,
+      short: 250,
+      standard: 300,
+      complex: 375,
+      enteringScreen: 225,
+      leavingScreen: 195,
+    },
+    easing: {
+      easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      easeOut: 'cubic-bezier(0.0, 0, 0.2, 1)',
+      easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
+      sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
+    },
+  },
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 960,
+      lg: 1280,
+      xl: 1920,
     },
   },
   components: {

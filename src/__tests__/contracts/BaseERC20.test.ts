@@ -4,6 +4,7 @@ import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import hre from "hardhat";
 import "@nomicfoundation/hardhat-ethers";
 import { parseEther, Interface, randomBytes, Contract, Log } from "ethers";
+import { ethers } from "ethers";
 
 describe("BaseERC20", function () {
   // Fixture that deploys TokenFactory
@@ -12,8 +13,9 @@ describe("BaseERC20", function () {
     owner: HardhatEthersSigner;
     addr1: HardhatEthersSigner;
     addr2: HardhatEthersSigner;
+    otherAccount: HardhatEthersSigner;
   }> {
-    const [owner, addr1, addr2] = await hre.ethers.getSigners();
+    const [owner, addr1, addr2, otherAccount] = await hre.ethers.getSigners();
     const TokenFactoryFactory =
       await hre.ethers.getContractFactory("TokenFactory");
     const tokenFactory = await TokenFactoryFactory.deploy(owner.address);
@@ -21,7 +23,7 @@ describe("BaseERC20", function () {
     const deployedAddress = await tokenFactory.getAddress();
     const deployedFactory = TokenFactoryFactory.attach(deployedAddress);
 
-    return { tokenFactory: deployedFactory, owner, addr1, addr2 };
+    return { tokenFactory: deployedFactory, owner, addr1, addr2, otherAccount };
   }
 
   describe("Token Creation", function () {
@@ -221,6 +223,103 @@ describe("BaseERC20", function () {
           await token.balanceOf((await hre.ethers.getSigners())[1].address),
         ),
       ).to.equal(Number(parseEther("1000000")));
+    });
+  });
+
+  describe("Edge Cases and Security", function () {
+    it("Should handle maximum supply edge cases", async function () {
+      const { tokenFactory } = await loadFixture(deployTokenFactoryFixture);
+      const maxPossibleSupply = ethers.MaxUint256;
+
+      // Test avec le supply maximum possible
+      const tx1 = await tokenFactory.createERC20(
+        "Max Supply Token",
+        "MAX",
+        18,
+        maxPossibleSupply,
+        maxPossibleSupply,
+        true,
+        randomBytes(32)
+      );
+      const receipt1 = await tx1.wait();
+      expect(receipt1.status).to.equal(1);
+
+      // Test avec tentative de dépassement du supply maximum
+      await expect(
+        tokenFactory.createERC20(
+          "Overflow Token",
+          "OVER",
+          18,
+          maxPossibleSupply + BigInt(1),
+          maxPossibleSupply + BigInt(1),
+          true,
+          randomBytes(32)
+        )
+      ).to.be.revertedWith("Supply overflow");
+    });
+
+    it("Should prevent unauthorized minting", async function () {
+      const { tokenFactory, owner, otherAccount } = await loadFixture(
+        deployTokenFactoryFixture
+      );
+
+      const initialSupply = parseEther("1000");
+      const maxSupply = parseEther("10000");
+      const tx = await tokenFactory.createERC20(
+        "Secure Token",
+        "SEC",
+        18,
+        initialSupply,
+        maxSupply,
+        true,
+        randomBytes(32)
+      );
+
+      const receipt = await tx.wait();
+      const tokenCreatedLog = receipt.logs[2];
+      const tokenAddress = `0x${tokenCreatedLog.topics[1].slice(26)}`;
+      const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
+      const token = BaseERC20Factory.attach(tokenAddress);
+
+      // Tentative de mint par un compte non autorisé
+      await expect(
+        token.connect(otherAccount).mint(otherAccount.address, parseEther("100"))
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+
+      // Vérification que seul le owner peut mint
+      await expect(
+        token.connect(owner).mint(owner.address, parseEther("100"))
+      ).to.not.be.reverted;
+    });
+
+    it("Should enforce transfer limits correctly", async function () {
+      const { tokenFactory, owner, otherAccount } = await loadFixture(
+        deployTokenFactoryFixture
+      );
+
+      const initialSupply = parseEther("1000");
+      const maxSupply = parseEther("10000");
+      const tx = await tokenFactory.createERC20(
+        "Limited Token",
+        "LIM",
+        18,
+        initialSupply,
+        maxSupply,
+        true,
+        randomBytes(32)
+      );
+
+      const receipt = await tx.wait();
+      const tokenCreatedLog = receipt.logs[2];
+      const tokenAddress = `0x${tokenCreatedLog.topics[1].slice(26)}`;
+      const BaseERC20Factory = await hre.ethers.getContractFactory("BaseERC20");
+      const token = BaseERC20Factory.attach(tokenAddress);
+
+      // Test des limites de transfer
+      const transferAmount = parseEther("1001"); // Plus que le supply initial
+      await expect(
+        token.transfer(otherAccount.address, transferAmount)
+      ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
     });
   });
 });

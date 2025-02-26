@@ -1,28 +1,53 @@
 import '@testing-library/jest-dom/vitest';
-import { expect, vi, beforeAll, afterAll, beforeEach, afterEach, describe, it } from 'vitest';
-import type { WalletClient } from 'viem';
+import { expect, vi, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
+import React from 'react';
 
 // Polyfills pour Node.js
-const nodeCrypto = require('crypto');
-global.crypto = {
-  getRandomValues: function(buffer) {
-    return nodeCrypto.randomFillSync(buffer);
-  }
-};
+if (!global.crypto) {
+  const nodeCrypto = require('crypto');
+  Object.defineProperty(global, 'crypto', {
+    value: {
+      getRandomValues: (buffer: Uint8Array) => nodeCrypto.randomFillSync(buffer)
+    },
+    configurable: true,
+    writable: true
+  });
+}
 
 // Fix pour TextEncoder/TextDecoder
-const util = require('util');
-global.TextEncoder = util.TextEncoder;
-global.TextDecoder = util.TextDecoder;
+if (!global.TextEncoder) {
+  const util = require('util');
+  global.TextEncoder = util.TextEncoder;
+  global.TextDecoder = util.TextDecoder;
+}
 
 // Autres polyfills nécessaires
 global.ArrayBuffer = ArrayBuffer;
 global.Uint8Array = Uint8Array;
 global.fetch = vi.fn();
 global.Request = vi.fn();
-global.Response = vi.fn();
+global.Response = vi.fn().mockImplementation((body, init) => {
+  return {
+    ...init,
+    body,
+    error: () => new Response(),
+    json: () => Promise.resolve({}),
+    redirect: (url: string, status?: number) => new Response(null, { status: status || 302, headers: { Location: url } }),
+    ok: true,
+    status: 200,
+    headers: new Headers(),
+    clone: () => new Response(body, init),
+    text: () => Promise.resolve(''),
+    blob: () => Promise.resolve(new Blob()),
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    formData: () => Promise.resolve(new FormData()),
+    type: 'default',
+    url: '',
+    bodyUsed: false
+  };
+}) as unknown as typeof Response;
 global.Headers = vi.fn();
 
 // Étend les matchers de test
@@ -43,7 +68,7 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock environment variables
+// Mock Firebase Config
 vi.stubEnv('VITE_FIREBASE_API_KEY', 'test-api-key');
 vi.stubEnv('VITE_FIREBASE_AUTH_DOMAIN', 'test.firebaseapp.com');
 vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project');
@@ -51,6 +76,28 @@ vi.stubEnv('VITE_FIREBASE_STORAGE_BUCKET', 'test.appspot.com');
 vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456789');
 vi.stubEnv('VITE_FIREBASE_APP_ID', '1:123456789:web:abcdef');
 vi.stubEnv('VITE_FIREBASE_MEASUREMENT_ID', 'G-TEST123456');
+
+// Mock Firebase
+vi.mock('firebase/app', () => ({
+  initializeApp: vi.fn().mockReturnValue({
+    name: '[DEFAULT]',
+    options: {
+      apiKey: 'test-api-key',
+      authDomain: 'test.firebaseapp.com',
+      projectId: 'test-project',
+      storageBucket: 'test.appspot.com',
+      messagingSenderId: '123456789',
+      appId: '1:123456789:web:abcdef',
+      measurementId: 'G-TEST123456'
+    },
+    automaticDataCollectionEnabled: true
+  }),
+  getApp: vi.fn(),
+  getApps: vi.fn().mockReturnValue([]),
+  deleteApp: vi.fn(),
+  onLog: vi.fn(),
+  setLogLevel: vi.fn()
+}));
 
 // Mock window.ethereum
 const mockEthereum = {
@@ -66,91 +113,143 @@ const mockEthereum = {
 
 vi.stubGlobal('ethereum', mockEthereum);
 
-// Mock viem
-vi.mock('viem', () => {
-  const mockWalletClient: Partial<WalletClient> = {
-    request: vi.fn(),
-    getAddresses: vi.fn().mockResolvedValue(['0x1234567890123456789012345678901234567890']),
-    getChainId: vi.fn().mockResolvedValue(1),
-    sendTransaction: vi.fn(),
-    signMessage: vi.fn(),
-    watchAsset: vi.fn()
-  };
+const mockFirebaseUser = {
+  uid: 'test-uid',
+  email: 'test@example.com',
+  emailVerified: true,
+  displayName: 'Test User',
+  photoURL: null,
+  phoneNumber: null,
+  providerId: 'password',
+  providerData: [],
+  refreshToken: '',
+  tenantId: null,
+  delete: vi.fn(),
+  getIdToken: vi.fn(),
+  getIdTokenResult: vi.fn(),
+  reload: vi.fn(),
+  toJSON: vi.fn(),
+  isAnonymous: false,
+  metadata: {
+    creationTime: new Date().toISOString(),
+    lastSignInTime: new Date().toISOString()
+  }
+};
 
-  return {
-    createWalletClient: vi.fn().mockReturnValue(mockWalletClient),
-    custom: vi.fn().mockReturnValue({}),
-    mainnet: { 
-      id: 1, 
-      name: 'Mainnet', 
-      network: 'homestead',
-      nativeCurrency: {
-        name: 'Ether',
-        symbol: 'ETH',
-        decimals: 18
-      }
-    },
-    WalletClient: vi.fn(),
-    parseEther: vi.fn((value: string) => BigInt(value) * BigInt(10 ** 18)),
-    formatEther: vi.fn((value: bigint) => (Number(value) / 10 ** 18).toString())
-  };
-});
-
-// Mock Firebase avec plus de fonctionnalités
-vi.mock('firebase/app', () => ({
-  initializeApp: vi.fn().mockReturnValue({
-    name: '[DEFAULT]',
-    options: {},
-    automaticDataCollectionEnabled: true
+const mockAuth = {
+  currentUser: mockFirebaseUser,
+  onAuthStateChanged: vi.fn((callback) => {
+    callback(mockFirebaseUser);
+    return vi.fn(); // Unsubscribe function
   }),
-  getApp: vi.fn(),
-  getApps: vi.fn().mockReturnValue([]),
-  deleteApp: vi.fn(),
-  onLog: vi.fn(),
-  setLogLevel: vi.fn()
+  onIdTokenChanged: vi.fn((callback) => {
+    callback(mockFirebaseUser);
+    return vi.fn(); // Unsubscribe function
+  }),
+  setPersistence: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn()
+};
+
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(() => mockAuth),
+  onAuthStateChanged: vi.fn(),
+  onIdTokenChanged: vi.fn(),
+  getIdToken: vi.fn().mockResolvedValue('mock-token'),
+  browserLocalPersistence: 'LOCAL',
+  browserSessionPersistence: 'SESSION',
+  inMemoryPersistence: 'NONE',
+  setPersistence: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(),
+  updateProfile: vi.fn()
 }));
 
-vi.mock('firebase/auth', () => {
-  const mockUser = {
-    uid: 'test-uid',
-    email: 'test@example.com',
-    emailVerified: true,
-    displayName: 'Test User',
-    photoURL: null,
-    phoneNumber: null,
-    isAnonymous: false,
-    metadata: {
-      creationTime: new Date().toISOString(),
-      lastSignInTime: new Date().toISOString()
-    }
-  };
+vi.mock('firebase/firestore', () => ({
+  getFirestore: vi.fn(() => ({
+    collection: vi.fn(),
+    doc: vi.fn(),
+    getDoc: vi.fn(),
+    setDoc: vi.fn()
+  })),
+  collection: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  setDoc: vi.fn()
+}));
 
+vi.mock('firebase/storage', () => ({
+  getStorage: vi.fn(() => ({
+    ref: vi.fn(),
+    uploadBytes: vi.fn(),
+    getDownloadURL: vi.fn()
+  })),
+  ref: vi.fn(),
+  uploadBytes: vi.fn(),
+  getDownloadURL: vi.fn()
+}));
+
+vi.mock('firebase/functions', () => ({
+  getFunctions: vi.fn(() => ({
+    httpsCallable: vi.fn()
+  })),
+  httpsCallable: vi.fn()
+}));
+
+// Mock des composants lazy
+vi.mock('@/features/home/pages/HomePage', () => ({
+  HomePage: () => React.createElement('div', null, 'Home Page')
+}));
+
+vi.mock('@/features/dashboard/pages/DashboardPage', () => ({
+  DashboardPage: () => React.createElement('div', null, 'Dashboard Page')
+}));
+
+vi.mock('@/features/auth/pages/ProfilePage', () => ({
+  ProfilePage: () => React.createElement('div', null, 'Profile Page')
+}));
+
+vi.mock('@/features/auth/pages/AuthPage', () => ({
+  AuthPage: () => React.createElement('div', null, 'Auth Page')
+}));
+
+// Mock des dépendances Web3
+vi.mock('@rainbow-me/rainbowkit', () => ({
+  RainbowKitProvider: ({ children }: { children: React.ReactNode }) => children,
+  ConnectButton: () => React.createElement('div', null, 'Connect Wallet'),
+  darkTheme: () => ({}),
+  connectorsForWallets: () => [],
+  wallet: {
+    metaMask: () => ({}),
+    walletConnect: () => ({}),
+    coinbase: () => ({}),
+    trust: () => ({})
+  }
+}));
+
+vi.mock('wagmi', () => ({
+  WagmiConfig: ({ children }: { children: React.ReactNode }) => children,
+  useAccount: () => ({ isConnected: true }),
+  useConnect: () => ({ connect: vi.fn(), connectors: [] })
+}));
+
+vi.mock('viem', () => ({
+  mainnet: { id: 1 },
+  polygon: { id: 137 },
+  http: () => ({})
+}));
+
+// Mock de Material-UI
+vi.mock('@mui/material', async () => {
+  const actual = await vi.importActual('@mui/material');
   return {
-    getAuth: vi.fn().mockReturnValue({
-      currentUser: mockUser,
-      signInWithEmailAndPassword: vi.fn().mockResolvedValue({ user: mockUser }),
-      signInWithPopup: vi.fn().mockResolvedValue({ user: mockUser }),
-      createUserWithEmailAndPassword: vi.fn().mockResolvedValue({ user: mockUser }),
-      signOut: vi.fn().mockResolvedValue(undefined),
-      onAuthStateChanged: vi.fn(),
-      sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
-      updateProfile: vi.fn().mockResolvedValue(undefined),
-      verifyBeforeUpdateEmail: vi.fn().mockResolvedValue(undefined),
-      sendEmailVerification: vi.fn().mockResolvedValue(undefined)
-    }),
-    signInWithEmailAndPassword: vi.fn().mockResolvedValue({ user: mockUser }),
-    signInWithPopup: vi.fn().mockResolvedValue({ user: mockUser }),
-    createUserWithEmailAndPassword: vi.fn().mockResolvedValue({ user: mockUser }),
-    signOut: vi.fn().mockResolvedValue(undefined),
-    onAuthStateChanged: vi.fn(),
-    GoogleAuthProvider: vi.fn().mockImplementation(() => ({
-      addScope: vi.fn(),
-      setCustomParameters: vi.fn()
-    }))
+    ...actual,
+    useMediaQuery: () => false
   };
 });
 
-// Mock console methods
+// Nettoyage de la console
 const originalConsole = { ...console };
 beforeAll(() => {
   console.log = vi.fn();
@@ -164,12 +263,5 @@ afterAll(() => {
   console.error = originalConsole.error;
   console.warn = originalConsole.warn;
   console.debug = originalConsole.debug;
-});
-
-// Nettoyage après chaque test
-afterEach(() => {
   cleanup();
-  vi.clearAllMocks();
-  localStorage.clear();
-  sessionStorage.clear();
 });

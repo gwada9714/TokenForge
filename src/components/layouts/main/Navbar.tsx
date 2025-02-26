@@ -21,6 +21,7 @@ import {
   Collapse,
   alpha,
   ButtonProps,
+  CircularProgress,
 } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -37,9 +38,10 @@ const services = [
 
 const community = [
   { name: 'Blog', href: '/blog' },
-  { name: 'Discord', href: 'https://discord.gg/tokenforge' },
-  { name: 'Telegram', href: 'https://t.me/tokenforge' },
-  { name: 'Twitter', href: 'https://twitter.com/tokenforge' },
+  { name: 'Documentation', href: '/docs' },
+  { name: 'Discord', href: 'https://discord.gg/tokenforge', external: true },
+  { name: 'Telegram', href: 'https://t.me/tokenforge', external: true },
+  { name: 'Twitter', href: 'https://twitter.com/tokenforge', external: true },
 ];
 
 const glowAnimation = keyframes`
@@ -65,17 +67,20 @@ const LogoContainer = styled('div')`
 interface NavButtonProps extends ButtonProps {
   component?: React.ElementType;
   to?: string;
+  $loading?: boolean;
 }
 
 const NavButton = styled(Button, {
-  shouldForwardProp: (prop) => !['component', 'to'].includes(prop as string),
-})<NavButtonProps>(({ theme }) => ({
+  shouldForwardProp: (prop) => !['component', 'to', '$loading'].includes(prop as string),
+})<NavButtonProps>(({ theme, $loading }) => ({
   color: alpha(theme.palette.common.white, 0.85),
   marginLeft: theme.spacing(2),
   fontFamily: 'Poppins, Roboto, sans-serif',
   fontWeight: 400,
   position: 'relative',
   textTransform: 'none',
+  opacity: $loading ? 0.7 : 1,
+  pointerEvents: $loading ? 'none' : 'auto',
   '&::after': {
     content: '""',
     position: 'absolute',
@@ -97,8 +102,8 @@ const NavButton = styled(Button, {
 }));
 
 const ConnectButton = styled(Button, {
-  shouldForwardProp: (prop) => !['component', 'to'].includes(prop as string),
-})<NavButtonProps>(({ theme }) => ({
+  shouldForwardProp: (prop) => !['component', 'to', '$loading'].includes(prop as string),
+})<NavButtonProps>(({ theme, $loading }) => ({
   marginLeft: theme.spacing(2),
   borderColor: '#D97706',
   color: '#D97706',
@@ -108,12 +113,26 @@ const ConnectButton = styled(Button, {
   fontWeight: 500,
   textTransform: 'none',
   transition: 'all 0.3s ease',
+  position: 'relative',
+  opacity: $loading ? 0.7 : 1,
+  pointerEvents: $loading ? 'none' : 'auto',
   '&:hover': {
     backgroundColor: '#D97706',
     borderColor: '#D97706',
     color: theme.palette.common.white,
     transform: 'translateY(-1px)',
     boxShadow: '0 4px 12px rgba(217, 119, 6, 0.2)',
+  },
+}));
+
+const SignUpLink = styled(RouterLink)(({ theme }) => ({
+  color: '#D97706',
+  fontSize: '0.875rem',
+  textDecoration: 'none',
+  marginLeft: theme.spacing(2),
+  fontFamily: 'Poppins, Roboto, sans-serif',
+  '&:hover': {
+    textDecoration: 'underline',
   },
 }));
 
@@ -125,13 +144,17 @@ const StyledMenu = styled(Menu)(({ theme }) => ({
     borderRadius: '12px',
     marginTop: '8px',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+    minWidth: '250px',
   },
   '& .MuiMenuItem-root': {
     fontFamily: 'Poppins, Roboto, sans-serif',
     color: alpha(theme.palette.common.white, 0.85),
-    padding: '10px 24px',
+    padding: '12px 24px',
     transition: 'all 0.2s ease',
     position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
     '&::after': {
       content: '""',
       position: 'absolute',
@@ -153,45 +176,33 @@ const StyledMenu = styled(Menu)(({ theme }) => ({
   },
 }));
 
-const Navbar = () => {
+export const NAVBAR_HEIGHT = 72;
+
+export const Navbar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [servicesAnchor, setServicesAnchor] = useState<null | HTMLElement>(null);
-  const [communityAnchor, setCommunityAnchor] = useState<null | HTMLElement>(null);
-  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
-  const [mobileCommunityOpen, setMobileCommunityOpen] = useState(false);
+  const { isAuthenticated, isLoading } = useTokenForgeAuth();
+  const { isConnected, isCorrectNetwork, connect } = useWalletStatus();
+  
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [servicesMenuAnchor, setServicesMenuAnchor] = useState<null | HTMLElement>(null);
+  const [communityMenuAnchor, setCommunityMenuAnchor] = useState<null | HTMLElement>(null);
 
-  const { state } = useTokenForgeAuth();
-  const { wallet, isConnected, isCorrectNetwork } = useWalletStatus();
-
-  const getWalletStatusColor = () => {
-    if (!isConnected) return theme.palette.error.main;
-    if (!isCorrectNetwork) return theme.palette.warning.main;
-    return theme.palette.success.main;
+  const handleServicesMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setServicesMenuAnchor(event.currentTarget);
   };
 
-  const getWalletStatusText = () => {
-    if (!isConnected) return 'Wallet non connecté';
-    if (!isCorrectNetwork) return 'Mauvais réseau';
-    return wallet.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : 'Connecté';
+  const handleCommunityMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setCommunityMenuAnchor(event.currentTarget);
   };
 
-  const handleServicesClick = (event: React.MouseEvent<HTMLElement>) => {
-    setServicesAnchor(event.currentTarget);
+  const handleMenuClose = () => {
+    setServicesMenuAnchor(null);
+    setCommunityMenuAnchor(null);
   };
 
-  const handleCommunityClick = (event: React.MouseEvent<HTMLElement>) => {
-    setCommunityAnchor(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setServicesAnchor(null);
-    setCommunityAnchor(null);
-  };
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  const handleMobileMenuToggle = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
   return (
@@ -201,9 +212,10 @@ const Navbar = () => {
         background: `linear-gradient(to right, rgba(24, 32, 56, 0.95), rgba(30, 41, 67, 0.95))`,
         backdropFilter: 'blur(8px)',
         boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+        height: NAVBAR_HEIGHT,
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+      <Toolbar sx={{ justifyContent: 'space-between', py: 1, height: '100%' }}>
         {/* Logo */}
         <StyledRouterLink to="/">
           <LogoContainer>
@@ -217,7 +229,7 @@ const Navbar = () => {
             color="inherit"
             aria-label="open drawer"
             edge="start"
-            onClick={handleDrawerToggle}
+            onClick={handleMobileMenuToggle}
             sx={{ ml: 2 }}
           >
             <MenuIcon />
@@ -229,30 +241,23 @@ const Navbar = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <NavButton
               component={RouterLink}
-              to="/tokens/create"
+              to="/plans"
             >
-              Créer un Token
+              Plans & Tarifs
             </NavButton>
 
-            <NavButton onClick={handleServicesClick}>
-              Services {Boolean(servicesAnchor) ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
+            <NavButton onClick={handleServicesMenuOpen}>
+              Services {servicesMenuAnchor ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
             </NavButton>
 
-            <NavButton
-              component={RouterLink}
-              to="/tokens"
-            >
-              Token $TKN
-            </NavButton>
-
-            <NavButton onClick={handleCommunityClick}>
-              Communauté {Boolean(communityAnchor) ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
+            <NavButton onClick={handleCommunityMenuOpen}>
+              Communauté {communityMenuAnchor ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
             </NavButton>
 
             {/* Wallet Status */}
             <Chip
-              icon={<FiberManualRecordIcon sx={{ color: getWalletStatusColor(), width: 10, height: 10 }} />}
-              label={getWalletStatusText()}
+              icon={<FiberManualRecordIcon sx={{ color: isCorrectNetwork ? theme.palette.success.main : theme.palette.error.main, width: 10, height: 10 }} />}
+              label={isCorrectNetwork ? 'Connecté' : 'Mauvais Réseau'}
               variant="outlined"
               sx={{
                 ml: 2,
@@ -266,60 +271,71 @@ const Navbar = () => {
               }}
             />
 
-            {/* Auth Button */}
-            {isConnected ? (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <ConnectButton
-                component={RouterLink}
-                to={state.isAuthenticated ? "/dashboard" : "/login"}
                 variant="outlined"
+                onClick={connect}
+                $loading={isLoading}
+                startIcon={isLoading && <CircularProgress size={20} />}
               >
-                {state.isAuthenticated ? 'Dashboard' : 'Connexion'}
+                {isLoading ? 'Connexion...' : 'Connecter Wallet'}
               </ConnectButton>
-            ) : (
-              <ConnectButton
-                component={RouterLink}
-                to="/connect-wallet"
-                variant="outlined"
-              >
-                Connecter Wallet
-              </ConnectButton>
-            )}
+            </Box>
           </Box>
         )}
 
-        {/* Services Dropdown */}
+        {/* Services Menu */}
         <StyledMenu
-          anchorEl={servicesAnchor}
-          open={Boolean(servicesAnchor)}
-          onClose={handleClose}
-          MenuListProps={{ 'aria-labelledby': 'services-button' }}
+          anchorEl={servicesMenuAnchor}
+          open={Boolean(servicesMenuAnchor)}
+          onClose={handleMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'center',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
         >
           {services.map((item) => (
             <MenuItem
               key={item.name}
               component={RouterLink}
               to={item.href}
-              onClick={handleClose}
+              onClick={handleMenuClose}
             >
+              <FiberManualRecordIcon sx={{ fontSize: 8, color: '#D97706' }} />
               {item.name}
             </MenuItem>
           ))}
         </StyledMenu>
 
-        {/* Community Dropdown */}
+        {/* Community Menu */}
         <StyledMenu
-          anchorEl={communityAnchor}
-          open={Boolean(communityAnchor)}
-          onClose={handleClose}
-          MenuListProps={{ 'aria-labelledby': 'community-button' }}
+          anchorEl={communityMenuAnchor}
+          open={Boolean(communityMenuAnchor)}
+          onClose={handleMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'center',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
         >
           {community.map((item) => (
             <MenuItem
               key={item.name}
-              component={RouterLink}
-              to={item.href}
-              onClick={handleClose}
+              component={item.external ? 'a' : RouterLink}
+              to={!item.external ? item.href : undefined}
+              href={item.external ? item.href : undefined}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noopener noreferrer' : undefined}
+              onClick={handleMenuClose}
             >
+              <FiberManualRecordIcon sx={{ fontSize: 8, color: '#D97706' }} />
               {item.name}
             </MenuItem>
           ))}
@@ -329,8 +345,8 @@ const Navbar = () => {
         <Drawer
           variant="temporary"
           anchor="right"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
+          open={mobileMenuOpen}
+          onClose={handleMobileMenuToggle}
           ModalProps={{ keepMounted: true }}
           sx={{
             '& .MuiDrawer-paper': {
@@ -358,18 +374,18 @@ const Navbar = () => {
           <List sx={{ pt: 2 }}>
             <ListItem 
               component={RouterLink} 
-              to="/tokens/create" 
-              onClick={handleDrawerToggle}
+              to="/plans" 
+              onClick={handleMobileMenuToggle}
               button
             >
-              <ListItemText primary="Créer un Token" />
+              <ListItemText primary="Plans & Tarifs" />
             </ListItem>
 
-            <ListItem button onClick={() => setMobileServicesOpen(!mobileServicesOpen)}>
+            <ListItem button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               <ListItemText primary="Services" />
-              {mobileServicesOpen ? <ExpandLess /> : <ExpandMore />}
+              {mobileMenuOpen ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
-            <Collapse in={mobileServicesOpen} timeout="auto" unmountOnExit>
+            <Collapse in={mobileMenuOpen} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 {services.map((item) => (
                   <ListItem
@@ -384,7 +400,7 @@ const Navbar = () => {
                     }}
                     component={RouterLink}
                     to={item.href}
-                    onClick={handleDrawerToggle}
+                    onClick={handleMobileMenuToggle}
                   >
                     <ListItemText 
                       primary={item.name}
@@ -397,20 +413,11 @@ const Navbar = () => {
               </List>
             </Collapse>
 
-            <ListItem 
-              component={RouterLink} 
-              to="/tokens" 
-              onClick={handleDrawerToggle}
-              button
-            >
-              <ListItemText primary="Token $TKN" />
-            </ListItem>
-
-            <ListItem button onClick={() => setMobileCommunityOpen(!mobileCommunityOpen)}>
+            <ListItem button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               <ListItemText primary="Communauté" />
-              {mobileCommunityOpen ? <ExpandLess /> : <ExpandMore />}
+              {mobileMenuOpen ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
-            <Collapse in={mobileCommunityOpen} timeout="auto" unmountOnExit>
+            <Collapse in={mobileMenuOpen} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 {community.map((item) => (
                   <ListItem
@@ -425,7 +432,7 @@ const Navbar = () => {
                     }}
                     component={RouterLink}
                     to={item.href}
-                    onClick={handleDrawerToggle}
+                    onClick={handleMobileMenuToggle}
                   >
                     <ListItemText 
                       primary={item.name}
@@ -440,8 +447,8 @@ const Navbar = () => {
 
             <ListItem
               component={RouterLink}
-              to={state.isAuthenticated ? "/dashboard" : "/login"}
-              onClick={handleDrawerToggle}
+              to={isAuthenticated ? "/dashboard" : "/login"}
+              onClick={handleMobileMenuToggle}
               button
               sx={{
                 mt: 2,
@@ -449,7 +456,7 @@ const Navbar = () => {
                 borderTop: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
               }}
             >
-              <ListItemText primary={state.isAuthenticated ? 'Dashboard' : 'Connexion'} />
+              <ListItemText primary={isAuthenticated ? 'Dashboard' : 'Connexion'} />
             </ListItem>
           </List>
         </Drawer>
@@ -457,5 +464,3 @@ const Navbar = () => {
     </AppBar>
   );
 };
-
-export default Navbar;

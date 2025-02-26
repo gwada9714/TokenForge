@@ -1,7 +1,19 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import React from 'react';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { routes } from './routes';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
-export function Router() {
-  const router = createBrowserRouter(routes);
-  return <RouterProvider router={router} />;
-} 
+// Configuration du router avec les options de base
+const router = createBrowserRouter(routes);
+
+export const Router: React.FC = () => {
+  return (
+    <RouterProvider 
+      router={router}
+      fallbackElement={<LoadingSpinner />}
+      future={{
+        v7_startTransition: true
+      }}
+    />
+  );
+}; 

@@ -1,45 +1,66 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { AuthService } from '../services/AuthService';
-import { AuthState } from '../types';
-import { logger } from '@/core/logger/Logger';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { firebaseService } from '@/config/firebase';
+import { logger } from '@/utils/logger';
 
-const AuthContext = createContext<AuthState | null>(null);
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  error: Error | null;
+}
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    loading: true,
-    error: null
-  });
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isLoading: true,
+  error: null
+});
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const authService = AuthService.getInstance();
-    const auth = authService.getFirebaseAuth();
+    const initializeAuth = async () => {
+      try {
+        await firebaseService.initialize();
+        const auth = firebaseService.getAuth();
 
-    const unsubscribe = auth.onAuthStateChanged(
-      (user) => {
-        setAuthState({
-          user,
-          loading: false,
-          error: null
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          setUser(user);
+          setIsLoading(false);
+        }, (error) => {
+          setError(error);
+          setIsLoading(false);
         });
-        logger.info('AuthProvider', 'Auth state updated', { userId: user?.uid });
-      },
-      (error) => {
-        setAuthState({
-          user: null,
-          loading: false,
-          error
+
+        return () => unsubscribe();
+      } catch (error) {
+        logger.error({
+          category: 'Auth',
+          message: 'Error initializing auth',
+          error: error instanceof Error ? error : new Error(String(error))
         });
-        logger.error('AuthProvider', 'Auth state error', error);
+        setError(error instanceof Error ? error : new Error(String(error)));
+        setIsLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
+    initializeAuth();
   }, []);
 
+  const value = {
+    user,
+    isLoading,
+    error
+  };
+
   return (
-    <AuthContext.Provider value={authState}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
