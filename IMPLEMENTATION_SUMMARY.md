@@ -1,5 +1,7 @@
 # Implémentation du Plan de Projet TokenForge Amélioré
 
+> **Note**: Ce document résume l'état d'avancement de l'implémentation du [Plan de Projet Détaillé](PROJECT_PLAN.md) qui définit la vision complète et les objectifs du projet. L'implémentation suit les directives techniques définies dans le [Plan d'Architecture Détaillé](ARCHITECTURE_PLAN.md).
+
 ## Fonctionnalités Implémentées
 
 ### 1. Création de Tokens - Améliorations

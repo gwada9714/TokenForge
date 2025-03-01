@@ -123,6 +123,8 @@ Pour toute question ou problème :
 - Consulter la documentation
 
 ## Roadmap
+Pour une vision détaillée du plan de projet complet, consultez le [Plan de Projet Détaillé](PROJECT_PLAN.md) et le [Plan d'Architecture Détaillé](ARCHITECTURE_PLAN.md).
+
 - [ ] Support de nouvelles chaînes
 - [ ] Amélioration de l'interface utilisateur
 - [ ] Optimisation des smart contracts

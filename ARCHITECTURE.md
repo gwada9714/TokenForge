@@ -1,5 +1,7 @@
 # Architecture TokenForge
 
+> **Note**: Cette architecture technique s'inscrit dans le cadre du [Plan de Projet Détaillé](PROJECT_PLAN.md) qui définit la vision globale, les phases de développement et les objectifs du projet. Pour une vision architecturale plus complète et détaillée, consultez le [Plan d'Architecture Détaillé](ARCHITECTURE_PLAN.md).
+
 ## Structure du Projet
 - `/src/core/` - Services et configurations core
   - `/src/core/auth/` - Service d'authentification centralisé

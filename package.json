@@ -26,6 +26,8 @@
     "@sentry/integrations": "^7.114.0",
     "@sentry/react": "^9.1.0",
     "@sentry/tracing": "^7.120.3",
+    "@solana/spl-token": "^0.4.12",
+    "@solana/web3.js": "^1.98.0",
     "@tanstack/react-query": "^5.18.1",
     "broadcast-channel": "^7.0.0",
     "crypto-js": "^4.2.0",
