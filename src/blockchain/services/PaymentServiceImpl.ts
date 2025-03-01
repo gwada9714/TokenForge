@@ -8,7 +8,7 @@ import {
   PaymentInitParams, 
   PaymentSession 
 } from '../types/payment';
-import { createPaymentService } from '../factory';
+// import { createPaymentService } from '../factory'; // Non utilisé
 import { PriceOracleService } from './PriceOracleService';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,20 +18,16 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export class PaymentService implements IPaymentService {
   private chainName: string;
-  private walletProvider: any;
-  private paymentService: any; // Changé de IPaymentService à any pour éviter les erreurs circulaires
   private priceOracle: PriceOracleService;
   private receivingAddress: string = '0x92e92b2705edc3d4c7204f961cc659c0'; // Adresse du wallet MetaMask centralisé
 
   /**
    * Constructeur du service de paiement
    * @param chainName Nom de la blockchain (ethereum, binance, polygon, avalanche, arbitrum, solana)
-   * @param walletProvider Provider du wallet (window.ethereum, etc.)
+   * @param _walletProvider Provider du wallet (window.ethereum, etc.) - non utilisé actuellement
    */
-  constructor(chainName: string, walletProvider?: any) {
+  constructor(chainName: string, _walletProvider?: any) {
     this.chainName = chainName;
-    this.walletProvider = walletProvider;
-    this.paymentService = createPaymentService(chainName, walletProvider);
     this.priceOracle = new PriceOracleService();
   }
 
@@ -84,7 +80,7 @@ export class PaymentService implements IPaymentService {
    * @param sessionId Identifiant de la session de paiement
    * @returns Statut du paiement
    */
-  async checkPaymentStatus(sessionId: string): Promise<PaymentStatus> {
+  async checkPaymentStatus(_sessionId: string): Promise<PaymentStatus> {
     try {
       // Dans une implémentation réelle, on récupérerait le statut depuis une base de données
       // Pour la démo, on simule un statut aléatoire
@@ -111,7 +107,7 @@ export class PaymentService implements IPaymentService {
    * @param txHash Hash de la transaction
    * @returns true si le paiement est confirmé, false sinon
    */
-  async confirmPayment(sessionId: string, txHash: string): Promise<boolean> {
+  async confirmPayment(_sessionId: string, _txHash: string): Promise<boolean> {
     try {
       // Dans une implémentation réelle, on vérifierait la transaction sur la blockchain
       // Pour la démo, on simule une confirmation réussie
@@ -394,7 +390,7 @@ export class PaymentService implements IPaymentService {
    * @param currencyAddress Adresse du token (null pour crypto native)
    * @returns Estimation des frais
    */
-  async estimateTransactionFees(amount: number, currencyAddress: string | null): Promise<FeeEstimate> {
+  async estimateTransactionFees(_amount: number, currencyAddress: string | null): Promise<FeeEstimate> {
     try {
       // Dans une implémentation réelle, on estimerait les frais selon la blockchain
       // Pour la démo, on retourne des valeurs prédéfinies
@@ -620,7 +616,7 @@ export class PaymentService implements IPaymentService {
    * @param transactionHash Hash de la transaction
    * @returns true si le paiement est valide, false sinon
    */
-  async verifyPayment(transactionHash: string): Promise<boolean> {
+  async verifyPayment(_transactionHash: string): Promise<boolean> {
     try {
       // Utiliser la nouvelle API pour vérifier le paiement
       // Note: Dans la nouvelle API, on utiliserait confirmPayment avec un sessionId
@@ -795,3 +791,6 @@ export class PaymentService implements IPaymentService {
     switch (this.chainName.toLowerCase()) {
       case 'ethereum':
         return 1; // Ethereum Mainnet
+      case 'binance':
+      case 'bsc':
+        return 56; // Binance

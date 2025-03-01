@@ -1,0 +1,117 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.STAGING_API_URL }}
+          VITE_BLOCKCHAIN_NETWORK: ${{ secrets.STAGING_BLOCKCHAIN_NETWORK }}
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Deploy to S3
+        run: |
+          aws s3 sync dist/ s3://${{ secrets.STAGING_S3_BUCKET }} --delete
+      
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.STAGING_CLOUDFRONT_ID }} --paths "/*"
+      
+      - name: Notify deployment
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+            -d '{"text":"🚀 Staging deployment completed for TokenForge v${{ github.sha }}"}' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-production:
+    name: Deploy to Production
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          VITE_BLOCKCHAIN_NETWORK: ${{ secrets.PRODUCTION_BLOCKCHAIN_NETWORK }}
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Deploy to S3
+        run: |
+          aws s3 sync dist/ s3://${{ secrets.PRODUCTION_S3_BUCKET }} --delete
+      
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.PRODUCTION_CLOUDFRONT_ID }} --paths "/*"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/index.html
+            dist/manifest.json
+          body: |
+            ## TokenForge ${{ github.ref_name }}
+            
+            ### 🚀 New Features
+            - Feature 1
+            - Feature 2
+            
+            ### 🐛 Bug Fixes
+            - Fix 1
+            - Fix 2
+            
+            ### 📝 Notes
+            - Note 1
+            - Note 2
+      
+      - name: Notify deployment
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+            -d '{"text":"🎉 Production deployment completed for TokenForge ${{ github.ref_name }}"}' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,181 +1,81 @@
-import React from 'react';
-import { Box, Grid, Paper, Typography, Drawer, List, ListItem as MuiListItem, ListItemIcon, ListItemText, AppBar, Toolbar, IconButton } from '@mui/material';
-import {
-  Dashboard as DashboardIcon,
-  People as PeopleIcon,
-  Token as TokenIcon,
-  Build as BuildIcon,
-  Assessment as AssessmentIcon,
-  Menu as MenuIcon,
-} from '@mui/icons-material';
-import { Link, useLocation, Outlet } from 'react-router-dom';
-import { styled } from '@mui/material/styles';
-import { AuditLogs } from './AuditLogs';
-import { TokenStats } from './TokenStats';
-import { UserManagement } from './UserManagement';
+import React, { useState } from 'react';
+import { Box, CssBaseline, Toolbar, useMediaQuery, useTheme } from '@mui/material';
+import { useLocation, Outlet } from 'react-router-dom';
 
-const drawerWidth = 240;
+// Import components
+import { AdminAppBar } from './layout/AdminAppBar';
+import { AdminDrawer } from './layout/AdminDrawer';
+import { AdminHome } from './pages/AdminHome';
 
-const StyledListItem = styled(MuiListItem)(({ theme }) => ({
-  '&.Mui-selected': {
-    backgroundColor: theme.palette.action.selected,
-  },
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover,
-  },
-}));
-
-const menuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
-  { text: 'Utilisateurs', icon: <PeopleIcon />, path: '/admin/users' },
-  { text: 'Tokens', icon: <TokenIcon />, path: '/admin/tokens' },
-  { text: 'Services', icon: <BuildIcon />, path: '/admin/services' },
-  { text: 'Logs', icon: <AssessmentIcon />, path: '/admin/logs' },
-];
-
+/**
+ * Dashboard administrateur principal
+ * Contient la structure globale du dashboard admin avec:
+ * - Barre d'application avec titre et toggle mobile
+ * - Tiroir de navigation avec menu items
+ * - Zone de contenu principal qui affiche soit le dashboard d'accueil, soit les routes enfants
+ */
 export const AdminDashboard: React.FC = () => {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [open, setOpen] = useState(true);
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  // Fermer automatiquement le drawer sur mobile
+  React.useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    } else {
+      setOpen(true);
+    }
+  }, [isMobile]);
+
+  // Gérer l'ouverture/fermeture du drawer
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    setOpen(!open);
   };
 
-  const drawer = (
-    <div>
-      <Toolbar />
-      <List>
-        {menuItems.map((item) => (
-          <StyledListItem
-            key={item.text}
-            selected={location.pathname === item.path}
-          >
-            <Link
-              to={item.path}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                textDecoration: 'none',
-                color: 'inherit'
-              }}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </Link>
-          </StyledListItem>
-        ))}
-      </List>
-    </div>
-  );
-
-  const MainContent = () => {
-    if (location.pathname === '/admin') {
-      return (
-        <Box sx={{ flexGrow: 1, p: 3 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Typography variant="h4" component="h1" gutterBottom>
-                Tableau de bord administrateur
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Statistiques des tokens
-                </Typography>
-                <TokenStats />
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Gestion des utilisateurs
-                </Typography>
-                <UserManagement />
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Logs d'audit
-                </Typography>
-                <AuditLogs />
-              </Paper>
-            </Grid>
-          </Grid>
-        </Box>
-      );
-    }
-    return <Outlet />;
+  // Gérer la navigation
+  const handleNavigate = (path: string) => {
+    // Dans une implémentation réelle, on utiliserait useNavigate de react-router-dom
+    console.log(`Navigation vers: ${path}`);
   };
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Administration TokenForge
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+      <CssBaseline />
+      
+      {/* Barre d'application */}
+      <AdminAppBar 
+        open={open} 
+        handleDrawerToggle={handleDrawerToggle}
+        title="TokenForge Admin"
+      />
+      
+      {/* Tiroir de navigation */}
+      <AdminDrawer 
+        open={open}
+        handleDrawerToggle={handleDrawerToggle}
+        onNavigate={handleNavigate}
+      />
+      
+      {/* Contenu principal */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          width: { sm: `calc(100% - ${open ? 240 : 0}px)` },
+          ml: { sm: `${open ? 240 : 0}px` },
+          transition: theme.transitions.create(['margin', 'width'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
         }}
       >
-        <Toolbar />
-        <MainContent />
+        <Toolbar /> {/* Espace pour la barre d'application */}
+        
+        {/* Afficher soit la page d'accueil, soit les routes enfants */}
+        {location.pathname === '/admin' ? <AdminHome /> : <Outlet />}
       </Box>
     </Box>
   );

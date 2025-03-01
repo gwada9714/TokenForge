@@ -1,105 +1,260 @@
 import React from 'react';
-import {
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Chip,
-  Box,
-  LinearProgress,
-  Typography
-} from '@mui/material';
-import {
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon
+import { Box, Grid, Paper, Typography, Chip, LinearProgress } from '@mui/material';
+import { 
+  CheckCircle as CheckCircleIcon, 
+  Warning as WarningIcon, 
+  Error as ErrorIcon 
 } from '@mui/icons-material';
 
-interface SystemStatusData {
-  services: {
-    name: string;
-    status: 'operational' | 'degraded' | 'down';
-    performance: number;
-  }[];
+export interface SystemStatusProps {
+  status: {
+    server: 'online' | 'degraded' | 'offline';
+    database: 'online' | 'degraded' | 'offline';
+    blockchain: {
+      ethereum: 'online' | 'degraded' | 'offline';
+      binance: 'online' | 'degraded' | 'offline';
+      polygon: 'online' | 'degraded' | 'offline';
+      avalanche: 'online' | 'degraded' | 'offline';
+      solana: 'online' | 'degraded' | 'offline';
+    };
+    cache: 'online' | 'degraded' | 'offline';
+    queue: 'online' | 'degraded' | 'offline';
+  };
 }
 
-interface SystemStatusProps {
-  status: SystemStatusData;
-}
-
+/**
+ * Composant affichant l'état du système
+ * Montre l'état des différents services (serveur, base de données, blockchains, etc.)
+ */
 export const SystemStatus: React.FC<SystemStatusProps> = ({ status }) => {
-  const getStatusIcon = (status: string) => {
+  // Fonction pour obtenir l'icône en fonction du statut
+  const getStatusIcon = (status: 'online' | 'degraded' | 'offline') => {
     switch (status) {
-      case 'operational':
-        return <CheckCircleIcon color="success" />;
+      case 'online':
+        return <CheckCircleIcon sx={{ color: 'success.main' }} />;
       case 'degraded':
-        return <WarningIcon color="warning" />;
-      case 'down':
-        return <ErrorIcon color="error" />;
-      default:
-        return null;
+        return <WarningIcon sx={{ color: 'warning.main' }} />;
+      case 'offline':
+        return <ErrorIcon sx={{ color: 'error.main' }} />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  // Fonction pour obtenir la couleur en fonction du statut
+  const getStatusColor = (status: 'online' | 'degraded' | 'offline') => {
     switch (status) {
-      case 'operational':
+      case 'online':
         return 'success';
       case 'degraded':
         return 'warning';
-      case 'down':
+      case 'offline':
         return 'error';
-      default:
-        return 'default';
     }
   };
 
-  const getPerformanceColor = (performance: number) => {
-    if (performance >= 90) return 'success';
-    if (performance >= 70) return 'warning';
-    return 'error';
+  // Fonction pour obtenir le texte en fonction du statut
+  const getStatusText = (status: 'online' | 'degraded' | 'offline') => {
+    switch (status) {
+      case 'online':
+        return 'En ligne';
+      case 'degraded':
+        return 'Dégradé';
+      case 'offline':
+        return 'Hors ligne';
+    }
   };
 
+  // Calculer le pourcentage global de santé du système
+  const calculateSystemHealth = () => {
+    const statusValues = {
+      'online': 100,
+      'degraded': 50,
+      'offline': 0
+    };
+    
+    const values = [
+      statusValues[status.server],
+      statusValues[status.database],
+      statusValues[status.blockchain.ethereum],
+      statusValues[status.blockchain.binance],
+      statusValues[status.blockchain.polygon],
+      statusValues[status.blockchain.avalanche],
+      statusValues[status.blockchain.solana],
+      statusValues[status.cache],
+      statusValues[status.queue]
+    ];
+    
+    return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+  };
+
+  const systemHealth = calculateSystemHealth();
+
   return (
-    <List>
-      {status.services.map((service) => (
-        <ListItem key={service.name} divider>
-          <ListItemIcon>
-            {getStatusIcon(service.status)}
-          </ListItemIcon>
-          <ListItemText
-            primary={
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body1">
-                  {service.name}
-                </Typography>
-                <Chip
-                  label={service.status}
-                  size="small"
-                  color={getStatusColor(service.status)}
-                />
-              </Box>
-            }
-            secondary={
-              <Box mt={1}>
-                <Box display="flex" justifyContent="space-between" mb={0.5}>
-                  <Typography variant="caption" color="text.secondary">
-                    Performance
+    <Box sx={{ width: '100%' }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Typography variant="subtitle1" sx={{ mr: 2 }}>
+              Santé du système: {systemHealth}%
+            </Typography>
+            <Box sx={{ flexGrow: 1 }}>
+              <LinearProgress 
+                variant="determinate" 
+                value={systemHealth} 
+                color={
+                  systemHealth > 80 ? 'success' : 
+                  systemHealth > 50 ? 'warning' : 
+                  'error'
+                }
+                sx={{ height: 10, borderRadius: 5 }}
+              />
+            </Box>
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Paper sx={{ p: 2, height: '100%' }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Services principaux
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              {getStatusIcon(status.server)}
+              <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                Serveur API
+              </Typography>
+              <Chip 
+                label={getStatusText(status.server)} 
+                size="small" 
+                color={getStatusColor(status.server)} 
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              {getStatusIcon(status.database)}
+              <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                Base de données
+              </Typography>
+              <Chip 
+                label={getStatusText(status.database)} 
+                size="small" 
+                color={getStatusColor(status.database)} 
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              {getStatusIcon(status.cache)}
+              <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                Cache
+              </Typography>
+              <Chip 
+                label={getStatusText(status.cache)} 
+                size="small" 
+                color={getStatusColor(status.cache)} 
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {getStatusIcon(status.queue)}
+              <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                File de traitement
+              </Typography>
+              <Chip 
+                label={getStatusText(status.queue)} 
+                size="small" 
+                color={getStatusColor(status.queue)} 
+              />
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={8}>
+          <Paper sx={{ p: 2, height: '100%' }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Connexions blockchain
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6} md={4}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  {getStatusIcon(status.blockchain.ethereum)}
+                  <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                    Ethereum
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {service.performance}%
-                  </Typography>
+                  <Chip 
+                    label={getStatusText(status.blockchain.ethereum)} 
+                    size="small" 
+                    color={getStatusColor(status.blockchain.ethereum)} 
+                  />
                 </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={service.performance}
-                  color={getPerformanceColor(service.performance)}
-                />
-              </Box>
-            }
-          />
-        </ListItem>
-      ))}
-    </List>
+              </Grid>
+              <Grid item xs={6} md={4}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  {getStatusIcon(status.blockchain.binance)}
+                  <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                    Binance
+                  </Typography>
+                  <Chip 
+                    label={getStatusText(status.blockchain.binance)} 
+                    size="small" 
+                    color={getStatusColor(status.blockchain.binance)} 
+                  />
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={4}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  {getStatusIcon(status.blockchain.polygon)}
+                  <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                    Polygon
+                  </Typography>
+                  <Chip 
+                    label={getStatusText(status.blockchain.polygon)} 
+                    size="small" 
+                    color={getStatusColor(status.blockchain.polygon)} 
+                  />
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={4}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  {getStatusIcon(status.blockchain.avalanche)}
+                  <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                    Avalanche
+                  </Typography>
+                  <Chip 
+                    label={getStatusText(status.blockchain.avalanche)} 
+                    size="small" 
+                    color={getStatusColor(status.blockchain.avalanche)} 
+                  />
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={4}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  {getStatusIcon(status.blockchain.solana)}
+                  <Typography variant="body2" sx={{ ml: 1, flexGrow: 1 }}>
+                    Solana
+                  </Typography>
+                  <Chip 
+                    label={getStatusText(status.blockchain.solana)} 
+                    size="small" 
+                    color={getStatusColor(status.blockchain.solana)} 
+                  />
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
   );
-}; 
+};
+
+// Valeurs par défaut pour le développement et les tests
+SystemStatus.defaultProps = {
+  status: {
+    server: 'online',
+    database: 'online',
+    blockchain: {
+      ethereum: 'online',
+      binance: 'online',
+      polygon: 'online',
+      avalanche: 'degraded',
+      solana: 'online'
+    },
+    cache: 'online',
+    queue: 'online'
+  }
+};
