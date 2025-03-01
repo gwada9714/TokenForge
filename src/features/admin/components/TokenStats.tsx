@@ -5,8 +5,6 @@ import {
   CardContent, 
   Typography, 
   Grid, 
-  Chip, 
-  Stack,
   LinearProgress,
   useTheme
 } from '@mui/material';
@@ -66,7 +64,7 @@ export const TokenStats: React.FC = () => {
           {change >= 0 ? '+' : ''}{change}%
         </Typography>
         <Typography variant="body2" component="span" sx={{ ml: 0.5, color: 'text.secondary' }}>
-          {stats.tokensCreated.period}
+          cette semaine
         </Typography>
       </Box>
     );
@@ -77,14 +75,12 @@ export const TokenStats: React.FC = () => {
     title, 
     value, 
     change, 
-    period, 
     icon: Icon,
     color
   }: { 
     title: string; 
     value: string | number; 
     change: number; 
-    period: string;
     icon: React.ElementType;
     color: string;
   }) => (
@@ -125,7 +121,6 @@ export const TokenStats: React.FC = () => {
           title="Tokens Créés" 
           value={stats.tokensCreated.total} 
           change={stats.tokensCreated.change} 
-          period={stats.tokensCreated.period}
           icon={BoltIcon}
           color={theme.palette.primary.main}
         />
@@ -136,7 +131,6 @@ export const TokenStats: React.FC = () => {
           title="Tokens Actifs" 
           value={stats.activeTokens.total} 
           change={stats.activeTokens.change} 
-          period={stats.activeTokens.period}
           icon={FireIcon}
           color={theme.palette.secondary.main}
         />
@@ -147,7 +141,6 @@ export const TokenStats: React.FC = () => {
           title="Transactions" 
           value={stats.totalTransactions.total} 
           change={stats.totalTransactions.change} 
-          period={stats.totalTransactions.period}
           icon={PaidIcon}
           color={theme.palette.success.main}
         />

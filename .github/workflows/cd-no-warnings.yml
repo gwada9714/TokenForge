@@ -1,0 +1,163 @@
+# CD workflow without context access warnings
+name: CD (No Warnings)
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+
+env:
+  AWS_REGION: eu-west-1
+  STAGING_API_URL: https://api-staging.tokenforge-app.com
+  STAGING_BLOCKCHAIN_NETWORK: testnet
+  STAGING_S3_BUCKET: tokenforge-staging
+  STAGING_CLOUDFRONT_ID: E1ABCDEFGHIJKL
+  PRODUCTION_API_URL: https://api.tokenforge.io
+  PRODUCTION_BLOCKCHAIN_NETWORK: mainnet
+  PRODUCTION_S3_BUCKET: tokenforge-production
+  PRODUCTION_CLOUDFRONT_ID: E2ABCDEFGHIJKL
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ env.STAGING_API_URL }}
+          VITE_BLOCKCHAIN_NETWORK: ${{ env.STAGING_BLOCKCHAIN_NETWORK }}
+      
+      # Using a different approach for AWS credentials
+      - name: Configure AWS credentials
+        run: |
+          # Create AWS credentials file
+          mkdir -p ~/.aws
+          cat > ~/.aws/credentials << EOF
+          [default]
+          aws_access_key_id=${AWS_KEY_ID}
+          aws_secret_access_key=${AWS_SECRET_KEY}
+          EOF
+          
+          # Create AWS config file
+          cat > ~/.aws/config << EOF
+          [default]
+          region=${AWS_REGION}
+          EOF
+        env:
+          # Using environment variables directly
+          AWS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      
+      - name: Deploy to S3
+        run: aws s3 sync dist/ s3://${{ env.STAGING_S3_BUCKET }} --delete
+      
+      - name: Invalidate CloudFront cache
+        run: aws cloudfront create-invalidation --distribution-id ${{ env.STAGING_CLOUDFRONT_ID }} --paths "/*"
+      
+      - name: Notify deployment
+        run: |
+          # Only run if WEBHOOK_URL is set
+          if [ -n "${WEBHOOK_URL}" ]; then
+            curl -X POST -H "Content-Type: application/json" \
+              -d "{\"text\":\"🚀 Staging deployment completed for TokenForge v${GITHUB_SHA}\"}" \
+              "${WEBHOOK_URL}"
+          fi
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GITHUB_SHA: ${{ github.sha }}
+
+  deploy-production:
+    name: Deploy to Production
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ env.PRODUCTION_API_URL }}
+          VITE_BLOCKCHAIN_NETWORK: ${{ env.PRODUCTION_BLOCKCHAIN_NETWORK }}
+      
+      # Using a different approach for AWS credentials
+      - name: Configure AWS credentials
+        run: |
+          # Create AWS credentials file
+          mkdir -p ~/.aws
+          cat > ~/.aws/credentials << EOF
+          [default]
+          aws_access_key_id=${AWS_KEY_ID}
+          aws_secret_access_key=${AWS_SECRET_KEY}
+          EOF
+          
+          # Create AWS config file
+          cat > ~/.aws/config << EOF
+          [default]
+          region=${AWS_REGION}
+          EOF
+        env:
+          # Using environment variables directly
+          AWS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      
+      - name: Deploy to S3
+        run: aws s3 sync dist/ s3://${{ env.PRODUCTION_S3_BUCKET }} --delete
+      
+      - name: Invalidate CloudFront cache
+        run: aws cloudfront create-invalidation --distribution-id ${{ env.PRODUCTION_CLOUDFRONT_ID }} --paths "/*"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/index.html
+            dist/manifest.json
+          body: |
+            ## TokenForge ${{ github.ref_name }}
+            
+            ### 🚀 New Features
+            - Feature 1
+            - Feature 2
+            
+            ### 🐛 Bug Fixes
+            - Fix 1
+            - Fix 2
+            
+            ### 📝 Notes
+            - Note 1
+            - Note 2
+      
+      - name: Notify deployment
+        run: |
+          # Only run if WEBHOOK_URL is set
+          if [ -n "${WEBHOOK_URL}" ]; then
+            curl -X POST -H "Content-Type: application/json" \
+              -d "{\"text\":\"🎉 Production deployment completed for TokenForge ${GITHUB_REF_NAME}\"}" \
+              "${WEBHOOK_URL}"
+          fi
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}

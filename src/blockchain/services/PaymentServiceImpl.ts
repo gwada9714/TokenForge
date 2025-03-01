@@ -793,4 +793,65 @@ export class PaymentService implements IPaymentService {
         return 1; // Ethereum Mainnet
       case 'binance':
       case 'bsc':
-        return 56; // Binance
+        return 56; // Binance Smart Chain
+      case 'polygon':
+        return 137; // Polygon Mainnet
+      case 'avalanche':
+        return 43114; // Avalanche C-Chain
+      case 'solana':
+        return 0; // Solana n'utilise pas d'ID de chaîne numérique standard
+      case 'arbitrum':
+        return 42161; // Arbitrum One
+      default:
+        return 1; // Ethereum Mainnet par défaut
+    }
+  }
+
+  /**
+   * Récupère le nombre minimum de confirmations requis pour cette blockchain
+   * @returns Nombre de confirmations
+   */
+  private getMinConfirmations(): number {
+    switch (this.chainName.toLowerCase()) {
+      case 'ethereum':
+        return 12; // Ethereum nécessite plus de confirmations
+      case 'binance':
+      case 'bsc':
+        return 5; // BSC est plus rapide
+      case 'polygon':
+        return 5; // Polygon est rapide
+      case 'avalanche':
+        return 5; // Avalanche est rapide
+      case 'solana':
+        return 32; // Solana a des confirmations rapides mais nombreuses
+      case 'arbitrum':
+        return 5; // Arbitrum est rapide
+      default:
+        return 10; // Valeur par défaut
+    }
+  }
+
+  /**
+   * Récupère le temps estimé pour une transaction sur cette blockchain
+   * @returns Temps estimé en secondes
+   */
+  private getEstimatedTransactionTime(): number {
+    switch (this.chainName.toLowerCase()) {
+      case 'ethereum':
+        return 180; // ~3 minutes sur Ethereum
+      case 'binance':
+      case 'bsc':
+        return 45; // ~45 secondes sur BSC
+      case 'polygon':
+        return 30; // ~30 secondes sur Polygon
+      case 'avalanche':
+        return 30; // ~30 secondes sur Avalanche
+      case 'solana':
+        return 15; // ~15 secondes sur Solana
+      case 'arbitrum':
+        return 60; // ~1 minute sur Arbitrum
+      default:
+        return 120; // 2 minutes par défaut
+    }
+  }
+}
