@@ -1,0 +1,106 @@
+.payment-flow {
+  font-family: 'Roboto', sans-serif;
+}
+
+.payment-flow .MuiCard-root {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.payment-flow .MuiStepLabel-root {
+  font-weight: 500;
+}
+
+.payment-flow .currency-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.payment-flow .currency-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-flow .currency-item:hover {
+  border-color: #1976d2;
+  background-color: rgba(25, 118, 210, 0.04);
+}
+
+.payment-flow .currency-item.selected {
+  border-color: #1976d2;
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.payment-flow .currency-item img {
+  margin-right: 12px;
+}
+
+.payment-flow .badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.payment-flow .badge.native {
+  background-color: #4caf50;
+  color: white;
+}
+
+.payment-flow .badge.stablecoin {
+  background-color: #2196f3;
+  color: white;
+}
+
+.payment-flow .error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.payment-flow .crypto-amount {
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  margin-top: 12px;
+}
+
+.payment-flow .fees {
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  margin-top: 12px;
+}
+
+.payment-flow .payment-session {
+  margin-top: 20px;
+}
+
+.payment-flow .payment-status-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.payment-flow .tx-hash-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.payment-flow .tx-hash-input input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}

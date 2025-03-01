@@ -1,0 +1,145 @@
+.payment-example {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.payment-example h2 {
+  color: #333;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.payment-example h3 {
+  margin-top: 20px;
+  color: #555;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.blockchain-selection select,
+.amount-input input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.currency-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.currency-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.currency-item:hover {
+  background-color: #f5f5f5;
+}
+
+.currency-item.selected {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  color: white;
+}
+
+.badge.native {
+  background-color: #4caf50;
+}
+
+.badge.stablecoin {
+  background-color: #ff9800;
+}
+
+button {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #1976d2;
+}
+
+button:disabled {
+  background-color: #bdbdbd;
+  cursor: not-allowed;
+}
+
+.payment-session {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.payment-status-actions {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tx-hash-input {
+  display: flex;
+  gap: 10px;
+}
+
+.tx-hash-input input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.amount-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.amount-input span {
+  font-weight: bold;
+}
+
+.crypto-amount, .fees {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.fees h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
