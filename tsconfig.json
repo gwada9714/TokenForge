@@ -19,7 +19,13 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@core/*": ["src/core/*"],
+      "@features/*": ["src/features/*"],
+      "@shared/*": ["src/shared/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@router/*": ["src/router/*"],
+      "@store/*": ["src/store/*"]
     },
     "typeRoots": [
       "./node_modules/@types",

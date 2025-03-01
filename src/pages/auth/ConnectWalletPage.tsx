@@ -23,7 +23,6 @@ export const ConnectWalletPage: React.FC = () => {
         variant: 'error',
         autoHideDuration: 3000
       });
-      console.error('Erreur de connexion:', error);
     }
   });
 

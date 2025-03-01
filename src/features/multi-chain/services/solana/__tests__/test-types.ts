@@ -2,19 +2,23 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { Mock } from 'vitest';
 import { PaymentStatus } from '../../../payment/types/PaymentSession';
 
-export type MockFunction<T extends (...args: any) => any> = T & Mock;
+export type MockFunction<T> = T & Mock;
 
 export type MockedConnection = {
-  [K in keyof Connection]: Mock;
+  [K in keyof Connection]?: Mock;
 } & {
   rpcEndpoint: string;
   commitment: string;
+  getLatestBlockhash: Mock;
+  sendTransaction: Mock;
+  confirmTransaction: Mock;
+  getParsedAccountInfo?: Mock;
 };
 
 export interface MockKeypair extends Omit<Keypair, '_keypair' | 'secretKey'> {
   publicKey: PublicKey;
-  signTransaction: MockFunction<(transaction: any) => Promise<any>>;
-  signAllTransactions: MockFunction<(transactions: any[]) => Promise<any[]>>;
+  signTransaction: Mock<[unknown], Promise<unknown>>;
+  signAllTransactions: Mock<[unknown[]], Promise<unknown[]>>;
 }
 
 export interface MockedSessionService {

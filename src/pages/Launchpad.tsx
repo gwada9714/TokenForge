@@ -7,8 +7,8 @@ import {
   Tab,
   Grid,
 } from '@mui/material';
-import { CreatePool } from '../components/Launchpad/CreatePool';
-import { LaunchpadPool } from '../components/Launchpad/LaunchpadPool';
+import { CreatePool } from '../components/features/launchpad/CreatePool';
+import { LaunchpadPool } from '../components/features/launchpad/LaunchpadPool';
 import { useContractRead } from 'wagmi';
 import { useNetwork } from '../hooks/useNetwork';
 import { getContractAddress } from '../config/contracts';
@@ -24,7 +24,6 @@ const LaunchpadPage: React.FC = () => {
     address: getContractAddress('LAUNCHPAD', chainId) || undefined,
     abi: launchpadABI,
     functionName: 'getPoolCount',
-    watch: true,
   });
 
   // Create array of pool IDs

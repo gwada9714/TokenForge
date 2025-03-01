@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-;
+
 import { AlertForm } from '../AlertForm';
 
 describe('AlertForm', () => {

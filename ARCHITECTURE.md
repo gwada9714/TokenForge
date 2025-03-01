@@ -1,13 +1,20 @@
 # Architecture TokenForge
 
 ## Structure du Projet
-- `/src/features/` - Fonctionnalités principales
-- `/src/components/` - Composants réutilisables
-- `/src/utils/` - Utilitaires et helpers
 - `/src/core/` - Services et configurations core
-- `/src/core/logger` - Système de logging centralisé
-- `/src/core/monitoring` - Service de monitoring
-- `/src/hooks` - React Hooks personnalisés
+  - `/src/core/auth/` - Service d'authentification centralisé
+  - `/src/core/web3/` - Service Web3 centralisé
+  - `/src/core/logger/` - Système de logging centralisé
+  - `/src/core/monitoring/` - Service de monitoring
+- `/src/features/` - Fonctionnalités principales organisées par domaine
+- `/src/shared/` - Composants et utilitaires partagés
+  - `/src/shared/components/` - Composants UI réutilisables
+  - `/src/shared/hooks/` - Hooks React partagés
+  - `/src/shared/utils/` - Fonctions utilitaires
+  - `/src/shared/types/` - Types TypeScript partagés
+- `/src/layouts/` - Layouts de l'application
+- `/src/router/` - Configuration du routeur
+- `/src/store/` - État global (Redux)
 
 ## Patterns & Conventions
 - Utiliser les imports absolus avec alias (@/)
@@ -18,6 +25,12 @@
 - Gestion centralisée des erreurs Redux
 - Persistence des logs dans localStorage
 - Monitoring centralisé des métriques
+
+## Organisation du Code
+- **Core Services**: Services fondamentaux de l'application (auth, web3, logging)
+- **Features**: Modules fonctionnels organisés par domaine métier
+- **Shared**: Composants et utilitaires partagés entre les features
+- **Hooks**: Logique réutilisable encapsulée dans des hooks React
 
 ## Sécurité
 - CSP avec nonces pour tous les scripts

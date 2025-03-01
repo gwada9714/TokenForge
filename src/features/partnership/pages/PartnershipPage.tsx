@@ -7,12 +7,12 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import GroupIcon from '@mui/icons-material/Group';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
-const StyledSection = styled('section')(({ theme }) => ({
-  padding: theme.spacing(8, 0),
-  backgroundColor: theme.palette.background.default,
+const StyledSection = styled('section')(({ theme: muiTheme }) => ({
+  padding: muiTheme.spacing(8, 0),
+  backgroundColor: muiTheme.palette.background.default,
 }));
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(() => ({
   height: '100%',
   textAlign: 'center',
   transition: 'transform 0.3s ease-in-out',
@@ -41,7 +41,7 @@ const benefits: Benefit[] = [
   {
     icon: <HandshakeIcon />,
     title: 'Collaboration Stratégique',
-    description: 'Accédez à notre réseau d\'experts et bénéficiez de conseils personnalisés pour votre projet.',
+    description: 'Accédez à notre réseau d&apos;experts et bénéficiez de conseils personnalisés pour votre projet.',
   },
   {
     icon: <MonetizationOnIcon />,
@@ -51,7 +51,7 @@ const benefits: Benefit[] = [
   {
     icon: <GroupIcon />,
     title: 'Communauté Privilégiée',
-    description: 'Rejoignez une communauté dynamique de professionnels et d\'entrepreneurs de la blockchain.',
+    description: 'Rejoignez une communauté dynamique de professionnels et d&apos;entrepreneurs de la blockchain.',
   },
   {
     icon: <TrendingUpIcon />,
@@ -60,41 +60,42 @@ const benefits: Benefit[] = [
   },
 ];
 
-const tiers = [
-  {
-    title: "Partenaire Standard",
-    price: "Gratuit",
-    features: [
-      "API de base",
-      "Support communautaire",
-      "5% de commission sur les revenus",
-      "Logo sur notre site"
-    ]
-  },
-  {
-    title: "Partenaire Premium",
-    price: "500 $TKN/mois",
-    features: [
-      "API complète",
-      "Support dédié",
-      "15% de commission sur les revenus",
-      "Logo mis en avant",
-      "Accès anticipé aux nouvelles fonctionnalités"
-    ]
-  },
-  {
-    title: "Partenaire Enterprise",
-    price: "Sur mesure",
-    features: [
-      "API personnalisée",
-      "Support prioritaire 24/7",
-      "Commission négociable",
-      "Co-marketing",
-      "Intégration personnalisée",
-      "Formation dédiée"
-    ]
-  }
-];
+// Uncomment when needed
+// const tiers = [
+//   {
+//     title: "Partenaire Standard",
+//     price: "Gratuit",
+//     features: [
+//       "API de base",
+//       "Support communautaire",
+//       "5% de commission sur les revenus",
+//       "Logo sur notre site"
+//     ]
+//   },
+//   {
+//     title: "Partenaire Premium",
+//     price: "500 $TKN/mois",
+//     features: [
+//       "API complète",
+//       "Support dédié",
+//       "15% de commission sur les revenus",
+//       "Logo mis en avant",
+//       "Accès anticipé aux nouvelles fonctionnalités"
+//     ]
+//   },
+//   {
+//     title: "Partenaire Enterprise",
+//     price: "Sur mesure",
+//     features: [
+//       "API personnalisée",
+//       "Support prioritaire 24/7",
+//       "Commission négociable",
+//       "Co-marketing",
+//       "Intégration personnalisée",
+//       "Formation dédiée"
+//     ]
+//   }
+// ];
 
 const PartnershipPage: React.FC = () => {
   return (
@@ -110,7 +111,7 @@ const PartnershipPage: React.FC = () => {
               Programme de Partenariat
             </Typography>
             <Typography variant="h5" color="textSecondary" paragraph>
-              Rejoignez TokenForge et développez votre activité dans l'écosystème blockchain
+              Rejoignez TokenForge et développez votre activité dans l&apos;écosystème blockchain
             </Typography>
             <Button
               variant="contained"
@@ -167,9 +168,9 @@ const PartnershipPage: React.FC = () => {
               Pourquoi devenir partenaire ?
             </Typography>
             <Typography variant="body1" color="textSecondary" paragraph>
-              En tant que partenaire TokenForge, vous bénéficiez d'un accès privilégié à notre technologie,
+              En tant que partenaire TokenForge, vous bénéficiez d&apos;un accès privilégié à notre technologie,
               notre expertise et notre réseau. Nous vous accompagnons dans le développement de votre activité
-              et vous offrons des conditions préférentielles sur l'ensemble de nos services.
+              et vous offrons des conditions préférentielles sur l&apos;ensemble de nos services.
             </Typography>
             <Button
               variant="outlined"
@@ -187,4 +188,4 @@ const PartnershipPage: React.FC = () => {
   );
 };
 
-export default PartnershipPage; 
+export default PartnershipPage;

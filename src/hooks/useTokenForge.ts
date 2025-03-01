@@ -1,15 +1,15 @@
-import { useMemo } from 'react';
-import { useContractWrite, useWaitForTransaction, useContractRead } from 'wagmi';
+import { useMemo, useState } from 'react';
+import { useContractRead, useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { keccak256, toUtf8Bytes } from 'ethers';
 import { parseEther, isAddress, formatEther } from 'viem';
 import TokenForgeFactoryJSON from '../contracts/abi/TokenForgeFactory.json';
 import TKNTokenJSON from '../contracts/abi/TKNToken.json';
 import { TokenForgePlansABI } from '../contracts/abis';
-import { useAccount } from 'wagmi';
-import { useNetwork } from '/useNetwork';
+import { useNetwork } from './useNetwork';
 import { sepolia } from 'wagmi/chains';
 import { toast } from 'react-hot-toast';
 import { getContractAddress } from '../config/contracts';
+import { logger } from '@/utils/logger';
 
 export const TokenForgeFactoryABI = TokenForgeFactoryJSON.abi;
 export const TKNTokenABI = TKNTokenJSON.abi;
@@ -30,8 +30,8 @@ export const useTokenForge = () => {
     try {
       const selectedAddress = getContractAddress('TOKEN_FACTORY', chainId);
       
-      console.log('Chain ID:', chainId);
-      console.log('Network Status:', {
+      logger.info('TokenForge', `Chain ID: ${chainId}`);
+      logger.info('TokenForge', 'Network Status:', {
         isConnected,
         chainName: chain?.name,
         chainId: chain?.id,
@@ -40,13 +40,13 @@ export const useTokenForge = () => {
       });
       
       if (!isAddress(selectedAddress)) {
-        console.error('Adresse de factory invalide pour le réseau:', chainId);
+        logger.error('TokenForge', `Adresse de factory invalide pour le réseau: ${chainId}`);
         return undefined;
       }
       
       return selectedAddress;
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'adresse du factory:', error);
+      logger.error('TokenForge', 'Erreur lors de la récupération de l\'adresse du factory:', error);
       return undefined;
     }
   }, [chainId, chain, isConnected, address]);
@@ -55,10 +55,15 @@ export const useTokenForge = () => {
     try {
       return getContractAddress('TOKEN_FORGE_PLANS', chainId);
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'adresse des plans:', error);
+      logger.error('TokenForge', 'Erreur lors de la récupération de l\'adresse des plans:', error);
       return undefined;
     }
   }, [chainId]);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
   // Lecture du plan actuel
   const { data: userPlanData } = useContractRead({
@@ -66,29 +71,19 @@ export const useTokenForge = () => {
     abi: TokenForgePlansABI,
     functionName: 'getUserPlan',
     args: address ? [address] : undefined,
-    enabled: !!address && !!plansAddress,
-  });
-
-  const { write: writeContract, data: createTokenData } = useContractWrite({
-    address: factoryAddress,
-    abi: TokenForgeFactoryABI,
-    functionName: 'createERC20',
-  });
-
-  const { isLoading, isSuccess } = useWaitForTransaction({
-    hash: createTokenData?.hash,
-    onSuccess: () => {
-      console.log('Token créé avec succès !');
-    },
-    onError: (error) => {
-      console.error('Erreur lors de la création du token:', error);
-    },
   });
 
   const createToken = async (params: TokenDeployParams) => {
     try {
-      if (!writeContract) {
-        throw new Error('Contract write not ready');
+      setIsLoading(true);
+      setIsSuccess(false);
+
+      if (!walletClient) {
+        throw new Error('Wallet non connecté');
+      }
+
+      if (!publicClient) {
+        throw new Error('Client public non disponible');
       }
 
       if (!factoryAddress) {
@@ -101,7 +96,7 @@ export const useTokenForge = () => {
 
       // Vérifier le plan de l'utilisateur
       const userPlan = userPlanData !== undefined ? Number(userPlanData) : null;
-      console.log('Plan de l\'utilisateur:', userPlan);
+      logger.info('TokenForge', `Plan de l'utilisateur: ${userPlan}`);
 
       if (userPlan === null || userPlan === 0) {
         throw new Error('Vous devez avoir un plan actif pour créer un token');
@@ -109,14 +104,13 @@ export const useTokenForge = () => {
 
       // Convertir initialSupply en BigInt avec 18 décimales
       const initialSupplyStr = String(params.initialSupply);
-      console.log('Initial supply (avant parseEther):', initialSupplyStr);
       
       let initialSupplyWei;
       try {
         initialSupplyWei = parseEther(initialSupplyStr);
-        console.log('Initial supply (après parseEther):', formatEther(initialSupplyWei), 'ETH');
+        logger.info('TokenForge', `Initial supply: ${formatEther(initialSupplyWei)} ETH`);
       } catch (error) {
-        console.error('Erreur lors de la conversion de initialSupply:', error);
+        logger.error('TokenForge', 'Erreur lors de la conversion de initialSupply', error);
         throw new Error('Montant initial invalide');
       }
 
@@ -124,7 +118,7 @@ export const useTokenForge = () => {
       const saltInput = `${params.name}${params.symbol}${initialSupplyStr}${Date.now()}`;
       const saltBytes = keccak256(toUtf8Bytes(saltInput));
 
-      console.log('Paramètres de création:', {
+      logger.info('TokenForge', 'Paramètres de création', {
         name: params.name,
         symbol: params.symbol,
         decimals: 18n,
@@ -136,7 +130,10 @@ export const useTokenForge = () => {
         userPlan
       });
 
-      await writeContract({
+      const hash = await walletClient.writeContract({
+        address: factoryAddress,
+        abi: TokenForgeFactoryABI,
+        functionName: 'createERC20',
         args: [
           params.name,
           params.symbol,
@@ -149,8 +146,14 @@ export const useTokenForge = () => {
       });
 
       toast.success('Transaction envoyée !');
+      
+      // Attendre la confirmation de la transaction
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      logger.info('TokenForge', 'Token créé avec succès !');
+      setIsSuccess(true);
+      return receipt;
     } catch (error) {
-      console.error('Erreur détaillée lors de la création du token:', error);
+      logger.error('TokenForge', 'Erreur détaillée lors de la création du token:', error);
       
       // Gestion spécifique des erreurs
       if (error instanceof Error) {
@@ -168,6 +171,8 @@ export const useTokenForge = () => {
       }
       
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 

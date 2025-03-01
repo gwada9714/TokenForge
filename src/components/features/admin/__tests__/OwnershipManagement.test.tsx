@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-;
+
 import OwnershipManagement from '../OwnershipManagement';
 import { useContract } from '../../../../hooks/useContract';
 

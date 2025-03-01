@@ -1,9 +1,9 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, CircularProgress } from '@mui/material';
-import { useTokenForgeAdmin } from '../../hooks/useTokenForgeAdmin';
+import { useTokenForgeAdmin } from '@/hooks/useTokenForgeAdmin';
 import { Link as RouterLink } from 'react-router-dom';
-import { CustomConnectButton } from '../ConnectWallet/CustomConnectButton';
-import { NetworkStatus } from '../Network/NetworkStatus';
+import { CustomConnectButton } from '@/components/features/wallet/CustomConnectButton';
+import { NetworkStatus } from '@/components/Network/NetworkStatus';
 import { sepolia } from 'viem/chains';
 
 const Navigation: React.FC = () => {

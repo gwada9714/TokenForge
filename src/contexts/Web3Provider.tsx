@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 import { createContext, useContext, ReactNode, useEffect, useState } from "react";
 import { useAccount, useChainId } from "wagmi";
 

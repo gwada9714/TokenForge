@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-;
+
 import { AuditLogToolbar } from '../AuditLogToolbar';
 
 describe('AuditLogToolbar', () => {

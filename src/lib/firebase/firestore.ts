@@ -5,9 +5,6 @@ import {
   updateDoc, 
   serverTimestamp, 
   increment, 
-  query, 
-  where, 
-  getDocs,
   Firestore
 } from 'firebase/firestore';
 import { getFirebaseManager } from './services';
@@ -20,12 +17,12 @@ const LOG_CATEGORY = 'FirestoreService';
 let _db: Firestore | null = null;
 
 // Fonction pour obtenir l'instance Firestore
-async function getFirestore(): Promise<Firestore> {
+export async function getFirestore(): Promise<Firestore> {
   if (!_db) {
-    logger.debug(LOG_CATEGORY, { message: ' Initialisation de Firestore' });
+    logger.debug({ category: LOG_CATEGORY, message: ' Initialisation de Firestore' });
     const firebaseManager = await getFirebaseManager();
     _db = firebaseManager.db;
-    logger.info(LOG_CATEGORY, { message: ' Service Firestore initialis' });
+    logger.info({ category: LOG_CATEGORY, message: ' Service Firestore initialis' });
   }
   return _db;
 }
@@ -40,12 +37,14 @@ export const firestoreService = {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-      logger.debug(LOG_CATEGORY, { 
+      logger.debug({ 
+        category: LOG_CATEGORY,
         message: ' Profil utilisateur cr',
         userId 
       });
     } catch (error) {
-      logger.error(LOG_CATEGORY, { 
+      logger.error({ 
+        category: LOG_CATEGORY,
         message: ' Erreur lors de la cration du profil utilisateur',
         userId,
         error 
@@ -62,12 +61,14 @@ export const firestoreService = {
         ...data,
         updatedAt: serverTimestamp()
       });
-      logger.debug(LOG_CATEGORY, { 
+      logger.debug({ 
+        category: LOG_CATEGORY,
         message: ' Profil utilisateur mis jour',
         userId 
       });
     } catch (error) {
-      logger.error(LOG_CATEGORY, { 
+      logger.error({ 
+        category: LOG_CATEGORY,
         message: ' Erreur lors de la mise jour du profil utilisateur',
         userId,
         error 
@@ -84,12 +85,14 @@ export const firestoreService = {
         lastActivity: serverTimestamp(),
         activityCount: increment(1)
       });
-      logger.debug(LOG_CATEGORY, { 
+      logger.debug({ 
+        category: LOG_CATEGORY,
         message: ' Activit utilisateur mise jour',
         userId 
       });
     } catch (error) {
-      logger.error(LOG_CATEGORY, { 
+      logger.error({ 
+        category: LOG_CATEGORY,
         message: ' Erreur lors de la mise jour de lactivit utilisateur',
         userId,
         error 

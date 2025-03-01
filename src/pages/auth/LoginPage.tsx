@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { Container, Paper, Typography, Box, Link } from '@mui/material';
+import { Container, Paper, Typography, Box, Link, CircularProgress } from '@mui/material';
 import { Link as RouterLink, Navigate, useLocation } from 'react-router-dom';
 import { LoginForm } from '../../features/auth';
 import { useTokenForgeAuth } from '../../features/auth/hooks/useTokenForgeAuth';
 import { AuthError } from '../../features/auth/errors/AuthError';
 
 const LoginPage: React.FC = () => {
-  const { isFullyAuthenticated, login } = useTokenForgeAuth();
+  const { isAuthenticated, signIn } = useTokenForgeAuth();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/';
   const [error, setError] = useState<AuthError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  if (isFullyAuthenticated) {
+  if (isAuthenticated) {
     return <Navigate to={from} replace />;
   }
 
@@ -20,7 +20,7 @@ const LoginPage: React.FC = () => {
     setError(null);
     setIsLoading(true);
     try {
-      await login(email, password);
+      await signIn(email, password);
     } catch (err) {
       setError(err as AuthError);
     } finally {
@@ -47,6 +47,8 @@ const LoginPage: React.FC = () => {
             error={error}
             isLoading={isLoading}
           />
+          {isLoading && <CircularProgress data-testid='loading-spinner' />}
+          {error && <Typography color="error">{error.message}</Typography>}
           <Box sx={{ mt: 2, textAlign: 'center' }}>
             <Link component={RouterLink} to="/signup" variant="body2">
               Don't have an account? Sign Up

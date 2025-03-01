@@ -42,7 +42,6 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await switchChain({ chainId: sepolia.id });
       setError(null);
     } catch (err) {
-      console.error('Failed to switch network:', err);
       setError('NETWORK_SWITCH_ERROR');
     }
   };
@@ -74,7 +73,6 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setContractAddress(address as `0x${string}`);
         setError(null);
       } catch (err) {
-        console.error('Failed to load contract:', err);
         setError('CONTRACT_LOAD_ERROR');
       } finally {
         setIsLoading(false);

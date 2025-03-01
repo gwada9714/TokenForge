@@ -79,7 +79,7 @@ const TokenDetails = () => {
         setAmount('');
       }
     } catch (error) {
-      console.error('Erreur de transfert:', error);
+      // console.error('Erreur de transfert:', error);
     }
   };
 
@@ -188,7 +188,7 @@ const TokenDetails = () => {
                 setMintTo('');
                 setMintAmount('');
               } catch (error) {
-                console.error('Erreur de mint:', error);
+                // console.error('Erreur de mint:', error);
               }
             }} className="space-y-4">
               <div>
@@ -241,7 +241,7 @@ const TokenDetails = () => {
                 await burnTokens(burnAmount);
                 setBurnAmount('');
               } catch (error) {
-                console.error('Erreur de burn:', error);
+                // console.error('Erreur de burn:', error);
               }
             }} className="space-y-4">
               <div>

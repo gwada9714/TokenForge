@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { getDiagnostics, getFirebaseStatus } from '../config/firebase';
+import { getDiagnostics, getFirebaseStatus } from '@/config/firebase';
 
 interface DiagnosticPanelProps {
   onClose?: () => void;
 }
 
+interface FirebaseDiagnostics {
+  firebase?: {
+    initialized?: boolean;
+    currentUser?: unknown;
+    status?: string;
+    error?: unknown;
+  };
+  environment?: {
+    nodeEnv?: string;
+    hasApiKey?: boolean;
+    hasAuthDomain?: boolean;
+    hasProjectId?: boolean;
+  };
+  configPresent?: boolean;
+  emulatorsConfigured?: boolean;
+}
+
 export const FirebaseDiagnosticPanel: React.FC<DiagnosticPanelProps> = ({ onClose }) => {
-  const [diagnostics, setDiagnostics] = useState<any>(null);
+  const [diagnostics, setDiagnostics] = useState<FirebaseDiagnostics | null>(null);
   const [status, setStatus] = useState<string>('');
   const [error, setError] = useState<string>('');
 
@@ -15,7 +32,8 @@ export const FirebaseDiagnosticPanel: React.FC<DiagnosticPanelProps> = ({ onClos
       try {
         const diag = await getDiagnostics();
         setDiagnostics(diag);
-        setStatus(getFirebaseStatus());
+        const firebaseStatus = await getFirebaseStatus();
+        setStatus(JSON.stringify(firebaseStatus, null, 2));
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Une erreur inconnue est survenue');
       }
@@ -57,17 +75,20 @@ export const FirebaseDiagnosticPanel: React.FC<DiagnosticPanelProps> = ({ onClos
         <section>
           <h3 className="text-lg font-semibold mb-2">État des Services</h3>
           <div className="grid grid-cols-2 gap-4">
-            {Object.entries(diagnostics).map(([key, value]: [string, any]) => {
-              if (typeof value === 'object' && value.isInitialized !== undefined) {
-                return (
-                  <div key={key} className="p-3 bg-gray-50 rounded">
-                    <div className="font-medium">{key}</div>
-                    <div className={`text-sm ${value.isInitialized ? 'text-green-600' : 'text-red-600'}`}>
-                      {value.isInitialized ? 'Initialisé' : 'Non initialisé'}
+            {Object.entries(diagnostics).map(([key, value]: [string, unknown]) => {
+              if (typeof value === 'object' && value !== null) {
+                const serviceValue = value as { isInitialized?: boolean; error?: string };
+                if (serviceValue.isInitialized !== undefined) {
+                  return (
+                    <div key={key} className="p-3 bg-gray-50 rounded">
+                      <div className="font-medium">{key}</div>
+                      <div className={`text-sm ${serviceValue.isInitialized ? 'text-green-600' : 'text-red-600'}`}>
+                        {serviceValue.isInitialized ? 'Initialisé' : 'Non initialisé'}
+                      </div>
+                      {serviceValue.error && <div className="text-sm text-red-500">{serviceValue.error}</div>}
                     </div>
-                    {value.error && <div className="text-sm text-red-500">{value.error}</div>}
-                  </div>
-                );
+                  );
+                }
               }
               return null;
             })}

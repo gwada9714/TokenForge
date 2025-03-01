@@ -1,8 +1,9 @@
+// @ts-expect-error React is needed for JSX
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 import { navigationRoutes } from '@/router/routes';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/auth/hooks/useAuth';
 
 const SidebarContainer = styled.aside`
   width: 280px;
@@ -69,4 +70,4 @@ export function Sidebar() {
       </NavSection>
     </SidebarContainer>
   );
-} 
+}

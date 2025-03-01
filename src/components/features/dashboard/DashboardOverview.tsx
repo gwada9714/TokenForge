@@ -1,39 +1,35 @@
 import React from 'react';
-import { Grid, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography, Divider } from '@mui/material';
+import { DashboardStats } from './DashboardStats';
 
 interface DashboardOverviewProps {
-  totalTokens?: number;
-  activeStaking?: number;
-  totalValue?: string;
+  isLoading?: boolean;
+  stats?: {
+    tokensCreated?: number;
+    activeStaking?: number;
+    totalValue?: string;
+    userBalance?: string;
+  };
+  userName?: string;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
-  totalTokens = 0,
-  activeStaking = 0,
-  totalValue = '0'
+  isLoading = false,
+  stats,
+  userName = 'Utilisateur'
 }) => {
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={4}>
-        <Paper className="p-4">
-          <Typography variant="h6">Total Tokens</Typography>
-          <Typography variant="h4">{totalTokens}</Typography>
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Paper className="p-4">
-          <Typography variant="h6">Active Staking</Typography>
-          <Typography variant="h4">{activeStaking}</Typography>
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Paper className="p-4">
-          <Typography variant="h6">Total Value</Typography>
-          <Typography variant="h4">{totalValue}</Typography>
-        </Paper>
-      </Grid>
-    </Grid>
+    <Box sx={{ mb: 4 }}>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          Tableau de bord
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Bienvenue, {userName}. Voici un aperçu de votre activité sur TokenForge.
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+        <DashboardStats stats={stats} isLoading={isLoading} />
+      </Paper>
+    </Box>
   );
 };
-
-export default DashboardOverview; 

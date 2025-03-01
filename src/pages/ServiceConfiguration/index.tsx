@@ -131,7 +131,7 @@ export const ServiceConfiguration: React.FC = () => {
       await requestService(serviceType, config);
       navigate('/dashboard', { state: { message: 'Service configuré avec succès !' } });
     } catch (err) {
-      console.error('Erreur lors de la configuration du service:', err);
+      // console.error('Erreur lors de la configuration du service:', err);
     }
   };
 

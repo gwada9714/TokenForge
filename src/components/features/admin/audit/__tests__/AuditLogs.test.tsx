@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-;
+
 import { AuditLogs } from '../AuditLogs';
 import { useTokenForgeAdmin } from '../../../../../hooks/useTokenForgeAdmin';
 

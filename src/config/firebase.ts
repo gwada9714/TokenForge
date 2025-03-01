@@ -2,11 +2,26 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { logger } from '@/utils/logger';
-import { FIREBASE_CONFIG, LOG_CATEGORIES } from './constants';
+import { logger, LogLevel } from '@/utils/logger';
+// import admin from './firebaseAdmin'; // Commenter ou supprimer cette ligne si non nécessaire
 
-// Configuration Firebase
-export const firebaseConfig = {
+// Vérification des variables d'environnement
+const isDevelopment = import.meta.env.DEV;
+
+// En mode développement, utiliser des valeurs par défaut si les variables d'environnement ne sont pas définies
+if (!isDevelopment && (!process.env.VITE_FIREBASE_API_KEY || !process.env.VITE_FIREBASE_AUTH_DOMAIN || !process.env.VITE_FIREBASE_PROJECT_ID || !process.env.VITE_FIREBASE_STORAGE_BUCKET || !process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || !process.env.VITE_FIREBASE_APP_ID)) {
+  throw new Error('Les variables d\'environnement Firebase ne sont pas correctement configurées.');
+}
+
+// Configuration Firebase avec valeurs par défaut pour le développement
+export const firebaseConfig = isDevelopment ? {
+  apiKey: process.env.VITE_FIREBASE_API_KEY || 'dev-api-key',
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || 'dev-project.firebaseapp.com',
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'dev-project',
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || 'dev-project.appspot.com',
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+  appId: process.env.VITE_FIREBASE_APP_ID || '1:123456789:web:abcdef'
+} : {
   apiKey: process.env.VITE_FIREBASE_API_KEY,
   authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.VITE_FIREBASE_PROJECT_ID,
@@ -42,9 +57,9 @@ class FirebaseService {
       }
 
       this.initialized = true;
-      logger.info('Firebase initialized successfully', { category: 'Firebase' });
+      logger.info('Firebase initialized successfully', LogLevel.INFO);
     } catch (error) {
-      logger.error('Firebase initialization failed', { category: 'Firebase', error: error instanceof Error ? error : new Error(String(error)) });
+      logger.error('Firebase initialization failed', LogLevel.ERROR);
       throw error;
     }
   }

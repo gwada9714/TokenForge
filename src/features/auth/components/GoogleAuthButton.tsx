@@ -45,20 +45,20 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   size = 'medium',
   fullWidth = false,
 }) => {
-  const { session, isLoading, signInWithGoogle } = useFirebaseAuth();
+  const { user, isLoading, signInWithGoogle } = useFirebaseAuth();
 
   const handleClick = async () => {
-    if (!session) {
+    if (!user) {
       try {
         await signInWithGoogle();
       } catch (error) {
-        console.error('Failed to sign in with Google:', error);
+        // console.error('Failed to sign in with Google:', error);
       }
     }
   };
 
   // Ne pas afficher si déjà connecté
-  if (session) return null;
+  if (user) return null;
 
   return (
     <StyledButton

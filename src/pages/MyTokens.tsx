@@ -18,7 +18,7 @@ const MyTokens: React.FC = () => {
 
   const handleTokenAction = (tokenAddress: string) => {
     // Gérer les actions sur le token (ex: redirection vers la page de détails)
-    console.log('Token action:', tokenAddress);
+    // console.log('Token action:', tokenAddress);
   };
 
   if (loading) {

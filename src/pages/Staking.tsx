@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 import React from 'react';
 import { Container, Typography, Box, Alert } from '@mui/material';
 import { StakingPool } from '../components/Staking/StakingPool';

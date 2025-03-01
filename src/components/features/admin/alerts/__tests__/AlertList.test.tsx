@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-;
+
 import { AlertList } from '../AlertList';
 import type { AlertRule } from '../../../../../types/contracts';
 

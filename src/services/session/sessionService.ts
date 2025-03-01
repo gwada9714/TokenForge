@@ -1,7 +1,7 @@
 import { Auth, User } from 'firebase/auth';
-import { auth } from '@/config/firebase';
+import { auth, firebaseService } from '@/config/firebase';
 import { logger } from '@/utils/logger';
-import { LogEntry } from '@/types/logger';
+import { AUTH_CONFIG } from '@/config/constants';
 
 export enum SessionState {
   INITIALIZING = 'INITIALIZING',
@@ -10,17 +10,80 @@ export enum SessionState {
   ERROR = 'ERROR'
 }
 
-interface SessionLogEntry extends LogEntry {
-  userId?: string;
-}
-
 export class SessionService {
   private static instance: SessionService;
   private currentState: SessionState = SessionState.INITIALIZING;
   private auth: Auth;
+  private sessionTimeout: number | null = null;
+  private lastActivity: number = Date.now();
+  private readonly SESSION_CHECK_INTERVAL = 60 * 1000; // Vérifier l'activité toutes les minutes
+  private sessionCheckIntervalId: number | null = null;
 
   private constructor() {
     this.auth = auth;
+    this.setupSessionMonitoring();
+  }
+
+  /**
+   * Configure la surveillance de session pour détecter l'inactivité
+   */
+  private setupSessionMonitoring(): void {
+    // Écouter les événements d'activité utilisateur
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    activityEvents.forEach(event => {
+      window.addEventListener(event, () => this.updateLastActivity());
+    });
+    
+    // Démarrer l'intervalle de vérification de session
+    this.sessionCheckIntervalId = window.setInterval(() => {
+      this.checkSessionActivity();
+    }, this.SESSION_CHECK_INTERVAL);
+  }
+
+  /**
+   * Met à jour le timestamp de dernière activité
+   */
+  private updateLastActivity(): void {
+    this.lastActivity = Date.now();
+  }
+
+  /**
+   * Vérifie l'activité de la session et déconnecte l'utilisateur si inactif trop longtemps
+   */
+  private checkSessionActivity(): void {
+    if (this.currentState !== SessionState.AUTHENTICATED) {
+      return; // Ne vérifier que si l'utilisateur est authentifié
+    }
+    
+    const now = Date.now();
+    const inactiveTime = now - this.lastActivity;
+    
+    // Si inactif pendant plus longtemps que la durée de session configurée
+    if (inactiveTime > AUTH_CONFIG.SESSION_DURATION) {
+      logger.warn('Session', 'Session expirée en raison d\'inactivité', { 
+        inactiveTime, 
+        threshold: AUTH_CONFIG.SESSION_DURATION 
+      });
+      
+      // Déconnecter l'utilisateur
+      this.endSession().catch(error => {
+        logger.error('Session', 'Erreur lors de la terminaison de session pour inactivité', 
+          error instanceof Error ? error : new Error(String(error))
+        );
+      });
+    }
+  }
+
+  /**
+   * Nettoie les ressources de surveillance de session
+   * Appelé lors de la destruction du service
+   */
+  private cleanupSessionMonitoring(): void {
+    if (this.sessionCheckIntervalId !== null) {
+      window.clearInterval(this.sessionCheckIntervalId);
+      this.sessionCheckIntervalId = null;
+    }
   }
 
   public static getInstance(): SessionService {
@@ -37,49 +100,99 @@ export class SessionService {
   async startSession(): Promise<void> {
     try {
       this.currentState = SessionState.INITIALIZING;
+      
+      // S'assurer que Firebase est initialisé
+      if (!firebaseService.isInitialized()) {
+        await firebaseService.initialize();
+      }
+      
       const user: User | null = this.auth.currentUser;
 
       if (!user) {
         this.currentState = SessionState.UNAUTHENTICATED;
-        logger.info({
-          message: 'Session non authentifiée',
-          category: 'Session'
-        } as SessionLogEntry);
+        logger.info('Session', 'Session non authentifiée');
         return;
       }
 
+      // Vérifier la validité du token
+      try {
+        await user.getIdToken(true);
+      } catch (error) {
+        logger.error('Session', 'Token invalide lors du démarrage de la session', 
+          error instanceof Error ? error : new Error(String(error))
+        );
+        this.currentState = SessionState.ERROR;
+        throw error;
+      }
+
       this.currentState = SessionState.AUTHENTICATED;
-      logger.info({
-        message: 'Session démarrée avec succès',
-        category: 'Session',
-        userId: user.uid
-      } as SessionLogEntry);
+      this.updateLastActivity(); // Mettre à jour le timestamp d'activité
+      
+      logger.info('Session', 'Session démarrée avec succès', { userId: user.uid });
     } catch (error) {
       this.currentState = SessionState.ERROR;
-      logger.error({
-        message: 'Erreur lors du démarrage de la session',
-        category: 'Session',
-        error: error instanceof Error ? error : new Error(String(error))
-      });
+      logger.error('Session', 'Erreur lors du démarrage de la session', 
+        error instanceof Error ? error : new Error(String(error))
+      );
       throw error;
     }
   }
 
   async endSession(): Promise<void> {
     try {
+      // Nettoyer tout timeout de session existant
+      if (this.sessionTimeout !== null) {
+        window.clearTimeout(this.sessionTimeout);
+        this.sessionTimeout = null;
+      }
+      
+      // Nettoyer les ressources de surveillance
+      this.cleanupSessionMonitoring();
+      
       await this.auth.signOut();
       this.currentState = SessionState.UNAUTHENTICATED;
-      logger.info({
-        message: 'Session terminée avec succès',
-        category: 'Session'
-      } as SessionLogEntry);
+      logger.info('Session', 'Session terminée avec succès');
     } catch (error) {
-      logger.error({
-        message: 'Erreur lors de la terminaison de la session',
-        category: 'Session',
-        error: error instanceof Error ? error : new Error(String(error))
-      });
+      logger.error('Session', 'Erreur lors de la terminaison de la session', 
+        error instanceof Error ? error : new Error(String(error))
+      );
       throw error;
     }
   }
-} 
+
+  /**
+   * Prolonge la session actuelle en mettant à jour le timestamp d'activité
+   */
+  public extendSession(): void {
+    if (this.currentState === SessionState.AUTHENTICATED) {
+      this.updateLastActivity();
+      logger.debug('Session', 'Session prolongée');
+    }
+  }
+
+  /**
+   * Vérifie si la session est active et valide
+   */
+  public async validateSession(): Promise<boolean> {
+    if (this.currentState !== SessionState.AUTHENTICATED) {
+      return false;
+    }
+
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        this.currentState = SessionState.UNAUTHENTICATED;
+        return false;
+      }
+
+      // Vérifier la validité du token
+      await user.getIdToken(false); // Ne pas forcer le rafraîchissement
+      return true;
+    } catch (error) {
+      logger.error('Session', 'Erreur lors de la validation de la session', 
+        error instanceof Error ? error : new Error(String(error))
+      );
+      return false;
+    }
+  }
+}

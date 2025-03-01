@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/auth/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface PublicGuardProps {
@@ -21,4 +21,4 @@ export function PublicGuard({ children }: PublicGuardProps) {
   }
 
   return <>{children}</>;
-} 
+}

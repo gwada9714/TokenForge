@@ -54,7 +54,6 @@ const initializeProvider = () => {
     const provider = window.ethereum;
     
     provider.on('disconnect', (error: Error) => {
-      console.error('MetaMask disconnect:', error);
       // Attendre un peu avant de recharger pour laisser le temps aux états de se mettre à jour
       setTimeout(() => window.location.reload(), 3000);
     });
@@ -65,7 +64,6 @@ const initializeProvider = () => {
 
     provider.on('accountsChanged', (accounts: string[]) => {
       if (accounts.length === 0) {
-        console.log('Please connect to MetaMask.');
         // Tentative de reconnexion automatique
         if (window.ethereum?.request) {
           window.ethereum.request({ method: 'eth_requestAccounts' })

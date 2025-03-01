@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import React, { useState } from 'react';
+import { useAuth } from '@/auth/hooks/useAuth';
 
 export const Login = () => {
-  const { login, error, loading } = useAuth();
+  const { login, authError, isLoading } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(formData.email, formData.password);
+    await login({ email: formData.email, password: formData.password });
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && <div className="error">{error.message}</div>}
+      {authError && <div className="error">{authError.message}</div>}
       <input
         type="email"
         value={formData.email}
@@ -27,8 +27,8 @@ export const Login = () => {
         placeholder="Mot de passe"
         required
       />
-      <button type="submit" disabled={loading}>
-        {loading ? 'Connexion...' : 'Se connecter'}
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Connexion...' : 'Se connecter'}
       </button>
     </form>
   );

@@ -38,7 +38,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     try {
       await onSubmit(email, password);
     } catch (err) {
-      console.error('Login error:', err);
+      // console.error('Login error:', err);
     }
   };
 

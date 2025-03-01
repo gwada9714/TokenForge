@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-;
+
 import AlertsManagement from '../AlertsManagement';
 import { useContract } from '../../../../hooks/useContract';
 

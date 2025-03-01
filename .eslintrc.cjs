@@ -15,15 +15,18 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:react/recommended'
+    'plugin:react/recommended',
+    'plugin:react/jsx-runtime' // Add this line to support the new JSX transform
   ],
   plugins: [
     '@typescript-eslint',
     'react'
   ],
   rules: {
-    'no-console': 'warn',
-    '@typescript-eslint/explicit-module-boundary-types': 'off'
+    'no-console': 'off', // Changed from 'warn' to 'off' to allow console statements in development
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    'react/jsx-uses-vars': 'error',
+    'react/jsx-uses-react': 'error' // Added back to fix 'React is defined but never used' errors
   },
   settings: {
     react: {

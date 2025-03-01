@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-;
+
 import { AuditLogList } from '../AuditLogList';
 import type { AuditLog } from '../../../../../types/contracts';
 

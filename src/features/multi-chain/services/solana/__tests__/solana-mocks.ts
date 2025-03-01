@@ -5,13 +5,13 @@ import { MockedConnection } from './test-types';
 // Mock de wallet avec les bonnes signatures
 export const mockWallet = {
   publicKey: new PublicKey('mock-wallet-pubkey'),
-  sign: vi.fn().mockImplementation((transaction: any) => {
+  sign: vi.fn().mockImplementation((transaction: unknown) => {
     return Promise.resolve(transaction);
   }),
-  signTransaction: vi.fn().mockImplementation((transaction: any) => {
+  signTransaction: vi.fn().mockImplementation((transaction: unknown) => {
     return Promise.resolve(transaction);
   }),
-  signAllTransactions: vi.fn().mockImplementation((transactions: any[]) => {
+  signAllTransactions: vi.fn().mockImplementation((transactions: unknown[]) => {
     return Promise.resolve(transactions);
   })
 } as unknown as Keypair;

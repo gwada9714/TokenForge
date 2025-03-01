@@ -50,7 +50,6 @@ export const CreateTokenForm: React.FC = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Une erreur est survenue';
       setError(errorMessage);
-      console.error('Erreur lors de la création du token:', err);
     } finally {
       setSubmitting(false);
     }

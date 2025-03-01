@@ -4,10 +4,13 @@ import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
 
 export const LoginPage: React.FC = () => {
   const { login } = useTokenForgeAuth();
+  const { error } = useTokenForgeAuth();
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Implémentation à venir
+    const email = event.currentTarget.email.value;
+    const password = event.currentTarget.password.value;
+    await login(email, password);
   };
 
   return (
@@ -47,6 +50,7 @@ export const LoginPage: React.FC = () => {
               Se connecter
             </Button>
           </Box>
+          {error && <div className="error">{error.message}</div>}
         </Paper>
       </Box>
     </Container>

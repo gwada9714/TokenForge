@@ -131,6 +131,4 @@ async function startApp() {
 // Start the application only in browser environment
 if (typeof window !== 'undefined') {
   startApp();
-} else {
-  console.error('Unsupported environment: window is not defined');
 }

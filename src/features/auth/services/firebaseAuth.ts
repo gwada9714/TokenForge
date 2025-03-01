@@ -39,7 +39,7 @@ class FirebaseAuth {
       return result;
     } catch (error) {
       logger.error({ message: 'Échec de la connexion', error, email });
-      throw error;
+      throw new Error('Échec de la connexion : ' + error.message);
     }
   }
 

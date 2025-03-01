@@ -69,20 +69,13 @@ const CreateToken = () => {
         return;
       }
 
-      const features = [
-        ...(formData.isMintable ? ['mintable'] : []),
-        ...(formData.isBurnable ? ['burnable'] : []),
-        ...(formData.isPausable ? ['pausable'] : []),
-        ...(formData.hasPermit ? ['permit'] : []),
-        ...(formData.hasVotes ? ['votes'] : []),
-      ];
-
       const deployPromise = deployToken({
         name: formData.name,
         symbol: formData.symbol.toUpperCase(),
         initialSupply: formData.initialSupply,
         decimals: parseInt(formData.decimals),
-        features,
+        isMintable: formData.isMintable,
+        isBurnable: formData.isBurnable,
       });
 
       await toast.promise(deployPromise, {
@@ -93,7 +86,6 @@ const CreateToken = () => {
 
       navigate('/dashboard');
     } catch (error) {
-      console.error('Error deploying token:', error);
       toast.error('Une erreur est survenue lors du déploiement');
     }
   };
@@ -214,13 +206,6 @@ const CreateToken = () => {
                 symbol: formData.symbol,
                 decimals: parseInt(formData.decimals),
                 totalSupply: formData.initialSupply,
-                features: [
-                  ...(formData.isMintable ? ['mintable'] : []),
-                  ...(formData.isBurnable ? ['burnable'] : []),
-                  ...(formData.isPausable ? ['pausable'] : []),
-                  ...(formData.hasPermit ? ['permit'] : []),
-                  ...(formData.hasVotes ? ['votes'] : []),
-                ],
               }}
             />
           </Box>
@@ -233,13 +218,6 @@ const CreateToken = () => {
               symbol: formData.symbol,
               decimals: parseInt(formData.decimals),
               totalSupply: formData.initialSupply,
-              features: [
-                ...(formData.isMintable ? ['mintable'] : []),
-                ...(formData.isBurnable ? ['burnable'] : []),
-                ...(formData.isPausable ? ['pausable'] : []),
-                ...(formData.hasPermit ? ['permit'] : []),
-                ...(formData.hasVotes ? ['votes'] : []),
-              ],
             }}
           />
         );

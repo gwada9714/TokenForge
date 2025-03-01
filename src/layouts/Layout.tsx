@@ -1,10 +1,11 @@
+// @ts-expect-error React is needed for JSX
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { Navbar, NAVBAR_HEIGHT } from '../components/layouts/main/Navbar';
 import { Footer } from '@/components/Footer';
 import { Sidebar } from '@/components/Sidebar';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/auth/hooks/useAuth';
 
 export const Layout = () => {
   const { isAuthenticated } = useAuth();
@@ -65,4 +66,4 @@ export const Layout = () => {
       </Box>
     </Box>
   );
-}; 
+};

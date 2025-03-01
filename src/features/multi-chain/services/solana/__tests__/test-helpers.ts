@@ -1,30 +1,28 @@
 import { vi } from 'vitest';
-import { PublicKey } from '@solana/web3.js';
-import { PaymentNetwork, PaymentStatus } from '../../payment/types/PaymentSession';
+import { PaymentNetwork, PaymentSession } from '../../payment/types/PaymentSession';
 import { PaymentSessionService } from '../../payment/PaymentSessionService';
 import { RECEIVER_STR } from './test-constants';
 import { MockedConnection } from './test-types';
 
 export interface TestContext {
-  service: any;
+  service: unknown;
   sessionService: PaymentSessionService;
   connection: MockedConnection;
-  wallet: any;
+  wallet: unknown;
 }
 
-export function createTestSession(overrides = {}) {
+export function createTestSession(overrides = {}): PaymentSession {
   return {
     id: 'test-session-id',
     userId: 'test-user-id',
     amount: BigInt(1000000),
     token: {
-      address: new PublicKey(RECEIVER_STR),
-      network: PaymentNetwork.SOLANA,
+      address: RECEIVER_STR,
       symbol: 'USDC',
       decimals: 6
     },
     serviceType: 'TEST_SERVICE',
-    status: PaymentStatus.PENDING,
+    status: 'PENDING',
     network: PaymentNetwork.SOLANA,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -36,11 +34,11 @@ export function createTestSession(overrides = {}) {
 
 export function mockSessionService(sessionService: PaymentSessionService) {
   const mockSession = createTestSession();
-  const confirmedSession = createTestSession({ status: PaymentStatus.CONFIRMED });
+  const confirmedSession = createTestSession({ status: 'COMPLETED' });
   
   vi.spyOn(sessionService, 'createSession').mockResolvedValue(mockSession);
   vi.spyOn(sessionService, 'getSession').mockResolvedValue(mockSession);
-  vi.spyOn(sessionService, 'updateSessionStatus').mockResolvedValue(confirmedSession);
+  vi.spyOn(sessionService, 'updateSessionStatus').mockResolvedValue();
   
   return {
     mockSession,

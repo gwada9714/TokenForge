@@ -7,12 +7,19 @@ export interface TokenConfig {
   initialSupply: bigint;
   mintable: boolean;
   burnable: boolean;
-  pausable: boolean;
-  taxConfig: {
+  pausable?: boolean;
+  blacklist?: boolean;
+  customTaxPercentage?: number;
+  taxConfig?: {
     enabled: boolean;
     buyTax: number;
     sellTax: number;
     transferTax: number;
+  };
+  antiWhale?: {
+    enabled: boolean;
+    maxTransactionPercentage: number;
+    maxWalletPercentage: number;
   };
 }
 
@@ -38,4 +45,4 @@ export interface TokenDeploymentOptions {
   chain: string;
   verifyContract?: boolean;
   deployerAddress?: Address;
-} 
+}
