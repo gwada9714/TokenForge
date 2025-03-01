@@ -1,13 +1,13 @@
 // src/components/features/token/components/MyTokens.tsx
 import React from 'react';
 import { useAccount } from 'wagmi';
-import { useTokenData } from '../../hooks/useTokenData';
+import { useTokenData } from '../hooks/useTokenData';
 import { useTransaction } from '../../../../hooks/useTransaction';
 import { useErrorHandler } from '../../../../hooks/useErrorHandler';
-import { TokenCard } from '../TokenCard/TokenCard';
+import { TokenCard } from '../../token/TokenCard/TokenCard';
 import LoadingSpinner from '../../../common/LoadingSpinner';
 import ErrorMessage from '../../../common/ErrorMessage';
-import type { TokenInfo } from '../../../../services/tokenService';
+import type { TokenInfo } from '../hooks/useTokenData';
 
 const MyTokens = () => {
   const { address } = useAccount();

@@ -1,346 +1,330 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useWeb3 } from '../../../../contexts/Web3Context';
+import { useState, useEffect } from 'react';
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
+import { parseEther, formatEther } from 'viem';
+import type { Address } from 'viem';
 
-// Define the staking pool type
-export interface StakingPool {
-  id: string;
-  name: string;
-  token: {
-    address: string;
-    symbol: string;
-    decimals: number;
-  };
-  rewardToken: {
-    address: string;
-    symbol: string;
-    decimals: number;
-  };
-  totalStaked: string;
-  apr: number;
-  lockDuration: number; // in days
-  userStaked?: string;
-  userRewards?: string;
-  userUnlockTime?: number;
+interface StakingStats {
+  totalStaked: bigint;
+  apy: number;
+  stakersCount: number;
 }
 
-// Define the staking transaction type
-export interface StakingTransaction {
-  id: string;
-  type: 'stake' | 'unstake' | 'claim';
-  amount: string;
-  timestamp: number;
-  hash: string;
-  poolId: string;
-}
-
-// Define the hook return type
-interface UseStakingReturn {
-  pools: StakingPool[];
-  transactions: StakingTransaction[];
-  isLoading: boolean;
-  error: string | null;
-  stake: (poolId: string, amount: string) => Promise<boolean>;
-  unstake: (poolId: string, amount: string) => Promise<boolean>;
-  claimRewards: (poolId: string) => Promise<boolean>;
-  refreshPools: () => Promise<void>;
-}
-
-/**
- * Hook for interacting with staking pools
- * @returns Functions and state for staking
- */
-export const useStaking = (): UseStakingReturn => {
-  const { isConnected, account } = useWeb3();
-  const [pools, setPools] = useState<StakingPool[]>([]);
-  const [transactions, setTransactions] = useState<StakingTransaction[]>([]);
+export const useStaking = (stakingContractAddress: Address) => {
+  const [stakedAmount, setStakedAmount] = useState<bigint | null>(null);
+  const [pendingRewards, setPendingRewards] = useState<bigint | null>(null);
+  const [stakingStats, setStakingStats] = useState<StakingStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stakeAmount, setStakeAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
 
-  // Fetch staking pools
-  const fetchPools = useCallback(async (): Promise<void> => {
-    if (!isConnected || !account) {
-      setPools([]);
-      setTransactions([]);
-      return;
-    }
+  const { address } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
-    setIsLoading(true);
-    setError(null);
+  // Fonction pour récupérer les données de staking
+  const fetchStakingData = async () => {
+    if (!address || !publicClient || !stakingContractAddress) return;
 
     try {
-      // In a real implementation, this would fetch staking pools from the blockchain
-      // For now, we'll simulate some staking pools
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIsLoading(true);
+      setError(null);
 
-      const mockPools: StakingPool[] = [
-        {
-          id: '1',
-          name: 'TKN Staking Pool',
-          token: {
-            address: '0x' + '1'.repeat(40),
-            symbol: 'TKN',
-            decimals: 18
+      // Récupérer le montant staké par l'utilisateur
+      const stakedResult = await publicClient.readContract({
+        address: stakingContractAddress,
+        abi: [
+          {
+            inputs: [{ name: 'account', type: 'address' }],
+            name: 'balanceOf',
+            outputs: [{ name: '', type: 'uint256' }],
+            stateMutability: 'view',
+            type: 'function',
           },
-          rewardToken: {
-            address: '0x' + '1'.repeat(40),
-            symbol: 'TKN',
-            decimals: 18
-          },
-          totalStaked: '1000000',
-          apr: 12.5,
-          lockDuration: 30,
-          userStaked: '100',
-          userRewards: '5.2',
-          userUnlockTime: Date.now() / 1000 + 86400 * 15 // 15 days from now
-        },
-        {
-          id: '2',
-          name: 'LP Staking Pool',
-          token: {
-            address: '0x' + '2'.repeat(40),
-            symbol: 'LP',
-            decimals: 18
-          },
-          rewardToken: {
-            address: '0x' + '1'.repeat(40),
-            symbol: 'TKN',
-            decimals: 18
-          },
-          totalStaked: '500000',
-          apr: 25,
-          lockDuration: 90,
-          userStaked: '50',
-          userRewards: '3.8',
-          userUnlockTime: Date.now() / 1000 + 86400 * 45 // 45 days from now
-        }
-      ];
+        ],
+        functionName: 'balanceOf',
+        args: [address],
+      });
 
-      const mockTransactions: StakingTransaction[] = [
-        {
-          id: '1',
-          type: 'stake',
-          amount: '100',
-          timestamp: Date.now() / 1000 - 86400 * 15, // 15 days ago
-          hash: '0x' + '1'.repeat(64),
-          poolId: '1'
-        },
-        {
-          id: '2',
-          type: 'stake',
-          amount: '50',
-          timestamp: Date.now() / 1000 - 86400 * 45, // 45 days ago
-          hash: '0x' + '2'.repeat(64),
-          poolId: '2'
-        },
-        {
-          id: '3',
-          type: 'claim',
-          amount: '2.5',
-          timestamp: Date.now() / 1000 - 86400 * 7, // 7 days ago
-          hash: '0x' + '3'.repeat(64),
-          poolId: '1'
-        }
-      ];
+      setStakedAmount(stakedResult as bigint);
 
-      setPools(mockPools);
-      setTransactions(mockTransactions);
+      // Récupérer les récompenses en attente
+      const rewardsResult = await publicClient.readContract({
+        address: stakingContractAddress,
+        abi: [
+          {
+            inputs: [{ name: 'account', type: 'address' }],
+            name: 'earned',
+            outputs: [{ name: '', type: 'uint256' }],
+            stateMutability: 'view',
+            type: 'function',
+          },
+        ],
+        functionName: 'earned',
+        args: [address],
+      });
+
+      setPendingRewards(rewardsResult as bigint);
+
+      // Récupérer les statistiques globales
+      const totalStakedResult = await publicClient.readContract({
+        address: stakingContractAddress,
+        abi: [
+          {
+            inputs: [],
+            name: 'totalSupply',
+            outputs: [{ name: '', type: 'uint256' }],
+            stateMutability: 'view',
+            type: 'function',
+          },
+        ],
+        functionName: 'totalSupply',
+        args: [],
+      });
+
+      // Récupérer le taux de récompense (pour calculer l'APY)
+      const rewardRateResult = await publicClient.readContract({
+        address: stakingContractAddress,
+        abi: [
+          {
+            inputs: [],
+            name: 'rewardRate',
+            outputs: [{ name: '', type: 'uint256' }],
+            stateMutability: 'view',
+            type: 'function',
+          },
+        ],
+        functionName: 'rewardRate',
+        args: [],
+      });
+
+      // Calculer l'APY approximatif (ceci est une simplification)
+      const totalStaked = totalStakedResult as bigint;
+      const rewardRate = rewardRateResult as bigint;
+      
+      // APY = (rewardRate * 365 * 86400 * 100) / totalStaked
+      // (récompenses par seconde * secondes dans une année * 100) / total staké
+      const apy = totalStaked > 0n 
+        ? Number(formatEther(rewardRate * 365n * 86400n * 100n)) / Number(formatEther(totalStaked))
+        : 0;
+
+      // Récupérer le nombre de stakers (si disponible)
+      let stakersCount = 0;
+      try {
+        const countResult = await publicClient.readContract({
+          address: stakingContractAddress,
+          abi: [
+            {
+              inputs: [],
+              name: 'getStakersCount',
+              outputs: [{ name: '', type: 'uint256' }],
+              stateMutability: 'view',
+              type: 'function',
+            },
+          ],
+          functionName: 'getStakersCount',
+          args: [],
+        });
+        stakersCount = Number(countResult);
+      } catch {
+        // Cette fonction peut ne pas exister dans tous les contrats de staking
+        stakersCount = 0;
+      }
+
+      setStakingStats({
+        totalStaked,
+        apy,
+        stakersCount,
+      });
     } catch (err) {
-      console.error('Error fetching staking pools:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error('Error fetching staking data:', err);
+      setError('Erreur lors de la récupération des données de staking');
     } finally {
       setIsLoading(false);
     }
-  }, [isConnected, account]);
+  };
 
-  // Fetch pools on mount and when account changes
+  // Charger les données au montage et lorsque l'adresse change
   useEffect(() => {
-    fetchPools();
-  }, [fetchPools]);
+    fetchStakingData();
+    // Rafraîchir les données toutes les 30 secondes
+    const interval = setInterval(fetchStakingData, 30000);
+    return () => clearInterval(interval);
+  }, [address, stakingContractAddress, publicClient]);
 
-  // Stake tokens
-  const stake = useCallback(
-    async (poolId: string, amount: string): Promise<boolean> => {
-      if (!isConnected || !account) {
-        setError('Wallet not connected');
-        return false;
-      }
+  // Fonction pour staker des tokens
+  const stake = async (amount: string) => {
+    if (!walletClient || !address || !stakingContractAddress || !publicClient) {
+      setError('Wallet non connecté ou client non disponible');
+      return;
+    }
 
+    try {
       setIsLoading(true);
       setError(null);
 
-      try {
-        // In a real implementation, this would stake tokens in the pool
-        // For now, we'll simulate a successful stake
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      const amountInWei = parseEther(amount);
 
-        // Update the pool with the new stake
-        setPools((prevPools) =>
-          prevPools.map((pool) => {
-            if (pool.id === poolId) {
-              const userStaked = pool.userStaked
-                ? (parseFloat(pool.userStaked) + parseFloat(amount)).toString()
-                : amount;
-              return {
-                ...pool,
-                totalStaked: (parseFloat(pool.totalStaked) + parseFloat(amount)).toString(),
-                userStaked
-              };
-            }
-            return pool;
-          })
-        );
+      // Approuver le contrat de staking pour dépenser les tokens
+      const tokenAddress = await publicClient.readContract({
+        address: stakingContractAddress,
+        abi: [
+          {
+            inputs: [],
+            name: 'stakingToken',
+            outputs: [{ name: '', type: 'address' }],
+            stateMutability: 'view',
+            type: 'function',
+          },
+        ],
+        functionName: 'stakingToken',
+        args: [],
+      }) as Address;
 
-        // Add a new transaction
-        const newTransaction: StakingTransaction = {
-          id: Date.now().toString(),
-          type: 'stake',
-          amount,
-          timestamp: Date.now() / 1000,
-          hash: '0x' + Math.random().toString(16).substring(2) + '0'.repeat(40),
-          poolId
-        };
-        setTransactions((prev) => [newTransaction, ...prev]);
+      // Approuver le transfert
+      const approveHash = await walletClient.writeContract({
+        address: tokenAddress,
+        abi: [
+          {
+            inputs: [
+              { name: 'spender', type: 'address' },
+              { name: 'amount', type: 'uint256' },
+            ],
+            name: 'approve',
+            outputs: [{ name: '', type: 'bool' }],
+            stateMutability: 'nonpayable',
+            type: 'function',
+          },
+        ],
+        functionName: 'approve',
+        args: [stakingContractAddress, amountInWei],
+      });
 
-        return true;
-      } catch (err) {
-        console.error('Error staking tokens:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [isConnected, account]
-  );
+      await publicClient.waitForTransactionReceipt({ hash: approveHash });
 
-  // Unstake tokens
-  const unstake = useCallback(
-    async (poolId: string, amount: string): Promise<boolean> => {
-      if (!isConnected || !account) {
-        setError('Wallet not connected');
-        return false;
-      }
+      // Staker les tokens
+      const stakeHash = await walletClient.writeContract({
+        address: stakingContractAddress,
+        abi: [
+          {
+            inputs: [{ name: 'amount', type: 'uint256' }],
+            name: 'stake',
+            outputs: [],
+            stateMutability: 'nonpayable',
+            type: 'function',
+          },
+        ],
+        functionName: 'stake',
+        args: [amountInWei],
+      });
 
+      await publicClient.waitForTransactionReceipt({ hash: stakeHash });
+
+      // Rafraîchir les données
+      fetchStakingData();
+      setStakeAmount('');
+    } catch (err: any) {
+      console.error('Error staking tokens:', err);
+      setError(err.message || 'Erreur lors du staking');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fonction pour retirer des tokens
+  const withdraw = async (amount: string) => {
+    if (!walletClient || !address || !stakingContractAddress || !publicClient) {
+      setError('Wallet non connecté ou client non disponible');
+      return;
+    }
+
+    try {
       setIsLoading(true);
       setError(null);
 
-      try {
-        // In a real implementation, this would unstake tokens from the pool
-        // For now, we'll simulate a successful unstake
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      const amountInWei = parseEther(amount);
 
-        // Update the pool with the new unstake
-        setPools((prevPools) =>
-          prevPools.map((pool) => {
-            if (pool.id === poolId) {
-              const userStaked = pool.userStaked
-                ? Math.max(0, parseFloat(pool.userStaked) - parseFloat(amount)).toString()
-                : '0';
-              return {
-                ...pool,
-                totalStaked: Math.max(0, parseFloat(pool.totalStaked) - parseFloat(amount)).toString(),
-                userStaked
-              };
-            }
-            return pool;
-          })
-        );
+      // Retirer les tokens
+      const withdrawHash = await walletClient.writeContract({
+        address: stakingContractAddress,
+        abi: [
+          {
+            inputs: [{ name: 'amount', type: 'uint256' }],
+            name: 'withdraw',
+            outputs: [],
+            stateMutability: 'nonpayable',
+            type: 'function',
+          },
+        ],
+        functionName: 'withdraw',
+        args: [amountInWei],
+      });
 
-        // Add a new transaction
-        const newTransaction: StakingTransaction = {
-          id: Date.now().toString(),
-          type: 'unstake',
-          amount,
-          timestamp: Date.now() / 1000,
-          hash: '0x' + Math.random().toString(16).substring(2) + '0'.repeat(40),
-          poolId
-        };
-        setTransactions((prev) => [newTransaction, ...prev]);
+      await publicClient.waitForTransactionReceipt({ hash: withdrawHash });
 
-        return true;
-      } catch (err) {
-        console.error('Error unstaking tokens:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [isConnected, account]
-  );
+      // Rafraîchir les données
+      fetchStakingData();
+      setWithdrawAmount('');
+    } catch (err: any) {
+      console.error('Error withdrawing tokens:', err);
+      setError(err.message || 'Erreur lors du retrait');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Claim rewards
-  const claimRewards = useCallback(
-    async (poolId: string): Promise<boolean> => {
-      if (!isConnected || !account) {
-        setError('Wallet not connected');
-        return false;
-      }
+  // Fonction pour réclamer les récompenses
+  const claimRewards = async () => {
+    if (!walletClient || !address || !stakingContractAddress || !publicClient) {
+      setError('Wallet non connecté ou client non disponible');
+      return;
+    }
 
+    try {
       setIsLoading(true);
       setError(null);
 
-      try {
-        // In a real implementation, this would claim rewards from the pool
-        // For now, we'll simulate a successful claim
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Réclamer les récompenses
+      const claimHash = await walletClient.writeContract({
+        address: stakingContractAddress,
+        abi: [
+          {
+            inputs: [],
+            name: 'getReward',
+            outputs: [],
+            stateMutability: 'nonpayable',
+            type: 'function',
+          },
+        ],
+        functionName: 'getReward',
+        args: [],
+      });
 
-        // Get the pool and rewards
-        const pool = pools.find((p) => p.id === poolId);
-        if (!pool || !pool.userRewards) {
-          setError('Pool not found or no rewards available');
-          return false;
-        }
+      await publicClient.waitForTransactionReceipt({ hash: claimHash });
 
-        // Update the pool with the claimed rewards
-        setPools((prevPools) =>
-          prevPools.map((p) => {
-            if (p.id === poolId) {
-              return {
-                ...p,
-                userRewards: '0'
-              };
-            }
-            return p;
-          })
-        );
-
-        // Add a new transaction
-        const newTransaction: StakingTransaction = {
-          id: Date.now().toString(),
-          type: 'claim',
-          amount: pool.userRewards,
-          timestamp: Date.now() / 1000,
-          hash: '0x' + Math.random().toString(16).substring(2) + '0'.repeat(40),
-          poolId
-        };
-        setTransactions((prev) => [newTransaction, ...prev]);
-
-        return true;
-      } catch (err) {
-        console.error('Error claiming rewards:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [isConnected, account, pools]
-  );
-
-  // Refresh pools
-  const refreshPools = useCallback(async (): Promise<void> => {
-    await fetchPools();
-  }, [fetchPools]);
+      // Rafraîchir les données
+      fetchStakingData();
+    } catch (err: any) {
+      console.error('Error claiming rewards:', err);
+      setError(err.message || 'Erreur lors de la réclamation des récompenses');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return {
-    pools,
-    transactions,
+    stakedAmount,
+    pendingRewards,
+    stakingStats,
     isLoading,
     error,
     stake,
-    unstake,
+    withdraw,
     claimRewards,
-    refreshPools
+    stakeAmount,
+    setStakeAmount,
+    withdrawAmount,
+    setWithdrawAmount,
+    refreshData: fetchStakingData,
   };
 };

@@ -1,51 +1,51 @@
-import { toast } from 'react-hot-toast';
+import { useState, useCallback } from 'react';
 
-interface ErrorWithMessage {
+interface ErrorState {
+  isVisible: boolean;
   message: string;
 }
 
-function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof (error as Record<string, unknown>).message === 'string'
-  );
+interface UseErrorHandlerReturn {
+  error: ErrorState;
+  handleError: (error: unknown) => void;
+  clearError: () => void;
 }
 
-function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
-  if (isErrorWithMessage(maybeError)) return maybeError;
+export const useErrorHandler = (): UseErrorHandlerReturn => {
+  const [error, setError] = useState<ErrorState>({
+    isVisible: false,
+    message: '',
+  });
 
-  try {
-    return new Error(JSON.stringify(maybeError));
-  } catch {
-    return new Error(String(maybeError));
-  }
-}
-
-export function useErrorHandler() {
-  const handleError = (error: unknown) => {
-    const errorWithMessage = toErrorWithMessage(error);
+  const handleError = useCallback((err: unknown) => {
+    console.error('Error caught:', err);
     
-    // Personnalisation des messages d'erreur
-    let displayMessage = errorWithMessage.message;
+    let errorMessage = 'Une erreur est survenue';
     
-    if (displayMessage.includes('user rejected transaction')) {
-      displayMessage = 'Transaction rejetée par l\'utilisateur';
-    } else if (displayMessage.includes('insufficient funds')) {
-      displayMessage = 'Fonds insuffisants pour effectuer la transaction';
-    } else if (displayMessage.includes('nonce too low')) {
-      displayMessage = 'Erreur de nonce : veuillez rafraîchir votre page';
-    } else if (displayMessage.includes('gas required exceeds allowance')) {
-      displayMessage = 'Limite de gas dépassée';
+    if (err instanceof Error) {
+      errorMessage = err.message;
+    } else if (typeof err === 'string') {
+      errorMessage = err;
+    } else if (err && typeof err === 'object' && 'message' in err) {
+      errorMessage = String((err as { message: unknown }).message);
     }
+    
+    setError({
+      isVisible: true,
+      message: errorMessage,
+    });
+  }, []);
 
-    // Affichage de l'erreur
-    toast.error(displayMessage);
+  const clearError = useCallback(() => {
+    setError({
+      isVisible: false,
+      message: '',
+    });
+  }, []);
 
-    // Log pour le débogage
-    console.error('Error details:', error);
+  return {
+    error,
+    handleError,
+    clearError,
   };
-
-  return { handleError };
-}
+};
