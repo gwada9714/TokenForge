@@ -14,8 +14,8 @@ $insertPosition += "Polygon</Typography>".Length
 # Lire le contenu du fichier de complétion
 $completionContent = Get-Content -Path "src\components\layouts\main\Navbar.tsx.completion" -Raw
 
-# Créer le nouveau contenu
-$newContent = $navbarContent.Substring(0, $insertPosition) + $completionContent
+# Créer le nouveau contenu en conservant la partie après le point d'insertion
+$newContent = $navbarContent.Substring(0, $insertPosition) + $completionContent + $navbarContent.Substring($insertPosition)
 
 # Écrire le nouveau contenu dans un fichier temporaire
 $newContent | Set-Content -Path "src\components\layouts\main\Navbar.tsx.new" -Encoding UTF8

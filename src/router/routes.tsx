@@ -26,8 +26,8 @@ const Profile = lazy(() => import('@/features/auth/pages/ProfilePage').then(modu
 // 3. Création de Token
 const CreateToken = lazy(() => import('@/features/token/pages/CreateTokenPage').then(module => ({ default: module.CreateTokenPage })));
 const TokenTemplates = lazy(() => import('@/features/token/pages/TokenTemplatesPage').then(module => ({ default: module.TokenTemplatesPage })));
-const TokenomicsDesigner = lazy(() => import('@/features/token/pages/TokenonomicsDesignerPage').then(module => ({ default: module.TokenonomicsDesignerPage })));
-const AntiRugpullConfigurator = lazy(() => import('@/features/token/pages/AntiRugpullConfiguratorPage').then(module => ({ default: module.AntiRugpullConfiguratorPage })));
+const TokenomicsDesigner = lazy(() => import('@/features/tokenomics/pages/TokenomicsDesignerPage').then(module => ({ default: module.default })));
+const AntiRugpullConfigurator = lazy(() => import('@/features/token/pages/AntiRugpullConfiguratorPage').then(module => ({ default: module.default })));
 const LandingPageBuilder = lazy(() => import('@/features/token/pages/LandingPageBuilderPage').then(module => ({ default: module.LandingPageBuilderPage })));
 
 // 4. Gestion de Token

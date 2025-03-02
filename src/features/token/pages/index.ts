@@ -4,5 +4,5 @@ export * from './TokenTemplatesPage';
 export * from './TokenListPage';
 export * from './TokenDetailsPage';
 export * from './AntiRugpullConfiguratorPage';
-export * from './TokenonomicsDesignerPage';
+export * from './AutoLiquidityManagerPage';
 export * from './LandingPageBuilderPage';
