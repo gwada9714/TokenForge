@@ -13,9 +13,83 @@ import {
   Snackbar,
 } from "@mui/material";
 import { usePublicClient, useWalletClient } from "wagmi";
-import { TokenInfo } from "../../services/tokenService"; // Changé l'import
-import { validateAddress } from "../../utils/address";
-import { getTokenContract } from "../../services/contracts";
+import { validateAddress } from "../utils/address";
+
+// Define a simplified version of the getTokenContract function
+const getTokenContract = (address: `0x${string}`) => {
+  return {
+    address,
+    abi: [
+      {
+        constant: true,
+        inputs: [],
+        name: "name",
+        outputs: [{ name: "", type: "string" }],
+        type: "function",
+      },
+      {
+        constant: true,
+        inputs: [],
+        name: "symbol",
+        outputs: [{ name: "", type: "string" }],
+        type: "function",
+      },
+      {
+        constant: true,
+        inputs: [],
+        name: "decimals",
+        outputs: [{ name: "", type: "uint8" }],
+        type: "function",
+      },
+      {
+        constant: true,
+        inputs: [],
+        name: "totalSupply",
+        outputs: [{ name: "", type: "uint256" }],
+        type: "function",
+      },
+      {
+        constant: true,
+        inputs: [{ name: "_owner", type: "address" }],
+        name: "balanceOf",
+        outputs: [{ name: "balance", type: "uint256" }],
+        type: "function",
+      },
+      {
+        constant: false,
+        inputs: [
+          { name: "_to", type: "address" },
+          { name: "_value", type: "uint256" },
+        ],
+        name: "transfer",
+        outputs: [{ name: "", type: "bool" }],
+        type: "function",
+      },
+      {
+        inputs: [{ name: "amount", type: "uint256" }],
+        name: "mint",
+        outputs: [],
+        type: "function",
+      },
+      {
+        inputs: [{ name: "amount", type: "uint256" }],
+        name: "burn",
+        outputs: [],
+        type: "function",
+      }
+    ],
+  };
+};
+// Define TokenInfo interface locally since we can't import it
+interface TokenInfo {
+  name: string;
+  symbol: string;
+  address: string;
+  totalSupply: string;
+  balance?: string;
+  mintable?: boolean;
+  burnable?: boolean;
+}
 
 interface TokenOperationsProps {
   token: TokenInfo;

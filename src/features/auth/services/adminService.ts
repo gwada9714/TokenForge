@@ -1,7 +1,7 @@
 import { TokenForgeUser } from '../types';
 import { storageService } from './storageService';
 import { logService } from './logService';
-import { errorService } from './errorService';
+import { ErrorService } from './errorService';
 import { AuthErrorCode } from '../errors/AuthError';
 
 const LOG_CATEGORY = 'AdminService';
@@ -14,8 +14,8 @@ interface AdminRights {
 
 class AdminService {
   private static instance: AdminService;
-  
-  private constructor() {}
+
+  private constructor() { }
 
   static getInstance(): AdminService {
     if (!AdminService.instance) {
@@ -24,27 +24,51 @@ class AdminService {
     return AdminService.instance;
   }
 
+  /**
+   * Vérifie si un utilisateur a le statut d'administrateur
+   * @param userId Identifiant de l'utilisateur
+   * @returns true si l'utilisateur est administrateur, false sinon
+   */
+  async verifyAdminStatus(userId: string): Promise<boolean> {
+    try {
+      const userData = await storageService.getUserData(userId);
+      if (!userData) {
+        return false;
+      }
+
+      return userData.isAdmin || false;
+    } catch (error) {
+      logService.error(
+        LOG_CATEGORY,
+        'Failed to verify admin status',
+        error instanceof Error ? error : new Error(String(error)),
+        { userId }
+      );
+      return false;
+    }
+  }
+
   async getAdminRights(user: TokenForgeUser): Promise<AdminRights> {
     try {
       const storedData = await storageService.getUserData(user.uid);
       if (!storedData) {
-        throw errorService.createAuthError(
+        throw ErrorService.createAuthError(
           AuthErrorCode.USER_NOT_FOUND,
           'User data not found'
         );
       }
-      
+
       return {
         isAdmin: storedData.isAdmin || false,
         canCreateToken: storedData.canCreateToken || false,
         canUseServices: storedData.canUseServices || false
       };
     } catch (error) {
-      const authError = errorService.handleError(error);
+      // Gérer l'erreur et retourner des droits par défaut
       logService.error(
         LOG_CATEGORY,
         'Failed to get admin rights',
-        authError,
+        error instanceof Error ? error : new Error(String(error)),
         { userId: user.uid }
       );
       return {
@@ -62,7 +86,7 @@ class AdminService {
     try {
       const currentData = await storageService.getUserData(userId);
       if (!currentData) {
-        throw errorService.createAuthError(
+        throw ErrorService.createAuthError(
           AuthErrorCode.USER_NOT_FOUND,
           'User data not found'
         );
@@ -72,22 +96,21 @@ class AdminService {
         ...currentData,
         ...rights
       };
-      
+
       await storageService.updateUserData(userId, updatedData);
-      
+
       logService.info(LOG_CATEGORY, 'Admin rights updated', {
         userId,
         rights
       });
     } catch (error) {
-      const authError = errorService.handleError(error);
       logService.error(
         LOG_CATEGORY,
         'Failed to update admin rights',
-        authError,
+        error instanceof Error ? error : new Error(String(error)),
         { userId, rights }
       );
-      throw authError;
+      throw error;
     }
   }
 
@@ -103,28 +126,28 @@ class AdminService {
     if (!isAuthenticated) {
       return {
         canAccess: false,
-        reason: errorService.getLocalizedMessage(AuthErrorCode.USER_NOT_FOUND)
+        reason: 'Vous devez être connecté pour accéder à cette page'
       };
     }
 
     if (!isAdmin) {
       return {
         canAccess: false,
-        reason: errorService.getLocalizedMessage(AuthErrorCode.OPERATION_NOT_ALLOWED)
+        reason: 'Vous n\'avez pas les droits d\'administration nécessaires'
       };
     }
 
     if (!isConnected) {
       return {
         canAccess: false,
-        reason: errorService.getLocalizedMessage(AuthErrorCode.WALLET_NOT_FOUND)
+        reason: 'Vous devez connecter votre portefeuille'
       };
     }
 
     if (!isCorrectNetwork) {
       return {
         canAccess: false,
-        reason: errorService.getLocalizedMessage(AuthErrorCode.NETWORK_MISMATCH)
+        reason: 'Vous devez être connecté au bon réseau'
       };
     }
 

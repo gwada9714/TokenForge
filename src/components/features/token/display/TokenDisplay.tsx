@@ -1,5 +1,5 @@
 import React from 'react';
-import { shortenAddress } from '../../utils/address';
+import { shortenAddress } from '../utils/address';
 
 interface TokenInfo {
   name: string;
@@ -88,4 +88,4 @@ export const TokenDisplay: React.FC<TokenDisplayProps> = ({
       </div>
     </div>
   );
-}; 
+};

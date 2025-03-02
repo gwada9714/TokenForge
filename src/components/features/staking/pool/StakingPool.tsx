@@ -9,7 +9,7 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import { useStaking } from '../../hooks/useStaking';
+import { useStaking } from '../hooks/useStaking';
 import { formatEther } from 'ethers';
 import type { Address } from 'viem';
 import { useAccount } from 'wagmi';
@@ -21,7 +21,7 @@ interface StakingPoolProps {
 
 export const StakingPool: React.FC<StakingPoolProps> = ({ tokenAddress, tokenSymbol }) => {
   const { isConnected } = useAccount();
-  
+
   // Vérifier si l'adresse du token est valide
   if (tokenAddress === '0x0000000000000000000000000000000000000000') {
     return (

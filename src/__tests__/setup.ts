@@ -234,11 +234,16 @@ vi.mock('wagmi', () => ({
   useConnect: () => ({ connect: vi.fn(), connectors: [] })
 }));
 
-vi.mock('viem', () => ({
-  mainnet: { id: 1 },
-  polygon: { id: 137 },
-  http: () => ({})
-}));
+vi.mock('viem', async () => {
+  const actual = await vi.importActual('../../src/tests/mocks/viem');
+  return {
+    ...actual,
+    mainnet: { id: 1 },
+    polygon: { id: 137 },
+    sepolia: { id: 11155111 },
+    http: () => ({})
+  };
+});
 
 // Mock de Material-UI
 vi.mock('@mui/material', async () => {

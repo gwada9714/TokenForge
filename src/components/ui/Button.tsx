@@ -104,7 +104,7 @@ const getButtonStyles = (props: StyledButtonProps) => {
   };
 };
 
-const StyledButton = styled.button<StyledButtonProps>`
+export const StyledButton = styled.button<StyledButtonProps>`
   ${getButtonStyles}
 `;
 

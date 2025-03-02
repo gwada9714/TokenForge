@@ -10,8 +10,8 @@ export const mockPublicClient = {
   getBalance: vi.fn().mockResolvedValue(parseEther('10')),
   getGasPrice: vi.fn().mockResolvedValue(2000000000n), // 2 gwei
   getBlockNumber: vi.fn().mockResolvedValue(12345678n),
-  getTransaction: vi.fn().mockImplementation((hash) => {
-    if (hash.hash === '0xvalidtransactionhash') {
+  getTransaction: vi.fn().mockImplementation((params) => {
+    if (params.hash === '0xvalidtransactionhash') {
       return Promise.resolve({
         hash: '0xvalidtransactionhash',
         blockNumber: 1234567n,
@@ -20,6 +20,7 @@ export const mockPublicClient = {
     }
     return Promise.resolve(null);
   }),
+  verifyMessage: vi.fn().mockResolvedValue(true),
   estimateGas: vi.fn().mockResolvedValue(21000n),
 };
 

@@ -1,8 +1,9 @@
 import { BlockchainService } from '../services/BlockchainService';
 import { IPaymentService } from '../interfaces/IPaymentService';
 import { ITokenService } from '../interfaces/ITokenService';
-import { TokenConfig, DeploymentResult, TokenInfo, ValidationResult, LiquidityConfig, PaymentStatus } from '../types';
+import { TokenConfig, DeploymentResult, TokenInfo, ValidationResult, LiquidityConfig } from '../types';
 import { parseEther } from 'viem';
+import { PaymentInitParams, PaymentSession, PaymentStatus, LegacyPaymentStatus, CryptocurrencyInfo, FeeEstimate, CryptoAmount } from '../types/payment';
 
 /**
  * Service blockchain spécifique à Ethereum
@@ -30,7 +31,96 @@ export class EthereumPaymentService implements IPaymentService {
     this.blockchainService = new EthereumBlockchainService(walletProvider);
   }
 
-  async createPaymentSession(amount: bigint, currency: string): Promise<string> {
+  // Nouvelles méthodes de l'API
+  async initPaymentSession(params: PaymentInitParams): Promise<PaymentSession> {
+    // Implémentation de base
+    return {
+      sessionId: `eth-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      receivingAddress: '0x1234567890123456789012345678901234567890',
+      amountDue: {
+        amount: params.amount.toString(),
+        formatted: `${params.amount} ETH`,
+        valueEUR: params.amount * 2000 // Taux de conversion fictif
+      },
+      currency: {
+        symbol: 'ETH',
+        address: null,
+        name: 'Ethereum',
+        decimals: 18,
+        isNative: true,
+        isStablecoin: false,
+        logoUrl: 'https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/13c43/eth-diamond-black.png',
+        minAmount: 0.001
+      },
+      exchangeRate: 2000, // 1 ETH = 2000 EUR
+      expiresAt: Math.floor(Date.now() / 1000) + 3600, // Expire dans 1 heure (timestamp Unix)
+      chainId: 1, // Ethereum Mainnet
+      status: PaymentStatus.PENDING,
+      minConfirmations: 12
+    };
+  }
+
+  async checkPaymentStatus(_sessionId: string): Promise<PaymentStatus> {
+    // Implémentation de base - retourne simplement PENDING
+    return PaymentStatus.PENDING;
+  }
+
+  async confirmPayment(_sessionId: string, txHash: string): Promise<boolean> {
+    // Vérifier la transaction
+    return await this.verifyPayment(txHash);
+  }
+
+  async getSupportedCryptocurrencies(): Promise<CryptocurrencyInfo[]> {
+    // Liste des cryptomonnaies supportées
+    return [
+      {
+        symbol: 'ETH',
+        name: 'Ethereum',
+        decimals: 18,
+        address: null, // ETH natif
+        logoUrl: 'https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/13c43/eth-diamond-black.png',
+        isNative: true,
+        isStablecoin: false,
+        minAmount: 0.001
+      }
+    ];
+  }
+
+  async estimateTransactionFees(_amount: number, _currencyAddress: string | null): Promise<FeeEstimate> {
+    // Estimation des frais
+    const gasPrice = await this.blockchainService.getGasPrice();
+    const gasPriceGwei = Number(gasPrice) / 1e9;
+    const baseFee = gasPriceGwei * 21000 / 1e9;
+
+    return {
+      baseFee: {
+        amount: baseFee.toString(),
+        formatted: `${baseFee.toFixed(6)} ETH`,
+        valueEUR: baseFee * 2000 // Taux de conversion fictif
+      },
+      maxFee: {
+        amount: (baseFee * 1.2).toString(),
+        formatted: `${(baseFee * 1.2).toFixed(6)} ETH`,
+        valueEUR: baseFee * 1.2 * 2000 // Taux de conversion fictif
+      },
+      estimatedTimeSeconds: 60 // 1 minute
+    };
+  }
+
+  async convertEURtoCrypto(amountEUR: number, currencySymbol: string): Promise<CryptoAmount> {
+    // Conversion simple (à remplacer par une API de prix réelle)
+    const rate = currencySymbol === 'ETH' ? 2000 : 1; // 1 ETH = 2000 EUR
+    const amount = amountEUR / rate;
+
+    return {
+      amount: amount.toString(),
+      formatted: `${amount.toFixed(6)} ${currencySymbol}`,
+      valueEUR: amountEUR
+    };
+  }
+
+  // Méthodes de l'ancienne API
+  async createPaymentSession(_amount: bigint, _currency: string): Promise<string> {
     // Implémentation pour Ethereum
     // Génère un identifiant de session et stocke les détails de paiement
     const sessionId = `eth-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -38,7 +128,7 @@ export class EthereumPaymentService implements IPaymentService {
     return sessionId;
   }
 
-  async getPaymentStatus(sessionId: string): Promise<PaymentStatus> {
+  async getPaymentStatus(sessionId: string): Promise<LegacyPaymentStatus> {
     // Vérifie le statut du paiement
     return { status: 'pending', details: { sessionId } };
   }
@@ -46,13 +136,18 @@ export class EthereumPaymentService implements IPaymentService {
   async verifyPayment(transactionHash: string): Promise<boolean> {
     // Vérifier la transaction sur la blockchain
     const { publicClient } = this.blockchainService.getProvider();
-    const transaction = await publicClient.getTransaction({
-      hash: transactionHash as `0x${string}`,
-    });
-    return transaction !== null;
+    try {
+      const transaction = await publicClient.getTransaction({
+        hash: transactionHash as `0x${string}`,
+      });
+      return transaction !== null;
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      return false;
+    }
   }
 
-  async calculateFees(amount: bigint): Promise<bigint> {
+  async calculateFees(_amount: bigint): Promise<bigint> {
     // Calcul des frais basé sur le gas actuel
     const gasPrice = await this.blockchainService.getGasPrice();
     // Estimation basique, à affiner selon les besoins réels
@@ -77,7 +172,7 @@ export class EthereumTokenService implements ITokenService {
     // Logique de déploiement de token sur Ethereum
     // Utilise walletClient pour signer et envoyer la transaction
     const { walletClient } = this.blockchainService.getProvider();
-    
+
     if (!walletClient) {
       throw new Error('Wallet client not available for deployment');
     }
@@ -87,7 +182,7 @@ export class EthereumTokenService implements ITokenService {
     if (!accounts || accounts.length === 0) {
       throw new Error('No accounts available in wallet');
     }
-    
+
     // Exemple simplifié - à adapter selon la structure réelle du contrat
     const hash = await walletClient.deployContract({
       abi: this.tokenFactoryAbi,
@@ -108,7 +203,7 @@ export class EthereumTokenService implements ITokenService {
     };
   }
 
-  async getTokenInfo(tokenAddress: string): Promise<TokenInfo> {
+  async getTokenInfo(_tokenAddress: string): Promise<TokenInfo> {
     // Récupérer les informations d'un token déployé
     return {
       name: '',
@@ -119,7 +214,7 @@ export class EthereumTokenService implements ITokenService {
     };
   }
 
-  async estimateDeploymentCost(tokenConfig: TokenConfig): Promise<bigint> {
+  async estimateDeploymentCost(_tokenConfig: TokenConfig): Promise<bigint> {
     // Estimer le coût de déploiement
     // Logique à implémenter
     return 0n;
@@ -145,7 +240,7 @@ export class EthereumTokenService implements ITokenService {
     };
   }
 
-  async setupAutoLiquidity(tokenAddress: string, config: LiquidityConfig): Promise<boolean> {
+  async setupAutoLiquidity(_tokenAddress: string, _config: LiquidityConfig): Promise<boolean> {
     // Configuration de la liquidité automatique
     // Implémentation à définir
     return true;

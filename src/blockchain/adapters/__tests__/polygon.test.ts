@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { PolygonBlockchainService, PolygonPaymentService, PolygonTokenService } from '../polygon';
-import { mockPublicClient, mockWalletClient, setupViemMocks } from '../../../tests/mocks/blockchain';
+import { mockPublicClient, mockWalletClient } from '../../../tests/mocks/blockchain';
 
 // Mock du module viem
 vi.mock('viem', async () => {
@@ -25,7 +25,22 @@ describe('PolygonBlockchainService', () => {
   let service: PolygonBlockchainService;
 
   beforeEach(() => {
+    // Reset les mocks avant chaque test
+    vi.resetAllMocks();
+
+    // Configurer les mocks pour retourner des valeurs
+    mockPublicClient.getBalance.mockResolvedValue(10n * 10n ** 18n);
+    mockPublicClient.getChainId.mockResolvedValue(1);
+    mockPublicClient.estimateGas.mockResolvedValue(21000n);
+    mockPublicClient.getGasPrice.mockResolvedValue(2000000000n);
+
     service = new PolygonBlockchainService({});
+
+    // Injecter directement les mocks dans le service
+    // @ts-ignore - Accès à des propriétés privées pour le test
+    service.publicClient = mockPublicClient;
+    // @ts-ignore
+    service.walletClient = mockWalletClient;
   });
 
   afterEach(() => {
@@ -68,7 +83,7 @@ describe('PolygonBlockchainService', () => {
   it('should get gas price estimates correctly', async () => {
     // Mock getGasPrice pour ce test spécifique
     vi.spyOn(service, 'getGasPrice').mockResolvedValue(2000000000n);
-    
+
     const estimates = await service.getGasPriceEstimate();
     expect(service.getGasPrice).toHaveBeenCalled();
     expect(estimates).toEqual({
@@ -88,8 +103,17 @@ describe('PolygonPaymentService', () => {
     vi.resetAllMocks();
     // Date.now() pour les tests prédictibles
     vi.setSystemTime(new Date('2025-01-01'));
-    
+
     service = new PolygonPaymentService({});
+
+    // Injecter directement le mock provider dans le service
+    // @ts-ignore - Accès à une propriété privée pour le test
+    service.blockchainService = {
+      getProvider: vi.fn().mockReturnValue({
+        publicClient: mockPublicClient,
+        walletClient: mockWalletClient
+      })
+    };
   });
 
   afterEach(() => {
@@ -100,11 +124,11 @@ describe('PolygonPaymentService', () => {
   it('should create payment session with correct id format', async () => {
     // Mock Math.random pour prédictibilité
     const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
-    
+
     const sessionId = await service.createPaymentSession(1000000000000000000n, 'MATIC');
     expect(sessionId).toMatch(/^matic-\d+-\d+$/);
-    expect(sessionId).toContain('matic-1704067200000-500');
-    
+    expect(sessionId).toContain('matic-1735689600000-500');
+
     randomSpy.mockRestore();
   });
 
@@ -117,6 +141,14 @@ describe('PolygonPaymentService', () => {
   });
 
   it('should verify payment correctly for invalid transaction', async () => {
+    // Configurer le mock pour retourner null pour les transactions invalides
+    mockPublicClient.getTransaction = vi.fn().mockImplementation(({ hash }) => {
+      if (hash === '0xvalidtransactionhash') {
+        return { hash, blockNumber: 123456 };
+      }
+      return null;
+    });
+
     const result = await service.verifyPayment('0xinvalidtransactionhash');
     expect(mockPublicClient.getTransaction).toHaveBeenCalledWith({
       hash: '0xinvalidtransactionhash',
@@ -134,10 +166,10 @@ describe('PolygonPaymentService', () => {
         fastest: 3000000000n
       })
     };
-    
+
     // @ts-ignore - Remplacer le service blockchain par notre mock
     service.blockchainService = mockBlockchainService;
-    
+
     const fees = await service.calculateFees(1000000000000000000n);
     expect(mockBlockchainService.getGasPriceEstimate).toHaveBeenCalled();
     // 21000 (gasLimit) * 2000000000 (gasPrice) = 42000000000000
@@ -152,6 +184,16 @@ describe('PolygonTokenService', () => {
     service = new PolygonTokenService({});
     // @ts-ignore - Définir tokenFactoryAbi pour les tests
     service.tokenFactoryAbi = [];
+
+    // Injecter directement le mock provider dans le service
+    // @ts-ignore - Accès à une propriété privée pour le test
+    service.blockchainService = {
+      getProvider: vi.fn().mockReturnValue({
+        publicClient: mockPublicClient,
+        walletClient: mockWalletClient
+      }),
+      getNetworkId: vi.fn().mockResolvedValue(137)
+    };
   });
 
   afterEach(() => {
@@ -165,7 +207,7 @@ describe('PolygonTokenService', () => {
       decimals: 18,
       initialSupply: 1000000
     };
-    
+
     const result = service.validateTokenConfig(validConfig);
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
@@ -178,7 +220,7 @@ describe('PolygonTokenService', () => {
       decimals: 18,
       initialSupply: 1000000
     };
-    
+
     const result = service.validateTokenConfig(invalidConfig);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('Token name must be between 1 and 50 characters');
@@ -191,7 +233,7 @@ describe('PolygonTokenService', () => {
       decimals: 18,
       initialSupply: 1000000
     };
-    
+
     const result = service.validateTokenConfig(invalidConfig);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('Token symbol must be between 1 and 10 characters');
@@ -200,14 +242,17 @@ describe('PolygonTokenService', () => {
   it('should deploy token correctly', async () => {
     // Mock getAddresses pour le test
     mockWalletClient.getAddresses = vi.fn().mockResolvedValue(['0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266']);
-    
+
+    // Mock deployContract pour retourner un hash de transaction
+    mockWalletClient.deployContract = vi.fn().mockResolvedValue('0xcontractdeploymenthash');
+
     const tokenConfig = {
       name: 'Test Token',
       symbol: 'TEST',
       decimals: 18,
       initialSupply: 1000000
     };
-    
+
     const result = await service.deployToken(tokenConfig);
     expect(mockWalletClient.getAddresses).toHaveBeenCalled();
     expect(mockWalletClient.deployContract).toHaveBeenCalled();

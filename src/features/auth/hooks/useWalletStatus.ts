@@ -1,51 +1,55 @@
-import { useTokenForgeAuth } from './useTokenForgeAuth';
 import { WalletState } from '../types/auth';
-import { WalletClient } from 'viem';
+import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 
 export function useWalletStatus(): {
   wallet: WalletState | null;
   isConnected: boolean;
   isCorrectNetwork: boolean;
   address: `0x${string}` | null;
-  connect: (address: string, chainId: number, walletClient: WalletClient) => Promise<void>;
+  connect: (address: string, chainId: number) => Promise<void>;
   disconnect: () => Promise<void>;
   switchNetwork: (chainId: number) => Promise<void>;
 } {
-  const { wallet, isInitialized, loading, connectWallet, disconnectWallet } = useTokenForgeAuth();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
 
-  // Si l'état n'est pas encore initialisé ou en cours de chargement, retourner un état par défaut
-  if (!isInitialized || loading) {
-    return {
-      wallet: null,
-      isConnected: false,
-      isCorrectNetwork: false,
-      address: null,
-      connect: connectWallet,
-      disconnect: disconnectWallet,
-      switchNetwork: async (chainId: number) => {
-        console.warn('Cannot switch network while loading or not initialized');
-      }
-    };
-  }
+  // Determine if on correct network (replace with your network check logic)
+  const isCorrectNetwork = chainId === 1 || chainId === 11155111; // Mainnet or Sepolia
 
-  // Utiliser une valeur par défaut si wallet est undefined
-  const walletState = wallet ?? {
-    address: null,
-    isConnected: false,
-    isCorrectNetwork: false,
-    chainId: undefined,
-    walletClient: undefined
+  const walletState: WalletState = {
+    address: address || null,
+    isConnected: Boolean(isConnected),
+    isCorrectNetwork,
+    chainId
+  };
+
+  // Placeholder functions - these would be implemented with actual logic in a real app
+  const connect = async (address: string, chainId: number) => {
+    console.log('Connect wallet called with:', { address, chainId });
+    // Implementation would go here
+  };
+
+  const disconnect = async () => {
+    console.log('Disconnect wallet called');
+    // Implementation would go here
+  };
+
+  const switchNetwork = async (targetChainId: number) => {
+    try {
+      await switchChain({ chainId: targetChainId });
+    } catch (error) {
+      console.error('Failed to switch network:', error);
+    }
   };
 
   return {
     wallet: walletState,
-    isConnected: Boolean(walletState.address),
-    isCorrectNetwork: Boolean(walletState.isCorrectNetwork),
-    address: walletState.address,
-    connect: connectWallet,
-    disconnect: disconnectWallet,
-    switchNetwork: async (chainId: number) => {
-      console.warn('Network switching not implemented');
-    }
+    isConnected: Boolean(address),
+    isCorrectNetwork,
+    address: address || null,
+    connect,
+    disconnect,
+    switchNetwork
   };
 }

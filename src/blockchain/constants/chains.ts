@@ -57,8 +57,7 @@ export const SUPPORTED_CHAINS = [
   ChainId.ETHEREUM,
   ChainId.BINANCE,
   ChainId.POLYGON,
-  // Chaînes à implémenter dans les phases futures
-  // ChainId.AVALANCHE,
-  // ChainId.ARBITRUM,
-  // ChainId.SOLANA,
+  ChainId.AVALANCHE,
+  ChainId.ARBITRUM,
+  ChainId.SOLANA,
 ];

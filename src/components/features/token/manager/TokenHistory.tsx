@@ -12,8 +12,20 @@ import {
   Box,
   Chip,
 } from "@mui/material";
-import { TokenInfo } from "../../types/tokens";
-import { shortenAddress } from "../../utils/address";
+import { shortenAddress } from "../utils/address";
+
+// Define TokenInfo interface locally
+interface TokenInfo {
+  name: string;
+  symbol: string;
+  address: string;
+  totalSupply: string;
+  balance?: string;
+  features?: {
+    mintable: boolean;
+    burnable: boolean;
+  };
+}
 
 interface TokenHistoryProps {
   token: TokenInfo;
