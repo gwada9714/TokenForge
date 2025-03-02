@@ -1,32 +1,46 @@
-import { useEffect } from 'react';
-import { useTokenForgeAuth } from '../providers/TokenForgeAuthProvider';
+import { useEffect, useState } from 'react';
 import { firebaseAuth } from '../services/firebaseAuth';
-import { errorService } from '../services/errorService';
-import { authActions } from '../store/authActions';
+
+interface AuthState {
+  user: any;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: Error | null;
+}
 
 export function useAuthState() {
-  const { user, isAuthenticated, loading, error, dispatch } = useTokenForgeAuth();
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    loading: true,
+    error: null
+  });
 
   useEffect(() => {
     const unsubscribe = firebaseAuth.onAuthStateChanged((firebaseUser) => {
       if (firebaseUser) {
-        dispatch(authActions.loginSuccess({
-          ...firebaseUser,
-          isAdmin: false, // Sera mis à jour par le sessionService
-          canCreateToken: false
-        }));
+        setAuthState({
+          user: {
+            ...firebaseUser,
+            isAdmin: false, // Sera mis à jour par le sessionService
+            canCreateToken: false
+          },
+          isAuthenticated: true,
+          loading: false,
+          error: null
+        });
       } else {
-        dispatch(authActions.logout());
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null
+        });
       }
     });
 
     return () => unsubscribe();
-  }, [dispatch]);
+  }, []);
 
-  return {
-    user,
-    isAuthenticated,
-    loading,
-    error
-  };
+  return authState;
 }

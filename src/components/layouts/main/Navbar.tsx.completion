@@ -1,0 +1,210 @@
+<Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
+                      Complexité:
+                    </Typography>
+                    <Box sx={{ display: 'flex' }}>
+                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                    </Box>
+                  </Box>
+                </Box>
+                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
+                  <Typography variant="caption">~1 min</Typography>
+                </Box>
+              </Box>
+            </MenuItem>
+          </Box>
+        </StyledMenu>
+        
+        {/* Community Menu */}
+        <StyledMenu
+          anchorEl={communityMenuAnchor}
+          open={Boolean(communityMenuAnchor)}
+          onClose={handleMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'center',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
+        >
+          {community.map((item) => (
+            <MenuItem
+              key={item.name}
+              component={item.external ? 'a' : RouterLink}
+              to={!item.external ? item.href : undefined}
+              href={item.external ? item.href : undefined}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noopener noreferrer' : undefined}
+              onClick={handleMenuClose}
+            >
+              <FiberManualRecordIcon sx={{ fontSize: 8, color: '#D97706' }} />
+              {item.name}
+            </MenuItem>
+          ))}
+        </StyledMenu>
+
+        {/* Mobile Drawer */}
+        <Drawer
+          variant="temporary"
+          anchor="right"
+          open={mobileMenuOpen}
+          onClose={handleMobileMenuToggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: 280,
+              bgcolor: alpha('#182038', 0.98),
+              backdropFilter: 'blur(12px)',
+              boxShadow: '-4px 0 32px rgba(0, 0, 0, 0.2)',
+              '& .MuiListItem-root': {
+                fontFamily: 'Poppins, Roboto, sans-serif',
+                color: alpha(theme.palette.common.white, 0.85),
+                py: 1.5,
+                px: 3,
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  color: '#D97706',
+                  bgcolor: alpha(theme.palette.common.white, 0.05),
+                },
+              },
+              '& .MuiListItemText-primary': {
+                fontFamily: 'Poppins, Roboto, sans-serif',
+              },
+            },
+          }}
+        >
+          <List sx={{ pt: 2 }}>
+            <ListItem
+              component={RouterLink}
+              to="/create-token"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Créer un Token" />
+            </ListItem>
+
+            <ListItem
+              component={RouterLink}
+              to="/tokenomics"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Tokenomics" />
+            </ListItem>
+
+            <ListItem button onClick={() => setServicesMenuOpen(!servicesMenuOpen)}>
+              <ListItemText primary="Services" />
+              {servicesMenuOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            <Collapse in={servicesMenuOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {services.map((item) => (
+                  <ListItem
+                    key={item.name}
+                    button
+                    sx={{
+                      pl: 4,
+                      '&:hover': {
+                        color: '#D97706',
+                        bgcolor: alpha(theme.palette.common.white, 0.05),
+                      },
+                    }}
+                    component={RouterLink}
+                    to={item.href}
+                    onClick={handleMobileMenuToggle}
+                  >
+                    <ListItemText
+                      primary={item.name}
+                      primaryTypographyProps={{
+                        sx: { fontSize: '0.9rem' }
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Collapse>
+
+            <ListItem
+              component={RouterLink}
+              to="/comparator"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Comparateur" />
+            </ListItem>
+
+            <ListItem button onClick={() => setCommunityMenuOpen(!communityMenuOpen)}>
+              <ListItemText primary="Communauté" />
+              {communityMenuOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            <Collapse in={communityMenuOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {community.map((item) => (
+                  <ListItem
+                    key={item.name}
+                    button
+                    sx={{
+                      pl: 4,
+                      '&:hover': {
+                        color: '#D97706',
+                        bgcolor: alpha(theme.palette.common.white, 0.05),
+                      },
+                    }}
+                    component={RouterLink}
+                    to={item.href}
+                    onClick={handleMobileMenuToggle}
+                  >
+                    <ListItemText
+                      primary={item.name}
+                      primaryTypographyProps={{
+                        sx: { fontSize: '0.9rem' }
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Collapse>
+
+            <ListItem
+              component={RouterLink}
+              to="/resources"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Ressources" />
+            </ListItem>
+
+            <ListItem
+              component={RouterLink}
+              to="/plans"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Plans & Tarifs" />
+            </ListItem>
+
+            <ListItem
+              component={RouterLink}
+              to={isAuthenticated ? "/dashboard" : "/login"}
+              onClick={handleMobileMenuToggle}
+              button
+              sx={{
+                mt: 2,
+                color: '#D97706',
+                borderTop: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+              }}
+            >
+              <ListItemText primary={isAuthenticated ? 'Dashboard' : 'Connexion'} />
+            </ListItem>
+          </List>
+        </Drawer>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default Navbar;

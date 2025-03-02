@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useTokenForgeAuth } from '../../../features/auth/hooks/useTokenForgeAuth';
 import { useWalletStatus } from '../../../features/auth/hooks/useWalletStatus';
@@ -592,7 +592,12 @@ export const Navbar = () => {
             </Typography>
 
             {/* Ethereum */}
-            <MenuItem sx={{ py: 1.5, borderRadius: 1 }}>
+            <MenuItem
+              component={RouterLink}
+              to="/create-token?blockchain=ethereum"
+              onClick={handleMenuClose}
+              sx={{ py: 1.5, borderRadius: 1 }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                 <Box
                   sx={{
@@ -628,7 +633,12 @@ export const Navbar = () => {
             </MenuItem>
 
             {/* Binance Smart Chain */}
-            <MenuItem sx={{ py: 1.5, borderRadius: 1, mt: 1 }}>
+            <MenuItem
+              component={RouterLink}
+              to="/create-token?blockchain=bsc"
+              onClick={handleMenuClose}
+              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                 <Box
                   sx={{
@@ -664,7 +674,12 @@ export const Navbar = () => {
             </MenuItem>
 
             {/* Polygon */}
-            <MenuItem sx={{ py: 1.5, borderRadius: 1, mt: 1 }}>
+            <MenuItem
+              component={RouterLink}
+              to="/create-token?blockchain=polygon"
+              onClick={handleMenuClose}
+              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                 <Box
                   sx={{
@@ -682,3 +697,456 @@ export const Navbar = () => {
                 </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body1">Polygon</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
+                      Complexité:
+                    </Typography>
+                    <Box sx={{ display: 'flex' }}>
+                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                    </Box>
+                  </Box>
+                </Box>
+                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
+                  <Typography variant="caption">~1 min</Typography>
+                </Box>
+              </Box>
+            </MenuItem>
+
+            {/* Solana */}
+            <MenuItem
+              component={RouterLink}
+              to="/create-token?blockchain=solana"
+              onClick={handleMenuClose}
+              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(20, 241, 149, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2
+                  }}
+                >
+                  <Box sx={{ width: 20, height: 20, bgcolor: '#14F195', borderRadius: '50%' }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body1">Solana</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
+                      Complexité:
+                    </Typography>
+                    <Box sx={{ display: 'flex' }}>
+                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                    </Box>
+                  </Box>
+                </Box>
+                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
+                  <Typography variant="caption">~2 min</Typography>
+                </Box>
+              </Box>
+            </MenuItem>
+
+            {/* Avalanche */}
+            <MenuItem
+              component={RouterLink}
+              to="/create-token?blockchain=avalanche"
+              onClick={handleMenuClose}
+              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(232, 65, 66, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2
+                  }}
+                >
+                  <Box sx={{ width: 20, height: 20, bgcolor: '#E84142', borderRadius: '50%' }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body1">Avalanche</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
+                      Complexité:
+                    </Typography>
+                    <Box sx={{ display: 'flex' }}>
+                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                    </Box>
+                  </Box>
+                </Box>
+                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
+                  <Typography variant="caption">~1 min</Typography>
+                </Box>
+              </Box>
+            </MenuItem>
+
+            {/* Arbitrum */}
+            <MenuItem
+              component={RouterLink}
+              to="/create-token?blockchain=arbitrum"
+              onClick={handleMenuClose}
+              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(40, 160, 240, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2
+                  }}
+                >
+                  <Box sx={{ width: 20, height: 20, bgcolor: '#28A0F0', borderRadius: '50%' }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body1">Arbitrum</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
+                      Complexité:
+                    </Typography>
+                    <Box sx={{ display: 'flex' }}>
+                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
+                    </Box>
+                  </Box>
+                </Box>
+                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
+                  <Typography variant="caption">~1 min</Typography>
+                </Box>
+              </Box>
+            </MenuItem>
+          </Box>
+        </StyledMenu>
+
+        {/* Community Menu */}
+        <StyledMenu
+          anchorEl={communityMenuAnchor}
+          open={Boolean(communityMenuAnchor)}
+          onClose={handleMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'center',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
+        >
+          {community.map((item) => (
+            <MenuItem
+              key={item.name}
+              component={item.external ? 'a' : RouterLink}
+              to={!item.external ? item.href : undefined}
+              href={item.external ? item.href : undefined}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noopener noreferrer' : undefined}
+              onClick={handleMenuClose}
+            >
+              <FiberManualRecordIcon sx={{ fontSize: 8, color: '#D97706' }} />
+              {item.name}
+            </MenuItem>
+          ))}
+        </StyledMenu>
+
+        {/* Mobile Drawer */}
+        <Drawer
+          variant="temporary"
+          anchor="right"
+          open={mobileMenuOpen}
+          onClose={handleMobileMenuToggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: 280,
+              bgcolor: alpha('#182038', 0.98),
+              backdropFilter: 'blur(12px)',
+              boxShadow: '-4px 0 32px rgba(0, 0, 0, 0.2)',
+              '& .MuiListItem-root': {
+                fontFamily: 'Poppins, Roboto, sans-serif',
+                color: alpha(theme.palette.common.white, 0.85),
+                py: 1.5,
+                px: 3,
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  color: '#D97706',
+                  bgcolor: alpha(theme.palette.common.white, 0.05),
+                },
+              },
+              '& .MuiListItemText-primary': {
+                fontFamily: 'Poppins, Roboto, sans-serif',
+              },
+            },
+          }}
+        >
+          <List sx={{ pt: 2 }}>
+            <ListItem button onClick={() => setCommunityMenuOpen(!communityMenuOpen)}>
+              <ListItemText primary="Créer un Token" />
+              {communityMenuOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            <Collapse in={communityMenuOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem
+                  button
+                  sx={{
+                    pl: 4,
+                    '&:hover': {
+                      color: '#D97706',
+                      bgcolor: alpha(theme.palette.common.white, 0.05),
+                    },
+                  }}
+                  component={RouterLink}
+                  to="/create-token?blockchain=ethereum"
+                  onClick={handleMobileMenuToggle}
+                >
+                  <ListItemText
+                    primary="Ethereum"
+                    primaryTypographyProps={{
+                      sx: { fontSize: '0.9rem' }
+                    }}
+                  />
+                </ListItem>
+                <ListItem
+                  button
+                  sx={{
+                    pl: 4,
+                    '&:hover': {
+                      color: '#D97706',
+                      bgcolor: alpha(theme.palette.common.white, 0.05),
+                    },
+                  }}
+                  component={RouterLink}
+                  to="/create-token?blockchain=bsc"
+                  onClick={handleMobileMenuToggle}
+                >
+                  <ListItemText
+                    primary="Binance Smart Chain"
+                    primaryTypographyProps={{
+                      sx: { fontSize: '0.9rem' }
+                    }}
+                  />
+                </ListItem>
+                <ListItem
+                  button
+                  sx={{
+                    pl: 4,
+                    '&:hover': {
+                      color: '#D97706',
+                      bgcolor: alpha(theme.palette.common.white, 0.05),
+                    },
+                  }}
+                  component={RouterLink}
+                  to="/create-token?blockchain=polygon"
+                  onClick={handleMobileMenuToggle}
+                >
+                  <ListItemText
+                    primary="Polygon"
+                    primaryTypographyProps={{
+                      sx: { fontSize: '0.9rem' }
+                    }}
+                  />
+                </ListItem>
+                <ListItem
+                  button
+                  sx={{
+                    pl: 4,
+                    '&:hover': {
+                      color: '#D97706',
+                      bgcolor: alpha(theme.palette.common.white, 0.05),
+                    },
+                  }}
+                  component={RouterLink}
+                  to="/create-token?blockchain=solana"
+                  onClick={handleMobileMenuToggle}
+                >
+                  <ListItemText
+                    primary="Solana"
+                    primaryTypographyProps={{
+                      sx: { fontSize: '0.9rem' }
+                    }}
+                  />
+                </ListItem>
+                <ListItem
+                  button
+                  sx={{
+                    pl: 4,
+                    '&:hover': {
+                      color: '#D97706',
+                      bgcolor: alpha(theme.palette.common.white, 0.05),
+                    },
+                  }}
+                  component={RouterLink}
+                  to="/create-token?blockchain=avalanche"
+                  onClick={handleMobileMenuToggle}
+                >
+                  <ListItemText
+                    primary="Avalanche"
+                    primaryTypographyProps={{
+                      sx: { fontSize: '0.9rem' }
+                    }}
+                  />
+                </ListItem>
+                <ListItem
+                  button
+                  sx={{
+                    pl: 4,
+                    '&:hover': {
+                      color: '#D97706',
+                      bgcolor: alpha(theme.palette.common.white, 0.05),
+                    },
+                  }}
+                  component={RouterLink}
+                  to="/create-token?blockchain=arbitrum"
+                  onClick={handleMobileMenuToggle}
+                >
+                  <ListItemText
+                    primary="Arbitrum"
+                    primaryTypographyProps={{
+                      sx: { fontSize: '0.9rem' }
+                    }}
+                  />
+                </ListItem>
+              </List>
+            </Collapse>
+
+            <ListItem
+              component={RouterLink}
+              to="/tokenomics"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Tokenomics" />
+            </ListItem>
+
+            <ListItem button onClick={() => setServicesMenuOpen(!servicesMenuOpen)}>
+              <ListItemText primary="Services" />
+              {servicesMenuOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            <Collapse in={servicesMenuOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {services.map((item) => (
+                  <ListItem
+                    key={item.name}
+                    button
+                    sx={{
+                      pl: 4,
+                      '&:hover': {
+                        color: '#D97706',
+                        bgcolor: alpha(theme.palette.common.white, 0.05),
+                      },
+                    }}
+                    component={RouterLink}
+                    to={item.href}
+                    onClick={handleMobileMenuToggle}
+                  >
+                    <ListItemText
+                      primary={item.name}
+                      primaryTypographyProps={{
+                        sx: { fontSize: '0.9rem' }
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Collapse>
+
+            <ListItem
+              component={RouterLink}
+              to="/comparator"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Comparateur" />
+            </ListItem>
+
+            <ListItem button onClick={() => setCommunityMenuOpen(!communityMenuOpen)}>
+              <ListItemText primary="Communauté" />
+              {communityMenuOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            <Collapse in={communityMenuOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {community.map((item) => (
+                  <ListItem
+                    key={item.name}
+                    button
+                    sx={{
+                      pl: 4,
+                      '&:hover': {
+                        color: '#D97706',
+                        bgcolor: alpha(theme.palette.common.white, 0.05),
+                      },
+                    }}
+                    component={RouterLink}
+                    to={item.href}
+                    onClick={handleMobileMenuToggle}
+                  >
+                    <ListItemText
+                      primary={item.name}
+                      primaryTypographyProps={{
+                        sx: { fontSize: '0.9rem' }
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Collapse>
+
+            <ListItem
+              component={RouterLink}
+              to="/resources"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Ressources" />
+            </ListItem>
+
+            <ListItem
+              component={RouterLink}
+              to="/plans"
+              onClick={handleMobileMenuToggle}
+              button
+            >
+              <ListItemText primary="Plans & Tarifs" />
+            </ListItem>
+
+            <ListItem
+              component={RouterLink}
+              to={isAuthenticated ? "/dashboard" : "/login"}
+              onClick={handleMobileMenuToggle}
+              button
+              sx={{
+                mt: 2,
+                color: '#D97706',
+                borderTop: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+              }}
+            >
+              <ListItemText primary={isAuthenticated ? 'Dashboard' : 'Connexion'} />
+            </ListItem>
+          </List>
+        </Drawer>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default Navbar;

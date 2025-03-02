@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Container, Typography, Grid, Button } from '@mui/material';
+import { Container, Typography, Grid, Button, Box } from '@mui/material';
 import { motion } from 'framer-motion';
 import LaunchpadIcon from '@mui/icons-material/Rocket';
 import StakingIcon from '@mui/icons-material/AccountBalance';
@@ -175,4 +175,4 @@ export const ServicesSection: React.FC = () => {
       </Content>
     </SectionContainer>
   );
-}; 
+};

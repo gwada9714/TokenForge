@@ -10,8 +10,8 @@ import {
   Tabs,
   Divider,
 } from "@mui/material";
-import { TokenInfo } from "../../services/tokenService"; // Changé l'import
-import { TokenDetails } from "./TokenDetails";
+import { TokenInfo } from "../../../../types/tokens";
+import TokenDetails from "./TokenDetails";
 import { TokenOperations } from "./TokenOperations";
 import { TokenHistory } from "./TokenHistory";
 
@@ -44,7 +44,7 @@ const a11yProps = (index: number) => ({
 export const TokenManager: React.FC<TokenManagerProps> = ({ token }) => {
   const [tabValue, setTabValue] = useState(0);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -85,8 +85,8 @@ export const TokenManager: React.FC<TokenManagerProps> = ({ token }) => {
             </TabPanel>
 
             <TabPanel value={tabValue} index={1}>
-              <TokenOperations 
-                token={token} 
+              <TokenOperations
+                token={token}
                 onOperationComplete={handleOperationComplete}
               />
             </TabPanel>

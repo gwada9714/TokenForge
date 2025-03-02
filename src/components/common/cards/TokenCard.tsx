@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { TokenInfo } from "../../services/tokenService";
+import { TokenInfo } from "../../../types/tokens";
 import { shortenAddress } from "../../utils/address";
 
 interface TokenCardProps {
@@ -89,14 +89,17 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onAction }) => {
           </Typography>
         </Box>
 
-        <Box sx={{ mb: 1 }}>
-          <Typography color="textSecondary" gutterBottom>
-            Balance
-          </Typography>
-          <Typography variant="body2">
-            {token.balance}
-          </Typography>
-        </Box>
+        {/* Balance is optional and might not exist in all TokenInfo objects */}
+        {'balance' in token && (
+          <Box sx={{ mb: 1 }}>
+            <Typography color="textSecondary" gutterBottom>
+              Balance
+            </Typography>
+            <Typography variant="body2">
+              {(token as any).balance}
+            </Typography>
+          </Box>
+        )}
 
         <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
           {token.burnable && (

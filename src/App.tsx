@@ -13,17 +13,9 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 import { Alert } from './components/ui/Alert';
 import { TokenForgeAuthProvider } from '@/features/auth/providers/TokenForgeAuthProvider';
-import { WagmiProvider, createConfig, http } from 'wagmi';
-import { mainnet } from 'wagmi/chains';
+import { WagmiProvider } from 'wagmi';
+import { wagmiConfig } from './config/wagmiConfig';
 import { firebaseService } from '@/config/firebase';
-
-// Configuration Wagmi
-const config = createConfig({
-  chains: [mainnet],
-  transports: {
-    [mainnet.id]: http()
-  }
-});
 
 const AppContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
@@ -53,14 +45,14 @@ const AppContent: React.FC = () => {
         <StyledThemeProvider theme={styledTheme}>
           <MuiThemeProvider theme={theme}>
             <CssBaseline />
-            <WagmiProvider config={config}>
+            <WagmiProvider config={wagmiConfig}>
               <QueryClientProvider client={queryClient}>
                 <AuthProvider>
                   <TokenForgeAuthProvider>
                     {error && (
-                      <Alert 
-                        type="error" 
-                        title="Erreur" 
+                      <Alert
+                        type="error"
+                        title="Erreur"
                         onClose={() => setError(null)}
                       >
                         {error}
