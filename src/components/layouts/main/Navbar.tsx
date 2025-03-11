@@ -1,5 +1,5 @@
-﻿import { useState } from 'react';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTokenForgeAuth } from '../../../features/auth/hooks/useTokenForgeAuth';
 import { useWalletStatus } from '../../../features/auth/hooks/useWalletStatus';
 import { TokenForgeLogo } from '../../Icons/TokenForgeLogo';
@@ -24,7 +24,9 @@ import {
   CircularProgress,
   Typography,
   Grid,
+  Tooltip,
 } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { styled, keyframes } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExpandLess from '@mui/icons-material/ExpandLess';
@@ -39,7 +41,6 @@ import WaterIcon from '@mui/icons-material/Water';
 import ShieldIcon from '@mui/icons-material/Shield';
 import PeopleIcon from '@mui/icons-material/People';
 import HighlightIcon from '@mui/icons-material/Highlight';
-import GavelIcon from '@mui/icons-material/Gavel';
 import TokenIcon from '@mui/icons-material/Token';
 
 const services = [
@@ -147,6 +148,43 @@ const ConnectButton = styled(Button, {
   },
 }));
 
+// Amélioration de la gestion des liens de navigation pour éviter les problèmes de redirection
+const NavLink = ({ to, children, ...props }: { to: string; children: React.ReactNode; [key: string]: any }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
+  
+  return (
+    <RouterLink 
+      to={to} 
+      style={{ 
+        textDecoration: 'none',
+        display: 'block',
+        width: '100%'
+      }}
+      onClick={(e) => {
+        // Prévention des redirections inutiles si déjà sur la page
+        if (location.pathname === to) {
+          e.preventDefault();
+        }
+        // Fermeture des menus après clic si nécessaire
+        if (props.onClick) props.onClick(e);
+      }}
+    >
+      <Typography 
+        component="span" 
+        sx={{ 
+          color: isActive ? 'primary.main' : 'inherit',
+          fontWeight: isActive ? 600 : 400,
+          '&:hover': {
+            color: 'primary.main'
+          }
+        }}
+      >
+        {children}
+      </Typography>
+    </RouterLink>
+  );
+};
 
 const StyledMenu = styled(Menu)(({ theme }) => ({
   '& .MuiPaper-root': {
@@ -193,9 +231,10 @@ export const NAVBAR_HEIGHT = 72;
 export const Navbar = () => {
   const theme = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAuthenticated, loading: isLoading } = useTokenForgeAuth();
-  const { isCorrectNetwork, connect } = useWalletStatus();
+  const { isCorrectNetwork, connect, hasInjectedProvider } = useWalletStatus();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
@@ -225,6 +264,52 @@ export const Navbar = () => {
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  const createTokenMenu = (
+    <StyledMenu
+      anchorEl={createTokenMenuAnchor}
+      open={Boolean(createTokenMenuAnchor)}
+      onClose={handleMenuClose}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+    >
+      <MenuItem onClick={() => {
+        handleMenuClose();
+        navigate('/create-token/standard');
+      }}>
+        <TokenIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+        Token Standard (ERC-20)
+      </MenuItem>
+      <MenuItem onClick={() => {
+        handleMenuClose();
+        navigate('/create-token/custom');
+      }}>
+        <HexagonIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+        Token Personnalisé
+      </MenuItem>
+      <MenuItem onClick={() => {
+        handleMenuClose();
+        navigate('/create-token/templates');
+      }}>
+        <InsertChartIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+        Bibliothèque de Templates
+      </MenuItem>
+      <MenuItem onClick={() => {
+        handleMenuClose();
+        navigate('/create-token/rugpull-protection');
+      }}>
+        <ShieldIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+        Protection Anti-Rugpull
+      </MenuItem>
+      <MenuItem onClick={() => {
+        handleMenuClose();
+        navigate('/create-token/landing-page');
+      }}>
+        <WebIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+        Créer une Landing Page
+      </MenuItem>
+    </StyledMenu>
+  );
 
   return (
     <AppBar
@@ -291,12 +376,9 @@ export const Navbar = () => {
         {!isMobile && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <NavButton
-              component={RouterLink}
-              to="/create-token"
               onClick={handleCreateTokenMenuOpen}
               aria-haspopup="true"
               aria-expanded={Boolean(createTokenMenuAnchor)}
-              className={location.pathname.startsWith('/create-token') ? 'active' : ''}
             >
               Créer un Token {createTokenMenuAnchor ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
             </NavButton>
@@ -305,9 +387,8 @@ export const Navbar = () => {
               component={RouterLink}
               to="/tokenomics"
               className={location.pathname.startsWith('/tokenomics') ? 'active' : ''}
-              aria-current={location.pathname.startsWith('/tokenomics') ? 'page' : undefined}
             >
-              Tokenomics
+              <NavLink to="/tokenomics">Tokenomics</NavLink>
             </NavButton>
 
             <NavButton
@@ -322,12 +403,12 @@ export const Navbar = () => {
               component={RouterLink}
               to="/comparator"
               className={location.pathname.startsWith('/comparator') ? 'active' : ''}
-              aria-current={location.pathname.startsWith('/comparator') ? 'page' : undefined}
             >
-              Comparateur
+              <NavLink to="/comparator">Comparateur</NavLink>
             </NavButton>
 
-            <NavButton onClick={handleCommunityMenuOpen}
+            <NavButton 
+              onClick={handleCommunityMenuOpen}
               aria-haspopup="true"
               aria-expanded={Boolean(communityMenuAnchor)}
             >
@@ -338,18 +419,16 @@ export const Navbar = () => {
               component={RouterLink}
               to="/resources"
               className={location.pathname.startsWith('/resources') ? 'active' : ''}
-              aria-current={location.pathname.startsWith('/resources') ? 'page' : undefined}
             >
-              Ressources
+              <NavLink to="/resources">Ressources</NavLink>
             </NavButton>
 
             <NavButton
               component={RouterLink}
               to="/plans"
               className={location.pathname.startsWith('/plans') ? 'active' : ''}
-              aria-current={location.pathname.startsWith('/plans') ? 'page' : undefined}
             >
-              Plans & Tarifs
+              <NavLink to="/plans">Plans & Tarifs</NavLink>
             </NavButton>
 
             {/* Right Zone Elements */}
@@ -443,16 +522,40 @@ export const Navbar = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
                 <ConnectButton
                   variant="outlined"
-                  onClick={() => {
-                    // Call connect with dummy values since we can't get them from the event
-                    // In a real implementation, these would come from elsewhere
-                    connect('0x0', 1);
+                  onClick={async () => {
+                    try {
+                      // Call connect with dummy values since we can't get them from the event
+                      // In a real implementation, these would come from elsewhere
+                      await connect('0x0', 1);
+                    } catch (error) {
+                      // L'erreur est déjà gérée dans le hook useWalletStatus
+                      // Les logs sont déjà envoyés dans le hook
+                    }
                   }}
                   $loading={isLoading}
                   startIcon={isLoading && <CircularProgress size={20} />}
+                  disabled={isLoading}
                 >
-                  {isLoading ? 'Connexion...' : 'Connecter Wallet'}
+                  {isLoading 
+                    ? 'Connexion...' 
+                    : hasInjectedProvider 
+                      ? 'Connecter Wallet' 
+                      : 'Installer Wallet'
+                  }
                 </ConnectButton>
+                {!hasInjectedProvider && (
+                  <Tooltip title="Vous avez besoin d'un wallet compatible (comme MetaMask) pour utiliser cette application. Cliquez pour plus d'informations.">
+                    <IconButton 
+                      size="small" 
+                      color="warning"
+                      onClick={() => {
+                        window.open('https://metamask.io/download/', '_blank');
+                      }}
+                    >
+                      <HelpOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Box>
             </Box>
           </Box>
@@ -572,272 +675,7 @@ export const Navbar = () => {
           </Grid>
         </StyledMenu>
 
-        {/* Create Token Dropdown */}
-        <StyledMenu
-          anchorEl={createTokenMenuAnchor}
-          open={Boolean(createTokenMenuAnchor)}
-          onClose={handleMenuClose}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'center',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
-          }}
-        >
-          <Box sx={{ p: 2, minWidth: 280 }}>
-            <Typography variant="subtitle2" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.6)', fontWeight: 400 }}>
-              Choisissez votre blockchain
-            </Typography>
-
-            {/* Ethereum */}
-            <MenuItem
-              component={RouterLink}
-              to="/create-token?blockchain=ethereum"
-              onClick={handleMenuClose}
-              sx={{ py: 1.5, borderRadius: 1 }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(98, 126, 234, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mr: 2
-                  }}
-                >
-                  <img src="/images/ethereum.svg" alt="Ethereum" width={20} height={20} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1">Ethereum</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
-                      Complexité:
-                    </Typography>
-                    <Box sx={{ display: 'flex' }}>
-                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                    </Box>
-                  </Box>
-                </Box>
-                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
-                  <Typography variant="caption">~3 min</Typography>
-                </Box>
-              </Box>
-            </MenuItem>
-
-            {/* Binance Smart Chain */}
-            <MenuItem
-              component={RouterLink}
-              to="/create-token?blockchain=bsc"
-              onClick={handleMenuClose}
-              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(243, 186, 47, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mr: 2
-                  }}
-                >
-                  <img src="/images/binance.svg" alt="Binance" width={20} height={20} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1">Binance Smart Chain</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
-                      Complexité:
-                    </Typography>
-                    <Box sx={{ display: 'flex' }}>
-                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                    </Box>
-                  </Box>
-                </Box>
-                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
-                  <Typography variant="caption">~2 min</Typography>
-                </Box>
-              </Box>
-            </MenuItem>
-
-            {/* Polygon */}
-            <MenuItem
-              component={RouterLink}
-              to="/create-token?blockchain=polygon"
-              onClick={handleMenuClose}
-              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(130, 71, 229, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mr: 2
-                  }}
-                >
-                  <img src="/images/polygon.svg" alt="Polygon" width={20} height={20} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1">Polygon</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
-                      Complexité:
-                    </Typography>
-                    <Box sx={{ display: 'flex' }}>
-                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                    </Box>
-                  </Box>
-                </Box>
-                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
-                  <Typography variant="caption">~1 min</Typography>
-                </Box>
-              </Box>
-            </MenuItem>
-
-            {/* Solana */}
-            <MenuItem
-              component={RouterLink}
-              to="/create-token?blockchain=solana"
-              onClick={handleMenuClose}
-              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(20, 241, 149, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mr: 2
-                  }}
-                >
-                  <Box sx={{ width: 20, height: 20, bgcolor: '#14F195', borderRadius: '50%' }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1">Solana</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
-                      Complexité:
-                    </Typography>
-                    <Box sx={{ display: 'flex' }}>
-                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                    </Box>
-                  </Box>
-                </Box>
-                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
-                  <Typography variant="caption">~2 min</Typography>
-                </Box>
-              </Box>
-            </MenuItem>
-
-            {/* Avalanche */}
-            <MenuItem
-              component={RouterLink}
-              to="/create-token?blockchain=avalanche"
-              onClick={handleMenuClose}
-              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(232, 65, 66, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mr: 2
-                  }}
-                >
-                  <Box sx={{ width: 20, height: 20, bgcolor: '#E84142', borderRadius: '50%' }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1">Avalanche</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
-                      Complexité:
-                    </Typography>
-                    <Box sx={{ display: 'flex' }}>
-                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                    </Box>
-                  </Box>
-                </Box>
-                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
-                  <Typography variant="caption">~1 min</Typography>
-                </Box>
-              </Box>
-            </MenuItem>
-
-            {/* Arbitrum */}
-            <MenuItem
-              component={RouterLink}
-              to="/create-token?blockchain=arbitrum"
-              onClick={handleMenuClose}
-              sx={{ py: 1.5, borderRadius: 1, mt: 1 }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(40, 160, 240, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mr: 2
-                  }}
-                >
-                  <Box sx={{ width: 20, height: 20, bgcolor: '#28A0F0', borderRadius: '50%' }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1">Arbitrum</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mr: 1 }}>
-                      Complexité:
-                    </Typography>
-                    <Box sx={{ display: 'flex' }}>
-                      <GavelIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                      <GavelIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.3)' }} />
-                    </Box>
-                  </Box>
-                </Box>
-                <Box sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
-                  <Typography variant="caption">~1 min</Typography>
-                </Box>
-              </Box>
-            </MenuItem>
-          </Box>
-        </StyledMenu>
+        {createTokenMenu}
 
         {/* Community Menu */}
         <StyledMenu
@@ -916,11 +754,11 @@ export const Navbar = () => {
                     },
                   }}
                   component={RouterLink}
-                  to="/create-token?blockchain=ethereum"
+                  to="/create-token/standard"
                   onClick={handleMobileMenuToggle}
                 >
                   <ListItemText
-                    primary="Ethereum"
+                    primary="Token Standard (ERC-20)"
                     primaryTypographyProps={{
                       sx: { fontSize: '0.9rem' }
                     }}
@@ -936,11 +774,11 @@ export const Navbar = () => {
                     },
                   }}
                   component={RouterLink}
-                  to="/create-token?blockchain=bsc"
+                  to="/create-token/custom"
                   onClick={handleMobileMenuToggle}
                 >
                   <ListItemText
-                    primary="Binance Smart Chain"
+                    primary="Token Personnalisé"
                     primaryTypographyProps={{
                       sx: { fontSize: '0.9rem' }
                     }}
@@ -956,11 +794,11 @@ export const Navbar = () => {
                     },
                   }}
                   component={RouterLink}
-                  to="/create-token?blockchain=polygon"
+                  to="/create-token/templates"
                   onClick={handleMobileMenuToggle}
                 >
                   <ListItemText
-                    primary="Polygon"
+                    primary="Bibliothèque de Templates"
                     primaryTypographyProps={{
                       sx: { fontSize: '0.9rem' }
                     }}
@@ -976,11 +814,11 @@ export const Navbar = () => {
                     },
                   }}
                   component={RouterLink}
-                  to="/create-token?blockchain=solana"
+                  to="/create-token/rugpull-protection"
                   onClick={handleMobileMenuToggle}
                 >
                   <ListItemText
-                    primary="Solana"
+                    primary="Protection Anti-Rugpull"
                     primaryTypographyProps={{
                       sx: { fontSize: '0.9rem' }
                     }}
@@ -996,31 +834,11 @@ export const Navbar = () => {
                     },
                   }}
                   component={RouterLink}
-                  to="/create-token?blockchain=avalanche"
+                  to="/create-token/landing-page"
                   onClick={handleMobileMenuToggle}
                 >
                   <ListItemText
-                    primary="Avalanche"
-                    primaryTypographyProps={{
-                      sx: { fontSize: '0.9rem' }
-                    }}
-                  />
-                </ListItem>
-                <ListItem
-                  button
-                  sx={{
-                    pl: 4,
-                    '&:hover': {
-                      color: '#D97706',
-                      bgcolor: alpha(theme.palette.common.white, 0.05),
-                    },
-                  }}
-                  component={RouterLink}
-                  to="/create-token?blockchain=arbitrum"
-                  onClick={handleMobileMenuToggle}
-                >
-                  <ListItemText
-                    primary="Arbitrum"
+                    primary="Créer une Landing Page"
                     primaryTypographyProps={{
                       sx: { fontSize: '0.9rem' }
                     }}

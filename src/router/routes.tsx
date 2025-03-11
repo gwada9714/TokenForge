@@ -26,16 +26,16 @@ const Profile = lazy(() => import('@/features/auth/pages/ProfilePage').then(modu
 // 3. Création de Token
 const CreateToken = lazy(() => import('@/features/token/pages/CreateTokenPage').then(module => ({ default: module.CreateTokenPage })));
 const TokenTemplates = lazy(() => import('@/features/token/pages/TokenTemplatesPage').then(module => ({ default: module.TokenTemplatesPage })));
-const TokenomicsDesigner = lazy(() => import('@/features/tokenomics/pages/TokenomicsDesignerPage').then(module => ({ default: module.default })));
-const AntiRugpullConfigurator = lazy(() => import('@/features/token/pages/AntiRugpullConfiguratorPage').then(module => ({ default: module.default })));
+const TokenomicsDesigner = lazy(() => import('@/features/tokenomics/pages/TokenomicsDesignerPage'));
+const AntiRugpullConfigurator = lazy(() => import('@/features/token/pages/AntiRugpullConfiguratorPage'));
 const LandingPageBuilder = lazy(() => import('@/features/token/pages/LandingPageBuilderPage').then(module => ({ default: module.LandingPageBuilderPage })));
 
 // 4. Gestion de Token
 const Dashboard = lazy(() => import('@/features/dashboard/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
 const TokenList = lazy(() => import('@/features/token/pages/TokenListPage').then(module => ({ default: module.TokenListPage })));
 const TokenDetails = lazy(() => import('@/features/token/pages/TokenDetailsPage').then(module => ({ default: module.TokenDetailsPage })));
-const AutoLiquidityManager = lazy(() => import('@/features/token/pages/AutoLiquidityManagerPage').then(module => ({ default: module.AutoLiquidityManagerPage })));
-const StakingManager = lazy(() => import('@/features/token-staking/pages/StakingManagerPage').then(module => ({ default: module.StakingManagerPage })));
+const AutoLiquidityManager = lazy(() => import('@/features/token/pages/AutoLiquidityManagerPage'));
+const StakingManager = lazy(() => import('@/features/token-staking/pages/StakingManagerPage'));
 
 // 5. Services Premium
 const HolderAnalytics = lazy(() => import('@/features/analytics/pages/HolderAnalyticsPage').then(module => ({ default: module.HolderAnalyticsPage })));
@@ -50,21 +50,23 @@ const AdminDashboard = lazy(() => import('@/features/admin/pages/AdminDashboardP
 const UsersManagement = lazy(() => import('@/features/admin/pages/UsersManagementPage').then(module => ({ default: module.UsersManagementPage })));
 const TokensManagement = lazy(() => import('@/features/admin/pages/TokensManagementPage').then(module => ({ default: module.TokensManagementPage })));
 const SystemSettings = lazy(() => import('@/features/admin/pages/SystemSettingsPage').then(module => ({ default: module.SystemSettingsPage })));
-const AnalyticsReporting = lazy(() => import('@/features/admin/pages/AnalyticsReportingPage').then(module => ({ default: module.AnalyticsReportingPage })));
+// Remplace le import par un composant temporaire ou stub en attendant la création du fichier
+const AnalyticsReporting = lazy(() => import('@/features/admin/pages/SystemSettingsPage').then(module => ({ default: module.SystemSettingsPage })));
 const MarketplaceManagement = lazy(() => import('@/features/admin/pages/MarketplaceManagementPage').then(module => ({ default: module.MarketplaceManagementPage })));
 
 // 7. Pages Community & Support
 const CommunityCenter = lazy(() => import('@/features/community/pages/CommunityCenterPage').then(module => ({ default: module.CommunityCenterPage })));
 const KnowledgeBase = lazy(() => import('@/features/learn/pages/KnowledgeBasePage').then(module => ({ default: module.KnowledgeBasePage })));
-const AmbassadorProgram = lazy(() => import('@/features/community/pages/AmbassadorProgramPage').then(module => ({ default: module.AmbassadorProgramPage })));
+const AmbassadorProgram = lazy(() => import('@/features/community/pages/AmbassadorProgramPage'));
 const WebinarsEvents = lazy(() => import('@/features/community/pages/WebinarsEventsPage').then(module => ({ default: module.WebinarsEventsPage })));
 
 // 8. Pages Mobiles (ces pages utilisent des layouts responsifs, pas besoin de pages séparées)
 
 // Pages de configuration des services
-const LaunchpadConfig = lazy(() => import('@/features/launchpad/pages/LaunchpadConfigPage').then(module => ({ default: module.LaunchpadConfigPage })));
+// Remplace les imports manquants par des composants temporaires
+const LaunchpadConfig = lazy(() => import('@/features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
 const MarketingConfig = lazy(() => import('@/features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
-const KYCConfig = lazy(() => import('@/features/kyc/pages/KYCConfigPage').then(module => ({ default: module.KYCConfigPage })));
+const KYCConfig = lazy(() => import('@/features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
 
 // Types
 export interface RouteConfig {
