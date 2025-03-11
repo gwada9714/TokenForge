@@ -9,7 +9,7 @@ import {
   getDocs,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from '@/config/firebase';
+import { getFirebaseFirestoreSync } from '@/lib/firebase/firestore';
 import { logger } from '@/utils/firebase-logger';
 import { StakingPool, StakingReward } from './stakingRewards';
 
@@ -19,99 +19,105 @@ const REWARDS_COLLECTION = 'stakingRewards';
 export const stakingFirestore = {
   async savePool(pool: StakingPool): Promise<void> {
     try {
+      const db = getFirebaseFirestoreSync();
       const poolRef = doc(collection(db, POOLS_COLLECTION), pool.id);
       await setDoc(poolRef, {
         ...pool,
-        totalStaked: pool.totalStaked.toString(),
-        rewardsDistributed: pool.rewardsDistributed.toString(),
-        minStakeAmount: pool.minStakeAmount.toString(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-      logger.info('Pool de staking sauvegardé', { poolId: pool.id });
+      logger.info({ message: `Staking pool ${pool.id} saved successfully` });
     } catch (error) {
-      logger.error('Erreur lors de la sauvegarde du pool de staking', { error, poolId: pool.id });
+      logger.error({ message: `Error saving staking pool ${pool.id}`, error });
       throw error;
     }
   },
 
   async updatePool(pool: StakingPool): Promise<void> {
     try {
+      const db = getFirebaseFirestoreSync();
       const poolRef = doc(collection(db, POOLS_COLLECTION), pool.id);
       await updateDoc(poolRef, {
         ...pool,
-        totalStaked: pool.totalStaked.toString(),
-        rewardsDistributed: pool.rewardsDistributed.toString(),
-        minStakeAmount: pool.minStakeAmount.toString(),
         updatedAt: serverTimestamp()
       });
-      logger.info('Pool de staking mis à jour', { poolId: pool.id });
+      logger.info({ message: `Staking pool ${pool.id} updated successfully` });
     } catch (error) {
-      logger.error('Erreur lors de la mise à jour du pool de staking', { error, poolId: pool.id });
+      logger.error({ message: `Error updating staking pool ${pool.id}`, error });
       throw error;
     }
   },
 
   async getPool(poolId: string): Promise<StakingPool | null> {
     try {
+      const db = getFirebaseFirestoreSync();
       const poolRef = doc(collection(db, POOLS_COLLECTION), poolId);
       const poolDoc = await getDoc(poolRef);
       
       if (!poolDoc.exists()) {
+        logger.warn({ message: `Staking pool ${poolId} not found` });
         return null;
       }
-
-      const data = poolDoc.data();
+      
+      const data = poolDoc.data() as StakingPool;
+      logger.info({ message: `Staking pool ${poolId} retrieved successfully` });
       return {
         ...data,
-        totalStaked: BigInt(data.totalStaked),
-        rewardsDistributed: BigInt(data.rewardsDistributed),
-        minStakeAmount: BigInt(data.minStakeAmount)
-      } as StakingPool;
+        id: poolId,
+      };
     } catch (error) {
-      logger.error('Erreur lors de la récupération du pool de staking', { error, poolId });
+      logger.error({ message: `Error getting staking pool ${poolId}`, error });
       throw error;
     }
   },
 
   async saveReward(reward: StakingReward): Promise<void> {
     try {
+      const db = getFirebaseFirestoreSync();
       const rewardRef = doc(collection(db, REWARDS_COLLECTION));
       await setDoc(rewardRef, {
         ...reward,
-        amount: reward.amount.toString(),
-        createdAt: serverTimestamp()
+        id: rewardRef.id,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
-      logger.info('Récompense de staking sauvegardée', { 
-        poolId: reward.poolId,
-        userAddress: reward.userAddress 
-      });
+      
+      logger.info({ message: `Staking reward created successfully` });
+      return;
     } catch (error) {
-      logger.error('Erreur lors de la sauvegarde de la récompense', { 
-        error, 
-        poolId: reward.poolId,
-        userAddress: reward.userAddress 
-      });
+      logger.error({ message: `Error creating staking reward`, error });
       throw error;
     }
   },
 
   async getPoolRewards(poolId: string): Promise<StakingReward[]> {
     try {
+      const db = getFirebaseFirestoreSync();
       const rewardsQuery = query(
         collection(db, REWARDS_COLLECTION),
-        where('poolId', '==', poolId),
-        where('claimed', '==', false)
+        where('poolId', '==', poolId)
       );
-
+      
       const rewardsDocs = await getDocs(rewardsQuery);
-      return rewardsDocs.docs.map(doc => ({
-        ...doc.data(),
-        amount: BigInt(doc.data().amount)
-      })) as StakingReward[];
+      const rewards: StakingReward[] = [];
+      
+      rewardsDocs.forEach((doc) => {
+        const data = doc.data();
+        rewards.push({
+          id: doc.id,
+          poolId: data.poolId,
+          userAddress: data.userAddress,
+          amount: data.amount,
+          timestamp: data.timestamp,
+          claimed: data.claimed
+        } as StakingReward);
+      });
+      
+      logger.info({ message: `Retrieved ${rewards.length} rewards for pool ${poolId}` });
+      return rewards;
     } catch (error) {
-      logger.error('Erreur lors de la récupération des récompenses', { error, poolId });
+      logger.error({ message: `Error getting rewards for pool ${poolId}`, error });
       throw error;
     }
   }
-}; 
+};
