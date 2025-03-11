@@ -1,4 +1,6 @@
 import { User } from 'firebase/auth';
+import { AUTH_ACTIONS } from '../features/auth/actions/authActions';
+import { AuthError } from '../features/auth/errors/AuthError';
 
 export interface TokenForgeUserMetadata {
   creationTime: string;
@@ -14,12 +16,6 @@ export interface TokenForgeUser extends Omit<User, 'metadata'> {
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
-}
-
-export interface AuthError {
-  code: string;
-  message: string;
-  details?: any;
 }
 
 export interface WalletConnectionState {
@@ -48,12 +44,50 @@ export const toAuthState = (user: TokenForgeUser | null): AuthState => ({
   }
 });
 
+// Utiliser les constantes d'action définies dans AUTH_ACTIONS
 export type AuthAction =
-  | { type: 'LOGIN_START' }
-  | { type: 'LOGIN_SUCCESS'; payload: TokenForgeUser }
-  | { type: 'LOGIN_FAILURE'; payload: AuthError }
-  | { type: 'LOGOUT' }
-  | { type: 'UPDATE_USER'; payload: Partial<TokenForgeUser> }
-  | { type: 'UPDATE_WALLET'; payload: { address: string | null; isConnected: boolean } }
-  | { type: 'SET_ERROR'; payload: AuthError }
-  | { type: 'CLEAR_ERROR' };
+  // Login et Sign In Actions
+  | { type: typeof AUTH_ACTIONS.LOGIN_START }
+  | { type: typeof AUTH_ACTIONS.LOGIN_SUCCESS; payload: { user: TokenForgeUser; token: string } }
+  | { type: typeof AUTH_ACTIONS.LOGIN_FAILURE; payload: AuthError }
+  | { type: typeof AUTH_ACTIONS.SIGN_IN_START }
+  | { type: typeof AUTH_ACTIONS.SIGN_IN_SUCCESS; payload: TokenForgeUser | null }
+  | { type: typeof AUTH_ACTIONS.SIGN_IN_FAILURE; payload: AuthError }
+  
+  // Sign Up Actions
+  | { type: typeof AUTH_ACTIONS.SIGN_UP_START }
+  | { type: typeof AUTH_ACTIONS.SIGN_UP_SUCCESS; payload: TokenForgeUser | null }
+  | { type: typeof AUTH_ACTIONS.SIGN_UP_FAILURE; payload: AuthError }
+  
+  // Logout Actions
+  | { type: typeof AUTH_ACTIONS.LOGOUT_START }
+  | { type: typeof AUTH_ACTIONS.LOGOUT_SUCCESS }
+  | { type: typeof AUTH_ACTIONS.LOGOUT_FAILURE; payload: AuthError }
+  | { type: typeof AUTH_ACTIONS.LOGOUT }
+  
+  // User Update Actions
+  | { type: typeof AUTH_ACTIONS.UPDATE_USER; payload: Partial<TokenForgeUser> }
+  | { type: typeof AUTH_ACTIONS.UPDATE_PROFILE_START }
+  | { type: typeof AUTH_ACTIONS.UPDATE_PROFILE_SUCCESS; payload: Partial<TokenForgeUser> }
+  | { type: typeof AUTH_ACTIONS.UPDATE_PROFILE_FAILURE; payload: AuthError }
+  
+  // Error Management
+  | { type: typeof AUTH_ACTIONS.SET_ERROR; payload: AuthError }
+  | { type: typeof AUTH_ACTIONS.CLEAR_ERROR }
+  
+  // Wallet Actions
+  | { type: typeof AUTH_ACTIONS.WALLET_CONNECT; payload: WalletConnectionState }
+  | { type: typeof AUTH_ACTIONS.WALLET_DISCONNECT }
+  | { type: typeof AUTH_ACTIONS.WALLET_NETWORK_CHANGE; payload: { chainId: number; isCorrectNetwork: boolean } }
+  | { type: typeof AUTH_ACTIONS.WALLET_UPDATE_PROVIDER; payload: any }
+  | { type: typeof AUTH_ACTIONS.CONNECT_WALLET_START }
+  | { type: typeof AUTH_ACTIONS.CONNECT_WALLET_SUCCESS; payload: WalletConnectionState }
+  | { type: typeof AUTH_ACTIONS.CONNECT_WALLET_FAILURE; payload: AuthError }
+  | { type: typeof AUTH_ACTIONS.DISCONNECT_WALLET_START }
+  | { type: typeof AUTH_ACTIONS.DISCONNECT_WALLET_SUCCESS }
+  | { type: typeof AUTH_ACTIONS.DISCONNECT_WALLET_FAILURE; payload: AuthError }
+  
+  // Password Reset Actions
+  | { type: typeof AUTH_ACTIONS.RESET_PASSWORD_START }
+  | { type: typeof AUTH_ACTIONS.RESET_PASSWORD_SUCCESS }
+  | { type: typeof AUTH_ACTIONS.RESET_PASSWORD_FAILURE; payload: AuthError };

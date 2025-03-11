@@ -1,11 +1,12 @@
 // @ts-expect-error React is needed for JSX
 import React, { createContext, ReactNode, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { auth, firebaseService } from '@/config/firebase';
+import { firebaseService } from '@/config/firebase';
 import { onAuthStateChanged, User, Auth, setPersistence } from 'firebase/auth';
 import { AUTH_PERSISTENCE } from '@/config/constants';
 import { SessionService, SessionState } from '@/services/session/sessionService';
 import { logger } from '@/utils/logger';
+import { getFirebaseAuth, initializeAuth } from '@/lib/firebase/auth';
 
 export interface AuthContextType {
   isAuthenticated: boolean;
@@ -33,14 +34,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const sessionService = SessionService.getInstance();
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    const initializeAuthAndSession = async () => {
       try {
+        logger.info('Auth', 'Initialisation de l\'authentification');
+        
         // S'assurer que Firebase est initialisé
         if (!firebaseService.isInitialized()) {
           await firebaseService.initialize();
         }
         
-        const firebaseAuth: Auth = auth;
+        // Initialiser l'authentification via le module dédié
+        await initializeAuth();
+        const firebaseAuth: Auth = getFirebaseAuth();
         
         // Set auth persistence (attendre que la persistance soit configurée)
         await setPersistence(firebaseAuth, AUTH_PERSISTENCE);
@@ -62,8 +67,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           if (user) {
             dispatch({ type: 'auth/setUser', payload: user });
+            logger.info('Auth', 'Utilisateur authentifié', { userId: user.uid });
           } else {
             dispatch({ type: 'auth/clearUser' });
+            logger.info('Auth', 'Aucun utilisateur authentifié');
           }
         });
 
@@ -77,7 +84,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     // Initialiser l'authentification et stocker la fonction de nettoyage
-    const unsubscribePromise = initializeAuth();
+    const unsubscribePromise = initializeAuthAndSession();
     
     return () => {
       // Nettoyer l'abonnement et terminer la session

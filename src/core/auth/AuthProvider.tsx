@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { auth, firebaseService } from '@/config/firebase';
+import { firebaseService } from '@/config/firebase';
+import { getFirebaseAuth } from '@/lib/firebase/auth';
 import { onAuthStateChanged, User, Auth, setPersistence } from 'firebase/auth';
 import { AUTH_PERSISTENCE } from '@/config/constants';
 import { SessionService, SessionState } from '@/services/session/sessionService';
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await firebaseService.initialize();
         }
         
-        const firebaseAuth: Auth = auth;
+        const firebaseAuth: Auth = getFirebaseAuth();
         
         // Set auth persistence (attendre que la persistance soit configurée)
         await setPersistence(firebaseAuth, AUTH_PERSISTENCE);
