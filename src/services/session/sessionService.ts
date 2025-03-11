@@ -1,5 +1,6 @@
 import { Auth, User } from 'firebase/auth';
-import { auth, firebaseService } from '@/config/firebase';
+import { firebaseService } from '@/config/firebase';
+import { getFirebaseAuth, initializeAuth } from '@/lib/firebase/auth';
 import { logger } from '@/utils/logger';
 import { AUTH_CONFIG } from '@/config/constants';
 
@@ -13,15 +14,30 @@ export enum SessionState {
 export class SessionService {
   private static instance: SessionService;
   private currentState: SessionState = SessionState.INITIALIZING;
-  private auth: Auth;
+  private auth: Auth | null = null;
   private sessionTimeout: number | null = null;
   private lastActivity: number = Date.now();
   private readonly SESSION_CHECK_INTERVAL = 60 * 1000; // Vérifier l'activité toutes les minutes
   private sessionCheckIntervalId: number | null = null;
 
   private constructor() {
-    this.auth = auth;
+    // Initialisation différée de l'auth
+    this.initAuth().catch(error => {
+      logger.error('Session', 'Erreur lors de l\'initialisation de l\'authentification', 
+        error instanceof Error ? error : new Error(String(error))
+      );
+    });
     this.setupSessionMonitoring();
+  }
+
+  private async initAuth(): Promise<void> {
+    try {
+      await initializeAuth();
+      this.auth = getFirebaseAuth();
+    } catch (error) {
+      this.currentState = SessionState.ERROR;
+      throw error;
+    }
   }
 
   /**
@@ -106,7 +122,13 @@ export class SessionService {
         await firebaseService.initialize();
       }
       
-      const user: User | null = this.auth.currentUser;
+      // S'assurer que l'authentification est initialisée
+      if (!this.auth) {
+        await this.initAuth();
+      }
+      
+      const auth = this.auth!; // Non-null assertion pour TypeScript
+      const user: User | null = auth.currentUser;
 
       if (!user) {
         this.currentState = SessionState.UNAUTHENTICATED;
@@ -149,7 +171,13 @@ export class SessionService {
       // Nettoyer les ressources de surveillance
       this.cleanupSessionMonitoring();
       
-      await this.auth.signOut();
+      // S'assurer que l'authentification est initialisée
+      if (!this.auth) {
+        await this.initAuth();
+      }
+      
+      const auth = this.auth!; // Non-null assertion pour TypeScript
+      await auth.signOut();
       this.currentState = SessionState.UNAUTHENTICATED;
       logger.info('Session', 'Session terminée avec succès');
     } catch (error) {
@@ -179,7 +207,12 @@ export class SessionService {
     }
 
     try {
-      const user = this.auth.currentUser;
+      if (!this.auth) {
+        await this.initAuth();
+      }
+      
+      const auth = this.auth!; // Non-null assertion pour TypeScript
+      const user = auth.currentUser;
       if (!user) {
         this.currentState = SessionState.UNAUTHENTICATED;
         return false;
