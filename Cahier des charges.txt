@@ -1,0 +1,915 @@
+# Cahier des Charges - Projet TokenForge
+
+## 1. Introduction et contexte
+
+### 1.1 Présentation générale
+Le présent document constitue le cahier des charges pour le développement de TokenForge, une plateforme complète de création et de gestion de tokens sur différentes blockchains. Ce document détaille les exigences fonctionnelles et techniques, les livrables attendus, ainsi que les modalités d'exécution du projet.
+
+### 1.2 Contexte du projet
+Dans un écosystème blockchain en constante évolution, la création de tokens reste une opération techniquement complexe, limitant l'accès à cette technologie pour de nombreux utilisateurs potentiels. TokenForge vise à démocratiser cette technologie en fournissant une solution accessible et sécurisée, tout en maintenant un avantage concurrentiel grâce à une structure tarifaire optimisée.
+
+### 1.3 Terminologie et définitions
+- **Token**: Actif numérique créé sur une blockchain
+- **Smart Contract**: Contrat auto-exécutant dont les termes sont écrits en code
+- **Multi-Chain**: Support de plusieurs blockchains distinctes
+- **DEX**: Exchange décentralisé (Decentralized Exchange)
+- **Tokenomics**: Économie et distribution des tokens d'un projet
+- **Anti-Rugpull**: Mécanismes de prévention contre l'abandon frauduleux d'un projet
+- **Anti-Whale**: Mécanismes limitant l'accumulation excessive de tokens par une entité
+
+## 2. Présentation du projet
+
+### 2.1 Vision et objectifs
+**Vision**: Développer TokenForge en tant que plateforme de référence pour la création et la gestion de tokens, accessible et puissante, avec un modèle économique durable basé sur des services à valeur ajoutée compétitifs.
+
+**Objectifs clés**:
+- Rendre la création de tokens accessible aux utilisateurs sans expertise technique avancée
+- Supporter au minimum 6 blockchains majeures (Ethereum, BSC, Polygon, Avalanche, Solana, Arbitrum)
+- Garantir la sécurité des utilisateurs tout en offrant une flexibilité configurée via le dashboard admin
+- Établir un modèle économique viable basé sur des frais de service compétitifs et des abonnements premium
+- Atteindre un minimum de 15,000 utilisateurs et 1,500 tokens créés dans les 12 premiers mois
+- Proposer systématiquement des tarifs 20-40% inférieurs à la concurrence
+
+### 2.2 Périmètre du projet
+Le projet inclut:
+- Le développement d'une plateforme web complète (frontend et backend)
+- La création de smart contracts pour 6 blockchains
+- Une interface utilisateur intuitive pour la création et la gestion de tokens
+- Des services à valeur ajoutée (Tokenomics Designer, Auto-Liquidity Manager, etc.)
+- Un système d'abonnement premium multi-niveaux
+- Des outils analytiques pour les créateurs de tokens
+- Une marketplace de templates et de services experts
+
+Le projet n'inclut pas:
+- Le trading de tokens (exchange)
+- La création de wallets blockchain
+- Le développement de protocoles blockchain
+- Les services de custody des actifs numériques
+
+### 2.3 Public cible
+- Entrepreneurs blockchain débutants et intermédiaires
+- Développeurs cherchant à accélérer leur processus de création
+- Projets communautaires de petite à moyenne taille
+- Entreprises souhaitant émettre des tokens fonctionnels
+- Créateurs de contenu et influenceurs souhaitant tokeniser leur audience
+
+## 3. Spécifications fonctionnelles
+
+### 3.1 Fonctionnalités core
+
+#### 3.1.1 Création de tokens
+- Interface étape par étape pour la création de tokens
+- Sélection de la blockchain cible parmi les 6 blockchains supportées
+- Configuration des paramètres de base du token (nom, symbole, supply, décimales)
+- Configuration des fonctionnalités optionnelles (mint, burn, pause, etc.)
+- Prévisualisation des caractéristiques du token avant déploiement
+- Options de tokenomics prédéfinies et personnalisables
+- Système de validation et vérification des configurations
+
+#### 3.1.2 Gestion des tokens
+- Dashboard de gestion des tokens créés
+- Monitoring des métriques clés (holders, transactions, prix)
+- Interface d'administration des fonctions du token (mint, burn, etc.)
+- Gestion des listes de whitelist/blacklist
+- Configuration des paramètres anti-whale
+- Exportation des données et rapports
+
+#### 3.1.3 Système de paiement
+- Support des paiements en crypto-monnaies natives (ETH, BNB, MATIC, etc.)
+- Sélection intelligente de la blockchain la moins coûteuse
+- Estimation des frais de gas en temps réel
+- Suivi des transactions et confirmation
+- Structure tarifaire flexible par blockchain et type de token
+- Intégration avec WalletConnect et Metamask
+
+#### 3.1.4 Système d'authentification
+- Connexion via wallet (Web3)
+- Authentification Firebase sécurisée
+- Gestion des profils utilisateurs
+- Niveaux d'accès différenciés (utilisateur standard, premium, admin)
+- Sécurité multi-facteurs pour les opérations sensibles
+
+### 3.2 Services à valeur ajoutée
+
+#### 3.2.1 Tokenomics Designer
+- Interface visuelle de conception de tokenomics
+- Modèles prédéfinis optimisés pour différents cas d'usage
+- Simulateur de scénarios économiques
+- Projection des distributions sur différentes périodes
+- Génération automatique de documentation
+- Exportation des modèles créés (JSON, PDF)
+
+#### 3.2.2 Auto-Liquidity Manager
+- Configuration des pools de liquidité automatiques
+- Support multi-DEX (Uniswap, PancakeSwap, SushiSwap, etc.)
+- Gestion des paires de trading
+- Monitoring de la liquidité en temps réel
+- Alertes configurables (seuils, événements)
+- Répartition optimisée des liquidités
+
+#### 3.2.3 Landing Page Builder
+- Templates de pages de présentation pour projets token
+- Personnalisation des éléments visuels et contenus
+- Intégration de widgets en temps réel (prix, supply, holders)
+- Options d'exportation et d'hébergement
+- Templates premium avec fonctionnalités avancées
+- Système de référencement optimisé
+
+#### 3.2.4 Expert Network
+- Marketplace de services professionnels
+- Système de validation des prestataires
+- Interface de mise en relation
+- Gestion des projets et suivi
+- Système d'évaluation et réputation
+- Programme de parrainage et commission
+
+#### 3.2.5 Multi-Chain Token Bridge
+- Interface simplifiée de bridge inter-chaînes
+- Sécurisation des transactions cross-chain
+- Monitoring des frais et optimisation
+- Historique des opérations de bridge
+- Alertes et notifications de statut
+
+### 3.3 Abonnements premium
+
+#### 3.3.1 Structure d'abonnement
+- Niveau Gratuit: Fonctionnalités de base limitées
+- Niveau Standard: Fonctionnalités complètes avec limitations de volume
+- Niveau Pro: Accès complet sans limitations
+- Niveau Enterprise: Services personnalisés et support dédié
+
+#### 3.3.2 Avantages premium
+- Réduction sur les frais de déploiement
+- Accès aux templates premium
+- Fonctionnalités analytics avancées
+- Support prioritaire
+- Personnalisation étendue
+- API d'accès pour intégrations
+- Tokens sans branding TokenForge
+
+## 4. Spécifications techniques
+
+### 4.1. Technologies frontend
+- Framework: React.js avec TypeScript
+- État global: Redux ou Context API
+- UI Components: Material-UI ou Chakra UI
+- Responsive design: Support mobile, tablette et desktop
+- Wallet Connect: ethers.js, Web3Modal
+- Visualisation: D3.js ou recharts
+- Tests: Jest, React Testing Library
+
+### 4.2 Technologies backend
+- Serveur: Node.js avec Express ou Nest.js
+- Base de données: Firebase Firestore
+- Authentification: Firebase Auth
+- Cloud Functions: Firebase Functions
+- Cache: Redis
+- API Documentation: Swagger/OpenAPI
+- Tests: Jest, Supertest
+
+### 4.3 Infrastructure blockchain
+- Providers: Infura, Alchemy
+- Bibliothèques: ethers.js, web3.js
+- Frameworks smart contracts: Hardhat/Truffle
+- Langages smart contracts: Solidity, Rust (Solana)
+- Tests smart contracts: Waffle, Chai
+- Sécurité: OpenZeppelin, Mythril
+
+### 4.4 Environnements de déploiement
+- Développement: Local + Firebase Emulators
+- Staging: Firebase Hosting + Functions Development
+- Production: Firebase Hosting + Functions Production
+- CI/CD: GitHub Actions
+- Monitoring: Firebase Performance, Sentry
+
+### 4.5 Blockchain supportées
+La plateforme devra obligatoirement supporter les blockchains suivantes:
+1. Ethereum
+2. Binance Smart Chain (BSC)
+3. Polygon
+4. Avalanche
+5. Solana
+6. Arbitrum
+
+Chaque blockchain supportée requiert:
+- Smart contracts spécifiques
+- Service de paiement dédié
+- Tests d'intégration
+- Documentation utilisateur
+
+## 5. Architecture système
+
+### 5.1 Architecture globale
+L'architecture du système doit être modulaire et scalable, permettant l'ajout de nouvelles blockchains et fonctionnalités.
+
+- **Frontend**: Application React.js structurée par features
+- **Backend**: API REST avec Firebase Functions
+- **Stockage**: Firebase Firestore + Storage
+- **Blockchain**: Smart contracts déployés sur chaque blockchain
+- **Services tiers**: Intégrations avec providers blockchain, services d'analytics
+
+### 5.2 Modèle de données
+
+#### 5.2.1 Utilisateurs
+- Identifiant utilisateur
+- Informations de profil
+- Wallets connectés
+- Niveau d'abonnement
+- Préférences
+- Historique d'activités
+
+#### 5.2.2 Tokens
+- Identifiant token
+- Créateur
+- Blockchain
+- Adresse du contrat
+- Paramètres configurables
+- Métadonnées
+- Statistiques
+- Historique de transactions
+
+#### 5.2.3 Paiements
+- Identifiant transaction
+- Utilisateur
+- Montant
+- Méthode de paiement
+- Statut
+- Horodatage
+- Références blockchain
+- Services achetés
+
+#### 5.2.4 Templates
+- Identifiant template
+- Type (token, landing page)
+- Créateur
+- Catégorie
+- Prix
+- Paramètres configurables
+- Métadonnées
+- Statistiques d'utilisation
+
+### 5.3 Sécurité et performances
+
+#### 5.3.1 Exigences de sécurité
+- Audit des smart contracts avant déploiement
+- Protection contre les attaques CSRF, XSS, injection
+- Validation stricte des entrées utilisateur
+- Chiffrement des données sensibles
+- Contrôle d'accès basé sur les rôles
+- Journal d'audit des opérations critiques
+- Mécanismes anti-rugpull validés
+- Tests de pénétration périodiques
+
+#### 5.3.2 Exigences de performance
+- Temps de chargement des pages < 3 secondes
+- Temps de réponse API < 2 secondes pour 95% des requêtes
+- Support de 1000+ utilisateurs simultanés
+- Optimisation des gas fees pour les déploiements
+- Scalabilité automatique des ressources cloud
+- Cache efficace pour les données fréquemment accédées
+- Disponibilité > 99.9%
+
+## 6. Méthodologie et organisation
+
+### 6.1 Structure de l'équipe
+- 1 Chef de Projet (100% temps)
+- 3 Développeurs Backend (100% temps)
+- 2 Développeurs Frontend (100% temps)
+- 1 Testeur QA (100% temps)
+- 1 Designer UI/UX (50% temps)
+- 1 Responsable Marketing & Communauté (100% temps)
+- 1 Analyste de marché (50% temps)
+
+### 6.2 Méthodologie de développement
+- Approche: Agile Scrum avec sprints de 2 semaines
+- Outils de gestion: JIRA pour le suivi des tâches, GitHub pour le versioning
+- Communication: Réunions quotidiennes (15 min), revue de sprint (bi-mensuelle), planification (bi-mensuelle)
+- Documentation: Confluence pour la documentation technique et fonctionnelle
+
+### 6.3 Gestion de la qualité
+- Tests unitaires: Couverture minimale de 80%
+- Tests d'intégration: Automatisés à chaque déploiement
+- Tests end-to-end: Scénarios clés automatisés
+- Tests de sécurité: Audit interne et externe
+- Revue de code: Obligatoire pour toutes les PR
+- CI/CD: Intégration et déploiement continus
+
+## 7. Livrables et jalons
+
+### 7.1 Livrables principaux
+
+#### 7.1.1 Documentation
+- Spécifications fonctionnelles détaillées
+- Documentation technique complète
+- Documentation utilisateur
+- Documentation API (Swagger)
+- Guides de déploiement et maintenance
+- Rapport d'audit de sécurité
+
+#### 7.1.2 Code source
+- Code frontend complet
+- Code backend complet
+- Smart contracts pour 6 blockchains
+- Tests unitaires et d'intégration
+- Scripts de déploiement
+- Assets graphiques
+
+#### 7.1.3 Plateformes déployées
+- Environnement de développement
+- Environnement de staging
+- Environnement de production
+- Tableau de bord de monitoring
+- Backups et systèmes de reprise
+
+### 7.2 Jalons clés
+
+#### 7.2.1 Phase 1: Fondation (Mois 1-3)
+- **Jalon 1 (Fin Semaine 2)**: Cahier des charges finalisé et environnement de développement configuré
+- **Jalon 2 (Fin Semaine 6)**: Refactoring du code existant terminé
+- **Jalon 3 (Fin Semaine 10)**: Infrastructure de base (auth, paiement, multi-chain) mise en place
+- **Jalon 4 (Fin Semaine 12)**: Livraison Phase 1 avec documentation et déploiement staging
+
+#### 7.2.2 Phase 2: Développement Core (Mois 4-6)
+- **Jalon 5 (Fin Semaine 16)**: Smart contracts développés pour 4 blockchains principales
+- **Jalon 6 (Fin Semaine 20)**: Interface de création de tokens complète
+- **Jalon 7 (Fin Semaine 24)**: Système de paiement intégré et version bêta déployée
+
+#### 7.2.3 Phase 3: Extension & Services (Mois 7-9)
+- **Jalon 8 (Fin Semaine 28)**: Dashboard Admin et Auto-Liquidity Manager fonctionnels
+- **Jalon 9 (Fin Semaine 32)**: Tokenomics Designer et Premium Template Store déployés
+- **Jalon 10 (Fin Semaine 36)**: Services de staking et système d'abonnement implémentés
+
+#### 7.2.4 Phase 4: Optimisation & Scaling (Mois 10-12)
+- **Jalon 11 (Fin Semaine 40)**: Support Solana & Arbitrum et Token Spotlight complétés
+- **Jalon 12 (Fin Semaine 44)**: Analytics Premium et Multi-Chain Bridge fonctionnels
+- **Jalon 13 (Fin Semaine 48)**: Expert Network et DeFi Integration Hub déployés
+- **Jalon 14 (Fin Semaine 52)**: Lancement officiel de la plateforme complète
+
+## 8. Budget et ressources
+
+### 8.1 Ressources humaines
+Budget détaillé pour:
+- Équipe de développement (6 personnes)
+- QA et testing (1 personne)
+- Design UI/UX (0.5 ETP)
+- Gestion de projet (1 personne)
+- Marketing et communauté (1 personne)
+- Analyse de marché (0.5 ETP)
+
+### 8.2 Infrastructures techniques
+Budget pour:
+- Serveurs cloud (AWS/GCP)
+- Services Firebase (Authentication, Hosting, Database)
+- Providers blockchain (Infura, Alchemy)
+- Outils de monitoring et analytics
+- Licences logicielles (design, développement)
+- Infrastructure pour services premium scalables
+
+### 8.3 Budget marketing
+Allocation pour:
+- Création de contenu (articles, vidéos, documentation)
+- Campagnes publicitaires (réseaux sociaux, Google Ads)
+- Présence événementielle (virtuelle et physique)
+- Programmes d'incitation (parrainage, récompenses)
+- Campagnes comparatives de tarifs
+
+### 8.4 Ventilation budgétaire
+- **Développement (65%)**: Équipe technique, infrastructure, sécurité
+- **Marketing (20%)**: Acquisition, rétention, contenu
+- **Opérations (10%)**: Gestion, légal, administratif
+- **Réserve (5%)**: Imprévus et opportunités
+
+## 9. Gestion des risques
+
+### 9.1 Risques techniques
+- **Complexité Multi-Chain**: Difficultés d'intégration et de maintenance
+  - *Mitigation*: Plan de test rigoureux, prioritisation des chaînes, abstraction modulaire
+- **Sécurité Smart Contracts**: Vulnérabilités potentielles, exploits
+  - *Mitigation*: Audits externes, tests approfondis, surveillance continue
+- **Performance**: Dégradation sous charge, temps de réponse élevés
+  - *Mitigation*: Tests de charge, monitoring continu, optimisations régulières
+- **Compatibilité Wallets**: Problèmes d'intégration avec certains wallets
+  - *Mitigation*: Tests exhaustifs, support des principaux wallets en priorité
+- **Scalabilité des services premium**: Performances sous charge intensive
+  - *Mitigation*: Architecture cloud scalable, monitoring proactif
+
+### 9.2 Risques business
+- **Adoption Limitée**: Traction utilisateurs insuffisante
+  - *Mitigation*: Stratégie marketing ciblée, offre freemium attractive, analyse des besoins
+- **Concurrence**: Émergence de plateformes concurrentes
+  - *Mitigation*: Veille concurrentielle, différenciation par les prix, innovation continue
+- **Conformité Réglementaire**: Évolutions réglementaires défavorables
+  - *Mitigation*: Veille juridique, documentation des risques, adaptabilité du produit
+- **Viabilité Économique**: Revenus insuffisants pour couvrir les coûts
+  - *Mitigation*: Monitoring des KPIs financiers, ajustements tarifaires, pivots potentiels
+- **Guerre des prix**: Pression concurrentielle sur les marges
+  - *Mitigation*: Surveillance continue des tarifs concurrents, différenciation par la valeur
+
+### 9.3 Plan de contingence
+- Revues de risques hebdomadaires pendant les sprints
+- Plans d'action documentés pour chaque risque majeur
+- Protocole d'escalade défini pour la gestion des incidents
+- Réserve budgétaire de 20% pour imprévus
+- Flexibilité d'ajustement de la roadmap en fonction des priorités
+
+## 10. Plan d'assurance qualité
+
+### 10.1 Stratégie de test
+- Tests unitaires pour tous les composants
+- Tests d'intégration pour les flux critiques
+- Tests end-to-end pour les parcours utilisateurs
+- Tests de charge et performance
+- Tests de sécurité et vulnérabilité
+- Tests de compatibilité (navigateurs, devices)
+
+### 10.2 Critères d'acceptation
+Les critères minimaux pour l'acceptation de chaque livrable incluent:
+- Conformité aux spécifications fonctionnelles
+- Couverture de tests > 80%
+- Zéro bug critique ou bloquant
+- Temps de réponse conforme aux exigences de performance
+- Documentation complète et à jour
+- Validation par les parties prenantes
+- Audit de sécurité sans vulnérabilité critique
+
+### 10.3 KPIs et mesures de succès
+
+#### 10.3.1 KPIs Produit
+- Nombre de tokens créés (total et par blockchain)
+- Utilisateurs actifs (quotidiens, hebdomadaires, mensuels)
+- Taux de conversion freemium vers payant
+- Satisfaction utilisateur (NPS, questionnaires)
+- Adoption des services premium par fonctionnalité
+
+#### 10.3.2 KPIs Techniques
+- Temps de disponibilité > 99.9%
+- Temps de réponse < 2s pour 95% des requêtes
+- Bugs critiques < 1 par mois après lancement
+- Dette technique mesurée par les outils d'analyse de code
+- Performance des services premium (temps de réponse, fiabilité)
+
+#### 10.3.3 KPIs Business
+- Revenus par source (frais, abonnements, services)
+- Coût d'acquisition client par canal
+- Valeur vie client (LTV)
+- Taux de rétention à 30, 90, 180 jours
+- Taux d'upgrade vers niveaux d'abonnement supérieurs
+- Écart tarifaire maintenu vs concurrence
+
+## 11. Modalités contractuelles
+
+### 11.1 Propriété intellectuelle
+- Droits de propriété sur le code source et la documentation
+- Licences des composants tiers et bibliothèques
+- Conditions d'utilisation des assets graphiques et marques
+- Droits sur les contenus générés par les utilisateurs
+
+### 11.2 Modalités de paiement
+- Échéancier des paiements lié aux jalons clés
+- Conditions de validation des livrables
+- Procédure de gestion des changements et avenants
+- Pénalités pour retards ou non-conformités
+
+### 11.3 Garantie et maintenance
+- Période de garantie post-livraison
+- Conditions de maintenance corrective et évolutive
+- SLA (Service Level Agreement) pour le support
+- Procédure de remontée et traitement des incidents
+
+### 11.4 Confidentialité et RGPD
+- Clauses de confidentialité
+- Traitement des données personnelles
+- Conformité RGPD
+- Mesures de protection des données sensibles
+
+---
+
+## Annexes
+
+### Annexe 1: Glossaire des termes techniques
+
+| Terme | Définition |
+|-------|------------|
+| **Token** | Actif numérique créé sur une blockchain représentant une valeur ou un droit particulier |
+| **Smart Contract** | Programme informatique auto-exécutable stocké sur une blockchain qui permet d'automatiser l'exécution d'un contrat selon des conditions prédéfinies |
+| **DApp** | Application décentralisée fonctionnant sur une blockchain |
+| **DEX** | Exchange décentralisé permettant l'échange de tokens sans intermédiaire centralisé |
+| **Tokenomics** | Étude de l'économie d'un token, incluant sa distribution, ses mécanismes d'offre/demande et ses cas d'usage |
+| **Liquidity Pool** | Réserve de tokens verrouillés dans un smart contract pour faciliter les échanges sur les DEX |
+| **Gas Fee** | Frais payés pour effectuer une transaction sur une blockchain |
+| **Anti-Whale** | Mécanismes limitant la possession ou les transactions de grandes quantités de tokens par une seule entité |
+| **Anti-Rugpull** | Mécanismes empêchant le retrait frauduleux de liquidité d'un projet |
+| **Staking** | Processus consistant à verrouiller des tokens pour recevoir des récompenses |
+| **AMM** | Automated Market Maker, protocole permettant l'échange automatisé de tokens |
+| **Bridge** | Protocole permettant le transfert d'actifs entre différentes blockchains |
+| **KYC** | Know Your Customer, processus de vérification d'identité |
+| **Multi-Chain** | Qui fonctionne sur plusieurs blockchains différentes |
+| **Web3** | Nouvelle génération d'Internet basée sur les technologies blockchain et décentralisées |
+| **Wallet Connect** | Protocole permettant de connecter un portefeuille crypto à une DApp |
+| **ERC-20** | Standard de token sur Ethereum |
+| **BEP-20** | Standard de token sur Binance Smart Chain |
+| **SPL Token** | Standard de token sur Solana |
+| **EVM** | Ethereum Virtual Machine, environnement d'exécution pour smart contracts |
+
+### Annexe 2: Maquettes et wireframes UI/UX
+
+#### Page d'accueil
+```
++------------------------------------------+
+|  TOKENFORGE LOGO       MENU    CONNECT   |
++------------------------------------------+
+|                                          |
+|     CRÉEZ VOTRE TOKEN EN QUELQUES        |
+|            MINUTES                       |
+|                                          |
+|    [COMMENCER MAINTENANT]  [EXPLORER]    |
+|                                          |
++------------------------------------------+
+|                                          |
+|  BLOCKCHAINS SUPPORTÉES                  |
+|  [ETH] [BSC] [POLYGON] [AVALANCHE]       |
+|  [SOLANA] [ARBITRUM]                     |
+|                                          |
++------------------------------------------+
+|                                          |
+|  SERVICES PREMIUM                        |
+|  - Tokenomics Designer                   |
+|  - Auto-Liquidity Manager                |
+|  - Landing Page Builder                  |
+|                                          |
++------------------------------------------+
+|                                          |
+|  TÉMOIGNAGES               STATISTIQUES  |
+|                                          |
++------------------------------------------+
+|  FOOTER: LIENS, COPYRIGHT, SOCIAL MEDIA  |
++------------------------------------------+
+```
+
+#### Interface de création de token
+```
++------------------------------------------+
+|  TOKENFORGE LOGO       MENU    CONNECT   |
++------------------------------------------+
+|                                          |
+|  ÉTAPE 1: BLOCKCHAIN & INFORMATIONS      |
+|  [Sélecteur de blockchain]               |
+|  Nom: [                ]                 |
+|  Symbole: [     ]                        |
+|  Supply: [             ]                 |
+|  Décimales: [  ]                         |
+|                                          |
+|  [PRÉCÉDENT]              [SUIVANT]      |
+|                                          |
++------------------------------------------+
+```
+
+#### Dashboard utilisateur
+```
++------------------------------------------+
+|  TOKENFORGE LOGO       MENU    CONNECT   |
++------------------------------------------+
+|                                          |
+|  [MES TOKENS]  [CRÉER]  [SERVICES]       |
+|                                          |
++------------------------------------------+
+|                                          |
+|  MES TOKENS                              |
+|  +----------------------------------+    |
+|  | Token A  | ETH  | 0x123...  |....|    |
+|  +----------------------------------+    |
+|  | Token B  | BSC  | 0x456...  |....|    |
+|  +----------------------------------+    |
+|                                          |
++------------------------------------------+
+|                                          |
+|  STATISTIQUES GLOBALES                   |
+|  [Graphique utilisateurs]                |
+|  [Graphique transactions]                |
+|                                          |
++------------------------------------------+
+```
+
+#### Tokenomics Designer
+```
++------------------------------------------+
+|  TOKENFORGE LOGO       MENU    CONNECT   |
++------------------------------------------+
+|                                          |
+|  TOKENOMICS DESIGNER                     |
+|                                          |
+|  [TEMPLATES]  [PERSONNALISÉ]  [SIMULER]  |
+|                                          |
++------------------------------------------+
+|                                          |
+|  DISTRIBUTION                            |
+|  +----------------------------------+    |
+|  |                                  |    |
+|  |          [GRAPHIQUE]             |    |
+|  |                                  |    |
+|  +----------------------------------+    |
+|                                          |
+|  [Team]     [%]     [Vesting period]     |
+|  [Advisors] [%]     [Vesting period]     |
+|  [Public]   [%]     [Vesting period]     |
+|  [Liquidity][%]     [Vesting period]     |
+|                                          |
+|  [CALCULER]         [EXPORTER]           |
+|                                          |
++------------------------------------------+
+```
+
+### Annexe 3: Diagrammes d'architecture
+
+#### Architecture système globale
+```
++-------------------------------------+
+|            UTILISATEURS             |
++-------------------------------------+
+              |
+              v
++-------------------------------------+
+|          FRONTEND REACT             |
++-------------------------------------+
+              |
+              v
++-------------------------------------+
+|           API GATEWAY               |
++-------------------------------------+
+              |
+       +------+------+
+       |             |
+       v             v
++-------------+ +------------------+
+| FIREBASE    | | BLOCKCHAIN       |
+| - Auth      | | INFRASTRUCTURE   |
+| - Firestore | | - Smart Contracts|
+| - Functions | | - Wallets        |
+| - Storage   | | - Providers      |
++-------------+ +------------------+
+                        |
+                        v
+           +------------------------+
+           | SERVICES BLOCKCHAIN    |
+           | - Ethereum            |
+           | - BSC                 |
+           | - Polygon             |
+           | - Avalanche           |
+           | - Solana              |
+           | - Arbitrum            |
+           +------------------------+
+```
+
+#### Architecture des Smart Contracts
+```
+                   +--------------------+
+                   |   TokenFactory     |
+                   +--------------------+
+                      |
+          +-----------|------------+
+          |           |            |
+          v           v            v
++------------------+ +----+ +----------------+
+| StandardToken    | |ERC20| | TokenExtensions|
++------------------+ +----+ +----------------+
+          |                        |
+          v                        v
++------------------+      +------------------+
+| TokenFeatures    |      | SecurityModules  |
+| - Mintable       |      | - AntiWhale      |
+| - Burnable       |      | - AntiRug        |
+| - Pausable       |      | - TimeLock       |
++------------------+      +------------------+
+```
+
+#### Flux de paiement
+```
++-------------+    +-------------+    +-------------+
+| Utilisateur |--->| TokenForge  |--->| Blockchain  |
++-------------+    +-------------+    +-------------+
+       |                  ^                 |
+       |                  |                 |
+       v                  |                 v
++-------------+    +-------------+    +-------------+
+| Wallet      |<---| Payment     |<---| Smart       |
+| Connect     |    | Service     |    | Contract    |
++-------------+    +-------------+    +-------------+
+```
+
+### Annexe 4: Planning détaillé
+
+#### Phase 1: Fondation (Mois 1-3)
+
+| Semaine | Activités principales | Livrables | Responsable |
+|---------|----------------------|-----------|-------------|
+| 1 | Finalisation du cahier des charges | Document de spécifications | Chef de projet |
+| 2 | Configuration environnement | Environnements de développement | Développeur backend |
+| 3-4 | Nettoyage du code existant | Code refactorisé | Équipe développement |
+| 5-6 | Refactorisation AdminDashboard | Dashboard amélioré | Développeur frontend |
+| 7-8 | Système d'authentification | Authentification sécurisée | Développeur backend |
+| 9-10 | Système de paiement (base) | Structure PaymentSessionService | Développeur backend |
+| 11 | Tests intégrés | Rapport de tests | Testeur QA |
+| 12 | Documentation Phase 1 | Documentation technique | Chef de projet |
+
+#### Phase 2: Développement Core (Mois 4-6)
+
+| Semaine | Activités principales | Livrables | Responsable |
+|---------|----------------------|-----------|-------------|
+| 13-14 | Smart contracts ETH & BSC | Contrats déployés et testés | Développeur backend |
+| 15-16 | Smart contracts Polygon & Avalanche | Contrats déployés et testés | Développeur backend |
+| 17-18 | Interface création token (base) | Formulaire fonctionnel | Développeur frontend |
+| 19-20 | Interface création token (avancée) | Fonctionnalités complètes | Développeur frontend |
+| 21-22 | Services de paiement | Services blockchain spécifiques | Développeur backend |
+| 23-24 | Interface paiement | Flux complet de paiement | Développeur frontend |
+
+#### Phase 3: Extension & Services (Mois 7-9)
+
+| Semaine | Activités principales | Livrables | Responsable |
+|---------|----------------------|-----------|-------------|
+| 25-26 | Dashboard Admin & Landing Page Builder | Interface complète | Développeur frontend |
+| 27-28 | Auto-Liquidity Manager | Module fonctionnel | Équipe développement |
+| 29-30 | Tokenomics Designer | Designer complet | Développeur frontend |
+| 31-32 | Premium Template Store | Marketplace fonctionnelle | Équipe développement |
+| 33-34 | Smart Contracts Staking | Contrats déployés | Développeur backend |
+| 35-36 | Structure d'abonnement | Système complet | Équipe développement |
+
+#### Phase 4: Optimisation & Scaling (Mois 10-12)
+
+| Semaine | Activités principales | Livrables | Responsable |
+|---------|----------------------|-----------|-------------|
+| 37-38 | Développement Solana | Support blockchain | Développeur backend |
+| 39-40 | Développement Arbitrum | Support blockchain | Développeur backend |
+| 41-42 | Analytics Premium | Dashboard analytics | Équipe développement |
+| 43-44 | Multi-Chain Bridge | Système bridge | Équipe développement |
+| 45-46 | Expert Network | Marketplace experts | Équipe développement |
+| 47-48 | DeFi Integration Hub | Hub d'intégrations | Équipe développement |
+| 49-50 | Tests finaux | Rapport de tests | Testeur QA |
+| 51-52 | Lancement officiel | Plateforme v1.0 | Toute l'équipe |
+
+### Annexe 5: Matrice de responsabilité (RACI)
+
+R: Responsible, A: Accountable, C: Consulted, I: Informed
+
+| Activité | Chef de projet | Dev Backend | Dev Frontend | Testeur QA | Designer | Marketing | Analyste |
+|----------|---------------|-------------|--------------|------------|----------|-----------|----------|
+| Spécifications | A/R | C | C | I | C | C | C |
+| Architecture système | A | R | C | I | I | I | I |
+| Smart contracts | A | R | I | C | I | I | I |
+| Frontend | A | C | R | C | R | C | I |
+| Tests | A | C | C | R | I | I | I |
+| Déploiement | A | R | C | R | I | I | I |
+| Documentation | A | C | C | C | I | C | C |
+| Marketing | A | I | I | I | C | R | C |
+| Stratégie tarifaire | A | I | I | I | I | C | R |
+| Support utilisateur | A | C | C | C | I | R | I |
+| Analyse concurrentielle | A | I | I | I | I | C | R |
+| Reporting | R | C | C | C | C | C | C |
+
+### Annexe 6: Modèles de reporting
+
+#### Rapport d'avancement hebdomadaire
+```
+# Rapport d'avancement - Semaine [X]
+
+## Résumé exécutif
+[Synthèse des points clés]
+
+## Avancement des tâches
+- Tâche 1: [x%] - [Commentaires]
+- Tâche 2: [x%] - [Commentaires]
+- Tâche 3: [x%] - [Commentaires]
+
+## Jalons
+- Jalon 1: [Statut] - [Date prévue/réelle]
+- Jalon 2: [Statut] - [Date prévue/réelle]
+
+## Risques et problèmes
+- Risque 1: [Description] - [Mitigation]
+- Problème 1: [Description] - [Action]
+
+## Budget
+- Budget prévu: [Montant]
+- Budget consommé: [Montant] ([x%])
+- Projection: [En ligne/Dépassement/Économie]
+
+## Actions pour la semaine prochaine
+- Action 1: [Responsable] - [Date]
+- Action 2: [Responsable] - [Date]
+```
+
+#### Dashboard KPIs mensuel
+```
+# Dashboard KPIs - Mois [X]
+
+## KPIs Produit
+- Tokens créés: [Nombre] ([+/-x%] vs mois précédent)
+- Utilisateurs actifs: [Nombre] ([+/-x%])
+- Taux de conversion: [x%] ([+/-x%])
+- Satisfaction utilisateur (NPS): [Score] ([+/-x])
+
+## KPIs Techniques
+- Disponibilité: [x%]
+- Temps de réponse moyen: [x]s
+- Bugs critiques: [Nombre]
+- Dette technique: [Score]
+
+## KPIs Business
+- Revenus: [Montant] ([+/-x%])
+- CAC: [Montant] ([+/-x%])
+- LTV: [Montant] ([+/-x%])
+- Rétention à 30j: [x%] ([+/-x%])
+
+## Points d'attention
+- Point 1: [Description]
+- Point 2: [Description]
+
+## Objectifs mois prochain
+- Objectif 1: [Description] - [Cible]
+- Objectif 2: [Description] - [Cible]
+```
+
+#### Rapport de revue de sprint
+```
+# Revue de Sprint [X]
+
+## Accomplissements
+- [Liste des fonctionnalités livrées]
+
+## Démos
+- [Fonctionnalité 1] - [Lien]
+- [Fonctionnalité 2] - [Lien]
+
+## Points de vélocité
+- Planifiés: [Nombre]
+- Complétés: [Nombre] ([x%])
+
+## Qualité
+- Tests réalisés: [Nombre]
+- Couverture: [x%]
+- Bugs identifiés: [Nombre]
+- Bugs résolus: [Nombre]
+
+## Rétrospective
+- Ce qui a bien fonctionné:
+  - [Point 1]
+  - [Point 2]
+- Ce qui peut être amélioré:
+  - [Point 1]
+  - [Point 2]
+- Actions pour le prochain sprint:
+  - [Action 1]
+  - [Action 2]
+```
+
+### Annexe 7: Liste des competitors et analyse tarifaire
+
+#### Principaux concurrents
+
+| Concurrent | Forces | Faiblesses | Tarification |
+|------------|--------|------------|--------------|
+| TokenMint | UI simple, bonne expérience utilisateur | Support limité de blockchains, options de personnalisation réduites | De 0.5 ETH à 2 ETH selon les fonctionnalités |
+| CoinFactory | Large adoption, documentation détaillée | Interface complexe, courbe d'apprentissage élevée | Abonnement mensuel de $99 à $499 |
+| TokenCreator | Tokenomics avancés, outils marketing intégrés | Performance limitée, support client lent | De 0.3 ETH à 1.5 ETH + frais mensuels |
+| BuildToken | Services premium de qualité, support multi-chain | Prix élevés, manque d'options gratuites | De $599 à $1999 par token + abonnement |
+| TokenGen | Personnalisation avancée, bonne sécurité | Interface peu intuitive, support limité de staking | $299 à $999 par déploiement |
+
+#### Modèle tarifaire TokenForge vs Concurrence
+
+| Service | TokenForge | Moyenne concurrence | Avantage tarifaire |
+|---------|------------|--------------------|-------------------|
+| Token ERC-20 standard | 0.2 ETH | 0.3 ETH | -33% |
+| Token BSC standard | 0.5 BNB | 0.8 BNB | -37.5% |
+| Token advanced (anti-whale, etc.) | 0.3 ETH | 0.5 ETH | -40% |
+| Auto-liquidity setup | 0.15 ETH | 0.25 ETH | -40% |
+| Landing page | $99 | $149 | -33.6% |
+| Tokenomics basic | Gratuit | $49 | -100% |
+| Tokenomics advanced | $79 | $129 | -38.8% |
+| Abonnement mensuel basic | $29 | $49 | -40.8% |
+| Abonnement mensuel pro | $79 | $99 | -20.2% |
+| Staking setup | 0.08 ETH | 0.12 ETH | -33.3% |
+
+#### Stratégie de différenciation tarifaire
+
+1. **Principes clés**:
+   - Maintenir des tarifs 20-40% inférieurs à la moyenne des concurrents
+   - Stratégie de pénétration de marché pour les premiers mois
+   - Ajustement trimestriel basé sur l'analyse concurrentielle
+
+2. **Structure tarifaire**:
+   - Niveau gratuit avec limitations pour acquisition
+   - Paiement à l'usage pour services basiques (création token)
+   - Abonnements pour utilisateurs réguliers
+   - Services premium à la carte
+   - Packages entreprise personnalisés
+
+3. **Communication marketing**:
+   - Comparatifs tarifaires transparents
+   - Calculateur d'économies en page d'accueil
+   - Garantie de prix bas
+   - Mise en avant de la valeur ajoutée malgré les prix bas
+
+4. **Évolution des prix**:
+   - Phase 1-2: Prix bas d'introduction (-40%)
+   - Phase 3: Ajustement progressif (-30%)
+   - Phase 4: Stabilisation (-20-25%)
+   - Post-lancement: Maintien avantage concurrentiel avec enrichissement de l'offre
