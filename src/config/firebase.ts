@@ -1,38 +1,49 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { logger, LogLevel } from '@/utils/logger';
-// import admin from './firebaseAdmin'; // Commenter ou supprimer cette ligne si non nécessaire
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { logger } from '../core/logger';
 
-// Vérification des variables d'environnement
+// Vérification du mode de l'application
 const isDevelopment = import.meta.env.DEV;
 
-// En mode développement, utiliser des valeurs par défaut si les variables d'environnement ne sont pas définies
-if (!isDevelopment && (!process.env.VITE_FIREBASE_API_KEY || !process.env.VITE_FIREBASE_AUTH_DOMAIN || !process.env.VITE_FIREBASE_PROJECT_ID || !process.env.VITE_FIREBASE_STORAGE_BUCKET || !process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || !process.env.VITE_FIREBASE_APP_ID)) {
-  throw new Error('Les variables d\'environnement Firebase ne sont pas correctement configurées.');
-}
-
-// Configuration Firebase avec valeurs par défaut pour le développement
-export const firebaseConfig = isDevelopment ? {
-  apiKey: process.env.VITE_FIREBASE_API_KEY || 'dev-api-key',
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || 'dev-project.firebaseapp.com',
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'dev-project',
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || 'dev-project.appspot.com',
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: process.env.VITE_FIREBASE_APP_ID || '1:123456789:web:abcdef'
-} : {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID
+// Configuration Firebase
+export const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'dev-api-key',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'dev-project.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'dev-project',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'dev-project.appspot.com',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789:web:abcdef'
 };
 
+// En production, vérifier que les variables d'environnement sont définies
+if (!isDevelopment) {
+  const missingVars = [];
+  if (!import.meta.env.VITE_FIREBASE_API_KEY) missingVars.push('VITE_FIREBASE_API_KEY');
+  if (!import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) missingVars.push('VITE_FIREBASE_AUTH_DOMAIN');
+  if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) missingVars.push('VITE_FIREBASE_PROJECT_ID');
+  if (!import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) missingVars.push('VITE_FIREBASE_STORAGE_BUCKET');
+  if (!import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) missingVars.push('VITE_FIREBASE_MESSAGING_SENDER_ID');
+  if (!import.meta.env.VITE_FIREBASE_APP_ID) missingVars.push('VITE_FIREBASE_APP_ID');
+  
+  if (missingVars.length > 0) {
+    logger.error({
+      category: 'Firebase',
+      message: `Variables d'environnement Firebase manquantes: ${missingVars.join(', ')}`,
+      error: new Error('Configuration Firebase incomplète')
+    });
+  }
+}
+
+/**
+ * Service de gestion de la configuration et de l'initialisation de l'application Firebase.
+ * Ce service est responsable uniquement de l'initialisation de base de Firebase.
+ * Pour les services spécifiques (auth, firestore, etc.), utilisez les modules dédiés:
+ * - src/lib/firebase/auth.ts : Gestion authentification
+ * - src/lib/firebase/firestore.ts : Interactions base de données
+ * - src/lib/firebase/services.ts : Initialisation cœur
+ */
 class FirebaseService {
   private static instance: FirebaseService;
-  private auth: Auth | null = null;
+  private _app: FirebaseApp | null = null;
   private initialized = false;
 
   private constructor() {}
@@ -44,31 +55,62 @@ class FirebaseService {
     return FirebaseService.instance;
   }
 
-  public async initialize(): Promise<void> {
-    if (this.initialized) return;
+  /**
+   * Initialise l'application Firebase si elle n'est pas déjà initialisée.
+   * Utilise getApps() pour vérifier si une instance existe déjà.
+   */
+  public initialize(): FirebaseApp {
+    if (this.initialized && this._app) {
+      logger.debug({
+        category: 'Firebase',
+        message: 'Firebase déjà initialisé, réutilisation de l\'instance existante'
+      });
+      return this._app;
+    }
 
     try {
-      const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-      this.auth = getAuth(app);
-
-      if (import.meta.env.DEV) {
-        connectAuthEmulator(this.auth, 'http://localhost:9099');
-        connectFirestoreEmulator(getFirestore(app), 'localhost', 8080);
+      logger.info({
+        category: 'Firebase',
+        message: 'Initialisation du service Firebase'
+      });
+      
+      // Vérifier si Firebase est déjà initialisé par une autre partie de l'application
+      if (getApps().length > 0) {
+        this._app = getApps()[0];
+        logger.info({
+          category: 'Firebase',
+          message: 'Instance Firebase existante détectée et réutilisée'
+        });
+      } else {
+        // Initialiser l'application Firebase seulement si aucune instance n'existe
+        this._app = initializeApp(firebaseConfig);
+        logger.info({
+          category: 'Firebase',
+          message: 'Nouvelle instance Firebase initialisée'
+        });
       }
-
+      
       this.initialized = true;
-      logger.info('Firebase initialized successfully', LogLevel.INFO);
+      return this._app;
     } catch (error) {
-      logger.error('Firebase initialization failed', LogLevel.ERROR);
+      this.initialized = false;
+      logger.error({
+        category: 'Firebase',
+        message: 'Erreur lors de l\'initialisation de Firebase',
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       throw error;
     }
   }
 
-  public getAuth(): Auth {
-    if (!this.auth) {
-      throw new Error('Firebase Auth not initialized');
+  /**
+   * Récupère l'instance de l'application Firebase, l'initialise si nécessaire.
+   */
+  public get app(): FirebaseApp {
+    if (!this._app) {
+      return this.initialize();
     }
-    return this.auth;
+    return this._app;
   }
 
   public isInitialized(): boolean {
@@ -76,41 +118,50 @@ class FirebaseService {
   }
 }
 
+// Création de l'instance singleton du service Firebase
 export const firebaseService = FirebaseService.getInstance();
 
-// Export des instances Firebase
-export const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-export const auth = getAuth(app);
-export const db = getFirestore();
-export const storage = getStorage();
+// Initialisation de Firebase et export de l'instance unique
+export const app = firebaseService.app;
 
-export const getFirebaseStatus = async () => {
+// Fonction pour vérifier l'état de Firebase
+export function getFirebaseStatus() {
   try {
-    const auth = getAuth(app);
+    const isInitialized = firebaseService.isInitialized();
+    const appsCount = getApps().length;
+    
     return {
-      initialized: !!auth,
-      currentUser: auth.currentUser,
-      status: 'connected'
+      isInitialized,
+      appsCount,
+      config: {
+        apiKey: firebaseConfig.apiKey ? 'configured' : 'missing',
+        authDomain: firebaseConfig.authDomain ? 'configured' : 'missing',
+        projectId: firebaseConfig.projectId ? 'configured' : 'missing',
+        environment: isDevelopment ? 'development' : 'production'
+      }
     };
   } catch (error) {
+    logger.error({
+      category: 'Firebase',
+      message: 'Erreur lors de la vérification du statut Firebase',
+      error: error instanceof Error ? error : new Error(String(error))
+    });
+    
     return {
-      initialized: false,
-      currentUser: null,
-      status: 'error',
-      error
+      isInitialized: false,
+      appsCount: -1,
+      error: error instanceof Error ? error.message : String(error)
     };
   }
-};
+}
 
-export const getDiagnostics = async () => {
-  const status = await getFirebaseStatus();
+// Fonction pour le diagnostic
+export function getDiagnostics() {
   return {
-    firebase: status,
-    environment: {
-      nodeEnv: process.env.NODE_ENV,
-      hasApiKey: !!process.env.VITE_FIREBASE_API_KEY,
-      hasAuthDomain: !!process.env.VITE_FIREBASE_AUTH_DOMAIN,
-      hasProjectId: !!process.env.VITE_FIREBASE_PROJECT_ID
+    firebase: getFirebaseStatus(),
+    env: {
+      isDevelopment,
+      useEmulator: isDevelopment && import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true'
     }
   };
-};
+}
