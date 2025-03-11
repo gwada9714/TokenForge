@@ -1,45 +1,107 @@
-import React, { useState } from 'react';
-import { TextField, Button, Typography, Box, Alert } from '@mui/material';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../../config/firebase';
-import { useTokenForgeAuthContext } from '../context/TokenForgeAuthProvider';
-import { AuthError } from '../types';
+import React, { useState, useEffect } from 'react';
+import { TextField, Button, Box, Alert } from '@mui/material';
+import { useTokenForgeAuth } from '../providers/TokenForgeAuthProvider';
+import { AuthError, AuthErrorCode, createAuthError } from '../errors/AuthError';
+import { logger } from '../../../core/logger';
 
 export const SignUpForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { setError, error } = useTokenForgeAuthContext();
+  const [authReady, setAuthReady] = useState(false);
+  const { error: contextError, signUp } = useTokenForgeAuth();
+  const [localError, setLocalError] = useState<AuthError | null>(null);
+
+  // Initialiser auth de manière asynchrone
+  useEffect(() => {
+    const setupAuth = async () => {
+      try {
+        // Le service firebaseAuth est déjà initialisé automatiquement
+        setAuthReady(true);
+        
+        logger.debug({
+          category: 'Auth',
+          message: 'Service Auth initialisé avec succès'
+        });
+      } catch (error) {
+        const authError = createAuthError(
+          AuthErrorCode.INTERNAL_ERROR,
+          "Erreur lors de l'initialisation du service d'authentification",
+          error instanceof Error ? error : undefined
+        );
+        
+        logger.error({
+          category: 'Auth',
+          message: "Échec de l'initialisation du service Auth",
+          error: authError
+        });
+        
+        setLocalError(authError);
+      }
+    };
+
+    setupAuth();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!authReady) {
+      setLocalError(createAuthError(
+        AuthErrorCode.INTERNAL_ERROR,
+        'Le service d\'authentification n\'est pas prêt'
+      ));
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError({
-        name: 'AuthError',
-        code: 'auth/passwords-dont-match',
-        message: 'Passwords do not match',
-      });
+      const passwordError = createAuthError(
+        AuthErrorCode.INVALID_PASSWORD,
+        'Les mots de passe ne correspondent pas'
+      );
+      
+      setLocalError(passwordError);
       return;
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      setLocalError(null);
+      await signUp(email, password);
     } catch (err) {
-      const authError: AuthError = {
-        name: 'AuthError',
-        code: (err as any)?.code || 'auth/unknown',
-        message: (err as any)?.message || 'An unknown error occurred',
-      };
-      setError(authError);
+      let errorCode: AuthErrorCode;
+      
+      switch ((err as any)?.code) {
+        case 'auth/email-already-in-use':
+          errorCode = AuthErrorCode.EMAIL_ALREADY_IN_USE;
+          break;
+        case 'auth/invalid-email':
+          errorCode = AuthErrorCode.INVALID_EMAIL;
+          break;
+        case 'auth/weak-password':
+          errorCode = AuthErrorCode.WEAK_PASSWORD;
+          break;
+        default:
+          errorCode = AuthErrorCode.UNKNOWN_ERROR;
+          break;
+      }
+      
+      const authError = createAuthError(
+        errorCode,
+        (err as any)?.message || 'Une erreur inconnue est survenue',
+        err
+      );
+      
+      setLocalError(authError);
     }
   };
 
+  const displayError = contextError || localError;
+
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-      {error && (
+      {displayError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error.message}
+          {displayError.message}
         </Alert>
       )}
       <TextField
@@ -47,7 +109,7 @@ export const SignUpForm: React.FC = () => {
         required
         fullWidth
         id="email"
-        label="Email Address"
+        label="Adresse email"
         name="email"
         autoComplete="email"
         autoFocus
@@ -59,7 +121,7 @@ export const SignUpForm: React.FC = () => {
         required
         fullWidth
         name="password"
-        label="Password"
+        label="Mot de passe"
         type="password"
         id="password"
         autoComplete="new-password"
@@ -71,7 +133,7 @@ export const SignUpForm: React.FC = () => {
         required
         fullWidth
         name="confirmPassword"
-        label="Confirm Password"
+        label="Confirmer le mot de passe"
         type="password"
         id="confirmPassword"
         autoComplete="new-password"
@@ -83,8 +145,9 @@ export const SignUpForm: React.FC = () => {
         fullWidth
         variant="contained"
         sx={{ mt: 3, mb: 2 }}
+        disabled={!authReady}
       >
-        Sign Up
+        S'inscrire
       </Button>
     </Box>
   );

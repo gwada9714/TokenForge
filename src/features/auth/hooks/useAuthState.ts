@@ -17,29 +17,51 @@ export function useAuthState() {
   });
 
   useEffect(() => {
-    const unsubscribe = firebaseAuth.onAuthStateChanged((firebaseUser) => {
-      if (firebaseUser) {
-        setAuthState({
-          user: {
-            ...firebaseUser,
-            isAdmin: false, // Sera mis à jour par le sessionService
-            canCreateToken: false
-          },
-          isAuthenticated: true,
-          loading: false,
-          error: null
+    let unsubscribeFunction: (() => void) | null = null;
+    
+    // Fonction pour gérer les changements d'état d'authentification
+    const handleAuthStateChanges = async () => {
+      try {
+        // Obtenir la fonction de désabonnement de manière asynchrone
+        unsubscribeFunction = await firebaseAuth.onAuthStateChanged((firebaseUser) => {
+          if (firebaseUser) {
+            setAuthState({
+              user: {
+                ...firebaseUser,
+                isAdmin: false, // Sera mis à jour par le sessionService
+                canCreateToken: false
+              },
+              isAuthenticated: true,
+              loading: false,
+              error: null
+            });
+          } else {
+            setAuthState({
+              user: null,
+              isAuthenticated: false,
+              loading: false,
+              error: null
+            });
+          }
         });
-      } else {
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
+      } catch (error) {
+        setAuthState(prev => ({
+          ...prev,
           loading: false,
-          error: null
-        });
+          error: error as Error
+        }));
       }
-    });
+    };
 
-    return () => unsubscribe();
+    // Initialiser l'abonnement
+    handleAuthStateChanges();
+
+    // Fonction de nettoyage
+    return () => {
+      if (unsubscribeFunction) {
+        unsubscribeFunction();
+      }
+    };
   }, []);
 
   return authState;

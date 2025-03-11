@@ -9,6 +9,15 @@ export enum AuthErrorCode {
   INVALID_EMAIL = 'auth/invalid-email',
   INTERNAL_ERROR = 'auth/internal-error',
   NETWORK_ERROR = 'auth/network-error',
+  TOO_MANY_ATTEMPTS = 'auth/too-many-attempts',
+  ACCOUNT_DISABLED = 'auth/user-disabled',
+  USER_NOT_LOGGED_IN = 'auth/user-not-logged-in',
+  
+  // Nouveaux codes d'erreur
+  AUTHENTICATION_ERROR = 'auth/authentication-error',
+  SIGNOUT_ERROR = 'auth/signout-error',
+  RESET_PASSWORD_ERROR = 'auth/reset-password-error',
+  UPDATE_PROFILE_ERROR = 'auth/update-profile-error',
 
   // Erreurs Wallet
   WALLET_NOT_FOUND = 'WALLET_NOT_FOUND',
@@ -16,6 +25,9 @@ export enum AuthErrorCode {
   NETWORK_MISMATCH = 'NETWORK_MISMATCH',
   INVALID_SIGNATURE = 'INVALID_SIGNATURE',
   PROVIDER_ERROR = 'PROVIDER_ERROR',
+  WRONG_NETWORK = 'WALLET_WRONG_NETWORK',
+  WALLET_CONNECTION_ERROR = 'WALLET_CONNECTION_ERROR',
+  WALLET_DISCONNECTION_ERROR = 'WALLET_DISCONNECTION_ERROR',
 
   // Erreurs Session
   SESSION_EXPIRED = 'SESSION_EXPIRED',

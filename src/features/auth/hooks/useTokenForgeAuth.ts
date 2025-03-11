@@ -85,7 +85,13 @@ export function useTokenForgeAuth(): TokenForgeAuthContextValue {
         // Vérifier si le wallet est connecté et sur le bon réseau
         const isAuth = isConnected && isCorrectNetwork;
 
-        console.log('État de l\'authentification:', { isConnected, isCorrectNetwork });
+        // Journalisation plus détaillée pour le debugging
+        console.log('État de l\'authentification:', { 
+          isConnected, 
+          isCorrectNetwork,
+          walletAddress: walletState.address,
+          chainId 
+        });
 
         setState({
           isAuthenticated: isAuth,
@@ -93,6 +99,7 @@ export function useTokenForgeAuth(): TokenForgeAuthContextValue {
           error: null
         });
       } catch (err) {
+        console.error('Erreur lors de la vérification de l\'authentification:', err);
         setState({
           isAuthenticated: false,
           isLoading: false,
@@ -106,7 +113,7 @@ export function useTokenForgeAuth(): TokenForgeAuthContextValue {
     };
 
     checkAuth();
-  }, [isConnected, isCorrectNetwork]);
+  }, [isConnected, isCorrectNetwork, walletState.address, chainId]);
 
   // Construct a partial TokenForgeAuthContextValue with the properties we have
   return {

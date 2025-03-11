@@ -1,18 +1,26 @@
 import React, { createContext, useContext, ReactNode, useReducer, useEffect } from 'react';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut as firebaseSignOut, 
+  sendPasswordResetEmail, 
+  updateProfile as firebaseUpdateProfile,
+  getAuth
+} from 'firebase/auth';
 import { useWalletStatus } from '../hooks/useWalletStatus';
 import { useAuthState } from '../hooks/useAuthState';
-import { AuthError } from '../errors/AuthError';
-import { TokenForgeAuthContextValue, TokenForgeUser } from '../types/auth';
+import { AuthError, AuthErrorCode, createAuthError } from '../errors/AuthError';
+import { TokenForgeAuthContextValue, TokenForgeUser, WalletState } from '../types/auth';
 import { authReducer, initialState } from '../reducers/authReducer';
-import { logger } from '../../../utils/firebase-logger';
-import { AUTH_ACTIONS } from '../actions/authActions';
-import { AuthAction } from '../../../types/authTypes';
+import { logger } from '../../../core/logger';
+import { createAuthAction } from '../actions/authActions';
+import { firebaseAuth } from '../../../lib/firebase/auth';
 
 export const TokenForgeAuthContext = createContext<TokenForgeAuthContextValue | undefined>(undefined);
 
 export const TokenForgeAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const { user, isAuthenticated: isFirebaseAuthenticated, loading: firebaseLoading } = useAuthState();
+  const { user, isAuthenticated: isFirebaseAuthenticated, loading: firebaseLoading, error: authError } = useAuthState();
   const {
     isConnected,
     isCorrectNetwork,
@@ -22,247 +30,449 @@ export const TokenForgeAuthProvider: React.FC<{ children: ReactNode }> = ({ chil
     // switchNetwork is available but not used in this component
   } = useWalletStatus();
 
-  // Combine Firebase auth and wallet status
-  const isAuthenticated = isFirebaseAuthenticated && isConnected && isCorrectNetwork;
-  const loading = firebaseLoading || state.loading;
-
+  // Synchroniser l'état d'erreur provenant du hook useAuthState
   useEffect(() => {
-    // Update wallet state when connection status changes
-    if (user && address) {
-      // Update user with wallet info if needed
-      dispatch({
-        type: AUTH_ACTIONS.UPDATE_USER,
-        payload: {
-          ...user,
-          metadata: {
-            ...user.metadata,
-            walletAddress: address as string,
-            chainId: isCorrectNetwork ? 1 : undefined
-          }
-        } as Partial<TokenForgeUser>
-      });
-
-      // Log wallet connection
-      logger.info({
-        category: 'Auth',
-        message: 'Wallet connected',
-        data: { address, isCorrectNetwork }
-      });
+    if (authError) {
+      let authErrorObj: AuthError;
+      
+      try {
+        authErrorObj = createAuthError(
+          AuthErrorCode.AUTHENTICATION_ERROR,
+          authError.message || 'Erreur d\'authentification',
+          authError
+        );
+      } catch (error) {
+        authErrorObj = createAuthError(
+          AuthErrorCode.UNKNOWN_ERROR,
+          'Erreur inconnue lors de l\'authentification',
+          error instanceof Error ? error : new Error(String(error))
+        );
+      }
+      
+      dispatch(createAuthAction.setError(authErrorObj));
     }
+  }, [authError]);
 
-    logger.info({
-      category: 'Auth',
-      message: 'Auth status updated',
-      data: { isAuthenticated, isConnected, isCorrectNetwork }
-    });
-  }, [isFirebaseAuthenticated, isConnected, isCorrectNetwork, user, address]);
+  // Synchroniser l'état de connexion wallet avec l'état global
+  useEffect(() => {
+    if (isConnected && isCorrectNetwork && address) {
+      dispatch(createAuthAction.connectWalletSuccess({
+        isConnected,
+        isCorrectNetwork,
+        address
+      }));
+    } else if (!isConnected && state.wallet.isConnected) {
+      dispatch(createAuthAction.disconnectWalletSuccess());
+    }
+  }, [isConnected, isCorrectNetwork, address, state.wallet.isConnected]);
 
-  // Firebase auth methods
-  const signIn = async (email: string) => {
+  // Connecter l'utilisateur avec email et mot de passe
+  const signIn = async (email: string, password: string): Promise<TokenForgeUser | null> => {
     try {
-      dispatch({ type: AUTH_ACTIONS.LOGIN_START });
-      // In a real implementation, we would use email and password to authenticate
+      dispatch(createAuthAction.signInStart());
+      
       logger.info({
         category: 'Auth',
-        message: 'Sign in attempt',
-        data: { email: email.substring(0, 3) + '***' } // Log partial email for debugging
+        message: 'Tentative de connexion utilisateur',
+        data: { emailProvided: !!email }
       });
-      // For example: const userCredential = await firebaseAuth.signIn(email, password);
-      // For now, just simulate success
-      if (user) {
-        dispatch({
-          type: AUTH_ACTIONS.LOGIN_SUCCESS,
-          payload: { user: user as TokenForgeUser, token: 'dummy-token' }
+      
+      // Utilisation du service d'authentification Firebase
+      // Obtenir l'instance Auth standard
+      const auth = getAuth();
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      if (userCredential.user) {
+        const tokenForgeUser: TokenForgeUser = {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email || '',
+          displayName: userCredential.user.displayName || '',
+          emailVerified: userCredential.user.emailVerified,
+          isAnonymous: userCredential.user.isAnonymous,
+          providerData: userCredential.user.providerData
+        };
+        
+        dispatch(createAuthAction.signInSuccess(tokenForgeUser));
+        
+        logger.info({
+          category: 'Auth',
+          message: 'Connexion utilisateur réussie',
+          data: { uid: tokenForgeUser.uid }
         });
+        
+        return tokenForgeUser;
+      }
+      
+      dispatch(createAuthAction.signInSuccess(null));
+      return null;
+    } catch (error) {
+      let authError: AuthError;
+      
+      if (error instanceof Error) {
+        // Traiter les erreurs d'authentification Firebase
+        authError = createAuthError(
+          AuthErrorCode.INVALID_CREDENTIALS,
+          'Email ou mot de passe incorrect',
+          error
+        );
+      } else {
+        authError = createAuthError(
+          AuthErrorCode.UNKNOWN_ERROR,
+          'Erreur inconnue lors de la connexion',
+          error instanceof Error ? error : new Error(String(error))
+        );
+      }
+      
+      logger.error({
+        category: 'Auth',
+        message: 'Échec de connexion utilisateur',
+        error: authError
+      });
+      
+      dispatch(createAuthAction.signInFailure(authError));
+      return null;
+    }
+  };
+
+  // Créer un nouveau compte utilisateur
+  const signUp = async (email: string, password: string): Promise<TokenForgeUser | null> => {
+    try {
+      dispatch(createAuthAction.signUpStart());
+      
+      logger.info({
+        category: 'Auth',
+        message: 'Tentative de création de compte',
+        data: { emailProvided: !!email }
+      });
+      
+      // Utilisation du service d'authentification Firebase
+      // Obtenir l'instance Auth standard
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      if (userCredential.user) {
+        const tokenForgeUser: TokenForgeUser = {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email || '',
+          displayName: userCredential.user.displayName || '',
+          emailVerified: userCredential.user.emailVerified,
+          isAnonymous: userCredential.user.isAnonymous,
+          providerData: userCredential.user.providerData
+        };
+        
+        dispatch(createAuthAction.signUpSuccess(tokenForgeUser));
+        
+        logger.info({
+          category: 'Auth',
+          message: 'Création de compte réussie',
+          data: { uid: tokenForgeUser.uid }
+        });
+        
+        return tokenForgeUser;
+      }
+      
+      dispatch(createAuthAction.signUpSuccess(null));
+      return null;
+    } catch (error) {
+      let authError: AuthError;
+      
+      if (error instanceof Error) {
+        // Traiter les erreurs d'authentification Firebase
+        authError = createAuthError(
+          AuthErrorCode.EMAIL_ALREADY_IN_USE,
+          'Cet email est déjà utilisé',
+          error
+        );
+      } else {
+        authError = createAuthError(
+          AuthErrorCode.UNKNOWN_ERROR,
+          'Erreur inconnue lors de la création du compte',
+          error instanceof Error ? error : new Error(String(error))
+        );
+      }
+      
+      logger.error({
+        category: 'Auth',
+        message: 'Échec de création de compte',
+        error: authError
+      });
+      
+      dispatch(createAuthAction.signUpFailure(authError));
+      return null;
+    }
+  };
+
+  // Déconnecter l'utilisateur (Firebase et wallet)
+  const signOut = async (): Promise<void> => {
+    try {
+      dispatch(createAuthAction.logoutStart());
+      
+      logger.info({
+        category: 'Auth',
+        message: 'Tentative de déconnexion'
+      });
+      
+      // Utilisation du service d'authentification Firebase
+      // Obtenir l'instance Auth standard
+      const auth = getAuth();
+      await firebaseSignOut(auth);
+      
+      // Déconnexion du wallet si connecté
+      if (isConnected) {
+        try {
+          await disconnect();
+        } catch (error) {
+          logger.warn({
+            category: 'Auth',
+            message: 'Erreur lors de la déconnexion du wallet',
+            error: error instanceof Error ? error : new Error(String(error))
+          });
+        }
+      }
+      
+      dispatch(createAuthAction.logoutSuccess());
+      
+      logger.info({
+        category: 'Auth',
+        message: 'Déconnexion réussie'
+      });
+    } catch (error) {
+      const authError = createAuthError(
+        AuthErrorCode.SIGNOUT_ERROR,
+        'Erreur lors de la déconnexion',
+        error instanceof Error ? error : new Error(String(error))
+      );
+      
+      logger.error({
+        category: 'Auth',
+        message: 'Échec de déconnexion',
+        error: authError
+      });
+      
+      dispatch(createAuthAction.logoutFailure(authError));
+    }
+  };
+
+  // Réinitialiser le mot de passe
+  const resetPassword = async (email: string): Promise<void> => {
+    try {
+      dispatch(createAuthAction.resetPasswordStart());
+      
+      logger.info({
+        category: 'Auth',
+        message: 'Tentative de réinitialisation de mot de passe',
+        data: { emailProvided: !!email }
+      });
+      
+      // Utilisation du service d'authentification Firebase
+      // Obtenir l'instance Auth standard
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
+      
+      dispatch(createAuthAction.resetPasswordSuccess());
+      
+      logger.info({
+        category: 'Auth',
+        message: 'Email de réinitialisation de mot de passe envoyé avec succès',
+        data: { emailProvided: !!email }
+      });
+    } catch (error) {
+      let authError: AuthError;
+      
+      if (error instanceof Error) {
+        authError = createAuthError(
+          AuthErrorCode.RESET_PASSWORD_ERROR,
+          'Erreur lors de la réinitialisation du mot de passe',
+          error
+        );
+      } else {
+        authError = createAuthError(
+          AuthErrorCode.UNKNOWN_ERROR,
+          'Erreur inconnue lors de la réinitialisation du mot de passe',
+          error instanceof Error ? error : new Error(String(error))
+        );
+      }
+      
+      logger.error({
+        category: 'Auth',
+        message: 'Échec de réinitialisation de mot de passe',
+        error: authError
+      });
+      
+      dispatch(createAuthAction.resetPasswordFailure(authError));
+    }
+  };
+
+  // Mettre à jour le profil utilisateur
+  const updateProfile = async (displayName: string, photoURL?: string): Promise<void> => {
+    try {
+      dispatch(createAuthAction.updateProfileStart());
+      
+      logger.info({
+        category: 'Auth',
+        message: 'Tentative de mise à jour du profil utilisateur',
+        data: { hasDisplayName: !!displayName, hasPhotoURL: !!photoURL }
+      });
+      
+      // Utilisation du service d'authentification Firebase
+      // Obtenir l'instance Auth standard
+      const auth = getAuth();
+      
+      if (auth.currentUser) {
+        await firebaseUpdateProfile(auth.currentUser, {
+          displayName,
+          photoURL: photoURL || null
+        });
+        
+        dispatch(createAuthAction.updateProfileSuccess({
+          ...state.user,
+          displayName
+        }));
+        
+        logger.info({
+          category: 'Auth',
+          message: 'Profil utilisateur mis à jour avec succès',
+          data: { uid: auth.currentUser.uid }
+        });
+      } else {
+        throw new Error('Aucun utilisateur connecté');
       }
     } catch (error) {
-      const authError = error as AuthError;
-      dispatch({
-        type: AUTH_ACTIONS.LOGIN_FAILURE,
-        payload: authError
+      const authError = createAuthError(
+        AuthErrorCode.UPDATE_PROFILE_ERROR,
+        'Erreur lors de la mise à jour du profil',
+        error instanceof Error ? error : new Error(String(error))
+      );
+      
+      logger.error({
+        category: 'Auth',
+        message: 'Échec de mise à jour du profil utilisateur',
+        error: authError
       });
-      throw error;
+      
+      dispatch(createAuthAction.updateProfileFailure(authError));
     }
   };
 
-  const signUp = async (email: string) => {
+  // Connecter le wallet
+  const connectWallet = async (): Promise<void> => {
     try {
-      dispatch({ type: AUTH_ACTIONS.LOGIN_START });
-      // In a real implementation, we would use email and password to create a new account
+      dispatch(createAuthAction.connectWalletStart());
+      
       logger.info({
         category: 'Auth',
-        message: 'Sign up attempt',
-        data: { email: email.substring(0, 3) + '***' } // Log partial email for debugging
+        message: 'Tentative de connexion du wallet'
       });
-      // For example: const userCredential = await firebaseAuth.signUp(email, password);
-      // For now, just simulate success
-      if (user) {
-        dispatch({
-          type: AUTH_ACTIONS.LOGIN_SUCCESS,
-          payload: { user: user as TokenForgeUser, token: 'dummy-token' }
+      
+      await connect();
+      
+      if (address) {
+        const walletState: WalletState = {
+          isConnected: true,
+          isCorrectNetwork,
+          address
+        };
+        
+        dispatch(createAuthAction.connectWalletSuccess(walletState));
+        
+        logger.info({
+          category: 'Auth',
+          message: 'Connexion du wallet réussie',
+          data: { address }
         });
+      } else {
+        throw new Error('Adresse wallet non disponible après connexion');
       }
     } catch (error) {
-      const authError = error as AuthError;
-      dispatch({
-        type: AUTH_ACTIONS.LOGIN_FAILURE,
-        payload: authError
+      const authError = createAuthError(
+        AuthErrorCode.WALLET_CONNECTION_ERROR,
+        'Erreur lors de la connexion du wallet',
+        error instanceof Error ? error : new Error(String(error))
+      );
+      
+      logger.error({
+        category: 'Auth',
+        message: 'Échec de connexion du wallet',
+        error: authError
       });
-      throw error;
+      
+      dispatch(createAuthAction.connectWalletFailure(authError));
     }
   };
 
-  const signOut = async () => {
+  // Déconnecter le wallet
+  const disconnectWallet = async (): Promise<void> => {
     try {
-      // Implementation would be added here
-      dispatch({ type: AUTH_ACTIONS.LOGOUT });
-    } catch (error) {
-      const authError = error as AuthError;
-      dispatch({
-        type: AUTH_ACTIONS.SET_ERROR,
-        payload: authError
-      });
-      throw error;
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      dispatch({ type: AUTH_ACTIONS.LOGIN_START });
-      // In a real implementation, we would use the email to send a password reset link
+      dispatch(createAuthAction.disconnectWalletStart());
+      
       logger.info({
         category: 'Auth',
-        message: 'Password reset attempt',
-        data: { email: email.substring(0, 3) + '***' } // Log partial email for debugging
+        message: 'Tentative de déconnexion du wallet'
       });
-      // For example: await firebaseAuth.sendPasswordReset(email);
-      // For now, just simulate success
-      dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
-    } catch (error) {
-      const authError = error as AuthError;
-      dispatch({
-        type: AUTH_ACTIONS.SET_ERROR,
-        payload: authError
-      });
-      throw error;
-    }
-  };
-
-  const updateProfile = async (displayName?: string, photoURL?: string) => {
-    try {
-      // Implementation would be added here
-      if (user) {
-        dispatch({
-          type: AUTH_ACTIONS.UPDATE_USER,
-          payload: {
-            ...user,
-            displayName,
-            photoURL
-          } as Partial<TokenForgeUser>
-        });
-      }
-    } catch (error) {
-      const authError = error as AuthError;
-      dispatch({
-        type: AUTH_ACTIONS.SET_ERROR,
-        payload: authError
-      });
-      throw error;
-    }
-  };
-
-  const updateUser = async (userData: Partial<TokenForgeUser>) => {
-    try {
-      // Implementation would be added here
-      dispatch({
-        type: AUTH_ACTIONS.UPDATE_USER,
-        payload: userData
-      });
-    } catch (error) {
-      const authError = error as AuthError;
-      dispatch({
-        type: AUTH_ACTIONS.SET_ERROR,
-        payload: authError
-      });
-      throw error;
-    }
-  };
-
-  // Wallet methods
-  const connectWallet = async () => {
-    try {
-      dispatch({ type: AUTH_ACTIONS.LOGIN_START });
-      await connect('0x0', 1); // Default to mainnet
-
-      // The wallet state will be updated in the useEffect hook
-    } catch (error) {
-      const authError = error as AuthError;
-      dispatch({
-        type: AUTH_ACTIONS.SET_ERROR,
-        payload: authError
-      });
-      throw error;
-    }
-  };
-
-  const disconnectWallet = async () => {
-    try {
+      
       await disconnect();
-      dispatch({ type: AUTH_ACTIONS.LOGOUT });
-    } catch (error) {
-      const authError = error as AuthError;
-      dispatch({
-        type: AUTH_ACTIONS.SET_ERROR,
-        payload: authError
+      
+      dispatch(createAuthAction.disconnectWalletSuccess());
+      
+      logger.info({
+        category: 'Auth',
+        message: 'Déconnexion du wallet réussie'
       });
-      throw error;
+    } catch (error) {
+      const authError = createAuthError(
+        AuthErrorCode.WALLET_DISCONNECTION_ERROR,
+        'Erreur lors de la déconnexion du wallet',
+        error instanceof Error ? error : new Error(String(error))
+      );
+      
+      logger.error({
+        category: 'Auth',
+        message: 'Échec de déconnexion du wallet',
+        error: authError
+      });
+      
+      dispatch(createAuthAction.disconnectWalletFailure(authError));
     }
   };
 
-  const clearError = () => {
-    dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
+  // Effacer les erreurs
+  const clearError = (): void => {
+    dispatch(createAuthAction.clearError());
   };
 
-  const validateAdminAccess = () => {
-    return state.isAdmin;
-  };
-
-  const authContextValue: TokenForgeAuthContextValue = {
+  // Valeur du contexte
+  const contextValue: TokenForgeAuthContextValue = {
     user: state.user,
-    wallet: state.wallet,
-    isAuthenticated,
-    loading,
+    isAuthenticated: isFirebaseAuthenticated,
+    isLoading: state.isLoading || firebaseLoading,
     error: state.error,
-    isAdmin: state.isAdmin,
-    status: state.status,
-    canCreateToken: state.canCreateToken,
-    canUseServices: state.canUseServices,
-    isInitialized: true, // Always initialized since we're using the reducer
-    dispatch: dispatch as React.Dispatch<AuthAction>,
+    wallet: state.wallet,
     signIn,
     signUp,
     signOut,
     resetPassword,
     updateProfile,
-    updateUser,
     connectWallet,
     disconnectWallet,
     clearError,
-    validateAdminAccess
+    dispatch
   };
 
   return (
-    <TokenForgeAuthContext.Provider value={authContextValue}>
+    <TokenForgeAuthContext.Provider value={contextValue}>
       {children}
     </TokenForgeAuthContext.Provider>
   );
 };
 
-export const useTokenForgeAuth = () => {
+// Hook personnalisé pour accéder au contexte
+export const useTokenForgeAuth = (): TokenForgeAuthContextValue => {
   const context = useContext(TokenForgeAuthContext);
-  if (context === undefined) {
-    throw new Error('useTokenForgeAuth must be used within a TokenForgeAuthProvider');
+  
+  if (!context) {
+    throw new Error('useTokenForgeAuth doit être utilisé à l\'intérieur d\'un TokenForgeAuthProvider');
   }
+  
   return context;
 };
 
