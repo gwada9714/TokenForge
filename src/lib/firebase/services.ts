@@ -2,7 +2,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { Functions, getFunctions } from 'firebase/functions';
-import { logger } from '../../utils/firebase-logger';
+import { logger } from '../../core/logger';
 import { app } from '@/config/firebase';
 
 const LOG_CATEGORY = 'FirebaseManager';
@@ -15,32 +15,57 @@ export class FirebaseManager {
   private _functions: Functions;
 
   private constructor() {
-    logger.info(LOG_CATEGORY, { message: '🚀 Démarrage de l\'initialisation de Firebase' });
+    logger.info({
+      category: LOG_CATEGORY,
+      message: '🚀 Démarrage de l\'initialisation de Firebase'
+    });
     
     try {
       // Utiliser l'instance Firebase déjà initialisée
       this.app = app;
       
       // Initialiser Firestore
-      logger.debug(LOG_CATEGORY, { message: '📚 Initialisation de Firestore' });
+      logger.debug({
+        category: LOG_CATEGORY,
+        message: '📚 Initialisation de Firestore'
+      });
       this._db = getFirestore(this.app);
-      logger.info(LOG_CATEGORY, { message: '✅ Service Firestore initialisé' });
+      logger.info({
+        category: LOG_CATEGORY,
+        message: '✅ Service Firestore initialisé'
+      });
 
       // Initialiser Functions
-      logger.debug(LOG_CATEGORY, { message: '⚡ Initialisation des Functions' });
+      logger.debug({
+        category: LOG_CATEGORY,
+        message: '⚡ Initialisation des Functions'
+      });
       this._functions = getFunctions(this.app, import.meta.env.VITE_FIREBASE_REGION);
-      logger.info(LOG_CATEGORY, { message: '✅ Service Functions initialisé' });
+      logger.info({
+        category: LOG_CATEGORY,
+        message: '✅ Service Functions initialisé'
+      });
       
-      logger.info(LOG_CATEGORY, { message: '🎉 Services Firebase de base initialisés' });
+      logger.info({
+        category: LOG_CATEGORY,
+        message: '🎉 Services Firebase de base initialisés'
+      });
     } catch (error) {
-      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de l\'initialisation de Firebase', error });
+      logger.error({
+        category: LOG_CATEGORY,
+        message: '❌ Erreur lors de l\'initialisation de Firebase',
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       throw error;
     }
   }
 
   public static async getInstanceAsync(): Promise<FirebaseManager> {
     if (!FirebaseManager.instance) {
-      logger.info(LOG_CATEGORY, { message: '🏗️ Création d\'une nouvelle instance FirebaseManager' });
+      logger.info({
+        category: LOG_CATEGORY,
+        message: '🏗️ Création d\'une nouvelle instance FirebaseManager'
+      });
       FirebaseManager.instance = new FirebaseManager();
       
       // Initialiser Auth de manière asynchrone
@@ -51,7 +76,10 @@ export class FirebaseManager {
 
   private async initializeAuth(): Promise<void> {
     try {
-      logger.debug(LOG_CATEGORY, { message: '🔐 Initialisation de Firebase Auth' });
+      logger.debug({
+        category: LOG_CATEGORY,
+        message: '🔐 Initialisation de Firebase Auth'
+      });
       
       // Import dynamique de firebase/auth
       await import('firebase/auth');
@@ -59,9 +87,16 @@ export class FirebaseManager {
       
       // Initialiser Auth
       this._auth = getAuth(this.app);
-      logger.info(LOG_CATEGORY, { message: '✅ Service Auth initialisé' });
+      logger.info({
+        category: LOG_CATEGORY,
+        message: '✅ Service Auth initialisé'
+      });
     } catch (error) {
-      logger.error(LOG_CATEGORY, { message: '❌ Erreur lors de l\'initialisation de Auth', error });
+      logger.error({
+        category: LOG_CATEGORY,
+        message: '❌ Erreur lors de l\'initialisation de Auth',
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       throw error;
     }
   }
