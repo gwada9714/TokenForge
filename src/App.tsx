@@ -16,6 +16,9 @@ import { TokenForgeAuthProvider } from '@/features/auth/providers/TokenForgeAuth
 import { WagmiProvider } from 'wagmi';
 import { wagmiConfig } from './config/wagmiConfig';
 import { firebaseService } from '@/config/firebase';
+import { initializeAuth } from '@/lib/firebase/auth';
+import { getFirebaseManager } from '@/lib/firebase/services';
+import { logger } from '@/utils/logger';
 
 const AppContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
@@ -24,11 +27,28 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
+        // Initialiser les services Firebase dans l'ordre correct
+        // selon l'architecture modulaire définie
+        logger.info('App', 'Initialisation des services Firebase...');
+        
+        // 1. Initialiser le service principal (firebase.ts)
         await firebaseService.initialize();
+        logger.info('App', 'Service Firebase principal initialisé');
+        
+        // 2. S'assurer que l'authentification est initialisée (auth.ts)
+        await initializeAuth();
+        logger.info('App', 'Service d\'authentification initialisé');
+        
+        // 3. Initialiser le gestionnaire Firebase (pour Firestore)
+        await getFirebaseManager();
+        logger.info('App', 'Gestionnaire Firebase initialisé');
+        
+        logger.info('App', 'Services Firebase initialisés avec succès');
         setIsInitialized(true);
       } catch (err) {
-        setError('Erreur lors de l\'initialisation de l\'application');
-        console.error('Initialization error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+        setError(`Erreur lors de l'initialisation de l'application: ${errorMessage}`);
+        logger.error('App', 'Erreur d\'initialisation', err);
       }
     };
 
