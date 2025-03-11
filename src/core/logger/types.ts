@@ -1,20 +1,28 @@
 export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+  FATAL = 'fatal'
 }
 
 export interface LogEntry {
+  timestamp: Date;
+  level: LogLevel;
+  category: string;
   message: string;
-  metadata?: Record<string, unknown>;
+  data?: Record<string, any>;
   error?: Error;
 }
 
-export interface Logger {
-  debug(entry: LogEntry): void;
-  info(entry: LogEntry): void;
-  warn(entry: LogEntry): void;
-  error(entry: LogEntry): void;
-  setLogLevel(level: LogLevel): void;
+export interface LoggerOptions {
+  minLevel: LogLevel;
+  enableConsole: boolean;
+  enableSentry: boolean;
+  enableFirebase: boolean;
+}
+
+export interface LogAdapter {
+  log(entry: LogEntry): void;
+  setLogLevel?(level: LogLevel): void;
 }
