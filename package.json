@@ -12,7 +12,9 @@
     "test:auth": "vitest src/__tests__/security/authentication.test.ts",
     "test:contracts": "cross-env NODE_OPTIONS=\"--experimental-specifier-resolution=node --loader ts-node/esm\" TS_NODE_PROJECT=./tsconfig.hardhat.json hardhat test",
     "compile": "cross-env NODE_OPTIONS=\"--loader ts-node/esm\" TS_NODE_PROJECT=./tsconfig.hardhat.json hardhat compile",
-    "typechain": "cross-env NODE_OPTIONS=\"--loader ts-node/esm\" TS_NODE_PROJECT=./tsconfig.hardhat.json hardhat typechain"
+    "typechain": "cross-env NODE_OPTIONS=\"--loader ts-node/esm\" TS_NODE_PROJECT=./tsconfig.hardhat.json hardhat typechain",
+    "prepare": "husky install",
+    "commit": "git-cz"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -52,6 +54,8 @@
   },
   "devDependencies": {
     "@babel/plugin-syntax-import-meta": "^7.10.4",
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
@@ -76,7 +80,9 @@
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.14",
     "chai": "^4.3.4",
+    "commitizen": "^4.3.1",
     "cross-env": "^7.0.3",
+    "cz-conventional-changelog": "^3.3.0",
     "dotenv": "^16.4.7",
     "eslint": "^8.55.0",
     "eslint-plugin-react": "^7.37.4",
@@ -85,6 +91,7 @@
     "ethers": "^6.0.0",
     "hardhat": "^2.19.5",
     "hardhat-gas-reporter": "^2.2.2",
+    "husky": "^9.1.7",
     "jsdom": "^26.0.0",
     "postcss": "^8.4.31",
     "postcss-nesting": "^13.0.1",
@@ -99,5 +106,10 @@
     "vite-plugin-pwa": "^0.21.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^1.2.2"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }
