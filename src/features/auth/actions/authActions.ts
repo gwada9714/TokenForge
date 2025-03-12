@@ -1,4 +1,5 @@
-import { TokenForgeUser, WalletState } from '../types/auth';
+import { TokenForgeUser } from '../types/auth';
+import { WalletConnectionState } from '../../../types/authTypes';
 import { AuthError } from '../errors/AuthError';
 
 export const AUTH_ACTIONS = {
@@ -33,7 +34,10 @@ export const AUTH_ACTIONS = {
   SIGN_IN_FAILURE: 'SIGN_IN_FAILURE',
   SIGN_UP_START: 'SIGN_UP_START',
   SIGN_UP_SUCCESS: 'SIGN_UP_SUCCESS',
-  SIGN_UP_FAILURE: 'SIGN_UP_FAILURE'
+  SIGN_UP_FAILURE: 'SIGN_UP_FAILURE',
+  SET_WALLET_PROVIDER_STATUS: 'SET_WALLET_PROVIDER_STATUS',
+  SET_WALLET_ERROR: 'SET_WALLET_ERROR',
+  CLEAR_WALLET_ERROR: 'CLEAR_WALLET_ERROR'
 } as const;
 
 export const createAuthAction = {
@@ -67,8 +71,8 @@ export const createAuthAction = {
   clearError() {
     return { type: AUTH_ACTIONS.CLEAR_ERROR };
   },
-  connectWallet(walletState: WalletState) {
-    return { type: AUTH_ACTIONS.WALLET_CONNECT, payload: walletState };
+  connectWallet(wallet: WalletConnectionState) {
+    return { type: AUTH_ACTIONS.WALLET_CONNECT, payload: wallet };
   },
   disconnectWallet() {
     return { type: AUTH_ACTIONS.WALLET_DISCONNECT };
@@ -100,7 +104,7 @@ export const createAuthAction = {
   connectWalletStart() {
     return { type: AUTH_ACTIONS.CONNECT_WALLET_START };
   },
-  connectWalletSuccess(walletState: WalletState) {
+  connectWalletSuccess(walletState: WalletConnectionState) {
     return { type: AUTH_ACTIONS.CONNECT_WALLET_SUCCESS, payload: walletState };
   },
   connectWalletFailure(error: AuthError) {
@@ -132,5 +136,14 @@ export const createAuthAction = {
   },
   signUpFailure(error: AuthError) {
     return { type: AUTH_ACTIONS.SIGN_UP_FAILURE, payload: error };
+  },
+  setWalletProviderStatus(hasWalletProvider: boolean) {
+    return { type: AUTH_ACTIONS.SET_WALLET_PROVIDER_STATUS, payload: { hasWalletProvider } };
+  },
+  setWalletError(error: AuthError) {
+    return { type: AUTH_ACTIONS.SET_WALLET_ERROR, payload: error };
+  },
+  clearWalletError() {
+    return { type: AUTH_ACTIONS.CLEAR_WALLET_ERROR };
   }
 };

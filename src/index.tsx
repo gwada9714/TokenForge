@@ -1,33 +1,41 @@
 import React from 'react';
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { logger } from './core/logger';
+import DiagnosticProviders from './providers/DiagnosticProviders';
 import App from './App';
-import { wagmiConfig } from './config/wagmiConfig';
-import '@rainbow-me/rainbowkit/styles.css';
 
-const queryClient = new QueryClient();
+// Configuration du point d'entrée ultra-minimal
+console.log('===== DÉMARRAGE DE L\'APPLICATION EN MODE DIAGNOSTIC =====');
 
 const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error('Failed to find the root element');
-}
+if (!rootElement) throw new Error('Failed to find the root element');
 
 const root = createRoot(rootElement);
 
-root.render(
-  <StrictMode>
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
-  </StrictMode>
-);
+try {
+  logger.info({
+    category: 'AppDiagnostic',
+    message: 'Tentative de rendu avec DiagnosticProviders'
+  });
+
+  // Rendu avec nos providers de diagnostic qui incluent WagmiProvider simulé
+  root.render(
+    <React.StrictMode>
+      <DiagnosticProviders>
+        <App />
+      </DiagnosticProviders>
+    </React.StrictMode>
+  );
+  
+  logger.info({
+    category: 'AppDiagnostic',
+    message: 'Rendu avec DiagnosticProviders effectué avec succès'
+  });
+} catch (err) {
+  logger.error({
+    category: 'AppDiagnostic',
+    message: `Erreur pendant le rendu en mode diagnostic: ${err instanceof Error ? err.message : String(err)}`,
+    error: err instanceof Error ? err : new Error(String(err))
+  });
+  console.error('===== ERREUR PENDANT LE RENDU DIAGNOSTIC =====', err);
+}

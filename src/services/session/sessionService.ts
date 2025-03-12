@@ -1,7 +1,7 @@
 import { Auth, User } from 'firebase/auth';
 import { firebaseService } from '@/config/firebase';
 import { getFirebaseAuth, initializeAuth } from '@/lib/firebase/auth';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 import { AUTH_CONFIG } from '@/config/constants';
 
 export enum SessionState {
@@ -23,9 +23,11 @@ export class SessionService {
   private constructor() {
     // Initialisation différée de l'auth
     this.initAuth().catch(error => {
-      logger.error('Session', 'Erreur lors de l\'initialisation de l\'authentification', 
-        error instanceof Error ? error : new Error(String(error))
-      );
+      logger.error({
+        category: 'Session',
+        message: 'Erreur lors de l\'initialisation de l\'authentification',
+        error: error instanceof Error ? error : new Error(String(error))
+      });
     });
     this.setupSessionMonitoring();
   }
@@ -77,16 +79,19 @@ export class SessionService {
     
     // Si inactif pendant plus longtemps que la durée de session configurée
     if (inactiveTime > AUTH_CONFIG.SESSION_DURATION) {
-      logger.warn('Session', 'Session expirée en raison d\'inactivité', { 
-        inactiveTime, 
-        threshold: AUTH_CONFIG.SESSION_DURATION 
+      logger.warn({
+        category: 'Session',
+        message: 'Session expirée en raison d\'inactivité',
+        data: { inactiveTime, threshold: AUTH_CONFIG.SESSION_DURATION }
       });
       
       // Déconnecter l'utilisateur
       this.endSession().catch(error => {
-        logger.error('Session', 'Erreur lors de la terminaison de session pour inactivité', 
-          error instanceof Error ? error : new Error(String(error))
-        );
+        logger.error({
+          category: 'Session',
+          message: 'Erreur lors de la terminaison de session pour inactivité',
+          error: error instanceof Error ? error : new Error(String(error))
+        });
       });
     }
   }
@@ -132,7 +137,10 @@ export class SessionService {
 
       if (!user) {
         this.currentState = SessionState.UNAUTHENTICATED;
-        logger.info('Session', 'Session non authentifiée');
+        logger.info({
+          category: 'Session',
+          message: 'Session non authentifiée'
+        });
         return;
       }
 
@@ -140,9 +148,11 @@ export class SessionService {
       try {
         await user.getIdToken(true);
       } catch (error) {
-        logger.error('Session', 'Token invalide lors du démarrage de la session', 
-          error instanceof Error ? error : new Error(String(error))
-        );
+        logger.error({
+          category: 'Session',
+          message: 'Token invalide lors du démarrage de la session',
+          error: error instanceof Error ? error : new Error(String(error))
+        });
         this.currentState = SessionState.ERROR;
         throw error;
       }
@@ -150,12 +160,18 @@ export class SessionService {
       this.currentState = SessionState.AUTHENTICATED;
       this.updateLastActivity(); // Mettre à jour le timestamp d'activité
       
-      logger.info('Session', 'Session démarrée avec succès', { userId: user.uid });
+      logger.info({
+        category: 'Session',
+        message: 'Session démarrée avec succès',
+        data: { userId: user.uid }
+      });
     } catch (error) {
       this.currentState = SessionState.ERROR;
-      logger.error('Session', 'Erreur lors du démarrage de la session', 
-        error instanceof Error ? error : new Error(String(error))
-      );
+      logger.error({
+        category: 'Session',
+        message: 'Erreur lors du démarrage de la session',
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       throw error;
     }
   }
@@ -179,11 +195,16 @@ export class SessionService {
       const auth = this.auth!; // Non-null assertion pour TypeScript
       await auth.signOut();
       this.currentState = SessionState.UNAUTHENTICATED;
-      logger.info('Session', 'Session terminée avec succès');
+      logger.info({
+        category: 'Session',
+        message: 'Session terminée avec succès'
+      });
     } catch (error) {
-      logger.error('Session', 'Erreur lors de la terminaison de la session', 
-        error instanceof Error ? error : new Error(String(error))
-      );
+      logger.error({
+        category: 'Session',
+        message: 'Erreur lors de la terminaison de la session',
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       throw error;
     }
   }
@@ -194,8 +215,32 @@ export class SessionService {
   public extendSession(): void {
     if (this.currentState === SessionState.AUTHENTICATED) {
       this.updateLastActivity();
-      logger.debug('Session', 'Session prolongée');
+      logger.debug({
+        category: 'Session',
+        message: 'Session prolongée'
+      });
     }
+  }
+
+  /**
+   * Vérifie si l'utilisateur est actuellement authentifié
+   */
+  public isAuthenticated(): boolean {
+    return this.currentState === SessionState.AUTHENTICATED;
+  }
+
+  /**
+   * Récupère l'utilisateur actuellement authentifié
+   */
+  public getCurrentUser(): User | null {
+    if (!this.auth) {
+      logger.warn({
+        category: 'Session',
+        message: 'Tentative d\'accès à l\'utilisateur avant initialisation de l\'auth'
+      });
+      return null;
+    }
+    return this.auth.currentUser;
   }
 
   /**
@@ -222,10 +267,15 @@ export class SessionService {
       await user.getIdToken(false); // Ne pas forcer le rafraîchissement
       return true;
     } catch (error) {
-      logger.error('Session', 'Erreur lors de la validation de la session', 
-        error instanceof Error ? error : new Error(String(error))
-      );
+      logger.error({
+        category: 'Session',
+        message: 'Erreur lors de la validation de la session',
+        error: error instanceof Error ? error : new Error(String(error))
+      });
       return false;
     }
   }
 }
+
+// Export de l'instance singleton
+export const sessionService = SessionService.getInstance();

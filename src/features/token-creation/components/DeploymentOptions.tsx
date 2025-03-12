@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   FormControl,
@@ -7,9 +7,9 @@ import {
   MenuItem,
   Typography,
   Alert,
-  Button,
   Grid,
-  Paper
+  Paper,
+  SelectChangeEvent
 } from '@mui/material';
 import { useSubscription } from '@/features/subscription/hooks/useSubscription';
 
@@ -68,22 +68,51 @@ const NETWORKS: Record<BlockchainNetwork, NetworkInfo> = {
   }
 };
 
-export const DeploymentOptions: React.FC = () => {
+interface DeploymentOptionsProps {
+  selectedNetwork?: BlockchainNetwork;
+  isTestnet?: boolean;
+  canDeployMainnet?: boolean;
+  onNetworkChange?: (network: BlockchainNetwork, testnet: boolean) => void;
+}
+
+export const DeploymentOptions: React.FC<DeploymentOptionsProps> = ({
+  selectedNetwork = 'bsc',
+  isTestnet = true,
+  canDeployMainnet = false,
+  onNetworkChange
+}) => {
   const { checkFeature } = useSubscription();
-  const [selectedNetwork, setSelectedNetwork] = React.useState<BlockchainNetwork>('bsc');
-  const [isTestnet, setIsTestnet] = React.useState(true);
+  const [network, setNetwork] = React.useState<BlockchainNetwork>(selectedNetwork);
+  const [testnet, setTestnet] = React.useState<boolean>(isTestnet);
 
-  const canDeployMainnet = checkFeature('canDeployMainnet');
+  // Utilise les valeurs par défaut ou les valeurs de souscription
+  const canDeployToMainnet = canDeployMainnet || checkFeature('canDeployMainnet');
 
-  const handleNetworkChange = (event: any) => {
-    setSelectedNetwork(event.target.value as BlockchainNetwork);
+  // S'assurer que l'état local est synchronisé avec les props
+  useEffect(() => {
+    setNetwork(selectedNetwork);
+    setTestnet(isTestnet);
+  }, [selectedNetwork, isTestnet]);
+
+  const handleNetworkChange = (event: SelectChangeEvent) => {
+    const newNetwork = event.target.value as BlockchainNetwork;
+    setNetwork(newNetwork);
+    
+    if (onNetworkChange) {
+      onNetworkChange(newNetwork, testnet);
+    }
   };
 
-  const handleTestnetChange = (event: any) => {
-    setIsTestnet(event.target.value === 'testnet');
+  const handleTestnetChange = (event: SelectChangeEvent) => {
+    const isTestnetValue = event.target.value === 'testnet';
+    setTestnet(isTestnetValue);
+    
+    if (onNetworkChange) {
+      onNetworkChange(network, isTestnetValue);
+    }
   };
 
-  const networkInfo = NETWORKS[selectedNetwork];
+  const networkInfo = NETWORKS[network];
 
   return (
     <Box sx={{ mt: 3 }}>
@@ -92,7 +121,7 @@ export const DeploymentOptions: React.FC = () => {
           <FormControl fullWidth>
             <InputLabel>Réseau Blockchain</InputLabel>
             <Select
-              value={selectedNetwork}
+              value={network}
               label="Réseau Blockchain"
               onChange={handleNetworkChange}
             >
@@ -109,12 +138,12 @@ export const DeploymentOptions: React.FC = () => {
           <FormControl fullWidth>
             <InputLabel>Type de Réseau</InputLabel>
             <Select
-              value={isTestnet ? 'testnet' : 'mainnet'}
+              value={testnet ? 'testnet' : 'mainnet'}
               label="Type de Réseau"
               onChange={handleTestnetChange}
             >
               <MenuItem value="testnet">Testnet</MenuItem>
-              <MenuItem value="mainnet" disabled={!canDeployMainnet}>
+              <MenuItem value="mainnet" disabled={!canDeployToMainnet}>
                 Mainnet
               </MenuItem>
             </Select>
@@ -127,7 +156,7 @@ export const DeploymentOptions: React.FC = () => {
               Détails du Déploiement
             </Typography>
             <Typography variant="body1">
-              Réseau: {networkInfo.name}
+              Réseau: {networkInfo.name} {testnet ? '(Testnet)' : '(Mainnet)'}
             </Typography>
             <Typography variant="body1">
               Chain ID: {networkInfo.chainId}
@@ -138,7 +167,7 @@ export const DeploymentOptions: React.FC = () => {
           </Paper>
         </Grid>
 
-        {!canDeployMainnet && !isTestnet && (
+        {!canDeployToMainnet && !testnet && (
           <Grid item xs={12}>
             <Alert severity="warning">
               Le déploiement sur Mainnet nécessite un abonnement Forgeron ou Maître Forgeron

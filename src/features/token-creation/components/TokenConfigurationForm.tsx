@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -21,29 +21,83 @@ import { TokenConfig } from '../../../types/deployment';
 import { AntiWhaleConfigPanel } from './AntiWhaleConfigPanel';
 import { DiscoveryModePanel } from './DiscoveryModePanel';
 
-export const TokenConfigurationForm: React.FC = () => {
+// Définir l'interface AntiWhaleConfig pour éviter les erreurs de type
+export interface AntiWhaleConfig {
+  enabled: boolean;
+  maxTransactionPercentage: number;
+  maxWalletPercentage: number;
+}
+
+interface TokenConfigurationFormProps {
+  initialConfig?: TokenConfig;
+  onChange?: (config: TokenConfig) => void;
+  hasMintBurn?: boolean;
+  hasBlacklist?: boolean;
+}
+
+const defaultAntiWhaleConfig: AntiWhaleConfig = {
+  enabled: false,
+  maxTransactionPercentage: 1,
+  maxWalletPercentage: 3
+};
+
+const defaultConfig: TokenConfig = {
+  name: '',
+  symbol: '',
+  decimals: 18,
+  initialSupply: BigInt(0),
+  mintable: false,
+  burnable: false,
+  blacklist: false,
+  customTaxPercentage: 0,
+  antiWhale: defaultAntiWhaleConfig
+};
+
+export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
+  initialConfig,
+  onChange,
+  hasMintBurn = false,
+  hasBlacklist = false
+}) => {
   const { checkFeature } = useSubscription();
   const [showDiscoveryMode, setShowDiscoveryMode] = useState(false);
-  const [config, setConfig] = useState<TokenConfig>({
-    name: '',
-    symbol: '',
-    decimals: 18,
-    initialSupply: BigInt(0),
-    mintable: false,
-    burnable: false,
-    blacklist: false,
-    customTaxPercentage: 0,
-    antiWhale: {
-      enabled: false,
-      maxTransactionPercentage: 1,
-      maxWalletPercentage: 3
-    }
-  });
+  const [config, setConfig] = useState<TokenConfig>(initialConfig || defaultConfig);
 
-  const hasMintBurn = checkFeature('hasMintBurn');
-  const hasBlacklist = checkFeature('hasBlacklist');
+  // Cette vérification permet de prendre en compte les features du niveau d'abonnement
+  // si elles ne sont pas explicitement passées en props
+  const hasMintBurnFeature = hasMintBurn || checkFeature('hasMintBurn');
+  const hasBlacklistFeature = hasBlacklist || checkFeature('hasBlacklist');
   const hasAdvancedFeatures = checkFeature('hasAdvancedFeatures');
   const maxCustomTax = checkFeature('maxCustomTax') || 0;
+
+  // S'assurer que config.antiWhale est toujours défini
+  useEffect(() => {
+    if (!config.antiWhale) {
+      setConfig(prevConfig => ({
+        ...prevConfig,
+        antiWhale: defaultAntiWhaleConfig
+      }));
+    }
+  }, [config.antiWhale]);
+
+  // Mettre à jour la configuration si initialConfig change
+  useEffect(() => {
+    if (initialConfig) {
+      const updatedConfig = {
+        ...initialConfig,
+        // S'assurer que antiWhale existe toujours
+        antiWhale: initialConfig.antiWhale || defaultAntiWhaleConfig
+      };
+      setConfig(updatedConfig);
+    }
+  }, [initialConfig]);
+
+  // Notifier le parent des changements de configuration
+  useEffect(() => {
+    if (onChange) {
+      onChange(config);
+    }
+  }, [config, onChange]);
 
   const handleChange = (field: keyof TokenConfig) => (
     event: React.ChangeEvent<HTMLInputElement>
@@ -77,21 +131,32 @@ export const TokenConfigurationForm: React.FC = () => {
     setConfig({ ...config, customTaxPercentage: value as number });
   };
 
-  const handleAntiWhaleChange = (antiWhaleConfig: {
-    enabled: boolean;
-    maxTransactionPercentage: number;
-    maxWalletPercentage: number;
-  }) => {
+  const handleAntiWhaleChange = (antiWhaleConfig: AntiWhaleConfig) => {
     setConfig({ ...config, antiWhale: antiWhaleConfig });
   };
 
   const handleTemplateSelect = (templateConfig: TokenConfig) => {
-    setConfig(templateConfig);
+    // S'assurer que antiWhale existe dans le template
+    const updatedConfig = {
+      ...templateConfig,
+      antiWhale: templateConfig.antiWhale || defaultAntiWhaleConfig
+    };
+    setConfig(updatedConfig);
     setShowDiscoveryMode(false);
   };
 
   const toggleDiscoveryMode = () => {
     setShowDiscoveryMode(!showDiscoveryMode);
+  };
+
+  const isConfigValid = (): boolean => {
+    return (
+      !!config.name &&
+      config.name.length >= 3 &&
+      !!config.symbol &&
+      config.symbol.length >= 2 &&
+      config.initialSupply > BigInt(0)
+    );
   };
 
   return (
@@ -122,6 +187,7 @@ export const TokenConfigurationForm: React.FC = () => {
                 value={config.name}
                 onChange={handleChange('name')}
                 helperText="Choisissez un nom unique et mémorable pour votre token"
+                error={config.name.length > 0 && config.name.length < 3}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -132,6 +198,7 @@ export const TokenConfigurationForm: React.FC = () => {
                 value={config.symbol}
                 onChange={handleChange('symbol')}
                 helperText="Généralement 3-4 caractères en majuscules (ex: BTC, ETH)"
+                error={config.symbol.length > 0 && config.symbol.length < 2}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -154,6 +221,7 @@ export const TokenConfigurationForm: React.FC = () => {
                 value={getSupplyInputValue()}
                 onChange={handleSupplyChange}
                 helperText="Nombre total de tokens à créer initialement"
+                error={Number(config.initialSupply) <= 0}
               />
             </Grid>
 
@@ -164,7 +232,7 @@ export const TokenConfigurationForm: React.FC = () => {
               </Typography>
             </Grid>
 
-            {hasMintBurn && (
+            {hasMintBurnFeature && (
               <>
                 <Grid item xs={12} sm={6}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -205,8 +273,8 @@ export const TokenConfigurationForm: React.FC = () => {
               </>
             )}
 
-            {hasBlacklist && (
-              <Grid item xs={12}>
+            {hasBlacklistFeature && (
+              <Grid item xs={12} sm={6}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <FormControlLabel
                     control={
@@ -215,9 +283,9 @@ export const TokenConfigurationForm: React.FC = () => {
                         onChange={handleChange('blacklist')}
                       />
                     }
-                    label="Activer la Blacklist"
+                    label="Blacklist"
                   />
-                  <Tooltip title="Permet de bloquer certaines adresses, les empêchant d'effectuer des transactions avec le token. Utile pour la conformité réglementaire.">
+                  <Tooltip title="Permet de bloquer certaines adresses de réaliser des transactions. Utile pour la conformité et la sécurité.">
                     <IconButton size="small">
                       <InfoIcon fontSize="small" />
                     </IconButton>
@@ -226,45 +294,47 @@ export const TokenConfigurationForm: React.FC = () => {
               </Grid>
             )}
 
-            {typeof maxCustomTax === 'number' && maxCustomTax > 0 && (
+            {hasAdvancedFeatures && typeof maxCustomTax === 'number' && maxCustomTax > 0 && (
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Typography>
-                    Taxe Personnalisée (max {maxCustomTax}%)
+                <Box sx={{ mt: 2 }}>
+                  <Typography id="custom-tax-slider" gutterBottom>
+                    Taxe de Transaction ({config.customTaxPercentage}%)
                   </Typography>
-                  <Tooltip title="Une taxe appliquée sur chaque transaction. Cette taxe est redistribuée selon les paramètres que vous définissez.">
-                    <IconButton size="small">
-                      <InfoIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  <Slider
+                    aria-labelledby="custom-tax-slider"
+                    value={config.customTaxPercentage}
+                    onChange={handleTaxChange}
+                    min={0}
+                    max={maxCustomTax}
+                    step={0.1}
+                    valueLabelDisplay="auto"
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Définit un pourcentage de chaque transaction qui sera redistribué ou brûlé.
+                  </Typography>
                 </Box>
-                <Slider
-                  value={config.customTaxPercentage}
-                  onChange={handleTaxChange}
-                  min={0}
-                  max={typeof maxCustomTax === 'number' ? maxCustomTax : 0}
-                  step={0.1}
-                  valueLabelDisplay="auto"
-                  valueLabelFormat={(value) => `${value}%`}
+              </Grid>
+            )}
+
+            {hasAdvancedFeatures && (
+              <Grid item xs={12}>
+                <AntiWhaleConfigPanel
+                  config={config.antiWhale || defaultAntiWhaleConfig}
+                  onChange={handleAntiWhaleChange}
                 />
               </Grid>
             )}
 
-            <Grid item xs={12}>
-              <Alert severity="info">
-                Une taxe de forge de 0.5% sera automatiquement appliquée à toutes les transactions.
-              </Alert>
-            </Grid>
+            {!isConfigValid() && (
+              <Grid item xs={12}>
+                <Alert severity="info">
+                  Veuillez remplir tous les champs obligatoires pour continuer.
+                </Alert>
+              </Grid>
+            )}
           </Grid>
         </Box>
       </Paper>
-
-      {hasAdvancedFeatures && (
-        <AntiWhaleConfigPanel 
-          config={config.antiWhale || { enabled: false, maxTransactionPercentage: 1, maxWalletPercentage: 3 }}
-          onChange={handleAntiWhaleChange}
-        />
-      )}
     </Box>
   );
 };

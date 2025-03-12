@@ -1,8 +1,7 @@
-import { UNSAFE_NavigationContext } from 'react-router-dom';
-
 export const routerConfig = {
   future: {
     v7_startTransition: true,
-    v7_relativeSplatPath: true
+    // Désactiver cette option pour le moment pour résoudre l'avertissement
+    v7_relativeSplatPath: false
   }
 };

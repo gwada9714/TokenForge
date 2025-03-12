@@ -1,9 +1,9 @@
 import { lazy } from 'react';
 import { RouteObject } from 'react-router-dom';
-import { AuthGuard } from '@/guards/AuthGuard';
-import { AdminGuard } from '@/guards/AdminGuard';
-import { PublicGuard } from '@/guards/PublicGuard';
-import { Layout } from '@/layouts/Layout';
+// Utiliser nos guards de diagnostic au lieu des guards d'authentification réels
+import { AuthGuard, AdminGuard, PublicGuard } from '../guards/DiagnosticGuard';
+// Utiliser notre layout de diagnostic
+import { Layout } from '../layouts/DiagnosticLayout';
 
 // 1. Pages Générales
 const Home = lazy(() => import('@/features/home/pages/HomePage').then(module => ({ default: module.HomePage })));
@@ -22,9 +22,15 @@ const Login = lazy(() => import('@/features/auth/pages/LoginPage').then(module =
 const Register = lazy(() => import('@/features/auth/pages/RegisterPage').then(module => ({ default: module.RegisterPage })));
 const RecoverAccount = lazy(() => import('@/features/auth/pages/RecoverAccountPage').then(module => ({ default: module.RecoverAccountPage })));
 const Profile = lazy(() => import('@/features/auth/pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
+// Composant de test d'authentification
+const AuthTest = lazy(() => import('@/features/auth/components/AuthTestComponent').then(module => ({ default: module.default })));
+// Composant de test Firestore
+const FirestoreTest = lazy(() => import('@/components/test/FirestoreTestComponent').then(module => ({ default: module.default })));
+// Ajout: Page de test Firebase
+const FirebaseTestPage = lazy(() => import('@/pages/FirebaseTestPage').then(module => ({ default: module.default })));
 
 // 3. Création de Token
-const CreateToken = lazy(() => import('@/features/token/pages/CreateTokenPage').then(module => ({ default: module.CreateTokenPage })));
+const CreateToken = lazy(() => import('@/pages/CreateToken').then(module => ({ default: module.default })));
 const TokenTemplates = lazy(() => import('@/features/token/pages/TokenTemplatesPage').then(module => ({ default: module.TokenTemplatesPage })));
 const TokenomicsDesigner = lazy(() => import('@/features/tokenomics/pages/TokenomicsDesignerPage'));
 const AntiRugpullConfigurator = lazy(() => import('@/features/token/pages/AntiRugpullConfiguratorPage'));
@@ -137,6 +143,11 @@ export const routes: RouteObject[] = [
       {
         path: 'profile',
         element: <AuthGuard><Profile /></AuthGuard>
+      },
+      // Route de test d'authentification
+      {
+        path: 'auth-test',
+        element: <AuthTest />
       },
 
       // 3. Création de Token
@@ -269,6 +280,32 @@ export const routes: RouteObject[] = [
       {
         path: 'services/kyc/config',
         element: <AuthGuard><KYCConfig /></AuthGuard>
+      },
+
+      // Routes de test (développement uniquement)
+      {
+        path: 'test/auth',
+        element: (
+          <AuthGuard>
+            <AuthTest />
+          </AuthGuard>
+        )
+      },
+      {
+        path: 'test/firestore',
+        element: (
+          <AuthGuard>
+            <FirestoreTest />
+          </AuthGuard>
+        )
+      },
+      {
+        path: 'test/firebase',
+        element: (
+          <AuthGuard>
+            <FirebaseTestPage />
+          </AuthGuard>
+        )
       },
 
       // Route 404

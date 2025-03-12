@@ -18,6 +18,11 @@ export enum AuthErrorCode {
   SIGNOUT_ERROR = 'auth/signout-error',
   RESET_PASSWORD_ERROR = 'auth/reset-password-error',
   UPDATE_PROFILE_ERROR = 'auth/update-profile-error',
+  SIGNUP_FAILED = 'auth/signup-failed',
+  LOGOUT_FAILED = 'auth/logout-failed',
+  RESET_PASSWORD_FAILED = 'auth/reset-password-failed',
+  UPDATE_PROFILE_FAILED = 'auth/update-profile-failed',
+  UPDATE_USER_FAILED = 'auth/update-user-failed',
 
   // Erreurs Wallet
   WALLET_NOT_FOUND = 'WALLET_NOT_FOUND',
@@ -28,6 +33,10 @@ export enum AuthErrorCode {
   WRONG_NETWORK = 'WALLET_WRONG_NETWORK',
   WALLET_CONNECTION_ERROR = 'WALLET_CONNECTION_ERROR',
   WALLET_DISCONNECTION_ERROR = 'WALLET_DISCONNECTION_ERROR',
+  WALLET_CONNECTION_FAILED = 'WALLET_CONNECTION_FAILED',
+  WALLET_DISCONNECTION_FAILED = 'WALLET_DISCONNECTION_FAILED',
+  NO_WALLET_PROVIDER = 'NO_WALLET_PROVIDER',
+  USER_REJECTED_REQUEST = 'USER_REJECTED_REQUEST',
 
   // Erreurs Session
   SESSION_EXPIRED = 'SESSION_EXPIRED',

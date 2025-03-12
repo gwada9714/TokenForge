@@ -31,7 +31,11 @@ export const useAuth = () => {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error('Auth', 'Échec de connexion', err);
       setAuthError(err);
-      throw err;
+      return {
+        success: false,
+        error: err,
+        user: undefined
+      };
     }
   }, []);
 

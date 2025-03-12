@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTokenDeploy } from '../hooks/useTokenDeploy';
 import { toast } from 'react-hot-toast';
@@ -16,15 +16,23 @@ import {
   Step,
   StepLabel,
   CircularProgress,
+  Alert,
+  AlertTitle,
+  Divider
 } from '@mui/material';
 import { CostEstimator } from '../components/features/token/estimation/CostEstimator';
 import { TokenSimulator } from '../components/features/token/simulation/TokenSimulator';
+import { useWalletStatus } from '@/features/auth/hooks/useWalletStatus';
+import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
 
 const steps = ['Configuration', 'Simulation', 'Déploiement'];
 
 const CreateToken = () => {
   const navigate = useNavigate();
-  const { deployToken, isDeploying } = useTokenDeploy();
+  const { deployToken, isDeploying, error, lastDeploymentResult, checkWalletStatus } = useTokenDeploy();
+  const { isConnected } = useWalletStatus();
+  const { connectWallet } = useTokenForgeAuth();
+  
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
@@ -37,6 +45,52 @@ const CreateToken = () => {
     hasPermit: false,
     hasVotes: false,
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  // Valider le formulaire à chaque changement
+  useEffect(() => {
+    validateForm();
+  }, [formData]);
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    let isValid = true;
+
+    if (!formData.name.trim()) {
+      errors.name = "Le nom du token est obligatoire";
+      isValid = false;
+    } else if (formData.name.trim().length < 3) {
+      errors.name = "Le nom doit contenir au moins 3 caractères";
+      isValid = false;
+    }
+
+    if (!formData.symbol.trim()) {
+      errors.symbol = "Le symbole est obligatoire";
+      isValid = false;
+    } else if (formData.symbol.trim().length < 2 || formData.symbol.trim().length > 6) {
+      errors.symbol = "Le symbole doit contenir entre 2 et 6 caractères";
+      isValid = false;
+    }
+
+    if (!formData.initialSupply) {
+      errors.initialSupply = "La quantité initiale est obligatoire";
+      isValid = false;
+    } else if (parseFloat(formData.initialSupply) <= 0) {
+      errors.initialSupply = "La quantité initiale doit être supérieure à 0";
+      isValid = false;
+    }
+
+    const decimals = parseInt(formData.decimals);
+    if (isNaN(decimals) || decimals < 0 || decimals > 18) {
+      errors.decimals = "Les décimales doivent être comprises entre 0 et 18";
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    setIsFormValid(isValid);
+    return isValid;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -47,6 +101,10 @@ const CreateToken = () => {
   };
 
   const handleNext = () => {
+    if (activeStep === 0 && !validateForm()) {
+      toast.error('Veuillez corriger les erreurs du formulaire');
+      return;
+    }
     setActiveStep((prevStep) => prevStep + 1);
   };
 
@@ -58,35 +116,47 @@ const CreateToken = () => {
     e.preventDefault();
     
     try {
-      // Validation basique
-      if (!formData.name || !formData.symbol || !formData.initialSupply) {
-        toast.error('Veuillez remplir tous les champs');
+      // Vérifier si l'utilisateur est connecté
+      const isWalletReady = await checkWalletStatus();
+      
+      if (!isWalletReady && !isConnected) {
+        toast.error('Veuillez connecter votre wallet pour déployer un token');
+        return;
+      }
+      
+      // Validation finale
+      if (!validateForm()) {
+        toast.error('Veuillez corriger les erreurs du formulaire');
         return;
       }
 
-      if (parseFloat(formData.initialSupply) <= 0) {
-        toast.error('Le supply initial doit être supérieur à 0');
-        return;
-      }
-
-      const deployPromise = deployToken({
+      const result = await deployToken({
         name: formData.name,
         symbol: formData.symbol.toUpperCase(),
         initialSupply: formData.initialSupply,
         decimals: parseInt(formData.decimals),
         isMintable: formData.isMintable,
-        isBurnable: formData.isBurnable,
+        isBurnable: formData.isBurnable
       });
 
-      await toast.promise(deployPromise, {
-        loading: 'Déploiement du token en cours...',
-        success: 'Token déployé avec succès !',
-        error: 'Erreur lors du déploiement du token',
-      });
-
-      navigate('/dashboard');
+      if (result.success) {
+        toast.success('Token déployé avec succès !');
+        // Attendre un peu avant de rediriger
+        setTimeout(() => {
+          navigate('/dashboard', { 
+            state: { 
+              deploymentSuccess: true,
+              tokenAddress: result.contractAddress,
+              transactionHash: result.hash
+            } 
+          });
+        }, 2000);
+      } else {
+        toast.error(`Erreur: ${result.error || 'Échec du déploiement'}`);
+      }
     } catch (error) {
-      toast.error('Une erreur est survenue lors du déploiement');
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+      toast.error(`Erreur: ${errorMessage}`);
     }
   };
 
@@ -104,6 +174,8 @@ const CreateToken = () => {
                   label="Nom du Token"
                   value={formData.name}
                   onChange={handleChange}
+                  error={!!formErrors.name}
+                  helperText={formErrors.name || "Choisissez un nom mémorable pour votre token"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -114,6 +186,8 @@ const CreateToken = () => {
                   label="Symbole"
                   value={formData.symbol}
                   onChange={handleChange}
+                  error={!!formErrors.symbol}
+                  helperText={formErrors.symbol || "Ex: BTC, ETH (2-6 caractères)"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -125,6 +199,8 @@ const CreateToken = () => {
                   type="number"
                   value={formData.initialSupply}
                   onChange={handleChange}
+                  error={!!formErrors.initialSupply}
+                  helperText={formErrors.initialSupply || "Quantité totale de tokens à créer"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -136,9 +212,18 @@ const CreateToken = () => {
                   type="number"
                   value={formData.decimals}
                   onChange={handleChange}
+                  error={!!formErrors.decimals}
+                  helperText={formErrors.decimals || "Standard: 18 (comme ETH)"}
+                  inputProps={{ min: 0, max: 18 }}
                 />
               </Grid>
+              
               <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="h6">Fonctionnalités avancées</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -150,7 +235,7 @@ const CreateToken = () => {
                   label="Mintable (création de nouveaux tokens)"
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -162,7 +247,7 @@ const CreateToken = () => {
                   label="Burnable (destruction de tokens)"
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -174,7 +259,7 @@ const CreateToken = () => {
                   label="Pausable (possibilité de geler les transferts)"
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -200,14 +285,16 @@ const CreateToken = () => {
               </Grid>
             </Grid>
             
-            <CostEstimator
-              tokenParams={{
-                name: formData.name,
-                symbol: formData.symbol,
-                decimals: parseInt(formData.decimals),
-                totalSupply: formData.initialSupply,
-              }}
-            />
+            <Box sx={{ mt: 4 }}>
+              <CostEstimator
+                tokenParams={{
+                  name: formData.name,
+                  symbol: formData.symbol,
+                  decimals: parseInt(formData.decimals) || 18,
+                  totalSupply: formData.initialSupply || "0",
+                }}
+              />
+            </Box>
           </Box>
         );
       case 1:
@@ -216,20 +303,93 @@ const CreateToken = () => {
             tokenParams={{
               name: formData.name,
               symbol: formData.symbol,
-              decimals: parseInt(formData.decimals),
-              totalSupply: formData.initialSupply,
+              decimals: parseInt(formData.decimals) || 18,
+              totalSupply: formData.initialSupply || "0",
             }}
           />
         );
       case 2:
         return (
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Box sx={{ mt: 3 }}>
             <Typography variant="h6" gutterBottom>
               Prêt pour le déploiement
             </Typography>
-            <Typography color="text.secondary">
-              Vérifiez les détails ci-dessus avant de procéder au déploiement.
+            <Typography color="text.secondary" paragraph>
+              Vérifiez les détails ci-dessous avant de procéder au déploiement.
             </Typography>
+            
+            <Paper sx={{ p: 3, mt: 2 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Nom du Token:</Typography>
+                  <Typography variant="body1">{formData.name}</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Symbole:</Typography>
+                  <Typography variant="body1">{formData.symbol.toUpperCase()}</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Supply Initial:</Typography>
+                  <Typography variant="body1">{formData.initialSupply}</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Décimales:</Typography>
+                  <Typography variant="body1">{formData.decimals}</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2">Fonctionnalités:</Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                    {formData.isMintable && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Mintable</Box>}
+                    {formData.isBurnable && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Burnable</Box>}
+                    {formData.isPausable && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Pausable</Box>}
+                    {formData.hasPermit && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Permit</Box>}
+                    {formData.hasVotes && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Votes</Box>}
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+            
+            {!isConnected && (
+              <Alert severity="warning" sx={{ mt: 3 }}>
+                <AlertTitle>Wallet non connecté</AlertTitle>
+                Vous devez connecter votre wallet pour déployer votre token.
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={connectWallet} 
+                  sx={{ ml: 2, mt: 1 }}
+                >
+                  Connecter Wallet
+                </Button>
+              </Alert>
+            )}
+            
+            {lastDeploymentResult && (
+              <Alert 
+                severity={lastDeploymentResult.success ? "success" : "error"} 
+                sx={{ mt: 3 }}
+              >
+                <AlertTitle>
+                  {lastDeploymentResult.success ? "Déploiement réussi!" : "Échec du déploiement"}
+                </AlertTitle>
+                {lastDeploymentResult.success ? (
+                  <>
+                    <Typography variant="body2">
+                      Adresse du contrat: <strong>{lastDeploymentResult.contractAddress}</strong>
+                    </Typography>
+                    {lastDeploymentResult.hash && (
+                      <Typography variant="body2">
+                        Transaction: <strong>{lastDeploymentResult.hash.substring(0, 10)}...{lastDeploymentResult.hash.substring(lastDeploymentResult.hash.length - 6)}</strong>
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <Typography variant="body2">
+                    {lastDeploymentResult.error || "Une erreur s'est produite lors du déploiement"}
+                  </Typography>
+                )}
+              </Alert>
+            )}
           </Box>
         );
       default:
@@ -254,7 +414,7 @@ const CreateToken = () => {
 
         {getStepContent(activeStep)}
 
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
           <Button
             disabled={activeStep === 0}
             onClick={handleBack}
@@ -267,8 +427,8 @@ const CreateToken = () => {
             <Button
               variant="contained"
               onClick={handleSubmit}
-              disabled={isDeploying}
-              startIcon={isDeploying && <CircularProgress size={20} />}
+              disabled={isDeploying || !isFormValid}
+              startIcon={isDeploying ? <CircularProgress size={20} /> : null}
             >
               {isDeploying ? 'Déploiement...' : 'Déployer'}
             </Button>
@@ -276,6 +436,7 @@ const CreateToken = () => {
             <Button
               variant="contained"
               onClick={handleNext}
+              disabled={activeStep === 0 && !isFormValid}
             >
               Suivant
             </Button>

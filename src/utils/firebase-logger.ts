@@ -61,28 +61,39 @@ class FirebaseLogger {
   /**
    * Formate un message de log
    */
-  private formatLogMessage(entry: LogMessage, level: LogLevel): Record<string, any> {
+  private formatLogMessage(entry: LogMessage | string, level: LogLevel): Record<string, any> {
     const timestamp = new Date().toISOString();
+    
+    // Si entry est une chaîne, la convertir en objet LogMessage
+    if (typeof entry === 'string') {
+      entry = { message: entry };
+    }
+    
     const category = entry.category || 'App';
     
     // Extraire le message et supprimer la propriété pour éviter la duplication
     const message = entry.message;
-    const { message: _, ...rest } = entry;
+    
+    // S'assurer que le message est toujours une chaîne de caractères
+    const safeMessage = typeof message === 'string' ? message : 
+                        message === undefined ? 'Undefined message' :
+                        String(message);
+    
+    // Extraire l'erreur et les autres propriétés
+    const error = entry.error;
+    const { message: _, error: __, ...restProps } = entry;
     
     // Transformer l'erreur en objet sérialisable si présente
-    const formattedError = entry.error ? this.formatError(entry.error) : undefined;
-    
-    // Remplacer l'erreur originale par l'erreur formatée
-    const { error: __, ...restWithoutError } = rest;
+    const formattedError = error ? this.formatError(error) : undefined;
     
     // Construire l'objet de log final
     return {
       timestamp,
       level,
       category,
-      message,
+      message: safeMessage,
       ...(formattedError ? { error: formattedError } : {}),
-      ...restWithoutError
+      ...restProps
     };
   }
 

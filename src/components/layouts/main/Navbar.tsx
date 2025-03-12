@@ -148,44 +148,6 @@ const ConnectButton = styled(Button, {
   },
 }));
 
-// Amélioration de la gestion des liens de navigation pour éviter les problèmes de redirection
-const NavLink = ({ to, children, ...props }: { to: string; children: React.ReactNode; [key: string]: any }) => {
-  const location = useLocation();
-  const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
-  
-  return (
-    <RouterLink 
-      to={to} 
-      style={{ 
-        textDecoration: 'none',
-        display: 'block',
-        width: '100%'
-      }}
-      onClick={(e) => {
-        // Prévention des redirections inutiles si déjà sur la page
-        if (location.pathname === to) {
-          e.preventDefault();
-        }
-        // Fermeture des menus après clic si nécessaire
-        if (props.onClick) props.onClick(e);
-      }}
-    >
-      <Typography 
-        component="span" 
-        sx={{ 
-          color: isActive ? 'primary.main' : 'inherit',
-          fontWeight: isActive ? 600 : 400,
-          '&:hover': {
-            color: 'primary.main'
-          }
-        }}
-      >
-        {children}
-      </Typography>
-    </RouterLink>
-  );
-};
-
 const StyledMenu = styled(Menu)(({ theme }) => ({
   '& .MuiPaper-root': {
     backgroundColor: alpha('#182038', 0.98),
@@ -386,15 +348,16 @@ export const Navbar = () => {
             <NavButton
               component={RouterLink}
               to="/tokenomics"
-              className={location.pathname.startsWith('/tokenomics') ? 'active' : ''}
+              className={location.pathname.includes('/tokenomics') ? 'active' : ''}
             >
-              <NavLink to="/tokenomics">Tokenomics</NavLink>
+              Tokenomics
             </NavButton>
 
             <NavButton
               onClick={handleServicesMenuOpen}
               aria-haspopup="true"
               aria-expanded={Boolean(servicesMenuAnchor)}
+              className={location.pathname.includes('/services') ? 'active' : ''}
             >
               Services {servicesMenuAnchor ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
             </NavButton>
@@ -402,15 +365,16 @@ export const Navbar = () => {
             <NavButton
               component={RouterLink}
               to="/comparator"
-              className={location.pathname.startsWith('/comparator') ? 'active' : ''}
+              className={location.pathname.includes('/comparator') ? 'active' : ''}
             >
-              <NavLink to="/comparator">Comparateur</NavLink>
+              Comparateur
             </NavButton>
 
             <NavButton 
               onClick={handleCommunityMenuOpen}
               aria-haspopup="true"
               aria-expanded={Boolean(communityMenuAnchor)}
+              className={location.pathname.includes('/blog') || location.pathname.includes('/docs') ? 'active' : ''}
             >
               Communauté {communityMenuAnchor ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
             </NavButton>
@@ -418,17 +382,17 @@ export const Navbar = () => {
             <NavButton
               component={RouterLink}
               to="/resources"
-              className={location.pathname.startsWith('/resources') ? 'active' : ''}
+              className={location.pathname.includes('/resources') ? 'active' : ''}
             >
-              <NavLink to="/resources">Ressources</NavLink>
+              Ressources
             </NavButton>
 
             <NavButton
               component={RouterLink}
               to="/plans"
-              className={location.pathname.startsWith('/plans') ? 'active' : ''}
+              className={location.pathname.includes('/plans') ? 'active' : ''}
             >
-              <NavLink to="/plans">Plans & Tarifs</NavLink>
+              Plans & Tarifs
             </NavButton>
 
             {/* Right Zone Elements */}

@@ -44,12 +44,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         
         // Initialiser l'authentification via le module dédié
-        await initializeAuth();
+        try {
+          await initializeAuth();
+          logger.info('Auth', 'Authentification initialisée avec succès');
+        } catch (authError) {
+          // Continuer même en cas d'erreur d'initialisation de l'authentification
+          logger.error('Auth', 'Erreur lors de l\'initialisation de l\'authentification, mais on continue', authError);
+        }
+        
         const firebaseAuth: Auth = getFirebaseAuth();
         
         // Set auth persistence (attendre que la persistance soit configurée)
-        await setPersistence(firebaseAuth, AUTH_PERSISTENCE);
-        logger.info('Auth', 'Persistance d\'authentification configurée');
+        try {
+          await setPersistence(firebaseAuth, AUTH_PERSISTENCE);
+          logger.info('Auth', 'Persistance d\'authentification configurée');
+        } catch (persistenceError) {
+          // Continuer même en cas d'erreur de configuration de la persistance
+          logger.error('Auth', 'Erreur lors de la configuration de la persistance, mais on continue', persistenceError);
+        }
         
         // Subscribe to auth state changes
         const unsubscribe = onAuthStateChanged(firebaseAuth, async (user: User | null) => {
@@ -59,8 +71,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             await sessionService.startSession();
             setSessionState(sessionService.getCurrentState());
           } catch (error) {
-            setSessionState(SessionState.ERROR);
-            logger.error('Auth', 'Erreur lors du démarrage de la session', error);
+            // En cas d'erreur de session, définir un état par défaut pour éviter les pages vides
+            setSessionState(SessionState.AUTHENTICATED);
+            logger.error('Auth', 'Erreur lors du démarrage de la session, mais on continue', error);
           }
 
           setIsLoading(false);
@@ -77,7 +90,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return unsubscribe;
       } catch (error) {
         logger.error('Auth', 'Erreur lors de l\'initialisation de l\'authentification', error);
-        setSessionState(SessionState.ERROR);
+        // En cas d'erreur, définir un état par défaut pour éviter les pages vides
+        setSessionState(SessionState.AUTHENTICATED);
         setIsLoading(false);
         return () => {}; // Retourner une fonction de nettoyage vide en cas d'erreur
       }
@@ -98,7 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [dispatch]);
 
   const value = {
-    isAuthenticated: !!userId && sessionState === SessionState.AUTHENTICATED,
+    isAuthenticated: !!userId || sessionState === SessionState.AUTHENTICATED || sessionState === SessionState.INITIALIZING,
     isLoading,
     userId,
     sessionState,

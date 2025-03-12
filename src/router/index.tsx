@@ -3,28 +3,28 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { routes } from './routes.tsx';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { logger } from '../core/logger';
+import { routerConfig } from './router.config';
 
 // Configuration du router avec les options adaptées pour réduire les avertissements
 const router = createBrowserRouter(routes, {
-  basename: '/' // Définit explicitement le basename pour éviter les problèmes de chemins relatifs
+  basename: '/', // Définit explicitement le basename pour éviter les problèmes de chemins relatifs
+  future: routerConfig.future // Utilisation de la configuration centralisée
 });
 
 logger.info({
   category: 'Router',
   message: 'Configuration du router initialisée',
-  data: { routesCount: routes.length }
+  data: { 
+    routesCount: routes.length,
+    futureConfig: routerConfig.future 
+  }
 });
 
 export const Router: React.FC = () => {
   return (
     <RouterProvider
       router={router}
-      fallbackElement={<LoadingSpinner />}
-      future={{
-        v7_startTransition: true
-        // Note: Nous utilisons seulement les options supportées par React Router v6
-        // Les autres options comme v7_relativeSplatPath seront supportées dans la version v7
-      }}
+      fallbackElement={<LoadingSpinner fullScreen={false} />}
     />
   );
 };

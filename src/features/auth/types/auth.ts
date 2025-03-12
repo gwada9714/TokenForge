@@ -29,9 +29,9 @@ export interface TokenForgeUser extends FirebaseUser {
 export interface WalletState {
   address: `0x${string}` | null;
   isConnected: boolean;
-  chainId?: number;
   isCorrectNetwork: boolean;
-  walletClient?: WalletClient;
+  chainId: number | null;
+  walletClient: WalletClient | null;
 }
 
 export interface TokenForgeAuthState {
@@ -44,6 +44,8 @@ export interface TokenForgeAuthState {
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
+  hasWalletProvider: boolean;
+  walletError: AuthError | null;
 }
 
 export interface SessionData {
@@ -62,17 +64,29 @@ export interface NotificationEvent {
   data?: any;
 }
 
-export interface TokenForgeAuthContextValue extends TokenForgeAuthState {
+export interface TokenForgeAuthContextValue {
   isInitialized: boolean;
+  status: AuthStatus;
+  isAuthenticated: boolean;
+  user: TokenForgeUser | null;
+  error: AuthError | null;
+  wallet: WalletState;
+  loading: boolean;
+  isAdmin: boolean;
+  canCreateToken: boolean;
+  canUseServices: boolean;
+  hasWalletProvider: boolean;
+  walletError: AuthError | null;
   dispatch: React.Dispatch<AuthAction>;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (displayName?: string, photoURL?: string) => Promise<void>;
   updateUser: (updates: Partial<TokenForgeUser>) => Promise<void>;
-  connectWallet: (address: string, chainId: number, walletClient: WalletClient) => Promise<void>;
+  connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;
   clearError: () => void;
+  clearWalletError: () => void;
   validateAdminAccess: () => boolean;
 }

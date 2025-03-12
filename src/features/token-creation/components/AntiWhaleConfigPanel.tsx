@@ -13,12 +13,7 @@ import {
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { useSubscription } from '@/features/subscription/hooks/useSubscription';
-
-interface AntiWhaleConfig {
-  enabled: boolean;
-  maxTransactionPercentage: number;
-  maxWalletPercentage: number;
-}
+import { AntiWhaleConfig } from './TokenConfigurationForm';
 
 interface AntiWhaleConfigPanelProps {
   config: AntiWhaleConfig;
@@ -100,7 +95,7 @@ export const AntiWhaleConfigPanel: React.FC<AntiWhaleConfigPanelProps> = ({
 
           <Grid item xs={12}>
             <Typography gutterBottom>
-              Limite de détention maximum (% du supply total)
+              Limite de portefeuille maximum (% du supply total)
             </Typography>
             <Slider
               value={config.maxWalletPercentage}
@@ -114,9 +109,8 @@ export const AntiWhaleConfigPanel: React.FC<AntiWhaleConfigPanelProps> = ({
           </Grid>
 
           <Grid item xs={12}>
-            <Alert severity="warning">
-              Attention: Une limite trop restrictive pourrait décourager les investisseurs légitimes. 
-              Nous recommandons une limite de transaction de 1-2% et une limite de détention de 3-5% pour un équilibre optimal.
+            <Alert severity="info">
+              Ces limitations empêchent les manipulations de marché et favorisent une distribution plus équitable des tokens.
             </Alert>
           </Grid>
         </Grid>

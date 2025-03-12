@@ -1,6 +1,7 @@
 import { User } from 'firebase/auth';
 import { AUTH_ACTIONS } from '../features/auth/actions/authActions';
 import { AuthError } from '../features/auth/errors/AuthError';
+import { WalletClient } from 'viem';
 
 export interface TokenForgeUserMetadata {
   creationTime: string;
@@ -18,10 +19,20 @@ export interface TokenForgeUser extends Omit<User, 'metadata'> {
   canUseServices: boolean;
 }
 
+export enum WalletConnectionStatus {
+  NO_WALLET = 'NO_WALLET',
+  DISCONNECTED = 'DISCONNECTED',
+  WRONG_NETWORK = 'WRONG_NETWORK',
+  CONNECTED = 'CONNECTED'
+}
+
 export interface WalletConnectionState {
   isConnected: boolean;
-  address: string | null;
+  address: `0x${string}` | null;
   chainId: number | null;
+  isCorrectNetwork: boolean;
+  walletClient: WalletClient | null;
+  status: WalletConnectionStatus;
 }
 
 export interface AuthState {
@@ -30,6 +41,8 @@ export interface AuthState {
   user: TokenForgeUser | null;
   error: AuthError | null;
   walletState: WalletConnectionState;
+  hasWalletProvider?: boolean;
+  walletError?: AuthError | null;
 }
 
 export const toAuthState = (user: TokenForgeUser | null): AuthState => ({
@@ -40,8 +53,13 @@ export const toAuthState = (user: TokenForgeUser | null): AuthState => ({
   walletState: {
     isConnected: false,
     address: null,
-    chainId: null
-  }
+    chainId: null,
+    isCorrectNetwork: false,
+    walletClient: null,
+    status: WalletConnectionStatus.DISCONNECTED
+  },
+  hasWalletProvider: false,
+  walletError: null
 });
 
 // Utiliser les constantes d'action définies dans AUTH_ACTIONS
@@ -90,4 +108,9 @@ export type AuthAction =
   // Password Reset Actions
   | { type: typeof AUTH_ACTIONS.RESET_PASSWORD_START }
   | { type: typeof AUTH_ACTIONS.RESET_PASSWORD_SUCCESS }
-  | { type: typeof AUTH_ACTIONS.RESET_PASSWORD_FAILURE; payload: AuthError };
+  | { type: typeof AUTH_ACTIONS.RESET_PASSWORD_FAILURE; payload: AuthError }
+  
+  // Nouvelles actions pour la gestion du provider wallet
+  | { type: typeof AUTH_ACTIONS.SET_WALLET_PROVIDER_STATUS; payload: { hasWalletProvider: boolean } }
+  | { type: typeof AUTH_ACTIONS.SET_WALLET_ERROR; payload: AuthError }
+  | { type: typeof AUTH_ACTIONS.CLEAR_WALLET_ERROR };

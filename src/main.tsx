@@ -5,13 +5,13 @@ import './polyfills';
 import './index.css';
 
 // React imports
-import React, { StrictMode } from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 
 // Firebase imports
 import 'firebase/auth';
-import { initializeAuth } from './lib/firebase/auth';
+import { firebaseAuth } from './lib/firebase/auth';
 import { getFirebaseManager } from './lib/firebase/services';
 
 // App imports
@@ -27,16 +27,29 @@ const LOG_CATEGORY = 'Application';
 
 async function initializeServices() {
   try {
-    // 1. Initialiser Firebase en premier
-    await firebaseInitializer.initialize();
-    
-    // 2. Initialiser Auth
-    await initializeAuth();
-    
-    // 3. Initialiser Firebase Manager
+    // 1. Initialiser Firebase Manager
     const firebaseManager = await getFirebaseManager();
+    logger.info({
+      category: 'Firebase',
+      message: 'Firebase core services initialized'
+    });
     
-    // 4. Initialiser les autres services
+    // 2. Initialiser Auth explicitement en utilisant la méthode directe
+    // Cette approche évite les dépendances circulaires
+    await firebaseManager.initAuth();
+    logger.info({
+      category: 'Firebase',
+      message: 'Firebase Auth est complètement initialisé'
+    });
+    
+    // 3. Initialiser le service d'authentification qui utilise Firebase Auth
+    await firebaseAuth.getAuth();
+    logger.info({
+      category: 'Firebase',
+      message: 'FirebaseAuth service est prêt à être utilisé'
+    });
+    
+    // 4. Initialiser les autres services qui peuvent dépendre de Auth
     serviceManager.registerService(firebaseInitializer);
     await serviceManager.initialize();
 
@@ -54,7 +67,7 @@ async function initializeServices() {
   } catch (error) {
     logger.error({
       category: LOG_CATEGORY,
-      message: 'Services initialization failed',
+      message: '❌ Services initialization failed',
       error: error as Error
     });
     throw error;
@@ -119,16 +132,14 @@ async function startApp() {
           color: #ff4444;
           padding: 20px;
         ">
-          <h1>Erreur de chargement</h1>
-          <p>Une erreur est survenue lors du chargement de l'application.</p>
-          <p>Veuillez rafraîchir la page ou contacter le support si le problème persiste.</p>
+          <h1>Oops! Une erreur est survenue</h1>
+          <p>Nous rencontrons un problème au démarrage de l'application. Veuillez réessayer plus tard.</p>
+          <p style="font-size: 0.8em; margin-top: 20px;">Détails techniques: ${(error as Error).message}</p>
         </div>
       `;
     }
   }
 }
 
-// Start the application only in browser environment
-if (typeof window !== 'undefined') {
-  startApp();
-}
+// Start the application
+startApp();
