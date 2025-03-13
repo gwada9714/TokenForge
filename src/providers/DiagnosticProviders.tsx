@@ -6,6 +6,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '../theme/theme';
 import CssBaseline from '@mui/material/CssBaseline';
 import { logger } from '../core/logger';
+import FirebaseIntegration from './FirebaseIntegration';
 
 interface DiagnosticProvidersProps {
   children: React.ReactNode;
@@ -26,7 +27,9 @@ const DiagnosticProviders: React.FC<DiagnosticProvidersProps> = ({ children }) =
       <DiagnosticWagmiProvider>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          {children}
+          <FirebaseIntegration>
+            {children}
+          </FirebaseIntegration>
         </ThemeProvider>
       </DiagnosticWagmiProvider>
     </ReduxProvider>

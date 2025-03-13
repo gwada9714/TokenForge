@@ -7,6 +7,7 @@ import { Layout } from '@/layouts/Layout';
 import { AuthGuard } from '@/guards/AuthGuard';
 import { AdminGuard } from '@/guards/AdminGuard';
 import { PublicGuard } from '@/guards/PublicGuard';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Import des pages
 import { Home } from '@/features/home/pages/HomePage';
@@ -26,7 +27,7 @@ import { AdminDashboard } from '@/features/admin/pages/AdminDashboardPage';
 import { NotFound } from '@/features/common/pages/NotFoundPage';
 
 // Mock du hook d'authentification
-jest.mock('@/features/auth/hooks/useTokenForgeAuth', () => ({
+vi.mock('@/features/auth/hooks/useTokenForgeAuth', () => ({
   useTokenForgeAuth: () => ({
     isAuthenticated: false,
     isAdmin: false,
@@ -111,7 +112,7 @@ describe('Router Integration Tests', () => {
 
   describe('Routes protégées', () => {
     beforeEach(() => {
-      jest.spyOn(require('@/features/auth/hooks/useTokenForgeAuth'), 'useTokenForgeAuth')
+      vi.spyOn(require('@/features/auth/hooks/useTokenForgeAuth'), 'useTokenForgeAuth')
         .mockImplementation(() => ({
           isAuthenticated: false,
           isAdmin: false,
@@ -125,7 +126,7 @@ describe('Router Integration Tests', () => {
     });
 
     it('permet l\'accès au dashboard quand authentifié', () => {
-      jest.spyOn(require('@/features/auth/hooks/useTokenForgeAuth'), 'useTokenForgeAuth')
+      vi.spyOn(require('@/features/auth/hooks/useTokenForgeAuth'), 'useTokenForgeAuth')
         .mockImplementation(() => ({
           isAuthenticated: true,
           isAdmin: false,
@@ -143,7 +144,7 @@ describe('Router Integration Tests', () => {
     });
 
     it('redirige vers / quand authentifié mais non admin', () => {
-      jest.spyOn(require('@/features/auth/hooks/useTokenForgeAuth'), 'useTokenForgeAuth')
+      vi.spyOn(require('@/features/auth/hooks/useTokenForgeAuth'), 'useTokenForgeAuth')
         .mockImplementation(() => ({
           isAuthenticated: true,
           isAdmin: false,
@@ -154,7 +155,7 @@ describe('Router Integration Tests', () => {
     });
 
     it('permet l\'accès à l\'admin quand authentifié et admin', () => {
-      jest.spyOn(require('@/features/auth/hooks/useTokenForgeAuth'), 'useTokenForgeAuth')
+      vi.spyOn(require('@/features/auth/hooks/useTokenForgeAuth'), 'useTokenForgeAuth')
         .mockImplementation(() => ({
           isAuthenticated: true,
           isAdmin: true,

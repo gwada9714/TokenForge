@@ -8,6 +8,16 @@ export {
 export { firestoreService } from './firestore';
 export { addCommit, getUserCommits, deleteCommit, updateCommit } from './commits';
 
+// Export du module d'optimisation Firestore
+export {
+  getDocumentOptimized,
+  queryOptimized,
+  invalidateDocumentCache,
+  invalidateCollectionCache,
+  clearCache,
+  unsubscribeAll
+} from './firestore-optimized';
+
 // Déprécié: Ces exports sont maintenus pour la compatibilité 
 // mais devraient être remplacés par firebaseAuth depuis './auth'
 // @deprecated

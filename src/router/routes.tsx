@@ -6,73 +6,79 @@ import { AuthGuard, AdminGuard, PublicGuard } from '../guards/DiagnosticGuard';
 import { Layout } from '../layouts/DiagnosticLayout';
 
 // 1. Pages Générales
-const Home = lazy(() => import('@/features/home/pages/HomePage').then(module => ({ default: module.HomePage })));
-const About = lazy(() => import('@/features/about/pages/AboutPage').then(module => ({ default: module.AboutPage })));
-const Plans = lazy(() => import('@/features/pricing/pages/PlansPage').then(module => ({ default: module.PlansPage })));
-const FAQ = lazy(() => import('@/features/faq/pages/FAQPage').then(module => ({ default: module.FAQPage })));
-const Contact = lazy(() => import('@/features/contact/pages/ContactPage').then(module => ({ default: module.ContactPage })));
-const Blog = lazy(() => import('@/features/blog/pages/BlogPage').then(module => ({ default: module.BlogPage })));
-const BlogPost = lazy(() => import('@/features/blog/pages/BlogPostPage').then(module => ({ default: module.BlogPostPage })));
-const Resources = lazy(() => import('@/features/resources/pages/ResourcesPage').then(module => ({ default: module.ResourcesPage })));
-const NotFound = lazy(() => import('@/features/common/pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })));
+const Home = lazy(() => import('../features/home/pages/HomePage').then(module => ({ default: module.HomePage })));
+const About = lazy(() => import('../features/about/pages/AboutPage').then(module => ({ default: module.AboutPage })));
+const Plans = lazy(() => import('../features/pricing/pages/PlansPage').then(module => ({ default: module.PlansPage })));
+const FAQ = lazy(() => import('../features/faq/pages/FAQPage').then(module => ({ default: module.FAQPage })));
+const Contact = lazy(() => import('../features/contact/pages/ContactPage').then(module => ({ default: module.ContactPage })));
+const Blog = lazy(() => import('../features/blog/pages/BlogPage').then(module => ({ default: module.BlogPage })));
+const BlogPost = lazy(() => import('../features/blog/pages/BlogPostPage').then(module => ({ default: module.BlogPostPage })));
+const Resources = lazy(() => import('../features/resources/pages/ResourcesPage').then(module => ({ default: module.ResourcesPage })));
+const NotFound = lazy(() => import('../features/common/pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })));
 
 // 2. Système d'Authentification
-const Auth = lazy(() => import('@/features/auth/pages/AuthPage').then(module => ({ default: module.AuthPage })));
-const Login = lazy(() => import('@/features/auth/pages/LoginPage').then(module => ({ default: module.LoginPage })));
-const Register = lazy(() => import('@/features/auth/pages/RegisterPage').then(module => ({ default: module.RegisterPage })));
-const RecoverAccount = lazy(() => import('@/features/auth/pages/RecoverAccountPage').then(module => ({ default: module.RecoverAccountPage })));
-const Profile = lazy(() => import('@/features/auth/pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
+const Auth = lazy(() => import('../features/auth/pages/AuthPage').then(module => ({ default: module.AuthPage })));
+const Login = lazy(() => import('../features/auth/pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const Register = lazy(() => import('../features/auth/pages/RegisterPage').then(module => ({ default: module.RegisterPage })));
+const RecoverAccount = lazy(() => import('../features/auth/pages/RecoverAccountPage').then(module => ({ default: module.RecoverAccountPage })));
+const Profile = lazy(() => import('../features/auth/pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
 // Composant de test d'authentification
-const AuthTest = lazy(() => import('@/features/auth/components/AuthTestComponent').then(module => ({ default: module.default })));
+const AuthTest = lazy(() => import('../features/auth/components/AuthTestComponent').then(module => ({ default: module.default })));
 // Composant de test Firestore
-const FirestoreTest = lazy(() => import('@/components/test/FirestoreTestComponent').then(module => ({ default: module.default })));
+const FirestoreTest = lazy(() => import('../components/test/FirestoreTestComponent').then(module => ({ default: module.default })));
 // Ajout: Page de test Firebase
-const FirebaseTestPage = lazy(() => import('@/pages/FirebaseTestPage').then(module => ({ default: module.default })));
+const FirebaseTestPage = lazy(() => import('../pages/FirebaseTestPage').then(module => ({ default: module.default })));
 
 // 3. Création de Token
-const CreateToken = lazy(() => import('@/pages/CreateToken').then(module => ({ default: module.default })));
-const TokenTemplates = lazy(() => import('@/features/token/pages/TokenTemplatesPage').then(module => ({ default: module.TokenTemplatesPage })));
-const TokenomicsDesigner = lazy(() => import('@/features/tokenomics/pages/TokenomicsDesignerPage'));
-const AntiRugpullConfigurator = lazy(() => import('@/features/token/pages/AntiRugpullConfiguratorPage'));
-const LandingPageBuilder = lazy(() => import('@/features/token/pages/LandingPageBuilderPage').then(module => ({ default: module.LandingPageBuilderPage })));
+const CreateToken = lazy(() => import('../pages/CreateToken').then(module => ({ default: module.default })));
+const TokenTemplates = lazy(() => import('../features/token/pages/TokenTemplatesPage').then(module => ({ default: module.TokenTemplatesPage })));
+const TokenomicsDesigner = lazy(() => import('../features/tokenomics/pages/TokenomicsDesignerPage'));
+const AntiRugpullConfigurator = lazy(() => import('../features/token/pages/AntiRugpullConfiguratorPage'));
+const LandingPageBuilder = lazy(() => import('../features/token/pages/LandingPageBuilderPage').then(module => ({ default: module.LandingPageBuilderPage })));
 
 // 4. Gestion de Token
-const Dashboard = lazy(() => import('@/features/dashboard/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
-const TokenList = lazy(() => import('@/features/token/pages/TokenListPage').then(module => ({ default: module.TokenListPage })));
-const TokenDetails = lazy(() => import('@/features/token/pages/TokenDetailsPage').then(module => ({ default: module.TokenDetailsPage })));
-const AutoLiquidityManager = lazy(() => import('@/features/token/pages/AutoLiquidityManagerPage'));
-const StakingManager = lazy(() => import('@/features/token-staking/pages/StakingManagerPage'));
+const Dashboard = lazy(() => import('../features/dashboard/pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
+const TokenList = lazy(() => import('../features/token/pages/TokenListPage').then(module => ({ default: module.TokenListPage })));
+const TokenDetails = lazy(() => import('../features/token/pages/TokenDetailsPage').then(module => ({ default: module.TokenDetailsPage })));
+const AutoLiquidityManager = lazy(() => import('../features/token/pages/AutoLiquidityManagerPage'));
+const StakingManager = lazy(() => import('../features/token-staking/pages/StakingManagerPage'));
 
 // 5. Services Premium
-const HolderAnalytics = lazy(() => import('@/features/analytics/pages/HolderAnalyticsPage').then(module => ({ default: module.HolderAnalyticsPage })));
-const MultiChainBridge = lazy(() => import('@/features/multi-chain/pages/MultiChainBridgePage').then(module => ({ default: module.MultiChainBridgePage })));
-const ExpertNetwork = lazy(() => import('@/features/partnership/pages/ExpertNetworkPage').then(module => ({ default: module.ExpertNetworkPage })));
-const DefiIntegrationHub = lazy(() => import('@/features/services/pages/DefiIntegrationHubPage').then(module => ({ default: module.DefiIntegrationHubPage })));
-const TokenSpotlight = lazy(() => import('@/features/services/pages/TokenSpotlightPage').then(module => ({ default: module.TokenSpotlightPage })));
-const LegalTemplateLibrary = lazy(() => import('@/features/services/pages/LegalTemplateLibraryPage').then(module => ({ default: module.LegalTemplateLibraryPage })));
+const HolderAnalytics = lazy(() => import('../features/analytics/pages/HolderAnalyticsPage').then(module => ({ default: module.HolderAnalyticsPage })));
+const MultiChainBridge = lazy(() => import('../features/multi-chain/pages/MultiChainBridgePage').then(module => ({ default: module.MultiChainBridgePage })));
+const ExpertNetwork = lazy(() => import('../features/partnership/pages/ExpertNetworkPage').then(module => ({ default: module.ExpertNetworkPage })));
+const DefiIntegrationHub = lazy(() => import('../features/services/pages/DefiIntegrationHubPage').then(module => ({ default: module.DefiIntegrationHubPage })));
+const TokenSpotlight = lazy(() => import('../features/services/pages/TokenSpotlightPage').then(module => ({ default: module.TokenSpotlightPage })));
+const LegalTemplateLibrary = lazy(() => import('../features/services/pages/LegalTemplateLibraryPage').then(module => ({ default: module.LegalTemplateLibraryPage })));
 
 // 6. Administration
-const AdminDashboard = lazy(() => import('@/features/admin/pages/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })));
-const UsersManagement = lazy(() => import('@/features/admin/pages/UsersManagementPage').then(module => ({ default: module.UsersManagementPage })));
-const TokensManagement = lazy(() => import('@/features/admin/pages/TokensManagementPage').then(module => ({ default: module.TokensManagementPage })));
-const SystemSettings = lazy(() => import('@/features/admin/pages/SystemSettingsPage').then(module => ({ default: module.SystemSettingsPage })));
+const AdminDashboard = lazy(() => import('../features/admin/pages/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })));
+const UsersManagement = lazy(() => import('../features/admin/pages/UsersManagementPage').then(module => ({ default: module.UsersManagementPage })));
+const TokensManagement = lazy(() => import('../features/admin/pages/TokensManagementPage').then(module => ({ default: module.TokensManagementPage })));
+const SystemSettings = lazy(() => import('../features/admin/pages/SystemSettingsPage').then(module => ({ default: module.SystemSettingsPage })));
 // Remplace le import par un composant temporaire ou stub en attendant la création du fichier
-const AnalyticsReporting = lazy(() => import('@/features/admin/pages/SystemSettingsPage').then(module => ({ default: module.SystemSettingsPage })));
-const MarketplaceManagement = lazy(() => import('@/features/admin/pages/MarketplaceManagementPage').then(module => ({ default: module.MarketplaceManagementPage })));
+const AnalyticsReporting = lazy(() => import('../features/admin/pages/SystemSettingsPage').then(module => ({ default: module.SystemSettingsPage })));
+const MarketplaceManagement = lazy(() => import('../features/admin/pages/MarketplaceManagementPage').then(module => ({ default: module.MarketplaceManagementPage })));
 
 // 7. Pages Community & Support
-const CommunityCenter = lazy(() => import('@/features/community/pages/CommunityCenterPage').then(module => ({ default: module.CommunityCenterPage })));
-const KnowledgeBase = lazy(() => import('@/features/learn/pages/KnowledgeBasePage').then(module => ({ default: module.KnowledgeBasePage })));
-const AmbassadorProgram = lazy(() => import('@/features/community/pages/AmbassadorProgramPage'));
-const WebinarsEvents = lazy(() => import('@/features/community/pages/WebinarsEventsPage').then(module => ({ default: module.WebinarsEventsPage })));
+const CommunityCenter = lazy(() => import('../features/community/pages/CommunityCenterPage').then(module => ({ default: module.CommunityCenterPage })));
+const KnowledgeBase = lazy(() => import('../features/learn/pages/KnowledgeBasePage').then(module => ({ default: module.KnowledgeBasePage })));
+const AmbassadorProgram = lazy(() => import('../features/community/pages/AmbassadorProgramPage'));
+const WebinarsEvents = lazy(() => import('../features/community/pages/WebinarsEventsPage').then(module => ({ default: module.WebinarsEventsPage })));
 
 // 8. Pages Mobiles (ces pages utilisent des layouts responsifs, pas besoin de pages séparées)
 
 // Pages de configuration des services
 // Remplace les imports manquants par des composants temporaires
-const LaunchpadConfig = lazy(() => import('@/features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
-const MarketingConfig = lazy(() => import('@/features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
-const KYCConfig = lazy(() => import('@/features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
+const LaunchpadConfig = lazy(() => import('../features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
+const MarketingConfig = lazy(() => import('../features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
+const KYCConfig = lazy(() => import('../features/services/pages/MarketingConfigPage').then(module => ({ default: module.MarketingConfigPage })));
+
+// Ajout: Pages adaptées de Next.js à React Router
+const AuthDemo = lazy(() => import('../pages/auth-demo').then(module => ({ default: module.default })));
+const ProtectedPage = lazy(() => import('../pages/protected-page').then(module => ({ default: module.default })));
+const AdminPage = lazy(() => import('../pages/admin-page').then(module => ({ default: module.default })));
+const AuthHookDoc = lazy(() => import('../pages/docs/auth-hook').then(module => ({ default: module.default })));
 
 // Types
 export interface RouteConfig {
@@ -306,6 +312,32 @@ export const routes: RouteObject[] = [
             <FirebaseTestPage />
           </AuthGuard>
         )
+      },
+
+      // Ajout: Routes pour les pages adaptées de Next.js
+      {
+        path: 'auth-demo',
+        element: <AuthDemo />
+      },
+      {
+        path: 'protected',
+        element: (
+          <AuthGuard>
+            <ProtectedPage />
+          </AuthGuard>
+        )
+      },
+      {
+        path: 'admin-page',
+        element: (
+          <AdminGuard>
+            <AdminPage />
+          </AdminGuard>
+        )
+      },
+      {
+        path: 'docs/auth-hook',
+        element: <AuthHookDoc />
       },
 
       // Route 404

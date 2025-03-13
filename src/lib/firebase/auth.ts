@@ -8,9 +8,9 @@ import {
   sendPasswordResetEmail, 
   updateProfile
 } from 'firebase/auth';
-import { logger } from '@/core/logger';
+import { logger } from '../../core/logger';
 import { getFirebaseManager } from './services';
-import { handleFirebaseError } from '@/utils/error-handler';
+import { handleFirebaseError } from '../../utils/error-handler';
 
 export class FirebaseAuthService {
   private static instance: FirebaseAuthService;

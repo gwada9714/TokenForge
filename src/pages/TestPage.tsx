@@ -3,20 +3,24 @@ import { useWeb3 } from '../hooks/useWeb3';
 import { TestForm } from '../components/test/TestForm';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
+import FirestoreTestComponent from '../components/FirestoreTestComponent';
+import FirestoreOptimizedTest from '../components/FirestoreOptimizedTest';
+import FirestoreHooksDemo from '../components/FirestoreHooksDemo';
 
 export const TestPage = () => {
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'basic' | 'advanced' | 'optimized' | 'hooks'>('basic');
   
   const { isConnected, address } = useWeb3();
 
-  const handleTest = useCallback(async (testParams: any) => {
+  const handleTest = useCallback(async (formData: any) => {
     setIsLoading(true);
     setError(null);
     try {
       // Logique de test
-      setResults(prev => [...prev, { success: true, message: 'Test successful' }]);
+      setResults(prev => [...prev, { success: true, message: 'Test successful', data: formData }]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -49,12 +53,77 @@ export const TestPage = () => {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-header">
-            <h2 className="text-xl font-semibold">Test Configuration</h2>
+        {/* Onglets de navigation pour les tests Firebase */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('basic')}
+                className={`${
+                  activeTab === 'basic'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              >
+                Tests de base
+              </button>
+              <button
+                onClick={() => setActiveTab('advanced')}
+                className={`${
+                  activeTab === 'advanced'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              >
+                Tests avancés Firestore
+              </button>
+              <button
+                onClick={() => setActiveTab('optimized')}
+                className={`${
+                  activeTab === 'optimized'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              >
+                Tests optimisés Firestore
+              </button>
+              <button
+                onClick={() => setActiveTab('hooks')}
+                className={`${
+                  activeTab === 'hooks'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              >
+                Hooks Firestore
+              </button>
+            </nav>
           </div>
-          <div className="card-content">
-            <TestForm onSubmit={handleTest} disabled={isLoading || !isConnected} />
+
+          {/* Contenu des onglets */}
+          <div className="mt-4">
+            {activeTab === 'basic' && (
+              <div className="card">
+                <div className="card-header">
+                  <h2 className="text-xl font-semibold">Test Configuration</h2>
+                </div>
+                <div className="card-content">
+                  <TestForm onSubmit={handleTest} disabled={isLoading || !isConnected} />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'advanced' && (
+              <FirestoreTestComponent />
+            )}
+
+            {activeTab === 'optimized' && (
+              <FirestoreOptimizedTest />
+            )}
+            
+            {activeTab === 'hooks' && (
+              <FirestoreHooksDemo />
+            )}
           </div>
         </div>
 
@@ -70,7 +139,7 @@ export const TestPage = () => {
           </div>
         )}
 
-        {results.length > 0 && (
+        {results.length > 0 && activeTab === 'basic' && (
           <div className="mt-6 card">
             <div className="card-header">
               <h2 className="text-xl font-semibold">Test Results</h2>
@@ -85,6 +154,11 @@ export const TestPage = () => {
                     } border`}
                   >
                     <p className="text-sm">{result.message}</p>
+                    {result.data && (
+                      <pre className="mt-2 text-xs bg-gray-100 p-2 rounded">
+                        {JSON.stringify(result.data, null, 2)}
+                      </pre>
+                    )}
                   </div>
                 ))}
               </div>
@@ -94,4 +168,4 @@ export const TestPage = () => {
       </div>
     </div>
   );
-}; 
+};

@@ -199,19 +199,51 @@ vi.mock('firebase/functions', () => ({
 
 // Mock des composants lazy
 vi.mock('@/features/home/pages/HomePage', () => ({
-  HomePage: () => React.createElement('div', null, 'Home Page')
+  default: () => {
+    const React = require('react');
+    return React.createElement('div', null, 'HomePage');
+  }
 }));
 
 vi.mock('@/features/dashboard/pages/DashboardPage', () => ({
-  DashboardPage: () => React.createElement('div', null, 'Dashboard Page')
+  default: () => {
+    const React = require('react');
+    return React.createElement('div', null, 'DashboardPage');
+  }
 }));
 
 vi.mock('@/features/auth/pages/ProfilePage', () => ({
-  ProfilePage: () => React.createElement('div', null, 'Profile Page')
+  default: () => {
+    const React = require('react');
+    return React.createElement('div', null, 'ProfilePage');
+  }
 }));
 
 vi.mock('@/features/auth/pages/AuthPage', () => ({
-  AuthPage: () => React.createElement('div', null, 'Auth Page')
+  default: () => {
+    const React = require('react');
+    return React.createElement('div', null, 'AuthPage');
+  }
+}));
+
+// Mock de next/router
+vi.mock('next/router', () => ({
+  useRouter: vi.fn().mockReturnValue({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    pathname: '/',
+    route: '/',
+    asPath: '/',
+    query: {},
+    isReady: true,
+    events: {
+      on: vi.fn(),
+      off: vi.fn(),
+      emit: vi.fn()
+    }
+  })
 }));
 
 // Mock des dépendances Web3

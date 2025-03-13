@@ -17,7 +17,8 @@ import {
   startAfter,
   QueryConstraint,
   serverTimestamp,
-  Transaction
+  Transaction,
+  Query
 } from 'firebase/firestore';
 import { logger } from '@/core/logger';
 import { getFirebaseManager } from './services';
@@ -53,6 +54,29 @@ export class FirestoreService {
       });
     }
     return this.db;
+  }
+
+  /**
+   * Obtient une référence à un document Firestore
+   * @param collectionName Nom de la collection
+   * @param docId Identifiant du document
+   * @returns Référence au document
+   */
+  public async getDocumentRef(collectionName: string, docId: string): Promise<DocumentReference> {
+    const db = await this.ensureInitialized();
+    return doc(db, collectionName, docId);
+  }
+
+  /**
+   * Crée une requête Firestore avec les contraintes spécifiées
+   * @param collectionName Nom de la collection
+   * @param constraints Contraintes de la requête
+   * @returns Objet Query Firestore
+   */
+  public async createQuery(collectionName: string, constraints: QueryConstraint[] = []): Promise<Query> {
+    const db = await this.ensureInitialized();
+    const collectionRef = collection(db, collectionName);
+    return query(collectionRef, ...constraints);
   }
 
   /**
