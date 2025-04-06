@@ -1,5 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
-import { errorService, ErrorCode, ErrorSeverity, ErrorDetails, ErrorListener } from '../core/errors/ErrorService';
+import { useState, useCallback, useEffect } from "react";
+import {
+  errorService,
+  ErrorCode,
+  ErrorSeverity,
+  ErrorDetails,
+  ErrorListener,
+} from "../core/errors/ErrorService";
 
 /**
  * Interface pour le retour du hook useError
@@ -21,7 +27,7 @@ export interface UseErrorReturn {
  */
 export function useError(): UseErrorReturn {
   const [error, setError] = useState<ErrorDetails | null>(null);
-  
+
   // Fonction pour gérer une erreur
   const handleError = useCallback(
     (
@@ -30,18 +36,23 @@ export function useError(): UseErrorReturn {
       severity?: ErrorSeverity,
       context?: Record<string, unknown>
     ) => {
-      const errorDetails = errorService.handleError(errorOrCode, message, severity, context);
+      const errorDetails = errorService.handleError(
+        errorOrCode,
+        message,
+        severity,
+        context
+      );
       setError(errorDetails);
       return errorDetails;
     },
     []
   );
-  
+
   // Fonction pour effacer l'erreur
   const clearError = useCallback(() => {
     setError(null);
   }, []);
-  
+
   // Écouter les erreurs globales
   useEffect(() => {
     const errorListener: ErrorListener = (errorDetails) => {
@@ -50,19 +61,19 @@ export function useError(): UseErrorReturn {
         setError(errorDetails);
       }
     };
-    
+
     errorService.addErrorListener(errorListener);
-    
+
     return () => {
       errorService.removeErrorListener(errorListener);
     };
   }, [error]);
-  
+
   return {
     error,
     hasError: error !== null,
     handleError,
-    clearError
+    clearError,
   };
 }
 
