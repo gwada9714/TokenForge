@@ -1,8 +1,8 @@
 // Exporter les types et services d'erreur
-export * from './ErrorService';
+export * from "./ErrorService";
 
 // Fonction utilitaire pour gérer les erreurs
-import { errorService, ErrorCode, ErrorSeverity } from './ErrorService';
+import { errorService, ErrorCode, ErrorSeverity } from "./ErrorService";
 
 /**
  * Fonction utilitaire pour gérer les erreurs en dehors des composants React

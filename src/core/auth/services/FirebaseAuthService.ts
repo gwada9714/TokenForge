@@ -1,21 +1,31 @@
-import { 
-  Auth, 
-  getAuth, 
-  User, 
-  signInWithEmailAndPassword, 
+import {
+  Auth,
+  getAuth,
+  User,
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   updateProfile,
-  signOut, 
+  signOut,
   AuthErrorCodes,
   sendEmailVerification,
-  UserCredential
-} from 'firebase/auth';
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { logger } from '../../logger';
-import { errorService, ErrorCode, ErrorSeverity } from '../../errors/ErrorService';
-import { configService } from '../../config';
-import { AuthServiceBase, LoginCredentials, SignupCredentials, AuthResponse, AuthServiceOptions } from './AuthServiceBase';
+  UserCredential,
+} from "firebase/auth";
+import { initializeApp, FirebaseApp } from "firebase/app";
+import { logger } from "../../logger";
+import {
+  errorService,
+  ErrorCode,
+  ErrorSeverity,
+} from "../../errors/ErrorService";
+import { configService } from "../../config";
+import {
+  AuthServiceBase,
+  LoginCredentials,
+  SignupCredentials,
+  AuthResponse,
+  AuthServiceOptions,
+} from "./AuthServiceBase";
 
 /**
  * Interface pour les erreurs d'authentification Firebase
@@ -44,11 +54,11 @@ export class FirebaseAuthService extends AuthServiceBase {
       lockoutDuration: 15 * 60 * 1000, // 15 minutes
       sessionTimeout: securityConfig.session.timeout * 1000,
       requireEmailVerification: true,
-      ...options
+      ...options,
     };
-    
+
     super(mergedOptions);
-    
+
     // Initialiser Firebase avec la configuration
     const firebaseConfig = configService.getFirebaseConfig();
     this.app = initializeApp({
@@ -58,38 +68,41 @@ export class FirebaseAuthService extends AuthServiceBase {
       storageBucket: firebaseConfig.storageBucket,
       messagingSenderId: firebaseConfig.messagingSenderId,
       appId: firebaseConfig.appId,
-      measurementId: firebaseConfig.measurementId
+      measurementId: firebaseConfig.measurementId,
     });
-    
+
     this.auth = getAuth(this.app);
     this.setupAuthListeners();
-    
+
     // Vérifier si l'utilisateur est déjà connecté au démarrage
     const currentUser = this.auth.currentUser;
     if (currentUser) {
-      this.setupTokenRefresh(currentUser).catch(error => {
+      this.setupTokenRefresh(currentUser).catch((error) => {
         logger.error({
-          category: 'Auth',
-          message: 'Erreur lors de la configuration du rafraîchissement du token au démarrage',
-          error: error instanceof Error ? error : new Error(String(error))
+          category: "Auth",
+          message:
+            "Erreur lors de la configuration du rafraîchissement du token au démarrage",
+          error: error instanceof Error ? error : new Error(String(error)),
         });
       });
     }
-    
+
     logger.info({
-      category: 'Auth',
-      message: 'Service d\'authentification Firebase initialisé',
-      data: { 
+      category: "Auth",
+      message: "Service d'authentification Firebase initialisé",
+      data: {
         projectId: firebaseConfig.projectId,
-        useEmulator: firebaseConfig.useEmulator
-      }
+        useEmulator: firebaseConfig.useEmulator,
+      },
     });
   }
 
   /**
    * Obtient l'instance singleton du service d'authentification
    */
-  public static getInstance(options: AuthServiceOptions = {}): FirebaseAuthService {
+  public static getInstance(
+    options: AuthServiceOptions = {}
+  ): FirebaseAuthService {
     if (!FirebaseAuthService.instance) {
       FirebaseAuthService.instance = new FirebaseAuthService(options);
     }
@@ -121,7 +134,11 @@ export class FirebaseAuthService extends AuthServiceBase {
       if (this.isLoginBlocked(credentials.email)) {
         return {
           success: false,
-          error: new Error(`Trop de tentatives de connexion. Veuillez réessayer après ${this.options.lockoutDuration! / 60000} minutes.`)
+          error: new Error(
+            `Trop de tentatives de connexion. Veuillez réessayer après ${
+              this.options.lockoutDuration! / 60000
+            } minutes.`
+          ),
         };
       }
 
@@ -132,16 +149,21 @@ export class FirebaseAuthService extends AuthServiceBase {
       );
 
       // Vérifier si l'email est vérifié si nécessaire
-      if (this.options.requireEmailVerification && !userCredential.user.emailVerified) {
+      if (
+        this.options.requireEmailVerification &&
+        !userCredential.user.emailVerified
+      ) {
         // Envoyer un email de vérification
         await sendEmailVerification(userCredential.user);
-        
+
         // Déconnecter l'utilisateur
         await this.logout();
-        
+
         return {
           success: false,
-          error: new Error('Veuillez vérifier votre email avant de vous connecter. Un nouvel email de vérification a été envoyé.')
+          error: new Error(
+            "Veuillez vérifier votre email avant de vous connecter. Un nouvel email de vérification a été envoyé."
+          ),
         };
       }
 
@@ -152,17 +174,17 @@ export class FirebaseAuthService extends AuthServiceBase {
       await this.setupTokenRefresh(userCredential.user);
 
       logger.info({
-        category: 'Auth',
-        message: 'Utilisateur connecté avec succès',
+        category: "Auth",
+        message: "Utilisateur connecté avec succès",
         data: {
           uid: userCredential.user.uid,
-          email: userCredential.user.email
-        }
+          email: userCredential.user.email,
+        },
       });
 
       return {
         success: true,
-        user: userCredential.user
+        user: userCredential.user,
       };
     } catch (error) {
       // Incrémenter les tentatives de connexion
@@ -170,43 +192,45 @@ export class FirebaseAuthService extends AuthServiceBase {
 
       const authError = error as FirebaseAuthError;
       logger.error({
-        category: 'Auth',
-        message: 'Échec de connexion',
+        category: "Auth",
+        message: "Échec de connexion",
         error: authError,
-        data: { email: credentials.email }
+        data: { email: credentials.email },
       });
-      
+
       // Fournir des messages d'erreur plus spécifiques
-      let errorMessage = 'Échec de connexion';
-      
+      let errorMessage = "Échec de connexion";
+
       if (authError.code) {
         switch (authError.code) {
-          case 'auth/invalid-email':
-            errorMessage = 'Adresse email invalide';
+          case "auth/invalid-email":
+            errorMessage = "Adresse email invalide";
             break;
-          case 'auth/user-disabled':
-            errorMessage = 'Ce compte a été désactivé';
+          case "auth/user-disabled":
+            errorMessage = "Ce compte a été désactivé";
             break;
-          case 'auth/user-not-found':
-            errorMessage = 'Aucun compte trouvé avec cette adresse email';
+          case "auth/user-not-found":
+            errorMessage = "Aucun compte trouvé avec cette adresse email";
             break;
-          case 'auth/wrong-password':
-            errorMessage = 'Mot de passe incorrect';
+          case "auth/wrong-password":
+            errorMessage = "Mot de passe incorrect";
             break;
-          case 'auth/too-many-requests':
-            errorMessage = 'Trop de tentatives de connexion. Veuillez réessayer plus tard';
+          case "auth/too-many-requests":
+            errorMessage =
+              "Trop de tentatives de connexion. Veuillez réessayer plus tard";
             break;
-          case 'auth/network-request-failed':
-            errorMessage = 'Problème de connexion réseau. Vérifiez votre connexion internet';
+          case "auth/network-request-failed":
+            errorMessage =
+              "Problème de connexion réseau. Vérifiez votre connexion internet";
             break;
           default:
             errorMessage = `Erreur de connexion: ${authError.code}`;
         }
       }
-      
+
       return {
         success: false,
-        error: new Error(errorMessage)
+        error: new Error(errorMessage),
       };
     }
   }
@@ -222,85 +246,88 @@ export class FirebaseAuthService extends AuthServiceBase {
         credentials.email,
         credentials.password
       );
-      
+
       // Mettre à jour le profil si nécessaire
       if (credentials.displayName || credentials.photoURL) {
         await updateProfile(userCredential.user, {
           displayName: credentials.displayName,
-          photoURL: credentials.photoURL
+          photoURL: credentials.photoURL,
         });
       }
-      
+
       // Envoyer un email de vérification si nécessaire
       if (this.options.requireEmailVerification) {
         await sendEmailVerification(userCredential.user);
-        
+
         logger.info({
-          category: 'Auth',
-          message: 'Email de vérification envoyé',
-          data: { email: credentials.email }
+          category: "Auth",
+          message: "Email de vérification envoyé",
+          data: { email: credentials.email },
         });
-        
+
         // Déconnecter l'utilisateur jusqu'à ce que l'email soit vérifié
         await this.logout();
-        
+
         return {
           success: true,
           user: userCredential.user,
-          error: new Error('Un email de vérification a été envoyé. Veuillez vérifier votre email avant de vous connecter.')
+          error: new Error(
+            "Un email de vérification a été envoyé. Veuillez vérifier votre email avant de vous connecter."
+          ),
         };
       }
-      
+
       // Configurer le rafraîchissement du token
       await this.setupTokenRefresh(userCredential.user);
-      
+
       logger.info({
-        category: 'Auth',
-        message: 'Utilisateur inscrit avec succès',
+        category: "Auth",
+        message: "Utilisateur inscrit avec succès",
         data: {
           uid: userCredential.user.uid,
-          email: userCredential.user.email
-        }
+          email: userCredential.user.email,
+        },
       });
-      
+
       return {
         success: true,
-        user: userCredential.user
+        user: userCredential.user,
       };
     } catch (error) {
       const authError = error as FirebaseAuthError;
       logger.error({
-        category: 'Auth',
-        message: 'Échec d\'inscription',
+        category: "Auth",
+        message: "Échec d'inscription",
         error: authError,
-        data: { email: credentials.email }
+        data: { email: credentials.email },
       });
-      
+
       // Fournir des messages d'erreur plus spécifiques
-      let errorMessage = 'Échec d\'inscription';
-      
+      let errorMessage = "Échec d'inscription";
+
       if (authError.code) {
         switch (authError.code) {
-          case 'auth/email-already-in-use':
-            errorMessage = 'Cette adresse email est déjà utilisée';
+          case "auth/email-already-in-use":
+            errorMessage = "Cette adresse email est déjà utilisée";
             break;
-          case 'auth/invalid-email':
-            errorMessage = 'Adresse email invalide';
+          case "auth/invalid-email":
+            errorMessage = "Adresse email invalide";
             break;
-          case 'auth/weak-password':
-            errorMessage = 'Le mot de passe est trop faible';
+          case "auth/weak-password":
+            errorMessage = "Le mot de passe est trop faible";
             break;
-          case 'auth/operation-not-allowed':
-            errorMessage = 'L\'inscription avec email et mot de passe n\'est pas activée';
+          case "auth/operation-not-allowed":
+            errorMessage =
+              "L'inscription avec email et mot de passe n'est pas activée";
             break;
           default:
             errorMessage = `Erreur d'inscription: ${authError.code}`;
         }
       }
-      
+
       return {
         success: false,
-        error: new Error(errorMessage)
+        error: new Error(errorMessage),
       };
     }
   }
@@ -312,25 +339,25 @@ export class FirebaseAuthService extends AuthServiceBase {
     try {
       // Nettoyer les intervalles avant la déconnexion
       this.clearAllTokenRefreshIntervals();
-      
+
       // Vérifier si l'utilisateur est connecté avant de tenter la déconnexion
       if (this.auth.currentUser) {
         await signOut(this.auth);
         logger.info({
-          category: 'Auth',
-          message: 'Déconnexion réussie'
+          category: "Auth",
+          message: "Déconnexion réussie",
         });
       } else {
         logger.info({
-          category: 'Auth',
-          message: 'Déconnexion ignorée - aucun utilisateur connecté'
+          category: "Auth",
+          message: "Déconnexion ignorée - aucun utilisateur connecté",
         });
       }
     } catch (error) {
       logger.error({
-        category: 'Auth',
-        message: 'Échec de déconnexion',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Auth",
+        message: "Échec de déconnexion",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -350,26 +377,26 @@ export class FirebaseAuthService extends AuthServiceBase {
     try {
       await sendPasswordResetEmail(this.auth, email);
       logger.info({
-        category: 'Auth',
-        message: 'Email de réinitialisation de mot de passe envoyé',
-        data: { email }
+        category: "Auth",
+        message: "Email de réinitialisation de mot de passe envoyé",
+        data: { email },
       });
       return true;
     } catch (error) {
       const authError = error as FirebaseAuthError;
       logger.error({
-        category: 'Auth',
-        message: 'Échec d\'envoi d\'email de réinitialisation de mot de passe',
+        category: "Auth",
+        message: "Échec d'envoi d'email de réinitialisation de mot de passe",
         error: authError,
-        data: { email }
+        data: { email },
       });
-      
+
       // Gérer les erreurs spécifiques
-      if (authError.code === 'auth/user-not-found') {
+      if (authError.code === "auth/user-not-found") {
         // Ne pas révéler que l'utilisateur n'existe pas pour des raisons de sécurité
         return true;
       }
-      
+
       throw error;
     }
   }
@@ -377,26 +404,29 @@ export class FirebaseAuthService extends AuthServiceBase {
   /**
    * Met à jour le profil de l'utilisateur
    */
-  public async updateUserProfile(user: User, profile: Partial<SignupCredentials>): Promise<User> {
+  public async updateUserProfile(
+    user: User,
+    profile: Partial<SignupCredentials>
+  ): Promise<User> {
     try {
       await updateProfile(user, {
         displayName: profile.displayName,
-        photoURL: profile.photoURL
+        photoURL: profile.photoURL,
       });
-      
+
       logger.info({
-        category: 'Auth',
-        message: 'Profil utilisateur mis à jour',
-        data: { uid: user.uid }
+        category: "Auth",
+        message: "Profil utilisateur mis à jour",
+        data: { uid: user.uid },
       });
-      
+
       return user;
     } catch (error) {
       logger.error({
-        category: 'Auth',
-        message: 'Échec de mise à jour du profil utilisateur',
+        category: "Auth",
+        message: "Échec de mise à jour du profil utilisateur",
         error: error instanceof Error ? error : new Error(String(error)),
-        data: { uid: user.uid }
+        data: { uid: user.uid },
       });
       throw error;
     }
@@ -418,15 +448,15 @@ export class FirebaseAuthService extends AuthServiceBase {
     if (!user) {
       return null;
     }
-    
+
     try {
       return await user.getIdToken(forceRefresh);
     } catch (error) {
       logger.error({
-        category: 'Auth',
-        message: 'Échec d\'obtention du token',
+        category: "Auth",
+        message: "Échec d'obtention du token",
         error: error instanceof Error ? error : new Error(String(error)),
-        data: { uid: user.uid }
+        data: { uid: user.uid },
       });
       return null;
     }
@@ -439,33 +469,34 @@ export class FirebaseAuthService extends AuthServiceBase {
     try {
       // Nettoyer tout intervalle existant pour cet utilisateur
       this.clearTokenRefreshInterval(user.uid);
-      
+
       // Vérifier si l'utilisateur est toujours valide
       if (!user.uid) {
         logger.warn({
-          category: 'Auth',
-          message: 'Tentative de rafraîchissement de token pour un utilisateur non valide'
+          category: "Auth",
+          message:
+            "Tentative de rafraîchissement de token pour un utilisateur non valide",
         });
         return;
       }
-      
+
       // Rafraîchir le token immédiatement
       try {
         const token = await user.getIdToken(true);
         logger.info({
-          category: 'Auth',
-          message: 'Token initial obtenu avec succès',
-          data: { tokenLength: token.length }
+          category: "Auth",
+          message: "Token initial obtenu avec succès",
+          data: { tokenLength: token.length },
         });
       } catch (error) {
         logger.error({
-          category: 'Auth',
-          message: 'Échec de l\'obtention du token initial',
-          error: error instanceof Error ? error : new Error(String(error))
+          category: "Auth",
+          message: "Échec de l'obtention du token initial",
+          error: error instanceof Error ? error : new Error(String(error)),
         });
         throw error; // Propager l'erreur pour éviter de configurer un intervalle qui échouera
       }
-      
+
       // Configurer un nouvel intervalle avec une fonction de rafraîchissement robuste
       const intervalId = window.setInterval(async () => {
         try {
@@ -473,63 +504,67 @@ export class FirebaseAuthService extends AuthServiceBase {
           const currentUser = this.auth.currentUser;
           if (!currentUser || currentUser.uid !== user.uid) {
             logger.warn({
-              category: 'Auth',
-              message: 'Utilisateur déconnecté, arrêt du rafraîchissement du token'
+              category: "Auth",
+              message:
+                "Utilisateur déconnecté, arrêt du rafraîchissement du token",
             });
             this.clearTokenRefreshInterval(user.uid);
             return;
           }
-          
+
           const token = await user.getIdToken(true);
           logger.info({
-            category: 'Auth',
-            message: 'Token rafraîchi avec succès',
-            data: { tokenLength: token.length }
+            category: "Auth",
+            message: "Token rafraîchi avec succès",
+            data: { tokenLength: token.length },
           });
         } catch (error) {
           logger.error({
-            category: 'Auth',
-            message: 'Échec du rafraîchissement du token',
-            error: error instanceof Error ? error : new Error(String(error))
+            category: "Auth",
+            message: "Échec du rafraîchissement du token",
+            error: error instanceof Error ? error : new Error(String(error)),
           });
-          
+
           // Analyser l'erreur pour déterminer si nous devons arrêter les tentatives
           const authError = error as FirebaseAuthError;
-          if (authError.code === 'auth/id-token-expired' || 
-              authError.code === 'auth/user-disabled' ||
-              authError.code === 'auth/user-token-expired' ||
-              authError.code === 'auth/user-not-found') {
+          if (
+            authError.code === "auth/id-token-expired" ||
+            authError.code === "auth/user-disabled" ||
+            authError.code === "auth/user-token-expired" ||
+            authError.code === "auth/user-not-found"
+          ) {
             logger.warn({
-              category: 'Auth',
-              message: 'Arrêt du rafraîchissement du token en raison d\'une erreur critique',
-              data: { code: authError.code }
+              category: "Auth",
+              message:
+                "Arrêt du rafraîchissement du token en raison d'une erreur critique",
+              data: { code: authError.code },
             });
             this.clearTokenRefreshInterval(user.uid);
-            
+
             // Forcer la déconnexion si l'utilisateur n'est plus valide
-            this.logout().catch(e => {
+            this.logout().catch((e) => {
               logger.error({
-                category: 'Auth',
-                message: 'Échec de la déconnexion forcée après erreur de token',
-                error: e instanceof Error ? e : new Error(String(e))
+                category: "Auth",
+                message: "Échec de la déconnexion forcée après erreur de token",
+                error: e instanceof Error ? e : new Error(String(e)),
               });
             });
           }
         }
       }, this.options.tokenRefreshInterval);
-      
+
       // Stocker l'ID de l'intervalle pour pouvoir le nettoyer plus tard
       this.tokenRefreshIntervals.set(user.uid, intervalId);
       logger.info({
-        category: 'Auth',
-        message: 'Rafraîchissement de token configuré avec succès',
-        data: { userId: user.uid }
+        category: "Auth",
+        message: "Rafraîchissement de token configuré avec succès",
+        data: { userId: user.uid },
       });
     } catch (error) {
       logger.error({
-        category: 'Auth',
-        message: 'Échec de la configuration du rafraîchissement du token',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Auth",
+        message: "Échec de la configuration du rafraîchissement du token",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -566,9 +601,9 @@ export class FirebaseAuthService extends AuthServiceBase {
 
   private handleAuthError(error: Error): void {
     logger.error({
-      category: 'Auth',
-      message: 'Erreur de changement d\'état d\'authentification',
-      error
+      category: "Auth",
+      message: "Erreur de changement d'état d'authentification",
+      error,
     });
   }
 }

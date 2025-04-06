@@ -1,21 +1,25 @@
-import { User, UserCredential } from 'firebase/auth';
-import { errorService, ErrorCode, ErrorSeverity } from '../../errors/ErrorService';
-import { logger } from '../../logger';
+import { User, UserCredential } from "firebase/auth";
+import {
+  errorService,
+  ErrorCode,
+  ErrorSeverity,
+} from "../../errors/ErrorService";
+import { logger } from "../../logger";
 
 /**
  * Types d'authentification supportés
  */
 export enum AuthType {
-  EMAIL_PASSWORD = 'email_password',
-  GOOGLE = 'google',
-  FACEBOOK = 'facebook',
-  TWITTER = 'twitter',
-  GITHUB = 'github',
-  APPLE = 'apple',
-  PHONE = 'phone',
-  ANONYMOUS = 'anonymous',
-  WEB3 = 'web3',
-  CUSTOM = 'custom'
+  EMAIL_PASSWORD = "email_password",
+  GOOGLE = "google",
+  FACEBOOK = "facebook",
+  TWITTER = "twitter",
+  GITHUB = "github",
+  APPLE = "apple",
+  PHONE = "phone",
+  ANONYMOUS = "anonymous",
+  WEB3 = "web3",
+  CUSTOM = "custom",
 }
 
 /**
@@ -79,7 +83,7 @@ export abstract class AuthServiceBase {
       lockoutDuration: 15 * 60 * 1000, // 15 minutes
       sessionTimeout: 60 * 60 * 1000, // 1 heure
       requireEmailVerification: true,
-      ...options
+      ...options,
     };
   }
 
@@ -111,7 +115,10 @@ export abstract class AuthServiceBase {
   /**
    * Méthode abstraite pour mettre à jour le profil utilisateur
    */
-  public abstract updateUserProfile(user: User, profile: Partial<SignupCredentials>): Promise<User>;
+  public abstract updateUserProfile(
+    user: User,
+    profile: Partial<SignupCredentials>
+  ): Promise<User>;
 
   /**
    * Méthode abstraite pour vérifier si l'utilisateur est connecté
@@ -141,11 +148,11 @@ export abstract class AuthServiceBase {
     if (lockTime && Date.now() < lockTime) {
       return true;
     }
-    
+
     if (lockTime) {
       this.lockedAccounts.delete(email);
     }
-    
+
     return false;
   }
 
@@ -155,15 +162,15 @@ export abstract class AuthServiceBase {
   protected incrementLoginAttempt(email: string): void {
     const attempts = (this.loginAttempts.get(email) || 0) + 1;
     this.loginAttempts.set(email, attempts);
-    
+
     if (attempts >= this.options.maxLoginAttempts!) {
       this.lockAccount(email);
       this.loginAttempts.delete(email);
-      
+
       logger.warn({
-        category: 'Auth',
+        category: "Auth",
         message: `Compte verrouillé après ${attempts} tentatives de connexion échouées`,
-        data: { email }
+        data: { email },
       });
     }
   }
@@ -174,10 +181,12 @@ export abstract class AuthServiceBase {
   protected lockAccount(email: string): void {
     const unlockTime = Date.now() + this.options.lockoutDuration!;
     this.lockedAccounts.set(email, unlockTime);
-    
+
     errorService.handleError(
       ErrorCode.AUTH_TOO_MANY_REQUESTS,
-      `Trop de tentatives de connexion. Compte verrouillé pendant ${this.options.lockoutDuration! / 60000} minutes.`,
+      `Trop de tentatives de connexion. Compte verrouillé pendant ${
+        this.options.lockoutDuration! / 60000
+      } minutes.`,
       ErrorSeverity.WARNING,
       { email }
     );
@@ -198,7 +207,7 @@ export abstract class AuthServiceBase {
     if (this.options.requireEmailVerification && !user.emailVerified) {
       errorService.handleError(
         ErrorCode.AUTH_EMAIL_NOT_VERIFIED,
-        'Veuillez vérifier votre email avant de vous connecter.',
+        "Veuillez vérifier votre email avant de vous connecter.",
         ErrorSeverity.WARNING,
         { email: user.email }
       );
@@ -212,14 +221,14 @@ export abstract class AuthServiceBase {
    */
   protected handleAuthError(error: unknown, context: string): Error {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
+
     logger.error({
-      category: 'Auth',
+      category: "Auth",
       message: `Erreur d'authentification: ${errorMessage}`,
       error: error instanceof Error ? error : new Error(errorMessage),
-      data: { context }
+      data: { context },
     });
-    
+
     return error instanceof Error ? error : new Error(errorMessage);
   }
 }
