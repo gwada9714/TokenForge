@@ -1,6 +1,6 @@
-import { ethers } from 'ethers';
-import { IBlockchainService } from '../interfaces/IBlockchainService';
-import { logger } from '@/core/logger';
+import { ethers } from "ethers";
+import { IBlockchainService } from "../interfaces/IBlockchainService";
+import { logger } from "@/core/logger";
 
 /**
  * Interface pour les options de déploiement de token
@@ -74,9 +74,15 @@ export class TokenDeploymentService {
    * @param chainName Nom de la blockchain
    * @param service Service blockchain
    */
-  public registerBlockchainService(chainName: string, service: IBlockchainService): void {
+  public registerBlockchainService(
+    chainName: string,
+    service: IBlockchainService
+  ): void {
     this.blockchainServices.set(chainName.toLowerCase(), service);
-    logger.info('TokenDeploymentService', `Service blockchain enregistré pour ${chainName}`);
+    logger.info(
+      "TokenDeploymentService",
+      `Service blockchain enregistré pour ${chainName}`
+    );
   }
 
   /**
@@ -93,57 +99,76 @@ export class TokenDeploymentService {
    * @param options Options de déploiement du token
    * @returns Résultat du déploiement
    */
-  public async deployToken(options: TokenDeploymentOptions): Promise<TokenDeploymentResult> {
+  public async deployToken(
+    options: TokenDeploymentOptions
+  ): Promise<TokenDeploymentResult> {
     const startTime = Date.now();
     const chainName = options.network.toLowerCase();
-    
+
     try {
       // Vérifier si le service blockchain est disponible
       if (!this.hasBlockchainService(chainName)) {
-        throw new Error(`Service blockchain non disponible pour ${options.network}`);
+        throw new Error(
+          `Service blockchain non disponible pour ${options.network}`
+        );
       }
-      
+
       // Récupérer le service blockchain
       const blockchainService = this.blockchainServices.get(chainName);
       if (!blockchainService) {
-        throw new Error(`Service blockchain non disponible pour ${options.network}`);
+        throw new Error(
+          `Service blockchain non disponible pour ${options.network}`
+        );
       }
-      
+
       // Vérifier si le service est connecté
       const isConnected = await blockchainService.isConnected();
       if (!isConnected) {
-        throw new Error(`Service blockchain non connecté pour ${options.network}`);
+        throw new Error(
+          `Service blockchain non connecté pour ${options.network}`
+        );
       }
-      
+
       // Journaliser le début du déploiement
-      logger.info('TokenDeploymentService', `Début du déploiement du token ${options.name} (${options.symbol}) sur ${options.network}`, {
-        options
-      });
-      
+      logger.info(
+        "TokenDeploymentService",
+        `Début du déploiement du token ${options.name} (${options.symbol}) sur ${options.network}`,
+        {
+          options,
+        }
+      );
+
       // Sélectionner le contrat approprié en fonction des fonctionnalités
       const contractType = this.determineContractType(options.features);
-      
+
       // Obtenir la factory de contrat
-      const contractFactory = await this.getContractFactory(contractType, chainName);
-      
+      const contractFactory = await this.getContractFactory(
+        contractType,
+        chainName
+      );
+
       // Préparer les arguments du constructeur
       const constructorArgs = this.prepareConstructorArgs(options);
-      
+
       // Estimer les frais de gaz
-      const gasEstimate = await this.estimateGas(contractFactory, constructorArgs, chainName);
-      
+      const gasEstimate = await this.estimateGas(
+        contractFactory,
+        constructorArgs,
+        chainName
+      );
+
       // Déployer le contrat
       const deploymentResult = await this.executeDeployment(
-        contractFactory, 
-        constructorArgs, 
+        contractFactory,
+        constructorArgs,
         gasEstimate,
         options.ownerAddress,
         chainName
       );
-      
+
       // Calculer le temps de déploiement
       const deploymentTime = Date.now() - startTime;
-      
+
       // Créer le résultat
       const result: TokenDeploymentResult = {
         success: true,
@@ -153,33 +178,44 @@ export class TokenDeploymentService {
         deploymentTime,
         gasUsed: deploymentResult.deployTransaction.gasLimit.toString(),
         network: options.network,
-        explorerUrl: this.getExplorerUrl(options.network, deploymentResult.address)
+        explorerUrl: this.getExplorerUrl(
+          options.network,
+          deploymentResult.address
+        ),
       };
-      
+
       // Ajouter à l'historique
       this.deploymentHistory.push(result);
-      
+
       // Journaliser le succès
-      logger.info('TokenDeploymentService', `Token ${options.name} (${options.symbol}) déployé avec succès sur ${options.network}`, {
-        result
-      });
-      
+      logger.info(
+        "TokenDeploymentService",
+        `Token ${options.name} (${options.symbol}) déployé avec succès sur ${options.network}`,
+        {
+          result,
+        }
+      );
+
       return result;
     } catch (error) {
       // Journaliser l'erreur
-      logger.error('TokenDeploymentService', `Erreur lors du déploiement du token ${options.name} (${options.symbol}) sur ${options.network}`, error);
-      
+      logger.error(
+        "TokenDeploymentService",
+        `Erreur lors du déploiement du token ${options.name} (${options.symbol}) sur ${options.network}`,
+        error
+      );
+
       // Créer le résultat d'erreur
       const errorResult: TokenDeploymentResult = {
         success: false,
         error: error instanceof Error ? error.message : String(error),
         network: options.network,
-        deploymentTime: Date.now() - startTime
+        deploymentTime: Date.now() - startTime,
       };
-      
+
       // Ajouter à l'historique
       this.deploymentHistory.push(errorResult);
-      
+
       return errorResult;
     }
   }
@@ -198,35 +234,42 @@ export class TokenDeploymentService {
    * @param network Réseau sur lequel vérifier
    * @returns true si le token est déployé, false sinon
    */
-  public async isTokenDeployed(contractAddress: string, network: string): Promise<boolean> {
+  public async isTokenDeployed(
+    contractAddress: string,
+    network: string
+  ): Promise<boolean> {
     try {
       const chainName = network.toLowerCase();
-      
+
       // Vérifier si le service blockchain est disponible
       if (!this.hasBlockchainService(chainName)) {
         throw new Error(`Service blockchain non disponible pour ${network}`);
       }
-      
+
       // Récupérer le service blockchain
       const blockchainService = this.blockchainServices.get(chainName);
       if (!blockchainService) {
         throw new Error(`Service blockchain non disponible pour ${network}`);
       }
-      
+
       // Vérifier si le service est connecté
       const isConnected = await blockchainService.isConnected();
       if (!isConnected) {
         throw new Error(`Service blockchain non connecté pour ${network}`);
       }
-      
+
       // Vérifier si le contrat existe (en récupérant le code du contrat)
       const provider = blockchainService.getProvider();
       const code = await provider.getCode(contractAddress);
-      
+
       // Si le code est '0x' ou vide, le contrat n'existe pas
-      return code !== '0x' && code !== '';
+      return code !== "0x" && code !== "";
     } catch (error) {
-      logger.error('TokenDeploymentService', `Erreur lors de la vérification du token à l'adresse ${contractAddress} sur ${network}`, error);
+      logger.error(
+        "TokenDeploymentService",
+        `Erreur lors de la vérification du token à l'adresse ${contractAddress} sur ${network}`,
+        error
+      );
       return false;
     }
   }
@@ -238,23 +281,25 @@ export class TokenDeploymentService {
    * @param features Fonctionnalités du token
    * @returns Type de contrat à utiliser
    */
-  private determineContractType(features: TokenDeploymentOptions['features']): string {
+  private determineContractType(
+    features: TokenDeploymentOptions["features"]
+  ): string {
     if (features.reflective) {
-      return 'ReflectiveToken';
+      return "ReflectiveToken";
     } else if (features.taxable) {
-      return 'TaxableToken';
+      return "TaxableToken";
     } else if (features.mintable && features.burnable && features.pausable) {
-      return 'FullFeaturedToken';
+      return "FullFeaturedToken";
     } else if (features.mintable && features.burnable) {
-      return 'MintableBurnableToken';
+      return "MintableBurnableToken";
     } else if (features.mintable) {
-      return 'MintableToken';
+      return "MintableToken";
     } else if (features.burnable) {
-      return 'BurnableToken';
+      return "BurnableToken";
     } else if (features.pausable) {
-      return 'PausableToken';
+      return "PausableToken";
     } else {
-      return 'StandardToken';
+      return "StandardToken";
     }
   }
 
@@ -264,39 +309,42 @@ export class TokenDeploymentService {
    * @param chainName Nom de la blockchain
    * @returns Factory de contrat
    */
-  private async getContractFactory(contractType: string, chainName: string): Promise<any> {
+  private async getContractFactory(
+    contractType: string,
+    chainName: string
+  ): Promise<any> {
     // Vérifier si la factory est déjà en cache
     const cacheKey = `${contractType}-${chainName}`;
     if (this.contractFactories.has(cacheKey)) {
       return this.contractFactories.get(cacheKey);
     }
-    
+
     // Récupérer le service blockchain
     const blockchainService = this.blockchainServices.get(chainName);
     if (!blockchainService) {
       throw new Error(`Service blockchain non disponible pour ${chainName}`);
     }
-    
+
     // Récupérer le provider
     const provider = blockchainService.getProvider();
-    
+
     // Créer un signer
     const signer = provider.getSigner();
-    
+
     // Charger l'ABI et le bytecode du contrat
     // Dans une implémentation réelle, ces données seraient chargées depuis des fichiers
     const contractData = await this.loadContractData(contractType);
-    
+
     // Créer la factory
     const factory = new ethers.ContractFactory(
       contractData.abi,
       contractData.bytecode,
       signer
     );
-    
+
     // Mettre en cache la factory
     this.contractFactories.set(cacheKey, factory);
-    
+
     return factory;
   }
 
@@ -305,12 +353,14 @@ export class TokenDeploymentService {
    * @param contractType Type de contrat
    * @returns Données du contrat
    */
-  private async loadContractData(contractType: string): Promise<{ abi: any; bytecode: string }> {
+  private async loadContractData(
+    contractType: string
+  ): Promise<{ abi: any; bytecode: string }> {
     // Dans une implémentation réelle, ces données seraient chargées depuis des fichiers
     // Pour la démo, on retourne des données fictives
     return {
       abi: [], // ABI du contrat
-      bytecode: '0x' // Bytecode du contrat
+      bytecode: "0x", // Bytecode du contrat
     };
   }
 
@@ -330,9 +380,9 @@ export class TokenDeploymentService {
       options.name,
       options.symbol,
       options.decimals,
-      BigInt(Number(options.totalSupply) * (10 ** options.decimals)) // Utiliser BigInt au lieu de ethers.utils.parseUnits
+      BigInt(Number(options.totalSupply) * 10 ** options.decimals), // Utiliser BigInt au lieu de ethers.utils.parseUnits
     ];
-    
+
     // Si le token est taxable, ajouter les configurations de taxe
     if (options.features.taxable && options.taxConfig) {
       // Convertir les taxes en points de base (1% = 100)
@@ -343,7 +393,7 @@ export class TokenDeploymentService {
       const marketingShare = options.taxConfig.marketingShare * 100;
       const devShare = options.taxConfig.devShare * 100;
       const reflectionShare = options.taxConfig.reflectionShare * 100;
-      
+
       // Ajouter chaque paramètre individuellement au lieu d'un objet
       args.push(buyTax);
       args.push(sellTax);
@@ -353,7 +403,7 @@ export class TokenDeploymentService {
       args.push(devShare);
       args.push(reflectionShare);
     }
-    
+
     return args;
   }
 
@@ -364,22 +414,30 @@ export class TokenDeploymentService {
    * @param chainName Nom de la blockchain
    * @returns Estimation des frais de gaz
    */
-  private async estimateGas(factory: any, args: any[], chainName: string): Promise<bigint> {
+  private async estimateGas(
+    factory: any,
+    args: any[],
+    chainName: string
+  ): Promise<bigint> {
     try {
       // Récupérer le service blockchain
       const blockchainService = this.blockchainServices.get(chainName);
       if (!blockchainService) {
         throw new Error(`Service blockchain non disponible pour ${chainName}`);
       }
-      
+
       // Créer la transaction de déploiement
       const deployTransaction = factory.getDeployTransaction(...args);
-      
+
       // Estimer les frais de gaz
       return await blockchainService.estimateGas(deployTransaction);
     } catch (error) {
-      logger.error('TokenDeploymentService', `Erreur lors de l'estimation des frais de gaz pour le déploiement sur ${chainName}`, error);
-      
+      logger.error(
+        "TokenDeploymentService",
+        `Erreur lors de l'estimation des frais de gaz pour le déploiement sur ${chainName}`,
+        error
+      );
+
       // En cas d'erreur, retourner une estimation par défaut
       return BigInt(5000000); // 5 millions de gaz
     }
@@ -402,14 +460,14 @@ export class TokenDeploymentService {
     chainName: string
   ): Promise<any> {
     // Ajouter une marge de sécurité aux frais de gaz
-    const gasLimit = gasEstimate * BigInt(120) / BigInt(100); // +20%
-    
+    const gasLimit = (gasEstimate * BigInt(120)) / BigInt(100); // +20%
+
     // Options de déploiement
     const deployOptions = {
       gasLimit,
-      from: ownerAddress
+      from: ownerAddress,
     };
-    
+
     // Déployer le contrat
     return await factory.deploy(...args, deployOptions);
   }
@@ -422,21 +480,21 @@ export class TokenDeploymentService {
    */
   private getExplorerUrl(network: string, contractAddress: string): string {
     switch (network.toLowerCase()) {
-      case 'ethereum':
+      case "ethereum":
         return `https://etherscan.io/address/${contractAddress}`;
-      case 'binance':
-      case 'bsc':
+      case "binance":
+      case "bsc":
         return `https://bscscan.com/address/${contractAddress}`;
-      case 'polygon':
+      case "polygon":
         return `https://polygonscan.com/address/${contractAddress}`;
-      case 'avalanche':
+      case "avalanche":
         return `https://snowtrace.io/address/${contractAddress}`;
-      case 'arbitrum':
+      case "arbitrum":
         return `https://arbiscan.io/address/${contractAddress}`;
-      case 'solana':
+      case "solana":
         return `https://explorer.solana.com/address/${contractAddress}`;
       default:
-        return '';
+        return "";
     }
   }
 }

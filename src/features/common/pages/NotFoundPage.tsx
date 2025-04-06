@@ -1,6 +1,6 @@
-import React from 'react';
-import { Container, Typography, Button, Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { Container, Typography, Button, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export const NotFoundPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,10 +10,10 @@ export const NotFoundPage: React.FC = () => {
       <Box
         sx={{
           mt: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 3
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 3,
         }}
       >
         <Typography variant="h1" component="h1">
@@ -28,11 +28,11 @@ export const NotFoundPage: React.FC = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
         >
           Retour à l'accueil
         </Button>
       </Box>
     </Container>
   );
-}; 
+};

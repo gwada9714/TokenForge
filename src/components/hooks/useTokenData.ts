@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useWeb3 } from '../../contexts/Web3Context';
+import { useState, useEffect, useCallback } from "react";
+import { useWeb3 } from "../../contexts/Web3Context";
 
 // Define the token data type
 export interface TokenData {
@@ -51,35 +51,35 @@ export const useTokenData = (): UseTokenDataReturn => {
 
       const mockTokens: TokenData[] = [
         {
-          address: '0x' + '1'.repeat(40),
-          name: 'Mock Token 1',
-          symbol: 'MTK1',
-          totalSupply: '1000000',
+          address: "0x" + "1".repeat(40),
+          name: "Mock Token 1",
+          symbol: "MTK1",
+          totalSupply: "1000000",
           decimals: 18,
-          balance: '100',
-          price: '0.05',
-          marketCap: '50000',
+          balance: "100",
+          price: "0.05",
+          marketCap: "50000",
           holders: 120,
-          transactions: 450
+          transactions: 450,
         },
         {
-          address: '0x' + '2'.repeat(40),
-          name: 'Mock Token 2',
-          symbol: 'MTK2',
-          totalSupply: '500000',
+          address: "0x" + "2".repeat(40),
+          name: "Mock Token 2",
+          symbol: "MTK2",
+          totalSupply: "500000",
           decimals: 18,
-          balance: '50',
-          price: '0.1',
-          marketCap: '50000',
+          balance: "50",
+          price: "0.1",
+          marketCap: "50000",
           holders: 75,
-          transactions: 230
-        }
+          transactions: 230,
+        },
       ];
 
       setTokens(mockTokens);
     } catch (err) {
-      console.error('Error fetching tokens:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error("Error fetching tokens:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +99,7 @@ export const useTokenData = (): UseTokenDataReturn => {
   const getTokenDetails = useCallback(
     async (address: string): Promise<TokenData | null> => {
       if (!isConnected) {
-        setError('Wallet not connected');
+        setError("Wallet not connected");
         return null;
       }
 
@@ -112,7 +112,9 @@ export const useTokenData = (): UseTokenDataReturn => {
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Check if we already have this token in our list
-        const existingToken = tokens.find((t) => t.address.toLowerCase() === address.toLowerCase());
+        const existingToken = tokens.find(
+          (t) => t.address.toLowerCase() === address.toLowerCase()
+        );
         if (existingToken) {
           return existingToken;
         }
@@ -120,19 +122,19 @@ export const useTokenData = (): UseTokenDataReturn => {
         // Simulate a new token
         return {
           address,
-          name: 'New Token',
-          symbol: 'NEW',
-          totalSupply: '1000000',
+          name: "New Token",
+          symbol: "NEW",
+          totalSupply: "1000000",
           decimals: 18,
-          balance: '0',
-          price: '0.01',
-          marketCap: '10000',
+          balance: "0",
+          price: "0.01",
+          marketCap: "10000",
           holders: 50,
-          transactions: 100
+          transactions: 100,
         };
       } catch (err) {
-        console.error('Error fetching token details:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error("Error fetching token details:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
         return null;
       } finally {
         setIsLoading(false);
@@ -146,6 +148,6 @@ export const useTokenData = (): UseTokenDataReturn => {
     isLoading,
     error,
     refreshTokens,
-    getTokenDetails
+    getTokenDetails,
   };
 };

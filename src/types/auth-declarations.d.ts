@@ -1,5 +1,5 @@
-declare module '../../providers/TokenForgeAuthProvider' {
-  import { ReactNode } from 'react';
+declare module "../../providers/TokenForgeAuthProvider" {
+  import { ReactNode } from "react";
 
   export interface TokenForgeAuthContextValue {
     user: any;

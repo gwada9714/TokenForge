@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Card,
@@ -17,14 +17,14 @@ import {
   Tooltip,
   Chip,
   Stack,
-} from '@mui/material';
+} from "@mui/material";
 import {
   FilterList as FilterIcon,
   Download as DownloadIcon,
   Info as InfoIcon,
-} from '@mui/icons-material';
-import { useContract } from '../../../hooks/useContract';
-import { Contract, EventLog } from 'ethers';
+} from "@mui/icons-material";
+import { useContract } from "../../../hooks/useContract";
+import { Contract, EventLog } from "ethers";
 
 interface AuditLog {
   id: string;
@@ -32,7 +32,7 @@ interface AuditLog {
   address: string;
   timestamp: number;
   details: string;
-  status: 'success' | 'failure';
+  status: "success" | "failure";
   blockNumber: number;
   transactionHash: string;
 }
@@ -50,17 +50,19 @@ const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [totalCount, setTotalCount] = useState(0);
 
-  const { contract } = useContract('token');
+  const { contract } = useContract("token");
 
   const fetchLogs = useCallback(async () => {
     if (!contract) return;
 
     try {
-      const events = await contract.queryFilter('AuditLog') as AuditLogEvent[];
-      
+      const events = (await contract.queryFilter(
+        "AuditLog"
+      )) as AuditLogEvent[];
+
       if (events) {
         const formattedLogs = await Promise.all(
           events.map(async (event) => {
@@ -71,7 +73,7 @@ const AuditLogs: React.FC = () => {
               address: event.args.account,
               timestamp: block.timestamp * 1000,
               details: event.args.details,
-              status: event.args.success ? 'success' : 'failure',
+              status: event.args.success ? "success" : "failure",
               blockNumber: event.blockNumber,
               transactionHash: event.transactionHash,
             } as AuditLog;
@@ -82,7 +84,7 @@ const AuditLogs: React.FC = () => {
         setTotalCount(formattedLogs.length);
       }
     } catch (error) {
-      console.error('Failed to fetch audit logs:', error);
+      console.error("Failed to fetch audit logs:", error);
     }
   }, [contract]);
 
@@ -94,15 +96,26 @@ const AuditLogs: React.FC = () => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
   const handleExportLogs = () => {
     const csvContent = [
-      ['ID', 'Action', 'Address', 'Timestamp', 'Details', 'Status', 'Block', 'Transaction Hash'],
-      ...logs.map(log => [
+      [
+        "ID",
+        "Action",
+        "Address",
+        "Timestamp",
+        "Details",
+        "Status",
+        "Block",
+        "Transaction Hash",
+      ],
+      ...logs.map((log) => [
         log.id,
         log.action,
         log.address,
@@ -113,12 +126,12 @@ const AuditLogs: React.FC = () => {
         log.transactionHash,
       ]),
     ]
-      .map(row => row.join(','))
-      .join('\n');
+      .map((row) => row.join(","))
+      .join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `audit-logs-${new Date().toISOString()}.csv`;
     document.body.appendChild(a);
@@ -128,18 +141,25 @@ const AuditLogs: React.FC = () => {
   };
 
   const filteredLogs = logs.filter(
-    log =>
+    (log) =>
       log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.details.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const displayedLogs = filteredLogs
-    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const displayedLogs = filteredLogs.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5">Audit Logs</Typography>
         <Stack direction="row" spacing={2}>
           <TextField
@@ -148,7 +168,9 @@ const AuditLogs: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
-              startAdornment: <FilterIcon sx={{ mr: 1, color: 'action.active' }} />,
+              startAdornment: (
+                <FilterIcon sx={{ mr: 1, color: "action.active" }} />
+              ),
             }}
           />
           <Tooltip title="Export logs">
@@ -179,7 +201,10 @@ const AuditLogs: React.FC = () => {
                     <TableCell>{log.action}</TableCell>
                     <TableCell>
                       <Tooltip title={log.address}>
-                        <span>{`${log.address.slice(0, 6)}...${log.address.slice(-4)}`}</span>
+                        <span>{`${log.address.slice(
+                          0,
+                          6
+                        )}...${log.address.slice(-4)}`}</span>
                       </Tooltip>
                     </TableCell>
                     <TableCell>
@@ -189,12 +214,14 @@ const AuditLogs: React.FC = () => {
                     <TableCell>
                       <Chip
                         label={log.status}
-                        color={log.status === 'success' ? 'success' : 'error'}
+                        color={log.status === "success" ? "success" : "error"}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      <Tooltip title={`Block: ${log.blockNumber}\nTx: ${log.transactionHash}`}>
+                      <Tooltip
+                        title={`Block: ${log.blockNumber}\nTx: ${log.transactionHash}`}
+                      >
                         <IconButton size="small">
                           <InfoIcon />
                         </IconButton>

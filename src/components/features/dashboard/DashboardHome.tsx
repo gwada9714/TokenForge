@@ -1,5 +1,5 @@
-import { Box, Typography, Grid, Paper } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Box, Typography, Grid, Paper } from "@mui/material";
+import { Link } from "react-router-dom";
 
 const DashboardHome = () => {
   return (
@@ -7,7 +7,7 @@ const DashboardHome = () => {
       <Typography variant="h4" gutterBottom>
         Tableau de bord TokenForge
       </Typography>
-      
+
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12} md={6}>
           <Paper
@@ -15,11 +15,11 @@ const DashboardHome = () => {
             to="/dashboard/staking"
             sx={{
               p: 3,
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'transform 0.2s',
-              '&:hover': {
-                transform: 'translateY(-4px)',
+              textDecoration: "none",
+              color: "inherit",
+              transition: "transform 0.2s",
+              "&:hover": {
+                transform: "translateY(-4px)",
               },
             }}
           >
@@ -38,11 +38,11 @@ const DashboardHome = () => {
             to="/dashboard/profit"
             sx={{
               p: 3,
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'transform 0.2s',
-              '&:hover': {
-                transform: 'translateY(-4px)',
+              textDecoration: "none",
+              color: "inherit",
+              transition: "transform 0.2s",
+              "&:hover": {
+                transform: "translateY(-4px)",
               },
             }}
           >

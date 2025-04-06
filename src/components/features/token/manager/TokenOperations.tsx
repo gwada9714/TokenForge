@@ -76,7 +76,7 @@ const getTokenContract = (address: `0x${string}`) => {
         name: "burn",
         outputs: [],
         type: "function",
-      }
+      },
     ],
   };
 };
@@ -307,9 +307,7 @@ export const TokenOperations: React.FC<TokenOperationsProps> = ({
                 handleOperation("transfer", [transferAmount, transferAddress])
               }
               disabled={
-                !transferAmount ||
-                !validateAddress(transferAddress) ||
-                loading
+                !transferAmount || !validateAddress(transferAddress) || loading
               }
               sx={{ mt: 2 }}
             >

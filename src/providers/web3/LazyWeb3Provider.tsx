@@ -1,9 +1,9 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { CircularProgress, Box } from '@mui/material';
-import { useTokenForgeAuth } from '../../hooks/useTokenForgeAuth';
+import React, { Suspense, lazy, useEffect, useState } from "react";
+import { CircularProgress, Box } from "@mui/material";
+import { useTokenForgeAuth } from "../../hooks/useTokenForgeAuth";
 
 // Chargement conditionnel des providers
-const Web3Providers = lazy(() => import('./Web3Providers'));
+const Web3Providers = lazy(() => import("./Web3Providers"));
 
 // Détection des capacités du navigateur
 interface BrowserCapabilities {
@@ -13,14 +13,18 @@ interface BrowserCapabilities {
 }
 
 const detectBrowserCapabilities = (): BrowserCapabilities => ({
-  hasWallet: typeof window.ethereum !== 'undefined',
-  supportsWebWorkers: 'Worker' in window,
+  hasWallet: typeof window.ethereum !== "undefined",
+  supportsWebWorkers: "Worker" in window,
   supportsSecureContext: window.isSecureContext,
 });
 
-export const LazyWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const LazyWeb3Provider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isAuthenticated } = useTokenForgeAuth();
-  const [capabilities, setCapabilities] = useState<BrowserCapabilities | null>(null);
+  const [capabilities, setCapabilities] = useState<BrowserCapabilities | null>(
+    null
+  );
   const [shouldLoadWeb3, setShouldLoadWeb3] = useState(false);
 
   useEffect(() => {
@@ -31,16 +35,16 @@ export const LazyWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Décision de charger Web3 basée sur les capacités et l'authentification
     setShouldLoadWeb3(
       isAuthenticated &&
-      caps.hasWallet &&
-      caps.supportsWebWorkers &&
-      caps.supportsSecureContext
+        caps.hasWallet &&
+        caps.supportsWebWorkers &&
+        caps.supportsSecureContext
     );
   }, [isAuthenticated]);
 
   // Affichage d'un message si les conditions ne sont pas remplies
   if (capabilities && !shouldLoadWeb3) {
     return (
-      <Box sx={{ p: 2, textAlign: 'center' }}>
+      <Box sx={{ p: 2, textAlign: "center" }}>
         {!capabilities.hasWallet && (
           <p>Un wallet Web3 est nécessaire pour utiliser cette application.</p>
         )}
@@ -59,7 +63,7 @@ export const LazyWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ chil
   return shouldLoadWeb3 ? (
     <Suspense
       fallback={
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
           <CircularProgress />
         </Box>
       }

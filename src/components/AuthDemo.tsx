@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { logger } from '@/core/logger';
+import React, { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { logger } from "@/core/logger";
 
 const AuthDemo: React.FC = () => {
   // États pour les formulaires
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [photoURL, setPhotoURL] = useState('');
-  const [resetEmail, setResetEmail] = useState('');
-  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [photoURL, setPhotoURL] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
+
   // Utilisation du hook useAuth
-  const { 
-    user, 
-    status, 
-    error, 
+  const {
+    user,
+    status,
+    error,
     isAuthenticated,
     isAdmin,
     isLoading,
@@ -23,7 +23,7 @@ const AuthDemo: React.FC = () => {
     signInAnonymously,
     signOut,
     resetPassword,
-    updateUserProfile
+    updateUserProfile,
   } = useAuth();
 
   // Gestionnaires d'événements pour les formulaires
@@ -32,14 +32,14 @@ const AuthDemo: React.FC = () => {
     try {
       await signIn(email, password);
       // Réinitialiser le formulaire après connexion
-      setEmail('');
-      setPassword('');
+      setEmail("");
+      setPassword("");
     } catch (error) {
       // L'erreur est déjà gérée par le hook
       logger.debug({
-        category: 'AuthDemo',
-        message: 'Erreur gérée par le hook useAuth',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "AuthDemo",
+        message: "Erreur gérée par le hook useAuth",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
     }
   };
@@ -49,14 +49,14 @@ const AuthDemo: React.FC = () => {
     try {
       await signUp(email, password);
       // Réinitialiser le formulaire après inscription
-      setEmail('');
-      setPassword('');
+      setEmail("");
+      setPassword("");
     } catch (error) {
       // L'erreur est déjà gérée par le hook
       logger.debug({
-        category: 'AuthDemo',
-        message: 'Erreur gérée par le hook useAuth',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "AuthDemo",
+        message: "Erreur gérée par le hook useAuth",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
     }
   };
@@ -67,9 +67,9 @@ const AuthDemo: React.FC = () => {
     } catch (error) {
       // L'erreur est déjà gérée par le hook
       logger.debug({
-        category: 'AuthDemo',
-        message: 'Erreur gérée par le hook useAuth',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "AuthDemo",
+        message: "Erreur gérée par le hook useAuth",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
     }
   };
@@ -80,9 +80,9 @@ const AuthDemo: React.FC = () => {
     } catch (error) {
       // L'erreur est déjà gérée par le hook
       logger.debug({
-        category: 'AuthDemo',
-        message: 'Erreur gérée par le hook useAuth',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "AuthDemo",
+        message: "Erreur gérée par le hook useAuth",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
     }
   };
@@ -92,14 +92,14 @@ const AuthDemo: React.FC = () => {
     try {
       await updateUserProfile({ displayName, photoURL: photoURL || undefined });
       // Réinitialiser le formulaire après mise à jour
-      setDisplayName('');
-      setPhotoURL('');
+      setDisplayName("");
+      setPhotoURL("");
     } catch (error) {
       // L'erreur est déjà gérée par le hook
       logger.debug({
-        category: 'AuthDemo',
-        message: 'Erreur gérée par le hook useAuth',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "AuthDemo",
+        message: "Erreur gérée par le hook useAuth",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
     }
   };
@@ -109,14 +109,14 @@ const AuthDemo: React.FC = () => {
     try {
       await resetPassword(resetEmail);
       // Réinitialiser le formulaire après envoi de l'email
-      setResetEmail('');
-      alert('Un email de réinitialisation a été envoyé à votre adresse email.');
+      setResetEmail("");
+      alert("Un email de réinitialisation a été envoyé à votre adresse email.");
     } catch (error) {
       // L'erreur est déjà gérée par le hook
       logger.debug({
-        category: 'AuthDemo',
-        message: 'Erreur gérée par le hook useAuth',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "AuthDemo",
+        message: "Erreur gérée par le hook useAuth",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
     }
   };
@@ -124,20 +124,26 @@ const AuthDemo: React.FC = () => {
   // Rendu conditionnel en fonction de l'état d'authentification
   return (
     <div className="p-4 bg-white rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Démonstration d'Authentification Firebase</h2>
-      
+      <h2 className="text-xl font-bold mb-4">
+        Démonstration d'Authentification Firebase
+      </h2>
+
       {/* Affichage de l'état d'authentification */}
       <div className="mb-6 p-4 bg-gray-50 rounded">
         <h3 className="text-lg font-semibold mb-2">État d'authentification</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-700">Statut:</p>
-            <p className={`text-sm ${status === 'error' ? 'text-red-500' : 'text-gray-900'}`}>
-              {status === 'idle' && 'En attente'}
-              {status === 'loading' && 'Chargement...'}
-              {status === 'authenticated' && 'Authentifié'}
-              {status === 'unauthenticated' && 'Non authentifié'}
-              {status === 'error' && 'Erreur'}
+            <p
+              className={`text-sm ${
+                status === "error" ? "text-red-500" : "text-gray-900"
+              }`}
+            >
+              {status === "idle" && "En attente"}
+              {status === "loading" && "Chargement..."}
+              {status === "authenticated" && "Authentifié"}
+              {status === "unauthenticated" && "Non authentifié"}
+              {status === "error" && "Erreur"}
             </p>
           </div>
           <div>
@@ -171,7 +177,7 @@ const AuthDemo: React.FC = () => {
             </p>
           </div>
         </div>
-        
+
         {/* Affichage des erreurs */}
         {error && (
           <div className="mt-4 p-3 bg-red-50 text-red-700 rounded">
@@ -180,11 +186,13 @@ const AuthDemo: React.FC = () => {
           </div>
         )}
       </div>
-      
+
       {/* Informations utilisateur */}
       {user && (
         <div className="mb-6 p-4 bg-blue-50 rounded">
-          <h3 className="text-lg font-semibold mb-2">Informations utilisateur</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            Informations utilisateur
+          </h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-gray-700">UID:</p>
@@ -192,11 +200,17 @@ const AuthDemo: React.FC = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-700">Email:</p>
-              <p className="text-sm text-gray-900">{user.email || 'Non défini'}</p>
+              <p className="text-sm text-gray-900">
+                {user.email || "Non défini"}
+              </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700">Nom d'affichage:</p>
-              <p className="text-sm text-gray-900">{user.displayName || 'Non défini'}</p>
+              <p className="text-sm font-medium text-gray-700">
+                Nom d'affichage:
+              </p>
+              <p className="text-sm text-gray-900">
+                {user.displayName || "Non défini"}
+              </p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-700">Anonyme:</p>
@@ -209,7 +223,9 @@ const AuthDemo: React.FC = () => {
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700">Email vérifié:</p>
+              <p className="text-sm font-medium text-gray-700">
+                Email vérifié:
+              </p>
               <p className="text-sm">
                 {user.emailVerified ? (
                   <span className="text-green-500">Oui</span>
@@ -221,17 +237,17 @@ const AuthDemo: React.FC = () => {
             {user.photoURL && (
               <div className="col-span-2">
                 <p className="text-sm font-medium text-gray-700">Photo:</p>
-                <img 
-                  src={user.photoURL} 
-                  alt="Photo de profil" 
-                  className="w-16 h-16 mt-1 rounded-full object-cover" 
+                <img
+                  src={user.photoURL}
+                  alt="Photo de profil"
+                  className="w-16 h-16 mt-1 rounded-full object-cover"
                 />
               </div>
             )}
           </div>
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Formulaires d'authentification */}
         {!isAuthenticated ? (
@@ -269,11 +285,11 @@ const AuthDemo: React.FC = () => {
                   className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+                  {isLoading ? "Connexion en cours..." : "Se connecter"}
                 </button>
               </form>
             </div>
-            
+
             {/* Inscription */}
             <div className="p-4 border rounded">
               <h3 className="text-lg font-semibold mb-4">Inscription</h3>
@@ -307,10 +323,10 @@ const AuthDemo: React.FC = () => {
                   className="w-full py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-green-300"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Inscription en cours...' : 'S\'inscrire'}
+                  {isLoading ? "Inscription en cours..." : "S'inscrire"}
                 </button>
               </form>
-              
+
               {/* Connexion anonyme */}
               <div className="mt-4">
                 <button
@@ -318,14 +334,16 @@ const AuthDemo: React.FC = () => {
                   className="w-full py-2 px-4 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-300"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Connexion en cours...' : 'Connexion anonyme'}
+                  {isLoading ? "Connexion en cours..." : "Connexion anonyme"}
                 </button>
               </div>
             </div>
-            
+
             {/* Réinitialisation du mot de passe */}
             <div className="p-4 border rounded md:col-span-2">
-              <h3 className="text-lg font-semibold mb-4">Réinitialisation du mot de passe</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                Réinitialisation du mot de passe
+              </h3>
               <form onSubmit={handleResetPassword}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -344,7 +362,9 @@ const AuthDemo: React.FC = () => {
                   className="py-2 px-4 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:bg-yellow-300"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Envoi en cours...' : 'Réinitialiser le mot de passe'}
+                  {isLoading
+                    ? "Envoi en cours..."
+                    : "Réinitialiser le mot de passe"}
                 </button>
               </form>
             </div>
@@ -353,7 +373,9 @@ const AuthDemo: React.FC = () => {
           <>
             {/* Mise à jour du profil */}
             <div className="p-4 border rounded">
-              <h3 className="text-lg font-semibold mb-4">Mise à jour du profil</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                Mise à jour du profil
+              </h3>
               <form onSubmit={handleUpdateProfile}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -364,7 +386,7 @@ const AuthDemo: React.FC = () => {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="w-full p-2 border rounded"
-                    placeholder={user?.displayName || 'Non défini'}
+                    placeholder={user?.displayName || "Non défini"}
                   />
                 </div>
                 <div className="mb-4">
@@ -376,7 +398,7 @@ const AuthDemo: React.FC = () => {
                     value={photoURL}
                     onChange={(e) => setPhotoURL(e.target.value)}
                     className="w-full p-2 border rounded"
-                    placeholder={user?.photoURL || 'Non défini'}
+                    placeholder={user?.photoURL || "Non défini"}
                   />
                 </div>
                 <button
@@ -384,23 +406,26 @@ const AuthDemo: React.FC = () => {
                   className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
                   disabled={isLoading || (!displayName && !photoURL)}
                 >
-                  {isLoading ? 'Mise à jour en cours...' : 'Mettre à jour le profil'}
+                  {isLoading
+                    ? "Mise à jour en cours..."
+                    : "Mettre à jour le profil"}
                 </button>
               </form>
             </div>
-            
+
             {/* Déconnexion */}
             <div className="p-4 border rounded">
               <h3 className="text-lg font-semibold mb-4">Déconnexion</h3>
               <p className="mb-4 text-sm text-gray-600">
-                Vous êtes actuellement connecté{user?.isAnonymous ? ' anonymement' : ''}.
+                Vous êtes actuellement connecté
+                {user?.isAnonymous ? " anonymement" : ""}.
               </p>
               <button
                 onClick={handleSignOut}
                 className="w-full py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-red-300"
                 disabled={isLoading}
               >
-                {isLoading ? 'Déconnexion en cours...' : 'Se déconnecter'}
+                {isLoading ? "Déconnexion en cours..." : "Se déconnecter"}
               </button>
             </div>
           </>

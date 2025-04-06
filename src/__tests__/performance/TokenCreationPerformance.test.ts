@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { TokenDeploymentService } from '../../features/token-creation/services/tokenDeploymentService';
-import { setupTestEnvironment } from '../utils/testSetup';
-import { parseEther } from 'viem';
+import { describe, it, expect, beforeEach } from "vitest";
+import { TokenDeploymentService } from "../../features/token-creation/services/tokenDeploymentService";
+import { setupTestEnvironment } from "../utils/testSetup";
+import { parseEther } from "viem";
 
-describe('Token Creation Performance Tests', () => {
+describe("Token Creation Performance Tests", () => {
   let deploymentService: TokenDeploymentService;
 
   beforeEach(async () => {
@@ -11,7 +11,7 @@ describe('Token Creation Performance Tests', () => {
     deploymentService = env.deploymentService;
   });
 
-  it('should handle concurrent token deployments efficiently', async () => {
+  it("should handle concurrent token deployments efficiently", async () => {
     const metrics = {
       totalDeployments: 5,
       successfulDeployments: 0,
@@ -30,7 +30,7 @@ describe('Token Creation Performance Tests', () => {
           name: `Performance Token ${index}`,
           symbol: `PERF${index}`,
           decimals: 18,
-          initialSupply: parseEther('1000000'),
+          initialSupply: parseEther("1000000"),
           mintable: true,
           burnable: true,
           pausable: false,
@@ -38,8 +38,8 @@ describe('Token Creation Performance Tests', () => {
             enabled: false,
             buyTax: 0,
             sellTax: 0,
-            transferTax: 0
-          }
+            transferTax: 0,
+          },
         };
 
         const result = await deploymentService.deployToken(tokenConfig);
@@ -86,7 +86,10 @@ Total Time: ${metrics.totalTime}ms
 Average Time per Deployment: ${metrics.averageTime.toFixed(2)}ms
 Minimum Deployment Time: ${metrics.minTime}ms
 Maximum Deployment Time: ${metrics.maxTime}ms
-Throughput: ${(metrics.successfulDeployments / (metrics.totalTime / 1000)).toFixed(2)} tokens/second
+Throughput: ${(
+      metrics.successfulDeployments /
+      (metrics.totalTime / 1000)
+    ).toFixed(2)} tokens/second
     `);
 
     // Assertions
@@ -96,18 +99,18 @@ Throughput: ${(metrics.successfulDeployments / (metrics.totalTime / 1000)).toFix
     expect(metrics.maxTime).toBeLessThan(45000); // Pas plus de 45 secondes pour un déploiement
   });
 
-  it('should maintain performance under load', async () => {
+  it("should maintain performance under load", async () => {
     const batchSizes = [1, 3, 5];
     const results = [];
 
     for (const batchSize of batchSizes) {
       const startTime = Date.now();
-      const deployments = Array.from({ length: batchSize }, (_, i) => 
+      const deployments = Array.from({ length: batchSize }, (_, i) =>
         deploymentService.deployToken({
           name: `Load Test Token ${i}`,
           symbol: `LOAD${i}`,
           decimals: 18,
-          initialSupply: parseEther('1000000'),
+          initialSupply: parseEther("1000000"),
           mintable: true,
           burnable: false,
           pausable: false,
@@ -115,8 +118,8 @@ Throughput: ${(metrics.successfulDeployments / (metrics.totalTime / 1000)).toFix
             enabled: false,
             buyTax: 0,
             sellTax: 0,
-            transferTax: 0
-          }
+            transferTax: 0,
+          },
         })
       );
 
@@ -128,11 +131,11 @@ Throughput: ${(metrics.successfulDeployments / (metrics.totalTime / 1000)).toFix
       results.push({
         batchSize,
         totalTime,
-        averageTime
+        averageTime,
       });
     }
 
-    console.log('\nLoad Test Results:');
+    console.log("\nLoad Test Results:");
     results.forEach(({ batchSize, totalTime, averageTime }) => {
       console.log(`
 Batch Size: ${batchSize}
@@ -148,7 +151,11 @@ Average Time per Token: ${averageTime.toFixed(2)}ms
     results.slice(1).forEach(({ batchSize, averageTime }) => {
       const degradation = averageTime / baselineTime;
       expect(degradation).toBeLessThan(maxDegradation);
-      console.log(`Performance degradation for batch size ${batchSize}: ${degradation.toFixed(2)}x`);
+      console.log(
+        `Performance degradation for batch size ${batchSize}: ${degradation.toFixed(
+          2
+        )}x`
+      );
     });
   });
-}); 
+});

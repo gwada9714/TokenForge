@@ -1,5 +1,5 @@
-import { TokenConfig } from '../types';
-import { ChainId } from '../constants/chains';
+import { TokenConfig } from "../types";
+import { ChainId } from "../constants/chains";
 
 /**
  * Utilitaires pour l'estimation des coûts de gas sur différentes blockchains
@@ -28,7 +28,10 @@ const FEATURE_GAS_COSTS = {
  * @param chainId ID de la blockchain
  * @returns Estimation du gas en unités de gas
  */
-export const estimateTokenDeploymentGas = (config: TokenConfig, chainId: ChainId): bigint => {
+export const estimateTokenDeploymentGas = (
+  config: TokenConfig,
+  chainId: ChainId
+): bigint => {
   // Gas de base pour le déploiement
   let gasEstimate = BASE_DEPLOYMENT_GAS[chainId] || 2000000n;
 
@@ -55,7 +58,10 @@ export const estimateTokenDeploymentGas = (config: TokenConfig, chainId: ChainId
  * @param gasPrice Prix du gas en wei/gwei
  * @returns Coût estimé en wei/gwei
  */
-export const estimateDeploymentCost = (gasEstimate: bigint, gasPrice: bigint): bigint => {
+export const estimateDeploymentCost = (
+  gasEstimate: bigint,
+  gasPrice: bigint
+): bigint => {
   return gasEstimate * gasPrice;
 };
 
@@ -111,7 +117,7 @@ export const estimateTokenTransferGas = (chainId: ChainId): bigint => {
  */
 export const formatGasCost = (cost: bigint, chainId: ChainId): string => {
   const decimals = 18; // La plupart des chaînes EVM utilisent 18 décimales
-  
+
   if (cost < 10n ** 9n) {
     // Moins de 1 Gwei, afficher en Wei
     return `${cost.toString()} Wei`;
@@ -135,16 +141,16 @@ export const formatGasCost = (cost: bigint, chainId: ChainId): string => {
 const getChainSymbol = (chainId: ChainId): string => {
   switch (chainId) {
     case ChainId.ETHEREUM:
-      return 'ETH';
+      return "ETH";
     case ChainId.BINANCE:
-      return 'BNB';
+      return "BNB";
     case ChainId.POLYGON:
-      return 'MATIC';
+      return "MATIC";
     case ChainId.AVALANCHE:
-      return 'AVAX';
+      return "AVAX";
     case ChainId.ARBITRUM:
-      return 'ETH';
+      return "ETH";
     default:
-      return 'ETH';
+      return "ETH";
   }
 };

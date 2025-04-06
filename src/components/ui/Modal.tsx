@@ -1,7 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-import { SPACING } from '@/config/constants/theme';
-import { Button } from './Button';
+import React from "react";
+import styled from "styled-components";
+import { SPACING } from "@/config/constants/theme";
+import { Button } from "./Button";
 
 interface ModalProps {
   isOpen: boolean;
@@ -18,15 +18,15 @@ const Overlay = styled.div<{ isOpen: boolean }>`
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  display: ${props => props.isOpen ? 'flex' : 'none'};
+  display: ${(props) => (props.isOpen ? "flex" : "none")};
   justify-content: center;
   align-items: center;
   z-index: 1000;
 `;
 
 const ModalContainer = styled.div`
-  background-color: ${props => props.theme.colors.background.primary};
-  border-radius: ${props => props.theme.borderRadius};
+  background-color: ${(props) => props.theme.colors.background.primary};
+  border-radius: ${(props) => props.theme.borderRadius};
   padding: ${SPACING.xl};
   min-width: 400px;
   max-width: 90%;
@@ -44,7 +44,7 @@ const ModalHeader = styled.div`
 
 const ModalTitle = styled.h2`
   margin: 0;
-  color: ${props => props.theme.colors.text.primary};
+  color: ${(props) => props.theme.colors.text.primary};
 `;
 
 const CloseButton = styled.button`
@@ -52,10 +52,10 @@ const CloseButton = styled.button`
   border: none;
   cursor: pointer;
   padding: ${SPACING.xs};
-  color: ${props => props.theme.colors.text.secondary};
-  
+  color: ${(props) => props.theme.colors.text.secondary};
+
   &:hover {
-    color: ${props => props.theme.colors.text.primary};
+    color: ${(props) => props.theme.colors.text.primary};
   }
 `;
 
@@ -80,31 +80,25 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <Overlay isOpen={isOpen} onClick={onClose}>
-      <ModalContainer onClick={e => e.stopPropagation()}>
+      <ModalContainer onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>{title}</ModalTitle>
           <CloseButton onClick={onClose}>×</CloseButton>
         </ModalHeader>
-        
-        <ModalContent>
-          {children}
-        </ModalContent>
-        
+
+        <ModalContent>{children}</ModalContent>
+
         {footer ? (
-          <ModalFooter>
-            {footer}
-          </ModalFooter>
+          <ModalFooter>{footer}</ModalFooter>
         ) : (
           <ModalFooter>
             <Button variant="outline" onClick={onClose}>
               Annuler
             </Button>
-            <Button onClick={onClose}>
-              Confirmer
-            </Button>
+            <Button onClick={onClose}>Confirmer</Button>
           </ModalFooter>
         )}
       </ModalContainer>
     </Overlay>
   );
-}; 
+};

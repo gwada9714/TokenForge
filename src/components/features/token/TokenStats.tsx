@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Typography, Paper, Grid, Divider } from '@mui/material';
+import React from "react";
+import { Box, Typography, Paper, Grid, Divider } from "@mui/material";
 
 interface TokenStatsProps {
   totalSupply?: string;
@@ -12,13 +12,13 @@ interface TokenStatsProps {
 }
 
 export const TokenStats: React.FC<TokenStatsProps> = ({
-  totalSupply = '0',
+  totalSupply = "0",
   holders = 0,
   transactions = 0,
-  price = '0',
-  marketCap = '0',
-  volume24h = '0',
-  liquidity = '0'
+  price = "0",
+  marketCap = "0",
+  volume24h = "0",
+  liquidity = "0",
 }) => {
   return (
     <Box sx={{ mt: 4 }}>
@@ -35,7 +35,7 @@ export const TokenStats: React.FC<TokenStatsProps> = ({
               <Typography variant="h6">{totalSupply}</Typography>
             </Box>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={4}>
             <Box>
               <Typography variant="subtitle2" color="text.secondary">
@@ -44,7 +44,7 @@ export const TokenStats: React.FC<TokenStatsProps> = ({
               <Typography variant="h6">{holders}</Typography>
             </Box>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={4}>
             <Box>
               <Typography variant="subtitle2" color="text.secondary">
@@ -53,11 +53,11 @@ export const TokenStats: React.FC<TokenStatsProps> = ({
               <Typography variant="h6">{transactions}</Typography>
             </Box>
           </Grid>
-          
+
           <Grid item xs={12}>
             <Divider sx={{ my: 2 }} />
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Box>
               <Typography variant="subtitle2" color="text.secondary">
@@ -66,7 +66,7 @@ export const TokenStats: React.FC<TokenStatsProps> = ({
               <Typography variant="h6">${price}</Typography>
             </Box>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Box>
               <Typography variant="subtitle2" color="text.secondary">
@@ -75,7 +75,7 @@ export const TokenStats: React.FC<TokenStatsProps> = ({
               <Typography variant="h6">${marketCap}</Typography>
             </Box>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Box>
               <Typography variant="subtitle2" color="text.secondary">
@@ -84,7 +84,7 @@ export const TokenStats: React.FC<TokenStatsProps> = ({
               <Typography variant="h6">${volume24h}</Typography>
             </Box>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Box>
               <Typography variant="subtitle2" color="text.secondary">

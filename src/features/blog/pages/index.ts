@@ -1,2 +1,2 @@
-export * from './BlogPage';
-export * from './BlogPostPage';
+export * from "./BlogPage";
+export * from "./BlogPostPage";

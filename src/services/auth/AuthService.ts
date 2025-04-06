@@ -1,7 +1,7 @@
-import { BaseService } from '@/core/services/BaseService';
-import { FirebaseService } from '../firebase/FirebaseService';
-import { User } from 'firebase/auth';
-import { AuthError } from '@/types/errors';
+import { BaseService } from "@/core/services/BaseService";
+import { FirebaseService } from "../firebase/FirebaseService";
+import { User } from "firebase/auth";
+import { AuthError } from "@/types/errors";
 
 export class AuthService extends BaseService {
   private firebaseService: FirebaseService;
@@ -9,7 +9,7 @@ export class AuthService extends BaseService {
   private readonly TOKEN_REFRESH_INTERVAL = 55 * 60 * 1000;
 
   constructor(firebaseService: FirebaseService) {
-    super('AuthService');
+    super("AuthService");
     this.firebaseService = firebaseService;
   }
 
@@ -17,9 +17,9 @@ export class AuthService extends BaseService {
     try {
       const auth = this.firebaseService.getAuth();
       this.setupAuthStateListener(auth);
-      this.log('Auth service initialized');
+      this.log("Auth service initialized");
     } catch (error) {
-      this.logError('Auth service initialization failed', error as Error);
+      this.logError("Auth service initialization failed", error as Error);
       throw error;
     }
   }
@@ -27,17 +27,17 @@ export class AuthService extends BaseService {
   private setupAuthStateListener(auth: Auth): void {
     auth.onAuthStateChanged(
       (user) => this.handleAuthStateChange(user),
-      (error) => this.logError('Auth state change error', error)
+      (error) => this.logError("Auth state change error", error)
     );
   }
 
   private async handleAuthStateChange(user: User | null): Promise<void> {
     if (user) {
       await this.setupTokenRefresh(user);
-      this.log('User authenticated', { userId: user.uid });
+      this.log("User authenticated", { userId: user.uid });
     } else {
       this.clearTokenRefresh();
-      this.log('User signed out');
+      this.log("User signed out");
     }
   }
 
@@ -45,7 +45,7 @@ export class AuthService extends BaseService {
 
   async cleanup(): Promise<void> {
     this.clearTokenRefresh();
-    this.log('Auth service cleaned up');
+    this.log("Auth service cleaned up");
   }
 }
 

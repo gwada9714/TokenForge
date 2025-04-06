@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface AnalyticsState {
   events: Array<{
@@ -34,11 +34,11 @@ const initialState: AnalyticsState = {
   loading: false,
   error: null,
   selectedToken: null,
-  realtimeSubscriptions: {}
+  realtimeSubscriptions: {},
 };
 
 const analyticsSlice = createSlice({
-  name: 'analytics',
+  name: "analytics",
   initialState,
   reducers: {
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -54,7 +54,10 @@ const analyticsSlice = createSlice({
       const { address } = action.payload.token;
       state.tokens[address] = action.payload;
     },
-    addTokenEvent: (state, action: PayloadAction<{ address: string; event: TokenEvent }>) => {
+    addTokenEvent: (
+      state,
+      action: PayloadAction<{ address: string; event: TokenEvent }>
+    ) => {
       const { address, event } = action.payload;
       if (state.tokens[address]) {
         state.tokens[address].events.unshift(event);
@@ -64,7 +67,10 @@ const analyticsSlice = createSlice({
         }
       }
     },
-    setRealtimeSubscription: (state, action: PayloadAction<{ address: string; active: boolean }>) => {
+    setRealtimeSubscription: (
+      state,
+      action: PayloadAction<{ address: string; active: boolean }>
+    ) => {
       const { address, active } = action.payload;
       state.realtimeSubscriptions[address] = active;
     },
@@ -86,7 +92,7 @@ const analyticsSlice = createSlice({
     clearEvents: (state) => {
       state.events = [];
     },
-  }
+  },
 });
 
 export const {
@@ -98,7 +104,7 @@ export const {
   setRealtimeSubscription,
   clearTokenData,
   addEvent,
-  clearEvents
+  clearEvents,
 } = analyticsSlice.actions;
 
 export default analyticsSlice.reducer;

@@ -4,59 +4,60 @@
 
 /* Polices système de secours */
 @font-face {
-  font-family: 'Montserrat';
+  font-family: "Montserrat";
   font-style: normal;
   font-weight: 400;
-  src: local('Montserrat Regular'), local('Montserrat-Regular'), local('Arial');
+  src: local("Montserrat Regular"), local("Montserrat-Regular"), local("Arial");
 }
 
 @font-face {
-  font-family: 'Montserrat';
+  font-family: "Montserrat";
   font-style: normal;
   font-weight: 500;
-  src: local('Montserrat Medium'), local('Montserrat-Medium'), local('Arial');
+  src: local("Montserrat Medium"), local("Montserrat-Medium"), local("Arial");
 }
 
 @font-face {
-  font-family: 'Montserrat';
+  font-family: "Montserrat";
   font-style: normal;
   font-weight: 600;
-  src: local('Montserrat SemiBold'), local('Montserrat-SemiBold'), local('Arial');
+  src: local("Montserrat SemiBold"), local("Montserrat-SemiBold"),
+    local("Arial");
 }
 
 @font-face {
-  font-family: 'Montserrat';
+  font-family: "Montserrat";
   font-style: normal;
   font-weight: 700;
-  src: local('Montserrat Bold'), local('Montserrat-Bold'), local('Arial');
+  src: local("Montserrat Bold"), local("Montserrat-Bold"), local("Arial");
 }
 
 @font-face {
-  font-family: 'Open Sans';
+  font-family: "Open Sans";
   font-style: normal;
   font-weight: 400;
-  src: local('Open Sans Regular'), local('OpenSans-Regular'), local('Arial');
+  src: local("Open Sans Regular"), local("OpenSans-Regular"), local("Arial");
 }
 
 @font-face {
-  font-family: 'Open Sans';
+  font-family: "Open Sans";
   font-style: normal;
   font-weight: 500;
-  src: local('Open Sans Medium'), local('OpenSans-Medium'), local('Arial');
+  src: local("Open Sans Medium"), local("OpenSans-Medium"), local("Arial");
 }
 
 @font-face {
-  font-family: 'Open Sans';
+  font-family: "Open Sans";
   font-style: normal;
   font-weight: 600;
-  src: local('Open Sans SemiBold'), local('OpenSans-SemiBold'), local('Arial');
+  src: local("Open Sans SemiBold"), local("OpenSans-SemiBold"), local("Arial");
 }
 
 @layer base {
   html {
     @apply bg-gray-900;
   }
-  
+
   body {
     @apply text-gray-100;
   }

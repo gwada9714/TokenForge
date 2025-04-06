@@ -50,13 +50,19 @@ export interface FirebaseAuthService {
   // État actuel
   currentUser: User | null;
   isInitialized: boolean;
-  
+
   // Méthodes d'authentification
-  signInWithEmailAndPassword(email: string, password: string): Promise<UserCredential>;
+  signInWithEmailAndPassword(
+    email: string,
+    password: string
+  ): Promise<UserCredential>;
   signInAnonymously(): Promise<UserCredential>;
-  createUserWithEmailAndPassword(email: string, password: string): Promise<UserCredential>;
+  createUserWithEmailAndPassword(
+    email: string,
+    password: string
+  ): Promise<UserCredential>;
   signOut(): Promise<void>;
-  
+
   // Surveillance
   onAuthStateChanged(callback: (user: User | null) => void): Unsubscribe;
 }
@@ -85,16 +91,18 @@ export interface FirestoreService {
   // Collections et documents
   collection(path: string): CollectionReference;
   doc(path: string): DocumentReference;
-  
+
   // Opérations CRUD
   getDoc(docRef: DocumentReference): Promise<DocumentSnapshot>;
   getDocs(query: Query): Promise<QuerySnapshot>;
   setDoc(docRef: DocumentReference, data: any): Promise<void>;
   updateDoc(docRef: DocumentReference, data: any): Promise<void>;
   deleteDoc(docRef: DocumentReference): Promise<void>;
-  
+
   // Transactions
-  runTransaction(callback: (transaction: Transaction) => Promise<any>): Promise<any>;
+  runTransaction(
+    callback: (transaction: Transaction) => Promise<any>
+  ): Promise<any>;
   batch(): WriteBatch;
 }
 ```
@@ -117,7 +125,7 @@ export interface FirebaseServices {
   app: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
-  
+
   // Méthodes utilitaires
   isInitialized(): boolean;
   terminate(): Promise<void>;

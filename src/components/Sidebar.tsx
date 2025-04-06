@@ -1,9 +1,9 @@
 // @ts-expect-error React is needed for JSX
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import styled from 'styled-components';
-import { navigationRoutes } from '@/router/routes';
-import { useTokenForgeAuth } from '@/hooks/useAuth';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import styled from "styled-components";
+import { navigationRoutes } from "@/router/routes";
+import { useTokenForgeAuth } from "@/hooks/useAuth";
 
 const SidebarContainer = styled.aside`
   width: 280px;
@@ -48,7 +48,7 @@ const NavSection = styled.div`
 export function Sidebar() {
   const { isAuthenticated } = useTokenForgeAuth();
 
-  const filteredRoutes = navigationRoutes.filter(route => {
+  const filteredRoutes = navigationRoutes.filter((route) => {
     if (route.isProtected && !isAuthenticated) return false;
     if (route.isPublic && isAuthenticated) return false;
     return true;
@@ -58,12 +58,8 @@ export function Sidebar() {
     <SidebarContainer>
       <NavSection>
         <h3>Navigation</h3>
-        {filteredRoutes.map(route => (
-          <NavItem
-            key={route.path}
-            to={route.path}
-            end={route.path === '/'}
-          >
+        {filteredRoutes.map((route) => (
+          <NavItem key={route.path} to={route.path} end={route.path === "/"}>
             {route.title}
           </NavItem>
         ))}

@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useTokenForgePlans } from '../hooks/useTokenForgePlans';
-import { UserLevel } from '../types/plans';
-import { useAccount } from 'wagmi';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useTokenForgePlans } from "../hooks/useTokenForgePlans";
+import { UserLevel } from "../types/plans";
+import { useAccount } from "wagmi";
 
 interface UserPlanContextType {
   userPlan: UserLevel;
@@ -15,7 +15,9 @@ const UserPlanContext = createContext<UserPlanContextType>({
   refreshPlan: async () => {},
 });
 
-export const UserPlanProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const UserPlanProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [userPlan, setUserPlan] = useState<UserLevel>(UserLevel.APPRENTICE);
   const [isLoading, setIsLoading] = useState(true);
   const { getUserPlan } = useTokenForgePlans();
@@ -33,7 +35,7 @@ export const UserPlanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const plan = await getUserPlan(address);
       setUserPlan(plan);
     } catch (error) {
-      console.error('Erreur lors de la récupération du plan:', error);
+      console.error("Erreur lors de la récupération du plan:", error);
       setUserPlan(UserLevel.APPRENTICE);
     } finally {
       setIsLoading(false);

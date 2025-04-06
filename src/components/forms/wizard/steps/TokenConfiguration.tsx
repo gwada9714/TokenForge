@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   TextField,
   Typography,
   Grid,
   InputAdornment,
-} from '@mui/material';
+} from "@mui/material";
 
 interface TokenConfigurationProps {
   data: {
@@ -14,18 +14,18 @@ interface TokenConfigurationProps {
     supply: string;
     decimals: string;
   };
-  onUpdate: (data: Partial<TokenConfigurationProps['data']>) => void;
+  onUpdate: (data: Partial<TokenConfigurationProps["data"]>) => void;
 }
 
 const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
   data,
   onUpdate,
 }) => {
-  const handleChange = (field: keyof typeof data) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    onUpdate({ [field]: event.target.value });
-  };
+  const handleChange =
+    (field: keyof typeof data) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ [field]: event.target.value });
+    };
 
   return (
     <Box>
@@ -42,7 +42,7 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
             fullWidth
             label="Token Name"
             value={data.name}
-            onChange={handleChange('name')}
+            onChange={handleChange("name")}
             helperText="The full name of your token (e.g., 'Ethereum')"
           />
         </Grid>
@@ -52,7 +52,7 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
             fullWidth
             label="Token Symbol"
             value={data.symbol}
-            onChange={handleChange('symbol')}
+            onChange={handleChange("symbol")}
             helperText="The symbol of your token (e.g., 'ETH')"
           />
         </Grid>
@@ -63,7 +63,7 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
             label="Total Supply"
             type="number"
             value={data.supply}
-            onChange={handleChange('supply')}
+            onChange={handleChange("supply")}
             helperText="The total number of tokens to create"
             InputProps={{
               endAdornment: (
@@ -79,7 +79,7 @@ const TokenConfiguration: React.FC<TokenConfigurationProps> = ({
             label="Decimals"
             type="number"
             value={data.decimals}
-            onChange={handleChange('decimals')}
+            onChange={handleChange("decimals")}
             helperText="Number of decimal places (usually 18)"
             InputProps={{
               inputProps: {

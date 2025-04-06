@@ -3,7 +3,10 @@ const hre = require("hardhat");
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
-  console.log("Deploying contracts with the account:", await deployer.getAddress());
+  console.log(
+    "Deploying contracts with the account:",
+    await deployer.getAddress()
+  );
 
   // Configuration addresses from .env
   const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS;
@@ -16,8 +19,10 @@ async function main() {
 
   try {
     // Get the ContractFactory
-    const TokenForgeFactory = await hre.ethers.getContractFactory("TokenForgeFactory");
-    
+    const TokenForgeFactory = await hre.ethers.getContractFactory(
+      "TokenForgeFactory"
+    );
+
     console.log("Deploying TokenForgeFactory with parameters:");
     console.log("TKN Token:", TKN_TOKEN_ADDRESS);
     console.log("Treasury:", TREASURY_ADDRESS);
@@ -32,7 +37,7 @@ async function main() {
 
     await factory.waitForDeployment();
     const factoryAddress = await factory.getAddress();
-    
+
     console.log("TokenForgeFactory deployed to:", factoryAddress);
     console.log("Owner address:", TREASURY_ADDRESS);
 
@@ -40,19 +45,18 @@ async function main() {
     if (process.env.ETHERSCAN_API_KEY) {
       console.log("Waiting for a few block confirmations...");
       await factory.deploymentTransaction()?.wait(5);
-      
+
       console.log("Verifying contract on Etherscan...");
       await hre.run("verify:verify", {
         address: factoryAddress,
         constructorArguments: [
           TKN_TOKEN_ADDRESS,
           TREASURY_ADDRESS,
-          TAX_SYSTEM_ADDRESS
+          TAX_SYSTEM_ADDRESS,
         ],
       });
       console.log("Contract verified on Etherscan");
     }
-
   } catch (error) {
     console.error("Deployment failed:", error);
     process.exit(1);

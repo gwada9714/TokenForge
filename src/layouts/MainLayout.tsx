@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box } from '@mui/material';
-import { Navbar } from '../components/layouts/main/Navbar';
+import React from "react";
+import { Box } from "@mui/material";
+import { Navbar } from "../components/layouts/main/Navbar";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -8,7 +8,7 @@ interface MainLayoutProps {
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <Navbar />
       <Box component="main" sx={{ flexGrow: 1, pt: 8 }}>
         {children}

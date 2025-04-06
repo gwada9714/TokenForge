@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
-import { useTokenForgeAuth } from '../../../hooks/useAuth';
-import { useWalletStatus } from '../../../features/auth/hooks/useWalletStatus';
-import { TokenForgeLogo } from '../../Icons/TokenForgeLogo';
+import { useState } from "react";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { useTokenForgeAuth } from "../../../hooks/useAuth";
+import { useWalletStatus } from "../../../features/auth/hooks/useWalletStatus";
+import { TokenForgeLogo } from "../../Icons/TokenForgeLogo";
 import {
   AppBar,
   Toolbar,
@@ -25,37 +25,53 @@ import {
   Typography,
   Grid,
   Tooltip,
-} from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { styled, keyframes } from '@mui/material/styles';
-import MenuIcon from '@mui/icons-material/Menu';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-import SearchIcon from '@mui/icons-material/Search';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import HexagonIcon from '@mui/icons-material/Hexagon';
-import InsertChartIcon from '@mui/icons-material/InsertChart';
-import WebIcon from '@mui/icons-material/Web';
-import WaterIcon from '@mui/icons-material/Water';
-import ShieldIcon from '@mui/icons-material/Shield';
-import PeopleIcon from '@mui/icons-material/People';
-import HighlightIcon from '@mui/icons-material/Highlight';
-import TokenIcon from '@mui/icons-material/Token';
+} from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { styled, keyframes } from "@mui/material/styles";
+import MenuIcon from "@mui/icons-material/Menu";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import SearchIcon from "@mui/icons-material/Search";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import HexagonIcon from "@mui/icons-material/Hexagon";
+import InsertChartIcon from "@mui/icons-material/InsertChart";
+import WebIcon from "@mui/icons-material/Web";
+import WaterIcon from "@mui/icons-material/Water";
+import ShieldIcon from "@mui/icons-material/Shield";
+import PeopleIcon from "@mui/icons-material/People";
+import HighlightIcon from "@mui/icons-material/Highlight";
+import TokenIcon from "@mui/icons-material/Token";
 
 const services = [
-  { name: 'Création de Launchpad (IDO)', href: '/services/launchpad', icon: <WebIcon sx={{ color: '#F59E0B', fontSize: 20 }} /> },
-  { name: 'Création de plateforme de Staking', href: '/services/staking', icon: <TokenIcon sx={{ color: '#F59E0B', fontSize: 20 }} /> },
-  { name: 'Assistance Marketing et Listing', href: '/services/marketing', icon: <HighlightIcon sx={{ color: '#F59E0B', fontSize: 20 }} /> },
-  { name: 'KYC (Know Your Customer)', href: '/services/kyc', icon: <ShieldIcon sx={{ color: '#F59E0B', fontSize: 20 }} /> },
+  {
+    name: "Création de Launchpad (IDO)",
+    href: "/services/launchpad",
+    icon: <WebIcon sx={{ color: "#F59E0B", fontSize: 20 }} />,
+  },
+  {
+    name: "Création de plateforme de Staking",
+    href: "/services/staking",
+    icon: <TokenIcon sx={{ color: "#F59E0B", fontSize: 20 }} />,
+  },
+  {
+    name: "Assistance Marketing et Listing",
+    href: "/services/marketing",
+    icon: <HighlightIcon sx={{ color: "#F59E0B", fontSize: 20 }} />,
+  },
+  {
+    name: "KYC (Know Your Customer)",
+    href: "/services/kyc",
+    icon: <ShieldIcon sx={{ color: "#F59E0B", fontSize: 20 }} />,
+  },
 ];
 
 const community = [
-  { name: 'Blog', href: '/blog' },
-  { name: 'Documentation', href: '/docs' },
-  { name: 'Discord', href: 'https://discord.gg/tokenforge', external: true },
-  { name: 'Telegram', href: 'https://t.me/tokenforge', external: true },
-  { name: 'Twitter', href: 'https://twitter.com/tokenforge', external: true },
+  { name: "Blog", href: "/blog" },
+  { name: "Documentation", href: "/docs" },
+  { name: "Discord", href: "https://discord.gg/tokenforge", external: true },
+  { name: "Telegram", href: "https://t.me/tokenforge", external: true },
+  { name: "Twitter", href: "https://twitter.com/tokenforge", external: true },
 ];
 
 const glowAnimation = keyframes`
@@ -70,7 +86,7 @@ const StyledRouterLink = styled(RouterLink)`
   align-items: center;
 `;
 
-const LogoContainer = styled('div')`
+const LogoContainer = styled("div")`
   transition: transform 0.3s ease;
   &:hover {
     transform: scale(1.05);
@@ -85,104 +101,106 @@ interface NavButtonProps extends ButtonProps {
 }
 
 const NavButton = styled(Button, {
-  shouldForwardProp: (prop) => !['component', 'to', '$loading'].includes(prop as string),
+  shouldForwardProp: (prop) =>
+    !["component", "to", "$loading"].includes(prop as string),
 })<NavButtonProps>(({ theme, $loading }) => ({
   color: alpha(theme.palette.common.white, 0.85),
   marginLeft: theme.spacing(2),
   fontFamily: '"Space Grotesk", "Poppins", sans-serif',
   fontWeight: 500,
-  position: 'relative',
-  textTransform: 'none',
+  position: "relative",
+  textTransform: "none",
   opacity: $loading ? 0.7 : 1,
-  pointerEvents: $loading ? 'none' : 'auto',
-  transition: 'all 0.2s ease',
-  '&::after': {
+  pointerEvents: $loading ? "none" : "auto",
+  transition: "all 0.2s ease",
+  "&::after": {
     content: '""',
-    position: 'absolute',
-    width: '0%',
-    height: '2px',
+    position: "absolute",
+    width: "0%",
+    height: "2px",
     bottom: 0,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: '#F59E0B',
-    transition: 'width 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+    left: "50%",
+    transform: "translateX(-50%)",
+    backgroundColor: "#F59E0B",
+    transition: "width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
   },
-  '&:hover': {
-    color: '#FFFFFF',
-    backgroundColor: 'transparent',
-    boxShadow: '0 0 8px rgba(245, 158, 11, 0.3)',
-    '&::after': {
-      width: '80%',
+  "&:hover": {
+    color: "#FFFFFF",
+    backgroundColor: "transparent",
+    boxShadow: "0 0 8px rgba(245, 158, 11, 0.3)",
+    "&::after": {
+      width: "80%",
     },
   },
-  '&.active': {
-    color: '#FFFFFF',
-    '&::after': {
-      width: '100%',
+  "&.active": {
+    color: "#FFFFFF",
+    "&::after": {
+      width: "100%",
     },
-    boxShadow: '0 0 12px rgba(245, 158, 11, 0.4)',
+    boxShadow: "0 0 12px rgba(245, 158, 11, 0.4)",
   },
 }));
 
 const ConnectButton = styled(Button, {
-  shouldForwardProp: (prop) => !['component', 'to', '$loading'].includes(prop as string),
+  shouldForwardProp: (prop) =>
+    !["component", "to", "$loading"].includes(prop as string),
 })<NavButtonProps>(({ theme, $loading }) => ({
   marginLeft: theme.spacing(2),
-  borderColor: '#D97706',
-  color: '#D97706',
-  borderRadius: '8px',
-  padding: '8px 24px',
-  fontFamily: 'Poppins, Roboto, sans-serif',
+  borderColor: "#D97706",
+  color: "#D97706",
+  borderRadius: "8px",
+  padding: "8px 24px",
+  fontFamily: "Poppins, Roboto, sans-serif",
   fontWeight: 500,
-  textTransform: 'none',
-  transition: 'all 0.3s ease',
-  position: 'relative',
+  textTransform: "none",
+  transition: "all 0.3s ease",
+  position: "relative",
   opacity: $loading ? 0.7 : 1,
-  pointerEvents: $loading ? 'none' : 'auto',
-  '&:hover': {
-    backgroundColor: '#D97706',
-    borderColor: '#D97706',
+  pointerEvents: $loading ? "none" : "auto",
+  "&:hover": {
+    backgroundColor: "#D97706",
+    borderColor: "#D97706",
     color: theme.palette.common.white,
-    transform: 'translateY(-1px)',
-    boxShadow: '0 4px 12px rgba(217, 119, 6, 0.2)',
+    transform: "translateY(-1px)",
+    boxShadow: "0 4px 12px rgba(217, 119, 6, 0.2)",
   },
 }));
 
 const StyledMenu = styled(Menu)(({ theme }) => ({
-  '& .MuiPaper-root': {
-    backgroundColor: alpha('#182038', 0.98),
-    backdropFilter: 'blur(12px)',
+  "& .MuiPaper-root": {
+    backgroundColor: alpha("#182038", 0.98),
+    backdropFilter: "blur(12px)",
     border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
-    borderRadius: '12px',
-    marginTop: '8px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-    minWidth: '250px',
+    borderRadius: "12px",
+    marginTop: "8px",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+    minWidth: "250px",
   },
-  '& .MuiMenuItem-root': {
-    fontFamily: 'Poppins, Roboto, sans-serif',
+  "& .MuiMenuItem-root": {
+    fontFamily: "Poppins, Roboto, sans-serif",
     color: alpha(theme.palette.common.white, 0.85),
-    padding: '12px 24px',
-    transition: 'all 0.2s ease',
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    '&::after': {
+    padding: "12px 24px",
+    transition: "all 0.2s ease",
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    "&::after": {
       content: '""',
-      position: 'absolute',
-      width: '0%',
-      height: '2px',
+      position: "absolute",
+      width: "0%",
+      height: "2px",
       bottom: 4,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      backgroundColor: '#D97706',
-      transition: 'width 0.3s ease',
+      left: "50%",
+      transform: "translateX(-50%)",
+      backgroundColor: "#D97706",
+      transition: "width 0.3s ease",
     },
-    '&:hover': {
+    "&:hover": {
       backgroundColor: alpha(theme.palette.common.white, 0.05),
-      color: '#D97706',
-      '&::after': {
-        width: 'calc(100% - 48px)',
+      color: "#D97706",
+      "&::after": {
+        width: "calc(100% - 48px)",
       },
     },
   },
@@ -194,16 +212,19 @@ export const Navbar = () => {
   const theme = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { isAuthenticated, loading: isLoading } = useTokenForgeAuth();
   const { isCorrectNetwork, connect, hasInjectedProvider } = useWalletStatus();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
   const [communityMenuOpen, setCommunityMenuOpen] = useState(false);
-  const [servicesMenuAnchor, setServicesMenuAnchor] = useState<null | HTMLElement>(null);
-  const [communityMenuAnchor, setCommunityMenuAnchor] = useState<null | HTMLElement>(null);
-  const [createTokenMenuAnchor, setCreateTokenMenuAnchor] = useState<null | HTMLElement>(null);
+  const [servicesMenuAnchor, setServicesMenuAnchor] =
+    useState<null | HTMLElement>(null);
+  const [communityMenuAnchor, setCommunityMenuAnchor] =
+    useState<null | HTMLElement>(null);
+  const [createTokenMenuAnchor, setCreateTokenMenuAnchor] =
+    useState<null | HTMLElement>(null);
 
   const handleServicesMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setServicesMenuAnchor(event.currentTarget);
@@ -232,42 +253,52 @@ export const Navbar = () => {
       anchorEl={createTokenMenuAnchor}
       open={Boolean(createTokenMenuAnchor)}
       onClose={handleMenuClose}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      transformOrigin={{ vertical: "top", horizontal: "left" }}
     >
-      <MenuItem onClick={() => {
-        handleMenuClose();
-        navigate('/create-token/standard');
-      }}>
-        <TokenIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+      <MenuItem
+        onClick={() => {
+          handleMenuClose();
+          navigate("/create-token/standard");
+        }}
+      >
+        <TokenIcon sx={{ color: "#F59E0B", fontSize: 20 }} />
         Token Standard (ERC-20)
       </MenuItem>
-      <MenuItem onClick={() => {
-        handleMenuClose();
-        navigate('/create-token/custom');
-      }}>
-        <HexagonIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+      <MenuItem
+        onClick={() => {
+          handleMenuClose();
+          navigate("/create-token/custom");
+        }}
+      >
+        <HexagonIcon sx={{ color: "#F59E0B", fontSize: 20 }} />
         Token Personnalisé
       </MenuItem>
-      <MenuItem onClick={() => {
-        handleMenuClose();
-        navigate('/create-token/templates');
-      }}>
-        <InsertChartIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+      <MenuItem
+        onClick={() => {
+          handleMenuClose();
+          navigate("/create-token/templates");
+        }}
+      >
+        <InsertChartIcon sx={{ color: "#F59E0B", fontSize: 20 }} />
         Bibliothèque de Templates
       </MenuItem>
-      <MenuItem onClick={() => {
-        handleMenuClose();
-        navigate('/create-token/rugpull-protection');
-      }}>
-        <ShieldIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+      <MenuItem
+        onClick={() => {
+          handleMenuClose();
+          navigate("/create-token/rugpull-protection");
+        }}
+      >
+        <ShieldIcon sx={{ color: "#F59E0B", fontSize: 20 }} />
         Protection Anti-Rugpull
       </MenuItem>
-      <MenuItem onClick={() => {
-        handleMenuClose();
-        navigate('/create-token/landing-page');
-      }}>
-        <WebIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
+      <MenuItem
+        onClick={() => {
+          handleMenuClose();
+          navigate("/create-token/landing-page");
+        }}
+      >
+        <WebIcon sx={{ color: "#F59E0B", fontSize: 20 }} />
         Créer une Landing Page
       </MenuItem>
     </StyledMenu>
@@ -282,16 +313,16 @@ export const Navbar = () => {
           linear-gradient(to right, rgba(24, 32, 56, 0.95), rgba(30, 41, 67, 0.95)),
           url('/images/circuit-pattern.svg')
         `,
-        backgroundSize: 'cover, 400px',
-        backgroundBlendMode: 'normal, overlay',
-        backdropFilter: 'blur(8px)',
-        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+        backgroundSize: "cover, 400px",
+        backgroundBlendMode: "normal, overlay",
+        backdropFilter: "blur(8px)",
+        boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
         height: NAVBAR_HEIGHT,
-        borderBottom: '1px solid',
-        borderColor: 'rgba(71, 85, 105, 0.15)',
+        borderBottom: "1px solid",
+        borderColor: "rgba(71, 85, 105, 0.15)",
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', py: 1, height: '100%' }}>
+      <Toolbar sx={{ justifyContent: "space-between", py: 1, height: "100%" }}>
         {/* Logo with Tagline */}
         <StyledRouterLink to="/">
           <LogoContainer>
@@ -299,12 +330,12 @@ export const Navbar = () => {
           </LogoContainer>
           <Box
             sx={{
-              display: { xs: 'none', md: 'flex' },
-              alignItems: 'center',
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
               ml: 1.5,
               pl: 1.5,
-              borderLeft: '1px solid',
-              borderColor: 'rgba(255, 255, 255, 0.15)'
+              borderLeft: "1px solid",
+              borderColor: "rgba(255, 255, 255, 0.15)",
             }}
           >
             <Typography
@@ -312,8 +343,8 @@ export const Navbar = () => {
               sx={{
                 fontFamily: '"Space Grotesk", sans-serif',
                 fontWeight: 300,
-                color: 'rgba(248, 250, 252, 0.8)',
-                letterSpacing: '0.02em'
+                color: "rgba(248, 250, 252, 0.8)",
+                letterSpacing: "0.02em",
               }}
             >
               Forge Your Token Future
@@ -336,19 +367,26 @@ export const Navbar = () => {
 
         {/* Desktop Menu */}
         {!isMobile && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <NavButton
               onClick={handleCreateTokenMenuOpen}
               aria-haspopup="true"
               aria-expanded={Boolean(createTokenMenuAnchor)}
             >
-              Créer un Token {createTokenMenuAnchor ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
+              Créer un Token{" "}
+              {createTokenMenuAnchor ? (
+                <ExpandLess sx={{ ml: 0.5 }} />
+              ) : (
+                <ExpandMore sx={{ ml: 0.5 }} />
+              )}
             </NavButton>
 
             <NavButton
               component={RouterLink}
               to="/tokenomics"
-              className={location.pathname.includes('/tokenomics') ? 'active' : ''}
+              className={
+                location.pathname.includes("/tokenomics") ? "active" : ""
+              }
             >
               Tokenomics
             </NavButton>
@@ -357,32 +395,53 @@ export const Navbar = () => {
               onClick={handleServicesMenuOpen}
               aria-haspopup="true"
               aria-expanded={Boolean(servicesMenuAnchor)}
-              className={location.pathname.includes('/services') ? 'active' : ''}
+              className={
+                location.pathname.includes("/services") ? "active" : ""
+              }
             >
-              Services {servicesMenuAnchor ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
+              Services{" "}
+              {servicesMenuAnchor ? (
+                <ExpandLess sx={{ ml: 0.5 }} />
+              ) : (
+                <ExpandMore sx={{ ml: 0.5 }} />
+              )}
             </NavButton>
 
             <NavButton
               component={RouterLink}
               to="/comparator"
-              className={location.pathname.includes('/comparator') ? 'active' : ''}
+              className={
+                location.pathname.includes("/comparator") ? "active" : ""
+              }
             >
               Comparateur
             </NavButton>
 
-            <NavButton 
+            <NavButton
               onClick={handleCommunityMenuOpen}
               aria-haspopup="true"
               aria-expanded={Boolean(communityMenuAnchor)}
-              className={location.pathname.includes('/blog') || location.pathname.includes('/docs') ? 'active' : ''}
+              className={
+                location.pathname.includes("/blog") ||
+                location.pathname.includes("/docs")
+                  ? "active"
+                  : ""
+              }
             >
-              Communauté {communityMenuAnchor ? <ExpandLess sx={{ ml: 0.5 }} /> : <ExpandMore sx={{ ml: 0.5 }} />}
+              Communauté{" "}
+              {communityMenuAnchor ? (
+                <ExpandLess sx={{ ml: 0.5 }} />
+              ) : (
+                <ExpandMore sx={{ ml: 0.5 }} />
+              )}
             </NavButton>
 
             <NavButton
               component={RouterLink}
               to="/resources"
-              className={location.pathname.includes('/resources') ? 'active' : ''}
+              className={
+                location.pathname.includes("/resources") ? "active" : ""
+              }
             >
               Ressources
             </NavButton>
@@ -390,35 +449,35 @@ export const Navbar = () => {
             <NavButton
               component={RouterLink}
               to="/plans"
-              className={location.pathname.includes('/plans') ? 'active' : ''}
+              className={location.pathname.includes("/plans") ? "active" : ""}
             >
               Plans & Tarifs
             </NavButton>
 
             {/* Right Zone Elements */}
-            <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
               {/* Blockchain Selector */}
               <IconButton
                 color="inherit"
                 aria-label="select blockchain"
                 sx={{
-                  position: 'relative',
+                  position: "relative",
                   mr: 1.5,
-                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' }
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
                 }}
               >
-                <HexagonIcon sx={{ color: '#3498db', fontSize: 28 }} />
+                <HexagonIcon sx={{ color: "#3498db", fontSize: 28 }} />
                 <Box
                   sx={{
-                    position: 'absolute',
+                    position: "absolute",
                     width: 8,
                     height: 8,
-                    borderRadius: '50%',
-                    bgcolor: isCorrectNetwork ? 'success.main' : 'error.main',
+                    borderRadius: "50%",
+                    bgcolor: isCorrectNetwork ? "success.main" : "error.main",
                     bottom: 12,
                     right: 12,
-                    border: '1px solid',
-                    borderColor: 'background.paper'
+                    border: "1px solid",
+                    borderColor: "background.paper",
                   }}
                 />
               </IconButton>
@@ -427,7 +486,10 @@ export const Navbar = () => {
               <IconButton
                 color="inherit"
                 aria-label="search the site"
-                sx={{ mr: 1.5, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}
+                sx={{
+                  mr: 1.5,
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                }}
               >
                 <SearchIcon />
               </IconButton>
@@ -436,7 +498,10 @@ export const Navbar = () => {
               <IconButton
                 color="inherit"
                 aria-label="account"
-                sx={{ mr: 1.5, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}
+                sx={{
+                  mr: 1.5,
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                }}
               >
                 <AccountCircleIcon />
               </IconButton>
@@ -451,17 +516,19 @@ export const Navbar = () => {
                   px: 3,
                   py: 1,
                   borderRadius: 2,
-                  textTransform: 'none',
+                  textTransform: "none",
                   fontFamily: '"Space Grotesk", sans-serif',
                   fontWeight: 600,
-                  fontSize: '0.95rem',
-                  background: 'linear-gradient(45deg, #F59E0B 0%, #EA580C 100%)',
-                  boxShadow: '0 4px 10px rgba(245, 158, 11, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #F59E0B 30%, #EA580C 90%)',
-                    boxShadow: '0 6px 12px rgba(245, 158, 11, 0.4)',
-                    transform: 'translateY(-1px)'
-                  }
+                  fontSize: "0.95rem",
+                  background:
+                    "linear-gradient(45deg, #F59E0B 0%, #EA580C 100%)",
+                  boxShadow: "0 4px 10px rgba(245, 158, 11, 0.3)",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(45deg, #F59E0B 30%, #EA580C 90%)",
+                    boxShadow: "0 6px 12px rgba(245, 158, 11, 0.4)",
+                    transform: "translateY(-1px)",
+                  },
                 }}
               >
                 Forge ton Token
@@ -469,28 +536,38 @@ export const Navbar = () => {
 
               {/* Wallet Status */}
               <Chip
-                icon={<FiberManualRecordIcon sx={{ color: isCorrectNetwork ? theme.palette.success.main : theme.palette.error.main, width: 10, height: 10 }} />}
-                label={isCorrectNetwork ? 'Connecté' : 'Mauvais Réseau'}
+                icon={
+                  <FiberManualRecordIcon
+                    sx={{
+                      color: isCorrectNetwork
+                        ? theme.palette.success.main
+                        : theme.palette.error.main,
+                      width: 10,
+                      height: 10,
+                    }}
+                  />
+                }
+                label={isCorrectNetwork ? "Connecté" : "Mauvais Réseau"}
                 variant="outlined"
                 sx={{
-                  borderColor: 'transparent',
+                  borderColor: "transparent",
                   bgcolor: alpha(theme.palette.common.white, 0.05),
                   fontFamily: '"Space Grotesk", sans-serif',
                   height: 32,
-                  '& .MuiChip-label': {
+                  "& .MuiChip-label": {
                     px: 1,
                   },
                 }}
               />
 
-              <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
                 <ConnectButton
                   variant="outlined"
                   onClick={async () => {
                     try {
                       // Call connect with dummy values since we can't get them from the event
                       // In a real implementation, these would come from elsewhere
-                      await connect('0x0', 1);
+                      await connect("0x0", 1);
                     } catch (error) {
                       // L'erreur est déjà gérée dans le hook useWalletStatus
                       // Les logs sont déjà envoyés dans le hook
@@ -500,20 +577,19 @@ export const Navbar = () => {
                   startIcon={isLoading && <CircularProgress size={20} />}
                   disabled={isLoading}
                 >
-                  {isLoading 
-                    ? 'Connexion...' 
-                    : hasInjectedProvider 
-                      ? 'Connecter Wallet' 
-                      : 'Installer Wallet'
-                  }
+                  {isLoading
+                    ? "Connexion..."
+                    : hasInjectedProvider
+                    ? "Connecter Wallet"
+                    : "Installer Wallet"}
                 </ConnectButton>
                 {!hasInjectedProvider && (
                   <Tooltip title="Vous avez besoin d'un wallet compatible (comme MetaMask) pour utiliser cette application. Cliquez pour plus d'informations.">
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       color="warning"
                       onClick={() => {
-                        window.open('https://metamask.io/download/', '_blank');
+                        window.open("https://metamask.io/download/", "_blank");
                       }}
                     >
                       <HelpOutlineIcon fontSize="small" />
@@ -531,32 +607,40 @@ export const Navbar = () => {
           open={Boolean(servicesMenuAnchor)}
           onClose={handleMenuClose}
           anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'center',
+            vertical: "bottom",
+            horizontal: "center",
           }}
           transformOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
+            vertical: "top",
+            horizontal: "center",
           }}
           sx={{
-            '& .MuiPaper-root': {
+            "& .MuiPaper-root": {
               width: 640,
               p: 3,
-              mt: 1.5
-            }
+              mt: 1.5,
+            },
           }}
         >
           <Grid container spacing={2}>
             {/* Tokenomics Designer */}
             <Grid item xs={6} md={4}>
-              <Box sx={{ p: 1.5, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <InsertChartIcon sx={{ color: '#F59E0B', mr: 1.5 }} />
+              <Box
+                sx={{
+                  p: 1.5,
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <InsertChartIcon sx={{ color: "#F59E0B", mr: 1.5 }} />
                   <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
                     Tokenomics Designer
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+                >
                   Concevez l'économie parfaite pour votre token
                 </Typography>
               </Box>
@@ -564,14 +648,22 @@ export const Navbar = () => {
 
             {/* Landing Page Builder */}
             <Grid item xs={6} md={4}>
-              <Box sx={{ p: 1.5, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <WebIcon sx={{ color: '#F59E0B', mr: 1.5 }} />
+              <Box
+                sx={{
+                  p: 1.5,
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <WebIcon sx={{ color: "#F59E0B", mr: 1.5 }} />
                   <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
                     Landing Page Builder
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+                >
                   Créez une vitrine professionnelle sans coder
                 </Typography>
               </Box>
@@ -579,14 +671,22 @@ export const Navbar = () => {
 
             {/* Auto-Liquidity Manager */}
             <Grid item xs={6} md={4}>
-              <Box sx={{ p: 1.5, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <WaterIcon sx={{ color: '#F59E0B', mr: 1.5 }} />
+              <Box
+                sx={{
+                  p: 1.5,
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <WaterIcon sx={{ color: "#F59E0B", mr: 1.5 }} />
                   <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
                     Auto-Liquidity Manager
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+                >
                   Gestion automatisée de la liquidité multi-DEX
                 </Typography>
               </Box>
@@ -594,14 +694,22 @@ export const Navbar = () => {
 
             {/* Anti-Rugpull Protection */}
             <Grid item xs={6} md={4}>
-              <Box sx={{ p: 1.5, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <ShieldIcon sx={{ color: '#F59E0B', mr: 1.5 }} />
+              <Box
+                sx={{
+                  p: 1.5,
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <ShieldIcon sx={{ color: "#F59E0B", mr: 1.5 }} />
                   <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
                     Anti-Rugpull Protection
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+                >
                   Sécurisez votre projet avec des mécanismes de confiance
                 </Typography>
               </Box>
@@ -609,14 +717,22 @@ export const Navbar = () => {
 
             {/* Expert Network */}
             <Grid item xs={6} md={4}>
-              <Box sx={{ p: 1.5, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <PeopleIcon sx={{ color: '#F59E0B', mr: 1.5 }} />
+              <Box
+                sx={{
+                  p: 1.5,
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <PeopleIcon sx={{ color: "#F59E0B", mr: 1.5 }} />
                   <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
                     Expert Network
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+                >
                   Accédez à notre réseau d'experts vérifiés
                 </Typography>
               </Box>
@@ -624,14 +740,22 @@ export const Navbar = () => {
 
             {/* Token Spotlight */}
             <Grid item xs={6} md={4}>
-              <Box sx={{ p: 1.5, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <HighlightIcon sx={{ color: '#F59E0B', mr: 1.5 }} />
+              <Box
+                sx={{
+                  p: 1.5,
+                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <HighlightIcon sx={{ color: "#F59E0B", mr: 1.5 }} />
                   <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
                     Token Spotlight
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+                >
                   Mettez en valeur votre projet auprès de notre communauté
                 </Typography>
               </Box>
@@ -647,25 +771,25 @@ export const Navbar = () => {
           open={Boolean(communityMenuAnchor)}
           onClose={handleMenuClose}
           anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'center',
+            vertical: "bottom",
+            horizontal: "center",
           }}
           transformOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
+            vertical: "top",
+            horizontal: "center",
           }}
         >
           {community.map((item) => (
             <MenuItem
               key={item.name}
-              component={item.external ? 'a' : RouterLink}
+              component={item.external ? "a" : RouterLink}
               to={!item.external ? item.href : undefined}
               href={item.external ? item.href : undefined}
-              target={item.external ? '_blank' : undefined}
-              rel={item.external ? 'noopener noreferrer' : undefined}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
               onClick={handleMenuClose}
             >
-              <FiberManualRecordIcon sx={{ fontSize: 8, color: '#D97706' }} />
+              <FiberManualRecordIcon sx={{ fontSize: 8, color: "#D97706" }} />
               {item.name}
             </MenuItem>
           ))}
@@ -679,30 +803,33 @@ export const Navbar = () => {
           onClose={handleMobileMenuToggle}
           ModalProps={{ keepMounted: true }}
           sx={{
-            '& .MuiDrawer-paper': {
+            "& .MuiDrawer-paper": {
               width: 280,
-              bgcolor: alpha('#182038', 0.98),
-              backdropFilter: 'blur(12px)',
-              boxShadow: '-4px 0 32px rgba(0, 0, 0, 0.2)',
-              '& .MuiListItem-root': {
-                fontFamily: 'Poppins, Roboto, sans-serif',
+              bgcolor: alpha("#182038", 0.98),
+              backdropFilter: "blur(12px)",
+              boxShadow: "-4px 0 32px rgba(0, 0, 0, 0.2)",
+              "& .MuiListItem-root": {
+                fontFamily: "Poppins, Roboto, sans-serif",
                 color: alpha(theme.palette.common.white, 0.85),
                 py: 1.5,
                 px: 3,
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  color: '#D97706',
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  color: "#D97706",
                   bgcolor: alpha(theme.palette.common.white, 0.05),
                 },
               },
-              '& .MuiListItemText-primary': {
-                fontFamily: 'Poppins, Roboto, sans-serif',
+              "& .MuiListItemText-primary": {
+                fontFamily: "Poppins, Roboto, sans-serif",
               },
             },
           }}
         >
           <List sx={{ pt: 2 }}>
-            <ListItem button onClick={() => setCommunityMenuOpen(!communityMenuOpen)}>
+            <ListItem
+              button
+              onClick={() => setCommunityMenuOpen(!communityMenuOpen)}
+            >
               <ListItemText primary="Créer un Token" />
               {communityMenuOpen ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
@@ -712,8 +839,8 @@ export const Navbar = () => {
                   button
                   sx={{
                     pl: 4,
-                    '&:hover': {
-                      color: '#D97706',
+                    "&:hover": {
+                      color: "#D97706",
                       bgcolor: alpha(theme.palette.common.white, 0.05),
                     },
                   }}
@@ -724,7 +851,7 @@ export const Navbar = () => {
                   <ListItemText
                     primary="Token Standard (ERC-20)"
                     primaryTypographyProps={{
-                      sx: { fontSize: '0.9rem' }
+                      sx: { fontSize: "0.9rem" },
                     }}
                   />
                 </ListItem>
@@ -732,8 +859,8 @@ export const Navbar = () => {
                   button
                   sx={{
                     pl: 4,
-                    '&:hover': {
-                      color: '#D97706',
+                    "&:hover": {
+                      color: "#D97706",
                       bgcolor: alpha(theme.palette.common.white, 0.05),
                     },
                   }}
@@ -744,7 +871,7 @@ export const Navbar = () => {
                   <ListItemText
                     primary="Token Personnalisé"
                     primaryTypographyProps={{
-                      sx: { fontSize: '0.9rem' }
+                      sx: { fontSize: "0.9rem" },
                     }}
                   />
                 </ListItem>
@@ -752,8 +879,8 @@ export const Navbar = () => {
                   button
                   sx={{
                     pl: 4,
-                    '&:hover': {
-                      color: '#D97706',
+                    "&:hover": {
+                      color: "#D97706",
                       bgcolor: alpha(theme.palette.common.white, 0.05),
                     },
                   }}
@@ -764,7 +891,7 @@ export const Navbar = () => {
                   <ListItemText
                     primary="Bibliothèque de Templates"
                     primaryTypographyProps={{
-                      sx: { fontSize: '0.9rem' }
+                      sx: { fontSize: "0.9rem" },
                     }}
                   />
                 </ListItem>
@@ -772,8 +899,8 @@ export const Navbar = () => {
                   button
                   sx={{
                     pl: 4,
-                    '&:hover': {
-                      color: '#D97706',
+                    "&:hover": {
+                      color: "#D97706",
                       bgcolor: alpha(theme.palette.common.white, 0.05),
                     },
                   }}
@@ -784,7 +911,7 @@ export const Navbar = () => {
                   <ListItemText
                     primary="Protection Anti-Rugpull"
                     primaryTypographyProps={{
-                      sx: { fontSize: '0.9rem' }
+                      sx: { fontSize: "0.9rem" },
                     }}
                   />
                 </ListItem>
@@ -792,8 +919,8 @@ export const Navbar = () => {
                   button
                   sx={{
                     pl: 4,
-                    '&:hover': {
-                      color: '#D97706',
+                    "&:hover": {
+                      color: "#D97706",
                       bgcolor: alpha(theme.palette.common.white, 0.05),
                     },
                   }}
@@ -804,7 +931,7 @@ export const Navbar = () => {
                   <ListItemText
                     primary="Créer une Landing Page"
                     primaryTypographyProps={{
-                      sx: { fontSize: '0.9rem' }
+                      sx: { fontSize: "0.9rem" },
                     }}
                   />
                 </ListItem>
@@ -820,7 +947,10 @@ export const Navbar = () => {
               <ListItemText primary="Tokenomics" />
             </ListItem>
 
-            <ListItem button onClick={() => setServicesMenuOpen(!servicesMenuOpen)}>
+            <ListItem
+              button
+              onClick={() => setServicesMenuOpen(!servicesMenuOpen)}
+            >
               <ListItemText primary="Services" />
               {servicesMenuOpen ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
@@ -832,8 +962,8 @@ export const Navbar = () => {
                     button
                     sx={{
                       pl: 4,
-                      '&:hover': {
-                        color: '#D97706',
+                      "&:hover": {
+                        color: "#D97706",
                         bgcolor: alpha(theme.palette.common.white, 0.05),
                       },
                     }}
@@ -844,7 +974,7 @@ export const Navbar = () => {
                     <ListItemText
                       primary={item.name}
                       primaryTypographyProps={{
-                        sx: { fontSize: '0.9rem' }
+                        sx: { fontSize: "0.9rem" },
                       }}
                     />
                   </ListItem>
@@ -861,7 +991,10 @@ export const Navbar = () => {
               <ListItemText primary="Comparateur" />
             </ListItem>
 
-            <ListItem button onClick={() => setCommunityMenuOpen(!communityMenuOpen)}>
+            <ListItem
+              button
+              onClick={() => setCommunityMenuOpen(!communityMenuOpen)}
+            >
               <ListItemText primary="Communauté" />
               {communityMenuOpen ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
@@ -873,8 +1006,8 @@ export const Navbar = () => {
                     button
                     sx={{
                       pl: 4,
-                      '&:hover': {
-                        color: '#D97706',
+                      "&:hover": {
+                        color: "#D97706",
                         bgcolor: alpha(theme.palette.common.white, 0.05),
                       },
                     }}
@@ -885,7 +1018,7 @@ export const Navbar = () => {
                     <ListItemText
                       primary={item.name}
                       primaryTypographyProps={{
-                        sx: { fontSize: '0.9rem' }
+                        sx: { fontSize: "0.9rem" },
                       }}
                     />
                   </ListItem>
@@ -918,11 +1051,16 @@ export const Navbar = () => {
               button
               sx={{
                 mt: 2,
-                color: '#D97706',
-                borderTop: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+                color: "#D97706",
+                borderTop: `1px solid ${alpha(
+                  theme.palette.common.white,
+                  0.1
+                )}`,
               }}
             >
-              <ListItemText primary={isAuthenticated ? 'Dashboard' : 'Connexion'} />
+              <ListItemText
+                primary={isAuthenticated ? "Dashboard" : "Connexion"}
+              />
             </ListItem>
           </List>
         </Drawer>

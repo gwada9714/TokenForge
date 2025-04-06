@@ -1,10 +1,10 @@
-import { PublicKey } from '@solana/web3.js';
-import { Address } from 'viem';
-import { PaymentAmount } from '../types/PaymentService';
-import { PaymentError, PaymentErrorType } from '../types/PaymentError';
+import { PublicKey } from "@solana/web3.js";
+import { Address } from "viem";
+import { PaymentAmount } from "../types/PaymentService";
+import { PaymentError, PaymentErrorType } from "../types/PaymentError";
 
-const MAX_AMOUNT = BigInt('1000000000000000000000000'); // 1M tokens avec 18 decimals
-const MIN_AMOUNT = BigInt('100000'); // 0.1 tokens avec 18 decimals
+const MAX_AMOUNT = BigInt("1000000000000000000000000"); // 1M tokens avec 18 decimals
+const MIN_AMOUNT = BigInt("100000"); // 0.1 tokens avec 18 decimals
 
 /**
  * Validates payment parameters
@@ -23,42 +23,42 @@ export function validatePaymentParams(
     if (!tokenAddress) {
       throw new PaymentError(
         PaymentErrorType.VALIDATION_ERROR,
-        'Token address is required'
+        "Token address is required"
       );
     }
 
     // Validate amount
-    if (typeof amount === 'bigint') {
+    if (typeof amount === "bigint") {
       if (amount <= 0n) {
         throw new PaymentError(
           PaymentErrorType.VALIDATION_ERROR,
-          'Payment amount must be greater than 0'
+          "Payment amount must be greater than 0"
         );
       }
       if (amount > MAX_AMOUNT) {
         throw new PaymentError(
           PaymentErrorType.VALIDATION_ERROR,
-          'Payment amount exceeds maximum allowed'
+          "Payment amount exceeds maximum allowed"
         );
       }
       if (amount < MIN_AMOUNT) {
         throw new PaymentError(
           PaymentErrorType.VALIDATION_ERROR,
-          'Payment amount is below minimum allowed'
+          "Payment amount is below minimum allowed"
         );
       }
     } else if (amount <= 0) {
       throw new PaymentError(
         PaymentErrorType.VALIDATION_ERROR,
-        'Payment amount must be greater than 0'
+        "Payment amount must be greater than 0"
       );
     }
 
     // Validate userId
-    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    if (!userId || typeof userId !== "string" || userId.trim() === "") {
       throw new PaymentError(
         PaymentErrorType.VALIDATION_ERROR,
-        'Valid user ID is required'
+        "Valid user ID is required"
       );
     }
   } catch (error) {
@@ -67,7 +67,7 @@ export function validatePaymentParams(
     }
     throw new PaymentError(
       PaymentErrorType.VALIDATION_ERROR,
-      'Payment validation failed',
+      "Payment validation failed",
       error
     );
   }
@@ -90,11 +90,11 @@ export function validateWalletState(
   if (balance < totalRequired) {
     throw new PaymentError(
       PaymentErrorType.INSUFFICIENT_FUNDS,
-      'Insufficient funds for transaction',
+      "Insufficient funds for transaction",
       {
         balance,
         required: totalRequired,
-        missing: totalRequired - balance
+        missing: totalRequired - balance,
       }
     );
   }
@@ -113,7 +113,7 @@ export function validateTransactionParams(
   if (gasLimit && gasLimit <= BigInt(21000)) {
     throw new PaymentError(
       PaymentErrorType.VALIDATION_ERROR,
-      'Gas limit is too low',
+      "Gas limit is too low",
       { gasLimit }
     );
   }
@@ -121,7 +121,7 @@ export function validateTransactionParams(
   if (gasPrice && gasPrice <= BigInt(0)) {
     throw new PaymentError(
       PaymentErrorType.VALIDATION_ERROR,
-      'Invalid gas price',
+      "Invalid gas price",
       { gasPrice }
     );
   }

@@ -1,9 +1,9 @@
-import { useContract } from '@/providers/contract';
-import { useCallback } from 'react';
-import { Address, Hash } from 'viem';
+import { useContract } from "@/providers/contract";
+import { useCallback } from "react";
+import { Address, Hash } from "viem";
 
 interface DeploymentStatus {
-  status: 'pending' | 'success' | 'error';
+  status: "pending" | "success" | "error";
   hash?: Hash;
   error?: string;
 }
@@ -11,36 +11,40 @@ interface DeploymentStatus {
 export const useTokenDeployment = () => {
   const { deploymentStatus, setDeploymentStatus } = useContract();
 
-  const updateDeploymentStatus = useCallback((
-    address: Address,
-    status: DeploymentStatus
-  ) => {
-    setDeploymentStatus(address, status);
-  }, [setDeploymentStatus]);
+  const updateDeploymentStatus = useCallback(
+    (address: Address, status: DeploymentStatus) => {
+      setDeploymentStatus(address, status);
+    },
+    [setDeploymentStatus]
+  );
 
-  const getDeploymentStatus = useCallback((
-    address: Address
-  ): DeploymentStatus | undefined => {
-    return deploymentStatus[address];
-  }, [deploymentStatus]);
+  const getDeploymentStatus = useCallback(
+    (address: Address): DeploymentStatus | undefined => {
+      return deploymentStatus[address];
+    },
+    [deploymentStatus]
+  );
 
-  const isPending = useCallback((
-    address: Address
-  ): boolean => {
-    return deploymentStatus[address]?.status === 'pending';
-  }, [deploymentStatus]);
+  const isPending = useCallback(
+    (address: Address): boolean => {
+      return deploymentStatus[address]?.status === "pending";
+    },
+    [deploymentStatus]
+  );
 
-  const isSuccess = useCallback((
-    address: Address
-  ): boolean => {
-    return deploymentStatus[address]?.status === 'success';
-  }, [deploymentStatus]);
+  const isSuccess = useCallback(
+    (address: Address): boolean => {
+      return deploymentStatus[address]?.status === "success";
+    },
+    [deploymentStatus]
+  );
 
-  const isError = useCallback((
-    address: Address
-  ): boolean => {
-    return deploymentStatus[address]?.status === 'error';
-  }, [deploymentStatus]);
+  const isError = useCallback(
+    (address: Address): boolean => {
+      return deploymentStatus[address]?.status === "error";
+    },
+    [deploymentStatus]
+  );
 
   return {
     deploymentStatus,

@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../contexts/AuthContext';
-import { CircularProgress, Box, Typography } from '@mui/material';
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../contexts/AuthContext";
+import { CircularProgress, Box, Typography } from "@mui/material";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ interface AuthGuardProps {
 /**
  * Composant de garde d'authentification
  * Protège les routes qui nécessitent une authentification
- * 
+ *
  * @param children - Contenu à afficher si l'authentification est valide
  * @param requireAuth - Si true, l'utilisateur doit être authentifié
  * @param requireAdmin - Si true, l'utilisateur doit être administrateur
@@ -23,14 +23,14 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   children,
   requireAuth = true,
   requireAdmin = false,
-  fallbackUrl = '/auth-demo'
+  fallbackUrl = "/auth-demo",
 }) => {
   const { isAuthenticated, isAdmin, status } = useAuthContext();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Ne rien faire tant que l'état d'authentification n'est pas déterminé
-    if (status === 'idle' || status === 'loading') {
+    if (status === "idle" || status === "loading") {
       return;
     }
 
@@ -42,12 +42,28 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     if (authFailed || adminFailed) {
       navigate(fallbackUrl);
     }
-  }, [isAuthenticated, isAdmin, status, requireAuth, requireAdmin, fallbackUrl, navigate]);
+  }, [
+    isAuthenticated,
+    isAdmin,
+    status,
+    requireAuth,
+    requireAdmin,
+    fallbackUrl,
+    navigate,
+  ]);
 
   // Afficher un indicateur de chargement pendant la vérification de l'authentification
-  if (status === 'idle' || status === 'loading') {
+  if (status === "idle" || status === "loading") {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+        }}
+      >
         <CircularProgress />
         <Typography variant="body1" sx={{ mt: 2 }}>
           Vérification de l&apos;authentification...

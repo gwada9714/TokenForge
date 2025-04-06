@@ -1,4 +1,4 @@
-import { formatUnits, parseUnits } from 'viem';
+import { formatUnits, parseUnits } from "viem";
 
 /**
  * Utilitaires pour le formatage des données blockchain
@@ -21,7 +21,11 @@ export const formatAmount = (amount: bigint, decimals: number = 18): string => {
  * @param decimals Nombre de décimales (par défaut 18 pour ETH)
  * @returns Montant formaté avec symbole
  */
-export const formatCurrency = (amount: bigint, symbol: string, decimals: number = 18): string => {
+export const formatCurrency = (
+  amount: bigint,
+  symbol: string,
+  decimals: number = 18
+): string => {
   const formatted = formatUnits(amount, decimals);
   return `${formatted} ${symbol}`;
 };
@@ -43,10 +47,14 @@ export const parseAmount = (amount: string, decimals: number = 18): bigint => {
  * @param endChars Nombre de caractères à afficher à la fin (par défaut 4)
  * @returns Adresse formatée (ex: 0x1234...5678)
  */
-export const formatAddress = (address: string, startChars: number = 6, endChars: number = 4): string => {
-  if (!address) return '';
+export const formatAddress = (
+  address: string,
+  startChars: number = 6,
+  endChars: number = 4
+): string => {
+  if (!address) return "";
   if (address.length <= startChars + endChars) return address;
-  
+
   return `${address.slice(0, startChars)}...${address.slice(-endChars)}`;
 };
 
@@ -57,10 +65,14 @@ export const formatAddress = (address: string, startChars: number = 6, endChars:
  * @param endChars Nombre de caractères à afficher à la fin (par défaut 10)
  * @returns Hash formaté (ex: 0x1234567890...1234567890)
  */
-export const formatTransactionHash = (hash: string, startChars: number = 10, endChars: number = 10): string => {
-  if (!hash) return '';
+export const formatTransactionHash = (
+  hash: string,
+  startChars: number = 10,
+  endChars: number = 10
+): string => {
+  if (!hash) return "";
   if (hash.length <= startChars + endChars) return hash;
-  
+
   return `${hash.slice(0, startChars)}...${hash.slice(-endChars)}`;
 };
 
@@ -73,7 +85,7 @@ export const formatTimestamp = (timestamp: number): string => {
   // Convertir en millisecondes si nécessaire
   const timestampMs = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
   const date = new Date(timestampMs);
-  
+
   return date.toLocaleString();
 };
 

@@ -1,18 +1,18 @@
 export enum PaymentStatus {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  CONFIRMED = 'CONFIRMED',
-  FAILED = 'FAILED'
+  PENDING = "PENDING",
+  PROCESSING = "PROCESSING",
+  CONFIRMED = "CONFIRMED",
+  FAILED = "FAILED",
 }
 
 export enum PaymentNetwork {
-  SOLANA = 'SOLANA',
-  ETHEREUM = 'ETHEREUM'
+  SOLANA = "SOLANA",
+  ETHEREUM = "ETHEREUM",
 }
 
 export interface PaymentOptions {
   skipPreflight?: boolean;
-  commitment?: 'finalized' | 'processed' | 'confirmed';
+  commitment?: "finalized" | "processed" | "confirmed";
 }
 
 export interface PaymentSession {

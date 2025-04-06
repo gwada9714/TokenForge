@@ -5,16 +5,22 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
   sendAndConfirmTransaction,
-  Keypair
-} from '@solana/web3.js';
+  Keypair,
+} from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   createTransferInstruction,
-  getAccount
-} from '@solana/spl-token';
-import { AbstractChainService } from './base/AbstractChainService';
-import { PaymentNetwork, PaymentSession, PaymentStatus, PaymentToken, PaymentError } from './types';
+  getAccount,
+} from "@solana/spl-token";
+import { AbstractChainService } from "./base/AbstractChainService";
+import {
+  PaymentNetwork,
+  PaymentSession,
+  PaymentStatus,
+  PaymentToken,
+  PaymentError,
+} from "./types";
 
 /**
  * Service de paiement pour le réseau Solana
@@ -29,11 +35,11 @@ export class SolanaPaymentService extends AbstractChainService {
   public readonly chainName = PaymentNetwork.SOLANA;
   public readonly supportedTokens: PaymentToken[] = [
     {
-      symbol: 'SOL',
-      address: 'SOL',
+      symbol: "SOL",
+      address: "SOL",
       decimals: 9,
-      network: PaymentNetwork.SOLANA
-    }
+      network: PaymentNetwork.SOLANA,
+    },
   ];
 
   /**
@@ -44,7 +50,7 @@ export class SolanaPaymentService extends AbstractChainService {
    */
   constructor(rpcUrl: string, payerPrivateKey: Uint8Array) {
     super();
-    this.connection = new Connection(rpcUrl, 'confirmed');
+    this.connection = new Connection(rpcUrl, "confirmed");
     this.payer = Keypair.fromSecretKey(payerPrivateKey);
   }
 
@@ -67,18 +73,21 @@ export class SolanaPaymentService extends AbstractChainService {
     const { userId, token, amount } = params;
 
     if (!this.validateToken(token)) {
-      throw this.createPaymentError('Token non supporté', 'INVALID_TOKEN');
+      throw this.createPaymentError("Token non supporté", "INVALID_TOKEN");
     }
 
     if (!this.validateAmount(amount)) {
-      throw this.createPaymentError('Montant invalide', 'INVALID_AMOUNT');
+      throw this.createPaymentError("Montant invalide", "INVALID_AMOUNT");
     }
 
     try {
       // Valider l'adresse Solana
       new PublicKey(userId);
     } catch {
-      throw this.createPaymentError('Adresse Solana invalide', 'INVALID_ADDRESS');
+      throw this.createPaymentError(
+        "Adresse Solana invalide",
+        "INVALID_ADDRESS"
+      );
     }
 
     return {
@@ -92,7 +101,7 @@ export class SolanaPaymentService extends AbstractChainService {
       updatedAt: Date.now(),
       retryCount: 0,
       txHash: undefined,
-      error: undefined
+      error: undefined,
     };
   }
 
@@ -113,12 +122,12 @@ export class SolanaPaymentService extends AbstractChainService {
       const recipientPubkey = new PublicKey(session.userId);
       let signature: string;
 
-      if (session.token.address === 'SOL') {
+      if (session.token.address === "SOL") {
         const transaction = new Transaction().add(
           SystemProgram.transfer({
             fromPubkey: this.payer.publicKey,
             toPubkey: recipientPubkey,
-            lamports: Math.floor(parseFloat(session.amount) * LAMPORTS_PER_SOL)
+            lamports: Math.floor(parseFloat(session.amount) * LAMPORTS_PER_SOL),
           })
         );
 
@@ -126,7 +135,7 @@ export class SolanaPaymentService extends AbstractChainService {
           this.connection,
           transaction,
           [this.payer],
-          { commitment: 'confirmed' }
+          { commitment: "confirmed" }
         );
       } else {
         const tokenMint = new PublicKey(session.token.address);
@@ -144,7 +153,9 @@ export class SolanaPaymentService extends AbstractChainService {
             sourceATA,
             destinationATA,
             this.payer.publicKey,
-            Math.floor(parseFloat(session.amount) * Math.pow(10, session.token.decimals))
+            Math.floor(
+              parseFloat(session.amount) * Math.pow(10, session.token.decimals)
+            )
           )
         );
 
@@ -152,7 +163,7 @@ export class SolanaPaymentService extends AbstractChainService {
           this.connection,
           transaction,
           [this.payer],
-          { commitment: 'confirmed' }
+          { commitment: "confirmed" }
         );
       }
 
@@ -160,16 +171,16 @@ export class SolanaPaymentService extends AbstractChainService {
         ...session,
         status: PaymentStatus.PROCESSING,
         txHash: signature,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       // Attendre la confirmation
-      await this.connection.confirmTransaction(signature, 'confirmed');
+      await this.connection.confirmTransaction(signature, "confirmed");
 
       return {
         ...updatedSession,
         status: PaymentStatus.CONFIRMED,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -178,8 +189,8 @@ export class SolanaPaymentService extends AbstractChainService {
       return {
         ...session,
         status: PaymentStatus.FAILED,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        updatedAt: Date.now()
+        error: error instanceof Error ? error.message : "Unknown error",
+        updatedAt: Date.now(),
       };
     }
   }
@@ -207,7 +218,7 @@ export class SolanaPaymentService extends AbstractChainService {
   public async validateTransaction(txHash: string): Promise<boolean> {
     try {
       const status = await this.connection.getSignatureStatus(txHash);
-      return status?.value?.confirmationStatus === 'confirmed';
+      return status?.value?.confirmationStatus === "confirmed";
     } catch (error: unknown) {
       if (error instanceof Error) {
         await this.handleNetworkError(error);
@@ -223,7 +234,7 @@ export class SolanaPaymentService extends AbstractChainService {
    * @param {Error} error - Erreur à traiter
    */
   protected async handleNetworkError(error: Error): Promise<void> {
-    console.error('Erreur réseau Solana:', error);
+    console.error("Erreur réseau Solana:", error);
     // Implémentation de la gestion des erreurs réseau
     // Par exemple: reconnexion, retry, etc.
   }
@@ -250,25 +261,30 @@ export class SolanaPaymentService extends AbstractChainService {
    * @param {PaymentToken} token - Token à vérifier
    * @returns {Promise<string>} Solde formaté
    */
-  public async getBalance(address: string, token: PaymentToken): Promise<string> {
+  public async getBalance(
+    address: string,
+    token: PaymentToken
+  ): Promise<string> {
     if (!this.isValidAddress(address)) {
-      throw this.createPaymentError('Adresse invalide', 'INVALID_ADDRESS');
+      throw this.createPaymentError("Adresse invalide", "INVALID_ADDRESS");
     }
 
     if (!this.validateToken(token)) {
-      throw this.createPaymentError('Token non supporté', 'INVALID_TOKEN');
+      throw this.createPaymentError("Token non supporté", "INVALID_TOKEN");
     }
 
     const pubkey = new PublicKey(address);
 
-    if (token.address === 'SOL') {
+    if (token.address === "SOL") {
       const balance = await this.connection.getBalance(pubkey);
       return (balance / LAMPORTS_PER_SOL).toString();
     } else {
       const tokenMint = new PublicKey(token.address);
       const tokenAccount = await getAssociatedTokenAddress(tokenMint, pubkey);
       const accountInfo = await getAccount(this.connection, tokenAccount);
-      return (Number(accountInfo.amount) / Math.pow(10, token.decimals)).toString();
+      return (
+        Number(accountInfo.amount) / Math.pow(10, token.decimals)
+      ).toString();
     }
   }
 }

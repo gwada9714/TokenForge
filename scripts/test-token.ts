@@ -18,16 +18,16 @@ task("test-token", "Test TokenForge token functionality")
 
     // Test basic token functionality
     console.log("Testing token functionality...");
-    
+
     try {
       // Get token info
       const [name, symbol, decimals, totalSupply] = await Promise.all([
         TokenForgeToken.name(),
         TokenForgeToken.symbol(),
         TokenForgeToken.decimals(),
-        TokenForgeToken.totalSupply()
+        TokenForgeToken.totalSupply(),
       ]);
-      
+
       console.log(`
         Token Info:
         - Name: ${name}
@@ -39,15 +39,19 @@ task("test-token", "Test TokenForge token functionality")
       // Test transfers
       console.log("\nTesting transfers...");
       const amount = BigInt(100) * BigInt(10 ** Number(decimals));
-      
+
       const transferTx = await TokenForgeToken.transfer(
         await addr1.getAddress(),
         amount
       );
       await transferTx.wait();
-      console.log(`Transferred ${amount} tokens to ${await addr1.getAddress()}`);
-      
-      const addr1Balance = await TokenForgeToken.balanceOf(await addr1.getAddress());
+      console.log(
+        `Transferred ${amount} tokens to ${await addr1.getAddress()}`
+      );
+
+      const addr1Balance = await TokenForgeToken.balanceOf(
+        await addr1.getAddress()
+      );
       console.log(`Address 1 balance: ${addr1Balance}`);
 
       // Test allowances
@@ -58,7 +62,7 @@ task("test-token", "Test TokenForge token functionality")
       );
       await approveTx.wait();
       console.log(`Address 1 approved Address 2 to spend ${amount} tokens`);
-      
+
       const allowance = await TokenForgeToken.allowance(
         await addr1.getAddress(),
         await addr2.getAddress()
@@ -72,9 +76,13 @@ task("test-token", "Test TokenForge token functionality")
         amount / BigInt(2)
       );
       await transferFromTx.wait();
-      console.log(`Address 2 transferred ${amount / BigInt(2)} tokens from Address 1`);
-      
-      const addr2Balance = await TokenForgeToken.balanceOf(await addr2.getAddress());
+      console.log(
+        `Address 2 transferred ${amount / BigInt(2)} tokens from Address 1`
+      );
+
+      const addr2Balance = await TokenForgeToken.balanceOf(
+        await addr2.getAddress()
+      );
       console.log(`Address 2 balance: ${addr2Balance}`);
 
       console.log("\nAll tests completed successfully!");
@@ -90,7 +98,7 @@ async function main() {
   if (!tokenAddress) {
     throw new Error("Please set TOKEN_ADDRESS environment variable");
   }
-  
+
   await hre.run("test-token", { tokenAddress });
 }
 

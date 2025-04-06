@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 export const useTransactionState = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +27,6 @@ export const useTransactionState = () => {
     success,
     startTransaction,
     completeTransaction,
-    failTransaction
+    failTransaction,
   };
-}; 
+};

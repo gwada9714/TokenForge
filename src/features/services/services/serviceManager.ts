@@ -1,8 +1,13 @@
-import { ServiceType, ServiceRequest, ServiceQuote, Service } from '../types/services';
-import { NetworkConfig } from '@/features/auth/types/wallet';
-import { logger } from '@/core/logger';
-import { SERVICES } from '../config/services';
-import { paymentService } from '@/features/pricing/services/paymentService';
+import {
+  ServiceType,
+  ServiceRequest,
+  ServiceQuote,
+  Service,
+} from "../types/services";
+import { NetworkConfig } from "@/features/auth/types/wallet";
+import { logger } from "@/core/logger";
+import { SERVICES } from "../config/services";
+import { paymentService } from "@/features/pricing/services/paymentService";
 
 class ServiceManager {
   private static instance: ServiceManager;
@@ -22,21 +27,21 @@ class ServiceManager {
     amount?: number
   ): Promise<ServiceQuote> {
     try {
-      const service = SERVICES.find(s => s.id === serviceType);
+      const service = SERVICES.find((s) => s.id === serviceType);
       if (!service) {
-        throw new Error('Service non trouvé');
+        throw new Error("Service non trouvé");
       }
 
       // Vérifier si le réseau est supporté
       if (!service.networks.includes(network.name)) {
-        throw new Error('Réseau non supporté pour ce service');
+        throw new Error("Réseau non supporté pour ce service");
       }
 
       // Calculer le montant total
       const baseAmount = service.price.baseFee;
       const percentageFee = service.price.percentageFee || 0;
-      const totalAmount = amount 
-        ? baseAmount + (amount * percentageFee / 100)
+      const totalAmount = amount
+        ? baseAmount + (amount * percentageFee) / 100
         : baseAmount;
 
       const quote: ServiceQuote = {
@@ -45,18 +50,18 @@ class ServiceManager {
         percentageFee,
         totalAmount,
         currency: service.price.currency,
-        validUntil: Date.now() + (30 * 60 * 1000) // Valide 30 minutes
+        validUntil: Date.now() + 30 * 60 * 1000, // Valide 30 minutes
       };
 
-      logger.info('Devis de service généré', {
+      logger.info("Devis de service généré", {
         serviceType,
         network: network.name,
-        totalAmount
+        totalAmount,
       });
 
       return quote;
     } catch (error) {
-      logger.error('Erreur lors de la génération du devis', { error });
+      logger.error("Erreur lors de la génération du devis", { error });
       throw error;
     }
   }
@@ -64,14 +69,14 @@ class ServiceManager {
   public async requestService(
     serviceType: ServiceType,
     network: NetworkConfig,
-    config: ServiceRequest['config']
+    config: ServiceRequest["config"]
   ): Promise<ServiceRequest> {
     try {
       // Obtenir le devis
       const quote = await this.getServiceQuote(
         serviceType,
         network,
-        'budget' in config ? config.budget : undefined
+        "budget" in config ? config.budget : undefined
       );
 
       // Créer la demande de service
@@ -81,24 +86,26 @@ class ServiceManager {
         config,
         payment: {
           amount: quote.totalAmount,
-          currency: quote.currency
+          currency: quote.currency,
         },
-        status: 'pending',
+        status: "pending",
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       // Sauvegarder la demande
       await this.saveServiceRequest(serviceRequest);
 
-      logger.info('Demande de service créée', {
+      logger.info("Demande de service créée", {
         serviceType,
-        network: network.name
+        network: network.name,
       });
 
       return serviceRequest;
     } catch (error) {
-      logger.error('Erreur lors de la création de la demande de service', { error });
+      logger.error("Erreur lors de la création de la demande de service", {
+        error,
+      });
       throw error;
     }
   }
@@ -115,7 +122,7 @@ class ServiceManager {
         currency: request.payment.currency,
         network: request.network,
         timestamp: Date.now(),
-        status: 'pending' as const
+        status: "pending" as const,
       };
 
       await paymentService.confirmPayment(paymentDetails, transactionHash);
@@ -123,8 +130,8 @@ class ServiceManager {
       // Mettre à jour le statut
       const updatedRequest: ServiceRequest = {
         ...request,
-        status: 'processing',
-        updatedAt: Date.now()
+        status: "processing",
+        updatedAt: Date.now(),
       };
 
       // Sauvegarder la mise à jour
@@ -133,14 +140,16 @@ class ServiceManager {
       // Démarrer le traitement spécifique au service
       await this.startServiceProcessing(updatedRequest);
 
-      logger.info('Traitement de la demande de service démarré', {
+      logger.info("Traitement de la demande de service démarré", {
         serviceType: request.serviceType,
-        transactionHash
+        transactionHash,
       });
 
       return updatedRequest;
     } catch (error) {
-      logger.error('Erreur lors du traitement de la demande de service', { error });
+      logger.error("Erreur lors du traitement de la demande de service", {
+        error,
+      });
       throw error;
     }
   }
@@ -163,7 +172,7 @@ class ServiceManager {
           break;
       }
     } catch (error) {
-      logger.error('Erreur lors du démarrage du traitement', { error });
+      logger.error("Erreur lors du démarrage du traitement", { error });
       throw error;
     }
   }
@@ -171,15 +180,15 @@ class ServiceManager {
   private async saveServiceRequest(request: ServiceRequest): Promise<void> {
     try {
       // TODO: Implémenter la sauvegarde dans Firebase
-      logger.info('Demande de service sauvegardée', {
+      logger.info("Demande de service sauvegardée", {
         serviceType: request.serviceType,
-        status: request.status
+        status: request.status,
       });
     } catch (error) {
-      logger.error('Erreur lors de la sauvegarde de la demande', { error });
+      logger.error("Erreur lors de la sauvegarde de la demande", { error });
       throw error;
     }
   }
 }
 
-export const serviceManager = ServiceManager.getInstance(); 
+export const serviceManager = ServiceManager.getInstance();

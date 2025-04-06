@@ -2,7 +2,7 @@ export enum ChainId {
   ETH = 1,
   BSC = 56,
   POLYGON = 137,
-  SOLANA = 'solana', // Solana n'utilise pas le même système d'ID
+  SOLANA = "solana", // Solana n'utilise pas le même système d'ID
 }
 
 export interface ChainConfig {
@@ -24,6 +24,6 @@ export interface EVMChainConfig extends ChainConfig {
 }
 
 export interface SolanaChainConfig extends ChainConfig {
-  cluster: 'mainnet-beta' | 'testnet' | 'devnet';
+  cluster: "mainnet-beta" | "testnet" | "devnet";
   wsEndpoint: string;
 }

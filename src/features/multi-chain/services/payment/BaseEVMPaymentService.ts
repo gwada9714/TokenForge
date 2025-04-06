@@ -1,9 +1,9 @@
-import { Address, PublicClient, WalletClient } from 'viem';
-import { PaymentSessionService } from './PaymentSessionService';
-import { PaymentNetwork, PaymentStatus } from './types/PaymentSession';
-import { EVMTokenConfig } from './types/TokenConfig';
-import { ERC20_ABI, PAYMENT_CONTRACT_ABI } from './abis/TokenABI';
-import { getNetworkConfig, getTokenConfig } from './config/SupportedTokens';
+import { Address, PublicClient, WalletClient } from "viem";
+import { PaymentSessionService } from "./PaymentSessionService";
+import { PaymentNetwork, PaymentStatus } from "./types/PaymentSession";
+import { EVMTokenConfig } from "./types/TokenConfig";
+import { ERC20_ABI, PAYMENT_CONTRACT_ABI } from "./abis/TokenABI";
+import { getNetworkConfig, getTokenConfig } from "./config/SupportedTokens";
 
 export interface EVMPaymentConfig {
   contractAddress: Address;
@@ -36,12 +36,12 @@ export abstract class BaseEVMPaymentService {
       const result = await this.config.publicClient.readContract({
         address: this.config.contractAddress,
         abi: PAYMENT_CONTRACT_ABI,
-        functionName: 'isTokenSupported',
+        functionName: "isTokenSupported",
         args: [tokenAddress],
       });
       return result;
     } catch (error) {
-      console.error('Error checking token support:', error);
+      console.error("Error checking token support:", error);
       return false;
     }
   }
@@ -54,11 +54,16 @@ export abstract class BaseEVMPaymentService {
     options: EVMPaymentOptions = {}
   ): Promise<void> {
     const networkConfig = getNetworkConfig(this.getNetwork());
-    const tokenConfig = getTokenConfig(this.getNetwork(), tokenAddress) as EVMTokenConfig;
+    const tokenConfig = getTokenConfig(
+      this.getNetwork(),
+      tokenAddress
+    ) as EVMTokenConfig;
 
     // Vérifier si le token est supporté
     if (!(await this.isTokenSupported(tokenAddress))) {
-      throw new Error(`Token ${tokenAddress} not supported on ${networkConfig.network}`);
+      throw new Error(
+        `Token ${tokenAddress} not supported on ${networkConfig.network}`
+      );
     }
 
     try {
@@ -70,7 +75,7 @@ export abstract class BaseEVMPaymentService {
         `Processing ${serviceType} payment`
       );
 
-      if (tokenConfig.type === 'NATIVE') {
+      if (tokenConfig.type === "NATIVE") {
         await this.payWithNativeToken(amount, sessionId, options);
       } else {
         await this.payWithERC20Token(tokenAddress, amount, sessionId, options);
@@ -80,7 +85,7 @@ export abstract class BaseEVMPaymentService {
         sessionId,
         PaymentStatus.FAILED,
         undefined,
-        error instanceof Error ? error.message : 'Unknown error occurred'
+        error instanceof Error ? error.message : "Unknown error occurred"
       );
       throw error;
     }
@@ -94,11 +99,11 @@ export abstract class BaseEVMPaymentService {
     const { request } = await this.config.publicClient.simulateContract({
       address: this.config.contractAddress,
       abi: PAYMENT_CONTRACT_ABI,
-      functionName: 'payWithNativeToken',
+      functionName: "payWithNativeToken",
       args: [sessionId],
       value: amount,
       account: this.config.walletClient.account,
-      ...options
+      ...options,
     });
 
     await this.config.walletClient.writeContract(request);
@@ -111,26 +116,28 @@ export abstract class BaseEVMPaymentService {
     options: EVMPaymentOptions
   ): Promise<void> {
     // 1. Approuver le contrat de paiement
-    const { request: approveRequest } = await this.config.publicClient.simulateContract({
-      address: tokenAddress,
-      abi: ERC20_ABI,
-      functionName: 'approve',
-      args: [this.config.contractAddress, amount],
-      account: this.config.walletClient.account,
-      ...options
-    });
+    const { request: approveRequest } =
+      await this.config.publicClient.simulateContract({
+        address: tokenAddress,
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [this.config.contractAddress, amount],
+        account: this.config.walletClient.account,
+        ...options,
+      });
 
     await this.config.walletClient.writeContract(approveRequest);
 
     // 2. Effectuer le paiement
-    const { request: paymentRequest } = await this.config.publicClient.simulateContract({
-      address: this.config.contractAddress,
-      abi: PAYMENT_CONTRACT_ABI,
-      functionName: 'payWithToken',
-      args: [tokenAddress, amount, sessionId],
-      account: this.config.walletClient.account,
-      ...options
-    });
+    const { request: paymentRequest } =
+      await this.config.publicClient.simulateContract({
+        address: this.config.contractAddress,
+        abi: PAYMENT_CONTRACT_ABI,
+        functionName: "payWithToken",
+        args: [tokenAddress, amount, sessionId],
+        account: this.config.walletClient.account,
+        ...options,
+      });
 
     await this.config.walletClient.writeContract(paymentRequest);
   }
@@ -139,7 +146,7 @@ export abstract class BaseEVMPaymentService {
     const unwatch = this.config.publicClient.watchContractEvent({
       address: this.config.contractAddress,
       abi: PAYMENT_CONTRACT_ABI,
-      eventName: 'PaymentReceived',
+      eventName: "PaymentReceived",
       onLogs: (logs) => {
         for (const log of logs) {
           const { sessionId } = log.args;
@@ -158,7 +165,7 @@ export abstract class BaseEVMPaymentService {
   }
 
   public cleanup(): void {
-    this.cleanupFunctions.forEach(cleanup => cleanup());
+    this.cleanupFunctions.forEach((cleanup) => cleanup());
     this.cleanupFunctions = [];
   }
 }

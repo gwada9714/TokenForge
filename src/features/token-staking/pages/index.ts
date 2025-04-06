@@ -1,1 +1,1 @@
-export { default as StakingManagerPage } from './StakingManagerPage';
+export { default as StakingManagerPage } from "./StakingManagerPage";

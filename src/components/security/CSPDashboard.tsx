@@ -1,8 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { getFirestore, collection, query, orderBy, limit, onSnapshot, DocumentData } from 'firebase/firestore';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { Card, CardContent, Typography, Grid, List, ListItem, ListItemText } from '@mui/material';
-import type { CSPViolationReport } from '../../security/monitoring/csp-collector';
+import React, { useEffect, useState } from "react";
+import {
+  getFirestore,
+  collection,
+  query,
+  orderBy,
+  limit,
+  onSnapshot,
+  DocumentData,
+} from "firebase/firestore";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+} from "@mui/material";
+import type { CSPViolationReport } from "../../security/monitoring/csp-collector";
 
 interface ViolationStats {
   directive: string;
@@ -20,22 +44,24 @@ interface FirestoreViolation extends DocumentData {
 }
 
 export const CSPDashboard: React.FC = () => {
-  const [recentViolations, setRecentViolations] = useState<CSPViolationReport[]>([]);
+  const [recentViolations, setRecentViolations] = useState<
+    CSPViolationReport[]
+  >([]);
   const [stats, setStats] = useState<ViolationStats[]>([]);
 
   useEffect(() => {
     const db = getFirestore();
-    const violationsRef = collection(db, 'csp-violations');
-    
+    const violationsRef = collection(db, "csp-violations");
+
     // Écoute des 10 dernières violations
     const recentQuery = query(
       violationsRef,
-      orderBy('timestamp', 'desc'),
+      orderBy("timestamp", "desc"),
       limit(10)
     );
 
     const unsubscribe = onSnapshot(recentQuery, (snapshot) => {
-      const violations = snapshot.docs.map(doc => {
+      const violations = snapshot.docs.map((doc) => {
         const data = doc.data() as FirestoreViolation;
         return {
           id: doc.id,
@@ -53,15 +79,17 @@ export const CSPDashboard: React.FC = () => {
 
       // Calcul des statistiques
       const directiveCounts: { [key: string]: number } = {};
-      violations.forEach(violation => {
-        const directive = violation.violatedDirective.split('-')[0];
+      violations.forEach((violation) => {
+        const directive = violation.violatedDirective.split("-")[0];
         directiveCounts[directive] = (directiveCounts[directive] || 0) + 1;
       });
 
-      const newStats = Object.entries(directiveCounts).map(([directive, count]) => ({
-        directive,
-        count
-      }));
+      const newStats = Object.entries(directiveCounts).map(
+        ([directive, count]) => ({
+          directive,
+          count,
+        })
+      );
 
       setStats(newStats);
     });

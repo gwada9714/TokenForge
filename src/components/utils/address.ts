@@ -9,9 +9,11 @@
  * @returns The shortened address (e.g., 0x1234...5678)
  */
 export const shortenAddress = (address: string, chars = 4): string => {
-  if (!address) return '';
+  if (!address) return "";
   if (address.length < chars * 2 + 2) return address;
-  return `${address.substring(0, chars + 2)}...${address.substring(address.length - chars)}`;
+  return `${address.substring(0, chars + 2)}...${address.substring(
+    address.length - chars
+  )}`;
 };
 
 /**
@@ -43,9 +45,9 @@ export const isContractAddress = async (
   try {
     const code = await provider.getCode(address);
     // If the code is more than '0x', it's a contract
-    return code !== '0x';
+    return code !== "0x";
   } catch (error) {
-    console.error('Error checking if address is contract:', error);
+    console.error("Error checking if address is contract:", error);
     return false;
   }
 };
@@ -70,10 +72,7 @@ export const formatAddressOrEns = (
  * @param address2 The second address
  * @returns True if the addresses are the same, false otherwise
  */
-export const isSameAddress = (
-  address1: string,
-  address2: string
-): boolean => {
+export const isSameAddress = (address1: string, address2: string): boolean => {
   if (!address1 || !address2) return false;
   return address1.toLowerCase() === address2.toLowerCase();
 };

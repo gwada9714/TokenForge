@@ -1,11 +1,11 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Container, Box } from '@mui/material';
-import { ForgeButton } from '../common/ForgeButton';
-import { ForgeHeading } from '../common/ForgeHeading';
-import { ParallaxContainer } from '../common/ParallaxContainer';
-import ForgeBackground from '../common/ForgeBackground';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import styled from "styled-components";
+import { Container, Box } from "@mui/material";
+import { ForgeButton } from "../common/ForgeButton";
+import { ForgeHeading } from "../common/ForgeHeading";
+import { ParallaxContainer } from "../common/ParallaxContainer";
+import ForgeBackground from "../common/ForgeBackground";
+import { useNavigate } from "react-router-dom";
 
 const HeroContainer = styled.section`
   position: relative;
@@ -20,7 +20,7 @@ const Content = styled.div`
   position: relative;
   z-index: 1;
   text-align: center;
-  color: ${props => props.theme.colors.text.light};
+  color: ${(props) => props.theme.colors.text.light};
 `;
 
 const Subtitle = styled.p`
@@ -41,7 +41,7 @@ const ButtonContainer = styled.div`
 
 const FloatingElement = styled.div<{ $delay?: number }>`
   animation: float 6s ease-in-out infinite;
-  animation-delay: ${props => props.$delay || 0}s;
+  animation-delay: ${(props) => props.$delay || 0}s;
 
   @keyframes float {
     0% {
@@ -62,16 +62,12 @@ export const HeroSection: React.FC = () => {
   return (
     <HeroContainer>
       <ForgeBackground sparkleCount={20} />
-      
+
       <Container maxWidth="lg">
         <Content>
           <ParallaxContainer speed={0.3}>
             <FloatingElement>
-              <ForgeHeading 
-                level={1} 
-                $hasGradient 
-                $align="center"
-              >
+              <ForgeHeading level={1} $hasGradient $align="center">
                 TokenForge : Forgez votre Avenir Crypto
               </ForgeHeading>
             </FloatingElement>
@@ -80,8 +76,9 @@ export const HeroSection: React.FC = () => {
           <ParallaxContainer speed={0.4}>
             <FloatingElement $delay={0.2}>
               <Subtitle>
-                Créez et déployez vos tokens en toute simplicité. Une plateforme complète
-                pour donner vie à vos projets blockchain avec des outils puissants et intuitifs.
+                Créez et déployez vos tokens en toute simplicité. Une plateforme
+                complète pour donner vie à vos projets blockchain avec des
+                outils puissants et intuitifs.
               </Subtitle>
             </FloatingElement>
           </ParallaxContainer>
@@ -89,18 +86,18 @@ export const HeroSection: React.FC = () => {
           <ParallaxContainer speed={0.5}>
             <FloatingElement $delay={0.4}>
               <ButtonContainer>
-                <ForgeButton 
+                <ForgeButton
                   variant="secondary"
                   size="large"
                   $isGlowing
-                  onClick={() => navigate('/create')}
+                  onClick={() => navigate("/create")}
                 >
                   Forge ton Token
                 </ForgeButton>
-                <ForgeButton 
+                <ForgeButton
                   variant="outline"
                   size="large"
-                  onClick={() => navigate('/about')}
+                  onClick={() => navigate("/about")}
                 >
                   Découvrir la Forge
                 </ForgeButton>

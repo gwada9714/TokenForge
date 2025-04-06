@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -7,31 +7,31 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
-} from 'recharts';
-import { formatEther } from 'viem';
-import { TokenEvent } from '../services/eventMonitorService';
+  Legend,
+} from "recharts";
+import { formatEther } from "viem";
+import { TokenEvent } from "../services/eventMonitorService";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '@/components/ui/card';
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { format } from 'date-fns';
+} from "@/components/ui/select";
+import { format } from "date-fns";
 
 interface TaxTrendChartProps {
   events: TokenEvent[];
 }
 
-type TimeFrame = 'day' | 'week' | 'month';
+type TimeFrame = "day" | "week" | "month";
 
 interface ChartData {
   date: Date;
@@ -41,22 +41,22 @@ interface ChartData {
 }
 
 export const TaxTrendChart: React.FC<TaxTrendChartProps> = ({ events }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<TimeFrame>('week');
+  const [selectedPeriod, setSelectedPeriod] = useState<TimeFrame>("week");
 
   const aggregateEventsByDate = (
     events: TokenEvent[],
-    period: 'day' | 'week' | 'month'
+    period: "day" | "week" | "month"
   ): ChartData[] => {
     const aggregatedData = new Map<number, ChartData>();
-    
-    events.forEach(event => {
+
+    events.forEach((event) => {
       // Convertir en UTC pour la cohérence
       const date = new Date(event.timestamp);
       const utcDate = Date.UTC(
         date.getUTCFullYear(),
         date.getUTCMonth(),
-        period === 'month' ? 1 : date.getUTCDate(),
-        period === 'day' ? date.getUTCHours() : 0
+        period === "month" ? 1 : date.getUTCDate(),
+        period === "day" ? date.getUTCHours() : 0
       );
 
       const key = utcDate;
@@ -64,12 +64,12 @@ export const TaxTrendChart: React.FC<TaxTrendChartProps> = ({ events }) => {
         date: new Date(utcDate),
         taxAmount: 0n,
         transferAmount: 0n,
-        count: 0
+        count: 0,
       };
 
-      if (event.type === 'TaxCollected') {
+      if (event.type === "TaxCollected") {
         current.taxAmount += event.amount;
-      } else if (event.type === 'Transfer') {
+      } else if (event.type === "Transfer") {
         current.transferAmount += event.amount;
       }
       current.count++;
@@ -80,24 +80,24 @@ export const TaxTrendChart: React.FC<TaxTrendChartProps> = ({ events }) => {
     // Trier par date et formater les montants
     return Array.from(aggregatedData.values())
       .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .map(data => ({
+      .map((data) => ({
         ...data,
         taxAmount: Number(formatEther(data.taxAmount)),
-        transferAmount: Number(formatEther(data.transferAmount))
+        transferAmount: Number(formatEther(data.transferAmount)),
       }));
   };
 
   const formatChartDate = (timestamp: number): string => {
     const date = new Date(timestamp);
     switch (selectedPeriod) {
-      case 'day':
+      case "day":
         return format(date, "HH'h'");
-      case 'week':
-        return format(date, 'EEE');
-      case 'month':
-        return format(date, 'dd/MM');
+      case "week":
+        return format(date, "EEE");
+      case "month":
+        return format(date, "dd/MM");
       default:
-        return format(date, 'dd/MM/yyyy');
+        return format(date, "dd/MM/yyyy");
     }
   };
 
@@ -106,25 +106,25 @@ export const TaxTrendChart: React.FC<TaxTrendChartProps> = ({ events }) => {
     const periods = {
       day: 24,
       week: 7,
-      month: 30
+      month: 30,
     };
 
     const periodStart = new Date(now);
     switch (selectedPeriod) {
-      case 'day':
+      case "day":
         periodStart.setHours(now.getHours() - 24);
         break;
-      case 'week':
+      case "week":
         periodStart.setDate(now.getDate() - 7);
         break;
-      case 'month':
+      case "month":
         periodStart.setDate(now.getDate() - 30);
         break;
     }
 
     // Filtrer les événements pour la période
     const filteredEvents = events.filter(
-      event => event.timestamp >= periodStart.getTime()
+      (event) => event.timestamp >= periodStart.getTime()
     );
 
     return aggregateEventsByDate(filteredEvents, selectedPeriod);
@@ -178,20 +178,20 @@ export const TaxTrendChart: React.FC<TaxTrendChartProps> = ({ events }) => {
                 yAxisId="left"
                 stroke="#888888"
                 fontSize={12}
-                tickFormatter={value => `${value} tokens`}
+                tickFormatter={(value) => `${value} tokens`}
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
                 stroke="#888888"
                 fontSize={12}
-                tickFormatter={value => `${value}`}
+                tickFormatter={(value) => `${value}`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '6px'
+                  backgroundColor: "hsl(var(--background))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "6px",
                 }}
               />
               <Legend />

@@ -1,4 +1,10 @@
-import { TokenConfig, DeploymentResult, TokenInfo, ValidationResult, LiquidityConfig } from '../types';
+import {
+  TokenConfig,
+  DeploymentResult,
+  TokenInfo,
+  ValidationResult,
+  LiquidityConfig,
+} from "../types";
 
 /**
  * Interface pour les services de gestion des tokens
@@ -10,5 +16,8 @@ export interface ITokenService {
   getTokenInfo(tokenAddress: string): Promise<TokenInfo>;
   estimateDeploymentCost(tokenConfig: TokenConfig): Promise<bigint>;
   validateTokenConfig(tokenConfig: TokenConfig): ValidationResult;
-  setupAutoLiquidity(tokenAddress: string, config: LiquidityConfig): Promise<boolean>;
+  setupAutoLiquidity(
+    tokenAddress: string,
+    config: LiquidityConfig
+  ): Promise<boolean>;
 }

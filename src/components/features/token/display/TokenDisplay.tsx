@@ -1,5 +1,5 @@
-import React from 'react';
-import { shortenAddress } from '../utils/address';
+import React from "react";
+import { shortenAddress } from "../utils/address";
 
 interface TokenInfo {
   name: string;
@@ -15,16 +15,16 @@ interface TokenInfo {
 
 interface TokenDisplayProps {
   token: TokenInfo;
-  variant: 'card' | 'preview';
-  onAction?: (action: 'transfer' | 'mint' | 'burn') => void;
+  variant: "card" | "preview";
+  onAction?: (action: "transfer" | "mint" | "burn") => void;
 }
 
 export const TokenDisplay: React.FC<TokenDisplayProps> = ({
   token,
   variant,
-  onAction
+  onAction,
 }) => {
-  if (variant === 'preview') {
+  if (variant === "preview") {
     return (
       <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="flex justify-between items-start">
@@ -32,7 +32,9 @@ export const TokenDisplay: React.FC<TokenDisplayProps> = ({
             <h3 className="text-lg font-semibold">{token.name}</h3>
             <p className="text-sm text-gray-600">{token.symbol}</p>
           </div>
-          <p className="text-sm text-gray-500">{shortenAddress(token.address)}</p>
+          <p className="text-sm text-gray-500">
+            {shortenAddress(token.address)}
+          </p>
         </div>
       </div>
     );
@@ -51,14 +53,14 @@ export const TokenDisplay: React.FC<TokenDisplayProps> = ({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => onAction?.('transfer')}
+            onClick={() => onAction?.("transfer")}
             className="btn btn-outline"
           >
             Transférer
           </button>
           {token.features?.mintable && (
             <button
-              onClick={() => onAction?.('mint')}
+              onClick={() => onAction?.("mint")}
               className="btn btn-primary"
             >
               Mint
@@ -66,7 +68,7 @@ export const TokenDisplay: React.FC<TokenDisplayProps> = ({
           )}
           {token.features?.burnable && (
             <button
-              onClick={() => onAction?.('burn')}
+              onClick={() => onAction?.("burn")}
               className="btn btn-secondary"
             >
               Burn

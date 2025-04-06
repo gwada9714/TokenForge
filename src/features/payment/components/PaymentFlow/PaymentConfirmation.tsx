@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Button,
@@ -8,9 +8,12 @@ import {
   Stack,
   Alert,
   useTheme,
-  CircularProgress
-} from '@mui/material';
-import { PaymentSession, PaymentNetwork } from '@/features/multi-chain/services/payment/types';
+  CircularProgress,
+} from "@mui/material";
+import {
+  PaymentSession,
+  PaymentNetwork,
+} from "@/features/multi-chain/services/payment/types";
 
 interface PaymentConfirmationProps {
   session: PaymentSession;
@@ -32,7 +35,7 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
   onConfirm,
   onCancel,
   estimatedGas,
-  estimatedTime
+  estimatedTime,
 }) => {
   const theme = useTheme();
   const [error, setError] = React.useState<string | null>(null);
@@ -42,38 +45,38 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
       setError(null);
       await onConfirm();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      setError(err instanceof Error ? err.message : "Une erreur est survenue");
     }
   };
 
   const getNetworkIcon = (network: PaymentNetwork) => {
     switch (network) {
       case PaymentNetwork.ETHEREUM:
-        return '🔷';
+        return "🔷";
       case PaymentNetwork.POLYGON:
-        return '💜';
+        return "💜";
       case PaymentNetwork.BINANCE:
-        return '💛';
+        return "💛";
       case PaymentNetwork.SOLANA:
-        return '🟣';
+        return "🟣";
       default:
-        return '🔗';
+        return "🔗";
     }
   };
 
   const getEstimatedTimeText = (minutes: number) => {
-    if (minutes < 1) return 'Moins d\'une minute';
-    if (minutes === 1) return 'Environ 1 minute';
+    if (minutes < 1) return "Moins d'une minute";
+    if (minutes === 1) return "Environ 1 minute";
     return `Environ ${minutes} minutes`;
   };
 
   return (
-    <Paper 
-      elevation={0} 
-      sx={{ 
+    <Paper
+      elevation={0}
+      sx={{
         p: 3,
         bgcolor: theme.palette.background.default,
-        borderRadius: 2
+        borderRadius: 2,
       }}
     >
       <Typography variant="h6" gutterBottom>
@@ -81,19 +84,19 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
       </Typography>
 
       <Stack spacing={2} sx={{ mt: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography color="textSecondary">Réseau</Typography>
           <Typography>
             {getNetworkIcon(session.network)} {session.network}
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography color="textSecondary">Token</Typography>
           <Typography>{session.token.symbol}</Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography color="textSecondary">Montant</Typography>
           <Typography>
             {session.amount} {session.token.symbol}
@@ -101,7 +104,7 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
         </Box>
 
         {estimatedGas && (
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography color="textSecondary">Frais estimés</Typography>
             <Typography>{estimatedGas}</Typography>
           </Box>
@@ -139,7 +142,7 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
             {isProcessing ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
-              'Confirmer'
+              "Confirmer"
             )}
           </Button>
         </Stack>

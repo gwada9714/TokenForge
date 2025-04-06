@@ -1,7 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-import { LinkButton, Container, Title, Text } from '@/components/common/styles';
-import { SPACING } from '@/config/constants/theme';
+import React from "react";
+import styled from "styled-components";
+import { LinkButton, Container, Title, Text } from "@/components/common/styles";
+import { SPACING } from "@/config/constants/theme";
 
 const NotFoundContainer = styled(Container)`
   display: flex;
@@ -32,7 +32,7 @@ export default function NotFound() {
   return (
     <NotFoundContainer>
       <ErrorCode>404</ErrorCode>
-      <Title as="h2" style={{ fontSize: '2rem', marginBottom: SPACING.lg }}>
+      <Title as="h2" style={{ fontSize: "2rem", marginBottom: SPACING.lg }}>
         Page non trouvée
       </Title>
       <Message>
@@ -41,4 +41,4 @@ export default function NotFound() {
       <LinkButton to="/">Retour à l'accueil</LinkButton>
     </NotFoundContainer>
   );
-} 
+}

@@ -1,12 +1,12 @@
-import React from 'react';
-import styled from 'styled-components';
-import { PLANS } from '../config/plans';
-import { PlanType } from '../types/plans';
-import { usePayment } from '../hooks/usePayment';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Alert } from '@/components/ui/Alert';
-import { SPACING } from '@/config/constants/theme';
+import React from "react";
+import styled from "styled-components";
+import { PLANS } from "../config/plans";
+import { PlanType } from "../types/plans";
+import { usePayment } from "../hooks/usePayment";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
+import { SPACING } from "@/config/constants/theme";
 
 const PlansContainer = styled.div`
   display: grid;
@@ -20,9 +20,12 @@ const PlanCard = styled(Card)<{ recommended?: boolean }>`
   flex-direction: column;
   padding: ${SPACING.xl};
   position: relative;
-  border: ${props => props.recommended ? `2px solid ${props.theme.colors.primary}` : 'none'};
+  border: ${(props) =>
+    props.recommended ? `2px solid ${props.theme.colors.primary}` : "none"};
 
-  ${props => props.recommended && `
+  ${(props) =>
+    props.recommended &&
+    `
     &::before {
       content: 'Recommandé';
       position: absolute;
@@ -46,24 +49,24 @@ const PlanHeader = styled.div`
 const PlanName = styled.h3`
   font-size: 1.5rem;
   margin-bottom: ${SPACING.xs};
-  color: ${props => props.theme.colors.text.primary};
+  color: ${(props) => props.theme.colors.text.primary};
 `;
 
 const PlanDescription = styled.p`
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${(props) => props.theme.colors.text.secondary};
   margin-bottom: ${SPACING.md};
 `;
 
 const PlanPrice = styled.div`
   font-size: 2rem;
   font-weight: bold;
-  color: ${props => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.primary};
   margin-bottom: ${SPACING.lg};
   text-align: center;
 
   span {
     font-size: 1rem;
-    color: ${props => props.theme.colors.text.secondary};
+    color: ${(props) => props.theme.colors.text.secondary};
   }
 `;
 
@@ -78,12 +81,16 @@ const Feature = styled.li<{ included: boolean }>`
   display: flex;
   align-items: center;
   margin-bottom: ${SPACING.sm};
-  color: ${props => props.included ? props.theme.colors.text.primary : props.theme.colors.text.secondary};
-  
+  color: ${(props) =>
+    props.included
+      ? props.theme.colors.text.primary
+      : props.theme.colors.text.secondary};
+
   &::before {
-    content: ${props => props.included ? '"✓"' : '"×"'};
+    content: ${(props) => (props.included ? '"✓"' : '"×"')};
     margin-right: ${SPACING.sm};
-    color: ${props => props.included ? props.theme.colors.success : props.theme.colors.error};
+    color: ${(props) =>
+      props.included ? props.theme.colors.success : props.theme.colors.error};
   }
 `;
 
@@ -95,7 +102,9 @@ interface PlanSelectionProps {
   onPlanSelected?: (planId: PlanType) => void;
 }
 
-export const PlanSelection: React.FC<PlanSelectionProps> = ({ onPlanSelected }) => {
+export const PlanSelection: React.FC<PlanSelectionProps> = ({
+  onPlanSelected,
+}) => {
   const { initiatePayment, isProcessing, error } = usePayment();
 
   const handlePlanSelection = async (planId: PlanType) => {
@@ -116,8 +125,8 @@ export const PlanSelection: React.FC<PlanSelectionProps> = ({ onPlanSelected }) 
       )}
 
       <PlansContainer>
-        {PLANS.map(plan => (
-          <PlanCard 
+        {PLANS.map((plan) => (
+          <PlanCard
             key={plan.id}
             recommended={plan.recommended}
             variant="elevated"
@@ -132,7 +141,7 @@ export const PlanSelection: React.FC<PlanSelectionProps> = ({ onPlanSelected }) 
             </PlanPrice>
 
             <FeatureList>
-              {plan.features.map(feature => (
+              {plan.features.map((feature) => (
                 <Feature key={feature.id} included={feature.included}>
                   {feature.name}
                 </Feature>
@@ -144,11 +153,11 @@ export const PlanSelection: React.FC<PlanSelectionProps> = ({ onPlanSelected }) 
               disabled={isProcessing}
               fullWidth
             >
-              {isProcessing ? 'Traitement...' : 'Sélectionner'}
+              {isProcessing ? "Traitement..." : "Sélectionner"}
             </ActionButton>
           </PlanCard>
         ))}
       </PlansContainer>
     </div>
   );
-}; 
+};

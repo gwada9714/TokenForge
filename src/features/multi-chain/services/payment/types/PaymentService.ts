@@ -1,5 +1,5 @@
-import { PublicKey } from '@solana/web3.js';
-import { Address } from 'viem';
+import { PublicKey } from "@solana/web3.js";
+import { Address } from "viem";
 
 export interface PaymentOptions {
   gasLimit?: bigint;
@@ -8,7 +8,7 @@ export interface PaymentOptions {
   slippage?: number;
   deadline?: number;
   skipPreflight?: boolean;
-  commitment?: 'processed' | 'confirmed' | 'finalized';
+  commitment?: "processed" | "confirmed" | "finalized";
 }
 
 export type PaymentAmount = number | bigint;

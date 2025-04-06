@@ -14,15 +14,15 @@ export const PaymentConfig = {
     batchSize: 50,
   },
   validation: {
-    maxAmount: BigInt('1000000000000000000000000'), // 1M tokens
-    minAmount: BigInt('100000'), // 0.1 tokens
+    maxAmount: BigInt("1000000000000000000000000"), // 1M tokens
+    minAmount: BigInt("100000"), // 0.1 tokens
     minGasLimit: BigInt(21000),
   },
   monitoring: {
     errorThreshold: 5,
     warningThreshold: 3,
     metricsInterval: 60 * 1000, // 1 minute
-  }
+  },
 } as const;
 
 export type RetryConfig = typeof PaymentConfig.retry;

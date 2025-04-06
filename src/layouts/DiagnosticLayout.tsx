@@ -1,16 +1,23 @@
-import React, { Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
-import { Box, Container, AppBar, Toolbar, Typography, Button } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { logger } from '../core/logger';
+import React, { Suspense } from "react";
+import { Outlet } from "react-router-dom";
+import {
+  Box,
+  Container,
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { logger } from "../core/logger";
 
 // Style pour le contenu principal
 const MainContent = styled(Box)(({ theme }) => ({
   flexGrow: 1,
   padding: theme.spacing(3),
   marginTop: 64,
-  minHeight: 'calc(100vh - 64px)',
-  backgroundColor: theme.palette.background.default
+  minHeight: "calc(100vh - 64px)",
+  backgroundColor: theme.palette.background.default,
 }));
 
 /**
@@ -19,12 +26,12 @@ const MainContent = styled(Box)(({ theme }) => ({
  */
 export const DiagnosticLayout: React.FC = () => {
   logger.info({
-    category: 'DiagnosticLayout',
-    message: 'Affichage du layout diagnostique simplifié'
+    category: "DiagnosticLayout",
+    message: "Affichage du layout diagnostique simplifié",
   });
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       {/* En-tête simplifié */}
       <AppBar position="fixed" color="primary">
         <Toolbar>
@@ -40,18 +47,23 @@ export const DiagnosticLayout: React.FC = () => {
       {/* Contenu principal */}
       <MainContent>
         <Container maxWidth="lg">
-          <Suspense fallback={
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-              <Typography>Chargement...</Typography>
-            </Box>
-          }>
+          <Suspense
+            fallback={
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                <Typography>Chargement...</Typography>
+              </Box>
+            }
+          >
             <Outlet />
           </Suspense>
         </Container>
       </MainContent>
 
       {/* Pied de page simplifié */}
-      <Box component="footer" sx={{ py: 3, bgcolor: 'background.paper', mt: 'auto' }}>
+      <Box
+        component="footer"
+        sx={{ py: 3, bgcolor: "background.paper", mt: "auto" }}
+      >
         <Container maxWidth="lg">
           <Typography variant="body2" color="text.secondary" align="center">
             TokenForge © {new Date().getFullYear()} - Mode Diagnostic

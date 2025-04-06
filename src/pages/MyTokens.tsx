@@ -1,14 +1,22 @@
-import React, { useEffect } from 'react';
-import { useAppSelector, useAppDispatch } from '@/store/store';
-import { fetchUserTokens, UserToken } from '@/store/slices/userTokensSlice';
-import { TokenCard } from '@/components/features/token';
-import { Container, Typography, Grid, Box, CircularProgress } from '@mui/material';
-import { useAccount } from 'wagmi';
+import React, { useEffect } from "react";
+import { useAppSelector, useAppDispatch } from "@/store/store";
+import { fetchUserTokens, UserToken } from "@/store/slices/userTokensSlice";
+import { TokenCard } from "@/components/features/token";
+import {
+  Container,
+  Typography,
+  Grid,
+  Box,
+  CircularProgress,
+} from "@mui/material";
+import { useAccount } from "wagmi";
 
 const MyTokens: React.FC = () => {
   const dispatch = useAppDispatch();
   const { address } = useAccount();
-  const { tokens, loading, error } = useAppSelector((state) => state.userTokens);
+  const { tokens, loading, error } = useAppSelector(
+    (state) => state.userTokens
+  );
 
   useEffect(() => {
     if (address) {
@@ -24,7 +32,12 @@ const MyTokens: React.FC = () => {
   if (loading) {
     return (
       <Container maxWidth="lg">
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="60vh"
+        >
           <CircularProgress />
         </Box>
       </Container>
@@ -68,7 +81,7 @@ const MyTokens: React.FC = () => {
                 token={{
                   address: token.address,
                   symbol: token.symbol,
-                  balance: token.balance
+                  balance: token.balance,
                 }}
                 onAction={handleTokenAction}
               />

@@ -1,6 +1,6 @@
-import React, { useEffect, ReactNode } from 'react';
-import { useWeb3 } from '../providers/Web3Provider';
-import { useTokens } from '../contexts/TokenContext';
+import React, { useEffect, ReactNode } from "react";
+import { useWeb3 } from "../providers/Web3Provider";
+import { useTokens } from "../contexts/TokenContext";
 
 interface TokenProviderProps {
   children: ReactNode;
@@ -19,4 +19,4 @@ const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
   return <>{children}</>;
 };
 
-export default TokenProvider; 
+export default TokenProvider;

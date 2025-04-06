@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Container,
   Typography,
@@ -17,16 +17,16 @@ import {
   InputAdornment,
   Button,
   Menu,
-  MenuItem
-} from '@mui/material';
+  MenuItem,
+} from "@mui/material";
 import {
   Search as SearchIcon,
   FilterList as FilterIcon,
   Visibility as ViewIcon,
   Block as BlockIcon,
   Delete as DeleteIcon,
-  CheckCircle as VerifyIcon
-} from '@mui/icons-material';
+  CheckCircle as VerifyIcon,
+} from "@mui/icons-material";
 
 interface Token {
   id: string;
@@ -34,7 +34,7 @@ interface Token {
   symbol: string;
   network: string;
   creator: string;
-  status: 'verified' | 'pending' | 'blocked';
+  status: "verified" | "pending" | "blocked";
   totalSupply: string;
   holders: number;
   createdAt: string;
@@ -42,52 +42,56 @@ interface Token {
 
 const mockTokens: Token[] = [
   {
-    id: '1',
-    name: 'MyToken',
-    symbol: 'MTK',
-    network: 'BSC',
-    creator: '0x1234...5678',
-    status: 'verified',
-    totalSupply: '1,000,000',
+    id: "1",
+    name: "MyToken",
+    symbol: "MTK",
+    network: "BSC",
+    creator: "0x1234...5678",
+    status: "verified",
+    totalSupply: "1,000,000",
     holders: 150,
-    createdAt: '2024-02-24'
+    createdAt: "2024-02-24",
   },
   {
-    id: '2',
-    name: 'GameToken',
-    symbol: 'GTK',
-    network: 'Ethereum',
-    creator: '0xabcd...efgh',
-    status: 'pending',
-    totalSupply: '500,000',
+    id: "2",
+    name: "GameToken",
+    symbol: "GTK",
+    network: "Ethereum",
+    creator: "0xabcd...efgh",
+    status: "pending",
+    totalSupply: "500,000",
     holders: 75,
-    createdAt: '2024-02-23'
+    createdAt: "2024-02-23",
   },
   {
-    id: '3',
-    name: 'ScamToken',
-    symbol: 'SCAM',
-    network: 'Polygon',
-    creator: '0x9876...4321',
-    status: 'blocked',
-    totalSupply: '10,000,000',
+    id: "3",
+    name: "ScamToken",
+    symbol: "SCAM",
+    network: "Polygon",
+    creator: "0x9876...4321",
+    status: "blocked",
+    totalSupply: "10,000,000",
     holders: 25,
-    createdAt: '2024-02-22'
-  }
+    createdAt: "2024-02-22",
+  },
 ];
 
 export const TokensManagementPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
+  const [selectedNetwork, setSelectedNetwork] = useState<string>("all");
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -110,36 +114,37 @@ export const TokensManagementPage: React.FC = () => {
     handleFilterClose();
   };
 
-  const getStatusColor = (status: Token['status']) => {
+  const getStatusColor = (status: Token["status"]) => {
     switch (status) {
-      case 'verified':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'blocked':
-        return 'error';
+      case "verified":
+        return "success";
+      case "pending":
+        return "warning";
+      case "blocked":
+        return "error";
       default:
-        return 'default';
+        return "default";
     }
   };
 
-  const getStatusIcon = (status: Token['status']) => {
+  const getStatusIcon = (status: Token["status"]) => {
     switch (status) {
-      case 'verified':
+      case "verified":
         return <VerifyIcon fontSize="small" />;
-      case 'pending':
+      case "pending":
         return <ViewIcon fontSize="small" />;
-      case 'blocked':
+      case "blocked":
         return <BlockIcon fontSize="small" />;
       default:
         return null;
     }
   };
 
-  const filteredTokens = mockTokens.filter(token =>
-    (token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())) &&
-    (selectedNetwork === 'all' || token.network === selectedNetwork)
+  const filteredTokens = mockTokens.filter(
+    (token) =>
+      (token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        token.symbol.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (selectedNetwork === "all" || token.network === selectedNetwork)
   );
 
   return (
@@ -153,7 +158,12 @@ export const TokensManagementPage: React.FC = () => {
       <Paper elevation={1}>
         <Box p={3}>
           {/* Barre d'outils */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={3}
+          >
             <Box display="flex" gap={2}>
               <TextField
                 size="small"
@@ -165,7 +175,7 @@ export const TokensManagementPage: React.FC = () => {
                     <InputAdornment position="start">
                       <SearchIcon />
                     </InputAdornment>
-                  )
+                  ),
                 }}
               />
               <Button
@@ -180,12 +190,18 @@ export const TokensManagementPage: React.FC = () => {
                 open={Boolean(filterAnchorEl)}
                 onClose={handleFilterClose}
               >
-                <MenuItem onClick={() => handleNetworkSelect('all')}>
+                <MenuItem onClick={() => handleNetworkSelect("all")}>
                   Tous les réseaux
                 </MenuItem>
-                <MenuItem onClick={() => handleNetworkSelect('BSC')}>BSC</MenuItem>
-                <MenuItem onClick={() => handleNetworkSelect('Ethereum')}>Ethereum</MenuItem>
-                <MenuItem onClick={() => handleNetworkSelect('Polygon')}>Polygon</MenuItem>
+                <MenuItem onClick={() => handleNetworkSelect("BSC")}>
+                  BSC
+                </MenuItem>
+                <MenuItem onClick={() => handleNetworkSelect("Ethereum")}>
+                  Ethereum
+                </MenuItem>
+                <MenuItem onClick={() => handleNetworkSelect("Polygon")}>
+                  Polygon
+                </MenuItem>
               </Menu>
             </Box>
           </Box>
@@ -214,7 +230,11 @@ export const TokensManagementPage: React.FC = () => {
                       <TableCell>{token.name}</TableCell>
                       <TableCell>{token.symbol}</TableCell>
                       <TableCell>
-                        <Chip label={token.network} size="small" variant="outlined" />
+                        <Chip
+                          label={token.network}
+                          size="small"
+                          variant="outlined"
+                        />
                       </TableCell>
                       <TableCell>{token.creator}</TableCell>
                       <TableCell>

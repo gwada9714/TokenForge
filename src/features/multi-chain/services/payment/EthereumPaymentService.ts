@@ -1,7 +1,13 @@
-import { ethers } from 'ethers';
-import { AbstractChainService } from './base/AbstractChainService';
-import { PaymentNetwork, PaymentSession, PaymentStatus, PaymentToken, PaymentError } from './types';
-import { ERC20_ABI } from '../constants/abis';
+import { ethers } from "ethers";
+import { AbstractChainService } from "./base/AbstractChainService";
+import {
+  PaymentNetwork,
+  PaymentSession,
+  PaymentStatus,
+  PaymentToken,
+  PaymentError,
+} from "./types";
+import { ERC20_ABI } from "../constants/abis";
 
 /**
  * Service de paiement pour le réseau Ethereum
@@ -16,11 +22,11 @@ export class EthereumPaymentService extends AbstractChainService {
   public readonly chainName = PaymentNetwork.ETHEREUM;
   public readonly supportedTokens: PaymentToken[] = [
     {
-      symbol: 'ETH',
-      address: 'ETH',
+      symbol: "ETH",
+      address: "ETH",
       decimals: 18,
-      network: PaymentNetwork.ETHEREUM
-    }
+      network: PaymentNetwork.ETHEREUM,
+    },
   ];
 
   /**
@@ -54,11 +60,11 @@ export class EthereumPaymentService extends AbstractChainService {
     const { userId, token, amount } = params;
 
     if (!this.validateToken(token)) {
-      throw this.createPaymentError('Token non supporté', 'INVALID_TOKEN');
+      throw this.createPaymentError("Token non supporté", "INVALID_TOKEN");
     }
 
     if (!this.validateAmount(amount)) {
-      throw this.createPaymentError('Montant invalide', 'INVALID_AMOUNT');
+      throw this.createPaymentError("Montant invalide", "INVALID_AMOUNT");
     }
 
     return {
@@ -72,7 +78,7 @@ export class EthereumPaymentService extends AbstractChainService {
       updatedAt: Date.now(),
       retryCount: 0,
       txHash: undefined,
-      error: undefined
+      error: undefined,
     };
   }
 
@@ -93,14 +99,21 @@ export class EthereumPaymentService extends AbstractChainService {
       const signer = await this.provider.getSigner();
       let tx: ethers.TransactionResponse;
 
-      if (session.token.address === 'ETH') {
+      if (session.token.address === "ETH") {
         tx = await signer.sendTransaction({
           to: session.userId, // Utilisation de userId comme adresse destinataire
-          value: ethers.parseEther(session.amount)
+          value: ethers.parseEther(session.amount),
         });
       } else {
-        const tokenContract = new ethers.Contract(session.token.address, ERC20_ABI, signer);
-        const amount = ethers.parseUnits(session.amount, session.token.decimals);
+        const tokenContract = new ethers.Contract(
+          session.token.address,
+          ERC20_ABI,
+          signer
+        );
+        const amount = ethers.parseUnits(
+          session.amount,
+          session.token.decimals
+        );
         tx = await tokenContract.transfer(session.userId, amount);
       }
 
@@ -108,7 +121,7 @@ export class EthereumPaymentService extends AbstractChainService {
         ...session,
         status: PaymentStatus.PROCESSING,
         txHash: tx.hash,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       await tx.wait();
@@ -116,7 +129,7 @@ export class EthereumPaymentService extends AbstractChainService {
       return {
         ...updatedSession,
         status: PaymentStatus.CONFIRMED,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -125,8 +138,8 @@ export class EthereumPaymentService extends AbstractChainService {
       return {
         ...session,
         status: PaymentStatus.FAILED,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        updatedAt: Date.now()
+        error: error instanceof Error ? error.message : "Unknown error",
+        updatedAt: Date.now(),
       };
     }
   }
@@ -170,7 +183,7 @@ export class EthereumPaymentService extends AbstractChainService {
    * @param {Error} error - Erreur à traiter
    */
   protected async handleNetworkError(error: Error): Promise<void> {
-    console.error('Erreur réseau Ethereum:', error);
+    console.error("Erreur réseau Ethereum:", error);
     // Implémentation de la gestion des erreurs réseau
     // Par exemple: reconnexion, retry, etc.
   }
@@ -192,22 +205,29 @@ export class EthereumPaymentService extends AbstractChainService {
    * @param {PaymentToken} token - Token à vérifier
    * @returns {Promise<string>} Solde formaté
    */
-  public async getBalance(address: string, token: PaymentToken): Promise<string> {
+  public async getBalance(
+    address: string,
+    token: PaymentToken
+  ): Promise<string> {
     if (!this.isValidAddress(address)) {
-      throw this.createPaymentError('Adresse invalide', 'INVALID_ADDRESS');
+      throw this.createPaymentError("Adresse invalide", "INVALID_ADDRESS");
     }
 
     if (!this.validateToken(token)) {
-      throw this.createPaymentError('Token non supporté', 'INVALID_TOKEN');
+      throw this.createPaymentError("Token non supporté", "INVALID_TOKEN");
     }
 
-    if (token.address === 'ETH') {
+    if (token.address === "ETH") {
       const balance = await this.provider.getBalance(address);
       return ethers.formatEther(balance);
     } else {
-      const tokenContract = new ethers.Contract(token.address, ERC20_ABI, this.provider);
+      const tokenContract = new ethers.Contract(
+        token.address,
+        ERC20_ABI,
+        this.provider
+      );
       const balance = await tokenContract.balanceOf(address);
       return ethers.formatUnits(balance, token.decimals);
     }
   }
-} 
+}

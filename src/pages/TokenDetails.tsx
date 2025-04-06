@@ -1,34 +1,40 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useToken } from '../hooks/useToken';
-import { useTokenTransfer } from '../hooks/useTokenTransfer';
-import { useTokenMint } from '../hooks/useTokenMint';
-import { useTokenBurn } from '../hooks/useTokenBurn';
-import { useBalance } from 'wagmi';
-import { toast } from 'react-hot-toast';
-import { isAddress } from 'viem';
+import React, { useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { useToken } from "../hooks/useToken";
+import { useTokenTransfer } from "../hooks/useTokenTransfer";
+import { useTokenMint } from "../hooks/useTokenMint";
+import { useTokenBurn } from "../hooks/useTokenBurn";
+import { useBalance } from "wagmi";
+import { toast } from "react-hot-toast";
+import { isAddress } from "viem";
 
 const TokenDetails = () => {
-  const { tokenId = '' } = useParams();
+  const { tokenId = "" } = useParams();
   const { token, isLoading, error: tokenError } = useToken(tokenId);
-  const { sendTokens, isLoading: isTransferLoading, isError: isTransferError } = useTokenTransfer({ 
-    tokenAddress: tokenId 
+  const {
+    sendTokens,
+    isLoading: isTransferLoading,
+    isError: isTransferError,
+  } = useTokenTransfer({
+    tokenAddress: tokenId,
   });
-  const { mintTokens, isLoading: isMintLoading } = useTokenMint({ tokenAddress: tokenId });
-  const { burnTokens, isLoading: isBurnLoading } = useTokenBurn({ tokenAddress: tokenId });
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState('');
-  const [mintTo, setMintTo] = useState('');
-  const [mintAmount, setMintAmount] = useState('');
-  const [burnAmount, setBurnAmount] = useState('');
+  const { mintTokens, isLoading: isMintLoading } = useTokenMint({
+    tokenAddress: tokenId,
+  });
+  const { burnTokens, isLoading: isBurnLoading } = useTokenBurn({
+    tokenAddress: tokenId,
+  });
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("");
+  const [mintTo, setMintTo] = useState("");
+  const [mintAmount, setMintAmount] = useState("");
+  const [burnAmount, setBurnAmount] = useState("");
 
   // Vérifier si l'adresse est valide
   if (!isAddress(tokenId)) {
     return (
       <div className="text-center space-y-4">
-        <div className="text-red-600">
-          L'adresse du token n'est pas valide
-        </div>
+        <div className="text-red-600">L'adresse du token n'est pas valide</div>
         <Link to="/tokens" className="btn btn-primary">
           Retour à la liste des tokens
         </Link>
@@ -65,18 +71,18 @@ const TokenDetails = () => {
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAddress(recipient)) {
-      toast.error('Adresse de destinataire invalide');
+      toast.error("Adresse de destinataire invalide");
       return;
     }
     if (parseFloat(amount) <= 0) {
-      toast.error('Le montant doit être supérieur à 0');
+      toast.error("Le montant doit être supérieur à 0");
       return;
     }
     try {
       await sendTokens(recipient, amount);
       if (!isTransferError) {
-        setRecipient('');
-        setAmount('');
+        setRecipient("");
+        setAmount("");
       }
     } catch (error) {
       // console.error('Erreur de transfert:', error);
@@ -91,10 +97,12 @@ const TokenDetails = () => {
             <Link to="/tokens" className="text-gray-500 hover:text-gray-700">
               ← Retour
             </Link>
-            <h1 className="text-3xl font-bold">{token.name} ({token.symbol})</h1>
+            <h1 className="text-3xl font-bold">
+              {token.name} ({token.symbol})
+            </h1>
           </div>
           <p className="text-gray-600 mt-2">
-            Balance: {balance?.formatted || '0'} {token.symbol}
+            Balance: {balance?.formatted || "0"} {token.symbol}
           </p>
         </div>
       </div>
@@ -106,7 +114,9 @@ const TokenDetails = () => {
             <p>
               <span className="text-gray-600">Adresse du contrat:</span>
               <br />
-              <code className="text-sm bg-gray-100 p-1 rounded">{token.address}</code>
+              <code className="text-sm bg-gray-100 p-1 rounded">
+                {token.address}
+              </code>
             </p>
             <p>
               <span className="text-gray-600">Decimals:</span>
@@ -121,12 +131,12 @@ const TokenDetails = () => {
             <p>
               <span className="text-gray-600">Mintable:</span>
               <br />
-              {token.isMintable ? 'Oui' : 'Non'}
+              {token.isMintable ? "Oui" : "Non"}
             </p>
             <p>
               <span className="text-gray-600">Burnable:</span>
               <br />
-              {token.isBurnable ? 'Oui' : 'Non'}
+              {token.isBurnable ? "Oui" : "Non"}
             </p>
           </div>
         </div>
@@ -135,7 +145,10 @@ const TokenDetails = () => {
           <h2 className="text-xl font-semibold mb-4">Transfert de tokens</h2>
           <form onSubmit={handleTransfer} className="space-y-4">
             <div>
-              <label htmlFor="recipient" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="recipient"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Destinataire
               </label>
               <input
@@ -148,7 +161,10 @@ const TokenDetails = () => {
               />
             </div>
             <div>
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="amount"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Montant
               </label>
               <input
@@ -165,7 +181,7 @@ const TokenDetails = () => {
               disabled={isTransferLoading}
               className="btn btn-primary w-full"
             >
-              {isTransferLoading ? 'Transfert en cours...' : 'Transférer'}
+              {isTransferLoading ? "Transfert en cours..." : "Transférer"}
             </button>
           </form>
         </div>
@@ -173,26 +189,32 @@ const TokenDetails = () => {
         {token.isMintable && (
           <div className="card">
             <h2 className="text-xl font-semibold mb-4">Créer des tokens</h2>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              if (!isAddress(mintTo)) {
-                toast.error('Adresse de destinataire invalide');
-                return;
-              }
-              if (parseFloat(mintAmount) <= 0) {
-                toast.error('Le montant doit être supérieur à 0');
-                return;
-              }
-              try {
-                await mintTokens(mintTo, mintAmount);
-                setMintTo('');
-                setMintAmount('');
-              } catch (error) {
-                // console.error('Erreur de mint:', error);
-              }
-            }} className="space-y-4">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!isAddress(mintTo)) {
+                  toast.error("Adresse de destinataire invalide");
+                  return;
+                }
+                if (parseFloat(mintAmount) <= 0) {
+                  toast.error("Le montant doit être supérieur à 0");
+                  return;
+                }
+                try {
+                  await mintTokens(mintTo, mintAmount);
+                  setMintTo("");
+                  setMintAmount("");
+                } catch (error) {
+                  // console.error('Erreur de mint:', error);
+                }
+              }}
+              className="space-y-4"
+            >
               <div>
-                <label htmlFor="mintTo" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="mintTo"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Destinataire
                 </label>
                 <input
@@ -205,7 +227,10 @@ const TokenDetails = () => {
                 />
               </div>
               <div>
-                <label htmlFor="mintAmount" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="mintAmount"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Montant
                 </label>
                 <input
@@ -222,7 +247,7 @@ const TokenDetails = () => {
                 disabled={isMintLoading}
                 className="btn btn-primary w-full"
               >
-                {isMintLoading ? 'Création en cours...' : 'Créer des tokens'}
+                {isMintLoading ? "Création en cours..." : "Créer des tokens"}
               </button>
             </form>
           </div>
@@ -231,21 +256,27 @@ const TokenDetails = () => {
         {token.isBurnable && (
           <div className="card">
             <h2 className="text-xl font-semibold mb-4">Détruire des tokens</h2>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              if (parseFloat(burnAmount) <= 0) {
-                toast.error('Le montant doit être supérieur à 0');
-                return;
-              }
-              try {
-                await burnTokens(burnAmount);
-                setBurnAmount('');
-              } catch (error) {
-                // console.error('Erreur de burn:', error);
-              }
-            }} className="space-y-4">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (parseFloat(burnAmount) <= 0) {
+                  toast.error("Le montant doit être supérieur à 0");
+                  return;
+                }
+                try {
+                  await burnTokens(burnAmount);
+                  setBurnAmount("");
+                } catch (error) {
+                  // console.error('Erreur de burn:', error);
+                }
+              }}
+              className="space-y-4"
+            >
               <div>
-                <label htmlFor="burnAmount" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="burnAmount"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Montant
                 </label>
                 <input
@@ -262,7 +293,9 @@ const TokenDetails = () => {
                 disabled={isBurnLoading}
                 className="btn btn-primary w-full"
               >
-                {isBurnLoading ? 'Destruction en cours...' : 'Détruire des tokens'}
+                {isBurnLoading
+                  ? "Destruction en cours..."
+                  : "Détruire des tokens"}
               </button>
             </form>
           </div>

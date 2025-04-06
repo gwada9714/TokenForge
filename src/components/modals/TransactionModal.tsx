@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { useWeb3Contract } from '../../hooks';
-import { useSnackbar } from 'notistack';
+import React, { useState } from "react";
+import { useWeb3Contract } from "../../hooks";
+import { useSnackbar } from "notistack";
 
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'transfer' | 'mint' | 'burn';
+  type: "transfer" | "mint" | "burn";
   tokenAddress: string;
   tokenSymbol: string;
 }
@@ -15,10 +15,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   onClose,
   type,
   tokenAddress,
-  tokenSymbol
+  tokenSymbol,
 }) => {
-  const [amount, setAmount] = useState('');
-  const [recipient, setRecipient] = useState('');
+  const [amount, setAmount] = useState("");
+  const [recipient, setRecipient] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const { executeTransaction } = useWeb3Contract();
@@ -29,28 +29,28 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   const getModalTitle = () => {
     switch (type) {
-      case 'transfer':
+      case "transfer":
         return `Transférer des ${tokenSymbol}`;
-      case 'mint':
+      case "mint":
         return `Créer des ${tokenSymbol}`;
-      case 'burn':
+      case "burn":
         return `Brûler des ${tokenSymbol}`;
       default:
-        return 'Transaction';
+        return "Transaction";
     }
   };
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
-    
+
     if (!amount || parseFloat(amount) <= 0) {
-      newErrors.amount = 'Montant invalide';
+      newErrors.amount = "Montant invalide";
     }
-    
-    if (type === 'transfer' && !recipient) {
-      newErrors.recipient = 'Destinataire requis';
+
+    if (type === "transfer" && !recipient) {
+      newErrors.recipient = "Destinataire requis";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -64,36 +64,36 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
     try {
       switch (type) {
-        case 'transfer':
+        case "transfer":
           await executeTransaction({
-            type: 'transfer',
+            type: "transfer",
             tokenAddress,
             recipient,
-            amount
+            amount,
           });
           break;
-        case 'mint':
+        case "mint":
           await executeTransaction({
-            type: 'mint',
+            type: "mint",
             tokenAddress,
-            amount
+            amount,
           });
           break;
-        case 'burn':
+        case "burn":
           await executeTransaction({
-            type: 'burn',
+            type: "burn",
             tokenAddress,
-            amount
+            amount,
           });
           break;
       }
 
-      enqueueSnackbar('Transaction réussie', { variant: 'success' });
+      enqueueSnackbar("Transaction réussie", { variant: "success" });
       onClose();
     } catch (error) {
       enqueueSnackbar(
-        error instanceof Error ? error.message : 'Une erreur est survenue',
-        { variant: 'error' }
+        error instanceof Error ? error.message : "Une erreur est survenue",
+        { variant: "error" }
       );
     } finally {
       setIsLoading(false);
@@ -110,8 +110,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             className="text-gray-500 hover:text-gray-700"
           >
             <span className="sr-only">Fermer</span>
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -127,7 +137,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               onChange={(e) => setAmount(e.target.value)}
               placeholder={`Montant en ${tokenSymbol}`}
               className={`w-full px-3 py-2 border rounded-md ${
-                errors.amount ? 'border-red-500' : 'border-gray-300'
+                errors.amount ? "border-red-500" : "border-gray-300"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
               min="0"
               step="any"
@@ -137,7 +147,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             )}
           </div>
 
-          {type === 'transfer' && (
+          {type === "transfer" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Destinataire
@@ -148,7 +158,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 onChange={(e) => setRecipient(e.target.value)}
                 placeholder="Adresse du destinataire"
                 className={`w-full px-3 py-2 border rounded-md ${
-                  errors.recipient ? 'border-red-500' : 'border-gray-300'
+                  errors.recipient ? "border-red-500" : "border-gray-300"
                 } focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
               {errors.recipient && (
@@ -157,9 +167,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </div>
           )}
 
-          <p className="text-sm text-gray-500">
-            Token: {tokenAddress}
-          </p>
+          <p className="text-sm text-gray-500">Token: {tokenAddress}</p>
 
           <div className="flex justify-end gap-3 mt-6">
             <button
@@ -174,15 +182,15 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               disabled={isLoading}
               className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md ${
                 isLoading
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-blue-700'
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-blue-700"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
-              {isLoading ? 'En cours...' : 'Confirmer'}
+              {isLoading ? "En cours..." : "Confirmer"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-}; 
+};

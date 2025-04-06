@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Card,
@@ -13,10 +13,10 @@ import {
   Tooltip,
   Alert,
   Slider,
-} from '@mui/material';
-import { MaxLimits } from '../../../../../../types/tokenFeatures';
-import InfoIcon from '@mui/icons-material/Info';
-import BlockIcon from '@mui/icons-material/Block';
+} from "@mui/material";
+import { MaxLimits } from "../../../../../../types/tokenFeatures";
+import InfoIcon from "@mui/icons-material/Info";
+import BlockIcon from "@mui/icons-material/Block";
 
 interface MaxLimitsConfigurationProps {
   maxLimits: MaxLimits;
@@ -35,17 +35,21 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
   disabled = false,
 }) => {
   const handleChange = (
-    type: 'maxWallet' | 'maxTransaction',
-    field: 'enabled' | 'percentage',
+    type: "maxWallet" | "maxTransaction",
+    field: "enabled" | "percentage",
     value: boolean | number
   ) => {
     const newConfig = { ...maxLimits };
-    if (field === 'enabled') {
+    if (field === "enabled") {
       newConfig[type].enabled = value as boolean;
       if (value) {
         // Définir des valeurs par défaut recommandées
-        newConfig[type].percentage = type === 'maxWallet' ? RECOMMENDED_MAX_WALLET : RECOMMENDED_MAX_TX;
-        newConfig[type].amount = calculateAmount(totalSupply, newConfig[type].percentage);
+        newConfig[type].percentage =
+          type === "maxWallet" ? RECOMMENDED_MAX_WALLET : RECOMMENDED_MAX_TX;
+        newConfig[type].amount = calculateAmount(
+          totalSupply,
+          newConfig[type].percentage
+        );
       }
     } else {
       newConfig[type].percentage = value as number;
@@ -55,11 +59,16 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
   };
 
   const calculateAmount = (supply: string, percentage: number): string => {
-    return ((BigInt(supply) * BigInt(Math.floor(percentage * 100))) / BigInt(10000)).toString();
+    return (
+      (BigInt(supply) * BigInt(Math.floor(percentage * 100))) /
+      BigInt(10000)
+    ).toString();
   };
 
-  const isMaxWalletTooHigh = maxLimits.maxWallet.enabled && maxLimits.maxWallet.percentage > 5;
-  const isMaxTxTooHigh = maxLimits.maxTransaction.enabled && maxLimits.maxTransaction.percentage > 2;
+  const isMaxWalletTooHigh =
+    maxLimits.maxWallet.enabled && maxLimits.maxWallet.percentage > 5;
+  const isMaxTxTooHigh =
+    maxLimits.maxTransaction.enabled && maxLimits.maxTransaction.percentage > 2;
 
   return (
     <Card>
@@ -77,13 +86,22 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
           <Grid item xs={12}>
             <Card variant="outlined">
               <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="subtitle1">Limite Maximum par Portefeuille</Typography>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={2}
+                >
+                  <Typography variant="subtitle1">
+                    Limite Maximum par Portefeuille
+                  </Typography>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={maxLimits.maxWallet.enabled}
-                        onChange={(e) => handleChange('maxWallet', 'enabled', e.target.checked)}
+                        onChange={(e) =>
+                          handleChange("maxWallet", "enabled", e.target.checked)
+                        }
                         disabled={disabled}
                       />
                     }
@@ -95,11 +113,18 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
                       <Typography variant="subtitle2" gutterBottom>
-                        Pourcentage du total supply ({maxLimits.maxWallet.percentage}%)
+                        Pourcentage du total supply (
+                        {maxLimits.maxWallet.percentage}%)
                       </Typography>
                       <Slider
                         value={maxLimits.maxWallet.percentage}
-                        onChange={(_, value) => handleChange('maxWallet', 'percentage', value as number)}
+                        onChange={(_, value) =>
+                          handleChange(
+                            "maxWallet",
+                            "percentage",
+                            value as number
+                          )
+                        }
                         min={0.1}
                         max={10}
                         step={0.1}
@@ -116,7 +141,11 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
                         disabled
                         size="small"
                         InputProps={{
-                          endAdornment: <InputAdornment position="end">tokens</InputAdornment>,
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              tokens
+                            </InputAdornment>
+                          ),
                         }}
                       />
                     </Grid>
@@ -130,13 +159,26 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
           <Grid item xs={12}>
             <Card variant="outlined">
               <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="subtitle1">Limite Maximum par Transaction</Typography>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={2}
+                >
+                  <Typography variant="subtitle1">
+                    Limite Maximum par Transaction
+                  </Typography>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={maxLimits.maxTransaction.enabled}
-                        onChange={(e) => handleChange('maxTransaction', 'enabled', e.target.checked)}
+                        onChange={(e) =>
+                          handleChange(
+                            "maxTransaction",
+                            "enabled",
+                            e.target.checked
+                          )
+                        }
                         disabled={disabled}
                       />
                     }
@@ -148,11 +190,18 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
                       <Typography variant="subtitle2" gutterBottom>
-                        Pourcentage du total supply ({maxLimits.maxTransaction.percentage}%)
+                        Pourcentage du total supply (
+                        {maxLimits.maxTransaction.percentage}%)
                       </Typography>
                       <Slider
                         value={maxLimits.maxTransaction.percentage}
-                        onChange={(_, value) => handleChange('maxTransaction', 'percentage', value as number)}
+                        onChange={(_, value) =>
+                          handleChange(
+                            "maxTransaction",
+                            "percentage",
+                            value as number
+                          )
+                        }
                         min={0.1}
                         max={5}
                         step={0.1}
@@ -169,7 +218,11 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
                         disabled
                         size="small"
                         InputProps={{
-                          endAdornment: <InputAdornment position="end">tokens</InputAdornment>,
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              tokens
+                            </InputAdornment>
+                          ),
                         }}
                       />
                     </Grid>
@@ -183,18 +236,21 @@ export const MaxLimitsConfiguration: React.FC<MaxLimitsConfigurationProps> = ({
           <Grid item xs={12}>
             {isMaxWalletTooHigh && (
               <Alert severity="warning" sx={{ mb: 2 }}>
-                Une limite de portefeuille supérieure à 5% pourrait ne pas être efficace contre les baleines.
+                Une limite de portefeuille supérieure à 5% pourrait ne pas être
+                efficace contre les baleines.
               </Alert>
             )}
-            
+
             {isMaxTxTooHigh && (
               <Alert severity="warning" sx={{ mb: 2 }}>
-                Une limite de transaction supérieure à 2% pourrait permettre une manipulation significative du prix.
+                Une limite de transaction supérieure à 2% pourrait permettre une
+                manipulation significative du prix.
               </Alert>
             )}
 
             <Alert severity="info">
-              Les limites recommandées sont de {RECOMMENDED_MAX_WALLET}% pour les portefeuilles et {RECOMMENDED_MAX_TX}% pour les transactions.
+              Les limites recommandées sont de {RECOMMENDED_MAX_WALLET}% pour
+              les portefeuilles et {RECOMMENDED_MAX_TX}% pour les transactions.
             </Alert>
           </Grid>
         </Grid>

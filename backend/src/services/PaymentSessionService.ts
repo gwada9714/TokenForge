@@ -1,18 +1,18 @@
-import { IPaymentService } from './blockchain/IPaymentService';
-import { EthereumPaymentService } from './blockchain/EthereumPaymentService';
-import { BSCPaymentService } from './blockchain/BSCPaymentService';
-import { PolygonPaymentService } from './blockchain/PolygonPaymentService';
-import { AvalanchePaymentService } from './blockchain/AvalanchePaymentService';
-import { SolanaPaymentService } from './blockchain/SolanaPaymentService';
-import { ArbitrumPaymentService } from './blockchain/ArbitrumPaymentService';
-import { 
-  PaymentStatus, 
-  CryptocurrencyInfo, 
-  FeeEstimate, 
-  CryptoAmount, 
-  PaymentInitParams, 
-  PaymentSession 
-} from '../types/payment';
+import { IPaymentService } from "./blockchain/IPaymentService";
+import { EthereumPaymentService } from "./blockchain/EthereumPaymentService";
+import { BSCPaymentService } from "./blockchain/BSCPaymentService";
+import { PolygonPaymentService } from "./blockchain/PolygonPaymentService";
+import { AvalanchePaymentService } from "./blockchain/AvalanchePaymentService";
+import { SolanaPaymentService } from "./blockchain/SolanaPaymentService";
+import { ArbitrumPaymentService } from "./blockchain/ArbitrumPaymentService";
+import {
+  PaymentStatus,
+  CryptocurrencyInfo,
+  FeeEstimate,
+  CryptoAmount,
+  PaymentInitParams,
+  PaymentSession,
+} from "../types/payment";
 
 /**
  * Service de gestion des sessions de paiement
@@ -20,19 +20,19 @@ import {
  */
 class PaymentSessionService {
   private paymentServices: Record<string, IPaymentService> = {};
-  
+
   constructor() {
     // Initialiser les services de paiement pour chaque blockchain
     this.paymentServices = {
-      'ethereum': new EthereumPaymentService(),
-      'binance': new BSCPaymentService(),
-      'polygon': new PolygonPaymentService(),
-      'avalanche': new AvalanchePaymentService(),
-      'solana': new SolanaPaymentService(),
-      'arbitrum': new ArbitrumPaymentService()
+      ethereum: new EthereumPaymentService(),
+      binance: new BSCPaymentService(),
+      polygon: new PolygonPaymentService(),
+      avalanche: new AvalanchePaymentService(),
+      solana: new SolanaPaymentService(),
+      arbitrum: new ArbitrumPaymentService(),
     };
   }
-  
+
   /**
    * Récupère le service de paiement pour une blockchain donnée
    * @param network Nom de la blockchain
@@ -40,25 +40,28 @@ class PaymentSessionService {
    */
   getPaymentService(network: string): IPaymentService {
     const service = this.paymentServices[network.toLowerCase()];
-    
+
     if (!service) {
       throw new Error(`Unsupported blockchain network: ${network}`);
     }
-    
+
     return service;
   }
-  
+
   /**
    * Crée une session de paiement
    * @param network Nom de la blockchain
    * @param params Paramètres d'initialisation
    * @returns Session de paiement
    */
-  async createPaymentSession(network: string, params: PaymentInitParams): Promise<PaymentSession> {
+  async createPaymentSession(
+    network: string,
+    params: PaymentInitParams
+  ): Promise<PaymentSession> {
     const paymentService = this.getPaymentService(network);
     return paymentService.initPaymentSession(params);
   }
-  
+
   /**
    * Vérifie le statut d'une session de paiement
    * @param sessionId Identifiant de la session
@@ -68,10 +71,10 @@ class PaymentSessionService {
     // Dans une implémentation réelle, on récupérerait d'abord la session
     // pour déterminer quelle blockchain utiliser
     // Pour la démo, on utilise Ethereum par défaut
-    const paymentService = this.paymentServices['ethereum'];
+    const paymentService = this.paymentServices["ethereum"];
     return paymentService.checkPaymentStatus(sessionId);
   }
-  
+
   /**
    * Confirme un paiement
    * @param sessionId Identifiant de la session
@@ -82,20 +85,22 @@ class PaymentSessionService {
     // Dans une implémentation réelle, on récupérerait d'abord la session
     // pour déterminer quelle blockchain utiliser
     // Pour la démo, on utilise Ethereum par défaut
-    const paymentService = this.paymentServices['ethereum'];
+    const paymentService = this.paymentServices["ethereum"];
     return paymentService.confirmPayment(sessionId, txHash);
   }
-  
+
   /**
    * Récupère les cryptomonnaies supportées pour une blockchain
    * @param network Nom de la blockchain
    * @returns Liste des cryptomonnaies supportées
    */
-  async getSupportedCryptocurrencies(network: string): Promise<CryptocurrencyInfo[]> {
+  async getSupportedCryptocurrencies(
+    network: string
+  ): Promise<CryptocurrencyInfo[]> {
     const paymentService = this.getPaymentService(network);
     return paymentService.getSupportedCryptocurrencies();
   }
-  
+
   /**
    * Estime les frais de transaction
    * @param network Nom de la blockchain
@@ -111,7 +116,7 @@ class PaymentSessionService {
     const paymentService = this.getPaymentService(network);
     return paymentService.estimateTransactionFees(amount, currencyAddress);
   }
-  
+
   /**
    * Convertit un montant EUR en crypto
    * @param network Nom de la blockchain
@@ -127,7 +132,7 @@ class PaymentSessionService {
     const paymentService = this.getPaymentService(network);
     return paymentService.convertEURtoCrypto(amountEUR, currencySymbol);
   }
-  
+
   /**
    * Récupère les transactions d'un utilisateur
    * @param userId Identifiant de l'utilisateur

@@ -4,14 +4,14 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import type {
   TokenForgeToken,
   TokenForgeFactory,
-  TokenForgeTaxSystem
+  TokenForgeTaxSystem,
 } from "../../../typechain-types";
 import { ZeroAddress } from "ethers";
 import {
   INITIAL_SUPPLY,
   MAX_TX_AMOUNT,
   MAX_WALLET_SIZE,
-  TEST_TOKEN_PARAMS
+  TEST_TOKEN_PARAMS,
 } from "./constants";
 
 describe("Fonctionnalités Anti-Whale de TokenForge", () => {
@@ -31,7 +31,9 @@ describe("Fonctionnalités Anti-Whale de TokenForge", () => {
 
     // Déploiement du système de taxe
     const TaxSystem = await ethers.getContractFactory("TokenForgeTaxSystem");
-    taxSystem = (await TaxSystem.deploy(treasury.address)) as unknown as TokenForgeTaxSystem;
+    taxSystem = (await TaxSystem.deploy(
+      treasury.address
+    )) as unknown as TokenForgeTaxSystem;
     await taxSystem.waitForDeployment();
 
     // Déploiement de la Factory
@@ -44,19 +46,22 @@ describe("Fonctionnalités Anti-Whale de TokenForge", () => {
     await factory.waitForDeployment();
 
     // Création d'un token de test avec les fonctionnalités anti-whale
-    const createTx = await factory.connect(creator).createToken(
-      TEST_TOKEN_PARAMS.name,
-      TEST_TOKEN_PARAMS.symbol,
-      TEST_TOKEN_PARAMS.totalSupply,
-      TEST_TOKEN_PARAMS.maxTxAmount,
-      TEST_TOKEN_PARAMS.maxWalletSize,
-      TEST_TOKEN_PARAMS.additionalTaxRate
-    );
+    const createTx = await factory
+      .connect(creator)
+      .createToken(
+        TEST_TOKEN_PARAMS.name,
+        TEST_TOKEN_PARAMS.symbol,
+        TEST_TOKEN_PARAMS.totalSupply,
+        TEST_TOKEN_PARAMS.maxTxAmount,
+        TEST_TOKEN_PARAMS.maxWalletSize,
+        TEST_TOKEN_PARAMS.additionalTaxRate
+      );
     const receipt = await createTx.wait();
     if (!receipt) throw new Error("Transaction receipt not found");
 
     const event = receipt.logs.find(
-      log => log instanceof ethers.EventLog && log.eventName === "TokenCreated"
+      (log) =>
+        log instanceof ethers.EventLog && log.eventName === "TokenCreated"
     );
     if (!event || !(event instanceof ethers.EventLog)) {
       throw new Error("TokenCreated event not found");
@@ -65,7 +70,10 @@ describe("Fonctionnalités Anti-Whale de TokenForge", () => {
     const tokenAddress = event.args[0] as string;
     if (!tokenAddress) throw new Error("Token address not found in event");
 
-    token = (await ethers.getContractAt("TokenForgeToken", tokenAddress)) as unknown as TokenForgeToken;
+    token = (await ethers.getContractAt(
+      "TokenForgeToken",
+      tokenAddress
+    )) as unknown as TokenForgeToken;
 
     // Transfert de tokens aux utilisateurs pour les tests
     await token.connect(creator).transfer(user1.address, MAX_TX_AMOUNT / 2n);
@@ -108,18 +116,17 @@ describe("Fonctionnalités Anti-Whale de TokenForge", () => {
       const currentBalance = await token.balanceOf(user1.address);
       const amountToMax = MAX_WALLET_SIZE - currentBalance;
 
-      await expect(
-        token.connect(creator).transfer(user1.address, amountToMax)
-      ).to.not.be.reverted;
+      await expect(token.connect(creator).transfer(user1.address, amountToMax))
+        .to.not.be.reverted;
     });
 
     it("devrait suivre correctement la taille du portefeuille après plusieurs transferts", async () => {
       const amount = MAX_WALLET_SIZE / 20n; // 5% de la taille maximum
-      
+
       // Plusieurs transferts vers le même portefeuille
       await token.connect(creator).transfer(user1.address, amount);
       await token.connect(creator).transfer(user1.address, amount);
-      
+
       const finalBalance = await token.balanceOf(user1.address);
       expect(finalBalance).to.be.lte(MAX_WALLET_SIZE);
     });
@@ -143,7 +150,7 @@ describe("Fonctionnalités Anti-Whale de TokenForge", () => {
       await expect(
         token.connect(user1).setMaxTxAmount(newAmount)
       ).to.be.revertedWith("Ownable: l'appelant n'est pas le propriétaire");
-      
+
       await expect(
         token.connect(user1).setMaxWalletSize(newAmount)
       ).to.be.revertedWith("Ownable: l'appelant n'est pas le propriétaire");

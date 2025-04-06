@@ -1,19 +1,15 @@
-import React, { useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Grid,
-} from '@mui/material';
-import LoadingButton from '@mui/lab/LoadingButton';
-import type { ButtonProps } from '@mui/material';
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
-import { AdminComponentProps } from '../types';
+import React, { useCallback } from "react";
+import { Card, CardContent, Typography, Box, Grid } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
+import type { ButtonProps } from "@mui/material";
+import PauseIcon from "@mui/icons-material/Pause";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { useTokenForgeAdmin } from "../../../../hooks/useTokenForgeAdmin";
+import { AdminComponentProps } from "../types";
 
-export const ContractControls: React.FC<AdminComponentProps> = ({ onError }) => {
+export const ContractControls: React.FC<AdminComponentProps> = ({
+  onError,
+}) => {
   const {
     isPaused,
     isPausing,
@@ -26,11 +22,18 @@ export const ContractControls: React.FC<AdminComponentProps> = ({ onError }) => 
     try {
       await togglePause();
     } catch (error) {
-      onError(error instanceof Error ? error.message : 'Failed to toggle contract state');
+      onError(
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle contract state"
+      );
     }
   }, [togglePause, onError]);
 
-  const buttonProps: ButtonProps & { loading?: boolean; loadingPosition?: 'start' | 'end' | 'center' } = {
+  const buttonProps: ButtonProps & {
+    loading?: boolean;
+    loadingPosition?: "start" | "end" | "center";
+  } = {
     variant: "contained",
     color: isPaused ? "success" : "warning",
     onClick: handleTogglePause,
@@ -48,24 +51,26 @@ export const ContractControls: React.FC<AdminComponentProps> = ({ onError }) => 
             <Typography variant="h6" gutterBottom>
               État du Contrat
             </Typography>
-            
+
             <Box sx={{ mb: 2 }}>
               <Typography color="text.secondary">Adresse du contrat</Typography>
-              <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+              <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
                 {contractAddress}
               </Typography>
             </Box>
 
             <Box sx={{ mb: 2 }}>
               <Typography color="text.secondary">État</Typography>
-              <Typography color={isPaused ? 'error' : 'success.main'}>
-                {isPaused ? 'En pause' : 'Actif'}
+              <Typography color={isPaused ? "error" : "success.main"}>
+                {isPaused ? "En pause" : "Actif"}
               </Typography>
             </Box>
 
             <Box sx={{ mt: 3 }}>
               <LoadingButton {...buttonProps}>
-                {isPaused ? 'Réactiver le contrat' : 'Mettre en pause le contrat'}
+                {isPaused
+                  ? "Réactiver le contrat"
+                  : "Mettre en pause le contrat"}
               </LoadingButton>
             </Box>
           </CardContent>

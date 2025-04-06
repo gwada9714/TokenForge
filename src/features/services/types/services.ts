@@ -1,11 +1,11 @@
-import { NetworkConfig } from '@/features/auth/types/wallet';
-import { PaymentCurrency } from '@/features/pricing/types/plans';
+import { NetworkConfig } from "@/features/auth/types/wallet";
+import { PaymentCurrency } from "@/features/pricing/types/plans";
 
 export enum ServiceType {
-  LAUNCHPAD = 'LAUNCHPAD',
-  STAKING = 'STAKING',
-  MARKETING = 'MARKETING',
-  KYC = 'KYC'
+  LAUNCHPAD = "LAUNCHPAD",
+  STAKING = "STAKING",
+  MARKETING = "MARKETING",
+  KYC = "KYC",
 }
 
 export interface NetworkFees {
@@ -20,7 +20,7 @@ export interface ServiceFeature {
 }
 
 export interface BaseServicePrice {
-  currency: PaymentCurrency | 'USD';
+  currency: PaymentCurrency | "USD";
 }
 
 export interface LaunchpadPrice extends BaseServicePrice {
@@ -42,7 +42,11 @@ export interface KYCPrice extends BaseServicePrice {
   verificationFee: number;
 }
 
-export type ServicePrice = LaunchpadPrice | StakingPrice | MarketingPrice | KYCPrice;
+export type ServicePrice =
+  | LaunchpadPrice
+  | StakingPrice
+  | MarketingPrice
+  | KYCPrice;
 
 export interface Service {
   id: ServiceType;
@@ -58,7 +62,7 @@ export interface LaunchpadConfig {
   tokenName: string;
   tokenSymbol: string;
   totalSupply: string;
-  auditLevel: 'basic' | 'standard' | 'premium';
+  auditLevel: "basic" | "standard" | "premium";
 }
 
 export interface StakingConfig {
@@ -87,8 +91,8 @@ export interface MarketingConfig {
 }
 
 export interface KYCConfig {
-  kycType: 'individual' | 'business';
-  verificationLevel: 'basic' | 'advanced' | 'premium';
+  kycType: "individual" | "business";
+  verificationLevel: "basic" | "advanced" | "premium";
   requirements: {
     idDocument?: boolean;
     proofOfAddress?: boolean;
@@ -105,9 +109,9 @@ export interface ServiceRequest {
   config: LaunchpadConfig | StakingConfig | MarketingConfig | KYCConfig;
   payment: {
     amount: number;
-    currency: PaymentCurrency | 'USD';
+    currency: PaymentCurrency | "USD";
   };
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: "pending" | "processing" | "completed" | "failed";
   createdAt: number;
   updatedAt: number;
 }
@@ -119,4 +123,4 @@ export interface ServiceQuote {
   totalAmount: number;
   currency: PaymentCurrency;
   validUntil: number;
-} 
+}

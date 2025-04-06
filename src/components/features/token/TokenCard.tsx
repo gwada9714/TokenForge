@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import React from "react";
+import { Card, CardContent, Typography, Box } from "@mui/material";
 
 interface TokenCardProps {
   name: string;
@@ -12,7 +12,7 @@ export const TokenCard: React.FC<TokenCardProps> = ({
   name,
   symbol,
   address,
-  balance
+  balance,
 }) => {
   return (
     <Card className="w-full shadow-lg">
@@ -37,4 +37,4 @@ export const TokenCard: React.FC<TokenCardProps> = ({
   );
 };
 
-export default TokenCard; 
+export default TokenCard;

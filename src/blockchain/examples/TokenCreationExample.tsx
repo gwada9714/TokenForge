@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useBlockchain } from '../hooks/useBlockchain';
-import { useTokenCreation } from '../hooks/useTokenCreation';
-import { useTokenDeployment } from '../hooks/useTokenDeployment';
-import { usePayment } from '../hooks/usePayment';
-import { TokenConfig } from '../types';
+import React, { useState, useEffect } from "react";
+import { useBlockchain } from "../hooks/useBlockchain";
+import { useTokenCreation } from "../hooks/useTokenCreation";
+import { useTokenDeployment } from "../hooks/useTokenDeployment";
+import { usePayment } from "../hooks/usePayment";
+import { TokenConfig } from "../types";
 
 /**
  * Exemple de composant React pour la création et le déploiement de tokens
@@ -11,10 +11,10 @@ import { TokenConfig } from '../types';
  */
 const TokenCreationExample: React.FC = () => {
   // État local
-  const [selectedChain, setSelectedChain] = useState<string>('ethereum');
+  const [selectedChain, setSelectedChain] = useState<string>("ethereum");
   const [tokenConfig, setTokenConfig] = useState<TokenConfig>({
-    name: '',
-    symbol: '',
+    name: "",
+    symbol: "",
     decimals: 18,
     initialSupply: 1000000,
     maxSupply: 10000000,
@@ -23,30 +23,36 @@ const TokenCreationExample: React.FC = () => {
     antiWhale: {
       enabled: false,
       maxTransferPercent: 1,
-      excludedAddresses: []
+      excludedAddresses: [],
     },
     taxable: {
       enabled: false,
       buyTaxPercent: 0,
       sellTaxPercent: 0,
       transferTaxPercent: 0,
-      taxRecipient: ''
-    }
+      taxRecipient: "",
+    },
   });
-  const [step, setStep] = useState<'connect' | 'configure' | 'payment' | 'deployment' | 'success'>('connect');
-  const [pairWithToken, setPairWithToken] = useState<string>('');
-  const [liquidityAmount, setLiquidityAmount] = useState<string>('0');
+  const [step, setStep] = useState<
+    "connect" | "configure" | "payment" | "deployment" | "success"
+  >("connect");
+  const [pairWithToken, setPairWithToken] = useState<string>("");
+  const [liquidityAmount, setLiquidityAmount] = useState<string>("0");
 
   // Hooks blockchain
-  const { service: blockchainService, isConnected, networkId, error: connectionError } = 
-    useBlockchain(selectedChain, window.ethereum);
-  
-  const { 
-    validateToken, 
-    estimateDeploymentCost, 
-    error: creationError 
+  const {
+    service: blockchainService,
+    isConnected,
+    networkId,
+    error: connectionError,
+  } = useBlockchain(selectedChain, window.ethereum);
+
+  const {
+    validateToken,
+    estimateDeploymentCost,
+    error: creationError,
   } = useTokenCreation(selectedChain, window.ethereum);
-  
+
   const {
     deployToken,
     setupAutoLiquidity,
@@ -54,23 +60,23 @@ const TokenCreationExample: React.FC = () => {
     deploymentStatus,
     deploymentProgress,
     deploymentError,
-    tokenAddress
+    tokenAddress,
   } = useTokenDeployment(selectedChain, window.ethereum);
-  
+
   const {
     createPaymentSession,
     verifyPayment,
     calculateFees,
     isProcessing: isProcessingPayment,
     sessionId,
-    error: paymentError
+    error: paymentError,
   } = usePayment(selectedChain, window.ethereum);
 
   // Effets
   useEffect(() => {
     // Réinitialiser l'étape si la connexion est perdue
-    if (!isConnected && step !== 'connect') {
-      setStep('connect');
+    if (!isConnected && step !== "connect") {
+      setStep("connect");
     }
   }, [isConnected, step]);
 
@@ -81,45 +87,53 @@ const TokenCreationExample: React.FC = () => {
 
   const handleConnect = async () => {
     if (isConnected) {
-      setStep('configure');
+      setStep("configure");
     } else {
       // Demander à l'utilisateur de connecter son wallet
       if (window.ethereum) {
         try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          await window.ethereum.request({ method: "eth_requestAccounts" });
         } catch (error) {
-          console.error('Failed to connect wallet:', error);
+          console.error("Failed to connect wallet:", error);
         }
       } else {
-        alert('Please install a Web3 wallet like MetaMask');
+        alert("Please install a Web3 wallet like MetaMask");
       }
     }
   };
 
-  const handleConfigChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleConfigChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target as HTMLInputElement;
-    
-    if (name.includes('.')) {
+
+    if (name.includes(".")) {
       // Gérer les propriétés imbriquées (e.g., antiWhale.enabled)
-      const [parent, child] = name.split('.');
-      
+      const [parent, child] = name.split(".");
+
       // Type safety for nested properties
-      if (parent === 'antiWhale' || parent === 'taxable') {
-        setTokenConfig(prev => ({
+      if (parent === "antiWhale" || parent === "taxable") {
+        setTokenConfig((prev) => ({
           ...prev,
           [parent]: {
             ...prev[parent as keyof TokenConfig],
-            [child]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-          }
+            [child]:
+              type === "checkbox"
+                ? (e.target as HTMLInputElement).checked
+                : value,
+          },
         }));
       }
     } else {
       // Gérer les propriétés de premier niveau
-      setTokenConfig(prev => ({
+      setTokenConfig((prev) => ({
         ...prev,
-        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : (
-          type === 'number' ? Number(value) : value
-        )
+        [name]:
+          type === "checkbox"
+            ? (e.target as HTMLInputElement).checked
+            : type === "number"
+            ? Number(value)
+            : value,
       }));
     }
   };
@@ -130,26 +144,29 @@ const TokenCreationExample: React.FC = () => {
       // Estimer le coût de déploiement
       const cost = await estimateDeploymentCost(tokenConfig);
       console.log(`Estimated deployment cost: ${cost}`);
-      setStep('payment');
+      setStep("payment");
     } else {
-      alert(`Invalid configuration: ${validation.errors.join(', ')}`);
+      alert(`Invalid configuration: ${validation.errors.join(", ")}`);
     }
   };
 
   const handleCreatePayment = async () => {
     // Calculer les frais
-    const estimatedCost = await estimateDeploymentCost(tokenConfig) || 0n;
-    const fees = await calculateFees(estimatedCost) || 0n;
+    const estimatedCost = (await estimateDeploymentCost(tokenConfig)) || 0n;
+    const fees = (await calculateFees(estimatedCost)) || 0n;
     console.log(`Estimated fees: ${fees}`);
-    
+
     // Créer une session de paiement
-    const session = await createPaymentSession(estimatedCost + fees, selectedChain === 'ethereum' ? 'ETH' : 'NATIVE');
+    const session = await createPaymentSession(
+      estimatedCost + fees,
+      selectedChain === "ethereum" ? "ETH" : "NATIVE"
+    );
     if (session) {
       console.log(`Payment session created: ${session}`);
       // Dans une application réelle, on redirigerait vers une page de paiement
       // Pour cet exemple, on simule un paiement réussi
       setTimeout(() => {
-        setStep('deployment');
+        setStep("deployment");
       }, 2000);
     }
   };
@@ -158,25 +175,27 @@ const TokenCreationExample: React.FC = () => {
     const result = await deployToken(tokenConfig);
     if (result && result.tokenAddress) {
       console.log(`Token deployed at: ${result.tokenAddress}`);
-      
+
       // Configurer la liquidité automatique si demandé
       if (pairWithToken && liquidityAmount) {
         const liquidityResult = await setupAutoLiquidity(
           result.tokenAddress,
           pairWithToken,
-          BigInt(parseFloat(liquidityAmount) * 10**18)
+          BigInt(parseFloat(liquidityAmount) * 10 ** 18)
         );
-        console.log(`Auto-liquidity setup: ${liquidityResult ? 'Success' : 'Failed'}`);
+        console.log(
+          `Auto-liquidity setup: ${liquidityResult ? "Success" : "Failed"}`
+        );
       }
-      
-      setStep('success');
+
+      setStep("success");
     }
   };
 
   // Rendu conditionnel selon l'étape
   const renderStep = () => {
     switch (step) {
-      case 'connect':
+      case "connect":
         return (
           <div className="step-connect">
             <h2>Connect Your Wallet</h2>
@@ -191,19 +210,19 @@ const TokenCreationExample: React.FC = () => {
               </select>
             </div>
             <button onClick={handleConnect} disabled={isConnected}>
-              {isConnected ? 'Connected' : 'Connect Wallet'}
+              {isConnected ? "Connected" : "Connect Wallet"}
             </button>
             {connectionError && <p className="error">{connectionError}</p>}
             {isConnected && (
               <div className="connection-info">
                 <p>Connected to network ID: {networkId}</p>
-                <button onClick={() => setStep('configure')}>Continue</button>
+                <button onClick={() => setStep("configure")}>Continue</button>
               </div>
             )}
           </div>
         );
-        
-      case 'configure':
+
+      case "configure":
         return (
           <div className="step-configure">
             <h2>Configure Your Token</h2>
@@ -253,7 +272,7 @@ const TokenCreationExample: React.FC = () => {
               <input
                 type="number"
                 name="maxSupply"
-                value={tokenConfig.maxSupply?.toString() || ''}
+                value={tokenConfig.maxSupply?.toString() || ""}
                 onChange={handleConfigChange}
                 min="0"
               />
@@ -355,14 +374,14 @@ const TokenCreationExample: React.FC = () => {
               </>
             )}
             <div className="form-actions">
-              <button onClick={() => setStep('connect')}>Back</button>
+              <button onClick={() => setStep("connect")}>Back</button>
               <button onClick={handleValidateConfig}>Next</button>
             </div>
             {creationError && <p className="error">{creationError}</p>}
           </div>
         );
-        
-      case 'payment':
+
+      case "payment":
         return (
           <div className="step-payment">
             <h2>Payment</h2>
@@ -375,12 +394,17 @@ const TokenCreationExample: React.FC = () => {
             {sessionId && <p>Payment session: {sessionId}</p>}
             {paymentError && <p className="error">{paymentError}</p>}
             <div className="form-actions">
-              <button onClick={() => setStep('configure')} disabled={isProcessingPayment}>Back</button>
+              <button
+                onClick={() => setStep("configure")}
+                disabled={isProcessingPayment}
+              >
+                Back
+              </button>
             </div>
           </div>
         );
-        
-      case 'deployment':
+
+      case "deployment":
         return (
           <div className="step-deployment">
             <h2>Token Deployment</h2>
@@ -409,7 +433,10 @@ const TokenCreationExample: React.FC = () => {
               <div className="deployment-progress">
                 <p>Deploying token... {deploymentProgress}%</p>
                 <div className="progress-bar">
-                  <div className="progress" style={{ width: `${deploymentProgress}%` }}></div>
+                  <div
+                    className="progress"
+                    style={{ width: `${deploymentProgress}%` }}
+                  ></div>
                 </div>
                 <p>Status: {deploymentStatus}</p>
               </div>
@@ -418,46 +445,58 @@ const TokenCreationExample: React.FC = () => {
             )}
             {deploymentError && <p className="error">{deploymentError}</p>}
             <div className="form-actions">
-              <button onClick={() => setStep('payment')} disabled={isDeploying}>Back</button>
+              <button onClick={() => setStep("payment")} disabled={isDeploying}>
+                Back
+              </button>
             </div>
           </div>
         );
-        
-      case 'success':
+
+      case "success":
         return (
           <div className="step-success">
             <h2>Deployment Successful!</h2>
             <p>Congratulations! Your token has been successfully deployed.</p>
             <div className="token-info">
-              <p><strong>Token Address:</strong> {tokenAddress}</p>
-              <p><strong>Token Name:</strong> {tokenConfig.name}</p>
-              <p><strong>Token Symbol:</strong> {tokenConfig.symbol}</p>
+              <p>
+                <strong>Token Address:</strong> {tokenAddress}
+              </p>
+              <p>
+                <strong>Token Name:</strong> {tokenConfig.name}
+              </p>
+              <p>
+                <strong>Token Symbol:</strong> {tokenConfig.symbol}
+              </p>
             </div>
-            <button onClick={() => {
-              // Réinitialiser le formulaire pour un nouveau token
-              setTokenConfig({
-                name: '',
-                symbol: '',
-                decimals: 18,
-                initialSupply: 1000000,
-                maxSupply: 10000000,
-                burnable: true,
-                mintable: true,
-                antiWhale: {
-                  enabled: false,
-                  maxTransferPercent: 1,
-                  excludedAddresses: []
-                },
-                taxable: {
-                  enabled: false,
-                  buyTaxPercent: 0,
-                  sellTaxPercent: 0,
-                  transferTaxPercent: 0,
-                  taxRecipient: ''
-                }
-              });
-              setStep('connect');
-            }}>Create Another Token</button>
+            <button
+              onClick={() => {
+                // Réinitialiser le formulaire pour un nouveau token
+                setTokenConfig({
+                  name: "",
+                  symbol: "",
+                  decimals: 18,
+                  initialSupply: 1000000,
+                  maxSupply: 10000000,
+                  burnable: true,
+                  mintable: true,
+                  antiWhale: {
+                    enabled: false,
+                    maxTransferPercent: 1,
+                    excludedAddresses: [],
+                  },
+                  taxable: {
+                    enabled: false,
+                    buyTaxPercent: 0,
+                    sellTaxPercent: 0,
+                    transferTaxPercent: 0,
+                    taxRecipient: "",
+                  },
+                });
+                setStep("connect");
+              }}
+            >
+              Create Another Token
+            </button>
           </div>
         );
     }
@@ -467,11 +506,39 @@ const TokenCreationExample: React.FC = () => {
     <div className="token-creation-example">
       <h1>TokenForge - Create Your Token</h1>
       <div className="steps-indicator">
-        <div className={`step ${step === 'connect' ? 'active' : ''} ${isConnected ? 'completed' : ''}`}>Connect</div>
-        <div className={`step ${step === 'configure' ? 'active' : ''} ${step === 'payment' || step === 'deployment' || step === 'success' ? 'completed' : ''}`}>Configure</div>
-        <div className={`step ${step === 'payment' ? 'active' : ''} ${step === 'deployment' || step === 'success' ? 'completed' : ''}`}>Payment</div>
-        <div className={`step ${step === 'deployment' ? 'active' : ''} ${step === 'success' ? 'completed' : ''}`}>Deployment</div>
-        <div className={`step ${step === 'success' ? 'active' : ''}`}>Success</div>
+        <div
+          className={`step ${step === "connect" ? "active" : ""} ${
+            isConnected ? "completed" : ""
+          }`}
+        >
+          Connect
+        </div>
+        <div
+          className={`step ${step === "configure" ? "active" : ""} ${
+            step === "payment" || step === "deployment" || step === "success"
+              ? "completed"
+              : ""
+          }`}
+        >
+          Configure
+        </div>
+        <div
+          className={`step ${step === "payment" ? "active" : ""} ${
+            step === "deployment" || step === "success" ? "completed" : ""
+          }`}
+        >
+          Payment
+        </div>
+        <div
+          className={`step ${step === "deployment" ? "active" : ""} ${
+            step === "success" ? "completed" : ""
+          }`}
+        >
+          Deployment
+        </div>
+        <div className={`step ${step === "success" ? "active" : ""}`}>
+          Success
+        </div>
       </div>
       {renderStep()}
     </div>

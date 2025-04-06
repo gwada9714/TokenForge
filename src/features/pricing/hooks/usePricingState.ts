@@ -1,5 +1,5 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store';
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store";
 import {
   setSelectedPlan,
   setCurrentPayment,
@@ -7,18 +7,13 @@ import {
   setProcessing,
   setError,
   clearPayment,
-} from '@/store/slices/pricing';
-import { PaymentDetails, PlanType } from '../types/plans';
+} from "@/store/slices/pricing";
+import { PaymentDetails, PlanType } from "../types/plans";
 
 export const usePricingState = () => {
   const dispatch = useDispatch();
-  const {
-    selectedPlan,
-    currentPayment,
-    paymentHistory,
-    isProcessing,
-    error
-  } = useSelector((state: RootState) => state.pricing);
+  const { selectedPlan, currentPayment, paymentHistory, isProcessing, error } =
+    useSelector((state: RootState) => state.pricing);
 
   const selectPlan = (plan: PlanType) => {
     dispatch(setSelectedPlan(plan));
@@ -60,4 +55,4 @@ export const usePricingState = () => {
     setPaymentError,
     clearCurrentPayment,
   };
-}; 
+};

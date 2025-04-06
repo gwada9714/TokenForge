@@ -1,6 +1,6 @@
-import { generateNonce } from './nonce';
-import { keyManager } from './vault/key-manager';
-import { cspCollector } from './monitoring/csp-collector';
+import { generateNonce } from "./nonce";
+import { keyManager } from "./vault/key-manager";
+import { cspCollector } from "./monitoring/csp-collector";
 
 export interface CSPConfig {
   nonce: string;
@@ -10,10 +10,12 @@ export interface CSPConfig {
 export async function getCSPDirectives(): Promise<CSPConfig> {
   const nonce = generateNonce();
   const key = await keyManager.getCurrentKey();
-  
+
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' ${process.env.DEV ? "'unsafe-eval'" : ''} https://*.walletconnect.org https://*.walletconnect.com`,
+    `script-src 'self' 'nonce-${nonce}' ${
+      process.env.DEV ? "'unsafe-eval'" : ""
+    } https://*.walletconnect.org https://*.walletconnect.com`,
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
     "img-src 'self' data: https: blob:",
@@ -40,7 +42,7 @@ export async function getCSPDirectives(): Promise<CSPConfig> {
     "form-action 'self'",
     "frame-ancestors 'self'",
     // Ajout du reporting
-    `report-uri https://api.tokenforge.example.com/csp-report?key=${key}`
+    `report-uri https://api.tokenforge.example.com/csp-report?key=${key}`,
   ];
 
   return { nonce, directives };
@@ -48,8 +50,8 @@ export async function getCSPDirectives(): Promise<CSPConfig> {
 
 // Gestionnaire des violations CSP
 export async function handleCSPViolation(event: SecurityPolicyViolationEvent) {
-  const clientId = localStorage.getItem('client_id') || undefined;
-  
+  const clientId = localStorage.getItem("client_id") || undefined;
+
   await cspCollector.reportViolation({
     blockedURI: event.blockedURI,
     documentURI: event.documentURI,

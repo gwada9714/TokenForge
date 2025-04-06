@@ -14,8 +14,5 @@
     "lib": ["ESNext"],
     "target": "ESNext"
   },
-  "include": [
-    "vite.config.ts",
-    "src/security/**/*.ts"
-  ]
+  "include": ["vite.config.ts", "src/security/**/*.ts"]
 }

@@ -1,6 +1,6 @@
-import React from 'react';
-import styled from 'styled-components';
-import { StyledButton } from '@/components/ui/Button';
+import React from "react";
+import styled from "styled-components";
+import { StyledButton } from "@/components/ui/Button";
 
 const HeroContainer = styled.section`
   min-height: 100vh;
@@ -8,30 +8,30 @@ const HeroContainer = styled.section`
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #182038 0%, #2A3352 100%);
+  background: linear-gradient(135deg, #182038 0%, #2a3352 100%);
   position: relative;
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('/forge-pattern.svg') repeat;
+    background: url("/forge-pattern.svg") repeat;
     opacity: 0.05;
     z-index: 1;
   }
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     left: 50%;
     width: 60vw;
     height: 60vw;
-    background: radial-gradient(circle, #D97706 0%, transparent 70%);
+    background: radial-gradient(circle, #d97706 0%, transparent 70%);
     transform: translate(-50%, -50%);
     opacity: 0.1;
     filter: blur(100px);
@@ -57,33 +57,33 @@ const Content = styled.div`
 
 const TextContent = styled.div`
   flex: 1;
-  color: #FFFFFF;
+  color: #ffffff;
 `;
 
 const Title = styled.h1`
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 4rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
   line-height: 1.2;
-  
+
   @media (max-width: 768px) {
     font-size: 2.5rem;
   }
 
   span {
-    background: linear-gradient(135deg, #D97706, #FFD700);
+    background: linear-gradient(135deg, #d97706, #ffd700);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 `;
 
 const Subtitle = styled.p`
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   font-size: 1.25rem;
   line-height: 1.6;
   margin-bottom: 2rem;
-  color: #F5F5F5;
+  color: #f5f5f5;
   opacity: 0.9;
 `;
 
@@ -114,8 +114,13 @@ const IllustrationContainer = styled.div`
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
   }
 `;
 
@@ -138,17 +143,17 @@ const StatItem = styled.div`
 `;
 
 const StatValue = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 2rem;
   font-weight: 700;
-  color: #D97706;
+  color: #d97706;
   margin-bottom: 0.5rem;
 `;
 
 const StatLabel = styled.div`
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   font-size: 0.875rem;
-  color: #F5F5F5;
+  color: #f5f5f5;
   opacity: 0.8;
 `;
 
@@ -161,7 +166,8 @@ export const HeroSection: React.FC = () => {
             Forge ton avenir dans la <span>blockchain</span>
           </Title>
           <Subtitle>
-            Créez, déployez et gérez vos tokens en toute simplicité. Une plateforme puissante pour donner vie à vos projets crypto.
+            Créez, déployez et gérez vos tokens en toute simplicité. Une
+            plateforme puissante pour donner vie à vos projets crypto.
           </Subtitle>
           <ButtonGroup>
             <StyledButton $variant="primary" $size="large">

@@ -1,7 +1,7 @@
-import { ethers } from 'ethers';
-import { NetworkConfig } from '@/config/networks';
-import { LiquidityLock } from '@/types/tokenFeatures';
-import { LIQUIDITY_LOCKER_ABI } from '@/abi/LiquidityLockerABI';
+import { ethers } from "ethers";
+import { NetworkConfig } from "@/config/networks";
+import { LiquidityLock } from "@/types/tokenFeatures";
+import { LIQUIDITY_LOCKER_ABI } from "@/abi/LiquidityLockerABI";
 
 export class LiquidityLockService {
   private provider: ethers.JsonRpcProvider;
@@ -9,9 +9,11 @@ export class LiquidityLockService {
 
   constructor(network: NetworkConfig) {
     this.provider = new ethers.JsonRpcProvider(network.chain.rpcUrls.default);
-    
+
     if (!network.contracts.liquidityLocker) {
-      throw new Error('Liquidity locker contract address not configured for this network');
+      throw new Error(
+        "Liquidity locker contract address not configured for this network"
+      );
     }
 
     this.lockContract = new ethers.Contract(
@@ -43,26 +45,32 @@ export class LiquidityLockService {
       const receipt = await tx.wait();
       return receipt.hash;
     } catch (error) {
-      console.error('Error locking liquidity:', error);
-      throw new Error('Failed to lock liquidity');
+      console.error("Error locking liquidity:", error);
+      throw new Error("Failed to lock liquidity");
     }
   }
 
-  async getLockInfo(tokenAddress: string, pairAddress: string): Promise<{
+  async getLockInfo(
+    tokenAddress: string,
+    pairAddress: string
+  ): Promise<{
     amount: string;
     unlockDate: Date;
     beneficiary: string;
   }> {
     try {
-      const lockInfo = await this.lockContract.getLockInfo(tokenAddress, pairAddress);
+      const lockInfo = await this.lockContract.getLockInfo(
+        tokenAddress,
+        pairAddress
+      );
       return {
         amount: ethers.formatUnits(lockInfo.amount, 18),
         unlockDate: new Date(Number(lockInfo.unlockTime) * 1000),
-        beneficiary: lockInfo.beneficiary
+        beneficiary: lockInfo.beneficiary,
       };
     } catch (error) {
-      console.error('Error getting lock info:', error);
-      throw new Error('Failed to get lock information');
+      console.error("Error getting lock info:", error);
+      throw new Error("Failed to get lock information");
     }
   }
 
@@ -84,8 +92,8 @@ export class LiquidityLockService {
       const receipt = await tx.wait();
       return receipt.hash;
     } catch (error) {
-      console.error('Error extending lock:', error);
-      throw new Error('Failed to extend lock');
+      console.error("Error extending lock:", error);
+      throw new Error("Failed to extend lock");
     }
   }
 }

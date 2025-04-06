@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Alert,
   AlertTitle,
@@ -9,8 +9,8 @@ import {
   DialogTitle,
   Typography,
   Box,
-} from '@mui/material';
-import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
+} from "@mui/material";
+import { useFirebaseAuth } from "../hooks/useFirebaseAuth";
 
 interface EmailVerificationProps {
   open: boolean;
@@ -37,7 +37,11 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
       await sendVerificationEmail();
       setEmailSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to send verification email'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to send verification email")
+      );
     } finally {
       setIsSending(false);
     }
@@ -48,15 +52,8 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle>
-        Email Verification Required
-      </DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Email Verification Required</DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 2 }}>
           <Typography variant="body1" gutterBottom>
@@ -68,19 +65,15 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
         </Box>
 
         {error && (
-          <Alert 
-            severity="error" 
-            sx={{ mb: 2 }}
-            onClose={() => setError(null)}
-          >
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
             <AlertTitle>Error</AlertTitle>
             {error.message}
           </Alert>
         )}
 
         {emailSent && (
-          <Alert 
-            severity="success" 
+          <Alert
+            severity="success"
             sx={{ mb: 2 }}
             onClose={() => setEmailSent(false)}
           >
@@ -90,14 +83,12 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
         )}
 
         <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
-          If you don't receive the email within a few minutes, check your spam folder or request a new verification email.
+          If you don't receive the email within a few minutes, check your spam
+          folder or request a new verification email.
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button
-          onClick={onClose}
-          color="inherit"
-        >
+        <Button onClick={onClose} color="inherit">
           Later
         </Button>
         <Button
@@ -106,7 +97,11 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
           color="primary"
           disabled={isSending}
         >
-          {isSending ? 'Sending...' : emailSent ? 'Resend Email' : 'Send Verification Email'}
+          {isSending
+            ? "Sending..."
+            : emailSent
+            ? "Resend Email"
+            : "Send Verification Email"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useTokenForgeAuthContext } from '../context/TokenForgeAuthProvider';
-import { CircularProgress, Box } from '@mui/material';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useTokenForgeAuthContext } from "../context/TokenForgeAuthProvider";
+import { CircularProgress, Box } from "@mui/material";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,12 +14,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireWallet = false,
   requireCorrectNetwork = false,
 }) => {
-  const {
-    isAuthenticated,
-    loading,
-    isConnected,
-    isCorrectNetwork,
-  } = useTokenForgeAuthContext();
+  const { isAuthenticated, loading, isConnected, isCorrectNetwork } =
+    useTokenForgeAuthContext();
   const location = useLocation();
 
   if (loading) {

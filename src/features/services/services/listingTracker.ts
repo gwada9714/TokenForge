@@ -1,12 +1,12 @@
-import { logger } from '@/core/logger';
-import { ServiceType } from '../types/services';
+import { logger } from "@/core/logger";
+import { ServiceType } from "../types/services";
 
 export interface ListingEvent {
   projectId: string;
   exchange: string;
   listingDate: Date;
   initialMarketCap: number;
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   commission?: number;
 }
 
@@ -34,7 +34,7 @@ export class ListingTracker {
         exchange,
         listingDate: new Date(),
         initialMarketCap,
-        status: 'pending'
+        status: "pending",
       };
 
       // TODO: Sauvegarder l'événement dans Firebase
@@ -42,7 +42,11 @@ export class ListingTracker {
 
       return listingEvent;
     } catch (error) {
-      logger.error('Erreur lors du suivi du listing', { error, projectId, exchange });
+      logger.error("Erreur lors du suivi du listing", {
+        error,
+        projectId,
+        exchange,
+      });
       throw error;
     }
   }
@@ -51,15 +55,17 @@ export class ListingTracker {
     try {
       const listingEvent = await this.getListingEvent(projectId);
       if (!listingEvent) {
-        throw new Error('Événement de listing non trouvé');
+        throw new Error("Événement de listing non trouvé");
       }
 
-      const commission = this.calculateCommission(listingEvent.initialMarketCap);
-      
+      const commission = this.calculateCommission(
+        listingEvent.initialMarketCap
+      );
+
       const updatedEvent: ListingEvent = {
         ...listingEvent,
-        status: 'completed',
-        commission
+        status: "completed",
+        commission,
       };
 
       // TODO: Mettre à jour l'événement dans Firebase
@@ -67,7 +73,10 @@ export class ListingTracker {
 
       return updatedEvent;
     } catch (error) {
-      logger.error('Erreur lors de la complétion du listing', { error, projectId });
+      logger.error("Erreur lors de la complétion du listing", {
+        error,
+        projectId,
+      });
       throw error;
     }
   }
@@ -78,17 +87,19 @@ export class ListingTracker {
 
   private async saveListingEvent(event: ListingEvent): Promise<void> {
     // TODO: Implémenter la sauvegarde Firebase
-    logger.info('Sauvegarde de l\'événement de listing', { event });
+    logger.info("Sauvegarde de l'événement de listing", { event });
   }
 
   private async updateListingEvent(event: ListingEvent): Promise<void> {
     // TODO: Implémenter la mise à jour Firebase
-    logger.info('Mise à jour de l\'événement de listing', { event });
+    logger.info("Mise à jour de l'événement de listing", { event });
   }
 
-  private async getListingEvent(projectId: string): Promise<ListingEvent | null> {
+  private async getListingEvent(
+    projectId: string
+  ): Promise<ListingEvent | null> {
     // TODO: Implémenter la récupération depuis Firebase
-    logger.info('Récupération de l\'événement de listing', { projectId });
+    logger.info("Récupération de l'événement de listing", { projectId });
     return null;
   }
-} 
+}

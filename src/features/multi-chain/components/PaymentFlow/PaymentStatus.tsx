@@ -1,5 +1,5 @@
-import React from 'react';
-import { PaymentStatus as PaymentStatusType } from '../../services/payment/types/PaymentSession';
+import React from "react";
+import { PaymentStatus as PaymentStatusType } from "../../services/payment/types/PaymentSession";
 
 interface PaymentStatusProps {
   status: PaymentStatusType;
@@ -10,24 +10,24 @@ interface PaymentStatusProps {
 
 const STATUS_DETAILS = {
   PENDING: {
-    icon: '⏳',
-    title: 'En attente',
-    description: 'Veuillez confirmer la transaction dans votre wallet',
+    icon: "⏳",
+    title: "En attente",
+    description: "Veuillez confirmer la transaction dans votre wallet",
   },
   PROCESSING: {
-    icon: '🔄',
-    title: 'En cours',
-    description: 'Transaction en cours de traitement',
+    icon: "🔄",
+    title: "En cours",
+    description: "Transaction en cours de traitement",
   },
   COMPLETED: {
-    icon: '✅',
-    title: 'Complété',
-    description: 'Paiement effectué avec succès',
+    icon: "✅",
+    title: "Complété",
+    description: "Paiement effectué avec succès",
   },
   FAILED: {
-    icon: '❌',
-    title: 'Échoué',
-    description: 'Le paiement a échoué',
+    icon: "❌",
+    title: "Échoué",
+    description: "Le paiement a échoué",
   },
 };
 
@@ -59,7 +59,7 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
         </div>
       )}
 
-      {status === 'FAILED' && onRetry && (
+      {status === "FAILED" && onRetry && (
         <button
           onClick={onRetry}
           className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors"
@@ -69,4 +69,4 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
       )}
     </div>
   );
-}; 
+};

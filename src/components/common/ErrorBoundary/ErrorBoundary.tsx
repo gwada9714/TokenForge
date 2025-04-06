@@ -1,6 +1,6 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { Box, Typography, Button, Paper } from '@mui/material';
-import { ErrorOutline as ErrorIcon } from '@mui/icons-material';
+import { Component, ErrorInfo, ReactNode } from "react";
+import { Box, Typography, Button, Paper } from "@mui/material";
+import { ErrorOutline as ErrorIcon } from "@mui/icons-material";
 
 interface Props {
   children: ReactNode;
@@ -33,9 +33,9 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo,
     });
-    
+
     // Ici, vous pouvez ajouter votre logique de logging d'erreur
-    console.error('Uncaught error:', error, errorInfo);
+    console.error("Uncaught error:", error, errorInfo);
   }
 
   private handleReset = () => {
@@ -55,11 +55,11 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '400px',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "400px",
             p: 3,
           }}
         >
@@ -68,8 +68,8 @@ export class ErrorBoundary extends Component<Props, State> {
             sx={{
               p: 4,
               maxWidth: 600,
-              width: '100%',
-              textAlign: 'center',
+              width: "100%",
+              textAlign: "center",
             }}
           >
             <ErrorIcon color="error" sx={{ fontSize: 64, mb: 2 }} />
@@ -77,24 +77,22 @@ export class ErrorBoundary extends Component<Props, State> {
               Something went wrong
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
-              {this.state.error?.message || 'An unexpected error occurred'}
+              {this.state.error?.message || "An unexpected error occurred"}
             </Typography>
-            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
+            {process.env.NODE_ENV === "development" && this.state.errorInfo && (
               <Box
                 component="pre"
                 sx={{
                   mt: 2,
                   p: 2,
-                  bgcolor: 'grey.100',
+                  bgcolor: "grey.100",
                   borderRadius: 1,
-                  overflow: 'auto',
-                  textAlign: 'left',
-                  maxHeight: '200px',
+                  overflow: "auto",
+                  textAlign: "left",
+                  maxHeight: "200px",
                 }}
               >
-                <code>
-                  {this.state.errorInfo.componentStack}
-                </code>
+                <code>{this.state.errorInfo.componentStack}</code>
               </Box>
             )}
             <Button

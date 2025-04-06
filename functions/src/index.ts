@@ -1,7 +1,4 @@
-import { verifyMoonPayWebhookSignature } from './verifyMoonPayWebhook';
-import { authenticateWallet } from './auth';
+import { verifyMoonPayWebhookSignature } from "./verifyMoonPayWebhook";
+import { authenticateWallet } from "./auth";
 
-export {
-  verifyMoonPayWebhookSignature,
-  authenticateWallet,
-};
+export { verifyMoonPayWebhookSignature, authenticateWallet };

@@ -1,5 +1,5 @@
-import { useContractWrite } from 'wagmi';
-import { toast } from 'react-hot-toast';
+import { useContractWrite } from "wagmi";
+import { toast } from "react-hot-toast";
 
 export interface PlanDetails {
   name: string;
@@ -31,7 +31,7 @@ export const usePlanPurchase = () => {
 
   return {
     purchasePlan,
-    isLoading
+    isLoading,
   };
 };
 

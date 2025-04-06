@@ -1,7 +1,7 @@
-import React, { memo, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Box, 
+import React, { memo, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
   Button,
   Card,
   CardContent,
@@ -14,15 +14,15 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton
-} from '@mui/material';
-import LaunchIcon from '@mui/icons-material/Launch';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import { Virtuoso } from 'react-virtuoso';
-import { useUserTokens, TokenData } from '../../hooks/useUserTokens';
-import { useTokenStats } from '../../hooks/useTokenStats';
-import { TokenIcon } from '../TokenDisplay/TokenIcon';
-import CircularProgress from '@mui/material/CircularProgress';
+  IconButton,
+} from "@mui/material";
+import LaunchIcon from "@mui/icons-material/Launch";
+import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import { Virtuoso } from "react-virtuoso";
+import { useUserTokens, TokenData } from "../../hooks/useUserTokens";
+import { useTokenStats } from "../../hooks/useTokenStats";
+import { TokenIcon } from "../TokenDisplay/TokenIcon";
+import CircularProgress from "@mui/material/CircularProgress";
 
 interface StatCardProps {
   title: string;
@@ -39,24 +39,26 @@ interface ExtendedTokenData extends TokenData {
   };
 }
 
-const StatCard = memo<StatCardProps>(({ title, value, icon, isLoading, subValue }) => (
-  <Card>
-    <CardContent>
-      <Box display="flex" alignItems="center" gap={1} mb={1}>
-        {icon}
-        <Typography variant="h6" component="div">
-          {title}
-        </Typography>
-      </Box>
-      <Typography variant="h4">{isLoading ? '...' : value}</Typography>
-      {subValue && (
-        <Typography variant="body2" color="text.secondary">
-          {subValue}
-        </Typography>
-      )}
-    </CardContent>
-  </Card>
-));
+const StatCard = memo<StatCardProps>(
+  ({ title, value, icon, isLoading, subValue }) => (
+    <Card>
+      <CardContent>
+        <Box display="flex" alignItems="center" gap={1} mb={1}>
+          {icon}
+          <Typography variant="h6" component="div">
+            {title}
+          </Typography>
+        </Box>
+        <Typography variant="h4">{isLoading ? "..." : value}</Typography>
+        {subValue && (
+          <Typography variant="body2" color="text.secondary">
+            {subValue}
+          </Typography>
+        )}
+      </CardContent>
+    </Card>
+  )
+);
 
 const TokenRow = memo<{ token: TokenData }>(({ token }) => (
   <TableRow>
@@ -64,22 +66,22 @@ const TokenRow = memo<{ token: TokenData }>(({ token }) => (
     <TableCell>{token.symbol}</TableCell>
     <TableCell>
       <Paper component="span" variant="outlined" square>
-        {token.network?.name || 'Unknown Network'}
+        {token.network?.name || "Unknown Network"}
       </Paper>
     </TableCell>
     <TableCell>{token.totalSupply.toString()}</TableCell>
-    <TableCell>
-      {new Date(token.createdAt).toLocaleDateString()}
-    </TableCell>
+    <TableCell>{new Date(token.createdAt).toLocaleDateString()}</TableCell>
     <TableCell align="right">
       <IconButton
         size="small"
-        onClick={() => window.open(
-          token.network ? 
-            `${token.network.explorerUrl}/token/${token.address}` :
-            '#',
-          '_blank'
-        )}
+        onClick={() =>
+          window.open(
+            token.network
+              ? `${token.network.explorerUrl}/token/${token.address}`
+              : "#",
+            "_blank"
+          )
+        }
       >
         <LaunchIcon fontSize="small" />
       </IconButton>
@@ -89,16 +91,18 @@ const TokenRow = memo<{ token: TokenData }>(({ token }) => (
 
 const TokenList = memo<{ tokens: TokenData[] }>(({ tokens }) => (
   <Virtuoso
-    style={{ height: '400px' }}
+    style={{ height: "400px" }}
     totalCount={tokens.length}
-    itemContent={(_: number, index: number) => <TokenRow token={tokens[index]} />}
+    itemContent={(_: number, index: number) => (
+      <TokenRow token={tokens[index]} />
+    )}
   />
 ));
 
 const useGlobalStats = () => {
   const { isLoading, error } = useTokenStats();
   const { tokens } = useUserTokens();
-  
+
   return useMemo(() => {
     let totalTaxCollected = 0;
     let totalTransactions = 0;
@@ -114,7 +118,7 @@ const useGlobalStats = () => {
       totalTaxCollected,
       totalTransactions,
       isLoading,
-      error
+      error,
     };
   }, [tokens, isLoading, error]);
 };
@@ -122,61 +126,79 @@ const useGlobalStats = () => {
 const Dashboard = memo(() => {
   const navigate = useNavigate();
   const { tokens, isLoading: tokensLoading } = useUserTokens();
-  const { totalTaxCollected, totalTransactions, isLoading: statsLoading } = useGlobalStats();
-  
+  const {
+    totalTaxCollected,
+    totalTransactions,
+    isLoading: statsLoading,
+  } = useGlobalStats();
+
   const isLoading = tokensLoading || statsLoading;
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     );
   }
 
-  const statsCards = useMemo(() => (
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-        <StatCard
-          title="Total Tax Collected"
-          value={totalTaxCollected?.toString() || "0"}
-          icon={<MonetizationOnIcon color="primary" />}
-          subValue={`${totalTransactions || 0} transactions`}
-        />
+  const statsCards = useMemo(
+    () => (
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <StatCard
+            title="Total Tax Collected"
+            value={totalTaxCollected?.toString() || "0"}
+            icon={<MonetizationOnIcon color="primary" />}
+            subValue={`${totalTransactions || 0} transactions`}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <StatCard
+            title="Total Tokens"
+            value={tokens.length.toString()}
+            icon={<TokenIcon color="primary" />}
+          />
+        </Grid>
       </Grid>
-      <Grid item xs={12} sm={6}>
-        <StatCard
-          title="Total Tokens"
-          value={tokens.length.toString()}
-          icon={<TokenIcon color="primary" />}
-        />
-      </Grid>
-    </Grid>
-  ), [totalTaxCollected, totalTransactions, tokens.length]);
+    ),
+    [totalTaxCollected, totalTransactions, tokens.length]
+  );
 
-  const mappedTokens = tokens?.map(token => ({
-    ...token,
-    tier: token.features.isBurnable || token.features.isMintable || token.features.isPausable ? ('premium' as const) : ('basic' as const)
-  })) || [];
+  const mappedTokens =
+    tokens?.map((token) => ({
+      ...token,
+      tier:
+        token.features.isBurnable ||
+        token.features.isMintable ||
+        token.features.isPausable
+          ? ("premium" as const)
+          : ("basic" as const),
+    })) || [];
 
   return (
     <Box sx={{ p: 2 }}>
       <Grid container spacing={3}>
         <Grid item xs={12} sm={4}>
-          <Paper 
+          <Paper
             elevation={1}
-            sx={{ 
+            sx={{
               p: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
             }}
           >
             <Typography variant="h6">Create New Token</Typography>
             <Button
               variant="contained"
               color="primary"
-              onClick={() => navigate('/tokens/create')}
+              onClick={() => navigate("/tokens/create")}
               startIcon={<TokenIcon />}
             >
               Create Token

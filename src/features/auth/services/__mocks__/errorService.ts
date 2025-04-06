@@ -1,4 +1,4 @@
-import { createAuthError } from '../../errors/AuthError';
+import { createAuthError } from "../../errors/AuthError";
 
 class MockErrorService {
   private static instance: MockErrorService;
@@ -13,11 +13,11 @@ class MockErrorService {
   }
 
   handleAuthError(_error: unknown) {
-    return createAuthError('AUTH_016', 'Mock error');
+    return createAuthError("AUTH_016", "Mock error");
   }
 
   handleWalletError(_error: unknown) {
-    return createAuthError('AUTH_009', 'Mock wallet error');
+    return createAuthError("AUTH_009", "Mock wallet error");
   }
 
   createAuthError(code: string, message: string) {

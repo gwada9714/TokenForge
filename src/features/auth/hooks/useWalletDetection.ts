@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
-import { createWalletClient, custom, WalletClient } from 'viem';
-import { mainnet, sepolia } from 'viem/chains';
-import { createAuthError } from '../errors/AuthError';
+import { useEffect, useState, useCallback } from "react";
+import { createWalletClient, custom, WalletClient } from "viem";
+import { mainnet, sepolia } from "viem/chains";
+import { createAuthError } from "../errors/AuthError";
 
 // Type explicite pour les chaînes supportées
 const SUPPORTED_CHAIN_IDS = [mainnet.id, sepolia.id] as const;
-type SupportedChainId = typeof SUPPORTED_CHAIN_IDS[number];
+type SupportedChainId = (typeof SUPPORTED_CHAIN_IDS)[number];
 
 interface WalletState {
   walletClient: WalletClient | null;
@@ -25,13 +25,13 @@ export const useWalletDetection = () => {
   });
 
   const detectProvider = useCallback(async () => {
-    if (typeof window.ethereum === 'undefined') {
-      setState(prev => ({
+    if (typeof window.ethereum === "undefined") {
+      setState((prev) => ({
         ...prev,
         isConnecting: false,
         error: createAuthError(
-          'AUTH_001',
-          'No Web3 provider detected. Please install MetaMask or another Web3 wallet.'
+          "AUTH_001",
+          "No Web3 provider detected. Please install MetaMask or another Web3 wallet."
         ),
       }));
       return;
@@ -39,14 +39,14 @@ export const useWalletDetection = () => {
 
     try {
       const walletClient = createWalletClient({
-        transport: custom(window.ethereum)
+        transport: custom(window.ethereum),
       });
 
       const [address] = await walletClient.requestAddresses();
       const chainId = await walletClient.getChainId();
 
       if (!address) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           walletClient,
           isConnecting: false,
@@ -55,13 +55,13 @@ export const useWalletDetection = () => {
       }
 
       if (!SUPPORTED_CHAIN_IDS.includes(chainId as SupportedChainId)) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           walletClient,
           isConnecting: false,
           error: createAuthError(
-            'AUTH_002',
-            'Unsupported network. Please switch to a supported network.',
+            "AUTH_002",
+            "Unsupported network. Please switch to a supported network.",
             { chainId }
           ),
         }));
@@ -76,12 +76,12 @@ export const useWalletDetection = () => {
         error: null,
       });
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isConnecting: false,
         error: createAuthError(
-          'AUTH_009',
-          'Failed to connect to wallet provider',
+          "AUTH_009",
+          "Failed to connect to wallet provider",
           { originalError: error }
         ),
       }));
@@ -92,22 +92,19 @@ export const useWalletDetection = () => {
     detectProvider();
 
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', detectProvider);
-      window.ethereum.on('chainChanged', detectProvider);
-      window.ethereum.on('disconnect', () => {
-        setState(prev => ({
+      window.ethereum.on("accountsChanged", detectProvider);
+      window.ethereum.on("chainChanged", detectProvider);
+      window.ethereum.on("disconnect", () => {
+        setState((prev) => ({
           ...prev,
           account: null,
-          error: createAuthError(
-            'AUTH_008',
-            'Wallet disconnected',
-          ),
+          error: createAuthError("AUTH_008", "Wallet disconnected"),
         }));
       });
 
       return () => {
-        window.ethereum.removeListener('accountsChanged', detectProvider);
-        window.ethereum.removeListener('chainChanged', detectProvider);
+        window.ethereum.removeListener("accountsChanged", detectProvider);
+        window.ethereum.removeListener("chainChanged", detectProvider);
       };
     }
   }, [detectProvider]);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Grid,
@@ -12,10 +12,10 @@ import {
   ListItemText,
   Divider,
   CircularProgress,
-} from '@mui/material';
-import { useAccount } from 'wagmi';
-import { useNavigate } from 'react-router-dom';
-import { useUserTokens } from '../../hooks/useUserTokens';
+} from "@mui/material";
+import { useAccount } from "wagmi";
+import { useNavigate } from "react-router-dom";
+import { useUserTokens } from "../../hooks/useUserTokens";
 
 export const Dashboard: React.FC = () => {
   const { address, isConnected } = useAccount();
@@ -24,7 +24,7 @@ export const Dashboard: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
+      <Box sx={{ textAlign: "center", py: 4 }}>
         <Typography variant="h5" gutterBottom>
           Connectez votre wallet pour accéder à votre tableau de bord
         </Typography>
@@ -34,7 +34,7 @@ export const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
         <CircularProgress />
       </Box>
     );
@@ -42,7 +42,7 @@ export const Dashboard: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
+      <Box sx={{ textAlign: "center", py: 4 }}>
         <Typography color="error" gutterBottom>
           Une erreur est survenue lors du chargement de vos tokens
         </Typography>
@@ -66,9 +66,7 @@ export const Dashboard: React.FC = () => {
                     <Typography color="textSecondary" gutterBottom>
                       Total des Tokens Créés
                     </Typography>
-                    <Typography variant="h4">
-                      {tokens?.length || 0}
-                    </Typography>
+                    <Typography variant="h4">{tokens?.length || 0}</Typography>
                   </CardContent>
                 </Card>
               </Grid>
@@ -79,7 +77,7 @@ export const Dashboard: React.FC = () => {
                       Tokens Actifs
                     </Typography>
                     <Typography variant="h4">
-                      {tokens?.filter(token => !token.burned)?.length || 0}
+                      {tokens?.filter((token) => !token.burned)?.length || 0}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -91,7 +89,8 @@ export const Dashboard: React.FC = () => {
                       Tokens avec Taxes
                     </Typography>
                     <Typography variant="h4">
-                      {tokens?.filter(token => token.taxConfig?.enabled)?.length || 0}
+                      {tokens?.filter((token) => token.taxConfig?.enabled)
+                        ?.length || 0}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -103,14 +102,19 @@ export const Dashboard: React.FC = () => {
         {/* Liste des Tokens */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Vos Tokens
-              </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h6">Vos Tokens</Typography>
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => navigate('/create')}
+                onClick={() => navigate("/create")}
               >
                 Créer un nouveau token
               </Button>
@@ -123,13 +127,17 @@ export const Dashboard: React.FC = () => {
                     <ListItem
                       component="div"
                       onClick={() => navigate(`/tokens/${token.address}`)}
-                      sx={{ py: 2, cursor: 'pointer' }}
+                      sx={{ py: 2, cursor: "pointer" }}
                     >
                       <ListItemText
                         primary={token.name}
                         secondary={
                           <React.Fragment>
-                            <Typography component="span" variant="body2" color="text.primary">
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.primary"
+                            >
                               {token.symbol}
                             </Typography>
                             {` - Supply: ${token.totalSupply}`}

@@ -1,6 +1,6 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Typography } from '@mui/material';
+import React from "react";
+import { useParams } from "react-router-dom";
+import { Typography } from "@mui/material";
 
 export const TokenDetails: React.FC = () => {
   const { address } = useParams<{ address: string }>();
@@ -10,9 +10,7 @@ export const TokenDetails: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Détails du Token
       </Typography>
-      <Typography>
-        Adresse: {address}
-      </Typography>
+      <Typography>Adresse: {address}</Typography>
     </div>
   );
-}; 
+};

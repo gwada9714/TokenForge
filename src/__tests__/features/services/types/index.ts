@@ -1,10 +1,10 @@
-export type PaymentCurrency = 'BNB' | 'ETH' | 'MATIC' | 'USDT' | 'USDC';
+export type PaymentCurrency = "BNB" | "ETH" | "MATIC" | "USDT" | "USDC";
 
 export enum ServiceType {
-  LAUNCHPAD = 'LAUNCHPAD',
-  STAKING = 'STAKING',
-  MARKETING = 'MARKETING',
-  KYC = 'KYC'
+  LAUNCHPAD = "LAUNCHPAD",
+  STAKING = "STAKING",
+  MARKETING = "MARKETING",
+  KYC = "KYC",
 }
 
 export interface ServicePrice {
@@ -45,4 +45,4 @@ export interface MarketingConfig {
     type: string;
     keyPoints: string;
   };
-} 
+}

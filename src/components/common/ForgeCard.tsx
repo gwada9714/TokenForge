@@ -1,28 +1,28 @@
-import React from 'react';
-import styled, { css } from 'styled-components';
-import { fadeIn } from './styles/animations';
+import React from "react";
+import styled, { css } from "styled-components";
+import { fadeIn } from "./styles/animations";
 
 export interface ForgeCardProps {
-  variant?: 'default' | 'elevated' | 'outlined';
+  variant?: "default" | "elevated" | "outlined";
   $isAnimated?: boolean;
   $hasShadow?: boolean;
   children: React.ReactNode;
   className?: string;
 }
 
-const getVariantStyles = (variant: ForgeCardProps['variant'] = 'default') => {
+const getVariantStyles = (variant: ForgeCardProps["variant"] = "default") => {
   const variants = {
     default: css`
-      background: ${props => props.theme.colors.background.paper};
+      background: ${(props) => props.theme.colors.background.paper};
     `,
     elevated: css`
-      background: ${props => props.theme.colors.background.paper};
+      background: ${(props) => props.theme.colors.background.paper};
       box-shadow: 0 4px 20px rgba(24, 32, 56, 0.1);
     `,
     outlined: css`
       background: transparent;
-      border: 2px solid ${props => props.theme.colors.primary.main}20;
-    `
+      border: 2px solid ${(props) => props.theme.colors.primary.main}20;
+    `,
   };
   return variants[variant];
 };
@@ -34,21 +34,25 @@ const StyledCard = styled.div<ForgeCardProps>`
   position: relative;
   overflow: hidden;
 
-  ${props => getVariantStyles(props.variant)}
+  ${(props) => getVariantStyles(props.variant)}
 
-  ${props => props.$isAnimated && css`
-    animation: ${fadeIn} 0.5s ease-out;
-  `}
+  ${(props) =>
+    props.$isAnimated &&
+    css`
+      animation: ${fadeIn} 0.5s ease-out;
+    `}
 
-  ${props => props.$hasShadow && css`
-    &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 30px rgba(24, 32, 56, 0.15);
-    }
-  `}
+  ${(props) =>
+    props.$hasShadow &&
+    css`
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(24, 32, 56, 0.15);
+      }
+    `}
 
   &:before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -56,8 +60,8 @@ const StyledCard = styled.div<ForgeCardProps>`
     height: 4px;
     background: linear-gradient(
       90deg,
-      ${props => props.theme.colors.primary.main},
-      ${props => props.theme.colors.secondary.main}
+      ${(props) => props.theme.colors.primary.main},
+      ${(props) => props.theme.colors.secondary.main}
     );
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -70,7 +74,7 @@ const StyledCard = styled.div<ForgeCardProps>`
 
 export const ForgeCard: React.FC<ForgeCardProps> = ({
   children,
-  variant = 'default',
+  variant = "default",
   $isAnimated = true,
   $hasShadow = true,
   className,

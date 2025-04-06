@@ -1,7 +1,7 @@
-import React from 'react';
-import { Box, TextField, Tooltip } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import LoadingButton from '@mui/lab/LoadingButton';
+import React from "react";
+import { Box, TextField, Tooltip } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 interface AlertFormProps {
   newRuleName: string;
@@ -26,11 +26,11 @@ export const AlertForm: React.FC<AlertFormProps> = ({
     <Box
       component="form"
       sx={{
-        display: 'flex',
+        display: "flex",
         gap: 2,
         mb: 3,
-        flexDirection: { xs: 'column', sm: 'row' },
-        alignItems: { xs: 'stretch', sm: 'flex-start' },
+        flexDirection: { xs: "column", sm: "row" },
+        alignItems: { xs: "stretch", sm: "flex-start" },
       }}
       onSubmit={(e) => {
         e.preventDefault();
@@ -45,7 +45,11 @@ export const AlertForm: React.FC<AlertFormProps> = ({
         size="small"
         required
         error={newRuleName.length > 50}
-        helperText={newRuleName.length > 50 ? 'Le nom est trop long (max 50 caractères)' : ''}
+        helperText={
+          newRuleName.length > 50
+            ? "Le nom est trop long (max 50 caractères)"
+            : ""
+        }
         disabled={isLoading}
         sx={{ flex: 1 }}
       />
@@ -60,7 +64,9 @@ export const AlertForm: React.FC<AlertFormProps> = ({
         disabled={isLoading}
         sx={{ flex: 2 }}
       />
-      <Tooltip title={!isValid ? 'Veuillez remplir tous les champs requis' : ''}>
+      <Tooltip
+        title={!isValid ? "Veuillez remplir tous les champs requis" : ""}
+      >
         <span>
           <LoadingButton
             variant="contained"
@@ -69,7 +75,7 @@ export const AlertForm: React.FC<AlertFormProps> = ({
             loading={isLoading}
             loadingPosition="start"
             startIcon={<AddIcon />}
-            sx={{ height: '40px', minWidth: '150px' }}
+            sx={{ height: "40px", minWidth: "150px" }}
           >
             Ajouter
           </LoadingButton>

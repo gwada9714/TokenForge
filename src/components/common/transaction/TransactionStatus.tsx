@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   CircularProgress,
@@ -6,11 +6,11 @@ import {
   AlertTitle,
   Link,
   Typography,
-  Paper
-} from '@mui/material';
-import { useNetwork } from '../hooks/useNetwork';
-import { getNetwork } from '../../config/networks';
-import { TransactionReceipt } from '@ethersproject/abstract-provider';
+  Paper,
+} from "@mui/material";
+import { useNetwork } from "../hooks/useNetwork";
+import { getNetwork } from "../../config/networks";
+import { TransactionReceipt } from "@ethersproject/abstract-provider";
 
 interface TransactionStatusProps {
   isLoading: boolean;
@@ -26,8 +26,8 @@ export const TransactionStatus: React.FC<TransactionStatusProps> = ({
   error,
   hash,
   receipt,
-  title = 'État de la transaction',
-  loadingMessage = 'Transaction en cours...'
+  title = "État de la transaction",
+  loadingMessage = "Transaction en cours...",
 }) => {
   const { chain } = useNetwork();
   const network = chain?.id ? getNetwork(chain.id) : undefined;
@@ -37,15 +37,17 @@ export const TransactionStatus: React.FC<TransactionStatusProps> = ({
   }
 
   return (
-    <Paper 
+    <Paper
       elevation={2}
-      sx={{ 
+      sx={{
         p: 2,
         mt: 2,
-        backgroundColor: theme => 
-          error ? theme.palette.error.light : 
-          receipt ? theme.palette.success.light : 
-          theme.palette.background.paper
+        backgroundColor: (theme) =>
+          error
+            ? theme.palette.error.light
+            : receipt
+            ? theme.palette.success.light
+            : theme.palette.background.paper,
       }}
     >
       <Typography variant="h6" gutterBottom>
@@ -69,9 +71,11 @@ export const TransactionStatus: React.FC<TransactionStatusProps> = ({
       {(hash || receipt) && network?.explorerUrl && (
         <Box mt={1}>
           <Typography variant="body2" color="textSecondary">
-            Hash de transaction:{' '}
+            Hash de transaction:{" "}
             <Link
-              href={`${network.explorerUrl}/tx/${hash || receipt?.transactionHash}`}
+              href={`${network.explorerUrl}/tx/${
+                hash || receipt?.transactionHash
+              }`}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -89,18 +93,16 @@ export const TransactionStatus: React.FC<TransactionStatusProps> = ({
               </Typography>
               {receipt.logs && receipt.logs.length > 0 && (
                 <Box mt={1}>
-                  <Typography variant="subtitle2">
-                    Événements émis:
-                  </Typography>
+                  <Typography variant="subtitle2">Événements émis:</Typography>
                   {receipt.logs.map((log, index) => (
-                    <Typography 
+                    <Typography
                       key={`${log.transactionHash}-${index}`}
-                      variant="body2" 
+                      variant="body2"
                       color="textSecondary"
                       sx={{ ml: 2 }}
                     >
                       • Log {index + 1}
-                      {log.topics && ` (${log.topics.join(', ')})`}
+                      {log.topics && ` (${log.topics.join(", ")})`}
                     </Typography>
                   ))}
                 </Box>

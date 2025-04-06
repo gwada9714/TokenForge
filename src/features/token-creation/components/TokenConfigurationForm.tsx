@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -12,14 +12,14 @@ import {
   Divider,
   Tooltip,
   IconButton,
-  Paper
-} from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import { useSubscription } from '@/features/subscription/hooks/useSubscription';
-import { TokenConfig } from '../../../types/deployment';
-import { AntiWhaleConfigPanel } from './AntiWhaleConfigPanel';
-import { DiscoveryModePanel } from './DiscoveryModePanel';
+  Paper,
+} from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
+import { useSubscription } from "@/features/subscription/hooks/useSubscription";
+import { TokenConfig } from "../../../types/deployment";
+import { AntiWhaleConfigPanel } from "./AntiWhaleConfigPanel";
+import { DiscoveryModePanel } from "./DiscoveryModePanel";
 
 // Définir l'interface AntiWhaleConfig pour éviter les erreurs de type
 export interface AntiWhaleConfig {
@@ -38,44 +38,46 @@ interface TokenConfigurationFormProps {
 const defaultAntiWhaleConfig: AntiWhaleConfig = {
   enabled: false,
   maxTransactionPercentage: 1,
-  maxWalletPercentage: 3
+  maxWalletPercentage: 3,
 };
 
 const defaultConfig: TokenConfig = {
-  name: '',
-  symbol: '',
+  name: "",
+  symbol: "",
   decimals: 18,
   initialSupply: BigInt(0),
   mintable: false,
   burnable: false,
   blacklist: false,
   customTaxPercentage: 0,
-  antiWhale: defaultAntiWhaleConfig
+  antiWhale: defaultAntiWhaleConfig,
 };
 
 export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
   initialConfig,
   onChange,
   hasMintBurn = false,
-  hasBlacklist = false
+  hasBlacklist = false,
 }) => {
   const { checkFeature } = useSubscription();
   const [showDiscoveryMode, setShowDiscoveryMode] = useState(false);
-  const [config, setConfig] = useState<TokenConfig>(initialConfig || defaultConfig);
+  const [config, setConfig] = useState<TokenConfig>(
+    initialConfig || defaultConfig
+  );
 
   // Cette vérification permet de prendre en compte les features du niveau d'abonnement
   // si elles ne sont pas explicitement passées en props
-  const hasMintBurnFeature = hasMintBurn || checkFeature('hasMintBurn');
-  const hasBlacklistFeature = hasBlacklist || checkFeature('hasBlacklist');
-  const hasAdvancedFeatures = checkFeature('hasAdvancedFeatures');
-  const maxCustomTax = checkFeature('maxCustomTax') || 0;
+  const hasMintBurnFeature = hasMintBurn || checkFeature("hasMintBurn");
+  const hasBlacklistFeature = hasBlacklist || checkFeature("hasBlacklist");
+  const hasAdvancedFeatures = checkFeature("hasAdvancedFeatures");
+  const maxCustomTax = checkFeature("maxCustomTax") || 0;
 
   // S'assurer que config.antiWhale est toujours défini
   useEffect(() => {
     if (!config.antiWhale) {
-      setConfig(prevConfig => ({
+      setConfig((prevConfig) => ({
         ...prevConfig,
-        antiWhale: defaultAntiWhaleConfig
+        antiWhale: defaultAntiWhaleConfig,
       }));
     }
   }, [config.antiWhale]);
@@ -86,7 +88,7 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
       const updatedConfig = {
         ...initialConfig,
         // S'assurer que antiWhale existe toujours
-        antiWhale: initialConfig.antiWhale || defaultAntiWhaleConfig
+        antiWhale: initialConfig.antiWhale || defaultAntiWhaleConfig,
       };
       setConfig(updatedConfig);
     }
@@ -99,31 +101,32 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
     }
   }, [config, onChange]);
 
-  const handleChange = (field: keyof TokenConfig) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = event.target.type === 'checkbox' 
-      ? event.target.checked 
-      : event.target.value;
-    setConfig({ ...config, [field]: value });
-  };
+  const handleChange =
+    (field: keyof TokenConfig) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        event.target.type === "checkbox"
+          ? event.target.checked
+          : event.target.value;
+      setConfig({ ...config, [field]: value });
+    };
 
   const handleSupplyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       // Convert to BigInt with 18 decimals
-      const rawValue = event.target.value || '0';
-      const value = BigInt(Math.floor(parseFloat(rawValue) * 10**18));
+      const rawValue = event.target.value || "0";
+      const value = BigInt(Math.floor(parseFloat(rawValue) * 10 ** 18));
       setConfig({ ...config, initialSupply: value });
     } catch (error) {
-      console.error('Invalid supply value:', error);
+      console.error("Invalid supply value:", error);
     }
   };
 
   const getSupplyInputValue = () => {
     try {
-      return (Number(config.initialSupply) / 10**18).toString();
+      return (Number(config.initialSupply) / 10 ** 18).toString();
     } catch (error) {
-      return '0';
+      return "0";
     }
   };
 
@@ -139,7 +142,7 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
     // S'assurer que antiWhale existe dans le template
     const updatedConfig = {
       ...templateConfig,
-      antiWhale: templateConfig.antiWhale || defaultAntiWhaleConfig
+      antiWhale: templateConfig.antiWhale || defaultAntiWhaleConfig,
     };
     setConfig(updatedConfig);
     setShowDiscoveryMode(false);
@@ -161,14 +164,21 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
 
   return (
     <Box sx={{ mt: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Typography variant="h5">Configuration du Token</Typography>
         <Button
           variant="outlined"
           startIcon={<LightbulbIcon />}
           onClick={toggleDiscoveryMode}
         >
-          {showDiscoveryMode ? 'Masquer les modèles' : 'Explorer des modèles'}
+          {showDiscoveryMode ? "Masquer les modèles" : "Explorer des modèles"}
         </Button>
       </Box>
 
@@ -185,7 +195,7 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
                 fullWidth
                 label="Nom du Token"
                 value={config.name}
-                onChange={handleChange('name')}
+                onChange={handleChange("name")}
                 helperText="Choisissez un nom unique et mémorable pour votre token"
                 error={config.name.length > 0 && config.name.length < 3}
               />
@@ -196,7 +206,7 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
                 fullWidth
                 label="Symbole"
                 value={config.symbol}
-                onChange={handleChange('symbol')}
+                onChange={handleChange("symbol")}
                 helperText="Généralement 3-4 caractères en majuscules (ex: BTC, ETH)"
                 error={config.symbol.length > 0 && config.symbol.length < 2}
               />
@@ -208,7 +218,7 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
                 type="number"
                 label="Décimales"
                 value={config.decimals}
-                onChange={handleChange('decimals')}
+                onChange={handleChange("decimals")}
                 inputProps={{ min: 0, max: 18 }}
                 helperText="Standard: 18 (comme ETH). Moins = non divisible, plus = très divisible"
               />
@@ -235,12 +245,12 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
             {hasMintBurnFeature && (
               <>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
                     <FormControlLabel
                       control={
                         <Switch
                           checked={config.mintable}
-                          onChange={handleChange('mintable')}
+                          onChange={handleChange("mintable")}
                         />
                       }
                       label="Mintable"
@@ -253,12 +263,12 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
                     <FormControlLabel
                       control={
                         <Switch
                           checked={config.burnable}
-                          onChange={handleChange('burnable')}
+                          onChange={handleChange("burnable")}
                         />
                       }
                       label="Burnable"
@@ -275,12 +285,12 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
 
             {hasBlacklistFeature && (
               <Grid item xs={12} sm={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={config.blacklist}
-                        onChange={handleChange('blacklist')}
+                        onChange={handleChange("blacklist")}
                       />
                     }
                     label="Blacklist"
@@ -294,27 +304,30 @@ export const TokenConfigurationForm: React.FC<TokenConfigurationFormProps> = ({
               </Grid>
             )}
 
-            {hasAdvancedFeatures && typeof maxCustomTax === 'number' && maxCustomTax > 0 && (
-              <Grid item xs={12}>
-                <Box sx={{ mt: 2 }}>
-                  <Typography id="custom-tax-slider" gutterBottom>
-                    Taxe de Transaction ({config.customTaxPercentage}%)
-                  </Typography>
-                  <Slider
-                    aria-labelledby="custom-tax-slider"
-                    value={config.customTaxPercentage}
-                    onChange={handleTaxChange}
-                    min={0}
-                    max={maxCustomTax}
-                    step={0.1}
-                    valueLabelDisplay="auto"
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Définit un pourcentage de chaque transaction qui sera redistribué ou brûlé.
-                  </Typography>
-                </Box>
-              </Grid>
-            )}
+            {hasAdvancedFeatures &&
+              typeof maxCustomTax === "number" &&
+              maxCustomTax > 0 && (
+                <Grid item xs={12}>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography id="custom-tax-slider" gutterBottom>
+                      Taxe de Transaction ({config.customTaxPercentage}%)
+                    </Typography>
+                    <Slider
+                      aria-labelledby="custom-tax-slider"
+                      value={config.customTaxPercentage}
+                      onChange={handleTaxChange}
+                      min={0}
+                      max={maxCustomTax}
+                      step={0.1}
+                      valueLabelDisplay="auto"
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                      Définit un pourcentage de chaque transaction qui sera
+                      redistribué ou brûlé.
+                    </Typography>
+                  </Box>
+                </Grid>
+              )}
 
             {hasAdvancedFeatures && (
               <Grid item xs={12}>

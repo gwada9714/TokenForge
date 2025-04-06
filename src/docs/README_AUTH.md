@@ -7,15 +7,18 @@ Ce document décrit l'architecture et l'utilisation du système d'authentificati
 Le système d'authentification est composé des éléments suivants :
 
 1. **Service d'authentification Firebase** (`src/lib/firebase/auth.ts`)
+
    - Initialise et gère les interactions avec l'API Firebase Authentication
    - Fournit des méthodes pour toutes les opérations d'authentification
 
 2. **Hook useAuth** (`src/hooks/useAuth.ts`)
+
    - Encapsule le service d'authentification dans un hook React
    - Gère l'état d'authentification, les erreurs et les callbacks
    - Fournit des méthodes pour toutes les opérations d'authentification
 
 3. **Contexte d'authentification** (`src/contexts/AuthContext.tsx`)
+
    - Rend l'état d'authentification disponible dans toute l'application
    - Permet d'accéder aux fonctionnalités d'authentification depuis n'importe quel composant
 
@@ -28,7 +31,7 @@ Le système d'authentification est composé des éléments suivants :
 ### 1. Accès à l'authentification via le contexte
 
 ```tsx
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const MyComponent = () => {
   const { user, isAuthenticated, signIn, signOut } = useAuthContext();
@@ -41,7 +44,7 @@ const MyComponent = () => {
 ### 2. Protection des routes
 
 ```tsx
-import AuthGuard from '@/components/AuthGuard';
+import AuthGuard from "@/components/AuthGuard";
 
 const ProtectedPage = () => {
   return (
@@ -55,7 +58,7 @@ const ProtectedPage = () => {
 ### 3. Protection des routes administrateur
 
 ```tsx
-import AuthGuard from '@/components/AuthGuard';
+import AuthGuard from "@/components/AuthGuard";
 
 const AdminPage = () => {
   return (

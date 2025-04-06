@@ -1,9 +1,9 @@
-import { PaymentConfig } from '../config/PaymentConfig';
-import { PaymentError, PaymentErrorType } from '../types/PaymentError';
+import { PaymentConfig } from "../config/PaymentConfig";
+import { PaymentError, PaymentErrorType } from "../types/PaymentError";
 
 const RETRYABLE_ERRORS = [
   PaymentErrorType.NETWORK_ERROR,
-  PaymentErrorType.TIMEOUT_ERROR
+  PaymentErrorType.TIMEOUT_ERROR,
 ];
 
 export async function withRetry<T>(
@@ -20,7 +20,7 @@ export async function withRetry<T>(
     maxAttempts = PaymentConfig.retry.maxAttempts,
     initialDelay = PaymentConfig.retry.initialDelay,
     backoffFactor = PaymentConfig.retry.backoffFactor,
-    maxDelay = PaymentConfig.retry.maxDelay
+    maxDelay = PaymentConfig.retry.maxDelay,
   } = options;
 
   let attempt = 1;
@@ -30,8 +30,14 @@ export async function withRetry<T>(
     try {
       return await operation();
     } catch (error) {
-      const paymentError = error instanceof PaymentError ? error : 
-        new PaymentError(PaymentErrorType.TRANSACTION_FAILED, 'Transaction failed', error);
+      const paymentError =
+        error instanceof PaymentError
+          ? error
+          : new PaymentError(
+              PaymentErrorType.TRANSACTION_FAILED,
+              "Transaction failed",
+              error
+            );
 
       if (attempt === maxAttempts || !isRetryableError(paymentError)) {
         throw paymentError;
@@ -59,5 +65,5 @@ function isRetryableError(error: PaymentError): boolean {
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

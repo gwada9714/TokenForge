@@ -1,5 +1,5 @@
-import React from 'react';
-import { PaymentNetwork } from '../../services/payment/types/PaymentSession';
+import React from "react";
+import { PaymentNetwork } from "../../services/payment/types/PaymentSession";
 
 interface NetworkSelectorProps {
   selectedNetwork?: PaymentNetwork;
@@ -8,20 +8,20 @@ interface NetworkSelectorProps {
 
 const NETWORK_DETAILS = {
   [PaymentNetwork.ETHEREUM]: {
-    name: 'Ethereum',
-    icon: '🔷',
+    name: "Ethereum",
+    icon: "🔷",
   },
   [PaymentNetwork.BINANCE]: {
-    name: 'Binance',
-    icon: '🟡',
+    name: "Binance",
+    icon: "🟡",
   },
   [PaymentNetwork.POLYGON]: {
-    name: 'Polygon',
-    icon: '🟣',
+    name: "Polygon",
+    icon: "🟣",
   },
   [PaymentNetwork.SOLANA]: {
-    name: 'Solana',
-    icon: '🟢',
+    name: "Solana",
+    icon: "🟢",
   },
 };
 
@@ -38,8 +38,8 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
           className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all
             ${
               selectedNetwork === network
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-blue-200'
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 hover:border-blue-200"
             }
           `}
         >
@@ -49,4 +49,4 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
       ))}
     </div>
   );
-}; 
+};

@@ -1,2 +1,2 @@
-export * from './Web3Provider';
-export { default } from './Web3Provider';
+export * from "./Web3Provider";
+export { default } from "./Web3Provider";

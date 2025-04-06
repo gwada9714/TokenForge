@@ -1,12 +1,12 @@
-import React from 'react';
-import styled from 'styled-components';
-import { APP_NAME } from '@/config/constants';
-import { Container, Title, Button, Text } from '@/components/common/styles';
-import { SPACING } from '@/config/constants/theme';
+import React from "react";
+import styled from "styled-components";
+import { APP_NAME } from "@/config/constants";
+import { Container, Title, Button, Text } from "@/components/common/styles";
+import { SPACING } from "@/config/constants/theme";
 
 const HomeContainer = styled(Container)`
   text-align: center;
-  padding: ${SPACING['2xl']} ${SPACING.xl};
+  padding: ${SPACING["2xl"]} ${SPACING.xl};
 `;
 
 const HomeTitle = styled(Title)`
@@ -18,7 +18,7 @@ const Description = styled(Text)`
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: ${SPACING['2xl']};
+  margin-bottom: ${SPACING["2xl"]};
 `;
 
 const CTAButton = styled(Button)`
@@ -35,8 +35,8 @@ export default function Home() {
     <HomeContainer>
       <HomeTitle>Bienvenue sur {APP_NAME}</HomeTitle>
       <Description>
-        La plateforme de gestion de tokens nouvelle génération.
-        Créez, gérez et suivez vos tokens en toute simplicité.
+        La plateforme de gestion de tokens nouvelle génération. Créez, gérez et
+        suivez vos tokens en toute simplicité.
       </Description>
       <CTAButton>Commencer maintenant</CTAButton>
     </HomeContainer>

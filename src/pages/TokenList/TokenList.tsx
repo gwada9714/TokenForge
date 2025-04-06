@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import { Typography, Button, Container } from '@mui/material';
-import { useWeb3 } from '../../providers/Web3Provider';
-import { useTokens } from '../../contexts/TokenContext';
-import { TokenListView } from './TokenListView';
+import React, { useEffect } from "react";
+import { Typography, Button, Container } from "@mui/material";
+import { useWeb3 } from "../../providers/Web3Provider";
+import { useTokens } from "../../contexts/TokenContext";
+import { TokenListView } from "./TokenListView";
 
 export const TokenList: React.FC = () => {
   const { isConnected, connect } = useWeb3();
@@ -16,15 +16,11 @@ export const TokenList: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, textAlign: 'center' }}>
+      <Container maxWidth="lg" sx={{ mt: 4, textAlign: "center" }}>
         <Typography variant="h4" gutterBottom>
           Mes Tokens
         </Typography>
-        <Button 
-          variant="contained" 
-          onClick={connect}
-          sx={{ mt: 2 }}
-        >
+        <Button variant="contained" onClick={connect} sx={{ mt: 2 }}>
           Connecter Wallet
         </Button>
       </Container>
@@ -41,10 +37,7 @@ export const TokenList: React.FC = () => {
           {error}
         </Typography>
       )}
-      <TokenListView 
-        tokens={tokens}
-        isLoading={isLoading}
-      />
+      <TokenListView tokens={tokens} isLoading={isLoading} />
     </Container>
   );
-}; 
+};

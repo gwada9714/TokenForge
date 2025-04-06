@@ -1,10 +1,10 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
-import { TokenPriceService } from '../TokenPriceService';
-import { PaymentNetwork } from '../../payment/types/PaymentSession';
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { TokenPriceService } from "../TokenPriceService";
+import { PaymentNetwork } from "../../payment/types/PaymentSession";
 
-describe('TokenPriceService', () => {
+describe("TokenPriceService", () => {
   let service: TokenPriceService;
-  
+
   beforeEach(() => {
     // Mock fetch
     global.fetch = vi.fn();
@@ -16,12 +16,12 @@ describe('TokenPriceService', () => {
     vi.restoreAllMocks();
   });
 
-  it('should fetch and update prices correctly', async () => {
+  it("should fetch and update prices correctly", async () => {
     const mockPrices = {
-      'ethereum': { usd: 2000 },
-      'tether': { usd: 1 },
-      'binancecoin': { usd: 300 },
-      'solana': { usd: 50 },
+      ethereum: { usd: 2000 },
+      tether: { usd: 1 },
+      binancecoin: { usd: 300 },
+      solana: { usd: 50 },
     };
 
     (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -48,8 +48,8 @@ describe('TokenPriceService', () => {
     expect(solPrices.USDT).toBe(1);
   });
 
-  it('should handle API errors gracefully', async () => {
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+  it("should handle API errors gracefully", async () => {
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("API Error"));
 
     // Trigger a price update
     await (service as any).fetchPrices();
@@ -59,10 +59,10 @@ describe('TokenPriceService', () => {
     expect(prices).toEqual({});
   });
 
-  it('should notify listeners of price updates', async () => {
+  it("should notify listeners of price updates", async () => {
     const mockPrices = {
-      'ethereum': { usd: 2000 },
-      'tether': { usd: 1 },
+      ethereum: { usd: 2000 },
+      tether: { usd: 1 },
     };
 
     (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -83,11 +83,11 @@ describe('TokenPriceService', () => {
     unsubscribe();
   });
 
-  it('should handle stablecoins correctly', async () => {
+  it("should handle stablecoins correctly", async () => {
     const mockPrices = {
-      'tether': { usd: 1.001 }, // Slight variation
-      'usd-coin': { usd: 0.999 }, // Slight variation
-      'dai': { usd: 1.002 }, // Slight variation
+      tether: { usd: 1.001 }, // Slight variation
+      "usd-coin": { usd: 0.999 }, // Slight variation
+      dai: { usd: 1.002 }, // Slight variation
     };
 
     (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -103,7 +103,7 @@ describe('TokenPriceService', () => {
     expect(ethPrices.DAI).toBe(1);
   });
 
-  it('should cleanup properly', () => {
+  it("should cleanup properly", () => {
     const interval = setInterval(() => {}, 1000);
     (service as any).updateInterval = interval;
 
@@ -113,4 +113,4 @@ describe('TokenPriceService', () => {
     expect((service as any).prices.size).toBe(0);
     expect((service as any).listeners.size).toBe(0);
   });
-}); 
+});

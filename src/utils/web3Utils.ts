@@ -1,6 +1,6 @@
-import { formatUnits, parseUnits, hexToBigInt } from 'viem';
-import { ethers, type BigNumberish } from 'ethers';
-import { type Address } from 'viem';
+import { formatUnits, parseUnits, hexToBigInt } from "viem";
+import { ethers, type BigNumberish } from "ethers";
+import { type Address } from "viem";
 
 /**
  * Utilitaires Web3 consolidés pour TokenForge
@@ -9,8 +9,11 @@ import { type Address } from 'viem';
 /**
  * Convertit une valeur pour l'affichage avec le nombre de décimales spécifié
  */
-export const formatValue = (value: bigint | BigNumberish, decimals: number = 18): string => {
-  if (typeof value === 'bigint') {
+export const formatValue = (
+  value: bigint | BigNumberish,
+  decimals: number = 18
+): string => {
+  if (typeof value === "bigint") {
     return formatUnits(value, decimals);
   }
   return ethers.formatUnits(value, decimals);
@@ -29,18 +32,24 @@ export const parseValue = (value: string, decimals: number = 18): bigint => {
 export const compareValues = (
   value1: bigint | BigNumberish,
   value2: bigint | BigNumberish,
-  operator: '>' | '<' | '>=' | '<=' | '==' = '>'
+  operator: ">" | "<" | ">=" | "<=" | "==" = ">"
 ): boolean => {
-  const v1 = typeof value1 === 'bigint' ? value1 : BigInt(value1.toString());
-  const v2 = typeof value2 === 'bigint' ? value2 : BigInt(value2.toString());
+  const v1 = typeof value1 === "bigint" ? value1 : BigInt(value1.toString());
+  const v2 = typeof value2 === "bigint" ? value2 : BigInt(value2.toString());
 
   switch (operator) {
-    case '>': return v1 > v2;
-    case '<': return v1 < v2;
-    case '>=': return v1 >= v2;
-    case '<=': return v1 <= v2;
-    case '==': return v1 === v2;
-    default: return false;
+    case ">":
+      return v1 > v2;
+    case "<":
+      return v1 < v2;
+    case ">=":
+      return v1 >= v2;
+    case "<=":
+      return v1 <= v2;
+    case "==":
+      return v1 === v2;
+    default:
+      return false;
   }
 };
 
@@ -49,7 +58,7 @@ export const compareValues = (
  */
 export const toHexString = (value: bigint): `0x${string}` => {
   if (value < 0n) {
-    throw new Error('Cannot convert negative bigint to hex string');
+    throw new Error("Cannot convert negative bigint to hex string");
   }
   return `0x${value.toString(16)}` as `0x${string}`;
 };
@@ -65,14 +74,14 @@ export const fromHexString = (hex: `0x${string}`): bigint => {
  * Type guard pour vérifier si une valeur est une chaîne hexadécimale valide
  */
 export const isHexString = (value: string): value is `0x${string}` => {
-  return value.startsWith('0x') && /^0x[0-9a-fA-F]*$/.test(value);
+  return value.startsWith("0x") && /^0x[0-9a-fA-F]*$/.test(value);
 };
 
 /**
  * Normalise une adresse Ethereum
  */
 export const normalizeAddress = (address: string): Address => {
-  if (!address.startsWith('0x')) {
+  if (!address.startsWith("0x")) {
     return `0x${address}` as Address;
   }
   return address.toLowerCase() as Address;

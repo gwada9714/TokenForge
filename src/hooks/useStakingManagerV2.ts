@@ -1,8 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
-import { ethers, Contract, Interface, Signer, ContractInterface, Fragment } from 'ethers';
-import { JsonRpcSigner } from '@ethersproject/providers';
-import { useWeb3React } from '@web3-react/core';
-import type { Web3Provider } from '@ethersproject/providers';
+import { useEffect, useState, useCallback } from "react";
+import {
+  ethers,
+  Contract,
+  Interface,
+  Signer,
+  ContractInterface,
+  Fragment,
+} from "ethers";
+import { JsonRpcSigner } from "@ethersproject/providers";
+import { useWeb3React } from "@web3-react/core";
+import type { Web3Provider } from "@ethersproject/providers";
 
 interface StakingState {
   totalStaked: string;
@@ -15,11 +22,14 @@ interface StakingState {
   } | null;
 }
 
-export const useStakingManagerV2 = (stakingAddress: string, stakingABI: ethers.ContractInterface) => {
+export const useStakingManagerV2 = (
+  stakingAddress: string,
+  stakingABI: ethers.ContractInterface
+) => {
   const { provider: web3Provider, account } = useWeb3React<Web3Provider>();
   const [state, setState] = useState<StakingState>({
-    totalStaked: '0',
-    userStake: '0',
+    totalStaked: "0",
+    userStake: "0",
     isLoading: true,
     error: null,
     networkInfo: null,
@@ -36,62 +46,76 @@ export const useStakingManagerV2 = (stakingAddress: string, stakingABI: ethers.C
 
   const loadStakingData = useCallback(async () => {
     if (!web3Provider || !account || !stakingAddress) {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState((prev) => ({ ...prev, isLoading: false }));
       return;
     }
 
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
       const networkInfo = await getNetworkInfo();
-      
+
       // eslint-disable-next-line no-console
-      console.log('Contract initialization details:', {
+      console.log("Contract initialization details:", {
         stakingAddress,
         networkInfo,
         account,
       });
 
       const signer = await web3Provider.getSigner();
-      const abiInterface = Array.isArray(stakingABI) 
-        ? stakingABI 
-        : typeof stakingABI === 'string' 
-          ? [stakingABI]
-          : stakingABI;
+      const abiInterface = Array.isArray(stakingABI)
+        ? stakingABI
+        : typeof stakingABI === "string"
+        ? [stakingABI]
+        : stakingABI;
       const stakingContract = new Contract(
         stakingAddress,
         abiInterface as Interface | string[] | readonly (string | Fragment)[],
         signer as unknown as Signer
       );
 
-      let totalStaked = '0';
-      let userStake = '0';
+      let totalStaked = "0";
+      let userStake = "0";
 
       try {
         const totalStakedBN = await stakingContract.totalStaked();
         // eslint-disable-next-line no-console
-        console.log('Raw totalStaked response:', totalStakedBN);
+        console.log("Raw totalStaked response:", totalStakedBN);
         const formattedTotalStaked = ethers.formatUnits(totalStakedBN, 18);
         totalStaked = formattedTotalStaked;
       } catch (error: unknown) {
         // eslint-disable-next-line no-console
-        console.error('Error fetching totalStaked:', error instanceof Error ? error.message : 'Unknown error');
-        throw new Error(`Failed to fetch totalStaked: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error(
+          "Error fetching totalStaked:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
+        throw new Error(
+          `Failed to fetch totalStaked: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       }
 
       try {
         const userStakeBN = await stakingContract.balanceOf(account);
         // eslint-disable-next-line no-console
-        console.log('Raw userStake response:', userStakeBN);
+        console.log("Raw userStake response:", userStakeBN);
         const formattedUserStake = ethers.formatUnits(userStakeBN, 18);
         userStake = formattedUserStake;
       } catch (error: unknown) {
         // eslint-disable-next-line no-console
-        console.error('Error fetching user stake:', error instanceof Error ? error.message : 'Unknown error');
-        throw new Error(`Failed to fetch user stake: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error(
+          "Error fetching user stake:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
+        throw new Error(
+          `Failed to fetch user stake: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       }
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         totalStaked,
         userStake,
@@ -101,12 +125,16 @@ export const useStakingManagerV2 = (stakingAddress: string, stakingABI: ethers.C
       }));
     } catch (error: unknown) {
       // eslint-disable-next-line no-console
-      console.error('Error loading staking data:', error instanceof Error ? error.message : 'Unknown error');
-      
-      setState(prev => ({
+      console.error(
+        "Error loading staking data:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error : new Error('Unknown error occurred'),
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
       }));
     }
   }, [web3Provider, account, stakingAddress, stakingABI, getNetworkInfo]);

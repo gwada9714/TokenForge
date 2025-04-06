@@ -4,7 +4,7 @@
  */
 
 // Étendre les types de @solana/web3.js
-declare module '@solana/web3.js' {
+declare module "@solana/web3.js" {
   // Ajouter les méthodes manquantes à Connection
   interface Connection {
     getBalance(publicKey: PublicKey): Promise<number>;
@@ -13,7 +13,9 @@ declare module '@solana/web3.js' {
     getSlot(): Promise<number>;
     getMinimumBalanceForRentExemption(size: number): Promise<number>;
     getSignatureStatus(signature: string): Promise<{ value: any }>;
-    getSignaturesForAddress(address: PublicKey): Promise<Array<{ signature: string }>>;
+    getSignaturesForAddress(
+      address: PublicKey
+    ): Promise<Array<{ signature: string }>>;
   }
 
   // Exporter les classes et constantes manquantes
@@ -50,7 +52,7 @@ interface TokenInfo {
 }
 
 // Étendre les types pour @solana/spl-token
-declare module '@solana/spl-token' {
+declare module "@solana/spl-token" {
   export function createMint(
     connection: any,
     payer: any,

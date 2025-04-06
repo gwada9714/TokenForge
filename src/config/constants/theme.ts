@@ -1,39 +1,39 @@
 // Thème "La Forge Numérique"
 export const THEME = {
   // Couleurs primaires
-  PRIMARY: '#0F172A', // Bleu nuit profond
-  PRIMARY_LIGHT: '#1E293B', // Version plus claire du bleu nuit
-  PRIMARY_DARK: '#0B1222', // Version plus foncée du bleu nuit
-  SECONDARY: '#F59E0B', // Orange incandescent
-  SECONDARY_LIGHT: '#FBBF24', // Version plus claire de l'orange
-  SECONDARY_DARK: '#D97706', // Version plus foncée de l'orange
-  GOLD: '#D4AF37', // Doré métallique pour éléments premium
-  SUCCESS: '#10B981', // Vert émeraude
-  WARNING: '#F59E0B', // Ambre (même que l'orange incandescent)
-  ERROR: '#EF4444', // Rouge rubis
-  INFO: '#3B82F6', // Bleu électrique
+  PRIMARY: "#0F172A", // Bleu nuit profond
+  PRIMARY_LIGHT: "#1E293B", // Version plus claire du bleu nuit
+  PRIMARY_DARK: "#0B1222", // Version plus foncée du bleu nuit
+  SECONDARY: "#F59E0B", // Orange incandescent
+  SECONDARY_LIGHT: "#FBBF24", // Version plus claire de l'orange
+  SECONDARY_DARK: "#D97706", // Version plus foncée de l'orange
+  GOLD: "#D4AF37", // Doré métallique pour éléments premium
+  SUCCESS: "#10B981", // Vert émeraude
+  WARNING: "#F59E0B", // Ambre (même que l'orange incandescent)
+  ERROR: "#EF4444", // Rouge rubis
+  INFO: "#3B82F6", // Bleu électrique
 };
 
 // Couleurs secondaires
 export const FORGE_COLORS = {
-  steel: '#475569', // Gris acier
-  electric: '#3B82F6', // Bleu électrique
-  ivory: '#F8FAFC', // Blanc ivoire
-  charcoal: '#1E293B', // Noir charbon
-  gold: '#D4AF37', // Doré métallique
+  steel: "#475569", // Gris acier
+  electric: "#3B82F6", // Bleu électrique
+  ivory: "#F8FAFC", // Blanc ivoire
+  charcoal: "#1E293B", // Noir charbon
+  gold: "#D4AF37", // Doré métallique
 };
 
 // Couleurs blockchain-spécifiques
 export const BLOCKCHAIN_COLORS = {
-  ethereum: '#627EEA', // Violet
-  binance: '#F3BA2F', // Jaune
-  polygon: '#8247E5', // Mauve
-  avalanche: '#E84142', // Rouge intense
+  ethereum: "#627EEA", // Violet
+  binance: "#F3BA2F", // Jaune
+  polygon: "#8247E5", // Mauve
+  avalanche: "#E84142", // Rouge intense
   solana: {
-    from: '#9945FF', // Début du dégradé
-    to: '#14F195', // Fin du dégradé
+    from: "#9945FF", // Début du dégradé
+    to: "#14F195", // Fin du dégradé
   },
-  arbitrum: '#28A0F0', // Bleu ciel
+  arbitrum: "#28A0F0", // Bleu ciel
 };
 
 export const BREAKPOINTS = {
@@ -105,36 +105,36 @@ export const THEME_CONFIG = {
     fontWeightExtraBold: 800,
     // Hiérarchie des titres
     h1: {
-      fontSize: '2.5rem', // 40px
-      lineHeight: '3rem', // 48px
+      fontSize: "2.5rem", // 40px
+      lineHeight: "3rem", // 48px
       fontWeight: 800, // Extra-Bold
-      letterSpacing: '0.02em', // Lettrage étendu
+      letterSpacing: "0.02em", // Lettrage étendu
       fontFamily: '"Space Grotesk", sans-serif',
     },
     h2: {
-      fontSize: '2rem', // 32px
-      lineHeight: '2.5rem', // 40px
+      fontSize: "2rem", // 32px
+      lineHeight: "2.5rem", // 40px
       fontWeight: 700, // Bold
       fontFamily: '"Space Grotesk", sans-serif',
     },
     h3: {
-      fontSize: '1.5rem', // 24px
-      lineHeight: '2rem', // 32px
+      fontSize: "1.5rem", // 24px
+      lineHeight: "2rem", // 32px
       fontWeight: 700, // Bold
       fontFamily: '"Space Grotesk", sans-serif',
     },
     h4: {
-      fontSize: '1.25rem', // 20px
-      lineHeight: '1.75rem', // 28px
+      fontSize: "1.25rem", // 20px
+      lineHeight: "1.75rem", // 28px
       fontWeight: 500, // Medium
       fontFamily: '"Space Grotesk", sans-serif',
     },
     h5: {
-      fontSize: '1rem', // 16px
-      lineHeight: '1.5rem', // 24px
+      fontSize: "1rem", // 16px
+      lineHeight: "1.5rem", // 24px
       fontWeight: 500, // Medium
       fontFamily: '"Space Grotesk", sans-serif',
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
     },
   },
   shape: {
@@ -145,9 +145,9 @@ export const THEME_CONFIG = {
     },
   },
   shadows: {
-    small: '0 2px 4px rgba(0, 0, 0, 0.3)',
-    medium: '0 4px 8px rgba(0, 0, 0, 0.4)',
-    large: '0 8px 16px rgba(0, 0, 0, 0.5)',
+    small: "0 2px 4px rgba(0, 0, 0, 0.3)",
+    medium: "0 4px 8px rgba(0, 0, 0, 0.4)",
+    large: "0 8px 16px rgba(0, 0, 0, 0.5)",
   },
   transitions: {
     duration: {
@@ -160,14 +160,14 @@ export const THEME_CONFIG = {
       leavingScreen: 195,
     },
     easing: {
-      easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-      easeOut: 'cubic-bezier(0.0, 0, 0.2, 1)',
-      easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
-      sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
+      easeInOut: "cubic-bezier(0.4, 0, 0.2, 1)",
+      easeOut: "cubic-bezier(0.0, 0, 0.2, 1)",
+      easeIn: "cubic-bezier(0.4, 0, 1, 1)",
+      sharp: "cubic-bezier(0.4, 0, 0.6, 1)",
     },
     // Transitions personnalisées
-    fast: '0.15s ease-out',
-    normal: '0.3s ease-out',
-    slow: '0.5s ease-out',
+    fast: "0.15s ease-out",
+    normal: "0.3s ease-out",
+    slow: "0.5s ease-out",
   },
 };

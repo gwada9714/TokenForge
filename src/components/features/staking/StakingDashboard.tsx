@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Box,
   Card,
@@ -20,18 +20,26 @@ import {
   TableHead,
   TableRow,
   Paper,
-} from '@mui/material';
-import { formatValue } from '@/utils/web3Adapters';
-import { useStakingManager } from '@/hooks/useStakingManager';
-import { useAccount } from 'wagmi';
-import { useNetwork } from '@/hooks/useNetwork';
-import { StakingState, SUPPORTED_CHAINS } from '@/types/common';
-import TokenIcon from '@mui/icons-material/Token';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import InfoIcon from '@mui/icons-material/Info';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { toast } from 'react-hot-toast';
+} from "@mui/material";
+import { formatValue } from "@/utils/web3Adapters";
+import { useStakingManager } from "@/hooks/useStakingManager";
+import { useAccount } from "wagmi";
+import { useNetwork } from "@/hooks/useNetwork";
+import { StakingState, SUPPORTED_CHAINS } from "@/types/common";
+import TokenIcon from "@mui/icons-material/Token";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import InfoIcon from "@mui/icons-material/Info";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { toast } from "react-hot-toast";
 
 const StatCard: React.FC<{
   title: string;
@@ -66,7 +74,7 @@ const StatCard: React.FC<{
 const StakingHistory: React.FC<{
   history: Array<{
     timestamp: number;
-    action: 'stake' | 'unstake' | 'claim';
+    action: "stake" | "unstake" | "claim";
     amount: bigint;
   }>;
 }> = ({ history }) => (
@@ -82,11 +90,13 @@ const StakingHistory: React.FC<{
       <TableBody>
         {history.map((entry, index) => (
           <TableRow key={index}>
-            <TableCell>{new Date(entry.timestamp * 1000).toLocaleString()}</TableCell>
             <TableCell>
-              {entry.action === 'stake' && 'Stake'}
-              {entry.action === 'unstake' && 'Unstake'}
-              {entry.action === 'claim' && 'Récompenses réclamées'}
+              {new Date(entry.timestamp * 1000).toLocaleString()}
+            </TableCell>
+            <TableCell>
+              {entry.action === "stake" && "Stake"}
+              {entry.action === "unstake" && "Unstake"}
+              {entry.action === "claim" && "Récompenses réclamées"}
             </TableCell>
             <TableCell align="right">{formatValue(entry.amount)} TKN</TableCell>
           </TableRow>
@@ -102,7 +112,7 @@ const RewardsChart: React.FC<{
     rewards: bigint;
   }>;
 }> = ({ rewardsHistory }) => {
-  const data = rewardsHistory.map(entry => ({
+  const data = rewardsHistory.map((entry) => ({
     date: new Date(entry.timestamp * 1000).toLocaleDateString(),
     rewards: Number(formatValue(entry.rewards)),
   }));
@@ -131,15 +141,15 @@ const StakingDashboard: React.FC = () => {
     stake,
     unstake,
     claimRewards,
-    refreshBalances
+    refreshBalances,
   } = useStakingManager();
 
   const { isConnected } = useAccount();
   const { chain } = useNetwork();
   const stakedBalance = Number(formatValue(stakedAmount));
 
-  const [stakeAmount, setStakeAmount] = React.useState('');
-  const [unstakeAmount, setUnstakeAmount] = React.useState('');
+  const [stakeAmount, setStakeAmount] = React.useState("");
+  const [unstakeAmount, setUnstakeAmount] = React.useState("");
   const [isStaking, setIsStaking] = React.useState(false);
   const [isUnstaking, setIsUnstaking] = React.useState(false);
   const [isClaiming, setIsClaiming] = React.useState(false);
@@ -147,29 +157,33 @@ const StakingDashboard: React.FC = () => {
   const handleStake = async () => {
     try {
       if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
-        toast.error('Veuillez entrer un montant valide');
+        toast.error("Veuillez entrer un montant valide");
         return;
       }
 
       if (!isConnected) {
-        toast.error('Veuillez connecter votre wallet');
+        toast.error("Veuillez connecter votre wallet");
         return;
       }
 
       if (!chain || !(chain.id in SUPPORTED_CHAINS)) {
-        toast.error('Veuillez vous connecter à un réseau supporté');
+        toast.error("Veuillez vous connecter à un réseau supporté");
         return;
       }
 
       setIsStaking(true);
       const tx = await stake(parseFloat(stakeAmount));
       await tx.wait();
-      toast.success('Staking effectué avec succès');
-      setStakeAmount('');
+      toast.success("Staking effectué avec succès");
+      setStakeAmount("");
       await refreshBalances();
     } catch (error) {
-      console.error('Erreur de staking:', error);
-      toast.error(error instanceof Error ? error.message : 'Une erreur est survenue lors du staking');
+      console.error("Erreur de staking:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors du staking"
+      );
     } finally {
       setIsStaking(false);
     }
@@ -178,34 +192,38 @@ const StakingDashboard: React.FC = () => {
   const handleUnstake = async () => {
     try {
       if (!unstakeAmount || parseFloat(unstakeAmount) <= 0) {
-        toast.error('Veuillez entrer un montant valide');
+        toast.error("Veuillez entrer un montant valide");
         return;
       }
 
       if (parseFloat(unstakeAmount) > stakedBalance) {
-        toast.error('Montant supérieur à votre balance stakée');
+        toast.error("Montant supérieur à votre balance stakée");
         return;
       }
 
       if (!isConnected) {
-        toast.error('Veuillez connecter votre wallet');
+        toast.error("Veuillez connecter votre wallet");
         return;
       }
 
       if (!chain || !(chain.id in SUPPORTED_CHAINS)) {
-        toast.error('Veuillez vous connecter à un réseau supporté');
+        toast.error("Veuillez vous connecter à un réseau supporté");
         return;
       }
 
       setIsUnstaking(true);
       const tx = await unstake(parseFloat(unstakeAmount));
       await tx.wait();
-      toast.success('Unstaking effectué avec succès');
-      setUnstakeAmount('');
+      toast.success("Unstaking effectué avec succès");
+      setUnstakeAmount("");
       await refreshBalances();
     } catch (error) {
-      console.error('Erreur d\'unstaking:', error);
-      toast.error(error instanceof Error ? error.message : 'Une erreur est survenue lors de l\'unstaking');
+      console.error("Erreur d'unstaking:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de l'unstaking"
+      );
     } finally {
       setIsUnstaking(false);
     }
@@ -214,43 +232,52 @@ const StakingDashboard: React.FC = () => {
   const handleClaim = async () => {
     try {
       if (rewards <= 0n) {
-        toast.error('Aucune récompense à réclamer');
+        toast.error("Aucune récompense à réclamer");
         return;
       }
 
       if (!isConnected) {
-        toast.error('Veuillez connecter votre wallet');
+        toast.error("Veuillez connecter votre wallet");
         return;
       }
 
       if (!chain || !(chain.id in SUPPORTED_CHAINS)) {
-        toast.error('Veuillez vous connecter à un réseau supporté');
+        toast.error("Veuillez vous connecter à un réseau supporté");
         return;
       }
 
       setIsClaiming(true);
       const tx = await claimRewards();
       await tx.wait();
-      toast.success('Récompenses réclamées avec succès');
+      toast.success("Récompenses réclamées avec succès");
       await refreshBalances();
     } catch (error) {
-      console.error('Erreur de claim:', error);
-      toast.error(error instanceof Error ? error.message : 'Une erreur est survenue lors de la réclamation');
+      console.error("Erreur de claim:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de la réclamation"
+      );
     } finally {
       setIsClaiming(false);
     }
   };
 
   const chartData = useMemo(() => {
-    return stakingHistory.map(entry => ({
+    return stakingHistory.map((entry) => ({
       timestamp: new Date(entry.timestamp * 1000).toLocaleDateString(),
-      amount: Number(formatValue(entry.amount))
+      amount: Number(formatValue(entry.amount)),
     }));
   }, [stakingHistory]);
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Card,
   Button,
@@ -8,29 +8,26 @@ import {
   LinearProgress,
   Badge,
   Typography,
-} from '@mui/material';
-import { useLaunchpad } from '../../hooks/useLaunchpad';
-import { formatEther } from 'viem';
+} from "@mui/material";
+import { useLaunchpad } from "../../hooks/useLaunchpad";
+import { formatEther } from "viem";
 
 interface LaunchpadPoolProps {
   poolId: number;
 }
 
 export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
-  const [contributionAmount, setContributionAmount] = useState('');
+  const [contributionAmount, setContributionAmount] = useState("");
 
-  const {
-    poolInfo,
-    userContribution,
-    invest,
-    claim,
-    isInvesting,
-    isClaiming,
-  } = useLaunchpad(poolId);
+  const { poolInfo, userContribution, invest, claim, isInvesting, isClaiming } =
+    useLaunchpad(poolId);
 
   if (!poolInfo) return null;
 
-  const progress = (Number(formatEther(poolInfo.totalRaised)) / Number(formatEther(poolInfo.hardCap))) * 100;
+  const progress =
+    (Number(formatEther(poolInfo.totalRaised)) /
+      Number(formatEther(poolInfo.hardCap))) *
+    100;
   const now = BigInt(Math.floor(Date.now() / 1000));
   const isLive = now >= poolInfo.startTime && now <= poolInfo.endTime;
   const isEnded = now > poolInfo.endTime;
@@ -42,7 +39,7 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
       args: [BigInt(poolId)],
       value: BigInt(Math.floor(Number(contributionAmount) * 1e18)),
     });
-    setContributionAmount('');
+    setContributionAmount("");
   };
 
   const handleClaim = () => {
@@ -59,8 +56,13 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
   };
 
   return (
-    <Card sx={{ p: 6, maxWidth: 'xl', mx: 'auto', mt: 8 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
+    <Card sx={{ p: 6, maxWidth: "xl", mx: "auto", mt: 8 }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={4}
+      >
         <Typography variant="h5">Pool #{poolId}</Typography>
         {getPoolStatus()}
       </Stack>
@@ -80,7 +82,8 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
         <Stack direction="row" justifyContent="space-between" mb={2}>
           <Box>Progress:</Box>
           <Box>
-            {formatEther(poolInfo.totalRaised)} / {formatEther(poolInfo.hardCap)} ETH
+            {formatEther(poolInfo.totalRaised)} /{" "}
+            {formatEther(poolInfo.hardCap)} ETH
           </Box>
         </Stack>
         <LinearProgress variant="determinate" value={progress} sx={{ mt: 2 }} />
@@ -102,7 +105,9 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
             <TextField
               type="number"
               value={contributionAmount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setContributionAmount(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setContributionAmount(e.target.value)
+              }
               placeholder="Amount in ETH"
             />
             <Button
@@ -110,7 +115,7 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
               onClick={handleInvest}
               disabled={isInvesting}
             >
-              {isInvesting ? 'Contributing' : 'Contribute'}
+              {isInvesting ? "Contributing" : "Contribute"}
             </Button>
           </Stack>
         </Box>
@@ -121,9 +126,9 @@ export const LaunchpadPool: React.FC<LaunchpadPoolProps> = ({ poolId }) => {
           color="success"
           onClick={handleClaim}
           disabled={isClaiming}
-          sx={{ mb: 4, width: '100%' }}
+          sx={{ mb: 4, width: "100%" }}
         >
-          {isClaiming ? 'Claiming' : 'Claim Tokens'}
+          {isClaiming ? "Claiming" : "Claim Tokens"}
         </Button>
       )}
     </Card>

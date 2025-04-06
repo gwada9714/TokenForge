@@ -1,9 +1,9 @@
-import { 
+import {
   PaymentSession,
   PaymentStatus,
   PaymentToken,
-  PaymentError
-} from '../types';
+  PaymentError,
+} from "../types";
 
 /**
  * Service de base abstrait pour les paiements sur différentes blockchains
@@ -116,7 +116,7 @@ export abstract class AbstractChainService {
     return {
       message,
       code,
-      name: 'PaymentError'
+      name: "PaymentError",
     } as PaymentError;
   }
-} 
+}

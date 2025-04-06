@@ -1,1 +1,1 @@
-export { default as MultiChainBridgePage } from './MultiChainBridgePage';
+export { default as MultiChainBridgePage } from "./MultiChainBridgePage";

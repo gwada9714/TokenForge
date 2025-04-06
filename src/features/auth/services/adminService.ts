@@ -1,10 +1,10 @@
-import { TokenForgeUser } from '../types';
-import { storageService } from './storageService';
-import { logService } from './logService';
-import { ErrorService } from './errorService';
-import { AuthErrorCode } from '../errors/AuthError';
+import { TokenForgeUser } from "../types";
+import { storageService } from "./storageService";
+import { logService } from "./logService";
+import { ErrorService } from "./errorService";
+import { AuthErrorCode } from "../errors/AuthError";
 
-const LOG_CATEGORY = 'AdminService';
+const LOG_CATEGORY = "AdminService";
 
 interface AdminRights {
   isAdmin: boolean;
@@ -15,7 +15,7 @@ interface AdminRights {
 class AdminService {
   private static instance: AdminService;
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): AdminService {
     if (!AdminService.instance) {
@@ -40,7 +40,7 @@ class AdminService {
     } catch (error) {
       logService.error(
         LOG_CATEGORY,
-        'Failed to verify admin status',
+        "Failed to verify admin status",
         error instanceof Error ? error : new Error(String(error)),
         { userId }
       );
@@ -54,27 +54,27 @@ class AdminService {
       if (!storedData) {
         throw ErrorService.createAuthError(
           AuthErrorCode.USER_NOT_FOUND,
-          'User data not found'
+          "User data not found"
         );
       }
 
       return {
         isAdmin: storedData.isAdmin || false,
         canCreateToken: storedData.canCreateToken || false,
-        canUseServices: storedData.canUseServices || false
+        canUseServices: storedData.canUseServices || false,
       };
     } catch (error) {
       // Gérer l'erreur et retourner des droits par défaut
       logService.error(
         LOG_CATEGORY,
-        'Failed to get admin rights',
+        "Failed to get admin rights",
         error instanceof Error ? error : new Error(String(error)),
         { userId: user.uid }
       );
       return {
         isAdmin: false,
         canCreateToken: false,
-        canUseServices: false
+        canUseServices: false,
       };
     }
   }
@@ -88,25 +88,25 @@ class AdminService {
       if (!currentData) {
         throw ErrorService.createAuthError(
           AuthErrorCode.USER_NOT_FOUND,
-          'User data not found'
+          "User data not found"
         );
       }
 
       const updatedData = {
         ...currentData,
-        ...rights
+        ...rights,
       };
 
       await storageService.updateUserData(userId, updatedData);
 
-      logService.info(LOG_CATEGORY, 'Admin rights updated', {
+      logService.info(LOG_CATEGORY, "Admin rights updated", {
         userId,
-        rights
+        rights,
       });
     } catch (error) {
       logService.error(
         LOG_CATEGORY,
-        'Failed to update admin rights',
+        "Failed to update admin rights",
         error instanceof Error ? error : new Error(String(error)),
         { userId, rights }
       );
@@ -126,28 +126,28 @@ class AdminService {
     if (!isAuthenticated) {
       return {
         canAccess: false,
-        reason: 'Vous devez être connecté pour accéder à cette page'
+        reason: "Vous devez être connecté pour accéder à cette page",
       };
     }
 
     if (!isAdmin) {
       return {
         canAccess: false,
-        reason: 'Vous n\'avez pas les droits d\'administration nécessaires'
+        reason: "Vous n'avez pas les droits d'administration nécessaires",
       };
     }
 
     if (!isConnected) {
       return {
         canAccess: false,
-        reason: 'Vous devez connecter votre portefeuille'
+        reason: "Vous devez connecter votre portefeuille",
       };
     }
 
     if (!isCorrectNetwork) {
       return {
         canAccess: false,
-        reason: 'Vous devez être connecté au bon réseau'
+        reason: "Vous devez être connecté au bon réseau",
       };
     }
 

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { logger } from '../core/logger';
+import { useState } from "react";
+import { logger } from "../core/logger";
 
 interface TokenDeployParams {
   name: string;
@@ -26,11 +26,12 @@ export function useTokenDeploy() {
   const [isDeploying, setIsDeploying] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [lastDeploymentResult, setLastDeploymentResult] = useState<DeploymentResult | null>(null);
+  const [lastDeploymentResult, setLastDeploymentResult] =
+    useState<DeploymentResult | null>(null);
 
   logger.info({
-    category: 'DiagnosticHooks',
-    message: 'Hook useTokenDeploy simulé initialisé'
+    category: "DiagnosticHooks",
+    message: "Hook useTokenDeploy simulé initialisé",
   });
 
   const deployToken = async (params: TokenDeployParams) => {
@@ -38,47 +39,54 @@ export function useTokenDeploy() {
     setError(null);
 
     logger.info({
-      category: 'DiagnosticHooks',
-      message: `Simulation de déploiement du token "${params.name}" (${params.symbol})`
+      category: "DiagnosticHooks",
+      message: `Simulation de déploiement du token "${params.name}" (${params.symbol})`,
     });
 
     try {
       // Simuler un délai d'attente pour le déploiement
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Créer un faux résultat de déploiement
       const mockResult: DeploymentResult = {
         success: true,
-        hash: `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
-        contractAddress: `0x${Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+        hash: `0x${Array.from({ length: 64 }, () =>
+          Math.floor(Math.random() * 16).toString(16)
+        ).join("")}`,
+        contractAddress: `0x${Array.from({ length: 40 }, () =>
+          Math.floor(Math.random() * 16).toString(16)
+        ).join("")}`,
       };
 
       setLastDeploymentResult(mockResult);
       setIsSuccess(true);
 
       logger.info({
-        category: 'DiagnosticHooks',
-        message: `Simulation de déploiement terminée avec succès: ${mockResult.contractAddress}`
+        category: "DiagnosticHooks",
+        message: `Simulation de déploiement terminée avec succès: ${mockResult.contractAddress}`,
       });
 
       return mockResult;
     } catch (err) {
-      const errorObj = err instanceof Error ? err : new Error('Erreur inconnue lors du déploiement simulé');
+      const errorObj =
+        err instanceof Error
+          ? err
+          : new Error("Erreur inconnue lors du déploiement simulé");
       setError(errorObj);
       setLastDeploymentResult({
         success: false,
-        error: errorObj.message
+        error: errorObj.message,
       });
 
       logger.error({
-        category: 'DiagnosticHooks',
+        category: "DiagnosticHooks",
         message: `Erreur simulée lors du déploiement: ${errorObj.message}`,
-        error: errorObj
+        error: errorObj,
       });
 
       return {
         success: false,
-        error: errorObj.message
+        error: errorObj.message,
       };
     } finally {
       setIsDeploying(false);
@@ -90,14 +98,14 @@ export function useTokenDeploy() {
    */
   const checkWalletStatus = async () => {
     logger.info({
-      category: 'DiagnosticHooks',
-      message: 'Vérification simulée du statut du portefeuille'
+      category: "DiagnosticHooks",
+      message: "Vérification simulée du statut du portefeuille",
     });
-    
+
     return {
       isConnected: true,
       hasCorrectNetwork: true,
-      hasMinimumBalance: true
+      hasMinimumBalance: true,
     };
   };
 
@@ -107,7 +115,7 @@ export function useTokenDeploy() {
     isSuccess,
     error,
     lastDeploymentResult,
-    checkWalletStatus
+    checkWalletStatus,
   };
 }
 
@@ -116,16 +124,16 @@ export function useTokenDeploy() {
  */
 export function useWalletStatus() {
   logger.info({
-    category: 'DiagnosticHooks',
-    message: 'Hook useWalletStatus simulé initialisé'
+    category: "DiagnosticHooks",
+    message: "Hook useWalletStatus simulé initialisé",
   });
 
   return {
     isConnected: true,
     isCorrectChain: true,
-    currentChain: 'goerli',
+    currentChain: "goerli",
     hasMinimumBalance: true,
-    balance: '1.0'
+    balance: "1.0",
   };
 }
 
@@ -134,24 +142,24 @@ export function useWalletStatus() {
  */
 export function useTokenForgeAuth() {
   logger.info({
-    category: 'DiagnosticHooks',
-    message: 'Hook useTokenForgeAuth simulé initialisé'
+    category: "DiagnosticHooks",
+    message: "Hook useTokenForgeAuth simulé initialisé",
   });
 
   const connectWallet = async () => {
     logger.info({
-      category: 'DiagnosticHooks',
-      message: 'Connexion du portefeuille simulée'
+      category: "DiagnosticHooks",
+      message: "Connexion du portefeuille simulée",
     });
     return true;
   };
 
   return {
     currentUser: {
-      uid: 'mock-user-id',
-      email: 'user@example.com',
-      displayName: 'Utilisateur Test',
-      photoURL: null
+      uid: "mock-user-id",
+      email: "user@example.com",
+      displayName: "Utilisateur Test",
+      photoURL: null,
     },
     isAuthenticated: true,
     isLoading: false,
@@ -159,6 +167,6 @@ export function useTokenForgeAuth() {
     logout: async () => true,
     signInWithEmail: async () => true,
     signUpWithEmail: async () => true,
-    resetPassword: async () => true
+    resetPassword: async () => true,
   };
 }

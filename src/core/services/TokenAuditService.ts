@@ -1,27 +1,27 @@
-import { ethers } from 'ethers';
-import { TokenConfig } from '@/types/token';
-import { TokenAudit } from '@/types/tokenFeatures';
+import { ethers } from "ethers";
+import { TokenConfig } from "@/types/token";
+import { TokenAudit } from "@/types/tokenFeatures";
 
 export class TokenAuditService {
   private static readonly CRITICAL_VULNERABILITIES = [
-    'selfdestruct',
-    'delegatecall',
-    'transfer.call',
-    'tx.origin'
+    "selfdestruct",
+    "delegatecall",
+    "transfer.call",
+    "tx.origin",
   ];
 
   private static readonly HIGH_VULNERABILITIES = [
-    'block.timestamp',
-    'assembly',
-    'ecrecover'
+    "block.timestamp",
+    "assembly",
+    "ecrecover",
   ];
 
   async auditToken(tokenConfig: TokenConfig): Promise<TokenAudit> {
     const audit: TokenAudit = {
       timestamp: new Date(),
-      status: 'in_progress',
+      status: "in_progress",
       issues: [],
-      score: 0
+      score: 0,
     };
 
     try {
@@ -39,38 +39,42 @@ export class TokenAuditService {
 
       return audit;
     } catch (error) {
-      console.error('Error during token audit:', error);
-      audit.status = 'failed';
-      audit.issues = [{
-        severity: 'critical',
-        description: 'Audit process failed',
-        recommendation: 'Please contact support'
-      }];
+      console.error("Error during token audit:", error);
+      audit.status = "failed";
+      audit.issues = [
+        {
+          severity: "critical",
+          description: "Audit process failed",
+          recommendation: "Please contact support",
+        },
+      ];
       return audit;
     }
   }
 
-  private async auditSourceCode(tokenConfig: TokenConfig): Promise<TokenAudit['issues']> {
-    const issues: TokenAudit['issues'] = [];
+  private async auditSourceCode(
+    tokenConfig: TokenConfig
+  ): Promise<TokenAudit["issues"]> {
+    const issues: TokenAudit["issues"] = [];
 
     // Vérification des vulnérabilités critiques
     for (const vulnerability of TokenAuditService.CRITICAL_VULNERABILITIES) {
-      if (tokenConfig.features.some(f => f.includes(vulnerability))) {
+      if (tokenConfig.features.some((f) => f.includes(vulnerability))) {
         issues.push({
-          severity: 'critical',
+          severity: "critical",
           description: `Detected potentially dangerous function: ${vulnerability}`,
-          recommendation: `Remove or secure the usage of ${vulnerability}`
+          recommendation: `Remove or secure the usage of ${vulnerability}`,
         });
       }
     }
 
     // Vérification des vulnérabilités élevées
     for (const vulnerability of TokenAuditService.HIGH_VULNERABILITIES) {
-      if (tokenConfig.features.some(f => f.includes(vulnerability))) {
+      if (tokenConfig.features.some((f) => f.includes(vulnerability))) {
         issues.push({
-          severity: 'high',
+          severity: "high",
           description: `Detected risky function: ${vulnerability}`,
-          recommendation: `Review and secure the usage of ${vulnerability}`
+          recommendation: `Review and secure the usage of ${vulnerability}`,
         });
       }
     }
@@ -78,40 +82,41 @@ export class TokenAuditService {
     return issues;
   }
 
-  private auditConfiguration(tokenConfig: TokenConfig): TokenAudit['issues'] {
-    const issues: TokenAudit['issues'] = [];
+  private auditConfiguration(tokenConfig: TokenConfig): TokenAudit["issues"] {
+    const issues: TokenAudit["issues"] = [];
 
     // Vérification des taxes
     if (tokenConfig.taxConfig?.enabled) {
       if (tokenConfig.taxConfig.baseTaxRate > 10) {
         issues.push({
-          severity: 'high',
-          description: 'High base tax rate detected',
-          recommendation: 'Consider reducing the base tax rate below 10%'
+          severity: "high",
+          description: "High base tax rate detected",
+          recommendation: "Consider reducing the base tax rate below 10%",
         });
       }
     }
 
     // Vérification du supply
     const supply = ethers.parseUnits(tokenConfig.supply, tokenConfig.decimals);
-    const maxSupply = ethers.parseUnits('1000000000000', 18);
+    const maxSupply = ethers.parseUnits("1000000000000", 18);
     if (supply.gt(maxSupply)) {
       issues.push({
-        severity: 'medium',
-        description: 'Very large total supply detected',
-        recommendation: 'Consider reducing the total supply to prevent potential numerical issues'
+        severity: "medium",
+        description: "Very large total supply detected",
+        recommendation:
+          "Consider reducing the total supply to prevent potential numerical issues",
       });
     }
 
     return issues;
   }
 
-  private calculateAuditScore(issues: TokenAudit['issues']): number {
-    const weights: Record<TokenAudit['issues'][number]['severity'], number> = {
+  private calculateAuditScore(issues: TokenAudit["issues"]): number {
+    const weights: Record<TokenAudit["issues"][number]["severity"], number> = {
       critical: -30,
       high: -20,
       medium: -10,
-      low: -5
+      low: -5,
     };
 
     const baseScore = 100;
@@ -122,9 +127,9 @@ export class TokenAuditService {
     return Math.max(0, Math.min(100, baseScore + totalPenalty));
   }
 
-  private determineAuditStatus(score: number): TokenAudit['status'] {
-    if (score >= 80) return 'completed';
-    if (score >= 50) return 'in_progress';
-    return 'failed';
+  private determineAuditStatus(score: number): TokenAudit["status"] {
+    if (score >= 80) return "completed";
+    if (score >= 50) return "in_progress";
+    return "failed";
   }
 }

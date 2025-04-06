@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Card,
@@ -17,14 +17,14 @@ import {
   Alert,
   AlertColor,
   Divider,
-} from '@mui/material';
-import { useContract } from '../../../hooks/useContract';
-import { ethers } from 'ethers';
+} from "@mui/material";
+import { useContract } from "../../../hooks/useContract";
+import { ethers } from "ethers";
 
 const OwnershipManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [newOwner, setNewOwner] = useState('');
+  const [newOwner, setNewOwner] = useState("");
   const [currentOwner, setCurrentOwner] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -32,11 +32,11 @@ const OwnershipManagement: React.FC = () => {
     severity: AlertColor;
   }>({
     open: false,
-    message: '',
-    severity: 'success',
+    message: "",
+    severity: "success",
   });
 
-  const { contract } = useContract('token');
+  const { contract } = useContract("token");
 
   const handleTransferOwnership = useCallback(async () => {
     if (!contract || !ethers.isAddress(newOwner)) return;
@@ -45,20 +45,20 @@ const OwnershipManagement: React.FC = () => {
     try {
       const tx = await contract.transferOwnership(newOwner);
       await tx.wait();
-      
+
       setCurrentOwner(newOwner);
       setOpenDialog(false);
-      setNewOwner('');
+      setNewOwner("");
       setSnackbar({
         open: true,
-        message: 'Ownership transferred successfully',
-        severity: 'success',
+        message: "Ownership transferred successfully",
+        severity: "success",
       });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to transfer ownership',
-        severity: 'error',
+        message: "Failed to transfer ownership",
+        severity: "error",
       });
     } finally {
       setLoading(false);
@@ -67,11 +67,11 @@ const OwnershipManagement: React.FC = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setNewOwner('');
+    setNewOwner("");
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   const isValidAddress = newOwner && ethers.isAddress(newOwner);
@@ -91,7 +91,9 @@ const OwnershipManagement: React.FC = () => {
               </Typography>
               {currentOwner ? (
                 <Chip
-                  label={`${currentOwner.slice(0, 6)}...${currentOwner.slice(-4)}`}
+                  label={`${currentOwner.slice(0, 6)}...${currentOwner.slice(
+                    -4
+                  )}`}
                   color="primary"
                 />
               ) : (
@@ -130,8 +132,8 @@ const OwnershipManagement: React.FC = () => {
             error={!!newOwner && !isValidAddress}
             helperText={
               newOwner && !isValidAddress
-                ? 'Please enter a valid Ethereum address'
-                : ''
+                ? "Please enter a valid Ethereum address"
+                : ""
             }
           />
         </DialogContent>

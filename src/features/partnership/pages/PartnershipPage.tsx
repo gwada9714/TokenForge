@@ -1,31 +1,39 @@
-import React from 'react';
-import { Container, Typography, Grid, Card, CardContent, Box, Button } from '@mui/material';
-import { motion } from 'framer-motion';
-import { styled } from '@mui/material/styles';
-import HandshakeIcon from '@mui/icons-material/Handshake';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import GroupIcon from '@mui/icons-material/Group';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import React from "react";
+import {
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Box,
+  Button,
+} from "@mui/material";
+import { motion } from "framer-motion";
+import { styled } from "@mui/material/styles";
+import HandshakeIcon from "@mui/icons-material/Handshake";
+import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import GroupIcon from "@mui/icons-material/Group";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 
-const StyledSection = styled('section')(({ theme: muiTheme }) => ({
+const StyledSection = styled("section")(({ theme: muiTheme }) => ({
   padding: muiTheme.spacing(8, 0),
   backgroundColor: muiTheme.palette.background.default,
 }));
 
 const StyledCard = styled(Card)(() => ({
-  height: '100%',
-  textAlign: 'center',
-  transition: 'transform 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-8px)',
+  height: "100%",
+  textAlign: "center",
+  transition: "transform 0.3s ease-in-out",
+  "&:hover": {
+    transform: "translateY(-8px)",
   },
 }));
 
 const IconWrapper = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'center',
+  display: "flex",
+  justifyContent: "center",
   marginBottom: theme.spacing(2),
-  '& > svg': {
+  "& > svg": {
     fontSize: 48,
     color: theme.palette.primary.main,
   },
@@ -40,23 +48,27 @@ interface Benefit {
 const benefits: Benefit[] = [
   {
     icon: <HandshakeIcon />,
-    title: 'Collaboration Stratégique',
-    description: 'Accédez à notre réseau d&apos;experts et bénéficiez de conseils personnalisés pour votre projet.',
+    title: "Collaboration Stratégique",
+    description:
+      "Accédez à notre réseau d&apos;experts et bénéficiez de conseils personnalisés pour votre projet.",
   },
   {
     icon: <MonetizationOnIcon />,
-    title: 'Avantages Financiers',
-    description: 'Profitez de réductions exclusives sur nos services et de commissions préférentielles.',
+    title: "Avantages Financiers",
+    description:
+      "Profitez de réductions exclusives sur nos services et de commissions préférentielles.",
   },
   {
     icon: <GroupIcon />,
-    title: 'Communauté Privilégiée',
-    description: 'Rejoignez une communauté dynamique de professionnels et d&apos;entrepreneurs de la blockchain.',
+    title: "Communauté Privilégiée",
+    description:
+      "Rejoignez une communauté dynamique de professionnels et d&apos;entrepreneurs de la blockchain.",
   },
   {
     icon: <TrendingUpIcon />,
-    title: 'Croissance Accélérée',
-    description: 'Bénéficiez de notre expertise marketing et de notre support pour développer votre projet.',
+    title: "Croissance Accélérée",
+    description:
+      "Bénéficiez de notre expertise marketing et de notre support pour développer votre projet.",
   },
 ];
 
@@ -111,7 +123,8 @@ const PartnershipPage: React.FC = () => {
               Programme de Partenariat
             </Typography>
             <Typography variant="h5" color="textSecondary" paragraph>
-              Rejoignez TokenForge et développez votre activité dans l&apos;écosystème blockchain
+              Rejoignez TokenForge et développez votre activité dans
+              l&apos;écosystème blockchain
             </Typography>
             <Button
               variant="contained"
@@ -135,20 +148,11 @@ const PartnershipPage: React.FC = () => {
               >
                 <StyledCard>
                   <CardContent>
-                    <IconWrapper>
-                      {benefit.icon}
-                    </IconWrapper>
-                    <Typography
-                      variant="h6"
-                      component="h3"
-                      gutterBottom
-                    >
+                    <IconWrapper>{benefit.icon}</IconWrapper>
+                    <Typography variant="h6" component="h3" gutterBottom>
                       {benefit.title}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                    >
+                    <Typography variant="body2" color="textSecondary">
                       {benefit.description}
                     </Typography>
                   </CardContent>
@@ -168,9 +172,11 @@ const PartnershipPage: React.FC = () => {
               Pourquoi devenir partenaire ?
             </Typography>
             <Typography variant="body1" color="textSecondary" paragraph>
-              En tant que partenaire TokenForge, vous bénéficiez d&apos;un accès privilégié à notre technologie,
-              notre expertise et notre réseau. Nous vous accompagnons dans le développement de votre activité
-              et vous offrons des conditions préférentielles sur l&apos;ensemble de nos services.
+              En tant que partenaire TokenForge, vous bénéficiez d&apos;un accès
+              privilégié à notre technologie, notre expertise et notre réseau.
+              Nous vous accompagnons dans le développement de votre activité et
+              vous offrons des conditions préférentielles sur l&apos;ensemble de
+              nos services.
             </Typography>
             <Button
               variant="outlined"

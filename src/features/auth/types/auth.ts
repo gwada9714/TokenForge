@@ -1,16 +1,16 @@
-import { User as FirebaseUser } from 'firebase/auth';
-import { AuthError } from '../errors/AuthError';
-import { WalletClient } from 'viem';
-import { AuthAction } from '../../../types/authTypes';
+import { User as FirebaseUser } from "firebase/auth";
+import { AuthError } from "../errors/AuthError";
+import { WalletClient } from "viem";
+import { AuthAction } from "../../../types/authTypes";
 
-export type AuthStatus = 
-  | 'idle'
-  | 'loading'
-  | 'authenticated'
-  | 'error'
-  | 'wallet_connected'
-  | 'wallet_connected_auth_pending'
-  | 'wallet_connected_wrong_network';
+export type AuthStatus =
+  | "idle"
+  | "loading"
+  | "authenticated"
+  | "error"
+  | "wallet_connected"
+  | "wallet_connected_auth_pending"
+  | "wallet_connected_wrong_network";
 
 export interface TokenForgeUser extends FirebaseUser {
   isAdmin: boolean;
@@ -58,7 +58,7 @@ export interface SessionData {
 }
 
 export interface NotificationEvent {
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: "success" | "error" | "warning" | "info";
   message: string;
   duration?: number;
   data?: any;
@@ -79,7 +79,11 @@ export interface TokenForgeAuthContextValue {
   walletError: AuthError | null;
   dispatch: React.Dispatch<AuthAction>;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName?: string
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (displayName?: string, photoURL?: string) => Promise<void>;

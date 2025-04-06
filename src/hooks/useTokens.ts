@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
 
 interface Token {
   address: string;
@@ -20,15 +20,17 @@ export function useTokens() {
         // TODO: Implémenter la récupération des tokens depuis le smart contract
         const mockTokens: Token[] = [
           {
-            address: '0x1234...5678',
-            name: 'Test Token',
-            symbol: 'TST',
-            totalSupply: '1000000',
+            address: "0x1234...5678",
+            name: "Test Token",
+            symbol: "TST",
+            totalSupply: "1000000",
           },
         ];
         setTokens(mockTokens);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        setError(
+          err instanceof Error ? err.message : "Une erreur est survenue"
+        );
       } finally {
         setIsLoading(false);
       }

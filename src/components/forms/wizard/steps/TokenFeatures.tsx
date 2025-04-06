@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Typography,
@@ -6,9 +6,9 @@ import {
   Switch,
   Paper,
   Grid,
-} from '@mui/material';
-import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
+} from "@mui/material";
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 
 interface TokenFeaturesProps {
   data: {
@@ -21,16 +21,16 @@ interface TokenFeaturesProps {
 }
 
 const TokenFeatures: React.FC<TokenFeaturesProps> = ({ data, onUpdate }) => {
-  const handleFeatureChange = (feature: 'mint' | 'burn') => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    onUpdate({
-      features: {
-        ...data.features,
-        [feature]: event.target.checked,
-      },
-    });
-  };
+  const handleFeatureChange =
+    (feature: "mint" | "burn") =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({
+        features: {
+          ...data.features,
+          [feature]: event.target.checked,
+        },
+      });
+    };
 
   return (
     <Box>
@@ -57,7 +57,7 @@ const TokenFeatures: React.FC<TokenFeaturesProps> = ({ data, onUpdate }) => {
               control={
                 <Switch
                   checked={data.features.mint}
-                  onChange={handleFeatureChange('mint')}
+                  onChange={handleFeatureChange("mint")}
                 />
               }
               label="Enable Minting"
@@ -80,7 +80,7 @@ const TokenFeatures: React.FC<TokenFeaturesProps> = ({ data, onUpdate }) => {
               control={
                 <Switch
                   checked={data.features.burn}
-                  onChange={handleFeatureChange('burn')}
+                  onChange={handleFeatureChange("burn")}
                 />
               }
               label="Enable Burning"

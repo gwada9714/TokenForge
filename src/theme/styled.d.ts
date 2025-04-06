@@ -1,4 +1,4 @@
-import 'styled-components';
+import "styled-components";
 
 interface ColorSet {
   main: string;
@@ -13,7 +13,7 @@ interface ExtendedColorSet extends ColorSet {
   glow?: string;
 }
 
-declare module 'styled-components' {
+declare module "styled-components" {
   export interface DefaultTheme {
     colors: {
       primary: ColorSet;
@@ -69,9 +69,9 @@ declare module 'styled-components' {
         medium: string;
         large: string;
         xl: string;
-        '2xl': string;
-        '3xl': string;
-        '4xl': string;
+        "2xl": string;
+        "3xl": string;
+        "4xl": string;
       };
     };
     borderRadius: {
@@ -80,7 +80,7 @@ declare module 'styled-components' {
       medium: string;
       large: string;
       xl: string;
-      '2xl': string;
+      "2xl": string;
       full: string;
     };
     transitions: {
@@ -109,4 +109,4 @@ declare module 'styled-components' {
       between: (start: string, end: string) => string;
     };
   }
-} 
+}

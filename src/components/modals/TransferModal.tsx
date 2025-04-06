@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface TransferModalProps {
   token: {
@@ -9,9 +9,13 @@ interface TransferModalProps {
   onTransfer: (to: string, amount: string) => void;
 }
 
-export const TransferModal = ({ token, onClose, onTransfer }: TransferModalProps) => {
-  const [to, setTo] = useState('');
-  const [amount, setAmount] = useState('');
+export const TransferModal = ({
+  token,
+  onClose,
+  onTransfer,
+}: TransferModalProps) => {
+  const [to, setTo] = useState("");
+  const [amount, setAmount] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +28,9 @@ export const TransferModal = ({ token, onClose, onTransfer }: TransferModalProps
         <h2 className="text-xl font-bold mb-4">Transférer {token.symbol}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Destinataire</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Destinataire
+            </label>
             <input
               type="text"
               value={to}
@@ -35,7 +41,9 @@ export const TransferModal = ({ token, onClose, onTransfer }: TransferModalProps
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Montant</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Montant
+            </label>
             <input
               type="text"
               value={amount}
@@ -57,4 +65,4 @@ export const TransferModal = ({ token, onClose, onTransfer }: TransferModalProps
       </div>
     </div>
   );
-}; 
+};

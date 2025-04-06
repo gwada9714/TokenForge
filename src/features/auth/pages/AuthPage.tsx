@@ -1,7 +1,7 @@
-import React from 'react';
-import { Container, Paper, Box, Tabs, Tab } from '@mui/material';
-import { LoginForm } from '../components/LoginForm';
-import { SignUpForm } from '../components/SignUpForm';
+import React from "react";
+import { Container, Paper, Box, Tabs, Tab } from "@mui/material";
+import { LoginForm } from "../components/LoginForm";
+import { SignUpForm } from "../components/SignUpForm";
 
 export const AuthPage: React.FC = () => {
   const [value, setValue] = React.useState(0);
@@ -27,4 +27,4 @@ export const AuthPage: React.FC = () => {
       </Box>
     </Container>
   );
-}; 
+};

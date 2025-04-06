@@ -3,6 +3,7 @@
 ## 1. Vue d'Ensemble de l'Architecture
 
 ### 1.1 Architecture Système Globale
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         FRONTEND                                │
@@ -32,6 +33,7 @@
 ```
 
 ### 1.2 Principes Architecturaux
+
 - **Modularité**: Architecture modulaire avec séparation claire des responsabilités
 - **Extensibilité**: Facilité d'ajout de nouvelles blockchains et fonctionnalités
 - **Scalabilité**: Capacité à supporter une croissance importante d'utilisateurs
@@ -42,6 +44,7 @@
 ## 2. Architecture Technique
 
 ### 2.1 Frontend Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                       FRONTEND ARCHITECTURE                     │
@@ -79,6 +82,7 @@
 ```
 
 #### Framework & Technologies
+
 - **Framework**: React avec TypeScript
 - **Structure**: Architecture basée sur features/
 - **State Management**: Redux pour l'état global, React Context pour l'état local
@@ -87,22 +91,27 @@
 - **Web3 Integration**: ethers.js, web3.js, WalletConnect
 
 #### Modules Frontend Clés
+
 1. **TokenCreationModule**
+
    - Formulaire multi-étapes de création de token
    - Prévisualisation et validation
    - Sélection des fonctionnalités du token (mint, burn, etc.)
 
 2. **TokenomicsDesignerModule**
+
    - Interface visuelle de conception
    - Simulateur de scénarios
    - Templates prédéfinis
 
 3. **AdminDashboardModule**
+
    - Tableau de bord analytique
    - Gestion des utilisateurs
    - Configuration système
 
 4. **PaymentModule**
+
    - Sélection de blockchain et méthode
    - Processus de paiement
    - Confirmation et suivi
@@ -113,6 +122,7 @@
    - Gestion des licences
 
 ### 2.2 Backend Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                       BACKEND ARCHITECTURE                      │
@@ -158,6 +168,7 @@
 ```
 
 #### Framework & Technologies
+
 - **Framework**: Node.js avec Express ou NestJS
 - **Language**: TypeScript
 - **API**: REST avec documentation OpenAPI/Swagger
@@ -166,27 +177,33 @@
 - **ORM**: TypeORM ou Prisma
 
 #### Services Backend Principaux
+
 1. **TokenFactoryService**
+
    - Gestion de la création de tokens
    - Templates de smart contracts
    - Validation et déploiement
 
 2. **PaymentSessionService**
+
    - Création et gestion des sessions de paiement
    - Intégration blockchain-spécifique
    - Suivi et confirmation des transactions
 
 3. **UserService**
+
    - Gestion des utilisateurs
    - Authentification et autorisation
    - Profils et préférences
 
 4. **BlockchainIntegrationService**
+
    - Adapters pour chaque blockchain supportée
    - Monitoring des transactions
    - Interface unifiée pour les opérations blockchain
 
 5. **AnalyticsService**
+
    - Collecte de données d'utilisation
    - Métriques de performance des tokens
    - Rapports et visualisations
@@ -197,6 +214,7 @@
    - Gestion des droits d'utilisation
 
 ### 2.3 Architecture des Smart Contracts
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                 SMART CONTRACTS ARCHITECTURE                    │
@@ -235,6 +253,7 @@
 ```
 
 #### Technologies & Standards
+
 - **Ethereum/BSC/Polygon/Arbitrum**: Solidity 0.8.x avec hardhat/truffle
 - **Solana**: Rust avec Anchor framework
 - **Standards**: ERC-20, BEP-20, SPL Token, etc.
@@ -242,18 +261,22 @@
 - **Sécurité**: Outils d'analyse statique, audits de sécurité
 
 #### Contrats Principaux
+
 1. **TokenFactory.sol**
+
    - Interface de création de tokens
    - Configuration dynamique des fonctionnalités
    - Gestion des déploiements
 
 2. **TokenTemplates/**
+
    - StandardToken.sol - Implémentation de base
    - ReflectToken.sol - Tokens avec réflexion
    - StakingToken.sol - Tokens avec staking intégré
    - LiquidityToken.sol - Tokens avec gestion automatique de liquidité
 
 3. **SecurityModules/**
+
    - AntiWhale.sol - Limites de transaction et détention
    - AntiRugpull.sol - Mécanismes de protection contre le rugpull
    - TimeLock.sol - Verrouillage temporel pour actions critiques
@@ -267,6 +290,7 @@
 ## 3. Architecture des Données
 
 ### 3.1 Modèle de Données
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                       DATA MODEL ARCHITECTURE                   │
@@ -315,12 +339,14 @@
 ```
 
 #### Technologies de Stockage
+
 - **Base de données principale**: PostgreSQL
 - **Cache**: Redis
 - **Stockage de fichiers**: Cloud Storage (AWS S3 ou GCP Cloud Storage)
 - **Stockage blockchain**: IPFS pour les données décentralisées
 
 #### Stratégies de Stockage
+
 1. **Données utilisateur**: PostgreSQL avec encryption des données sensibles
 2. **Données haute fréquence**: Redis pour le caching et les sessions
 3. **Données blockchain**: Combinaison d'indexation on-chain et off-chain
@@ -328,6 +354,7 @@
 5. **Templates et assets**: Stockage objet + IPFS pour la résilience
 
 ### 3.2 Flux de Données
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                       DATA FLOW ARCHITECTURE                    │
@@ -361,6 +388,7 @@
 ## 4. Architecture d'Infrastructure
 
 ### 4.1 Architecture Cloud & Déploiement
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                   CLOUD INFRASTRUCTURE ARCHITECTURE             │
@@ -399,6 +427,7 @@
 ```
 
 #### Infrastructure Cloud
+
 - **Provider Principal**: AWS ou GCP
 - **Compute**: Conteneurs orchestrés avec Kubernetes
 - **Serverless**: Functions pour les opérations événementielles
@@ -407,6 +436,7 @@
 - **CDN**: Distribution de contenu optimisée
 
 #### Services Externes
+
 - **Authentication**: Firebase Auth
 - **Blockchain Providers**: Infura, Alchemy
 - **Monitoring**: Datadog, Prometheus/Grafana
@@ -414,6 +444,7 @@
 - **Logs**: ELK Stack
 
 ### 4.2 Architecture de Sécurité
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    SECURITY ARCHITECTURE                        │
@@ -448,21 +479,26 @@
 ```
 
 #### Stratégies de Sécurité
+
 1. **Authentication**:
+
    - Firebase Auth pour la gestion des utilisateurs
    - JWT pour l'authentification API
    - Wallet Signature pour la vérification de propriété blockchain
 
 2. **Autorisation**:
+
    - RBAC (Role-Based Access Control)
    - Validation des permissions par contexte
 
 3. **Sécurité Réseau**:
+
    - WAF (Web Application Firewall)
    - DDoS Protection
    - TLS/SSL pour toutes les communications
 
 4. **Sécurité des Données**:
+
    - Encryption au repos et en transit
    - Masquage des données sensibles
    - Politique de rétention des données
@@ -475,6 +511,7 @@
 ## 5. Architecture DevOps
 
 ### 5.1 Architecture CI/CD
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                       CI/CD ARCHITECTURE                        │
@@ -506,17 +543,21 @@
 ```
 
 #### Pratiques DevOps
+
 1. **CI (Continuous Integration)**:
+
    - Tests automatisés à chaque commit
    - Linting et validation de code
    - Build automatisé des artefacts
 
 2. **CD (Continuous Deployment)**:
+
    - Déploiement automatisé vers staging
    - Déploiement validé vers production
    - Stratégie de rollback automatisée
 
 3. **Monitoring**:
+
    - APM (Application Performance Monitoring)
    - Logging centralisé
    - Alerting basé sur les métriques
@@ -529,6 +570,7 @@
 ## 6. Architecture d'Intégration
 
 ### 6.1 Intégration Blockchain
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                 BLOCKCHAIN INTEGRATION ARCHITECTURE             │
@@ -564,12 +606,15 @@
 ```
 
 #### Stratégie d'Intégration Blockchain
+
 1. **API Providers**:
+
    - Utilisation de providers établis (Infura, Alchemy)
    - Fallback nodes pour la résilience
    - RPC caching pour optimisation
 
 2. **Layer d'Abstraction**:
+
    - Interface unifiée pour toutes les blockchains
    - Adapters spécifiques par blockchain
    - Conversion formats/types automatique
@@ -580,6 +625,7 @@
    - Reconciliation des transactions asynchrone
 
 ### 6.2 Intégration Wallet
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    WALLET INTEGRATION ARCHITECTURE              │
@@ -613,6 +659,7 @@
 ## 7. Architecture Modulaire des Fonctionnalités
 
 ### 7.1 Module Création de Token
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    TOKEN CREATION MODULE                        │
@@ -644,6 +691,7 @@
 ```
 
 ### 7.2 Module Tokenomics Designer
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    TOKENOMICS DESIGNER MODULE                   │
@@ -675,6 +723,7 @@
 ```
 
 ### 7.3 Module Auto-Liquidity Manager
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                   AUTO-LIQUIDITY MANAGER MODULE                 │
@@ -708,6 +757,7 @@
 ## 8. Architecture d'Évolution et Scalabilité
 
 ### 8.1 Stratégie de Scaling
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    SCALING ARCHITECTURE                         │
@@ -739,6 +789,7 @@
 ```
 
 ### 8.2 Phases d'Évolution Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    ARCHITECTURE EVOLUTION                       │
@@ -772,12 +823,14 @@
 ## 9. Documentation d'Architecture
 
 ### 9.1 Standards et Formats
+
 - Architecture documentée selon standards C4 (Context, Container, Component, Code)
 - Documentation API selon standard OpenAPI 3.0
 - Documentation Smart Contracts selon NatSpec
 - Documentation utilisateur en formats multiples (texte, vidéo, interactif)
 
 ### 9.2 Gestion de la Documentation
+
 - Documentation code maintenue avec le code (inline, README)
 - Documentation architecture dans Confluence
 - Documentation technique auto-générée (Compodoc, Swagger)
@@ -786,6 +839,7 @@
 ## 10. Considérations Finales d'Architecture
 
 ### 10.1 Avantages de l'Architecture Proposée
+
 - **Extensibilité**: Facilité d'ajout de nouvelles blockchains et fonctionnalités
 - **Maintenabilité**: Séparation claire des responsabilités
 - **Performance**: Optimisation pour des temps de réponse rapides
@@ -793,6 +847,7 @@
 - **Coût Optimisé**: Infrastructure évolutive selon les besoins
 
 ### 10.2 Challenges d'Implémentation
+
 - Complexité de l'intégration multi-chain
 - Maintien de la compatibilité des smart contracts entre blockchains
 - Équilibrage entre flexibilité et simplicité d'utilisation
@@ -800,6 +855,7 @@
 - Maintien des avantages tarifaires face à la concurrence
 
 ### 10.3 Recommandations Techniques
+
 - Commencer avec un MVP bien défini sur 2 blockchains
 - Prioritiser la qualité du code et les tests pour les smart contracts
 - Implémenter un monitoring complet dès le départ

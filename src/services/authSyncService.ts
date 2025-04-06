@@ -1,4 +1,4 @@
-import { TokenForgeUser } from '../types/authTypes';
+import { TokenForgeUser } from "../types/authTypes";
 
 let refreshInterval: NodeJS.Timeout | null = null;
 
@@ -12,9 +12,9 @@ export const authSyncService = {
     refreshInterval = setInterval(async () => {
       try {
         // Logique de refresh à implémenter
-        console.log('Refreshing token...');
+        console.log("Refreshing token...");
       } catch (error) {
-        console.error('Error refreshing token:', error);
+        console.error("Error refreshing token:", error);
       }
     }, 55 * 60 * 1000);
   },
@@ -24,5 +24,5 @@ export const authSyncService = {
       clearInterval(refreshInterval);
       refreshInterval = null;
     }
-  }
+  },
 };

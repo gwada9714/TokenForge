@@ -4,13 +4,17 @@
  * @param startLength Nombre de caractères au début (défaut: 6)
  * @param endLength Nombre de caractères à la fin (défaut: 4)
  */
-export const truncateAddress = (address: string, startLength = 6, endLength = 4): string => {
-  if (!address) return '';
+export const truncateAddress = (
+  address: string,
+  startLength = 6,
+  endLength = 4
+): string => {
+  if (!address) return "";
   if (address.length <= startLength + endLength) return address;
-  
+
   const start = address.slice(0, startLength);
   const end = address.slice(-endLength);
-  
+
   return `${start}...${end}`;
 };
 
@@ -21,8 +25,8 @@ export const truncateAddress = (address: string, startLength = 6, endLength = 4)
  */
 export const formatAmount = (amount: string, decimals: number): string => {
   const num = parseFloat(amount);
-  if (isNaN(num)) return '0';
-  return num.toLocaleString('fr-FR', {
+  if (isNaN(num)) return "0";
+  return num.toLocaleString("fr-FR", {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
   });
@@ -34,17 +38,17 @@ export const formatAmount = (amount: string, decimals: number): string => {
  * @param decimals Le nombre de décimales (défaut: 2)
  */
 export const formatNumber = (value: string | number, decimals = 2): string => {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(num)) return '0';
-  
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "0";
+
   if (num > 1000000000) {
-    return (num / 1000000000).toFixed(decimals) + 'B';
+    return (num / 1000000000).toFixed(decimals) + "B";
   } else if (num > 1000000) {
-    return (num / 1000000).toFixed(decimals) + 'M';
+    return (num / 1000000).toFixed(decimals) + "M";
   } else if (num > 1000) {
-    return (num / 1000).toFixed(decimals) + 'K';
+    return (num / 1000).toFixed(decimals) + "K";
   }
-  
+
   return num.toFixed(decimals);
 };
 
@@ -53,12 +57,12 @@ export const formatNumber = (value: string | number, decimals = 2): string => {
  * @param date La date à formater
  */
 export const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return date.toLocaleDateString("fr-FR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 

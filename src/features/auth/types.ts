@@ -1,20 +1,20 @@
-import { User as FirebaseUser } from 'firebase/auth';
-import { PublicClient } from 'viem';
-import { getWalletClient } from '@wagmi/core';
-import { ErrorCode } from './errors/AuthError';
+import { User as FirebaseUser } from "firebase/auth";
+import { PublicClient } from "viem";
+import { getWalletClient } from "@wagmi/core";
+import { ErrorCode } from "./errors/AuthError";
 
-export type AuthStatus = 
-  | 'idle'
-  | 'loading'
-  | 'authenticated'
-  | 'wallet_connected'
-  | 'wallet_connected_auth_pending'
-  | 'wallet_connected_wrong_network'
-  | 'error';
+export type AuthStatus =
+  | "idle"
+  | "loading"
+  | "authenticated"
+  | "wallet_connected"
+  | "wallet_connected_auth_pending"
+  | "wallet_connected_wrong_network"
+  | "error";
 
 export type WalletClientType = Awaited<ReturnType<typeof getWalletClient>>;
 
-export interface TokenForgeUser extends Omit<FirebaseUser, 'metadata'> {
+export interface TokenForgeUser extends Omit<FirebaseUser, "metadata"> {
   uid: string;
   email: string | null;
   displayName: string | null;
@@ -86,11 +86,18 @@ export interface AuthError {
   code: ErrorCode;
   message: string;
   details?: Record<string, unknown>;
-  toJSON(): { name: string; code: ErrorCode; message: string; details?: Record<string, unknown> };
+  toJSON(): {
+    name: string;
+    code: ErrorCode;
+    message: string;
+    details?: Record<string, unknown>;
+  };
 }
 
 export interface SessionService {
-  initializeSession: (callback: (user: FirebaseUser | null) => void) => () => void;
+  initializeSession: (
+    callback: (user: FirebaseUser | null) => void
+  ) => () => void;
   refreshSession: () => Promise<void>;
   clearSession: () => Promise<void>;
 }

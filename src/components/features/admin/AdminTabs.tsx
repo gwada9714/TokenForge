@@ -1,11 +1,11 @@
-import React from 'react';
-import { Tab, Tabs, Box } from '@mui/material';
+import React from "react";
+import { Tab, Tabs, Box } from "@mui/material";
 import {
   Security as SecurityIcon,
   Settings as SettingsIcon,
   Notifications as AlertsIcon,
   Assessment as StatsIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 interface AdminTabsProps {
   value: number;
@@ -14,18 +14,21 @@ interface AdminTabsProps {
 
 const a11yProps = (index: number) => ({
   id: `admin-tab-${index}`,
-  'aria-controls': `admin-tabpanel-${index}`,
-  'aria-label': [
-    'Contrôle du contrat',
-    'Gestion de la propriété',
-    'Gestion des alertes',
-    'Logs et statistiques d\'audit'
+  "aria-controls": `admin-tabpanel-${index}`,
+  "aria-label": [
+    "Contrôle du contrat",
+    "Gestion de la propriété",
+    "Gestion des alertes",
+    "Logs et statistiques d'audit",
   ][index],
 });
 
 export const AdminTabs: React.FC<AdminTabsProps> = ({ value, onChange }) => {
   return (
-    <Box role="navigation" aria-label="Sections du tableau de bord administrateur">
+    <Box
+      role="navigation"
+      aria-label="Sections du tableau de bord administrateur"
+    >
       <Tabs
         value={value}
         onChange={onChange}
@@ -34,11 +37,11 @@ export const AdminTabs: React.FC<AdminTabsProps> = ({ value, onChange }) => {
         allowScrollButtonsMobile
         aria-label="Onglets du tableau de bord administrateur"
         sx={{
-          '& .MuiTab-root': {
+          "& .MuiTab-root": {
             minHeight: 72,
             py: 1,
           },
-          '& .MuiTab-iconWrapper': {
+          "& .MuiTab-iconWrapper": {
             mb: 1,
           },
         }}
@@ -53,11 +56,7 @@ export const AdminTabs: React.FC<AdminTabsProps> = ({ value, onChange }) => {
           label="Gestion de la propriété"
           {...a11yProps(1)}
         />
-        <Tab
-          icon={<AlertsIcon />}
-          label="Alertes"
-          {...a11yProps(2)}
-        />
+        <Tab icon={<AlertsIcon />} label="Alertes" {...a11yProps(2)} />
         <Tab
           icon={<StatsIcon />}
           label="Logs & Statistiques"

@@ -1,4 +1,4 @@
-import { logger } from '../core/logger';
+import { logger } from "../core/logger";
 
 export abstract class BaseService {
   protected readonly category: string;
@@ -16,8 +16,8 @@ export abstract class BaseService {
       category: this.category,
       data: {
         error: error.message,
-        stack: error.stack
-      }
+        stack: error.stack,
+      },
     });
   }
 

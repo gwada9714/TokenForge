@@ -49,13 +49,13 @@ Ce module utilise le pattern adapter pour gérer les différences entre blockcha
 ### Création d'un service blockchain
 
 ```typescript
-import { createBlockchainService } from '@/blockchain';
+import { createBlockchainService } from "@/blockchain";
 
 // Créer un service pour Ethereum
-const ethereumService = createBlockchainService('ethereum', window.ethereum);
+const ethereumService = createBlockchainService("ethereum", window.ethereum);
 
 // Utiliser le service
-const balance = await ethereumService.getBalance('0x...');
+const balance = await ethereumService.getBalance("0x...");
 ```
 
 ### Utilisation des hooks React
@@ -63,16 +63,19 @@ const balance = await ethereumService.getBalance('0x...');
 #### Hook de base pour la connexion blockchain
 
 ```typescript
-import { useBlockchain } from '@/blockchain/hooks/useBlockchain';
+import { useBlockchain } from "@/blockchain/hooks/useBlockchain";
 
 function MyComponent() {
-  const { service, isConnected, networkId, error } = useBlockchain('ethereum', window.ethereum);
+  const { service, isConnected, networkId, error } = useBlockchain(
+    "ethereum",
+    window.ethereum
+  );
 
   // Utiliser le service dans un composant React
   useEffect(() => {
     if (service && isConnected) {
-      service.getBalance('0x...').then(balance => {
-        console.log('Balance:', balance);
+      service.getBalance("0x...").then((balance) => {
+        console.log("Balance:", balance);
       });
     }
   }, [service, isConnected]);
@@ -93,34 +96,34 @@ function MyComponent() {
 #### Hook pour la création de tokens
 
 ```typescript
-import { useTokenCreation } from '@/blockchain/hooks/useTokenCreation';
+import { useTokenCreation } from "@/blockchain/hooks/useTokenCreation";
 
 function TokenCreationForm() {
-  const { 
-    validateToken, 
-    estimateDeploymentCost, 
-    deployToken, 
-    isDeploying, 
-    validationResult, 
-    error 
-  } = useTokenCreation('ethereum', window.ethereum);
+  const {
+    validateToken,
+    estimateDeploymentCost,
+    deployToken,
+    isDeploying,
+    validationResult,
+    error,
+  } = useTokenCreation("ethereum", window.ethereum);
 
   const handleSubmit = async (tokenConfig) => {
     // Valider la configuration
     const validation = await validateToken(tokenConfig);
     if (!validation.valid) {
-      console.error('Invalid token configuration:', validation.errors);
+      console.error("Invalid token configuration:", validation.errors);
       return;
     }
 
     // Estimer le coût
     const cost = await estimateDeploymentCost(tokenConfig);
-    console.log('Estimated deployment cost:', cost);
+    console.log("Estimated deployment cost:", cost);
 
     // Déployer le token
     const result = await deployToken(tokenConfig);
     if (result) {
-      console.log('Token deployed:', result);
+      console.log("Token deployed:", result);
     }
   };
 
@@ -137,33 +140,33 @@ function TokenCreationForm() {
 #### Hook pour les paiements
 
 ```typescript
-import { usePayment } from '@/blockchain/hooks/usePayment';
+import { usePayment } from "@/blockchain/hooks/usePayment";
 
 function PaymentComponent() {
-  const { 
-    createPaymentSession, 
-    verifyPayment, 
-    calculateFees, 
-    isProcessing, 
-    sessionId, 
-    error 
-  } = usePayment('ethereum', window.ethereum);
+  const {
+    createPaymentSession,
+    verifyPayment,
+    calculateFees,
+    isProcessing,
+    sessionId,
+    error,
+  } = usePayment("ethereum", window.ethereum);
 
   const handlePayment = async (amount) => {
     // Calculer les frais
     const fees = await calculateFees(amount);
-    console.log('Estimated fees:', fees);
+    console.log("Estimated fees:", fees);
 
     // Créer une session de paiement
-    const session = await createPaymentSession(amount, 'ETH');
+    const session = await createPaymentSession(amount, "ETH");
     if (session) {
-      console.log('Payment session created:', session);
+      console.log("Payment session created:", session);
     }
   };
 
   const handleVerification = async (txHash) => {
     const isValid = await verifyPayment(txHash);
-    console.log('Payment verification:', isValid ? 'Valid' : 'Invalid');
+    console.log("Payment verification:", isValid ? "Valid" : "Invalid");
   };
 
   return (
@@ -180,10 +183,10 @@ function PaymentComponent() {
 ## État d'implémentation
 
 - **Phase 1**: Ethereum (✅ implémenté)
-- **Phase 2**: 
+- **Phase 2**:
   - Binance Smart Chain (✅ implémenté)
   - Polygon (✅ implémenté)
-- **Phase 3**: 
+- **Phase 3**:
   - Avalanche (✅ implémenté)
   - Arbitrum (✅ implémenté)
 - **Phase 4**: Solana (🔄 ébauche implémentée avec dépendances installées)
@@ -191,13 +194,16 @@ function PaymentComponent() {
 ## Prochaines étapes
 
 1. **Finalisation des adaptateurs**:
+
    - Solana (créer des tests unitaires et tester l'intégration avec un wallet Solana)
 
 2. **Amélioration des tests**:
+
    - Tests d'intégration
    - Tests E2E
 
 3. **Utilitaires communs**:
+
    - Implémentation des utilitaires dans `src/blockchain/utils/`
    - Gestion des ABIs
    - Formatters pour les données blockchain
@@ -212,3 +218,4 @@ Les tests sont implémentés avec vitest. Pour exécuter les tests:
 
 ```bash
 npm run test
+```

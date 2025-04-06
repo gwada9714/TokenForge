@@ -1,10 +1,10 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
-import { Container, Title, Text, Button, Alert } from '@/components/ui';
-import { useService } from '@/features/services/hooks/useService';
-import { ServiceType } from '@/features/services/types/services';
-import { spacing } from '@/theme';
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import { Container, Title, Text, Button, Alert } from "@/components/ui";
+import { useService } from "@/features/services/hooks/useService";
+import { ServiceType } from "@/features/services/types/services";
+import { spacing } from "@/theme";
 
 const ConfigContainer = styled(Container)`
   max-width: 800px;
@@ -50,7 +50,9 @@ const InputGroup = styled.div`
     color: ${({ theme }) => theme.colors.text};
   }
 
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     width: 100%;
     padding: ${spacing.sm};
     border: 1px solid ${({ theme }) => theme.colors.border};
@@ -105,38 +107,42 @@ export const ServiceConfiguration: React.FC = () => {
   const navigate = useNavigate();
   const { requestService, isProcessing, error } = useService();
   const [config, setConfig] = React.useState({
-    name: '',
-    description: '',
-    network: '',
-    customRequirements: '',
+    name: "",
+    description: "",
+    network: "",
+    customRequirements: "",
   });
 
   const serviceType = location.state?.serviceType as ServiceType;
 
   if (!serviceType) {
-    navigate('/services');
+    navigate("/services");
     return null;
   }
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
-    setConfig(prev => ({ ...prev, [name]: value }));
+    setConfig((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await requestService(serviceType, config);
-      navigate('/dashboard', { state: { message: 'Service configuré avec succès !' } });
+      navigate("/dashboard", {
+        state: { message: "Service configuré avec succès !" },
+      });
     } catch (err) {
       // console.error('Erreur lors de la configuration du service:', err);
     }
   };
 
   const handleCancel = () => {
-    navigate('/services');
+    navigate("/services");
   };
 
   return (
@@ -144,8 +150,9 @@ export const ServiceConfiguration: React.FC = () => {
       <Header>
         <PageTitle>Configuration du Service</PageTitle>
         <Description>
-          Personnalisez votre service selon vos besoins spécifiques. Notre équipe
-          examinera votre configuration et vous contactera pour finaliser les détails.
+          Personnalisez votre service selon vos besoins spécifiques. Notre
+          équipe examinera votre configuration et vous contactera pour finaliser
+          les détails.
         </Description>
       </Header>
 
@@ -228,7 +235,9 @@ export const ServiceConfiguration: React.FC = () => {
             fullWidth
             disabled={isProcessing}
           >
-            {isProcessing ? 'Configuration en cours...' : 'Configurer le Service'}
+            {isProcessing
+              ? "Configuration en cours..."
+              : "Configurer le Service"}
           </Button>
           <Button
             type="button"
@@ -243,4 +252,4 @@ export const ServiceConfiguration: React.FC = () => {
       </ConfigForm>
     </ConfigContainer>
   );
-}; 
+};

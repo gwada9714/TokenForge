@@ -1,24 +1,30 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useTokenForgeAuth } from '../useTokenForgeAuth';
-import { useAuthState } from '../useAuthState';
-import { useWalletState } from '../useWalletState';
-import { AuthError } from '../../errors/AuthError';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAccount, useDisconnect, useChainId, useWalletClient, usePublicClient } from 'wagmi';
-import { TokenForgeAuthProvider } from '../../providers/TokenForgeAuthProvider';
-import React from 'react';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useTokenForgeAuth } from "../useTokenForgeAuth";
+import { useAuthState } from "../useAuthState";
+import { useWalletState } from "../useWalletState";
+import { AuthError } from "../../errors/AuthError";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  useAccount,
+  useDisconnect,
+  useChainId,
+  useWalletClient,
+  usePublicClient,
+} from "wagmi";
+import { TokenForgeAuthProvider } from "../../providers/TokenForgeAuthProvider";
+import React from "react";
 
 // Mock des hooks
-vi.mock('../useAuthState');
-vi.mock('../useWalletState');
-vi.mock('wagmi');
-vi.mock('firebase/auth');
+vi.mock("../useAuthState");
+vi.mock("../useWalletState");
+vi.mock("wagmi");
+vi.mock("firebase/auth");
 
-describe('useTokenForgeAuth', () => {
+describe("useTokenForgeAuth", () => {
   // Configuration initiale des mocks
   const mockAuthState = {
-    status: 'idle',
+    status: "idle",
     isAuthenticated: false,
     user: null,
     error: null,
@@ -47,7 +53,7 @@ describe('useTokenForgeAuth', () => {
   };
 
   const mockWagmi = {
-    address: '0x123',
+    address: "0x123",
     isConnected: false,
     chainId: 1,
     walletClient: null,
@@ -59,18 +65,25 @@ describe('useTokenForgeAuth', () => {
     vi.clearAllMocks();
     (useAuthState as vi.Mock).mockReturnValue(mockAuthState);
     (useWalletState as vi.Mock).mockReturnValue(mockWalletState);
-    (useAccount as vi.Mock).mockReturnValue({ address: mockWagmi.address, isConnected: mockWagmi.isConnected });
+    (useAccount as vi.Mock).mockReturnValue({
+      address: mockWagmi.address,
+      isConnected: mockWagmi.isConnected,
+    });
     (useChainId as vi.Mock).mockReturnValue(mockWagmi.chainId);
-    (useWalletClient as vi.Mock).mockReturnValue({ data: mockWagmi.walletClient });
+    (useWalletClient as vi.Mock).mockReturnValue({
+      data: mockWagmi.walletClient,
+    });
     (usePublicClient as vi.Mock).mockReturnValue(mockWagmi.provider);
-    (useDisconnect as vi.Mock).mockReturnValue({ disconnect: mockWagmi.disconnect });
+    (useDisconnect as vi.Mock).mockReturnValue({
+      disconnect: mockWagmi.disconnect,
+    });
   });
 
-  it('devrait retourner l\'état initial correct', () => {
+  it("devrait retourner l'état initial correct", () => {
     const { result } = renderHook(() => useTokenForgeAuth());
 
     expect(result.current).toEqual({
-      status: 'idle',
+      status: "idle",
       isAuthenticated: false,
       user: null,
       error: null,
@@ -89,9 +102,9 @@ describe('useTokenForgeAuth', () => {
     });
   });
 
-  it('devrait gérer le login avec succès', async () => {
+  it("devrait gérer le login avec succès", async () => {
     const mockUser = {
-      email: 'test@example.com',
+      email: "test@example.com",
       emailVerified: true,
     };
 
@@ -102,31 +115,31 @@ describe('useTokenForgeAuth', () => {
     const { result } = renderHook(() => useTokenForgeAuth());
 
     await act(async () => {
-      await result.current.login('test@example.com', 'password');
+      await result.current.login("test@example.com", "password");
     });
 
     expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
       expect.anything(),
-      'test@example.com',
-      'password'
+      "test@example.com",
+      "password"
     );
     expect(mockAuthState.verifyEmail).toHaveBeenCalled();
   });
 
-  it('devrait gérer les erreurs de login', async () => {
-    const mockError = new Error('Invalid credentials');
+  it("devrait gérer les erreurs de login", async () => {
+    const mockError = new Error("Invalid credentials");
     (signInWithEmailAndPassword as vi.Mock).mockRejectedValueOnce(mockError);
 
     const { result } = renderHook(() => useTokenForgeAuth());
 
     await expect(
       act(async () => {
-        await result.current.login('test@example.com', 'wrong-password');
+        await result.current.login("test@example.com", "wrong-password");
       })
     ).rejects.toThrow(AuthError);
   });
 
-  it('devrait gérer le logout', async () => {
+  it("devrait gérer le logout", async () => {
     const { result } = renderHook(() => useTokenForgeAuth());
 
     await act(async () => {
@@ -137,7 +150,7 @@ describe('useTokenForgeAuth', () => {
     expect(mockWagmi.disconnect).not.toHaveBeenCalled(); // Car isConnected est false
   });
 
-  it('devrait déconnecter le wallet lors du logout si connecté', async () => {
+  it("devrait déconnecter le wallet lors du logout si connecté", async () => {
     (useAccount as vi.Mock).mockReturnValue({ isConnected: true });
     const { result } = renderHook(() => useTokenForgeAuth());
 
@@ -149,28 +162,30 @@ describe('useTokenForgeAuth', () => {
     expect(mockWagmi.disconnect).toHaveBeenCalled();
   });
 
-  it('devrait mettre à jour l\'état du wallet', () => {
+  it("devrait mettre à jour l'état du wallet", () => {
     const { result } = renderHook(() => useTokenForgeAuth());
-    const newState = { address: '0x456', isConnected: true };
+    const newState = { address: "0x456", isConnected: true };
 
     act(() => {
       result.current.updateWalletState(newState);
     });
 
-    expect(mockWalletState.actions.updateWalletState).toHaveBeenCalledWith(newState);
+    expect(mockWalletState.actions.updateWalletState).toHaveBeenCalledWith(
+      newState
+    );
   });
 
-  it('devrait identifier correctement un admin', () => {
+  it("devrait identifier correctement un admin", () => {
     (useAuthState as vi.Mock).mockReturnValue({
       ...mockAuthState,
-      user: { email: 'admin@tokenforge.com' },
+      user: { email: "admin@tokenforge.com" },
     });
 
     const { result } = renderHook(() => useTokenForgeAuth());
     expect(result.current.isAdmin).toBe(true);
   });
 
-  it('devrait gérer la vérification d\'email', async () => {
+  it("devrait gérer la vérification d'email", async () => {
     const { result } = renderHook(() => useTokenForgeAuth());
 
     await act(async () => {
@@ -180,11 +195,11 @@ describe('useTokenForgeAuth', () => {
     expect(mockAuthState.startEmailVerification).toHaveBeenCalled();
   });
 
-  it('should initialize with default values', () => {
+  it("should initialize with default values", () => {
     const { result } = renderHook(() => useTokenForgeAuth(), {
       wrapper: ({ children }) => (
         <TokenForgeAuthProvider>{children}</TokenForgeAuthProvider>
-      )
+      ),
     });
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.loading).toBe(true);

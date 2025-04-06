@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import React from "react";
+import { Box, Typography } from "@mui/material";
+import { useParams } from "react-router-dom";
 
 export const TokenPreviewPage: React.FC = () => {
   const { tokenId } = useParams();

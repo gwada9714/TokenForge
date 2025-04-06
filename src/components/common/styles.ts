@@ -1,6 +1,6 @@
-import styled from 'styled-components';
-import { Link } from 'react-router-dom';
-import { COLORS, SPACING } from '@/config/constants/theme';
+import styled from "styled-components";
+import { Link } from "react-router-dom";
+import { COLORS, SPACING } from "@/config/constants/theme";
 
 /**
  * Container - Composant conteneur principal
@@ -79,4 +79,4 @@ export const LinkButton = styled(Link)`
   &:hover {
     background-color: var(--color-secondary);
   }
-`; 
+`;

@@ -1,15 +1,21 @@
-import { WalletService, WalletReconnectionService, WalletState } from '../types/wallet';
-import { WalletClient } from 'viem';
-import { useWagmiHooks } from '../hooks/useWagmiHooks';
+import {
+  WalletService,
+  WalletReconnectionService,
+  WalletState,
+} from "../types/wallet";
+import { WalletClient } from "viem";
+import { useWagmiHooks } from "../hooks/useWagmiHooks";
 
-export class UnifiedWalletService implements WalletService, WalletReconnectionService {
+export class UnifiedWalletService
+  implements WalletService, WalletReconnectionService
+{
   private static instance: UnifiedWalletService;
   private currentState: WalletState = {
     isConnected: false,
     address: null,
     chainId: null,
     isCorrectNetwork: false,
-    walletClient: null
+    walletClient: null,
   };
   private wagmiHooks: ReturnType<typeof useWagmiHooks>;
 
@@ -34,7 +40,7 @@ export class UnifiedWalletService implements WalletService, WalletReconnectionSe
         address,
         chainId: chain?.id || null,
         isCorrectNetwork: this.isCorrectChainId(chain?.id || 0),
-        walletClient
+        walletClient,
       };
     }
   }
@@ -43,14 +49,14 @@ export class UnifiedWalletService implements WalletService, WalletReconnectionSe
     try {
       const { connector } = this.wagmiHooks;
       if (!connector) {
-        throw new Error('No connector found');
+        throw new Error("No connector found");
       }
 
       await connector.connect();
       const { walletClient, address, chain } = this.wagmiHooks;
 
       if (!walletClient || !address || !chain) {
-        throw new Error('Failed to connect wallet');
+        throw new Error("Failed to connect wallet");
       }
 
       this.currentState = {
@@ -58,12 +64,12 @@ export class UnifiedWalletService implements WalletService, WalletReconnectionSe
         address,
         chainId: chain.id,
         isCorrectNetwork: this.isCorrectChainId(chain.id),
-        walletClient
+        walletClient,
       };
 
       return this.currentState;
     } catch (error) {
-      throw new Error('Failed to connect wallet');
+      throw new Error("Failed to connect wallet");
     }
   }
 
@@ -79,10 +85,10 @@ export class UnifiedWalletService implements WalletService, WalletReconnectionSe
         address: null,
         chainId: null,
         isCorrectNetwork: false,
-        walletClient: null
+        walletClient: null,
       };
     } catch (error) {
-      throw new Error('Failed to disconnect wallet');
+      throw new Error("Failed to disconnect wallet");
     }
   }
 
@@ -90,18 +96,18 @@ export class UnifiedWalletService implements WalletService, WalletReconnectionSe
     try {
       const { switchNetwork } = this.wagmiHooks;
       if (!switchNetwork) {
-        throw new Error('Network switching not supported');
+        throw new Error("Network switching not supported");
       }
 
       await switchNetwork({ chainId });
-      
+
       this.currentState = {
         ...this.currentState,
         chainId,
-        isCorrectNetwork: this.isCorrectChainId(chainId)
+        isCorrectNetwork: this.isCorrectChainId(chainId),
       };
     } catch (error) {
-      throw new Error('Failed to switch network');
+      throw new Error("Failed to switch network");
     }
   }
 

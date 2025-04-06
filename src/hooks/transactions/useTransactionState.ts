@@ -1,7 +1,12 @@
-import { useState, useCallback } from 'react';
-import { Hash } from 'viem';
+import { useState, useCallback } from "react";
+import { Hash } from "viem";
 
-export type TransactionStatus = 'idle' | 'pending' | 'mining' | 'success' | 'error';
+export type TransactionStatus =
+  | "idle"
+  | "pending"
+  | "mining"
+  | "success"
+  | "error";
 
 export interface TransactionState {
   status: TransactionStatus;
@@ -12,14 +17,14 @@ export interface TransactionState {
 
 export const useTransactionState = () => {
   const [state, setState] = useState<TransactionState>({
-    status: 'idle',
+    status: "idle",
     hash: null,
     error: null,
   });
 
   const reset = useCallback(() => {
     setState({
-      status: 'idle',
+      status: "idle",
       hash: null,
       error: null,
     });
@@ -27,7 +32,7 @@ export const useTransactionState = () => {
 
   const setMining = useCallback((hash: Hash) => {
     setState({
-      status: 'mining',
+      status: "mining",
       hash,
       error: null,
     });
@@ -35,7 +40,7 @@ export const useTransactionState = () => {
 
   const setPending = useCallback(() => {
     setState({
-      status: 'pending',
+      status: "pending",
       hash: null,
       error: null,
     });
@@ -43,7 +48,7 @@ export const useTransactionState = () => {
 
   const setSuccess = useCallback((hash: Hash, blockNumber?: number) => {
     setState({
-      status: 'success',
+      status: "success",
       hash,
       error: null,
       blockNumber,
@@ -52,7 +57,7 @@ export const useTransactionState = () => {
 
   const setError = useCallback((error: Error) => {
     setState({
-      status: 'error',
+      status: "error",
       hash: null,
       error,
     });

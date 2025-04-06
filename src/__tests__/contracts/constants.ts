@@ -17,5 +17,5 @@ export const TEST_TOKEN_PARAMS = {
   totalSupply: INITIAL_SUPPLY,
   maxTxAmount: MAX_TX_AMOUNT,
   maxWalletSize: MAX_WALLET_SIZE,
-  additionalTaxRate: 100 // 1%
-}; 
+  additionalTaxRate: 100, // 1%
+};

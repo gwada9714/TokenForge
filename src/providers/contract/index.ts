@@ -1,2 +1,2 @@
-export * from './ContractProvider';
-export { default } from './ContractProvider';
+export * from "./ContractProvider";
+export { default } from "./ContractProvider";

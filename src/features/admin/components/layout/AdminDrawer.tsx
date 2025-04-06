@@ -1,27 +1,27 @@
-import React from 'react';
-import { 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  Divider, 
-  Box, 
+import React from "react";
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Box,
   Toolbar,
   useTheme,
   useMediaQuery,
-  IconButton
-} from '@mui/material';
-import { 
-  Dashboard as DashboardIcon, 
-  Token as TokenIcon, 
-  People as PeopleIcon, 
-  Settings as SettingsIcon, 
-  BarChart as AnalyticsIcon, 
-  Security as SecurityIcon, 
+  IconButton,
+} from "@mui/material";
+import {
+  Dashboard as DashboardIcon,
+  Token as TokenIcon,
+  People as PeopleIcon,
+  Settings as SettingsIcon,
+  BarChart as AnalyticsIcon,
+  Security as SecurityIcon,
   Payment as PaymentIcon,
-  ChevronLeft as ChevronLeftIcon
-} from '@mui/icons-material';
+  ChevronLeft as ChevronLeftIcon,
+} from "@mui/icons-material";
 
 interface AdminDrawerProps {
   open: boolean;
@@ -33,23 +33,23 @@ interface AdminDrawerProps {
  * Tiroir de navigation pour le dashboard administrateur
  * Contient les liens vers les différentes sections du dashboard
  */
-export const AdminDrawer: React.FC<AdminDrawerProps> = ({ 
-  open, 
+export const AdminDrawer: React.FC<AdminDrawerProps> = ({
+  open,
   handleDrawerToggle,
-  onNavigate = () => {} 
+  onNavigate = () => {},
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // Définition des éléments du menu
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
-    { text: 'Tokens', icon: <TokenIcon />, path: '/admin/tokens' },
-    { text: 'Utilisateurs', icon: <PeopleIcon />, path: '/admin/users' },
-    { text: 'Paiements', icon: <PaymentIcon />, path: '/admin/payments' },
-    { text: 'Analytiques', icon: <AnalyticsIcon />, path: '/admin/analytics' },
-    { text: 'Sécurité', icon: <SecurityIcon />, path: '/admin/security' },
-    { text: 'Paramètres', icon: <SettingsIcon />, path: '/admin/settings' },
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/admin" },
+    { text: "Tokens", icon: <TokenIcon />, path: "/admin/tokens" },
+    { text: "Utilisateurs", icon: <PeopleIcon />, path: "/admin/users" },
+    { text: "Paiements", icon: <PaymentIcon />, path: "/admin/payments" },
+    { text: "Analytiques", icon: <AnalyticsIcon />, path: "/admin/analytics" },
+    { text: "Sécurité", icon: <SecurityIcon />, path: "/admin/security" },
+    { text: "Paramètres", icon: <SettingsIcon />, path: "/admin/settings" },
   ];
 
   // Contenu du drawer
@@ -57,9 +57,9 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
     <>
       <Toolbar
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
           px: [1],
         }}
       >
@@ -72,14 +72,12 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
       <Divider />
       <List>
         {menuItems.slice(0, 4).map((item) => (
-          <ListItem 
-            button 
+          <ListItem
+            button
             key={item.text}
             onClick={() => onNavigate(item.path)}
           >
-            <ListItemIcon>
-              {item.icon}
-            </ListItemIcon>
+            <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
         ))}
@@ -87,14 +85,12 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
       <Divider />
       <List>
         {menuItems.slice(4).map((item) => (
-          <ListItem 
-            button 
+          <ListItem
+            button
             key={item.text}
             onClick={() => onNavigate(item.path)}
           >
-            <ListItemIcon>
-              {item.icon}
-            </ListItemIcon>
+            <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
         ))}
@@ -117,8 +113,8 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
             keepMounted: true, // Meilleure performance sur mobile
           }}
           sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+            display: { xs: "block", md: "none" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: 240 },
           }}
         >
           {drawerContent}
@@ -131,24 +127,24 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({
           variant="permanent"
           open={open}
           sx={{
-            display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': {
-              position: 'relative',
-              whiteSpace: 'nowrap',
+            display: { xs: "none", md: "block" },
+            "& .MuiDrawer-paper": {
+              position: "relative",
+              whiteSpace: "nowrap",
               width: 240,
-              transition: theme.transitions.create('width', {
+              transition: theme.transitions.create("width", {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
               }),
-              boxSizing: 'border-box',
+              boxSizing: "border-box",
               ...(!open && {
-                overflowX: 'hidden',
-                transition: theme.transitions.create('width', {
+                overflowX: "hidden",
+                transition: theme.transitions.create("width", {
                   easing: theme.transitions.easing.sharp,
                   duration: theme.transitions.duration.leavingScreen,
                 }),
                 width: theme.spacing(7),
-                [theme.breakpoints.up('sm')]: {
+                [theme.breakpoints.up("sm")]: {
                   width: theme.spacing(9),
                 },
               }),

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Typography,
@@ -7,12 +7,15 @@ import {
   AlertTitle,
   Chip,
   Paper,
-  useTheme
-} from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import TimerIcon from '@mui/icons-material/Timer';
-import { PaymentStatus as Status, PaymentSession } from '@/features/multi-chain/services/payment/types';
+  useTheme,
+} from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
+import TimerIcon from "@mui/icons-material/Timer";
+import {
+  PaymentStatus as Status,
+  PaymentSession,
+} from "@/features/multi-chain/services/payment/types";
 
 interface PaymentStatusProps {
   session: PaymentSession;
@@ -23,7 +26,10 @@ interface PaymentStatusProps {
  * Composant affichant l'état actuel d'un paiement
  * @component
  */
-export const PaymentStatus: React.FC<PaymentStatusProps> = ({ session, onComplete }) => {
+export const PaymentStatus: React.FC<PaymentStatusProps> = ({
+  session,
+  onComplete,
+}) => {
   const theme = useTheme();
 
   React.useEffect(() => {
@@ -36,45 +42,47 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({ session, onComplet
     switch (status) {
       case Status.PENDING:
         return {
-          color: 'warning',
+          color: "warning",
           icon: <TimerIcon />,
-          message: 'En attente de confirmation...',
-          description: 'Veuillez confirmer la transaction dans votre wallet'
+          message: "En attente de confirmation...",
+          description: "Veuillez confirmer la transaction dans votre wallet",
         };
       case Status.PROCESSING:
         return {
-          color: 'info',
+          color: "info",
           icon: <CircularProgress size={20} />,
-          message: 'Transaction en cours...',
-          description: 'Veuillez patienter pendant le traitement de votre paiement'
+          message: "Transaction en cours...",
+          description:
+            "Veuillez patienter pendant le traitement de votre paiement",
         };
       case Status.CONFIRMED:
         return {
-          color: 'success',
+          color: "success",
           icon: <CheckCircleIcon />,
-          message: 'Paiement confirmé !',
-          description: 'Votre transaction a été validée avec succès'
+          message: "Paiement confirmé !",
+          description: "Votre transaction a été validée avec succès",
         };
       case Status.FAILED:
         return {
-          color: 'error',
+          color: "error",
           icon: <ErrorIcon />,
-          message: 'Échec du paiement',
-          description: session.error || 'Une erreur est survenue lors du traitement'
+          message: "Échec du paiement",
+          description:
+            session.error || "Une erreur est survenue lors du traitement",
         };
       case Status.TIMEOUT:
         return {
-          color: 'error',
+          color: "error",
           icon: <TimerIcon />,
-          message: 'Délai dépassé',
-          description: 'La transaction a pris trop de temps'
+          message: "Délai dépassé",
+          description: "La transaction a pris trop de temps",
         };
       default:
         return {
-          color: 'default',
+          color: "default",
           icon: null,
-          message: 'Statut inconnu',
-          description: 'Impossible de déterminer l\'état du paiement'
+          message: "Statut inconnu",
+          description: "Impossible de déterminer l'état du paiement",
         };
     }
   };
@@ -82,22 +90,22 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({ session, onComplet
   const config = getStatusConfig(session.status);
 
   return (
-    <Paper 
+    <Paper
       elevation={0}
-      sx={{ 
+      sx={{
         p: 3,
         bgcolor: theme.palette.background.default,
-        borderRadius: 2
+        borderRadius: 2,
       }}
     >
-      <Box sx={{ textAlign: 'center', mb: 2 }}>
+      <Box sx={{ textAlign: "center", mb: 2 }}>
         <Chip
           icon={config.icon}
           label={config.message}
           color={config.color as any}
           sx={{ mb: 2 }}
         />
-        
+
         <Typography variant="body1" color="textSecondary">
           {config.description}
         </Typography>
@@ -106,11 +114,11 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({ session, onComplet
       {session.txHash && (
         <Alert severity="info" sx={{ mt: 2 }}>
           <AlertTitle>Hash de transaction</AlertTitle>
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              wordBreak: 'break-all',
-              fontFamily: 'monospace'
+          <Typography
+            variant="body2"
+            sx={{
+              wordBreak: "break-all",
+              fontFamily: "monospace",
             }}
           >
             {session.txHash}
@@ -119,7 +127,7 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({ session, onComplet
       )}
 
       {session.status === Status.PROCESSING && (
-        <Box sx={{ mt: 3, textAlign: 'center' }}>
+        <Box sx={{ mt: 3, textAlign: "center" }}>
           <CircularProgress size={40} />
           <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
             Confirmation en cours...

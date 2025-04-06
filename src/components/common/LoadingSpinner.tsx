@@ -1,30 +1,37 @@
-import React from 'react';
-import { CircularProgress, Box } from '@mui/material';
+import React from "react";
+import { CircularProgress, Box } from "@mui/material";
 
 interface LoadingSpinnerProps {
   overlay?: boolean;
   size?: number;
-  color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'inherit';
+  color?:
+    | "primary"
+    | "secondary"
+    | "error"
+    | "info"
+    | "success"
+    | "warning"
+    | "inherit";
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   overlay = false,
   size = 40,
-  color = 'primary'
+  color = "primary",
 }) => {
   if (overlay) {
     return (
       <Box
         sx={{
-          position: 'fixed',
+          position: "fixed",
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
           zIndex: 9999,
         }}
       >
@@ -36,9 +43,9 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   return (
     <Box
       sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
         p: 4,
       }}
     >

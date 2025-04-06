@@ -1,36 +1,36 @@
-import React from 'react';
-import styled from 'styled-components';
-import { SPACING } from '@/config/constants/theme';
+import React from "react";
+import styled from "styled-components";
+import { SPACING } from "@/config/constants/theme";
 
 interface AlertProps {
-  type?: 'info' | 'success' | 'warning' | 'error';
+  type?: "info" | "success" | "warning" | "error";
   title?: string;
   children: React.ReactNode;
   onClose?: () => void;
 }
 
-const AlertContainer = styled.div<{ type: AlertProps['type'] }>`
+const AlertContainer = styled.div<{ type: AlertProps["type"] }>`
   padding: ${SPACING.md} ${SPACING.lg};
-  border-radius: ${props => props.theme.borderRadius};
+  border-radius: ${(props) => props.theme.borderRadius};
   display: flex;
   align-items: flex-start;
   gap: ${SPACING.md};
-  
-  ${props => {
+
+  ${(props) => {
     switch (props.type) {
-      case 'success':
+      case "success":
         return `
           background-color: ${props.theme.colors.success}20;
           border: 1px solid ${props.theme.colors.success};
           color: ${props.theme.colors.success};
         `;
-      case 'warning':
+      case "warning":
         return `
           background-color: ${props.theme.colors.warning}20;
           border: 1px solid ${props.theme.colors.warning};
           color: ${props.theme.colors.warning};
         `;
-      case 'error':
+      case "error":
         return `
           background-color: ${props.theme.colors.error}20;
           border: 1px solid ${props.theme.colors.error};
@@ -56,7 +56,7 @@ const AlertTitle = styled.h4`
 `;
 
 const AlertMessage = styled.div`
-  color: ${props => props.theme.colors.text.primary};
+  color: ${(props) => props.theme.colors.text.primary};
 `;
 
 const CloseButton = styled.button`
@@ -66,15 +66,15 @@ const CloseButton = styled.button`
   padding: ${SPACING.xs};
   color: currentColor;
   opacity: 0.7;
-  transition: ${props => props.theme.transition};
-  
+  transition: ${(props) => props.theme.transition};
+
   &:hover {
     opacity: 1;
   }
 `;
 
 export const Alert: React.FC<AlertProps> = ({
-  type = 'info',
+  type = "info",
   title,
   children,
   onClose,
@@ -85,9 +85,7 @@ export const Alert: React.FC<AlertProps> = ({
         {title && <AlertTitle>{title}</AlertTitle>}
         <AlertMessage>{children}</AlertMessage>
       </AlertContent>
-      {onClose && (
-        <CloseButton onClick={onClose}>×</CloseButton>
-      )}
+      {onClose && <CloseButton onClick={onClose}>×</CloseButton>}
     </AlertContainer>
   );
-}; 
+};

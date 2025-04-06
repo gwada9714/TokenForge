@@ -1,21 +1,21 @@
-import React, { useEffect } from 'react';
-import { useTokenEvents } from '../hooks/useTokenEvents';
-import { useTokenDeployment } from '../hooks/useTokenDeployment';
-import { NotificationService } from '../services/notificationService';
-import { BlockchainNetwork } from './DeploymentOptions';
-import { TokenEventsDashboard } from './TokenEventsDashboard';
-import { EventFilterBar } from './EventFilterBar';
-import { TaxTrendChart } from './TaxTrendChart';
+import React, { useEffect } from "react";
+import { useTokenEvents } from "../hooks/useTokenEvents";
+import { useTokenDeployment } from "../hooks/useTokenDeployment";
+import { NotificationService } from "../services/notificationService";
+import { BlockchainNetwork } from "./DeploymentOptions";
+import { TokenEventsDashboard } from "./TokenEventsDashboard";
+import { EventFilterBar } from "./EventFilterBar";
+import { TaxTrendChart } from "./TaxTrendChart";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
-import { formatEther } from 'viem';
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatEther } from "viem";
 
 interface TokenDashboardProps {
   network: BlockchainNetwork;
@@ -24,22 +24,23 @@ interface TokenDashboardProps {
 
 export const TokenDashboard: React.FC<TokenDashboardProps> = ({
   network,
-  tokenAddress
+  tokenAddress,
 }) => {
-  const {
-    events,
-    taxEvents,
-    isLoading,
-    error,
-    fetchEvents
-  } = useTokenEvents(network, tokenAddress);
+  const { events, taxEvents, isLoading, error, fetchEvents } = useTokenEvents(
+    network,
+    tokenAddress
+  );
 
   const [filteredEvents, setFilteredEvents] = React.useState(events);
-  const notificationService = React.useMemo(() => new NotificationService({
-    enableDesktopNotifications: true,
-    enableSoundAlerts: true,
-    minTaxAmount: BigInt('100000000000000000') // 0.1 tokens
-  }), []);
+  const notificationService = React.useMemo(
+    () =>
+      new NotificationService({
+        enableDesktopNotifications: true,
+        enableSoundAlerts: true,
+        minTaxAmount: BigInt("100000000000000000"), // 0.1 tokens
+      }),
+    []
+  );
 
   // Surveiller les nouveaux événements pour les notifications
   useEffect(() => {
@@ -57,14 +58,14 @@ export const TokenDashboard: React.FC<TokenDashboardProps> = ({
     );
 
     const last24hTax = taxEvents
-      .filter(event => event.timestamp > Date.now() - 24 * 60 * 60 * 1000)
+      .filter((event) => event.timestamp > Date.now() - 24 * 60 * 60 * 1000)
       .reduce((sum, event) => sum + event.amount, BigInt(0));
 
     return {
       totalTax: formatEther(totalTax),
       last24hTax: formatEther(last24hTax),
       totalTransactions: events.length,
-      uniqueAddresses: new Set(events.flatMap(e => [e.from, e.to])).size
+      uniqueAddresses: new Set(events.flatMap((e) => [e.from, e.to])).size,
     };
   }, [events, taxEvents]);
 
@@ -112,20 +113,24 @@ export const TokenDashboard: React.FC<TokenDashboardProps> = ({
       {/* Barre de filtrage */}
       <EventFilterBar
         events={events}
-        onFiltersChange={filters => {
-          setFilteredEvents(events.filter(event => {
-            const matchesType = !filters.eventTypes.length ||
-              filters.eventTypes.includes(event.type);
-            
-            const matchesDate = !filters.dateRange ||
-              (event.timestamp >= filters.dateRange.start.getTime() &&
-               event.timestamp <= filters.dateRange.end.getTime());
-            
-            const matchesAmount = !filters.minAmount ||
-              event.amount >= filters.minAmount;
+        onFiltersChange={(filters) => {
+          setFilteredEvents(
+            events.filter((event) => {
+              const matchesType =
+                !filters.eventTypes.length ||
+                filters.eventTypes.includes(event.type);
 
-            return matchesType && matchesDate && matchesAmount;
-          }));
+              const matchesDate =
+                !filters.dateRange ||
+                (event.timestamp >= filters.dateRange.start.getTime() &&
+                  event.timestamp <= filters.dateRange.end.getTime());
+
+              const matchesAmount =
+                !filters.minAmount || event.amount >= filters.minAmount;
+
+              return matchesType && matchesDate && matchesAmount;
+            })
+          );
         }}
       />
 
@@ -141,10 +146,7 @@ export const TokenDashboard: React.FC<TokenDashboardProps> = ({
         </TabsContent>
 
         <TabsContent value="events">
-          <TokenEventsDashboard
-            network={network}
-            tokenAddress={tokenAddress}
-          />
+          <TokenEventsDashboard network={network} tokenAddress={tokenAddress} />
         </TabsContent>
       </Tabs>
     </div>
@@ -162,13 +164,11 @@ const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
   description,
-  loading
+  loading,
 }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="text-sm font-medium">
-        {title}
-      </CardTitle>
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
     </CardHeader>
     <CardContent>
       {loading ? (
@@ -176,9 +176,7 @@ const StatCard: React.FC<StatCardProps> = ({
       ) : (
         <>
           <div className="text-2xl font-bold">{value}</div>
-          <p className="text-xs text-muted-foreground">
-            {description}
-          </p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </>
       )}
     </CardContent>

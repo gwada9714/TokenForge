@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ROUTES } from '@/config/routes.config';
+import React from "react";
+import { Link } from "react-router-dom";
+import { ROUTES } from "@/config/routes.config";
 
 export const NotFound: React.FC = () => {
   return (

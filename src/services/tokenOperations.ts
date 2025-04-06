@@ -23,7 +23,7 @@ export async function executeTokenOperation(
   amount: string,
   toAddress: Address | undefined,
   publicClient: PublicClient,
-  walletClient: WalletClient,
+  walletClient: WalletClient
 ): Promise<string> {
   if (!publicClient || !walletClient) {
     throw new Error("Wallet not connected");
@@ -45,8 +45,8 @@ export async function executeTokenOperation(
         operation === "transfer"
           ? [toAddress, parsedAmount]
           : operation === "mint"
-            ? [toAddress, parsedAmount]
-            : [parsedAmount],
+          ? [toAddress, parsedAmount]
+          : [parsedAmount],
       account: await walletClient
         .getAddresses()
         .then((addresses) => addresses[0]),
@@ -70,7 +70,7 @@ export async function executeTokenOperation(
 
 export async function getTokenHistory(
   token: TokenInfo,
-  publicClient: PublicClient,
+  publicClient: PublicClient
 ): Promise<TokenHistory> {
   const filter = await publicClient.createEventFilter({
     address: token.address as Address,
@@ -133,7 +133,7 @@ export async function getTokenHistory(
 export async function getTokenBalance(
   token: TokenInfo,
   address: Address,
-  publicClient: PublicClient,
+  publicClient: PublicClient
 ): Promise<string> {
   const result = await publicClient.readContract({
     ...getTokenContract(token.address as `0x${string}`),
@@ -146,7 +146,7 @@ export async function getTokenBalance(
 
 export async function getTokenRoles(
   token: TokenInfo,
-  publicClient: PublicClient,
+  publicClient: PublicClient
 ): Promise<TokenRole[]> {
   const roles: TokenRole[] = [];
 

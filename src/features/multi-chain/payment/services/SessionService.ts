@@ -1,4 +1,4 @@
-import { PaymentStatus } from '../types/PaymentSession';
+import { PaymentStatus } from "../types/PaymentSession";
 
 export interface SessionService {
   createSession(params: {
@@ -7,7 +7,7 @@ export interface SessionService {
     network: string;
     serviceType: string;
   }): Promise<{ id: string; status: PaymentStatus }>;
-  
+
   updateSessionStatus(
     sessionId: string,
     status: PaymentStatus,

@@ -1,7 +1,7 @@
 // Configuration de base pour les tests Jest/Vitest
 
 // Mock des modules Firebase
-jest.mock('@/lib/firebase/services', () => ({
+jest.mock("@/lib/firebase/services", () => ({
   getFirebaseManager: jest.fn().mockResolvedValue({
     db: {},
     auth: {},
@@ -9,7 +9,7 @@ jest.mock('@/lib/firebase/services', () => ({
   }),
 }));
 
-jest.mock('@/lib/firebase/firestore', () => ({
+jest.mock("@/lib/firebase/firestore", () => ({
   getFirestore: jest.fn().mockResolvedValue({}),
   firestoreService: {
     createUserProfile: jest.fn(),
@@ -18,7 +18,7 @@ jest.mock('@/lib/firebase/firestore', () => ({
   },
 }));
 
-jest.mock('@/lib/firebase/auth', () => ({
+jest.mock("@/lib/firebase/auth", () => ({
   signInWithEmailAndPassword: jest.fn(),
   createUserWithEmailAndPassword: jest.fn(),
   signOut: jest.fn(),
@@ -27,17 +27,17 @@ jest.mock('@/lib/firebase/auth', () => ({
 }));
 
 // Mock pour ethers
-jest.mock('ethers', () => ({
+jest.mock("ethers", () => ({
   utils: {
-    formatEther: jest.fn(val => `${val}`),
+    formatEther: jest.fn((val) => `${val}`),
   },
 }));
 
 // Mock pour wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn().mockReturnValue({ 
-    address: '0x1234567890123456789012345678901234567890',
-    isConnected: true
+jest.mock("wagmi", () => ({
+  useAccount: jest.fn().mockReturnValue({
+    address: "0x1234567890123456789012345678901234567890",
+    isConnected: true,
   }),
   useContractWrite: jest.fn().mockReturnValue({
     writeAsync: jest.fn().mockResolvedValue({}),
@@ -48,7 +48,7 @@ jest.mock('wagmi', () => ({
 }));
 
 // Mock pour react-hot-toast
-jest.mock('react-hot-toast', () => ({
+jest.mock("react-hot-toast", () => ({
   success: jest.fn(),
   error: jest.fn(),
   loading: jest.fn(),

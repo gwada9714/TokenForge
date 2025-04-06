@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -20,28 +20,28 @@ import {
   IconButton,
   Paper,
   LinearProgress,
-  Chip
-} from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
-import SettingsIcon from '@mui/icons-material/Settings';
-import ScheduleIcon from '@mui/icons-material/Schedule';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
-import { useAccount } from 'wagmi';
-import { useLiquidityManager } from '@/hooks/useLiquidityManager';
-import { formatValue } from '@/utils/web3Adapters';
+  Chip,
+} from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
+import { useAccount } from "wagmi";
+import { useLiquidityManager } from "@/hooks/useLiquidityManager";
+import { formatValue } from "@/utils/web3Adapters";
 
 export const AutoLiquidityManager: React.FC = () => {
   const { address } = useAccount();
-  const { 
-    userTokens, 
-    setupAutomaticLiquidity, 
-    modifyLiquiditySettings, 
+  const {
+    userTokens,
+    setupAutomaticLiquidity,
+    modifyLiquiditySettings,
     userLiquiditySettings,
     isLoading,
-    liquidityStatus
+    liquidityStatus,
   } = useLiquidityManager();
-  
-  const [selectedToken, setSelectedToken] = useState<string>('');
+
+  const [selectedToken, setSelectedToken] = useState<string>("");
   const [autoSettings, setAutoSettings] = useState({
     enabled: false,
     targetRatio: 50, // pourcentage
@@ -50,11 +50,11 @@ export const AutoLiquidityManager: React.FC = () => {
     rebalanceInterval: 24, // heures
     exchangeFee: 0.3, // pourcentage
     autoCompound: false,
-    liquidityPair: 'USDT', // token pair for liquidity
+    liquidityPair: "USDT", // token pair for liquidity
   });
-  
+
   const [advancedMode, setAdvancedMode] = useState(false);
-  
+
   // Charger les paramètres existants si disponibles
   useEffect(() => {
     if (selectedToken && userLiquiditySettings?.[selectedToken]) {
@@ -71,40 +71,42 @@ export const AutoLiquidityManager: React.FC = () => {
       });
     }
   }, [selectedToken, userLiquiditySettings]);
-  
+
   const handleTokenChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     setSelectedToken(event.target.value as string);
   };
-  
-  const handleSettingChange = (setting: keyof typeof autoSettings) => (
-    event: React.ChangeEvent<HTMLInputElement> | Event,
-    newValue?: number | boolean
-  ) => {
-    if (setting === 'enabled' || setting === 'autoCompound') {
-      setAutoSettings({
-        ...autoSettings,
-        [setting]: Boolean(newValue),
-      });
-    } else if (
-      event.target &&
-      'value' in event.target &&
-      (setting === 'liquidityPair')
-    ) {
-      setAutoSettings({
-        ...autoSettings,
-        [setting]: (event.target as HTMLInputElement).value,
-      });
-    } else if (typeof newValue === 'number') {
-      setAutoSettings({
-        ...autoSettings,
-        [setting]: newValue,
-      });
-    }
-  };
-  
+
+  const handleSettingChange =
+    (setting: keyof typeof autoSettings) =>
+    (
+      event: React.ChangeEvent<HTMLInputElement> | Event,
+      newValue?: number | boolean
+    ) => {
+      if (setting === "enabled" || setting === "autoCompound") {
+        setAutoSettings({
+          ...autoSettings,
+          [setting]: Boolean(newValue),
+        });
+      } else if (
+        event.target &&
+        "value" in event.target &&
+        setting === "liquidityPair"
+      ) {
+        setAutoSettings({
+          ...autoSettings,
+          [setting]: (event.target as HTMLInputElement).value,
+        });
+      } else if (typeof newValue === "number") {
+        setAutoSettings({
+          ...autoSettings,
+          [setting]: newValue,
+        });
+      }
+    };
+
   const handleSaveSettings = async () => {
     if (!selectedToken) return;
-    
+
     try {
       if (userLiquiditySettings?.[selectedToken]) {
         await modifyLiquiditySettings(selectedToken, autoSettings);
@@ -112,26 +114,36 @@ export const AutoLiquidityManager: React.FC = () => {
         await setupAutomaticLiquidity(selectedToken, autoSettings);
       }
     } catch (error) {
-      console.error('Error saving auto-liquidity settings:', error);
+      console.error("Error saving auto-liquidity settings:", error);
     }
   };
-  
+
   // Obtenir le statut de la liquidité pour le token sélectionné
-  const tokenLiquidityStatus = selectedToken ? liquidityStatus?.[selectedToken] : null;
-  
+  const tokenLiquidityStatus = selectedToken
+    ? liquidityStatus?.[selectedToken]
+    : null;
+
   // Calculer la prochaine exécution prévue
   const getNextRebalanceTime = () => {
-    if (!tokenLiquidityStatus?.lastRebalance) return 'Première exécution en attente';
-    
+    if (!tokenLiquidityStatus?.lastRebalance)
+      return "Première exécution en attente";
+
     const lastRebalance = new Date(tokenLiquidityStatus.lastRebalance);
-    const nextRebalance = new Date(lastRebalance.getTime() + autoSettings.rebalanceInterval * 60 * 60 * 1000);
+    const nextRebalance = new Date(
+      lastRebalance.getTime() + autoSettings.rebalanceInterval * 60 * 60 * 1000
+    );
     return nextRebalance.toLocaleString();
   };
-  
+
   return (
     <Card>
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+        >
           <Typography variant="h5">
             Gestionnaire Automatique de Liquidité
           </Typography>
@@ -146,9 +158,11 @@ export const AutoLiquidityManager: React.FC = () => {
             label="Mode avancé"
           />
         </Box>
-        
+
         {!address ? (
-          <Alert severity="info">Connectez votre portefeuille pour gérer la liquidité automatique</Alert>
+          <Alert severity="info">
+            Connectez votre portefeuille pour gérer la liquidité automatique
+          </Alert>
         ) : (
           <>
             <FormControl fullWidth sx={{ mb: 4 }}>
@@ -165,7 +179,7 @@ export const AutoLiquidityManager: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-            
+
             {selectedToken && (
               <>
                 <Box mb={3}>
@@ -199,24 +213,33 @@ export const AutoLiquidityManager: React.FC = () => {
                           </Typography>
                           <Chip
                             size="small"
-                            color={tokenLiquidityStatus.needsRebalance ? "warning" : "success"}
-                            label={tokenLiquidityStatus.needsRebalance ? "Rééquilibrage nécessaire" : "Équilibré"}
+                            color={
+                              tokenLiquidityStatus.needsRebalance
+                                ? "warning"
+                                : "success"
+                            }
+                            label={
+                              tokenLiquidityStatus.needsRebalance
+                                ? "Rééquilibrage nécessaire"
+                                : "Équilibré"
+                            }
                           />
                         </Grid>
                       </Grid>
                     ) : (
                       <Typography>
-                        Aucune donnée disponible. Configurez d'abord la gestion automatique.
+                        Aucune donnée disponible. Configurez d'abord la gestion
+                        automatique.
                       </Typography>
                     )}
                   </Paper>
-                
+
                   <FormControlLabel
                     control={
                       <Switch
                         checked={autoSettings.enabled}
-                        onChange={(_, checked) => 
-                          setAutoSettings({...autoSettings, enabled: checked})
+                        onChange={(_, checked) =>
+                          setAutoSettings({ ...autoSettings, enabled: checked })
                         }
                         color="primary"
                       />
@@ -224,13 +247,18 @@ export const AutoLiquidityManager: React.FC = () => {
                     label="Activer la gestion automatique de liquidité"
                   />
                 </Box>
-                
+
                 {autoSettings.enabled && (
                   <>
                     <Grid container spacing={3}>
                       <Grid item xs={12} md={6}>
                         <Box mb={3}>
-                          <Typography variant="subtitle1" gutterBottom display="flex" alignItems="center">
+                          <Typography
+                            variant="subtitle1"
+                            gutterBottom
+                            display="flex"
+                            alignItems="center"
+                          >
                             Ratio cible de liquidité
                             <Tooltip title="Pourcentage de jetons alloués à la liquidité par rapport à la capitalisation totale">
                               <IconButton size="small">
@@ -240,22 +268,28 @@ export const AutoLiquidityManager: React.FC = () => {
                           </Typography>
                           <Slider
                             value={autoSettings.targetRatio}
-                            onChange={handleSettingChange('targetRatio')}
+                            onChange={handleSettingChange("targetRatio")}
                             min={1}
                             max={90}
                             step={1}
                             valueLabelDisplay="auto"
-                            valueLabelFormat={value => `${value}%`}
+                            valueLabelFormat={(value) => `${value}%`}
                           />
                           <Typography variant="body2" color="text.secondary">
-                            {autoSettings.targetRatio}% de la capitalisation du token
+                            {autoSettings.targetRatio}% de la capitalisation du
+                            token
                           </Typography>
                         </Box>
                       </Grid>
-                      
+
                       <Grid item xs={12} md={6}>
                         <Box mb={3}>
-                          <Typography variant="subtitle1" gutterBottom display="flex" alignItems="center">
+                          <Typography
+                            variant="subtitle1"
+                            gutterBottom
+                            display="flex"
+                            alignItems="center"
+                          >
                             Paire de liquidité
                             <Tooltip title="Token à utiliser comme paire pour la liquidité">
                               <IconButton size="small">
@@ -266,10 +300,10 @@ export const AutoLiquidityManager: React.FC = () => {
                           <FormControl fullWidth>
                             <Select
                               value={autoSettings.liquidityPair}
-                              onChange={(e) => 
+                              onChange={(e) =>
                                 setAutoSettings({
-                                  ...autoSettings, 
-                                  liquidityPair: e.target.value as string
+                                  ...autoSettings,
+                                  liquidityPair: e.target.value as string,
                                 })
                               }
                             >
@@ -282,10 +316,15 @@ export const AutoLiquidityManager: React.FC = () => {
                           </FormControl>
                         </Box>
                       </Grid>
-                      
+
                       <Grid item xs={12} md={6}>
                         <Box mb={3}>
-                          <Typography variant="subtitle1" gutterBottom display="flex" alignItems="center">
+                          <Typography
+                            variant="subtitle1"
+                            gutterBottom
+                            display="flex"
+                            alignItems="center"
+                          >
                             Seuil de rééquilibrage
                             <Tooltip title="Écart par rapport au ratio cible nécessitant un rééquilibrage">
                               <IconButton size="small">
@@ -295,22 +334,28 @@ export const AutoLiquidityManager: React.FC = () => {
                           </Typography>
                           <Slider
                             value={autoSettings.rebalanceThreshold}
-                            onChange={handleSettingChange('rebalanceThreshold')}
+                            onChange={handleSettingChange("rebalanceThreshold")}
                             min={0.5}
                             max={10}
                             step={0.5}
                             valueLabelDisplay="auto"
-                            valueLabelFormat={value => `${value}%`}
+                            valueLabelFormat={(value) => `${value}%`}
                           />
                           <Typography variant="body2" color="text.secondary">
-                            Rééquilibrer si l'écart dépasse {autoSettings.rebalanceThreshold}%
+                            Rééquilibrer si l'écart dépasse{" "}
+                            {autoSettings.rebalanceThreshold}%
                           </Typography>
                         </Box>
                       </Grid>
-                      
+
                       <Grid item xs={12} md={6}>
                         <Box mb={3}>
-                          <Typography variant="subtitle1" gutterBottom display="flex" alignItems="center">
+                          <Typography
+                            variant="subtitle1"
+                            gutterBottom
+                            display="flex"
+                            alignItems="center"
+                          >
                             Intervalle de rééquilibrage
                             <Tooltip title="Fréquence de vérification et rééquilibrage potentiel">
                               <IconButton size="small">
@@ -320,28 +365,34 @@ export const AutoLiquidityManager: React.FC = () => {
                           </Typography>
                           <Slider
                             value={autoSettings.rebalanceInterval}
-                            onChange={handleSettingChange('rebalanceInterval')}
+                            onChange={handleSettingChange("rebalanceInterval")}
                             min={1}
                             max={168}
                             step={1}
                             valueLabelDisplay="auto"
-                            valueLabelFormat={value => `${value}h`}
+                            valueLabelFormat={(value) => `${value}h`}
                           />
                           <Typography variant="body2" color="text.secondary">
-                            Vérifier tous les {autoSettings.rebalanceInterval} heures
+                            Vérifier tous les {autoSettings.rebalanceInterval}{" "}
+                            heures
                           </Typography>
                         </Box>
                       </Grid>
-                      
+
                       {advancedMode && (
                         <>
                           <Grid item xs={12}>
                             <Divider>Paramètres avancés</Divider>
                           </Grid>
-                          
+
                           <Grid item xs={12} md={6}>
                             <Box mb={3}>
-                              <Typography variant="subtitle1" gutterBottom display="flex" alignItems="center">
+                              <Typography
+                                variant="subtitle1"
+                                gutterBottom
+                                display="flex"
+                                alignItems="center"
+                              >
                                 Slippage maximum
                                 <Tooltip title="Tolérance maximale de variation de prix lors des transactions">
                                   <IconButton size="small">
@@ -351,19 +402,24 @@ export const AutoLiquidityManager: React.FC = () => {
                               </Typography>
                               <Slider
                                 value={autoSettings.maxSlippage}
-                                onChange={handleSettingChange('maxSlippage')}
+                                onChange={handleSettingChange("maxSlippage")}
                                 min={0.1}
                                 max={5}
                                 step={0.1}
                                 valueLabelDisplay="auto"
-                                valueLabelFormat={value => `${value}%`}
+                                valueLabelFormat={(value) => `${value}%`}
                               />
                             </Box>
                           </Grid>
-                          
+
                           <Grid item xs={12} md={6}>
                             <Box mb={3}>
-                              <Typography variant="subtitle1" gutterBottom display="flex" alignItems="center">
+                              <Typography
+                                variant="subtitle1"
+                                gutterBottom
+                                display="flex"
+                                alignItems="center"
+                              >
                                 Frais d'échange estimés
                                 <Tooltip title="Frais prélevés par les exchanges lors des opérations (information)">
                                   <IconButton size="small">
@@ -374,32 +430,35 @@ export const AutoLiquidityManager: React.FC = () => {
                               <TextField
                                 type="number"
                                 value={autoSettings.exchangeFee}
-                                onChange={(e) => 
+                                onChange={(e) =>
                                   setAutoSettings({
-                                    ...autoSettings, 
-                                    exchangeFee: parseFloat(e.target.value)
+                                    ...autoSettings,
+                                    exchangeFee: parseFloat(e.target.value),
                                   })
                                 }
                                 InputProps={{
-                                  endAdornment: '%',
-                                  inputProps: { 
-                                    min: 0.01, 
-                                    max: 3, 
-                                    step: 0.01 
-                                  }
+                                  endAdornment: "%",
+                                  inputProps: {
+                                    min: 0.01,
+                                    max: 3,
+                                    step: 0.01,
+                                  },
                                 }}
                                 fullWidth
                               />
                             </Box>
                           </Grid>
-                          
+
                           <Grid item xs={12}>
                             <FormControlLabel
                               control={
                                 <Switch
                                   checked={autoSettings.autoCompound}
-                                  onChange={(_, checked) => 
-                                    setAutoSettings({...autoSettings, autoCompound: checked})
+                                  onChange={(_, checked) =>
+                                    setAutoSettings({
+                                      ...autoSettings,
+                                      autoCompound: checked,
+                                    })
                                   }
                                   color="primary"
                                 />
@@ -407,13 +466,14 @@ export const AutoLiquidityManager: React.FC = () => {
                               label="Auto-compound des frais de liquidité"
                             />
                             <Typography variant="body2" color="text.secondary">
-                              Réinvestir automatiquement les frais générés par la liquidité
+                              Réinvestir automatiquement les frais générés par
+                              la liquidité
                             </Typography>
                           </Grid>
                         </>
                       )}
                     </Grid>
-                    
+
                     <Box display="flex" mt={4} mb={2}>
                       <Button
                         variant="contained"
@@ -422,14 +482,18 @@ export const AutoLiquidityManager: React.FC = () => {
                         disabled={isLoading}
                         startIcon={<AutorenewIcon />}
                       >
-                        {isLoading ? 'Enregistrement en cours...' : 'Enregistrer les paramètres'}
+                        {isLoading
+                          ? "Enregistrement en cours..."
+                          : "Enregistrer les paramètres"}
                       </Button>
                     </Box>
-                    
+
                     <Alert severity="info" icon={<ScheduleIcon />}>
                       <Typography variant="body2">
-                        La gestion automatique de liquidité s'exécute en arrière-plan et nécessite que votre token 
-                        ait une paire de liquidité existante. Les fonds pour le rééquilibrage proviennent du wallet de déploiement.
+                        La gestion automatique de liquidité s'exécute en
+                        arrière-plan et nécessite que votre token ait une paire
+                        de liquidité existante. Les fonds pour le rééquilibrage
+                        proviennent du wallet de déploiement.
                       </Typography>
                     </Alert>
                   </>

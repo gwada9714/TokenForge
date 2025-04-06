@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { verifyMessage } from 'viem';
-import { type NextFunction, type Request, type Response } from 'express';
-import { authMiddleware, type AuthenticatedRequest } from '../middleware/auth';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { verifyMessage } from "viem";
+import { type NextFunction, type Request, type Response } from "express";
+import { authMiddleware, type AuthenticatedRequest } from "../middleware/auth";
 
-vi.mock('viem', () => ({
-  verifyMessage: vi.fn()
+vi.mock("viem", () => ({
+  verifyMessage: vi.fn(),
 }));
 
-describe('Auth Middleware', () => {
+describe("Auth Middleware", () => {
   let mockReq: Partial<AuthenticatedRequest>;
   let mockRes: Partial<Response>;
   let mockNext: NextFunction;
@@ -25,7 +25,7 @@ describe('Auth Middleware', () => {
     vi.mocked(verifyMessage).mockClear();
   });
 
-  it('should return 401 if no authorization header', async () => {
+  it("should return 401 if no authorization header", async () => {
     await authMiddleware(
       mockReq as AuthenticatedRequest,
       mockRes as Response,
@@ -35,13 +35,13 @@ describe('Auth Middleware', () => {
     expect(mockRes.status).toHaveBeenCalledWith(401);
     expect(mockRes.json).toHaveBeenCalledWith({
       success: false,
-      error: 'No authorization header'
+      error: "No authorization header",
     });
   });
 
-  it('should return 401 if invalid authorization format', async () => {
+  it("should return 401 if invalid authorization format", async () => {
     mockReq.headers = {
-      authorization: 'InvalidFormat'
+      authorization: "InvalidFormat",
     };
 
     await authMiddleware(
@@ -53,13 +53,13 @@ describe('Auth Middleware', () => {
     expect(mockRes.status).toHaveBeenCalledWith(401);
     expect(mockRes.json).toHaveBeenCalledWith({
       success: false,
-      error: 'Invalid authorization format'
+      error: "Invalid authorization format",
     });
   });
 
-  it('should return 401 if missing authentication parameters', async () => {
+  it("should return 401 if missing authentication parameters", async () => {
     mockReq.headers = {
-      authorization: 'Bearer invalid'
+      authorization: "Bearer invalid",
     };
 
     await authMiddleware(
@@ -71,14 +71,14 @@ describe('Auth Middleware', () => {
     expect(mockRes.status).toHaveBeenCalledWith(401);
     expect(mockRes.json).toHaveBeenCalledWith({
       success: false,
-      error: 'Missing authentication parameters'
+      error: "Missing authentication parameters",
     });
   });
 
-  it('should return 401 if signature is expired', async () => {
+  it("should return 401 if signature is expired", async () => {
     const oldTimestamp = Date.now() - 6 * 60 * 1000; // 6 minutes ago
     mockReq.headers = {
-      authorization: `Bearer address:signature:${oldTimestamp}`
+      authorization: `Bearer address:signature:${oldTimestamp}`,
     };
 
     await authMiddleware(
@@ -90,15 +90,15 @@ describe('Auth Middleware', () => {
     expect(mockRes.status).toHaveBeenCalledWith(401);
     expect(mockRes.json).toHaveBeenCalledWith({
       success: false,
-      error: 'Signature expired'
+      error: "Signature expired",
     });
   });
 
-  it('should return 401 if signature is invalid', async () => {
+  it("should return 401 if signature is invalid", async () => {
     const timestamp = Date.now();
-    const address = '0x1234567890123456789012345678901234567890';
+    const address = "0x1234567890123456789012345678901234567890";
     mockReq.headers = {
-      authorization: `Bearer ${address}:invalid-signature:${timestamp}`
+      authorization: `Bearer ${address}:invalid-signature:${timestamp}`,
     };
 
     vi.mocked(verifyMessage).mockResolvedValue(false);
@@ -112,15 +112,15 @@ describe('Auth Middleware', () => {
     expect(mockRes.status).toHaveBeenCalledWith(401);
     expect(mockRes.json).toHaveBeenCalledWith({
       success: false,
-      error: 'Invalid signature'
+      error: "Invalid signature",
     });
   });
 
-  it('should call next() if signature is valid', async () => {
+  it("should call next() if signature is valid", async () => {
     const timestamp = Date.now();
-    const address = '0x1234567890123456789012345678901234567890';
+    const address = "0x1234567890123456789012345678901234567890";
     mockReq.headers = {
-      authorization: `Bearer ${address}:valid-signature:${timestamp}`
+      authorization: `Bearer ${address}:valid-signature:${timestamp}`,
     };
 
     vi.mocked(verifyMessage).mockResolvedValue(true);
@@ -134,7 +134,7 @@ describe('Auth Middleware', () => {
     expect(mockNext).toHaveBeenCalled();
     expect(mockReq.user).toEqual({
       address: address.toLowerCase(),
-      timestamp
+      timestamp,
     });
   });
 });

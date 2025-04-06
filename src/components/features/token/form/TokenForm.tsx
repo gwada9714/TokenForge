@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useAccount } from 'wagmi';
-import { useNavigate } from 'react-router-dom';
-import { useTokenFactory } from '../../hooks/useTokenFactory';
-import { toast } from 'react-hot-toast';
+import React, { useState } from "react";
+import { useAccount } from "wagmi";
+import { useNavigate } from "react-router-dom";
+import { useTokenFactory } from "../../hooks/useTokenFactory";
+import { toast } from "react-hot-toast";
 
 interface TokenFormData {
   name: string;
@@ -19,11 +19,11 @@ export const TokenForm = () => {
   const { isConnected } = useAccount();
   const { createToken } = useTokenFactory();
   const [formData, setFormData] = useState<TokenFormData>({
-    name: '',
-    symbol: '',
+    name: "",
+    symbol: "",
     decimals: 18,
-    initialSupply: '',
-    maxSupply: '',
+    initialSupply: "",
+    maxSupply: "",
     burnable: false,
     mintable: false,
   });
@@ -38,27 +38,29 @@ export const TokenForm = () => {
     try {
       // Validation des valeurs
       if (formData.decimals < 0 || formData.decimals > 18) {
-        throw new Error('Les décimales doivent être comprises entre 0 et 18');
+        throw new Error("Les décimales doivent être comprises entre 0 et 18");
       }
 
       if (!/^\d+$/.test(formData.initialSupply)) {
-        throw new Error('Le supply initial doit être un nombre entier positif');
+        throw new Error("Le supply initial doit être un nombre entier positif");
       }
 
       // Conversion en BigInt avec les décimales
-      const initialSupplyBigInt = BigInt(formData.initialSupply) * BigInt(10) ** BigInt(formData.decimals);
+      const initialSupplyBigInt =
+        BigInt(formData.initialSupply) *
+        BigInt(10) ** BigInt(formData.decimals);
 
       const tokenData = {
         ...formData,
-        initialSupply: initialSupplyBigInt.toString() // Conversion en string pour correspondre au type attendu
+        initialSupply: initialSupplyBigInt.toString(), // Conversion en string pour correspondre au type attendu
       };
 
       await createToken(tokenData);
-      toast.success('Token créé avec succès !');
-      navigate('/tokens');
+      toast.success("Token créé avec succès !");
+      navigate("/tokens");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-      toast.error('Erreur lors de la création du token');
+      setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      toast.error("Erreur lors de la création du token");
     } finally {
       setIsLoading(false);
     }
@@ -71,9 +73,11 @@ export const TokenForm = () => {
           {error}
         </div>
       )}
-      
+
       <div>
-        <label className="block text-sm font-medium text-gray-700">Nom du Token</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Nom du Token
+        </label>
         <input
           type="text"
           value={formData.name}
@@ -84,7 +88,9 @@ export const TokenForm = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Symbole</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Symbole
+        </label>
         <input
           type="text"
           value={formData.symbol}
@@ -95,11 +101,15 @@ export const TokenForm = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Décimales</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Décimales
+        </label>
         <input
           type="number"
           value={formData.decimals}
-          onChange={(e) => setFormData({ ...formData, decimals: parseInt(e.target.value) })}
+          onChange={(e) =>
+            setFormData({ ...formData, decimals: parseInt(e.target.value) })
+          }
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           min="0"
           max="18"
@@ -108,11 +118,15 @@ export const TokenForm = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Supply Initial</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Supply Initial
+        </label>
         <input
           type="text"
           value={formData.initialSupply}
-          onChange={(e) => setFormData({ ...formData, initialSupply: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, initialSupply: e.target.value })
+          }
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
         />
@@ -123,7 +137,9 @@ export const TokenForm = () => {
           <input
             type="checkbox"
             checked={formData.burnable}
-            onChange={(e) => setFormData({ ...formData, burnable: e.target.checked })}
+            onChange={(e) =>
+              setFormData({ ...formData, burnable: e.target.checked })
+            }
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
           <span className="ml-2">Burnable</span>
@@ -133,7 +149,9 @@ export const TokenForm = () => {
           <input
             type="checkbox"
             checked={formData.mintable}
-            onChange={(e) => setFormData({ ...formData, mintable: e.target.checked })}
+            onChange={(e) =>
+              setFormData({ ...formData, mintable: e.target.checked })
+            }
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
           <span className="ml-2">Mintable</span>
@@ -145,7 +163,7 @@ export const TokenForm = () => {
         disabled={!isConnected || isLoading}
         className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
       >
-        {isLoading ? 'Création en cours...' : 'Créer le Token'}
+        {isLoading ? "Création en cours..." : "Créer le Token"}
       </button>
     </form>
   );

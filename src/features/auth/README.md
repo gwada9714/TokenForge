@@ -7,12 +7,14 @@ Le système d'authentification de TokenForge combine l'authentification Web3 (wa
 ### Hooks Principaux
 
 #### useTokenForgeAuth (Hook Principal)
+
 - Gère l'état global de l'authentification
 - Synchronise l'état du wallet avec Wagmi
 - Expose l'interface TokenForgeAuthState complète
 - Centralise la logique métier
 
 #### Hooks Spécialisés
+
 - `useAuthState` : Gestion pure de l'état Firebase
 - `useWalletState` : Gestion pure de l'état du wallet
 - `useNetworkManagement` : Gestion du réseau
@@ -30,13 +32,16 @@ Le système d'authentification de TokenForge combine l'authentification Web3 (wa
 ### Store
 
 #### Actions
+
 Actions unifiées dans `authReducer.ts` :
+
 - LOGIN_START, LOGIN_SUCCESS, LOGIN_FAILURE
 - LOGOUT
 - UPDATE_USER, UPDATE_WALLET
 - SET_ERROR, CLEAR_ERROR
 
 #### État
+
 ```typescript
 interface TokenForgeAuthState {
   user: TokenForgeUser | null;
@@ -62,18 +67,22 @@ interface TokenForgeAuthState {
 ## Tests
 
 ### Tests Unitaires
+
 - Tests des reducers
 - Tests des hooks
 - Tests des services
 - Tests des providers
 
 ### Tests d'Intégration
+
 - Flux d'authentification complet
 - Interaction wallet-auth
 - Gestion des erreurs
 
 ### Couverture
+
 Configuration Vitest avec seuils :
+
 - Branches : 80%
 - Fonctions : 80%
 - Lignes : 80%
@@ -84,7 +93,7 @@ Configuration Vitest avec seuils :
 ### Configuration de Base
 
 ```typescript
-import { TokenForgeAuthProvider } from 'features/auth/providers';
+import { TokenForgeAuthProvider } from "features/auth/providers";
 
 function App() {
   return (
@@ -98,7 +107,7 @@ function App() {
 ### Utilisation dans les Composants
 
 ```typescript
-import { useTokenForgeAuth } from 'features/auth/providers';
+import { useTokenForgeAuth } from "features/auth/providers";
 
 function YourComponent() {
   const { isAuthenticated, user, wallet } = useTokenForgeAuth();
@@ -119,8 +128,8 @@ function YourComponent() {
 ### Gestion des Erreurs
 
 ```typescript
-import { useTokenForgeAuth } from 'features/auth/providers';
-import { errorService } from 'features/auth/services';
+import { useTokenForgeAuth } from "features/auth/providers";
+import { errorService } from "features/auth/services";
 
 function YourComponent() {
   const { dispatch } = useTokenForgeAuth();

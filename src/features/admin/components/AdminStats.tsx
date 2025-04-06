@@ -1,11 +1,11 @@
-import React from 'react';
-import { Grid, Paper, Box, Typography } from '@mui/material';
+import React from "react";
+import { Grid, Paper, Box, Typography } from "@mui/material";
 import {
   People as PeopleIcon,
   Token as TokenIcon,
   AccountBalance as AccountBalanceIcon,
-  TrendingUp as TrendingUpIcon
-} from '@mui/icons-material';
+  TrendingUp as TrendingUpIcon,
+} from "@mui/icons-material";
 
 interface AdminStatsProps {
   stats: {
@@ -21,33 +21,33 @@ interface AdminStatsProps {
 export const AdminStats: React.FC<AdminStatsProps> = ({ stats }) => {
   const statItems = [
     {
-      title: 'Utilisateurs Totaux',
+      title: "Utilisateurs Totaux",
       value: stats.totalUsers,
       subtext: `${stats.activeUsers} actifs`,
       icon: <PeopleIcon />,
-      color: 'primary.main'
+      color: "primary.main",
     },
     {
-      title: 'Tokens Créés',
+      title: "Tokens Créés",
       value: stats.totalTokens,
-      subtext: 'Tous réseaux confondus',
+      subtext: "Tous réseaux confondus",
       icon: <TokenIcon />,
-      color: 'secondary.main'
+      color: "secondary.main",
     },
     {
-      title: 'Volume Total',
+      title: "Volume Total",
       value: stats.totalVolume,
       subtext: `${stats.totalTransactions} transactions`,
       icon: <AccountBalanceIcon />,
-      color: 'success.main'
+      color: "success.main",
     },
     {
-      title: 'Croissance',
+      title: "Croissance",
       value: `${stats.growthRate}%`,
-      subtext: 'Ce mois',
+      subtext: "Ce mois",
       icon: <TrendingUpIcon />,
-      color: 'info.main'
-    }
+      color: "info.main",
+    },
   ];
 
   return (
@@ -69,9 +69,9 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ stats }) => {
                 sx={{
                   width: 100,
                   height: 100,
-                  borderRadius: '50%',
+                  borderRadius: "50%",
                   backgroundColor: item.color,
-                  opacity: 0.1
+                  opacity: 0.1,
                 }}
               />
               <Box display="flex" alignItems="center" mb={2}>
@@ -80,8 +80,8 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ stats }) => {
                     p: 1,
                     borderRadius: 1,
                     backgroundColor: item.color,
-                    color: 'white',
-                    display: 'flex'
+                    color: "white",
+                    display: "flex",
                   }}
                 >
                   {item.icon}
@@ -102,4 +102,4 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ stats }) => {
       ))}
     </Grid>
   );
-}; 
+};

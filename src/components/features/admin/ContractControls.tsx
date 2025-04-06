@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Card,
@@ -12,8 +12,8 @@ import {
   Alert,
   AlertColor,
   Divider,
-} from '@mui/material';
-import { useContract } from '../../../hooks/useContract';
+} from "@mui/material";
+import { useContract } from "../../../hooks/useContract";
 
 const ContractControls: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -24,11 +24,11 @@ const ContractControls: React.FC = () => {
     severity: AlertColor;
   }>({
     open: false,
-    message: '',
-    severity: 'success',
+    message: "",
+    severity: "success",
   });
 
-  const { contract } = useContract('token');
+  const { contract } = useContract("token");
 
   const handlePauseToggle = useCallback(async () => {
     if (!contract) return;
@@ -37,18 +37,18 @@ const ContractControls: React.FC = () => {
     try {
       const tx = await (paused ? contract.unpause() : contract.pause());
       await tx.wait();
-      
+
       setPaused(!paused);
       setSnackbar({
         open: true,
-        message: `Contract successfully ${paused ? 'unpaused' : 'paused'}`,
-        severity: 'success',
+        message: `Contract successfully ${paused ? "unpaused" : "paused"}`,
+        severity: "success",
       });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: `Failed to ${paused ? 'unpause' : 'pause'} contract`,
-        severity: 'error',
+        message: `Failed to ${paused ? "unpause" : "pause"} contract`,
+        severity: "error",
       });
     } finally {
       setLoading(false);
@@ -56,7 +56,7 @@ const ContractControls: React.FC = () => {
   }, [contract, paused]);
 
   const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   return (
@@ -73,8 +73,8 @@ const ContractControls: React.FC = () => {
                 Contract Status
               </Typography>
               <Chip
-                label={paused ? 'Paused' : 'Active'}
-                color={paused ? 'error' : 'success'}
+                label={paused ? "Paused" : "Active"}
+                color={paused ? "error" : "success"}
               />
             </Box>
 
@@ -86,12 +86,12 @@ const ContractControls: React.FC = () => {
               </Typography>
               <Button
                 variant="contained"
-                color={paused ? 'success' : 'error'}
+                color={paused ? "success" : "error"}
                 onClick={handlePauseToggle}
                 disabled={loading}
                 startIcon={loading && <CircularProgress size={20} />}
               >
-                {paused ? 'Unpause Contract' : 'Pause Contract'}
+                {paused ? "Unpause Contract" : "Pause Contract"}
               </Button>
             </Box>
           </Stack>

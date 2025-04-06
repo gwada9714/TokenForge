@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { SPACING } from '@/config/constants/theme';
+import React, { useState } from "react";
+import styled from "styled-components";
+import { SPACING } from "@/config/constants/theme";
 
 interface TooltipProps {
   content: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  position?: "top" | "bottom" | "left" | "right";
   children: React.ReactNode;
 }
 
@@ -13,39 +13,39 @@ const TooltipWrapper = styled.div`
   display: inline-block;
 `;
 
-const TooltipContent = styled.div<{ 
+const TooltipContent = styled.div<{
   isVisible: boolean;
-  position: 'top' | 'bottom' | 'left' | 'right';
+  position: "top" | "bottom" | "left" | "right";
 }>`
   position: absolute;
-  background-color: ${props => props.theme.colors.text.primary};
-  color: ${props => props.theme.colors.background.primary};
+  background-color: ${(props) => props.theme.colors.text.primary};
+  color: ${(props) => props.theme.colors.background.primary};
   padding: ${SPACING.xs} ${SPACING.sm};
-  border-radius: ${props => props.theme.borderRadius};
+  border-radius: ${(props) => props.theme.borderRadius};
   font-size: 0.875rem;
   white-space: nowrap;
   z-index: 1000;
-  opacity: ${props => props.isVisible ? 1 : 0};
-  visibility: ${props => props.isVisible ? 'visible' : 'hidden'};
+  opacity: ${(props) => (props.isVisible ? 1 : 0)};
+  visibility: ${(props) => (props.isVisible ? "visible" : "hidden")};
   transition: all 0.2s ease-in-out;
 
-  ${props => {
+  ${(props) => {
     switch (props.position) {
-      case 'bottom':
+      case "bottom":
         return `
           top: 100%;
           left: 50%;
           transform: translateX(-50%);
           margin-top: ${SPACING.xs};
         `;
-      case 'left':
+      case "left":
         return `
           top: 50%;
           right: 100%;
           transform: translateY(-50%);
           margin-right: ${SPACING.xs};
         `;
-      case 'right':
+      case "right":
         return `
           top: 50%;
           left: 100%;
@@ -63,27 +63,27 @@ const TooltipContent = styled.div<{
   }}
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     border: 5px solid transparent;
 
-    ${props => {
+    ${(props) => {
       switch (props.position) {
-        case 'bottom':
+        case "bottom":
           return `
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
             border-bottom-color: ${props.theme.colors.text.primary};
           `;
-        case 'left':
+        case "left":
           return `
             left: 100%;
             top: 50%;
             transform: translateY(-50%);
             border-left-color: ${props.theme.colors.text.primary};
           `;
-        case 'right':
+        case "right":
           return `
             right: 100%;
             top: 50%;
@@ -104,8 +104,8 @@ const TooltipContent = styled.div<{
 
 export const Tooltip: React.FC<TooltipProps> = ({
   content,
-  position = 'top',
-  children
+  position = "top",
+  children,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -120,4 +120,4 @@ export const Tooltip: React.FC<TooltipProps> = ({
       </TooltipContent>
     </TooltipWrapper>
   );
-}; 
+};

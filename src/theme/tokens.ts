@@ -113,65 +113,65 @@ export interface Tokens {
 export const tokens: Tokens = {
   colors: {
     primary: {
-      main: '#182038',
-      light: '#2A3352',
-      dark: '#0F1525',
-      border: '#2A3352',
-      hover: '#0F1525'
+      main: "#182038",
+      light: "#2A3352",
+      dark: "#0F1525",
+      border: "#2A3352",
+      hover: "#0F1525",
     },
     secondary: {
-      main: '#D97706',
-      light: '#F59E0B',
-      dark: '#B45309',
-      border: '#F59E0B',
-      hover: '#B45309'
+      main: "#D97706",
+      light: "#F59E0B",
+      dark: "#B45309",
+      border: "#F59E0B",
+      hover: "#B45309",
     },
     background: {
-      default: '#F5F5F5',
-      paper: '#FFFFFF',
-      dark: '#121212'
+      default: "#F5F5F5",
+      paper: "#FFFFFF",
+      dark: "#121212",
     },
     text: {
-      primary: '#182038',
-      secondary: '#4B5563',
-      light: '#F5F5F5'
+      primary: "#182038",
+      secondary: "#4B5563",
+      light: "#F5F5F5",
     },
     gradient: {
-      primary: 'linear-gradient(45deg, #182038 30%, #2A3352 90%)',
-      secondary: 'linear-gradient(45deg, #D97706 30%, #F59E0B 90%)'
+      primary: "linear-gradient(45deg, #182038 30%, #2A3352 90%)",
+      secondary: "linear-gradient(45deg, #D97706 30%, #F59E0B 90%)",
     },
     action: {
-      active: '#D97706',
-      hover: '#F59E0B',
-      selected: '#B45309'
+      active: "#D97706",
+      hover: "#F59E0B",
+      selected: "#B45309",
     },
     error: {
-      main: '#DC2626',
-      light: '#EF4444',
-      dark: '#B91C1C'
+      main: "#DC2626",
+      light: "#EF4444",
+      dark: "#B91C1C",
     },
     success: {
-      main: '#059669',
-      light: '#10B981',
-      dark: '#047857'
+      main: "#059669",
+      light: "#10B981",
+      dark: "#047857",
     },
     warning: {
-      main: '#D97706',
-      light: '#F59E0B',
-      dark: '#B45309'
-    }
+      main: "#D97706",
+      light: "#F59E0B",
+      dark: "#B45309",
+    },
   },
   typography: {
     fontFamily: {
       heading: "'Inter', sans-serif",
-      body: "'Inter', sans-serif"
+      body: "'Inter', sans-serif",
     },
     fontWeight: {
       light: 300,
       regular: 400,
       medium: 500,
       semibold: 600,
-      bold: 700
+      bold: 700,
     },
     fontSizes: {
       xs: "0.75rem",
@@ -182,8 +182,8 @@ export const tokens: Tokens = {
       "2xl": "1.5rem",
       "3xl": "1.875rem",
       "4xl": "2.25rem",
-      "5xl": "3rem"
-    }
+      "5xl": "3rem",
+    },
   },
   borderRadius: {
     none: "0",
@@ -192,24 +192,24 @@ export const tokens: Tokens = {
     large: "0.5rem",
     xl: "0.75rem",
     "2xl": "1rem",
-    full: "9999px"
+    full: "9999px",
   },
   transitions: {
     default: "all 0.2s ease-in-out",
     fast: "all 0.1s ease-in-out",
-    slow: "all 0.3s ease-in-out"
+    slow: "all 0.3s ease-in-out",
   },
   spacing: (value: number) => `${value * 0.25}rem`,
   shadows: {
     sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
     md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
+    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
   },
   zIndex: {
     modal: 1000,
     popup: 900,
     header: 800,
-    dropdown: 700
+    dropdown: 700,
   },
   breakpoints: {
     xs: "320px",
@@ -217,8 +217,8 @@ export const tokens: Tokens = {
     md: "768px",
     lg: "1024px",
     xl: "1280px",
-    "2xl": "1536px"
-  }
+    "2xl": "1536px",
+  },
 };
 
 // Create a type-safe theme object that matches styled-components DefaultTheme
@@ -229,7 +229,7 @@ const theme = {
     background: tokens.colors.background,
     text: tokens.colors.text,
     gradient: {
-      primary: 'linear-gradient(135deg, #182038 0%, #2A3352 100%)',
+      primary: "linear-gradient(135deg, #182038 0%, #2A3352 100%)",
       secondary: tokens.colors.gradient.secondary,
     },
     action: tokens.colors.action,

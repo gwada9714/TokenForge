@@ -1,15 +1,23 @@
-import { createContext, useContext, ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
-import { useAccount } from 'wagmi';
-import { useNetwork } from '../hooks/useNetwork';
-import { getContractAddress } from '../config/contracts';
-import type { Address } from 'viem';
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+import { useAccount } from "wagmi";
+import { useNetwork } from "../hooks/useNetwork";
+import { getContractAddress } from "../config/contracts";
+import type { Address } from "viem";
 
 // Types
 interface ContractState {
   contractAddress: Address | null;
   isLoading: boolean;
   error: string | null;
-  networkStatus: 'disconnected' | 'wrong_network' | 'connected';
+  networkStatus: "disconnected" | "wrong_network" | "connected";
 }
 
 interface ContractContextValue extends ContractState {
@@ -21,20 +29,20 @@ const defaultState: ContractState = {
   contractAddress: null,
   isLoading: false,
   error: null,
-  networkStatus: 'disconnected'
+  networkStatus: "disconnected",
 };
 
 // Création du contexte avec une valeur par défaut complète
 const ContractContext = createContext<ContractContextValue>({
   ...defaultState,
-  refreshContract: async () => {}
+  refreshContract: async () => {},
 });
 
 // Hook personnalisé pour utiliser le contexte
 export const useContract = () => {
   const context = useContext(ContractContext);
   if (!context) {
-    throw new Error('useContract must be used within a ContractProvider');
+    throw new Error("useContract must be used within a ContractProvider");
   }
   return context;
 };
@@ -52,58 +60,62 @@ export const ContractProvider = ({ children }: ContractProviderProps) => {
 
   // Fonction de rafraîchissement du contrat
   const refreshContract = useCallback(async () => {
-    console.log('Refreshing contract state...', { chain, address, isConnected });
-    
+    console.log("Refreshing contract state...", {
+      chain,
+      address,
+      isConnected,
+    });
+
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       // Vérification de la connexion
       if (!isConnected || !address) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           contractAddress: null,
           isLoading: false,
           error: null,
-          networkStatus: 'disconnected'
+          networkStatus: "disconnected",
         }));
         return;
       }
 
       // Vérification du réseau
       if (!chain) {
-        throw new Error('Aucun réseau détecté');
+        throw new Error("Aucun réseau détecté");
       }
 
       // Vérification du réseau Sepolia
       if (chain.id !== 11155111) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           contractAddress: null,
           isLoading: false,
-          error: 'Veuillez vous connecter au réseau Sepolia',
-          networkStatus: 'wrong_network'
+          error: "Veuillez vous connecter au réseau Sepolia",
+          networkStatus: "wrong_network",
         }));
         return;
       }
 
       // Récupération de l'adresse du contrat
-      const contractAddress = getContractAddress('TOKEN_FACTORY', chain.id);
-      console.log('Contract address resolved:', contractAddress);
+      const contractAddress = getContractAddress("TOKEN_FACTORY", chain.id);
+      console.log("Contract address resolved:", contractAddress);
 
       setState({
         contractAddress,
         isLoading: false,
         error: null,
-        networkStatus: 'connected'
+        networkStatus: "connected",
       });
     } catch (error) {
-      console.error('Error in contract refresh:', error);
-      setState(prev => ({
+      console.error("Error in contract refresh:", error);
+      setState((prev) => ({
         ...prev,
         contractAddress: null,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Erreur inattendue',
-        networkStatus: 'disconnected'
+        error: error instanceof Error ? error.message : "Erreur inattendue",
+        networkStatus: "disconnected",
       }));
     }
   }, [chain, address, isConnected]);
@@ -117,7 +129,7 @@ export const ContractProvider = ({ children }: ContractProviderProps) => {
   const value = useMemo(
     () => ({
       ...state,
-      refreshContract
+      refreshContract,
     }),
     [state, refreshContract]
   );

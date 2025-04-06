@@ -1,9 +1,9 @@
-import { logger } from '@/core/logger';
+import { logger } from "@/core/logger";
 
 export enum ServiceStatus {
-  INITIALIZING = 'INITIALIZING',
-  READY = 'READY',
-  ERROR = 'ERROR'
+  INITIALIZING = "INITIALIZING",
+  READY = "READY",
+  ERROR = "ERROR",
 }
 
 export abstract class BaseService {
@@ -20,14 +20,18 @@ export abstract class BaseService {
   protected log(message: string, metadata?: Record<string, unknown>) {
     logger.info(message, {
       category: this.serviceName,
-      metadata
+      metadata,
     });
   }
 
-  protected logError(message: string, error: Error, metadata?: Record<string, unknown>) {
+  protected logError(
+    message: string,
+    error: Error,
+    metadata?: Record<string, unknown>
+  ) {
     logger.error(message, error, {
       category: this.serviceName,
-      metadata
+      metadata,
     });
   }
 }

@@ -1,54 +1,54 @@
 // Polyfills
-import './polyfills';
+import "./polyfills";
 
 // Styles
-import './index.css';
+import "./index.css";
 
 // React imports
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { Provider } from 'react-redux';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
 
 // Firebase imports
-import 'firebase/auth';
-import { firebaseAuth } from './lib/firebase/auth';
-import { getFirebaseManager } from './lib/firebase/services';
+import "firebase/auth";
+import { firebaseAuth } from "./lib/firebase/auth";
+import { getFirebaseManager } from "./lib/firebase/services";
 
 // App imports
-import App from './App';
-import { store } from './store';
-import { logger } from './utils/firebase-logger';
-import { ErrorMonitoring } from './utils/error-monitoring';
-import { SessionService } from './services/session/sessionService';
-import { serviceManager } from '@/core/services/ServiceManager';
-import { firebaseInitializer } from '@/lib/firebase/initialization';
+import App from "./App";
+import { store } from "./store";
+import { logger } from "./utils/firebase-logger";
+import { ErrorMonitoring } from "./utils/error-monitoring";
+import { SessionService } from "./services/session/sessionService";
+import { serviceManager } from "@/core/services/ServiceManager";
+import { firebaseInitializer } from "@/lib/firebase/initialization";
 
-const LOG_CATEGORY = 'Application';
+const LOG_CATEGORY = "Application";
 
 async function initializeServices() {
   try {
     // 1. Initialiser Firebase Manager
     const firebaseManager = await getFirebaseManager();
     logger.info({
-      category: 'Firebase',
-      message: 'Firebase core services initialized'
+      category: "Firebase",
+      message: "Firebase core services initialized",
     });
-    
+
     // 2. Initialiser Auth explicitement en utilisant la méthode directe
     // Cette approche évite les dépendances circulaires
     await firebaseManager.initAuth();
     logger.info({
-      category: 'Firebase',
-      message: 'Firebase Auth est complètement initialisé'
+      category: "Firebase",
+      message: "Firebase Auth est complètement initialisé",
     });
-    
+
     // 3. Initialiser le service d'authentification qui utilise Firebase Auth
     await firebaseAuth.getAuth();
     logger.info({
-      category: 'Firebase',
-      message: 'FirebaseAuth service est prêt à être utilisé'
+      category: "Firebase",
+      message: "FirebaseAuth service est prêt à être utilisé",
     });
-    
+
     // 4. Initialiser les autres services qui peuvent dépendre de Auth
     serviceManager.registerService(firebaseInitializer);
     await serviceManager.initialize();
@@ -62,13 +62,13 @@ async function initializeServices() {
 
     logger.info({
       category: LOG_CATEGORY,
-      message: 'Services initialized successfully'
+      message: "Services initialized successfully",
     });
   } catch (error) {
     logger.error({
       category: LOG_CATEGORY,
-      message: '❌ Services initialization failed',
-      error: error as Error
+      message: "❌ Services initialization failed",
+      error: error as Error,
     });
     throw error;
   }
@@ -76,16 +76,19 @@ async function initializeServices() {
 
 async function startApp() {
   try {
-    logger.info({ category: LOG_CATEGORY, message: '🚀 Starting TokenForge application' });
+    logger.info({
+      category: LOG_CATEGORY,
+      message: "🚀 Starting TokenForge application",
+    });
 
     // Validate environment variables
     const requiredEnvVars = [
-      'VITE_FIREBASE_API_KEY',
-      'VITE_FIREBASE_AUTH_DOMAIN',
-      'VITE_FIREBASE_PROJECT_ID'
+      "VITE_FIREBASE_API_KEY",
+      "VITE_FIREBASE_AUTH_DOMAIN",
+      "VITE_FIREBASE_PROJECT_ID",
     ];
 
-    requiredEnvVars.forEach(varName => {
+    requiredEnvVars.forEach((varName) => {
       if (!import.meta.env[varName]) {
         throw new Error(`Missing environment variable: ${varName}`);
       }
@@ -95,9 +98,9 @@ async function startApp() {
     await initializeServices();
 
     // Render the application
-    const container = document.getElementById('root');
+    const container = document.getElementById("root");
     if (!container) {
-      throw new Error('Container #root not found in DOM');
+      throw new Error("Container #root not found in DOM");
     }
 
     const root = createRoot(container);
@@ -109,16 +112,19 @@ async function startApp() {
       </StrictMode>
     );
 
-    logger.info({ category: LOG_CATEGORY, message: '🎉 Application started successfully' });
-  } catch (error) {
-    logger.error({ 
+    logger.info({
       category: LOG_CATEGORY,
-      message: '❌ Application initialization failed',
-      error: error as Error
+      message: "🎉 Application started successfully",
     });
-    
+  } catch (error) {
+    logger.error({
+      category: LOG_CATEGORY,
+      message: "❌ Application initialization failed",
+      error: error as Error,
+    });
+
     // Display user-friendly error
-    const errorContainer = document.getElementById('root');
+    const errorContainer = document.getElementById("root");
     if (errorContainer) {
       errorContainer.innerHTML = `
         <div style="
@@ -134,7 +140,9 @@ async function startApp() {
         ">
           <h1>Oops! Une erreur est survenue</h1>
           <p>Nous rencontrons un problème au démarrage de l'application. Veuillez réessayer plus tard.</p>
-          <p style="font-size: 0.8em; margin-top: 20px;">Détails techniques: ${(error as Error).message}</p>
+          <p style="font-size: 0.8em; margin-top: 20px;">Détails techniques: ${
+            (error as Error).message
+          }</p>
         </div>
       `;
     }

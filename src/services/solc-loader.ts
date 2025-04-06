@@ -23,7 +23,7 @@ function getWorker(): Worker {
  */
 export async function compile(
   source: string,
-  settings: any = null,
+  settings: any = null
 ): Promise<CompilerOutput> {
   return new Promise((resolve, reject) => {
     const currentWorker = getWorker();

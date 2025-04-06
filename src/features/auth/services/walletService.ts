@@ -1,5 +1,5 @@
-import { getWalletClient } from '@wagmi/core';
-import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
+import { getWalletClient } from "@wagmi/core";
+import { createAuthError, AUTH_ERROR_CODES } from "../errors/AuthError";
 
 export class WalletService {
   private static instance: WalletService;
@@ -19,14 +19,14 @@ export class WalletService {
       if (!walletClient) {
         throw createAuthError(
           AUTH_ERROR_CODES.WALLET_NOT_FOUND,
-          'No wallet client found'
+          "No wallet client found"
         );
       }
       return true;
     } catch (error) {
       throw createAuthError(
         AUTH_ERROR_CODES.WALLET_CONNECTION_FAILED,
-        'Failed to connect wallet',
+        "Failed to connect wallet",
         { error }
       );
     }

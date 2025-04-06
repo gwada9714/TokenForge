@@ -1,9 +1,12 @@
-import React from 'react';
-import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components';
-import { ReactNode } from 'react';
-import { THEME, BREAKPOINTS } from '@/config/constants';
-import { GlobalStyle } from './styles/global';
+import React from "react";
+import {
+  ThemeProvider as MuiThemeProvider,
+  createTheme,
+} from "@mui/material/styles";
+import { ThemeProvider as StyledThemeProvider } from "styled-components";
+import { ReactNode } from "react";
+import { THEME, BREAKPOINTS } from "@/config/constants";
+import { GlobalStyle } from "./styles/global";
 
 // MUI theme configuration
 const muiTheme = createTheme({
@@ -59,4 +62,4 @@ const ThemeProvider = ({ children }: ThemeProviderProps) => {
   );
 };
 
-export default ThemeProvider; 
+export default ThemeProvider;

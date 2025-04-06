@@ -1,16 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  getDocumentOptimized, 
-  queryOptimized, 
-  invalidateDocumentCache, 
+import { useState, useEffect, useCallback } from "react";
+import {
+  getDocumentOptimized,
+  queryOptimized,
+  invalidateDocumentCache,
   invalidateCollectionCache,
-  unsubscribeAll
-} from '@/lib/firebase/firestore-optimized';
-import { DocumentData, QueryConstraint } from 'firebase/firestore';
-import { logger } from '@/core/logger';
+  unsubscribeAll,
+} from "@/lib/firebase/firestore-optimized";
+import { DocumentData, QueryConstraint } from "firebase/firestore";
+import { logger } from "@/core/logger";
 
 // Type pour l'état de chargement
-type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+type LoadingState = "idle" | "loading" | "success" | "error";
 
 // Options pour les hooks Firestore
 interface FirestoreHookOptions {
@@ -53,7 +53,7 @@ export function useDocument<T = DocumentData>(
   options: FirestoreHookOptions = {}
 ): DocumentHookResult<T> {
   const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState<LoadingState>('idle');
+  const [loading, setLoading] = useState<LoadingState>("idle");
   const [error, setError] = useState<Error | null>(null);
 
   // Configuration par défaut
@@ -61,7 +61,7 @@ export function useDocument<T = DocumentData>(
     realtime = true,
     cacheEnabled = true,
     cacheTTL = 60000,
-    retry = { count: 3, delay: 1000 }
+    retry = { count: 3, delay: 1000 },
   } = options;
 
   // Fonction pour charger les données
@@ -71,27 +71,27 @@ export function useDocument<T = DocumentData>(
       return;
     }
 
-    setLoading('loading');
+    setLoading("loading");
     setError(null);
 
     try {
       const result = await getDocumentOptimized(collectionName, docId, {
         cache: { enabled: cacheEnabled, ttl: cacheTTL },
         retry,
-        realtime
+        realtime,
       });
 
       setData(result as T | null);
-      setLoading('success');
+      setLoading("success");
     } catch (err) {
       logger.error({
-        category: 'useDocument',
+        category: "useDocument",
         message: `Erreur lors de la récupération du document ${collectionName}/${docId}`,
-        error: err instanceof Error ? err : new Error(String(err))
+        error: err instanceof Error ? err : new Error(String(err)),
       });
 
       setError(err instanceof Error ? err : new Error(String(err)));
-      setLoading('error');
+      setLoading("error");
     }
   }, [collectionName, docId, cacheEnabled, cacheTTL, realtime, retry]);
 
@@ -108,7 +108,7 @@ export function useDocument<T = DocumentData>(
       fetchData();
     } else {
       setData(null);
-      setLoading('idle');
+      setLoading("idle");
       setError(null);
     }
 
@@ -125,7 +125,7 @@ export function useDocument<T = DocumentData>(
     loading,
     error,
     reload: fetchData,
-    invalidateCache
+    invalidateCache,
   };
 }
 
@@ -141,7 +141,7 @@ export function useQuery<T = DocumentData>(
   options: FirestoreHookOptions = {}
 ): QueryHookResult<T> {
   const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState<LoadingState>('idle');
+  const [loading, setLoading] = useState<LoadingState>("idle");
   const [error, setError] = useState<Error | null>(null);
 
   // Configuration par défaut
@@ -149,38 +149,38 @@ export function useQuery<T = DocumentData>(
     realtime = true,
     cacheEnabled = true,
     cacheTTL = 30000,
-    retry = { count: 3, delay: 1000 }
+    retry = { count: 3, delay: 1000 },
   } = options;
 
   // Clé unique pour la requête (pour éviter les re-rendus inutiles)
   const queryKey = JSON.stringify({
     collection: collectionName,
-    constraints: constraints.map(c => c.type)
+    constraints: constraints.map((c) => c.type),
   });
 
   // Fonction pour charger les données
   const fetchData = useCallback(async () => {
-    setLoading('loading');
+    setLoading("loading");
     setError(null);
 
     try {
       const results = await queryOptimized(collectionName, constraints, {
         cache: { enabled: cacheEnabled, ttl: cacheTTL },
         retry,
-        realtime
+        realtime,
       });
 
       setData(results as T[]);
-      setLoading('success');
+      setLoading("success");
     } catch (err) {
       logger.error({
-        category: 'useQuery',
+        category: "useQuery",
         message: `Erreur lors de l'exécution de la requête sur ${collectionName}`,
-        error: err instanceof Error ? err : new Error(String(err))
+        error: err instanceof Error ? err : new Error(String(err)),
       });
 
       setError(err instanceof Error ? err : new Error(String(err)));
-      setLoading('error');
+      setLoading("error");
     }
   }, [queryKey, cacheEnabled, cacheTTL, realtime, retry]);
 
@@ -206,7 +206,7 @@ export function useQuery<T = DocumentData>(
     loading,
     error,
     reload: fetchData,
-    invalidateCache
+    invalidateCache,
   };
 }
 
@@ -215,7 +215,7 @@ export function useQuery<T = DocumentData>(
  * @param collectionName Nom de la collection
  */
 export function useCollection(collectionName: string) {
-  const { firestoreService } = require('@/lib/firebase');
+  const { firestoreService } = require("@/lib/firebase");
 
   // Fonction pour ajouter un document
   const addDocument = useCallback(
@@ -227,16 +227,16 @@ export function useCollection(collectionName: string) {
         } else {
           id = await firestoreService.addDocument(collectionName, data);
         }
-        
+
         // Invalider le cache de la collection après modification
         invalidateCollectionCache(collectionName);
-        
+
         return id;
       } catch (error) {
         logger.error({
-          category: 'useCollection',
+          category: "useCollection",
           message: `Erreur lors de l'ajout d'un document dans ${collectionName}`,
-          error: error instanceof Error ? error : new Error(String(error))
+          error: error instanceof Error ? error : new Error(String(error)),
         });
         throw error;
       }
@@ -249,16 +249,16 @@ export function useCollection(collectionName: string) {
     async (docId: string, data: Record<string, unknown>) => {
       try {
         await firestoreService.updateDocument(collectionName, docId, data);
-        
+
         // Invalider le cache du document après modification
         invalidateDocumentCache(collectionName, docId);
-        
+
         return true;
       } catch (error) {
         logger.error({
-          category: 'useCollection',
+          category: "useCollection",
           message: `Erreur lors de la mise à jour du document ${collectionName}/${docId}`,
-          error: error instanceof Error ? error : new Error(String(error))
+          error: error instanceof Error ? error : new Error(String(error)),
         });
         throw error;
       }
@@ -271,16 +271,16 @@ export function useCollection(collectionName: string) {
     async (docId: string) => {
       try {
         await firestoreService.deleteDocument(collectionName, docId);
-        
+
         // Invalider le cache du document après suppression
         invalidateDocumentCache(collectionName, docId);
-        
+
         return true;
       } catch (error) {
         logger.error({
-          category: 'useCollection',
+          category: "useCollection",
           message: `Erreur lors de la suppression du document ${collectionName}/${docId}`,
-          error: error instanceof Error ? error : new Error(String(error))
+          error: error instanceof Error ? error : new Error(String(error)),
         });
         throw error;
       }
@@ -291,6 +291,6 @@ export function useCollection(collectionName: string) {
   return {
     addDocument,
     updateDocument,
-    deleteDocument
+    deleteDocument,
   };
 }

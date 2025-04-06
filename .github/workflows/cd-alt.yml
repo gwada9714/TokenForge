@@ -22,35 +22,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build
         run: npm run build
         env:
           VITE_API_URL: ${{ env.STAGING_API_URL }}
           VITE_BLOCKCHAIN_NETWORK: ${{ env.STAGING_BLOCKCHAIN_NETWORK }}
-      
+
       # Alternative approach using environment files
       - name: Create AWS credentials file
         run: |
           echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
           echo "AWS_REGION=${{ env.AWS_REGION }}" >> $GITHUB_ENV
-      
+
       - name: Deploy to S3
         run: aws s3 sync dist/ s3://${{ env.STAGING_S3_BUCKET }} --delete
-      
+
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id ${{ env.STAGING_CLOUDFRONT_ID }} --paths "/*"
-      
+
       - name: Notify deployment
         if: env.SLACK_WEBHOOK_URL != ''
         run: |

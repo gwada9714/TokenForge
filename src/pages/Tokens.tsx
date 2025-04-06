@@ -1,7 +1,7 @@
 // src/pages/Tokens.tsx
-import React from 'react';
-import { useTokens } from '../hooks/useTokens';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { useTokens } from "../hooks/useTokens";
+import { Link } from "react-router-dom";
 
 interface Token {
   address: string;
@@ -51,11 +51,11 @@ const Tokens = () => {
           Créer un Token
         </Link>
       </div>
-      
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {tokens.map((token: Token) => (
-          <Link 
-            key={token.address} 
+          <Link
+            key={token.address}
             to={`/tokens/${token.address}`}
             className="card hover:shadow-lg transition-shadow"
           >

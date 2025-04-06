@@ -1,31 +1,31 @@
-import React from 'react';
-import { render as rtlRender } from '@testing-library/react';
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
-import { StyledEngineProvider } from '@mui/material/styles';
-import { testTheme } from './test-theme';
-import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import tokenCreationReducer from '../store/slices/tokenCreationSlice';
-import uiReducer from '../store/slices/uiSlice';
-import walletReducer from '../store/slices/walletSlice';
-import analyticsReducer from '../store/slices/analyticsSlice';
-import userTokensReducer from '../store/slices/userTokensSlice';
-import authReducer from '../store/slices/authSlice';
-import { vi } from 'vitest';
+import React from "react";
+import { render as rtlRender } from "@testing-library/react";
+import { ThemeProvider } from "@mui/material/styles";
+import { CssBaseline } from "@mui/material";
+import { StyledEngineProvider } from "@mui/material/styles";
+import { testTheme } from "./test-theme";
+import { BrowserRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import tokenCreationReducer from "../store/slices/tokenCreationSlice";
+import uiReducer from "../store/slices/uiSlice";
+import walletReducer from "../store/slices/walletSlice";
+import analyticsReducer from "../store/slices/analyticsSlice";
+import userTokensReducer from "../store/slices/userTokensSlice";
+import authReducer from "../store/slices/authSlice";
+import { vi } from "vitest";
 
 // Mock WagmiProvider
-vi.mock('wagmi', () => ({
+vi.mock("wagmi", () => ({
   WagmiConfig: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useAccount: () => ({
-    address: '0x123',
-    isConnected: true
+    address: "0x123",
+    isConnected: true,
   }),
   useNetwork: () => ({
-    chain: { id: 11155111, name: 'Sepolia' }
-  })
+    chain: { id: 11155111, name: "Sepolia" },
+  }),
 }));
 
 // Create a client
@@ -75,15 +75,13 @@ function render(
 export const renderWithProviders = (ui: React.ReactElement) => {
   return render(
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        {ui}
-      </BrowserRouter>
+      <BrowserRouter>{ui}</BrowserRouter>
     </QueryClientProvider>
   );
 };
 
 // re-export everything
-export * from '@testing-library/react';
+export * from "@testing-library/react";
 
 // override render method
 export { render };

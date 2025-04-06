@@ -1,5 +1,5 @@
-import { ethers, ContractTransaction } from 'ethers';
-import { type Address } from 'viem';
+import { ethers, ContractTransaction } from "ethers";
+import { type Address } from "viem";
 
 export interface TokenContractMethods {
   transfer: (to: string, amount: bigint) => Promise<ContractTransaction>;
@@ -48,19 +48,19 @@ export interface TokenData extends TokenConfig {
   burned: boolean;
 }
 
-export type TokenForgeWriteFunction = 
-  | 'renounceOwnership'
-  | 'transferOwnership'
-  | 'addAlertRule'
-  | 'toggleAlertRule'
-  | 'deleteAlertRule'
-  | 'purgeAuditLogs';
+export type TokenForgeWriteFunction =
+  | "renounceOwnership"
+  | "transferOwnership"
+  | "addAlertRule"
+  | "toggleAlertRule"
+  | "deleteAlertRule"
+  | "purgeAuditLogs";
 
 export type TokenForgeReadFunction =
-  | 'paused'
-  | 'owner'
-  | 'getAlertRules'
-  | 'getAuditLogs';
+  | "paused"
+  | "owner"
+  | "getAlertRules"
+  | "getAuditLogs";
 
 export interface TokenForgeReadFunctionReturns {
   paused: boolean;
@@ -69,8 +69,8 @@ export interface TokenForgeReadFunctionReturns {
   getAuditLogs: AuditLog[];
 }
 
-export type LogLevel = 'error' | 'warning' | 'info' | 'debug';
-export type LogCategory = 'contract' | 'ownership' | 'alerts' | 'system';
+export type LogLevel = "error" | "warning" | "info" | "debug";
+export type LogCategory = "contract" | "ownership" | "alerts" | "system";
 
 export interface AuditLog {
   id: string;
@@ -92,7 +92,10 @@ export interface AlertRule {
 
 export interface TokenForgeAdminMethods {
   getAlertRules: () => Promise<AlertRule[]>;
-  addAlertRule: (name: string, condition: string) => Promise<ContractTransaction>;
+  addAlertRule: (
+    name: string,
+    condition: string
+  ) => Promise<ContractTransaction>;
   toggleAlertRule: (id: string) => Promise<ContractTransaction>;
   deleteAlertRule: (id: string) => Promise<ContractTransaction>;
   getAuditLogs: () => Promise<AuditLog[]>;

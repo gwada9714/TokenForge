@@ -18,46 +18,48 @@ const config = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
-      }
-    }
+        runs: 200,
+      },
+    },
   },
   paths: {
     root: "..",
     sources: "./contracts",
     tests: "./src/__tests__/contracts",
     cache: "./hardhat/cache",
-    artifacts: "./hardhat/artifacts"
+    artifacts: "./hardhat/artifacts",
   },
   networks: {
     hardhat: {
-      chainId: 1337
+      chainId: 1337,
     },
-    ...(SEPOLIA_RPC_URL && PRIVATE_KEY ? {
-      sepolia: {
-        url: SEPOLIA_RPC_URL,
-        accounts: [PRIVATE_KEY],
-        chainId: 11155111
-      }
-    } : {})
+    ...(SEPOLIA_RPC_URL && PRIVATE_KEY
+      ? {
+          sepolia: {
+            url: SEPOLIA_RPC_URL,
+            accounts: [PRIVATE_KEY],
+            chainId: 11155111,
+          },
+        }
+      : {}),
   },
   mocha: {
     timeout: 40000,
     require: ["ts-node/register"],
-    extension: [".ts"]
+    extension: [".ts"],
   },
   typechain: {
     outDir: "typechain-types",
-    target: "ethers-v6"
+    target: "ethers-v6",
   },
   gasReporter: {
     enabled: true,
     currency: "USD",
-    coinmarketcap: COINMARKETCAP_API_KEY
+    coinmarketcap: COINMARKETCAP_API_KEY,
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY
-  }
+    apiKey: ETHERSCAN_API_KEY,
+  },
 };
 
 module.exports = config;

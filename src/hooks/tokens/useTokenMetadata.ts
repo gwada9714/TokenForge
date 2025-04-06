@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import { usePublicClient } from 'wagmi';
-import { TokenContract } from '@/providers/contract/ContractProvider';
-import { erc20Abi } from '@/contracts/abis/erc20';
+import { useCallback, useEffect, useState } from "react";
+import { usePublicClient } from "wagmi";
+import { TokenContract } from "@/providers/contract/ContractProvider";
+import { erc20Abi } from "@/contracts/abis/erc20";
 
 interface TokenMetadata {
   name: string;
@@ -15,8 +15,8 @@ interface TokenMetadata {
 export const useTokenMetadata = (token?: TokenContract) => {
   const publicClient = usePublicClient();
   const [metadata, setMetadata] = useState<TokenMetadata>({
-    name: '',
-    symbol: '',
+    name: "",
+    symbol: "",
     decimals: 18,
     totalSupply: 0n,
     loading: false,
@@ -28,29 +28,29 @@ export const useTokenMetadata = (token?: TokenContract) => {
       return;
     }
 
-    setMetadata(prev => ({ ...prev, loading: true, error: null }));
+    setMetadata((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       const [name, symbol, decimals, totalSupply] = await Promise.all([
         publicClient.readContract({
           address: token.address,
           abi: erc20Abi,
-          functionName: 'name',
+          functionName: "name",
         }),
         publicClient.readContract({
           address: token.address,
           abi: erc20Abi,
-          functionName: 'symbol',
+          functionName: "symbol",
         }),
         publicClient.readContract({
           address: token.address,
           abi: erc20Abi,
-          functionName: 'decimals',
+          functionName: "decimals",
         }),
         publicClient.readContract({
           address: token.address,
           abi: erc20Abi,
-          functionName: 'totalSupply',
+          functionName: "totalSupply",
         }),
       ]);
 
@@ -63,10 +63,13 @@ export const useTokenMetadata = (token?: TokenContract) => {
         error: null,
       });
     } catch (error) {
-      setMetadata(prev => ({
+      setMetadata((prev) => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error : new Error('Failed to fetch metadata'),
+        error:
+          error instanceof Error
+            ? error
+            : new Error("Failed to fetch metadata"),
       }));
     }
   }, [token, publicClient]);

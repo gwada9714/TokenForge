@@ -1,4 +1,4 @@
-import { keyframes } from 'styled-components';
+import { keyframes } from "styled-components";
 
 // Animation de forge incandescente
 export const forgeGlow = keyframes`

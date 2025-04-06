@@ -1,15 +1,15 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Container, Grid } from '@mui/material';
-import { motion } from 'framer-motion';
-import SecurityIcon from '@mui/icons-material/Security';
-import LockIcon from '@mui/icons-material/Lock';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import CodeIcon from '@mui/icons-material/Code';
-import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
-import GroupsIcon from '@mui/icons-material/Groups';
-import SecurityFeature from '../common/SecurityFeature';
-import { ForgeHeading } from '../common/ForgeHeading';
+import React from "react";
+import styled from "styled-components";
+import { Container, Grid } from "@mui/material";
+import { motion } from "framer-motion";
+import SecurityIcon from "@mui/icons-material/Security";
+import LockIcon from "@mui/icons-material/Lock";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import CodeIcon from "@mui/icons-material/Code";
+import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
+import GroupsIcon from "@mui/icons-material/Groups";
+import SecurityFeature from "../common/SecurityFeature";
+import { ForgeHeading } from "../common/ForgeHeading";
 
 const SecuritySection: React.FC = () => {
   const containerVariants = {
@@ -18,53 +18,55 @@ const SecuritySection: React.FC = () => {
       opacity: 1,
       transition: {
         duration: 0.6,
-        staggerChildren: 0.2
-      }
-    }
+        staggerChildren: 0.2,
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   const securityFeatures = [
     {
       icon: <VerifiedUserIcon sx={{ fontSize: 40 }} />,
       title: "Audits de Sécurité",
-      description: "Audité par CertiK et Hacken pour garantir la sécurité maximale",
-      link: "/audit-reports"
+      description:
+        "Audité par CertiK et Hacken pour garantir la sécurité maximale",
+      link: "/audit-reports",
     },
     {
       icon: <LockIcon sx={{ fontSize: 40 }} />,
       title: "Verrouillage de Liquidité",
       description: "Liquidité verrouillée pendant 2 ans sur Unicrypt",
-      link: "/liquidity-lock"
+      link: "/liquidity-lock",
     },
     {
       icon: <SecurityIcon sx={{ fontSize: 40 }} />,
       title: "Multi-Signature",
-      description: "Gouvernance sécurisée par un système multi-signature Gnosis Safe",
-      link: "/multi-sig"
+      description:
+        "Gouvernance sécurisée par un système multi-signature Gnosis Safe",
+      link: "/multi-sig",
     },
     {
       icon: <CodeIcon sx={{ fontSize: 40 }} />,
       title: "Code Open Source",
       description: "Code entièrement vérifié et accessible sur GitHub",
-      link: "https://github.com/tokenforge"
+      link: "https://github.com/tokenforge",
     },
     {
       icon: <MonitorHeartIcon sx={{ fontSize: 40 }} />,
       title: "Monitoring 24/7",
       description: "Surveillance continue des contrats et des transactions",
-      link: "/monitoring"
+      link: "/monitoring",
     },
     {
       icon: <GroupsIcon sx={{ fontSize: 40 }} />,
       title: "Équipe KYC Vérifiée",
       description: "Identité de l'équipe vérifiée par Assure DeFi",
-      link: "/team-verification"
-    }
+      link: "/team-verification",
+    },
   ];
 
   return (
@@ -86,7 +88,8 @@ const SecuritySection: React.FC = () => {
               Sécurité & <span className="text-secondary">Transparence</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Notre priorité absolue est la sécurité de vos actifs. Découvrez les mesures mises en place pour protéger la plateforme.
+              Notre priorité absolue est la sécurité de vos actifs. Découvrez
+              les mesures mises en place pour protéger la plateforme.
             </p>
           </motion.div>
 
@@ -105,9 +108,7 @@ const SecuritySection: React.FC = () => {
                     <h3 className="text-xl font-heading font-bold text-primary mb-3">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 mb-4">
-                      {feature.description}
-                    </p>
+                    <p className="text-gray-600 mb-4">{feature.description}</p>
                     <motion.a
                       href={feature.link}
                       className="text-secondary hover:text-secondary-light font-medium inline-flex items-center transition-colors duration-300"
@@ -145,9 +146,21 @@ const SecuritySection: React.FC = () => {
               </h3>
               <div className="flex flex-wrap justify-center items-center gap-8">
                 {/* Logos des partenaires de sécurité */}
-                <img src="/certik-logo.svg" alt="CertiK" className="h-12 opacity-90 hover:opacity-100 transition-opacity" />
-                <img src="/hacken-logo.svg" alt="Hacken" className="h-12 opacity-90 hover:opacity-100 transition-opacity" />
-                <img src="/assure-logo.svg" alt="Assure DeFi" className="h-12 opacity-90 hover:opacity-100 transition-opacity" />
+                <img
+                  src="/certik-logo.svg"
+                  alt="CertiK"
+                  className="h-12 opacity-90 hover:opacity-100 transition-opacity"
+                />
+                <img
+                  src="/hacken-logo.svg"
+                  alt="Hacken"
+                  className="h-12 opacity-90 hover:opacity-100 transition-opacity"
+                />
+                <img
+                  src="/assure-logo.svg"
+                  alt="Assure DeFi"
+                  className="h-12 opacity-90 hover:opacity-100 transition-opacity"
+                />
               </div>
             </div>
           </motion.div>

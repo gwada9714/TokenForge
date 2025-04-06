@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Address, Hash } from 'viem';
-import { sepolia } from 'viem/chains';
-import { useNetworkManagement } from '@/hooks/useNetworkManagement';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Address, Hash } from "viem";
+import { sepolia } from "viem/chains";
+import { useNetworkManagement } from "@/hooks/useNetworkManagement";
 
 export interface TokenContract {
   address: Address;
@@ -12,7 +12,7 @@ export interface TokenContract {
   owner: Address;
   chainId: number;
   createdAt: number;
-  type: 'ERC20' | 'ERC721' | 'ERC1155';
+  type: "ERC20" | "ERC721" | "ERC1155";
   metadata?: {
     description?: string;
     image?: string;
@@ -28,31 +28,40 @@ interface ContractContextType {
   updateContract: (address: Address, updates: Partial<TokenContract>) => void;
   deploymentStatus: {
     [key: string]: {
-      status: 'pending' | 'success' | 'error';
+      status: "pending" | "success" | "error";
       hash?: Hash;
       error?: string;
     };
   };
-  setDeploymentStatus: (address: string, status: ContractContextType['deploymentStatus'][string]) => void;
+  setDeploymentStatus: (
+    address: string,
+    status: ContractContextType["deploymentStatus"][string]
+  ) => void;
 }
 
-const ContractContext = createContext<ContractContextType | undefined>(undefined);
+const ContractContext = createContext<ContractContextType | undefined>(
+  undefined
+);
 
-export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [contracts, setContracts] = useState<TokenContract[]>([]);
-  const [deploymentStatus, setDeploymentStatus] = useState<ContractContextType['deploymentStatus']>({});
+  const [deploymentStatus, setDeploymentStatus] = useState<
+    ContractContextType["deploymentStatus"]
+  >({});
   const { currentChainId } = useNetworkManagement(sepolia);
 
   // Charger les contrats depuis le stockage local au démarrage
   useEffect(() => {
     const loadContracts = () => {
-      const savedContracts = localStorage.getItem('tokenforge_contracts');
+      const savedContracts = localStorage.getItem("tokenforge_contracts");
       if (savedContracts) {
         try {
           const parsed = JSON.parse(savedContracts);
           setContracts(parsed);
         } catch (error) {
-          console.error('Failed to load contracts from storage:', error);
+          console.error("Failed to load contracts from storage:", error);
         }
       }
     };
@@ -62,7 +71,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Sauvegarder les contrats dans le stockage local à chaque modification
   useEffect(() => {
-    localStorage.setItem('tokenforge_contracts', JSON.stringify(contracts));
+    localStorage.setItem("tokenforge_contracts", JSON.stringify(contracts));
   }, [contracts]);
 
   // Réinitialiser le statut de déploiement lors du changement de réseau
@@ -73,28 +82,34 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [currentChainId]);
 
   const addContract = (contract: TokenContract) => {
-    setContracts(prev => [...prev, contract]);
+    setContracts((prev) => [...prev, contract]);
   };
 
   const removeContract = (address: Address) => {
-    setContracts(prev => prev.filter(c => c.address !== address));
+    setContracts((prev) => prev.filter((c) => c.address !== address));
     const newStatus = { ...deploymentStatus };
     delete newStatus[address];
     setDeploymentStatus(newStatus);
   };
 
   const getContract = (address: Address) => {
-    return contracts.find(c => c.address === address);
+    return contracts.find((c) => c.address === address);
   };
 
-  const updateContract = (address: Address, updates: Partial<TokenContract>) => {
-    setContracts(prev => prev.map(c => 
-      c.address === address ? { ...c, ...updates } : c
-    ));
+  const updateContract = (
+    address: Address,
+    updates: Partial<TokenContract>
+  ) => {
+    setContracts((prev) =>
+      prev.map((c) => (c.address === address ? { ...c, ...updates } : c))
+    );
   };
 
-  const handleSetDeploymentStatus = (address: string, status: ContractContextType['deploymentStatus'][string]) => {
-    setDeploymentStatus(prev => ({
+  const handleSetDeploymentStatus = (
+    address: string,
+    status: ContractContextType["deploymentStatus"][string]
+  ) => {
+    setDeploymentStatus((prev) => ({
       ...prev,
       [address]: status,
     }));
@@ -120,7 +135,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 export const useContract = () => {
   const context = useContext(ContractContext);
   if (context === undefined) {
-    throw new Error('useContract must be used within a ContractProvider');
+    throw new Error("useContract must be used within a ContractProvider");
   }
   return context;
 };

@@ -1,9 +1,23 @@
-import { BlockchainService } from '../services/BlockchainService';
-import { IPaymentService } from '../interfaces/IPaymentService';
-import { ITokenService } from '../interfaces/ITokenService';
-import { TokenConfig, DeploymentResult, TokenInfo, ValidationResult, LiquidityConfig } from '../types';
-import { parseEther } from 'viem';
-import { PaymentInitParams, PaymentSession, PaymentStatus, LegacyPaymentStatus, CryptocurrencyInfo, FeeEstimate, CryptoAmount } from '../types/payment';
+import { BlockchainService } from "../services/BlockchainService";
+import { IPaymentService } from "../interfaces/IPaymentService";
+import { ITokenService } from "../interfaces/ITokenService";
+import {
+  TokenConfig,
+  DeploymentResult,
+  TokenInfo,
+  ValidationResult,
+  LiquidityConfig,
+} from "../types";
+import { parseEther } from "viem";
+import {
+  PaymentInitParams,
+  PaymentSession,
+  PaymentStatus,
+  LegacyPaymentStatus,
+  CryptocurrencyInfo,
+  FeeEstimate,
+  CryptoAmount,
+} from "../types/payment";
 
 /**
  * Service blockchain spécifique à Ethereum
@@ -11,7 +25,7 @@ import { PaymentInitParams, PaymentSession, PaymentStatus, LegacyPaymentStatus, 
  */
 export class EthereumBlockchainService extends BlockchainService {
   constructor(walletProvider?: any) {
-    super('ethereum', walletProvider);
+    super("ethereum", walletProvider);
   }
 
   // Méthodes spécifiques à Ethereum si nécessaire
@@ -36,27 +50,28 @@ export class EthereumPaymentService implements IPaymentService {
     // Implémentation de base
     return {
       sessionId: `eth-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      receivingAddress: '0x1234567890123456789012345678901234567890',
+      receivingAddress: "0x1234567890123456789012345678901234567890",
       amountDue: {
         amount: params.amount.toString(),
         formatted: `${params.amount} ETH`,
-        valueEUR: params.amount * 2000 // Taux de conversion fictif
+        valueEUR: params.amount * 2000, // Taux de conversion fictif
       },
       currency: {
-        symbol: 'ETH',
+        symbol: "ETH",
         address: null,
-        name: 'Ethereum',
+        name: "Ethereum",
         decimals: 18,
         isNative: true,
         isStablecoin: false,
-        logoUrl: 'https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/13c43/eth-diamond-black.png',
-        minAmount: 0.001
+        logoUrl:
+          "https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/13c43/eth-diamond-black.png",
+        minAmount: 0.001,
       },
       exchangeRate: 2000, // 1 ETH = 2000 EUR
       expiresAt: Math.floor(Date.now() / 1000) + 3600, // Expire dans 1 heure (timestamp Unix)
       chainId: 1, // Ethereum Mainnet
       status: PaymentStatus.PENDING,
-      minConfirmations: 12
+      minConfirmations: 12,
     };
   }
 
@@ -74,53 +89,63 @@ export class EthereumPaymentService implements IPaymentService {
     // Liste des cryptomonnaies supportées
     return [
       {
-        symbol: 'ETH',
-        name: 'Ethereum',
+        symbol: "ETH",
+        name: "Ethereum",
         decimals: 18,
         address: null, // ETH natif
-        logoUrl: 'https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/13c43/eth-diamond-black.png',
+        logoUrl:
+          "https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/13c43/eth-diamond-black.png",
         isNative: true,
         isStablecoin: false,
-        minAmount: 0.001
-      }
+        minAmount: 0.001,
+      },
     ];
   }
 
-  async estimateTransactionFees(_amount: number, _currencyAddress: string | null): Promise<FeeEstimate> {
+  async estimateTransactionFees(
+    _amount: number,
+    _currencyAddress: string | null
+  ): Promise<FeeEstimate> {
     // Estimation des frais
     const gasPrice = await this.blockchainService.getGasPrice();
     const gasPriceGwei = Number(gasPrice) / 1e9;
-    const baseFee = gasPriceGwei * 21000 / 1e9;
+    const baseFee = (gasPriceGwei * 21000) / 1e9;
 
     return {
       baseFee: {
         amount: baseFee.toString(),
         formatted: `${baseFee.toFixed(6)} ETH`,
-        valueEUR: baseFee * 2000 // Taux de conversion fictif
+        valueEUR: baseFee * 2000, // Taux de conversion fictif
       },
       maxFee: {
         amount: (baseFee * 1.2).toString(),
         formatted: `${(baseFee * 1.2).toFixed(6)} ETH`,
-        valueEUR: baseFee * 1.2 * 2000 // Taux de conversion fictif
+        valueEUR: baseFee * 1.2 * 2000, // Taux de conversion fictif
       },
-      estimatedTimeSeconds: 60 // 1 minute
+      estimatedTimeSeconds: 60, // 1 minute
     };
   }
 
-  async convertEURtoCrypto(amountEUR: number, currencySymbol: string): Promise<CryptoAmount> {
+  async convertEURtoCrypto(
+    amountEUR: number,
+    currencySymbol: string
+  ): Promise<CryptoAmount> {
     // Conversion simple (à remplacer par une API de prix réelle)
-    const rate = currencySymbol === 'ETH' ? 2000 : 1; // 1 ETH = 2000 EUR
+    const rate = currencySymbol === "ETH" ? 2000 : 1; // 1 ETH = 2000 EUR
     const amount = amountEUR / rate;
 
     return {
       amount: amount.toString(),
       formatted: `${amount.toFixed(6)} ${currencySymbol}`,
-      valueEUR: amountEUR
+      valueEUR: amountEUR,
     };
   }
 
   // Méthodes de l'ancienne API
-  async createPaymentSession(_amount: bigint, _currency: string): Promise<string> {
+  async createPaymentSession(
+    _amount: bigint,
+    _currency: string
+  ): Promise<string> {
     // Implémentation pour Ethereum
     // Génère un identifiant de session et stocke les détails de paiement
     const sessionId = `eth-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -130,7 +155,7 @@ export class EthereumPaymentService implements IPaymentService {
 
   async getPaymentStatus(sessionId: string): Promise<LegacyPaymentStatus> {
     // Vérifie le statut du paiement
-    return { status: 'pending', details: { sessionId } };
+    return { status: "pending", details: { sessionId } };
   }
 
   async verifyPayment(transactionHash: string): Promise<boolean> {
@@ -151,7 +176,7 @@ export class EthereumPaymentService implements IPaymentService {
     // Calcul des frais basé sur le gas actuel
     const gasPrice = await this.blockchainService.getGasPrice();
     // Estimation basique, à affiner selon les besoins réels
-    return (gasPrice * 21000n); // coût de base d'une transaction simple
+    return gasPrice * 21000n; // coût de base d'une transaction simple
   }
 }
 
@@ -174,13 +199,13 @@ export class EthereumTokenService implements ITokenService {
     const { walletClient } = this.blockchainService.getProvider();
 
     if (!walletClient) {
-      throw new Error('Wallet client not available for deployment');
+      throw new Error("Wallet client not available for deployment");
     }
 
     // Récupérer l'adresse du compte
     const accounts = await walletClient.getAddresses();
     if (!accounts || accounts.length === 0) {
-      throw new Error('No accounts available in wallet');
+      throw new Error("No accounts available in wallet");
     }
 
     // Exemple simplifié - à adapter selon la structure réelle du contrat
@@ -191,14 +216,14 @@ export class EthereumTokenService implements ITokenService {
         tokenConfig.name,
         tokenConfig.symbol,
         tokenConfig.decimals,
-        parseEther(tokenConfig.initialSupply.toString())
+        parseEther(tokenConfig.initialSupply.toString()),
       ],
-      bytecode: '0x60806040...' // Bytecode du contrat (à remplacer par le vrai bytecode)
+      bytecode: "0x60806040...", // Bytecode du contrat (à remplacer par le vrai bytecode)
     });
 
     return {
       transactionHash: hash,
-      tokenAddress: '', // À récupérer après confirmation
+      tokenAddress: "", // À récupérer après confirmation
       chainId: await this.blockchainService.getNetworkId(),
     };
   }
@@ -206,8 +231,8 @@ export class EthereumTokenService implements ITokenService {
   async getTokenInfo(_tokenAddress: string): Promise<TokenInfo> {
     // Récupérer les informations d'un token déployé
     return {
-      name: '',
-      symbol: '',
+      name: "",
+      symbol: "",
       totalSupply: 0n,
       decimals: 18,
       // Autres informations...
@@ -224,23 +249,34 @@ export class EthereumTokenService implements ITokenService {
     // Validation de la configuration du token selon les règles Ethereum
     const errors = [];
 
-    if (!tokenConfig.name || tokenConfig.name.length < 1 || tokenConfig.name.length > 50) {
-      errors.push('Token name must be between 1 and 50 characters');
+    if (
+      !tokenConfig.name ||
+      tokenConfig.name.length < 1 ||
+      tokenConfig.name.length > 50
+    ) {
+      errors.push("Token name must be between 1 and 50 characters");
     }
 
-    if (!tokenConfig.symbol || tokenConfig.symbol.length < 1 || tokenConfig.symbol.length > 10) {
-      errors.push('Token symbol must be between 1 and 10 characters');
+    if (
+      !tokenConfig.symbol ||
+      tokenConfig.symbol.length < 1 ||
+      tokenConfig.symbol.length > 10
+    ) {
+      errors.push("Token symbol must be between 1 and 10 characters");
     }
 
     // Ajoutez d'autres validations spécifiques à Ethereum
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
-  async setupAutoLiquidity(_tokenAddress: string, _config: LiquidityConfig): Promise<boolean> {
+  async setupAutoLiquidity(
+    _tokenAddress: string,
+    _config: LiquidityConfig
+  ): Promise<boolean> {
     // Configuration de la liquidité automatique
     // Implémentation à définir
     return true;

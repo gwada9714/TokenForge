@@ -1,23 +1,23 @@
-import { BaseService } from '@/core/services/BaseService';
-import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, getAuth } from 'firebase/auth';
-import { firebaseConfig } from '@/config/firebase/index';
+import { BaseService } from "@/core/services/BaseService";
+import { FirebaseApp, initializeApp } from "firebase/app";
+import { Auth, getAuth } from "firebase/auth";
+import { firebaseConfig } from "@/config/firebase/index";
 
 export class FirebaseService extends BaseService {
   private app: FirebaseApp | null = null;
   private auth: Auth | null = null;
 
   constructor() {
-    super('FirebaseService');
+    super("FirebaseService");
   }
 
   async initialize(): Promise<void> {
     try {
       this.app = initializeApp(firebaseConfig);
       this.auth = getAuth(this.app);
-      this.log('Firebase initialized successfully');
+      this.log("Firebase initialized successfully");
     } catch (error) {
-      this.logError('Firebase initialization failed', error as Error);
+      this.logError("Firebase initialization failed", error as Error);
       throw error;
     }
   }
@@ -30,7 +30,7 @@ export class FirebaseService extends BaseService {
 
   getAuth(): Auth {
     if (!this.auth) {
-      throw new Error('Firebase Auth not initialized');
+      throw new Error("Firebase Auth not initialized");
     }
     return this.auth;
   }

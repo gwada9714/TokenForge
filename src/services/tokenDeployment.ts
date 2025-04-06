@@ -10,7 +10,7 @@ export async function deployToken(
   baseConfig: TokenBaseConfig,
   advancedConfig: TokenAdvancedConfig,
   walletClient: WalletClient,
-  publicClient: PublicClient,
+  publicClient: PublicClient
 ): Promise<TokenDeploymentStatus> {
   try {
     const factoryAddress = process.env.VITE_TOKEN_FACTORY_ADDRESS;
@@ -22,7 +22,7 @@ export async function deployToken(
 
     const initialSupply = parseUnits(
       baseConfig.initialSupply.toString(),
-      baseConfig.decimals,
+      baseConfig.decimals
     );
 
     const account = await walletClient

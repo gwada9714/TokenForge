@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardContent,
@@ -7,8 +7,8 @@ import {
   Button,
   Chip,
   Box,
-} from '@mui/material';
-import type { MarketplaceItem as MarketplaceItemType } from '../types';
+} from "@mui/material";
+import type { MarketplaceItem as MarketplaceItemType } from "../types";
 
 interface MarketplaceItemProps {
   item: MarketplaceItemType;
@@ -16,22 +16,27 @@ interface MarketplaceItemProps {
 
 export const MarketplaceItem: React.FC<MarketplaceItemProps> = ({ item }) => {
   const statusColors = {
-    active: 'success',
-    sold: 'error',
-    cancelled: 'default',
+    active: "success",
+    sold: "error",
+    cancelled: "default",
   };
 
   return (
     <Card>
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+        >
           <Typography variant="h6" component="div">
             {item.name}
           </Typography>
           <Chip
             data-testid="status-chip"
             label={item.status}
-            color={statusColors[item.status] as 'success' | 'error' | 'default'}
+            color={statusColors[item.status] as "success" | "error" | "default"}
             size="small"
           />
         </Box>
@@ -49,7 +54,12 @@ export const MarketplaceItem: React.FC<MarketplaceItemProps> = ({ item }) => {
           </Typography>
         </Box>
 
-        <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          display="block"
+          mt={1}
+        >
           Vendeur: {item.seller}
         </Typography>
       </CardContent>
@@ -60,7 +70,7 @@ export const MarketplaceItem: React.FC<MarketplaceItemProps> = ({ item }) => {
           color="primary"
           variant="contained"
           fullWidth
-          disabled={item.status !== 'active'}
+          disabled={item.status !== "active"}
         >
           Acheter
         </Button>

@@ -1,12 +1,12 @@
-import { configureStore } from '@reduxjs/toolkit';
-import tokenCreationReducer from './slices/tokenCreationSlice';
-import uiReducer from './slices/uiSlice';
-import walletReducer from './slices/walletSlice';
-import analyticsReducer from './slices/analyticsSlice';
-import userTokensReducer from './slices/userTokensSlice';
-import authReducer from './slices/authSlice';
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { authMiddleware } from './middleware/authMiddleware';
+import { configureStore } from "@reduxjs/toolkit";
+import tokenCreationReducer from "./slices/tokenCreationSlice";
+import uiReducer from "./slices/uiSlice";
+import walletReducer from "./slices/walletSlice";
+import analyticsReducer from "./slices/analyticsSlice";
+import userTokensReducer from "./slices/userTokensSlice";
+import authReducer from "./slices/authSlice";
+import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { authMiddleware } from "./middleware/authMiddleware";
 
 export const store = configureStore({
   reducer: {
@@ -15,19 +15,19 @@ export const store = configureStore({
     wallet: walletReducer,
     analytics: analyticsReducer,
     userTokens: userTokensReducer,
-    auth: authReducer
+    auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [
-          'tokenCreation/updateTokenConfig',
-          'wagmi/account/connect',
-          'wagmi/account/disconnect'
+          "tokenCreation/updateTokenConfig",
+          "wagmi/account/connect",
+          "wagmi/account/disconnect",
         ],
-        ignoredPaths: ['tokenCreation.tokenConfig.liquidityLock.unlockDate']
-      }
-    }).concat(authMiddleware)
+        ignoredPaths: ["tokenCreation.tokenConfig.liquidityLock.unlockDate"],
+      },
+    }).concat(authMiddleware),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

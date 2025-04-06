@@ -1,8 +1,8 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Container, Text } from './common/styles';
-import { APP_NAME } from '@/config/constants';
-import { COLORS, SPACING } from '@/config/constants/theme';
+import React from "react";
+import styled from "styled-components";
+import { Container, Text } from "./common/styles";
+import { APP_NAME } from "@/config/constants";
+import { COLORS, SPACING } from "@/config/constants/theme";
 
 const FooterContainer = styled.footer`
   background-color: ${COLORS.background.primary};
@@ -55,4 +55,4 @@ export function Footer() {
       </FooterContent>
     </FooterContainer>
   );
-} 
+}

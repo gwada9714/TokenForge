@@ -1,7 +1,7 @@
 /**
  * Crée une version debounced d'une fonction qui retarde son exécution
  * jusqu'à ce que le temps spécifié se soit écoulé depuis le dernier appel.
- * 
+ *
  * @param func - La fonction à debounce
  * @param wait - Le nombre de millisecondes à attendre
  * @returns Une version debounced de la fonction
@@ -29,7 +29,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Crée une version throttled d'une fonction qui ne s'exécute qu'une fois
  * pendant le délai spécifié, peu importe combien de fois elle est appelée.
- * 
+ *
  * @param func - La fonction à throttle
  * @param limit - Le nombre de millisecondes minimum entre les appels
  * @returns Une version throttled de la fonction
@@ -63,16 +63,16 @@ export function throttle<T extends (...args: any[]) => any>(
 
 /**
  * Retarde l'exécution d'une fonction d'un nombre spécifié de millisecondes
- * 
+ *
  * @param ms - Le nombre de millisecondes à attendre
  * @returns Une promesse qui se résout après le délai spécifié
  */
-export const delay = (ms: number): Promise<void> => 
-  new Promise(resolve => setTimeout(resolve, ms));
+export const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Regroupe plusieurs appels à une fonction asynchrone et retourne le résultat une fois que tous sont terminés
- * 
+ *
  * @param func - La fonction à regrouper
  * @param wait - Le temps d'attente avant d'exécuter le groupe
  * @returns Une fonction qui regroupe les appels
@@ -100,11 +100,11 @@ export function batch<T extends (...args: any[]) => Promise<any>>(
 
           try {
             const results = await Promise.all(
-              currentBatch.map(item => func.apply(null, item.args))
+              currentBatch.map((item) => func.apply(null, item.args))
             );
             currentBatch.forEach((item, index) => item.resolve(results[index]));
           } catch (error) {
-            currentBatch.forEach(item => item.reject(error));
+            currentBatch.forEach((item) => item.reject(error));
           }
         }, wait);
       }

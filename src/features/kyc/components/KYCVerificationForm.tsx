@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -19,16 +19,16 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  CardActions
-} from '@mui/material';
-import { useAuth } from '@/hooks/useAuth';
+  CardActions,
+} from "@mui/material";
+import { useAuth } from "@/hooks/useAuth";
 
 interface KYCFormData {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
   nationality: string;
-  documentType: 'passport' | 'id_card' | 'driving_license';
+  documentType: "passport" | "id_card" | "driving_license";
   documentNumber: string;
   documentExpiry: string;
   residenceAddress: string;
@@ -37,120 +37,137 @@ interface KYCFormData {
   country: string;
 }
 
-const steps = ['Informations personnelles', 'Document d\'identité', 'Adresse de résidence', 'Vérification'];
+const steps = [
+  "Informations personnelles",
+  "Document d'identité",
+  "Adresse de résidence",
+  "Vérification",
+];
 
 export const KYCVerificationForm: React.FC = () => {
-  const { /* user */ } = useAuth();
+  const {
+    /* user */
+  } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [documentFrontFile, setDocumentFrontFile] = useState<File | null>(null);
   const [documentBackFile, setDocumentBackFile] = useState<File | null>(null);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
-  const [proofOfAddressFile, setProofOfAddressFile] = useState<File | null>(null);
-  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
-  
+  const [proofOfAddressFile, setProofOfAddressFile] = useState<File | null>(
+    null
+  );
+  const [verificationStatus, setVerificationStatus] = useState<
+    "pending" | "approved" | "rejected" | null
+  >(null);
+
   const [formData, setFormData] = useState<KYCFormData>({
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    nationality: '',
-    documentType: 'passport',
-    documentNumber: '',
-    documentExpiry: '',
-    residenceAddress: '',
-    city: '',
-    postalCode: '',
-    country: ''
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    nationality: "",
+    documentType: "passport",
+    documentNumber: "",
+    documentExpiry: "",
+    residenceAddress: "",
+    city: "",
+    postalCode: "",
+    country: "",
   });
-  
+
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
   };
-  
+
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
-  
-  const handleChange = (field: keyof KYCFormData) => (
-    event: React.ChangeEvent<HTMLInputElement | { value: unknown }>
-  ) => {
-    const value = event.target.value;
-    setFormData({ ...formData, [field]: value });
-  };
-  
-  const handleFileChange = (fileType: 'front' | 'back' | 'selfie' | 'address') => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      
-      switch (fileType) {
-        case 'front':
-          setDocumentFrontFile(file);
-          break;
-        case 'back':
-          setDocumentBackFile(file);
-          break;
-        case 'selfie':
-          setSelfieFile(file);
-          break;
-        case 'address':
-          setProofOfAddressFile(file);
-          break;
+
+  const handleChange =
+    (field: keyof KYCFormData) =>
+    (event: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
+      const value = event.target.value;
+      setFormData({ ...formData, [field]: value });
+    };
+
+  const handleFileChange =
+    (fileType: "front" | "back" | "selfie" | "address") =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (event.target.files && event.target.files[0]) {
+        const file = event.target.files[0];
+
+        switch (fileType) {
+          case "front":
+            setDocumentFrontFile(file);
+            break;
+          case "back":
+            setDocumentBackFile(file);
+            break;
+          case "selfie":
+            setSelfieFile(file);
+            break;
+          case "address":
+            setProofOfAddressFile(file);
+            break;
+        }
       }
-    }
-  };
-  
+    };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
+
     try {
       // Simuler un upload de fichiers avec progression
       for (let i = 0; i <= 100; i += 10) {
         setUploadProgress(i);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
-      
+
       // Simuler une soumission à un service KYC
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Simuler une réponse
-      setVerificationStatus('pending');
+      setVerificationStatus("pending");
       setActiveStep(steps.length);
     } catch (error) {
-      console.error('Erreur lors de la vérification KYC:', error);
+      console.error("Erreur lors de la vérification KYC:", error);
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0);
     }
   };
-  
+
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 0:
-        return !!formData.firstName && 
-               !!formData.lastName && 
-               !!formData.dateOfBirth && 
-               !!formData.nationality;
+        return (
+          !!formData.firstName &&
+          !!formData.lastName &&
+          !!formData.dateOfBirth &&
+          !!formData.nationality
+        );
       case 1:
-        return !!formData.documentType && 
-               !!formData.documentNumber && 
-               !!formData.documentExpiry && 
-               !!documentFrontFile && 
-               (formData.documentType !== 'passport' ? !!documentBackFile : true) && 
-               !!selfieFile;
+        return (
+          !!formData.documentType &&
+          !!formData.documentNumber &&
+          !!formData.documentExpiry &&
+          !!documentFrontFile &&
+          (formData.documentType !== "passport" ? !!documentBackFile : true) &&
+          !!selfieFile
+        );
       case 2:
-        return !!formData.residenceAddress && 
-               !!formData.city && 
-               !!formData.postalCode && 
-               !!formData.country && 
-               !!proofOfAddressFile;
+        return (
+          !!formData.residenceAddress &&
+          !!formData.city &&
+          !!formData.postalCode &&
+          !!formData.country &&
+          !!proofOfAddressFile
+        );
       default:
         return true;
     }
   };
-  
+
   const getStepContent = (step: number) => {
     switch (step) {
       case 0:
@@ -161,30 +178,31 @@ export const KYCVerificationForm: React.FC = () => {
                 Informations personnelles
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                Veuillez fournir vos informations personnelles telles qu'elles apparaissent sur vos documents officiels.
+                Veuillez fournir vos informations personnelles telles qu'elles
+                apparaissent sur vos documents officiels.
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 required
                 fullWidth
                 label="Prénom"
                 value={formData.firstName}
-                onChange={handleChange('firstName')}
+                onChange={handleChange("firstName")}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 required
                 fullWidth
                 label="Nom"
                 value={formData.lastName}
-                onChange={handleChange('lastName')}
+                onChange={handleChange("lastName")}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 required
@@ -192,19 +210,19 @@ export const KYCVerificationForm: React.FC = () => {
                 label="Date de naissance"
                 type="date"
                 value={formData.dateOfBirth}
-                onChange={handleChange('dateOfBirth')}
+                onChange={handleChange("dateOfBirth")}
                 InputLabelProps={{
                   shrink: true,
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth required>
                 <InputLabel>Nationalité</InputLabel>
                 <Select
                   value={formData.nationality}
-                  onChange={handleChange('nationality') as any}
+                  onChange={handleChange("nationality") as any}
                   label="Nationalité"
                 >
                   <MenuItem value="FR">France</MenuItem>
@@ -219,7 +237,7 @@ export const KYCVerificationForm: React.FC = () => {
             </Grid>
           </Grid>
         );
-      
+
       case 1:
         return (
           <Grid container spacing={3}>
@@ -228,38 +246,43 @@ export const KYCVerificationForm: React.FC = () => {
                 Document d'identité
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                Veuillez fournir un document d'identité valide. Assurez-vous que le document est clairement visible et que toutes les informations sont lisibles.
+                Veuillez fournir un document d'identité valide. Assurez-vous que
+                le document est clairement visible et que toutes les
+                informations sont lisibles.
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth required>
                 <InputLabel>Type de document</InputLabel>
                 <Select
                   value={formData.documentType}
-                  onChange={handleChange('documentType') as any}
+                  onChange={handleChange("documentType") as any}
                   label="Type de document"
                 >
                   <MenuItem value="passport">Passeport</MenuItem>
                   <MenuItem value="id_card">Carte d'identité</MenuItem>
-                  <MenuItem value="driving_license">Permis de conduire</MenuItem>
+                  <MenuItem value="driving_license">
+                    Permis de conduire
+                  </MenuItem>
                 </Select>
                 <FormHelperText>
-                  Sélectionnez le type de document que vous souhaitez utiliser pour la vérification
+                  Sélectionnez le type de document que vous souhaitez utiliser
+                  pour la vérification
                 </FormHelperText>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 required
                 fullWidth
                 label="Numéro de document"
                 value={formData.documentNumber}
-                onChange={handleChange('documentNumber')}
+                onChange={handleChange("documentNumber")}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 required
@@ -267,54 +290,58 @@ export const KYCVerificationForm: React.FC = () => {
                 label="Date d'expiration"
                 type="date"
                 value={formData.documentExpiry}
-                onChange={handleChange('documentExpiry')}
+                onChange={handleChange("documentExpiry")}
                 InputLabelProps={{
                   shrink: true,
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
                 Téléchargement des documents
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <Button
                 variant="outlined"
                 component="label"
                 fullWidth
-                sx={{ height: 56, textTransform: 'none' }}
+                sx={{ height: 56, textTransform: "none" }}
               >
-                {documentFrontFile ? documentFrontFile.name : "Recto du document"}
+                {documentFrontFile
+                  ? documentFrontFile.name
+                  : "Recto du document"}
                 <input
                   type="file"
                   hidden
                   accept="image/*"
-                  onChange={handleFileChange('front')}
+                  onChange={handleFileChange("front")}
                 />
               </Button>
               <FormHelperText>
                 Téléchargez une photo claire du recto de votre document
               </FormHelperText>
             </Grid>
-            
-            {formData.documentType !== 'passport' && (
+
+            {formData.documentType !== "passport" && (
               <Grid item xs={12} sm={6}>
                 <Button
                   variant="outlined"
                   component="label"
                   fullWidth
-                  sx={{ height: 56, textTransform: 'none' }}
+                  sx={{ height: 56, textTransform: "none" }}
                 >
-                  {documentBackFile ? documentBackFile.name : "Verso du document"}
+                  {documentBackFile
+                    ? documentBackFile.name
+                    : "Verso du document"}
                   <input
                     type="file"
                     hidden
                     accept="image/*"
-                    onChange={handleFileChange('back')}
+                    onChange={handleFileChange("back")}
                   />
                 </Button>
                 <FormHelperText>
@@ -322,20 +349,20 @@ export const KYCVerificationForm: React.FC = () => {
                 </FormHelperText>
               </Grid>
             )}
-            
+
             <Grid item xs={12} sm={6}>
               <Button
                 variant="outlined"
                 component="label"
                 fullWidth
-                sx={{ height: 56, textTransform: 'none' }}
+                sx={{ height: 56, textTransform: "none" }}
               >
                 {selfieFile ? selfieFile.name : "Selfie avec document"}
                 <input
                   type="file"
                   hidden
                   accept="image/*"
-                  onChange={handleFileChange('selfie')}
+                  onChange={handleFileChange("selfie")}
                 />
               </Button>
               <FormHelperText>
@@ -344,7 +371,7 @@ export const KYCVerificationForm: React.FC = () => {
             </Grid>
           </Grid>
         );
-      
+
       case 2:
         return (
           <Grid container spacing={3}>
@@ -353,46 +380,47 @@ export const KYCVerificationForm: React.FC = () => {
                 Adresse de résidence
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                Veuillez fournir votre adresse de résidence actuelle et un justificatif de domicile récent (moins de 3 mois).
+                Veuillez fournir votre adresse de résidence actuelle et un
+                justificatif de domicile récent (moins de 3 mois).
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextField
                 required
                 fullWidth
                 label="Adresse"
                 value={formData.residenceAddress}
-                onChange={handleChange('residenceAddress')}
+                onChange={handleChange("residenceAddress")}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 required
                 fullWidth
                 label="Ville"
                 value={formData.city}
-                onChange={handleChange('city')}
+                onChange={handleChange("city")}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 required
                 fullWidth
                 label="Code postal"
                 value={formData.postalCode}
-                onChange={handleChange('postalCode')}
+                onChange={handleChange("postalCode")}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth required>
                 <InputLabel>Pays</InputLabel>
                 <Select
                   value={formData.country}
-                  onChange={handleChange('country') as any}
+                  onChange={handleChange("country") as any}
                   label="Pays"
                 >
                   <MenuItem value="FR">France</MenuItem>
@@ -405,36 +433,39 @@ export const KYCVerificationForm: React.FC = () => {
                 </Select>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
                 Justificatif de domicile
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <Button
                 variant="outlined"
                 component="label"
                 fullWidth
-                sx={{ height: 56, textTransform: 'none' }}
+                sx={{ height: 56, textTransform: "none" }}
               >
-                {proofOfAddressFile ? proofOfAddressFile.name : "Justificatif de domicile"}
+                {proofOfAddressFile
+                  ? proofOfAddressFile.name
+                  : "Justificatif de domicile"}
                 <input
                   type="file"
                   hidden
                   accept="image/*,application/pdf"
-                  onChange={handleFileChange('address')}
+                  onChange={handleFileChange("address")}
                 />
               </Button>
               <FormHelperText>
-                Téléchargez un justificatif de domicile récent (facture d'électricité, eau, gaz, téléphone, etc.)
+                Téléchargez un justificatif de domicile récent (facture
+                d'électricité, eau, gaz, téléphone, etc.)
               </FormHelperText>
             </Grid>
           </Grid>
         );
-      
+
       case 3:
         return (
           <Grid container spacing={3}>
@@ -443,10 +474,11 @@ export const KYCVerificationForm: React.FC = () => {
                 Vérification des informations
               </Typography>
               <Alert severity="info" sx={{ mb: 3 }}>
-                Veuillez vérifier attentivement les informations ci-dessous avant de soumettre votre demande de vérification KYC.
+                Veuillez vérifier attentivement les informations ci-dessous
+                avant de soumettre votre demande de vérification KYC.
               </Alert>
             </Grid>
-            
+
             <Grid item xs={12}>
               <Paper sx={{ p: 3 }}>
                 <Typography variant="subtitle1" gutterBottom>
@@ -478,9 +510,9 @@ export const KYCVerificationForm: React.FC = () => {
                     </Typography>
                   </Grid>
                 </Grid>
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Typography variant="subtitle1" gutterBottom>
                   Document d'identité
                 </Typography>
@@ -490,8 +522,11 @@ export const KYCVerificationForm: React.FC = () => {
                       Type de document:
                     </Typography>
                     <Typography variant="body1">
-                      {formData.documentType === 'passport' ? 'Passeport' : 
-                       formData.documentType === 'id_card' ? 'Carte d\'identité' : 'Permis de conduire'}
+                      {formData.documentType === "passport"
+                        ? "Passeport"
+                        : formData.documentType === "id_card"
+                        ? "Carte d'identité"
+                        : "Permis de conduire"}
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
@@ -511,9 +546,9 @@ export const KYCVerificationForm: React.FC = () => {
                     </Typography>
                   </Grid>
                 </Grid>
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Typography variant="subtitle1" gutterBottom>
                   Adresse de résidence
                 </Typography>
@@ -530,9 +565,7 @@ export const KYCVerificationForm: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                       Ville:
                     </Typography>
-                    <Typography variant="body1">
-                      {formData.city}
-                    </Typography>
+                    <Typography variant="body1">{formData.city}</Typography>
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="body2" color="text.secondary">
@@ -546,14 +579,12 @@ export const KYCVerificationForm: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                       Pays:
                     </Typography>
-                    <Typography variant="body1">
-                      {formData.country}
-                    </Typography>
+                    <Typography variant="body1">{formData.country}</Typography>
                   </Grid>
                 </Grid>
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Typography variant="subtitle1" gutterBottom>
                   Documents téléchargés
                 </Typography>
@@ -563,16 +594,16 @@ export const KYCVerificationForm: React.FC = () => {
                       Recto du document:
                     </Typography>
                     <Typography variant="body1">
-                      {documentFrontFile?.name || 'Non téléchargé'}
+                      {documentFrontFile?.name || "Non téléchargé"}
                     </Typography>
                   </Grid>
-                  {formData.documentType !== 'passport' && (
+                  {formData.documentType !== "passport" && (
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
                         Verso du document:
                       </Typography>
                       <Typography variant="body1">
-                        {documentBackFile?.name || 'Non téléchargé'}
+                        {documentBackFile?.name || "Non téléchargé"}
                       </Typography>
                     </Grid>
                   )}
@@ -581,7 +612,7 @@ export const KYCVerificationForm: React.FC = () => {
                       Selfie avec document:
                     </Typography>
                     <Typography variant="body1">
-                      {selfieFile?.name || 'Non téléchargé'}
+                      {selfieFile?.name || "Non téléchargé"}
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
@@ -589,7 +620,7 @@ export const KYCVerificationForm: React.FC = () => {
                       Justificatif de domicile:
                     </Typography>
                     <Typography variant="body1">
-                      {proofOfAddressFile?.name || 'Non téléchargé'}
+                      {proofOfAddressFile?.name || "Non téléchargé"}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -597,14 +628,14 @@ export const KYCVerificationForm: React.FC = () => {
             </Grid>
           </Grid>
         );
-      
+
       default:
-        return 'Étape inconnue';
+        return "Étape inconnue";
     }
   };
-  
+
   return (
-    <Box sx={{ width: '100%', mb: 4 }}>
+    <Box sx={{ width: "100%", mb: 4 }}>
       <Stepper activeStep={activeStep} alternativeLabel>
         {steps.map((label) => (
           <Step key={label}>
@@ -612,53 +643,60 @@ export const KYCVerificationForm: React.FC = () => {
           </Step>
         ))}
       </Stepper>
-      
+
       <Paper sx={{ p: 4, mt: 4 }}>
         {activeStep === steps.length ? (
-          <Box sx={{ textAlign: 'center' }}>
+          <Box sx={{ textAlign: "center" }}>
             <Typography variant="h5" gutterBottom>
               Demande soumise avec succès
             </Typography>
-            
+
             <Box sx={{ my: 4 }}>
-              <Card sx={{ maxWidth: 400, mx: 'auto' }}>
+              <Card sx={{ maxWidth: 400, mx: "auto" }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     Statut de vérification
                   </Typography>
-                  
-                  <Alert 
+
+                  <Alert
                     severity={
-                      verificationStatus === 'approved' ? 'success' : 
-                      verificationStatus === 'rejected' ? 'error' : 
-                      'info'
+                      verificationStatus === "approved"
+                        ? "success"
+                        : verificationStatus === "rejected"
+                        ? "error"
+                        : "info"
                     }
                     sx={{ mb: 2 }}
                   >
-                    {verificationStatus === 'approved' ? 'Vérifié' : 
-                     verificationStatus === 'rejected' ? 'Rejeté' : 
-                     'En attente de vérification'}
+                    {verificationStatus === "approved"
+                      ? "Vérifié"
+                      : verificationStatus === "rejected"
+                      ? "Rejeté"
+                      : "En attente de vérification"}
                   </Alert>
-                  
+
                   <Typography variant="body2" color="text.secondary" paragraph>
-                    {verificationStatus === 'approved' ? 
-                      'Votre vérification KYC a été approuvée. Vous pouvez maintenant accéder à toutes les fonctionnalités de la plateforme.' : 
-                     verificationStatus === 'rejected' ? 
-                      'Votre vérification KYC a été rejetée. Veuillez vérifier les informations fournies et réessayer.' : 
-                      'Votre demande de vérification KYC est en cours de traitement. Ce processus peut prendre jusqu\'à 24-48 heures ouvrables.'}
+                    {verificationStatus === "approved"
+                      ? "Votre vérification KYC a été approuvée. Vous pouvez maintenant accéder à toutes les fonctionnalités de la plateforme."
+                      : verificationStatus === "rejected"
+                      ? "Votre vérification KYC a été rejetée. Veuillez vérifier les informations fournies et réessayer."
+                      : "Votre demande de vérification KYC est en cours de traitement. Ce processus peut prendre jusqu'à 24-48 heures ouvrables."}
                   </Typography>
-                  
+
                   <Typography variant="body2">
-                    ID de référence: <strong>KYC-{Math.random().toString(36).substring(2, 10).toUpperCase()}</strong>
+                    ID de référence:{" "}
+                    <strong>
+                      KYC-
+                      {Math.random()
+                        .toString(36)
+                        .substring(2, 10)
+                        .toUpperCase()}
+                    </strong>
                   </Typography>
                 </CardContent>
-                
-                <CardActions sx={{ justifyContent: 'center' }}>
-                  <Button 
-                    variant="contained" 
-                    color="primary"
-                    href="/dashboard"
-                  >
+
+                <CardActions sx={{ justifyContent: "center" }}>
+                  <Button variant="contained" color="primary" href="/dashboard">
                     Retour au tableau de bord
                   </Button>
                 </CardActions>
@@ -667,20 +705,18 @@ export const KYCVerificationForm: React.FC = () => {
           </Box>
         ) : (
           <>
-            <Box sx={{ mt: 2, mb: 4 }}>
-              {getStepContent(activeStep)}
-            </Box>
-            
+            <Box sx={{ mt: 2, mb: 4 }}>{getStepContent(activeStep)}</Box>
+
             {isSubmitting && uploadProgress > 0 && (
-              <Box sx={{ width: '100%', mb: 3 }}>
+              <Box sx={{ width: "100%", mb: 3 }}>
                 <Typography variant="body2" gutterBottom>
                   Téléchargement des documents: {uploadProgress}%
                 </Typography>
                 <LinearProgress value={uploadProgress} />
               </Box>
             )}
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Button
                 disabled={activeStep === 0 || isSubmitting}
                 onClick={handleBack}
@@ -694,9 +730,11 @@ export const KYCVerificationForm: React.FC = () => {
                     color="primary"
                     onClick={handleSubmit}
                     disabled={isSubmitting || !validateStep(activeStep)}
-                    startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+                    startIcon={
+                      isSubmitting ? <CircularProgress size={20} /> : null
+                    }
                   >
-                    {isSubmitting ? 'Soumission en cours...' : 'Soumettre'}
+                    {isSubmitting ? "Soumission en cours..." : "Soumettre"}
                   </Button>
                 ) : (
                   <Button
@@ -717,16 +755,18 @@ export const KYCVerificationForm: React.FC = () => {
 };
 
 // Composant manquant pour la progression linéaire
-const LinearProgress: React.FC<{ /* variant: string; */ value: number }> = ({ /* variant, */ value }) => {
+const LinearProgress: React.FC<{ /* variant: string; */ value: number }> = ({
+  /* variant, */ value,
+}) => {
   return (
-    <Box sx={{ width: '100%', bgcolor: '#e0e0e0', borderRadius: 1, height: 8 }}>
+    <Box sx={{ width: "100%", bgcolor: "#e0e0e0", borderRadius: 1, height: 8 }}>
       <Box
         sx={{
           width: `${value}%`,
-          bgcolor: 'primary.main',
+          bgcolor: "primary.main",
           borderRadius: 1,
           height: 8,
-          transition: 'width 0.3s ease-in-out'
+          transition: "width 0.3s ease-in-out",
         }}
       />
     </Box>

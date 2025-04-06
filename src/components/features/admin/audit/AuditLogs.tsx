@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -10,30 +10,32 @@ import {
   DialogActions,
   Button,
   Alert,
-} from '@mui/material';
-import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
-import type { AuditLog } from '../../../../types/contracts';
-import { AuditLogList } from './AuditLogList';
-import { AuditLogToolbar } from './AuditLogToolbar';
-import { AdminComponentProps } from '../types';
-import { ForgeCard } from '../../../common/ForgeCard';
+} from "@mui/material";
+import { useTokenForgeAdmin } from "../../../../hooks/useTokenForgeAdmin";
+import type { AuditLog } from "../../../../types/contracts";
+import { AuditLogList } from "./AuditLogList";
+import { AuditLogToolbar } from "./AuditLogToolbar";
+import { AdminComponentProps } from "../types";
+import { ForgeCard } from "../../../common/ForgeCard";
 
 export const AuditLogs: React.FC<AdminComponentProps> = ({ onError }) => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
-  const [confirmAction, setConfirmAction] = useState<'purge' | null>(null);
+  const [confirmAction, setConfirmAction] = useState<"purge" | null>(null);
   const { contract, error: adminError } = useTokenForgeAdmin({ onError });
 
   const loadLogs = useCallback(async () => {
     if (!contract) return;
-    
+
     try {
       setIsLoading(true);
       const auditLogs = await contract.getAuditLogs();
       setLogs(auditLogs);
     } catch (error) {
-      onError?.(error instanceof Error ? error.message : 'Failed to load audit logs');
+      onError?.(
+        error instanceof Error ? error.message : "Failed to load audit logs"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -43,12 +45,15 @@ export const AuditLogs: React.FC<AdminComponentProps> = ({ onError }) => {
     try {
       setIsLoading(true);
       const csvContent = logs
-        .map(log => `${log.timestamp},${log.level},${log.category},${log.message}`)
-        .join('\n');
-      
-      const blob = new Blob([csvContent], { type: 'text/csv' });
+        .map(
+          (log) =>
+            `${log.timestamp},${log.level},${log.category},${log.message}`
+        )
+        .join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `audit_logs_${new Date().toISOString()}.csv`;
       document.body.appendChild(a);
@@ -56,7 +61,9 @@ export const AuditLogs: React.FC<AdminComponentProps> = ({ onError }) => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      onError?.(error instanceof Error ? error.message : 'Failed to export logs');
+      onError?.(
+        error instanceof Error ? error.message : "Failed to export logs"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +76,9 @@ export const AuditLogs: React.FC<AdminComponentProps> = ({ onError }) => {
       setLogs([]);
       setConfirmAction(null);
     } catch (error) {
-      onError?.(error instanceof Error ? error.message : 'Failed to purge logs');
+      onError?.(
+        error instanceof Error ? error.message : "Failed to purge logs"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -94,10 +103,10 @@ export const AuditLogs: React.FC<AdminComponentProps> = ({ onError }) => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <AuditLogToolbar
         onExport={handleExport}
-        onPurge={() => setConfirmAction('purge')}
+        onPurge={() => setConfirmAction("purge")}
         isLoading={isLoading}
         disabled={logs.length === 0}
       />
@@ -144,13 +153,14 @@ export const AuditLogs: React.FC<AdminComponentProps> = ({ onError }) => {
       </Dialog>
 
       <Dialog
-        open={confirmAction === 'purge'}
+        open={confirmAction === "purge"}
         onClose={() => setConfirmAction(null)}
       >
         <DialogTitle>Confirmation</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Êtes-vous sûr de vouloir supprimer tous les logs d'audit ? Cette action est irréversible.
+            Êtes-vous sûr de vouloir supprimer tous les logs d'audit ? Cette
+            action est irréversible.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { ToggleButton, ToggleButtonGroup } from '@mui/material';
-import { ChartPeriod } from '@/hooks/analytics/useTokenChartData';
+import React from "react";
+import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { ChartPeriod } from "@/hooks/analytics/useTokenChartData";
 
 interface PeriodSelectorProps {
   period: ChartPeriod;

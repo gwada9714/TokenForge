@@ -19,7 +19,7 @@ export const validateAddress = (address: string): boolean => {
  * @returns True if the value is a positive number, false otherwise
  */
 export const validatePositiveNumber = (value: string | number): boolean => {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
+  const num = typeof value === "string" ? parseFloat(value) : value;
   return !isNaN(num) && num > 0;
 };
 
@@ -35,7 +35,7 @@ export const validateNumberInRange = (
   min: number,
   max: number
 ): boolean => {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
+  const num = typeof value === "string" ? parseFloat(value) : value;
   return !isNaN(num) && num >= min && num <= max;
 };
 
@@ -45,7 +45,7 @@ export const validateNumberInRange = (
  * @returns True if the value is not empty, false otherwise
  */
 export const validateNotEmpty = (value: string): boolean => {
-  return value !== undefined && value !== null && value.trim() !== '';
+  return value !== undefined && value !== null && value.trim() !== "";
 };
 
 /**

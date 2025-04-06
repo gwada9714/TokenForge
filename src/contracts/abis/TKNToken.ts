@@ -1,4 +1,4 @@
-import { type Abi } from 'viem';
+import { type Abi } from "viem";
 
 export const TKNTokenABI = [
   {
@@ -28,7 +28,7 @@ export const TKNTokenABI = [
     outputs: [
       { name: "amount", type: "uint256" },
       { name: "lastStakeTime", type: "uint256" },
-      { name: "rewards", type: "uint256" }
+      { name: "rewards", type: "uint256" },
     ],
     stateMutability: "view",
     type: "function",
@@ -39,9 +39,9 @@ export const TKNTokenABI = [
     outputs: [
       { name: "totalStaked", type: "uint256" },
       { name: "totalStakers", type: "uint256" },
-      { name: "rewardRate", type: "uint256" }
+      { name: "rewardRate", type: "uint256" },
     ],
     stateMutability: "view",
     type: "function",
-  }
+  },
 ] as const satisfies Abi;

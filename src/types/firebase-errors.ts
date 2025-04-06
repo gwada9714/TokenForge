@@ -1,4 +1,4 @@
-import { FirebaseError } from 'firebase/app';
+import { FirebaseError } from "firebase/app";
 
 export interface FirebaseServiceError extends Error {
   code?: string;
@@ -8,7 +8,7 @@ export interface FirebaseServiceError extends Error {
 }
 
 export class ServiceError implements FirebaseServiceError {
-  public name: string = 'ServiceError';
+  public name: string = "ServiceError";
   public timestamp: number;
 
   constructor(

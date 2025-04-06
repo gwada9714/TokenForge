@@ -1,14 +1,15 @@
-import React from 'react';
-import { Container, Typography, Grid, Paper, Box } from '@mui/material';
-import { AdminStats } from '../components/AdminStats';
-import { UserActivityChart } from '../components/UserActivityChart';
-import { TokenDistributionChart } from '../components/TokenDistributionChart';
-import { RecentTransactions } from '../components/RecentTransactions';
-import { SystemStatus } from '../components/SystemStatus';
-import { useAdminDashboard } from '../hooks/useAdminDashboard';
+import React from "react";
+import { Container, Typography, Grid, Paper, Box } from "@mui/material";
+import { AdminStats } from "../components/AdminStats";
+import { UserActivityChart } from "../components/UserActivityChart";
+import { TokenDistributionChart } from "../components/TokenDistributionChart";
+import { RecentTransactions } from "../components/RecentTransactions";
+import { SystemStatus } from "../components/SystemStatus";
+import { useAdminDashboard } from "../hooks/useAdminDashboard";
 
 export const AdminDashboardPage: React.FC = () => {
-  const { stats, userActivity, tokenDistribution, transactions, systemStatus } = useAdminDashboard();
+  const { stats, userActivity, tokenDistribution, transactions, systemStatus } =
+    useAdminDashboard();
 
   return (
     <Container maxWidth="lg">
@@ -74,4 +75,4 @@ export const AdminDashboardPage: React.FC = () => {
       </Grid>
     </Container>
   );
-}; 
+};

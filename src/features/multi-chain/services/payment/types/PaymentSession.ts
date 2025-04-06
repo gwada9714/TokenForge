@@ -1,14 +1,14 @@
-import { PublicKey } from '@solana/web3.js';
-import { Address } from 'viem';
+import { PublicKey } from "@solana/web3.js";
+import { Address } from "viem";
 
 export enum PaymentNetwork {
-  ETHEREUM = 'ETHEREUM',
-  BINANCE = 'BINANCE',
-  POLYGON = 'POLYGON',
-  SOLANA = 'SOLANA',
+  ETHEREUM = "ETHEREUM",
+  BINANCE = "BINANCE",
+  POLYGON = "POLYGON",
+  SOLANA = "SOLANA",
 }
 
-export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+export type PaymentStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export interface PaymentToken {
   symbol: string;

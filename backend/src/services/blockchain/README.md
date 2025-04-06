@@ -42,26 +42,32 @@ Tous les paiements sont dirigés vers un unique wallet MetaMask (adresse : `0x92
 ## Cryptomonnaies Supportées
 
 ### Ethereum
+
 - ETH (natif)
 - USDT, USDC, DAI (stablecoins)
 
 ### Binance Smart Chain
+
 - BNB (natif)
 - BUSD, USDT, USDC (stablecoins)
 
 ### Polygon
+
 - MATIC (natif)
 - USDT, USDC, DAI (stablecoins)
 
 ### Avalanche
+
 - AVAX (natif)
 - USDT, USDC, DAI.e (stablecoins)
 
 ### Solana
+
 - SOL (natif)
 - USDT, USDC (stablecoins)
 
 ### Arbitrum
+
 - ETH (natif)
 - USDT, USDC, DAI (stablecoins)
 
@@ -72,6 +78,7 @@ Le système surveille en continu les transactions entrantes sur toutes les block
 ## Conversion de Prix
 
 Pour assurer une tarification cohérente, le système :
+
 - Maintient tous les prix en EUR dans le backend
 - Convertit en temps réel les prix en crypto selon le taux de change actuel
 - Ajoute une marge de sécurité (2-5%) pour tenir compte de la volatilité
@@ -80,28 +87,34 @@ Pour assurer une tarification cohérente, le système :
 
 ```typescript
 // Exemple d'utilisation du système de paiement
-import { paymentSessionService } from '../services';
+import { paymentSessionService } from "../services";
 
 // Créer une session de paiement
-const session = await paymentSessionService.createPaymentSession('ethereum', {
-  userId: 'user123',
-  productId: 'token-creation',
-  productType: 'token_creation',
+const session = await paymentSessionService.createPaymentSession("ethereum", {
+  userId: "user123",
+  productId: "token-creation",
+  productType: "token_creation",
   amount: 299, // EUR
-  currency: 'ETH',
-  payerAddress: '0x1234...'
+  currency: "ETH",
+  payerAddress: "0x1234...",
 });
 
 // Vérifier le statut d'un paiement
-const status = await paymentSessionService.checkPaymentStatus(session.sessionId);
+const status = await paymentSessionService.checkPaymentStatus(
+  session.sessionId
+);
 
 // Confirmer un paiement
-const confirmed = await paymentSessionService.confirmPayment(session.sessionId, '0xabcd...');
+const confirmed = await paymentSessionService.confirmPayment(
+  session.sessionId,
+  "0xabcd..."
+);
 ```
 
 ## Implémentation Future
 
 Pour une implémentation complète, il faudrait :
+
 1. Intégrer avec Firebase pour la persistance des données
 2. Implémenter la vérification réelle des transactions sur chaque blockchain
 3. Ajouter des webhooks pour les notifications de paiement

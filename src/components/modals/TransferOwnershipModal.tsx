@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -6,10 +6,10 @@ import {
   DialogActions,
   TextField,
   Typography,
-  Alert
-} from '@mui/material';
-import { StyledButton } from '@/components/ui/Button';
-import { isAddress } from 'viem';
+  Alert,
+} from "@mui/material";
+import { StyledButton } from "@/components/ui/Button";
+import { isAddress } from "viem";
 
 interface TransferOwnershipModalProps {
   open: boolean;
@@ -22,9 +22,9 @@ const TransferOwnershipModal: React.FC<TransferOwnershipModalProps> = ({
   open,
   onClose,
   onConfirm,
-  isLoading
+  isLoading,
 }) => {
-  const [newAddress, setNewAddress] = useState('');
+  const [newAddress, setNewAddress] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleConfirm = () => {
@@ -33,12 +33,12 @@ const TransferOwnershipModal: React.FC<TransferOwnershipModalProps> = ({
       return;
     }
     onConfirm(newAddress);
-    setNewAddress('');
+    setNewAddress("");
     setError(null);
   };
 
   const handleClose = () => {
-    setNewAddress('');
+    setNewAddress("");
     setError(null);
     onClose();
   };
@@ -66,21 +66,21 @@ const TransferOwnershipModal: React.FC<TransferOwnershipModalProps> = ({
         />
       </DialogContent>
       <DialogActions>
-        <StyledButton 
+        <StyledButton
           $variant="secondary"
-          onClick={handleClose} 
-          disabled={isLoading} 
+          onClick={handleClose}
+          disabled={isLoading}
           $isLoading={isLoading}
         >
           Annuler
         </StyledButton>
-        <StyledButton 
+        <StyledButton
           $variant="primary"
-          onClick={handleConfirm} 
+          onClick={handleConfirm}
           disabled={!newAddress || isLoading}
           $isLoading={isLoading}
         >
-          {isLoading ? 'Transfert en cours...' : 'Confirmer'}
+          {isLoading ? "Transfert en cours..." : "Confirmer"}
         </StyledButton>
       </DialogActions>
     </Dialog>

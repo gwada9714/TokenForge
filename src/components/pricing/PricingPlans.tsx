@@ -1,5 +1,5 @@
-import React from 'react';
-import { useAccount } from 'wagmi';
+import React from "react";
+import { useAccount } from "wagmi";
 
 interface PricingPlan {
   name: string;
@@ -16,9 +16,9 @@ const plans: PricingPlan[] = [
     features: [
       "Création de token simple sur testnet",
       "Fonctionnalités très limitées",
-      "Code non audité"
+      "Code non audité",
     ],
-    buttonText: "Commencer gratuitement"
+    buttonText: "Commencer gratuitement",
   },
   {
     name: "Forgeron",
@@ -27,10 +27,10 @@ const plans: PricingPlan[] = [
       "Création de token standard sur mainnet",
       "Fonctionnalités de base",
       "Option de taxe de la forge activable",
-      "Support standard"
+      "Support standard",
     ],
     buttonText: "Choisir ce plan",
-    recommended: true
+    recommended: true,
   },
   {
     name: "Maître Forgeron",
@@ -40,10 +40,10 @@ const plans: PricingPlan[] = [
       "Toutes les fonctionnalités avancées",
       "Audit de sécurité inclus",
       "Support prioritaire",
-      "Verrouillage de liquidité facilité"
+      "Verrouillage de liquidité facilité",
     ],
-    buttonText: "Devenir Maître"
-  }
+    buttonText: "Devenir Maître",
+  },
 ];
 
 export const PricingPlans: React.FC = () => {
@@ -75,11 +75,13 @@ export const PricingPlans: React.FC = () => {
             <div
               key={plan.name}
               className={`rounded-lg shadow-lg divide-y divide-gray-700 bg-gray-800 ${
-                plan.recommended ? 'ring-2 ring-primary' : ''
+                plan.recommended ? "ring-2 ring-primary" : ""
               }`}
             >
               <div className="p-6">
-                <h3 className="text-2xl font-semibold text-white">{plan.name}</h3>
+                <h3 className="text-2xl font-semibold text-white">
+                  {plan.name}
+                </h3>
                 <p className="mt-4 text-primary text-3xl">{plan.price}</p>
                 <ul className="mt-6 space-y-4">
                   {plan.features.map((feature) => (

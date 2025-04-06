@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Address } from 'viem';
-import { usePublicClient, useAccount } from 'wagmi';
-import { tokenFactoryAbi } from '@/contracts/abis/TokenFactory';
-import { erc20Abi } from '@/contracts/abis/erc20';
-import { TokenContract } from '@/providers/contract/ContractProvider';
+import { useCallback, useEffect, useState } from "react";
+import { Address } from "viem";
+import { usePublicClient, useAccount } from "wagmi";
+import { tokenFactoryAbi } from "@/contracts/abis/TokenFactory";
+import { erc20Abi } from "@/contracts/abis/erc20";
+import { TokenContract } from "@/providers/contract/ContractProvider";
 
 interface TokenListState {
   tokens: TokenContract[];
@@ -25,16 +25,16 @@ export const useTokenList = (factoryAddress?: Address) => {
       return;
     }
 
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       // Récupérer les adresses des tokens
-      const addresses = await publicClient.readContract({
+      const addresses = (await publicClient.readContract({
         address: factoryAddress,
         abi: tokenFactoryAbi,
-        functionName: 'getTokens',
+        functionName: "getTokens",
         args: [account],
-      }) as Address[];
+      })) as Address[];
 
       // Récupérer les métadonnées pour chaque token
       const tokensPromises = addresses.map(async (address) => {
@@ -43,23 +43,23 @@ export const useTokenList = (factoryAddress?: Address) => {
             {
               address,
               abi: erc20Abi,
-              functionName: 'name',
+              functionName: "name",
             },
             {
               address,
               abi: erc20Abi,
-              functionName: 'symbol',
+              functionName: "symbol",
             },
             {
               address,
               abi: erc20Abi,
-              functionName: 'decimals',
+              functionName: "decimals",
             },
           ],
         });
 
         if (!metadata[0].result || !metadata[1].result || !metadata[2].result) {
-          throw new Error('Failed to fetch token metadata');
+          throw new Error("Failed to fetch token metadata");
         }
 
         return {
@@ -78,10 +78,11 @@ export const useTokenList = (factoryAddress?: Address) => {
         error: null,
       });
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error : new Error('Failed to fetch tokens'),
+        error:
+          error instanceof Error ? error : new Error("Failed to fetch tokens"),
       }));
     }
   }, [factoryAddress, account, publicClient]);

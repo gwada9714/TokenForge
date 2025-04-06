@@ -1,1 +1,1 @@
-export * from './StakingDashboard';
+export * from "./StakingDashboard";

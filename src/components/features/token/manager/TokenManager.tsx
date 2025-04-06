@@ -38,7 +38,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 
 const a11yProps = (index: number) => ({
   id: `token-tab-${index}`,
-  'aria-controls': `token-tabpanel-${index}`,
+  "aria-controls": `token-tabpanel-${index}`,
 });
 
 export const TokenManager: React.FC<TokenManagerProps> = ({ token }) => {

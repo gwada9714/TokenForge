@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -12,25 +12,31 @@ import {
   DialogActions,
   Grid,
   Alert,
-} from '@mui/material';
-import { useTokenForgeAdmin } from '../../../../hooks/useTokenForgeAdmin';
-import { AdminComponentProps } from '../types';
-import { isValidAddress } from '../../../../utils/web3';
+} from "@mui/material";
+import { useTokenForgeAdmin } from "../../../../hooks/useTokenForgeAdmin";
+import { AdminComponentProps } from "../types";
+import { isValidAddress } from "../../../../utils/web3";
 
-export const OwnershipManagement: React.FC<AdminComponentProps> = ({ onError }) => {
-  const [newOwnerAddress, setNewOwnerAddress] = useState('');
+export const OwnershipManagement: React.FC<AdminComponentProps> = ({
+  onError,
+}) => {
+  const [newOwnerAddress, setNewOwnerAddress] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { transferOwnership, currentOwner, isTransferring } = useTokenForgeAdmin();
+  const { transferOwnership, currentOwner, isTransferring } =
+    useTokenForgeAdmin();
 
-  const handleAddressChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setNewOwnerAddress(event.target.value);
-    if (error) setError(null);
-  }, [error]);
+  const handleAddressChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setNewOwnerAddress(event.target.value);
+      if (error) setError(null);
+    },
+    [error]
+  );
 
   const handleOpenDialog = useCallback(() => {
     if (!isValidAddress(newOwnerAddress)) {
-      onError('Invalid Ethereum address');
+      onError("Invalid Ethereum address");
       return;
     }
     setOpenDialog(true);
@@ -44,10 +50,12 @@ export const OwnershipManagement: React.FC<AdminComponentProps> = ({ onError }) 
     try {
       await transferOwnership(newOwnerAddress);
       setOpenDialog(false);
-      setNewOwnerAddress('');
+      setNewOwnerAddress("");
       setError(null);
     } catch (error) {
-      onError(error instanceof Error ? error.message : 'Failed to transfer ownership');
+      onError(
+        error instanceof Error ? error.message : "Failed to transfer ownership"
+      );
     }
   }, [transferOwnership, newOwnerAddress, onError]);
 
@@ -59,14 +67,14 @@ export const OwnershipManagement: React.FC<AdminComponentProps> = ({ onError }) 
             <Typography variant="h6" gutterBottom>
               Gestion de la propriété
             </Typography>
-            
+
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="textSecondary" gutterBottom>
                 Propriétaire actuel : {currentOwner}
               </Typography>
             </Box>
 
-            <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+            <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
               <TextField
                 fullWidth
                 label="Nouvelle adresse du propriétaire"
@@ -98,7 +106,10 @@ export const OwnershipManagement: React.FC<AdminComponentProps> = ({ onError }) 
               <Typography>
                 Êtes-vous sûr de vouloir transférer la propriété à :
               </Typography>
-              <Typography variant="body2" sx={{ mt: 1, wordBreak: 'break-all' }}>
+              <Typography
+                variant="body2"
+                sx={{ mt: 1, wordBreak: "break-all" }}
+              >
                 {newOwnerAddress}
               </Typography>
               <Typography color="error" sx={{ mt: 2 }}>

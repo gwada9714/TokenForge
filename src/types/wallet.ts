@@ -1,4 +1,4 @@
-import { WalletClient } from 'viem';
+import { WalletClient } from "viem";
 
 export interface WalletState {
   isConnected: boolean;

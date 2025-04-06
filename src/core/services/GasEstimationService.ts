@@ -1,5 +1,5 @@
-import { ethers } from 'ethers';
-import { NetworkConfig } from '@/config/networks';
+import { ethers } from "ethers";
+import { NetworkConfig } from "@/config/networks";
 
 export interface GasEstimate {
   low: {
@@ -15,7 +15,7 @@ export interface GasEstimate {
     time: string;
   };
   estimatedBaseFee: string;
-  networkCongestion: 'Low' | 'Medium' | 'High';
+  networkCongestion: "Low" | "Medium" | "High";
   updatedAt: Date;
 }
 
@@ -37,20 +37,24 @@ export interface TokenDeploymentEstimate {
 export class GasEstimationService {
   private static readonly GAS_LIMIT_TOKEN_DEPLOYMENT = 3000000; // Estimation de base
   private static readonly GAS_APIS = {
-    1: 'https://api.etherscan.io/api', // Ethereum
-    56: 'https://api.bscscan.com/api', // BSC
-    137: 'https://api.polygonscan.com/api', // Polygon
-    43114: 'https://api.snowtrace.io/api' // Avalanche
+    1: "https://api.etherscan.io/api", // Ethereum
+    56: "https://api.bscscan.com/api", // BSC
+    137: "https://api.polygonscan.com/api", // Polygon
+    43114: "https://api.snowtrace.io/api", // Avalanche
   };
 
-  public static async getGasEstimate(network: NetworkConfig): Promise<GasEstimate> {
+  public static async getGasEstimate(
+    network: NetworkConfig
+  ): Promise<GasEstimate> {
     try {
-      const provider = new ethers.JsonRpcProvider(network.chain.rpcUrls.default.http[0]);
-      
+      const provider = new ethers.JsonRpcProvider(
+        network.chain.rpcUrls.default.http[0]
+      );
+
       // Récupérer les informations de base sur le gas
       const [feeData, blockNumber] = await Promise.all([
         provider.getFeeData(),
-        provider.getBlockNumber()
+        provider.getBlockNumber(),
       ]);
 
       // Récupérer l'historique récent des blocks pour estimer la congestion
@@ -59,15 +63,16 @@ export class GasEstimationService {
       );
 
       // Calculer la congestion du réseau
-      const avgGasUsed = recentBlocks.reduce((acc, block) => 
-        acc + (block?.gasUsed || 0n), 0n) / 5n;
-      const avgGasLimit = recentBlocks.reduce((acc, block) => 
-        acc + (block?.gasLimit || 0n), 0n) / 5n;
-      const congestionRatio = Number(avgGasUsed * 100n / avgGasLimit);
+      const avgGasUsed =
+        recentBlocks.reduce((acc, block) => acc + (block?.gasUsed || 0n), 0n) /
+        5n;
+      const avgGasLimit =
+        recentBlocks.reduce((acc, block) => acc + (block?.gasLimit || 0n), 0n) /
+        5n;
+      const congestionRatio = Number((avgGasUsed * 100n) / avgGasLimit);
 
-      const networkCongestion = 
-        congestionRatio > 80 ? 'High' :
-        congestionRatio > 50 ? 'Medium' : 'Low';
+      const networkCongestion =
+        congestionRatio > 80 ? "High" : congestionRatio > 50 ? "Medium" : "Low";
 
       // Calculer les estimations de prix
       const baseFee = feeData.gasPrice || 0n;
@@ -76,34 +81,37 @@ export class GasEstimationService {
       const highPrice = (baseFee * 150n) / 100n; // +50%
 
       // Estimer les temps d'attente
-      const getTimeEstimate = (priority: 'low' | 'medium' | 'high') => {
+      const getTimeEstimate = (priority: "low" | "medium" | "high") => {
         switch (priority) {
-          case 'high': return networkCongestion === 'High' ? '< 30 sec' : '< 15 sec';
-          case 'medium': return networkCongestion === 'High' ? '< 1 min' : '< 30 sec';
-          case 'low': return networkCongestion === 'High' ? '1-2 min' : '< 1 min';
+          case "high":
+            return networkCongestion === "High" ? "< 30 sec" : "< 15 sec";
+          case "medium":
+            return networkCongestion === "High" ? "< 1 min" : "< 30 sec";
+          case "low":
+            return networkCongestion === "High" ? "1-2 min" : "< 1 min";
         }
       };
 
       return {
         low: {
           price: lowPrice.toString(),
-          time: getTimeEstimate('low')
+          time: getTimeEstimate("low"),
         },
         medium: {
           price: mediumPrice.toString(),
-          time: getTimeEstimate('medium')
+          time: getTimeEstimate("medium"),
         },
         high: {
           price: highPrice.toString(),
-          time: getTimeEstimate('high')
+          time: getTimeEstimate("high"),
         },
         estimatedBaseFee: baseFee.toString(),
         networkCongestion,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
     } catch (error) {
-      console.error('Error estimating gas:', error);
-      throw new Error('Failed to estimate gas prices');
+      console.error("Error estimating gas:", error);
+      throw new Error("Failed to estimate gas prices");
     }
   }
 
@@ -122,7 +130,7 @@ export class GasEstimationService {
     const gasCosts = {
       low: calculateCost(low.price),
       medium: calculateCost(medium.price),
-      high: calculateCost(high.price)
+      high: calculateCost(high.price),
     };
 
     // Convertir les coûts en valeurs lisibles
@@ -137,8 +145,8 @@ export class GasEstimationService {
       totalCost: {
         low: formatCost(gasCosts.low),
         medium: formatCost(gasCosts.medium),
-        high: formatCost(gasCosts.high)
-      }
+        high: formatCost(gasCosts.high),
+      },
     };
   }
 }

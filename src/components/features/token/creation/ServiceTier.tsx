@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Grid,
@@ -9,17 +9,20 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Chip
-} from '@mui/material';
-import { Check, Close } from '@mui/icons-material';
-import { ServiceTierService } from '@/services/serviceTierService';
+  Chip,
+} from "@mui/material";
+import { Check, Close } from "@mui/icons-material";
+import { ServiceTierService } from "@/services/serviceTierService";
 
 interface ServiceTierProps {
   selectedTier: string;
   onTierSelect: (tierId: string) => void;
 }
 
-const ServiceTier: React.FC<ServiceTierProps> = ({ selectedTier, onTierSelect }) => {
+const ServiceTier: React.FC<ServiceTierProps> = ({
+  selectedTier,
+  onTierSelect,
+}) => {
   const tiers = ServiceTierService.getTiers();
 
   return (
@@ -31,16 +34,16 @@ const ServiceTier: React.FC<ServiceTierProps> = ({ selectedTier, onTierSelect })
       <Grid container spacing={3} sx={{ mt: 1 }}>
         {tiers.map((tier) => (
           <Grid item xs={12} md={6} key={tier.id}>
-            <Paper 
+            <Paper
               elevation={3}
               sx={{
                 p: 3,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'relative',
-                border: selectedTier === tier.id ? '2px solid' : 'none',
-                borderColor: 'primary.main'
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                border: selectedTier === tier.id ? "2px solid" : "none",
+                borderColor: "primary.main",
               }}
             >
               {tier.recommended && (
@@ -48,9 +51,9 @@ const ServiceTier: React.FC<ServiceTierProps> = ({ selectedTier, onTierSelect })
                   label="Recommandé"
                   color="primary"
                   sx={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: -12,
-                    right: 20
+                    right: 20,
                   }}
                 />
               )}
@@ -59,7 +62,11 @@ const ServiceTier: React.FC<ServiceTierProps> = ({ selectedTier, onTierSelect })
                 {tier.name}
               </Typography>
 
-              <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography
+                variant="subtitle1"
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
                 {tier.description}
               </Typography>
 
@@ -77,7 +84,7 @@ const ServiceTier: React.FC<ServiceTierProps> = ({ selectedTier, onTierSelect })
                         <Close color="error" />
                       )}
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                       primary={feature.name}
                       secondary={feature.description}
                     />
@@ -92,7 +99,7 @@ const ServiceTier: React.FC<ServiceTierProps> = ({ selectedTier, onTierSelect })
                 sx={{ mt: 2 }}
                 onClick={() => onTierSelect(tier.id)}
               >
-                {selectedTier === tier.id ? 'Sélectionné' : 'Sélectionner'}
+                {selectedTier === tier.id ? "Sélectionné" : "Sélectionner"}
               </Button>
             </Paper>
           </Grid>

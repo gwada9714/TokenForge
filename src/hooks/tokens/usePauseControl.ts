@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Address } from 'viem';
-import { usePublicClient, useWalletClient } from 'wagmi';
-import { tokenControlAbi } from '@/contracts/abis/tokenControl';
-import { useTransactionHandler } from '../transactions';
+import { useCallback, useEffect, useState } from "react";
+import { Address } from "viem";
+import { usePublicClient, useWalletClient } from "wagmi";
+import { tokenControlAbi } from "@/contracts/abis/tokenControl";
+import { useTransactionHandler } from "../transactions";
 
 interface PauseState {
   isPaused: boolean;
@@ -26,13 +26,13 @@ export const usePauseControl = (tokenAddress?: Address) => {
       return;
     }
 
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       const isPaused = await publicClient.readContract({
         address: tokenAddress,
         abi: tokenControlAbi,
-        functionName: 'paused',
+        functionName: "paused",
       });
 
       setState({
@@ -41,24 +41,27 @@ export const usePauseControl = (tokenAddress?: Address) => {
         error: null,
       });
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error : new Error('Failed to check pause status'),
+        error:
+          error instanceof Error
+            ? error
+            : new Error("Failed to check pause status"),
       }));
     }
   }, [tokenAddress, publicClient]);
 
   const pause = useCallback(async () => {
     if (!tokenAddress || !walletClient) {
-      throw new Error('Token address and wallet are required');
+      throw new Error("Token address and wallet are required");
     }
 
     return handleTransaction(async () => {
       const hash = await walletClient.writeContract({
         address: tokenAddress,
         abi: tokenControlAbi,
-        functionName: 'pause',
+        functionName: "pause",
       });
 
       await checkPauseStatus();
@@ -68,14 +71,14 @@ export const usePauseControl = (tokenAddress?: Address) => {
 
   const unpause = useCallback(async () => {
     if (!tokenAddress || !walletClient) {
-      throw new Error('Token address and wallet are required');
+      throw new Error("Token address and wallet are required");
     }
 
     return handleTransaction(async () => {
       const hash = await walletClient.writeContract({
         address: tokenAddress,
         abi: tokenControlAbi,
-        functionName: 'unpause',
+        functionName: "unpause",
       });
 
       await checkPauseStatus();

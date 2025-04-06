@@ -1,20 +1,20 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  updateDoc, 
+import {
+  collection,
+  doc,
+  setDoc,
+  updateDoc,
   getDoc,
   query,
   where,
   getDocs,
-  serverTimestamp
-} from 'firebase/firestore';
-import { getFirebaseFirestoreSync } from '@/lib/firebase/firestore';
-import { logger } from '@/core/logger';
-import { StakingPool, StakingReward } from './stakingRewards';
+  serverTimestamp,
+} from "firebase/firestore";
+import { getFirebaseFirestoreSync } from "@/lib/firebase/firestore";
+import { logger } from "@/core/logger";
+import { StakingPool, StakingReward } from "./stakingRewards";
 
-const POOLS_COLLECTION = 'stakingPools';
-const REWARDS_COLLECTION = 'stakingRewards';
+const POOLS_COLLECTION = "stakingPools";
+const REWARDS_COLLECTION = "stakingRewards";
 
 export const stakingFirestore = {
   async savePool(pool: StakingPool): Promise<void> {
@@ -24,7 +24,7 @@ export const stakingFirestore = {
       await setDoc(poolRef, {
         ...pool,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
       logger.info({ message: `Staking pool ${pool.id} saved successfully` });
     } catch (error) {
@@ -39,11 +39,14 @@ export const stakingFirestore = {
       const poolRef = doc(collection(db, POOLS_COLLECTION), pool.id);
       await updateDoc(poolRef, {
         ...pool,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
       logger.info({ message: `Staking pool ${pool.id} updated successfully` });
     } catch (error) {
-      logger.error({ message: `Error updating staking pool ${pool.id}`, error });
+      logger.error({
+        message: `Error updating staking pool ${pool.id}`,
+        error,
+      });
       throw error;
     }
   },
@@ -53,12 +56,12 @@ export const stakingFirestore = {
       const db = getFirebaseFirestoreSync();
       const poolRef = doc(collection(db, POOLS_COLLECTION), poolId);
       const poolDoc = await getDoc(poolRef);
-      
+
       if (!poolDoc.exists()) {
         logger.warn({ message: `Staking pool ${poolId} not found` });
         return null;
       }
-      
+
       const data = poolDoc.data() as StakingPool;
       logger.info({ message: `Staking pool ${poolId} retrieved successfully` });
       return {
@@ -79,9 +82,9 @@ export const stakingFirestore = {
         ...reward,
         id: rewardRef.id,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
-      
+
       logger.info({ message: `Staking reward created successfully` });
       return;
     } catch (error) {
@@ -95,12 +98,12 @@ export const stakingFirestore = {
       const db = getFirebaseFirestoreSync();
       const rewardsQuery = query(
         collection(db, REWARDS_COLLECTION),
-        where('poolId', '==', poolId)
+        where("poolId", "==", poolId)
       );
-      
+
       const rewardsDocs = await getDocs(rewardsQuery);
       const rewards: StakingReward[] = [];
-      
+
       rewardsDocs.forEach((doc) => {
         const data = doc.data();
         rewards.push({
@@ -109,15 +112,20 @@ export const stakingFirestore = {
           userAddress: data.userAddress,
           amount: data.amount,
           timestamp: data.timestamp,
-          claimed: data.claimed
+          claimed: data.claimed,
         } as StakingReward);
       });
-      
-      logger.info({ message: `Retrieved ${rewards.length} rewards for pool ${poolId}` });
+
+      logger.info({
+        message: `Retrieved ${rewards.length} rewards for pool ${poolId}`,
+      });
       return rewards;
     } catch (error) {
-      logger.error({ message: `Error getting rewards for pool ${poolId}`, error });
+      logger.error({
+        message: `Error getting rewards for pool ${poolId}`,
+        error,
+      });
       throw error;
     }
-  }
+  },
 };

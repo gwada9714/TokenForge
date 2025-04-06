@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 
 declare global {
   interface Window {
@@ -20,7 +20,7 @@ const useWalletConnectFix = () => {
 
 export const ScriptLoader: React.FC = () => {
   useWalletConnectFix();
-  
+
   return (
     <>
       <link

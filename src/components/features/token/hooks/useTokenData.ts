@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { usePublicClient } from 'wagmi';
-import type { Address } from 'viem';
-import { formatEther } from 'viem';
+import { useState, useEffect } from "react";
+import { usePublicClient } from "wagmi";
+import type { Address } from "viem";
+import { formatEther } from "viem";
 
 export interface TokenInfo {
   name: string;
@@ -42,18 +42,18 @@ export const useTokenData = (address?: string) => {
 
         // Dans un environnement réel, nous ferions un appel à une API ou à un contrat
         // pour récupérer les tokens de l'utilisateur. Pour l'exemple, nous utilisons des données fictives.
-        
+
         // Simuler un délai de chargement
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Données fictives pour la démonstration
         const mockTokens: TokenInfo[] = [
           {
-            name: 'TokenForge Demo',
-            symbol: 'TFD',
-            address: '0x1234567890123456789012345678901234567890',
-            totalSupply: '1000000',
-            balance: '500000',
+            name: "TokenForge Demo",
+            symbol: "TFD",
+            address: "0x1234567890123456789012345678901234567890",
+            totalSupply: "1000000",
+            balance: "500000",
             decimals: 18,
             features: {
               mintable: true,
@@ -62,17 +62,17 @@ export const useTokenData = (address?: string) => {
               blacklist: false,
               forceTransfer: false,
               deflation: false,
-              reflection: false
+              reflection: false,
             },
             owner: address,
-            createdAt: Date.now() - 86400000 // 1 jour avant
+            createdAt: Date.now() - 86400000, // 1 jour avant
           },
           {
-            name: 'Another Token',
-            symbol: 'ATK',
-            address: '0x0987654321098765432109876543210987654321',
-            totalSupply: '10000000',
-            balance: '2500000',
+            name: "Another Token",
+            symbol: "ATK",
+            address: "0x0987654321098765432109876543210987654321",
+            totalSupply: "10000000",
+            balance: "2500000",
             decimals: 18,
             features: {
               mintable: true,
@@ -81,17 +81,19 @@ export const useTokenData = (address?: string) => {
               blacklist: true,
               forceTransfer: false,
               deflation: false,
-              reflection: false
+              reflection: false,
             },
             owner: address,
-            createdAt: Date.now() - 172800000 // 2 jours avant
-          }
+            createdAt: Date.now() - 172800000, // 2 jours avant
+          },
         ];
 
         setData(mockTokens);
       } catch (err) {
-        console.error('Error fetching token data:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch token data'));
+        console.error("Error fetching token data:", err);
+        setError(
+          err instanceof Error ? err : new Error("Failed to fetch token data")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -103,7 +105,7 @@ export const useTokenData = (address?: string) => {
   // Fonction pour récupérer les détails d'un token spécifique
   const getTokenDetails = async (tokenAddress: Address) => {
     if (!publicClient) {
-      throw new Error('Public client not available');
+      throw new Error("Public client not available");
     }
 
     try {
@@ -113,13 +115,13 @@ export const useTokenData = (address?: string) => {
         abi: [
           {
             inputs: [],
-            name: 'name',
-            outputs: [{ name: '', type: 'string' }],
-            stateMutability: 'view',
-            type: 'function',
+            name: "name",
+            outputs: [{ name: "", type: "string" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'name',
+        functionName: "name",
       });
 
       // Récupérer le symbole
@@ -128,13 +130,13 @@ export const useTokenData = (address?: string) => {
         abi: [
           {
             inputs: [],
-            name: 'symbol',
-            outputs: [{ name: '', type: 'string' }],
-            stateMutability: 'view',
-            type: 'function',
+            name: "symbol",
+            outputs: [{ name: "", type: "string" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'symbol',
+        functionName: "symbol",
       });
 
       // Récupérer la supply totale
@@ -143,13 +145,13 @@ export const useTokenData = (address?: string) => {
         abi: [
           {
             inputs: [],
-            name: 'totalSupply',
-            outputs: [{ name: '', type: 'uint256' }],
-            stateMutability: 'view',
-            type: 'function',
+            name: "totalSupply",
+            outputs: [{ name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'totalSupply',
+        functionName: "totalSupply",
       });
 
       // Récupérer les décimales
@@ -158,13 +160,13 @@ export const useTokenData = (address?: string) => {
         abi: [
           {
             inputs: [],
-            name: 'decimals',
-            outputs: [{ name: '', type: 'uint8' }],
-            stateMutability: 'view',
-            type: 'function',
+            name: "decimals",
+            outputs: [{ name: "", type: "uint8" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'decimals',
+        functionName: "decimals",
       });
 
       // Vérifier si le token est mintable (peut varier selon l'implémentation)
@@ -175,13 +177,13 @@ export const useTokenData = (address?: string) => {
           abi: [
             {
               inputs: [],
-              name: 'mint',
+              name: "mint",
               outputs: [],
-              stateMutability: 'nonpayable',
-              type: 'function',
+              stateMutability: "nonpayable",
+              type: "function",
             },
           ],
-          functionName: 'mint',
+          functionName: "mint",
         });
         mintable = true;
       } catch {
@@ -196,13 +198,13 @@ export const useTokenData = (address?: string) => {
           abi: [
             {
               inputs: [],
-              name: 'burn',
+              name: "burn",
               outputs: [],
-              stateMutability: 'nonpayable',
-              type: 'function',
+              stateMutability: "nonpayable",
+              type: "function",
             },
           ],
-          functionName: 'burn',
+          functionName: "burn",
         });
         burnable = true;
       } catch {
@@ -222,11 +224,11 @@ export const useTokenData = (address?: string) => {
           blacklist: false,
           forceTransfer: false,
           deflation: false,
-          reflection: false
-        }
+          reflection: false,
+        },
       };
     } catch (err) {
-      console.error('Error fetching token details:', err);
+      console.error("Error fetching token details:", err);
       throw err;
     }
   };
@@ -240,6 +242,6 @@ export const useTokenData = (address?: string) => {
       setIsLoading(true);
       // Réinitialiser les données pour forcer un rechargement
       setData([]);
-    }
+    },
   };
 };

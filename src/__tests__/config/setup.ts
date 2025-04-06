@@ -1,17 +1,17 @@
-import '@testing-library/jest-dom';
-import { vi } from 'vitest';
-import { TextDecoder, TextEncoder } from 'util';
-import { cleanup } from '@testing-library/react';
-import { resetStore } from '@/store';
+import "@testing-library/jest-dom";
+import { vi } from "vitest";
+import { TextDecoder, TextEncoder } from "util";
+import { cleanup } from "@testing-library/react";
+import { resetStore } from "@/store";
 
 // Mock global objects and APIs
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 // Mock Web APIs
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -30,7 +30,7 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 // Mock sessionStorage
 const sessionStorageMock = {
@@ -39,7 +39,7 @@ const sessionStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+Object.defineProperty(window, "sessionStorage", { value: sessionStorageMock });
 
 // Mock window.URL
 window.URL.createObjectURL = vi.fn();
@@ -66,4 +66,4 @@ afterEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
   sessionStorage.clear();
-}); 
+});

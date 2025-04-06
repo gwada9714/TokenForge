@@ -1,11 +1,11 @@
-import { renderHook, act } from '@testing-library/react';
-import { useAuthState } from '../hooks/useAuthState';
-import { User } from 'firebase/auth';
+import { renderHook, act } from "@testing-library/react";
+import { useAuthState } from "../hooks/useAuthState";
+import { User } from "firebase/auth";
 
-describe('useAuthState', () => {
-  it('should initialize with default state', () => {
+describe("useAuthState", () => {
+  it("should initialize with default state", () => {
     const { result } = renderHook(() => useAuthState());
-    
+
     expect(result.current.state).toEqual({
       isAuthenticated: false,
       user: null,
@@ -14,9 +14,9 @@ describe('useAuthState', () => {
     });
   });
 
-  it('should update state on login', () => {
+  it("should update state on login", () => {
     const { result } = renderHook(() => useAuthState());
-    const mockUser = { email: 'test@example.com' } as User;
+    const mockUser = { email: "test@example.com" } as User;
 
     act(() => {
       result.current.actions.login(mockUser);
@@ -30,9 +30,9 @@ describe('useAuthState', () => {
     });
   });
 
-  it('should clear state on logout', () => {
+  it("should clear state on logout", () => {
     const { result } = renderHook(() => useAuthState());
-    const mockUser = { email: 'test@example.com' } as User;
+    const mockUser = { email: "test@example.com" } as User;
 
     act(() => {
       result.current.actions.login(mockUser);
@@ -50,12 +50,12 @@ describe('useAuthState', () => {
     });
   });
 
-  it('should handle errors', () => {
+  it("should handle errors", () => {
     const { result } = renderHook(() => useAuthState());
     const mockError = {
-      code: 'auth/invalid-email',
-      message: 'Invalid email',
-      name: 'AuthError',
+      code: "auth/invalid-email",
+      message: "Invalid email",
+      name: "AuthError",
     };
 
     act(() => {

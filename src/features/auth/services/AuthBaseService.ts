@@ -1,6 +1,6 @@
-import { BaseSingletonService } from '@/services/BaseService';
-import { Auth } from 'firebase/auth';
-import { errorHandler } from '@/utils/errors';
+import { BaseSingletonService } from "@/services/BaseService";
+import { Auth } from "firebase/auth";
+import { errorHandler } from "@/utils/errors";
 
 export abstract class AuthBaseService extends BaseSingletonService<AuthBaseService> {
   protected auth: Auth | null = null;
@@ -9,7 +9,7 @@ export abstract class AuthBaseService extends BaseSingletonService<AuthBaseServi
   protected setupAuthStateListener(auth: Auth): void {
     auth.onAuthStateChanged(
       (user) => this.handleAuthStateChange(user),
-      (error) => errorHandler.handleError(error, 'Auth')
+      (error) => errorHandler.handleError(error, "Auth")
     );
   }
 

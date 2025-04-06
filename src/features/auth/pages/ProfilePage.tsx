@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { SEOHead } from '@/components';
+import React, { useState } from "react";
+import { SEOHead } from "@/components";
 
 interface UserProfile {
   id: string;
@@ -21,12 +21,12 @@ interface UserProfile {
 export const ProfilePage: React.FC = () => {
   // Données utilisateur simulées
   const [profile, setProfile] = useState<UserProfile>({
-    id: 'user123',
-    name: 'Jean Dupont',
-    email: 'jean.dupont@example.com',
-    avatar: '/images/avatars/default.jpg',
-    walletAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-    createdAt: '2024-12-15T10:30:00Z',
+    id: "user123",
+    name: "Jean Dupont",
+    email: "jean.dupont@example.com",
+    avatar: "/images/avatars/default.jpg",
+    walletAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+    createdAt: "2024-12-15T10:30:00Z",
     twoFactorEnabled: false,
     notificationPreferences: {
       email: true,
@@ -44,9 +44,9 @@ export const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: profile.name,
     email: profile.email,
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
     emailNotifications: profile.notificationPreferences.email,
     push: profile.notificationPreferences.push,
     securityAlerts: profile.notificationPreferences.securityAlerts,
@@ -58,22 +58,28 @@ export const ProfilePage: React.FC = () => {
 
   // Formatage de l'adresse wallet
   const formatWalletAddress = (address: string) => {
-    if (!address) return '';
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    if (!address) return "";
+    return `${address.substring(0, 6)}...${address.substring(
+      address.length - 4
+    )}`;
   };
 
   // Formatage de la date
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('fr-FR', options);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString("fr-FR", options);
   };
 
   // Gestion des changements dans les formulaires
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -85,19 +91,21 @@ export const ProfilePage: React.FC = () => {
 
     try {
       // Simulation d'une mise à jour de profil
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Mise à jour du profil
-      setProfile(prev => ({
+      setProfile((prev) => ({
         ...prev,
         name: formData.name,
         email: formData.email,
       }));
 
-      setSuccessMessage('Profil mis à jour avec succès');
+      setSuccessMessage("Profil mis à jour avec succès");
       setIsEditingProfile(false);
     } catch (error) {
-      setErrorMessage('Une erreur est survenue lors de la mise à jour du profil');
+      setErrorMessage(
+        "Une erreur est survenue lors de la mise à jour du profil"
+      );
     }
   };
 
@@ -109,29 +117,31 @@ export const ProfilePage: React.FC = () => {
 
     // Validation des mots de passe
     if (formData.newPassword !== formData.confirmPassword) {
-      setErrorMessage('Les mots de passe ne correspondent pas');
+      setErrorMessage("Les mots de passe ne correspondent pas");
       return;
     }
 
     if (formData.newPassword.length < 8) {
-      setErrorMessage('Le mot de passe doit contenir au moins 8 caractères');
+      setErrorMessage("Le mot de passe doit contenir au moins 8 caractères");
       return;
     }
 
     try {
       // Simulation d'un changement de mot de passe
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      setSuccessMessage('Mot de passe modifié avec succès');
-      setFormData(prev => ({
+      setSuccessMessage("Mot de passe modifié avec succès");
+      setFormData((prev) => ({
         ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       }));
       setIsChangingPassword(false);
     } catch (error) {
-      setErrorMessage('Une erreur est survenue lors du changement de mot de passe');
+      setErrorMessage(
+        "Une erreur est survenue lors du changement de mot de passe"
+      );
     }
   };
 
@@ -143,10 +153,10 @@ export const ProfilePage: React.FC = () => {
 
     try {
       // Simulation d'une mise à jour des préférences
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Mise à jour des préférences
-      setProfile(prev => ({
+      setProfile((prev) => ({
         ...prev,
         notificationPreferences: {
           email: formData.emailNotifications,
@@ -157,10 +167,12 @@ export const ProfilePage: React.FC = () => {
         },
       }));
 
-      setSuccessMessage('Préférences de notification mises à jour avec succès');
+      setSuccessMessage("Préférences de notification mises à jour avec succès");
       setIsManagingNotifications(false);
     } catch (error) {
-      setErrorMessage('Une erreur est survenue lors de la mise à jour des préférences');
+      setErrorMessage(
+        "Une erreur est survenue lors de la mise à jour des préférences"
+      );
     }
   };
 
@@ -171,17 +183,23 @@ export const ProfilePage: React.FC = () => {
 
     try {
       // Simulation d'une mise à jour de l'authentification à deux facteurs
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Mise à jour du profil
-      setProfile(prev => ({
+      setProfile((prev) => ({
         ...prev,
         twoFactorEnabled: !prev.twoFactorEnabled,
       }));
 
-      setSuccessMessage(`Authentification à deux facteurs ${profile.twoFactorEnabled ? 'désactivée' : 'activée'} avec succès`);
+      setSuccessMessage(
+        `Authentification à deux facteurs ${
+          profile.twoFactorEnabled ? "désactivée" : "activée"
+        } avec succès`
+      );
     } catch (error) {
-      setErrorMessage('Une erreur est survenue lors de la mise à jour de l\'authentification à deux facteurs');
+      setErrorMessage(
+        "Une erreur est survenue lors de la mise à jour de l'authentification à deux facteurs"
+      );
     }
   };
 
@@ -195,7 +213,9 @@ export const ProfilePage: React.FC = () => {
       <div className="bg-gray-50 dark:bg-gray-900 min-h-screen py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-8">Mon Profil</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-8">
+              Mon Profil
+            </h1>
 
             {/* Messages de succès et d'erreur */}
             {successMessage && (
@@ -217,8 +237,12 @@ export const ProfilePage: React.FC = () => {
                     <span>Avatar</span>
                   </div>
                   <div className="text-center sm:text-left">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{profile.name}</h2>
-                    <p className="text-gray-600 dark:text-gray-400">{profile.email}</p>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                      {profile.name}
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {profile.email}
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
                       Membre depuis {formatDate(profile.createdAt)}
                     </p>
@@ -229,19 +253,24 @@ export const ProfilePage: React.FC = () => {
               {/* Informations du profil */}
               <div className="p-6 sm:p-8 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Informations personnelles</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Informations personnelles
+                  </h3>
                   <button
                     onClick={() => setIsEditingProfile(!isEditingProfile)}
                     className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                   >
-                    {isEditingProfile ? 'Annuler' : 'Modifier'}
+                    {isEditingProfile ? "Annuler" : "Modifier"}
                   </button>
                 </div>
 
                 {isEditingProfile ? (
                   <form onSubmit={handleProfileSubmit} className="space-y-4">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
                         Nom complet
                       </label>
                       <input
@@ -254,7 +283,10 @@ export const ProfilePage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label
+                        htmlFor="email"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
                         Adresse email
                       </label>
                       <input
@@ -279,20 +311,32 @@ export const ProfilePage: React.FC = () => {
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Nom</p>
-                        <p className="mt-1 text-gray-900 dark:text-white">{profile.name}</p>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Nom
+                        </p>
+                        <p className="mt-1 text-gray-900 dark:text-white">
+                          {profile.name}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</p>
-                        <p className="mt-1 text-gray-900 dark:text-white">{profile.email}</p>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Email
+                        </p>
+                        <p className="mt-1 text-gray-900 dark:text-white">
+                          {profile.email}
+                        </p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Adresse wallet</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Adresse wallet
+                      </p>
                       <p className="mt-1 text-gray-900 dark:text-white font-mono">
                         {formatWalletAddress(profile.walletAddress)}
                         <button
-                          onClick={() => navigator.clipboard.writeText(profile.walletAddress)}
+                          onClick={() =>
+                            navigator.clipboard.writeText(profile.walletAddress)
+                          }
                           className="ml-2 text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 text-xs"
                         >
                           Copier
@@ -306,19 +350,24 @@ export const ProfilePage: React.FC = () => {
               {/* Sécurité */}
               <div className="p-6 sm:p-8 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Sécurité</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Sécurité
+                  </h3>
                   <button
                     onClick={() => setIsChangingPassword(!isChangingPassword)}
                     className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                   >
-                    {isChangingPassword ? 'Annuler' : 'Changer le mot de passe'}
+                    {isChangingPassword ? "Annuler" : "Changer le mot de passe"}
                   </button>
                 </div>
 
                 {isChangingPassword ? (
                   <form onSubmit={handlePasswordSubmit} className="space-y-4">
                     <div>
-                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label
+                        htmlFor="currentPassword"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
                         Mot de passe actuel
                       </label>
                       <input
@@ -331,7 +380,10 @@ export const ProfilePage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label
+                        htmlFor="newPassword"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
                         Nouveau mot de passe
                       </label>
                       <input
@@ -344,7 +396,10 @@ export const ProfilePage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label
+                        htmlFor="confirmPassword"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
                         Confirmer le nouveau mot de passe
                       </label>
                       <input
@@ -369,26 +424,33 @@ export const ProfilePage: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">Authentification à deux facteurs</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          Authentification à deux facteurs
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {profile.twoFactorEnabled
-                            ? 'Activée - Votre compte est sécurisé avec l\'authentification à deux facteurs'
-                            : 'Désactivée - Activez l\'authentification à deux facteurs pour une sécurité renforcée'}
+                            ? "Activée - Votre compte est sécurisé avec l'authentification à deux facteurs"
+                            : "Désactivée - Activez l'authentification à deux facteurs pour une sécurité renforcée"}
                         </p>
                       </div>
                       <button
                         onClick={handleToggle2FA}
-                        className={`px-3 py-1 rounded-md text-sm font-medium ${profile.twoFactorEnabled
-                          ? 'bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50'
-                          : 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50'
-                          }`}
+                        className={`px-3 py-1 rounded-md text-sm font-medium ${
+                          profile.twoFactorEnabled
+                            ? "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+                            : "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
+                        }`}
                       >
-                        {profile.twoFactorEnabled ? 'Désactiver' : 'Activer'}
+                        {profile.twoFactorEnabled ? "Désactiver" : "Activer"}
                       </button>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Dernière connexion</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Aujourd'hui à 08:45 depuis Paris, France</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Dernière connexion
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Aujourd'hui à 08:45 depuis Paris, France
+                      </p>
                     </div>
                   </div>
                 )}
@@ -397,17 +459,24 @@ export const ProfilePage: React.FC = () => {
               {/* Préférences de notification */}
               <div className="p-6 sm:p-8">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Préférences de notification</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Préférences de notification
+                  </h3>
                   <button
-                    onClick={() => setIsManagingNotifications(!isManagingNotifications)}
+                    onClick={() =>
+                      setIsManagingNotifications(!isManagingNotifications)
+                    }
                     className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                   >
-                    {isManagingNotifications ? 'Annuler' : 'Gérer'}
+                    {isManagingNotifications ? "Annuler" : "Gérer"}
                   </button>
                 </div>
 
                 {isManagingNotifications ? (
-                  <form onSubmit={handleNotificationsSubmit} className="space-y-4">
+                  <form
+                    onSubmit={handleNotificationsSubmit}
+                    className="space-y-4"
+                  >
                     <div className="space-y-2">
                       <div className="flex items-start">
                         <div className="flex items-center h-5">
@@ -421,8 +490,16 @@ export const ProfilePage: React.FC = () => {
                           />
                         </div>
                         <div className="ml-3 text-sm">
-                          <label htmlFor="emailNotifications" className="font-medium text-gray-700 dark:text-gray-300">Notifications par email</label>
-                          <p className="text-gray-500 dark:text-gray-400">Recevoir des notifications par email pour les mises à jour importantes</p>
+                          <label
+                            htmlFor="emailNotifications"
+                            className="font-medium text-gray-700 dark:text-gray-300"
+                          >
+                            Notifications par email
+                          </label>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            Recevoir des notifications par email pour les mises
+                            à jour importantes
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-start">
@@ -437,8 +514,15 @@ export const ProfilePage: React.FC = () => {
                           />
                         </div>
                         <div className="ml-3 text-sm">
-                          <label htmlFor="push" className="font-medium text-gray-700 dark:text-gray-300">Notifications push</label>
-                          <p className="text-gray-500 dark:text-gray-400">Recevoir des notifications push sur votre navigateur</p>
+                          <label
+                            htmlFor="push"
+                            className="font-medium text-gray-700 dark:text-gray-300"
+                          >
+                            Notifications push
+                          </label>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            Recevoir des notifications push sur votre navigateur
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-start">
@@ -453,8 +537,15 @@ export const ProfilePage: React.FC = () => {
                           />
                         </div>
                         <div className="ml-3 text-sm">
-                          <label htmlFor="securityAlerts" className="font-medium text-gray-700 dark:text-gray-300">Alertes de sécurité</label>
-                          <p className="text-gray-500 dark:text-gray-400">Recevoir des alertes pour les activités suspectes</p>
+                          <label
+                            htmlFor="securityAlerts"
+                            className="font-medium text-gray-700 dark:text-gray-300"
+                          >
+                            Alertes de sécurité
+                          </label>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            Recevoir des alertes pour les activités suspectes
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-start">
@@ -469,8 +560,16 @@ export const ProfilePage: React.FC = () => {
                           />
                         </div>
                         <div className="ml-3 text-sm">
-                          <label htmlFor="marketingUpdates" className="font-medium text-gray-700 dark:text-gray-300">Mises à jour marketing</label>
-                          <p className="text-gray-500 dark:text-gray-400">Recevoir des informations sur les nouvelles fonctionnalités et offres</p>
+                          <label
+                            htmlFor="marketingUpdates"
+                            className="font-medium text-gray-700 dark:text-gray-300"
+                          >
+                            Mises à jour marketing
+                          </label>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            Recevoir des informations sur les nouvelles
+                            fonctionnalités et offres
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-start">
@@ -485,8 +584,15 @@ export const ProfilePage: React.FC = () => {
                           />
                         </div>
                         <div className="ml-3 text-sm">
-                          <label htmlFor="weeklyDigest" className="font-medium text-gray-700 dark:text-gray-300">Résumé hebdomadaire</label>
-                          <p className="text-gray-500 dark:text-gray-400">Recevoir un résumé hebdomadaire de vos activités</p>
+                          <label
+                            htmlFor="weeklyDigest"
+                            className="font-medium text-gray-700 dark:text-gray-300"
+                          >
+                            Résumé hebdomadaire
+                          </label>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            Recevoir un résumé hebdomadaire de vos activités
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -502,24 +608,54 @@ export const ProfilePage: React.FC = () => {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</p>
-                      <p className="mt-1 text-gray-900 dark:text-white">{profile.notificationPreferences.email ? 'Activé' : 'Désactivé'}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Email
+                      </p>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {profile.notificationPreferences.email
+                          ? "Activé"
+                          : "Désactivé"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Push</p>
-                      <p className="mt-1 text-gray-900 dark:text-white">{profile.notificationPreferences.push ? 'Activé' : 'Désactivé'}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Push
+                      </p>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {profile.notificationPreferences.push
+                          ? "Activé"
+                          : "Désactivé"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Alertes de sécurité</p>
-                      <p className="mt-1 text-gray-900 dark:text-white">{profile.notificationPreferences.securityAlerts ? 'Activé' : 'Désactivé'}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Alertes de sécurité
+                      </p>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {profile.notificationPreferences.securityAlerts
+                          ? "Activé"
+                          : "Désactivé"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Mises à jour marketing</p>
-                      <p className="mt-1 text-gray-900 dark:text-white">{profile.notificationPreferences.marketingUpdates ? 'Activé' : 'Désactivé'}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Mises à jour marketing
+                      </p>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {profile.notificationPreferences.marketingUpdates
+                          ? "Activé"
+                          : "Désactivé"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Résumé hebdomadaire</p>
-                      <p className="mt-1 text-gray-900 dark:text-white">{profile.notificationPreferences.weeklyDigest ? 'Activé' : 'Désactivé'}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Résumé hebdomadaire
+                      </p>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {profile.notificationPreferences.weeklyDigest
+                          ? "Activé"
+                          : "Désactivé"}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -528,7 +664,9 @@ export const ProfilePage: React.FC = () => {
 
             {/* Actions de compte */}
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 sm:p-8">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Actions de compte</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Actions de compte
+              </h3>
               <div className="space-y-4">
                 <button className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium">
                   Déconnecter tous les appareils

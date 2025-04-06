@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { Container, Tabs, Tab, Box, Typography, Paper, Alert, Button } from '@mui/material';
+import React, { useState } from "react";
+import {
+  Container,
+  Tabs,
+  Tab,
+  Box,
+  Typography,
+  Paper,
+  Alert,
+  Button,
+} from "@mui/material";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -18,11 +27,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -33,10 +38,12 @@ const SimpleTestComponent: React.FC = () => {
   return (
     <Box>
       <Typography variant="h5">Composant de test simple</Typography>
-      <Typography>Ce composant fonctionne correctement si vous pouvez voir ce texte.</Typography>
-      <Button 
-        variant="contained" 
-        color="primary" 
+      <Typography>
+        Ce composant fonctionne correctement si vous pouvez voir ce texte.
+      </Typography>
+      <Button
+        variant="contained"
+        color="primary"
         onClick={() => setCount(count + 1)}
         sx={{ mt: 2 }}
       >
@@ -64,16 +71,21 @@ const FirebaseTestPage: React.FC = () => {
           Firebase Test Center
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Cette page permet de tester les différentes fonctionnalités Firebase utilisées dans l'application.
-          Utilisez les onglets ci-dessous pour accéder aux différents tests.
+          Cette page permet de tester les différentes fonctionnalités Firebase
+          utilisées dans l'application. Utilisez les onglets ci-dessous pour
+          accéder aux différents tests.
         </Typography>
         <Alert severity="info" sx={{ mt: 2 }}>
           Version simplifiée pour diagnostiquer les problèmes d'affichage.
         </Alert>
       </Paper>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={currentTab} onChange={handleTabChange} aria-label="firebase test tabs">
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs
+          value={currentTab}
+          onChange={handleTabChange}
+          aria-label="firebase test tabs"
+        >
           <Tab label="Test Simple" id="tab-0" aria-controls="tabpanel-0" />
         </Tabs>
       </Box>

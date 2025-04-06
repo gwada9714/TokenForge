@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   TextField,
@@ -7,10 +7,10 @@ import {
   Button,
   Typography,
   Paper,
-  Alert
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useTokens } from '../../contexts/TokenContext';
+  Alert,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useTokens } from "../../contexts/TokenContext";
 
 interface TokenFormData {
   name: string;
@@ -23,13 +23,13 @@ interface TokenFormData {
 }
 
 const initialFormData: TokenFormData = {
-  name: '',
-  symbol: '',
+  name: "",
+  symbol: "",
   decimals: 18,
-  totalSupply: '',
+  totalSupply: "",
   burnable: false,
   mintable: false,
-  pausable: false
+  pausable: false,
 };
 
 export const CreateTokenForm: React.FC = () => {
@@ -46,9 +46,10 @@ export const CreateTokenForm: React.FC = () => {
 
     try {
       await createToken(formData);
-      navigate('/tokens');
+      navigate("/tokens");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Une erreur est survenue';
+      const errorMessage =
+        err instanceof Error ? err.message : "Une erreur est survenue";
       setError(errorMessage);
     } finally {
       setSubmitting(false);
@@ -56,7 +57,7 @@ export const CreateTokenForm: React.FC = () => {
   };
 
   return (
-    <Paper sx={{ p: 3, maxWidth: 600, mx: 'auto', mt: 4 }}>
+    <Paper sx={{ p: 3, maxWidth: 600, mx: "auto", mt: 4 }}>
       <Typography variant="h5" gutterBottom>
         Créer un Nouveau Token
       </Typography>
@@ -87,7 +88,9 @@ export const CreateTokenForm: React.FC = () => {
           type="number"
           label="Décimales"
           value={formData.decimals}
-          onChange={(e) => setFormData({ ...formData, decimals: parseInt(e.target.value) })}
+          onChange={(e) =>
+            setFormData({ ...formData, decimals: parseInt(e.target.value) })
+          }
           margin="normal"
           required
         />
@@ -95,7 +98,9 @@ export const CreateTokenForm: React.FC = () => {
           fullWidth
           label="Supply Totale"
           value={formData.totalSupply}
-          onChange={(e) => setFormData({ ...formData, totalSupply: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, totalSupply: e.target.value })
+          }
           margin="normal"
           required
         />
@@ -104,7 +109,9 @@ export const CreateTokenForm: React.FC = () => {
             control={
               <Checkbox
                 checked={formData.burnable}
-                onChange={(e) => setFormData({ ...formData, burnable: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, burnable: e.target.checked })
+                }
               />
             }
             label="Burnable"
@@ -113,7 +120,9 @@ export const CreateTokenForm: React.FC = () => {
             control={
               <Checkbox
                 checked={formData.mintable}
-                onChange={(e) => setFormData({ ...formData, mintable: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, mintable: e.target.checked })
+                }
               />
             }
             label="Mintable"
@@ -122,7 +131,9 @@ export const CreateTokenForm: React.FC = () => {
             control={
               <Checkbox
                 checked={formData.pausable}
-                onChange={(e) => setFormData({ ...formData, pausable: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, pausable: e.target.checked })
+                }
               />
             }
             label="Pausable"
@@ -136,9 +147,9 @@ export const CreateTokenForm: React.FC = () => {
           sx={{ mt: 3 }}
           disabled={submitting}
         >
-          {submitting ? 'Création en cours...' : 'Créer le Token'}
+          {submitting ? "Création en cours..." : "Créer le Token"}
         </Button>
       </Box>
     </Paper>
   );
-}; 
+};

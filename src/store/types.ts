@@ -1,5 +1,5 @@
-import { TokenConfig } from '@/types/token';
-import { store } from './index';
+import { TokenConfig } from "@/types/token";
+import { store } from "./index";
 
 // Base types
 export type RootState = ReturnType<typeof store.getState>;
@@ -40,10 +40,10 @@ export interface WalletState {
 }
 
 export interface UIState {
-  theme: 'light' | 'dark';
+  theme: "light" | "dark";
   notifications: Array<{
     id: string;
-    type: 'success' | 'error' | 'info' | 'warning';
+    type: "success" | "error" | "info" | "warning";
     message: string;
   }>;
   isLoading: boolean;

@@ -1,41 +1,41 @@
-import React from 'react';
-import { Grid, Button } from '@mui/material';
-import { 
+import React from "react";
+import { Grid, Button } from "@mui/material";
+import {
   Add as AddIcon,
   AccountBalanceWallet as WalletIcon,
   Lock as LockIcon,
-  SwapHoriz as SwapIcon
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+  SwapHoriz as SwapIcon,
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 export const QuickActions: React.FC = () => {
   const navigate = useNavigate();
 
   const actions = [
     {
-      label: 'Créer un Token',
+      label: "Créer un Token",
       icon: <AddIcon />,
-      onClick: () => navigate('/create-token'),
-      color: 'primary'
+      onClick: () => navigate("/create-token"),
+      color: "primary",
     },
     {
-      label: 'Staking',
+      label: "Staking",
       icon: <LockIcon />,
-      onClick: () => navigate('/staking'),
-      color: 'secondary'
+      onClick: () => navigate("/staking"),
+      color: "secondary",
     },
     {
-      label: 'Connecter Wallet',
+      label: "Connecter Wallet",
       icon: <WalletIcon />,
-      onClick: () => navigate('/connect-wallet'),
-      color: 'info'
+      onClick: () => navigate("/connect-wallet"),
+      color: "info",
     },
     {
-      label: 'Échanger',
+      label: "Échanger",
       icon: <SwapIcon />,
-      onClick: () => navigate('/swap'),
-      color: 'success'
-    }
+      onClick: () => navigate("/swap"),
+      color: "success",
+    },
   ] as const;
 
   return (
@@ -50,8 +50,8 @@ export const QuickActions: React.FC = () => {
             fullWidth
             sx={{
               py: 1.5,
-              justifyContent: 'flex-start',
-              textAlign: 'left'
+              justifyContent: "flex-start",
+              textAlign: "left",
             }}
           >
             {action.label}
@@ -60,4 +60,4 @@ export const QuickActions: React.FC = () => {
       ))}
     </Grid>
   );
-}; 
+};

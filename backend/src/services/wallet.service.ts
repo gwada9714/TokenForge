@@ -1,7 +1,7 @@
-import { ethers } from 'ethers';
-import { WalletModel } from '../models/wallet.model';
-import { ProviderService } from './provider.service';
-import logger from '../utils/logger';
+import { ethers } from "ethers";
+import { WalletModel } from "../models/wallet.model";
+import { ProviderService } from "./provider.service";
+import logger from "../utils/logger";
 
 export class WalletService {
   private provider: ProviderService;
@@ -14,7 +14,7 @@ export class WalletService {
     try {
       // Créer un nouveau wallet
       const wallet = ethers.Wallet.createRandom();
-      
+
       // Calculer la date d'expiration (24h)
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
@@ -23,15 +23,15 @@ export class WalletService {
       const newWallet = await WalletModel.create({
         address: wallet.address,
         privateKey: wallet.privateKey, // Note: En production, crypter la clé privée
-        expiresAt
+        expiresAt,
       });
 
       return {
         address: newWallet.address,
-        expiresAt: newWallet.expiresAt
+        expiresAt: newWallet.expiresAt,
       };
     } catch (error) {
-      logger.error('Error in createTemporaryWallet:', error);
+      logger.error("Error in createTemporaryWallet:", error);
       throw error;
     }
   }
@@ -43,10 +43,10 @@ export class WalletService {
 
       return {
         address: wallet.address,
-        expiresAt: wallet.expiresAt
+        expiresAt: wallet.expiresAt,
       };
     } catch (error) {
-      logger.error('Error in getWalletByAddress:', error);
+      logger.error("Error in getWalletByAddress:", error);
       throw error;
     }
   }
@@ -57,7 +57,7 @@ export class WalletService {
       const balance = await provider.getBalance(address);
       return ethers.formatEther(balance);
     } catch (error) {
-      logger.error('Error in getWalletBalance:', error);
+      logger.error("Error in getWalletBalance:", error);
       throw error;
     }
   }
@@ -66,11 +66,11 @@ export class WalletService {
   async cleanupExpiredWallets() {
     try {
       const result = await WalletModel.deleteMany({
-        expiresAt: { $lt: new Date() }
+        expiresAt: { $lt: new Date() },
       });
       logger.info(`Cleaned up ${result.deletedCount} expired wallets`);
     } catch (error) {
-      logger.error('Error in cleanupExpiredWallets:', error);
+      logger.error("Error in cleanupExpiredWallets:", error);
       throw error;
     }
   }

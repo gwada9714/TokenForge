@@ -1,32 +1,36 @@
-import React from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import React from "react";
+import { Box, CircularProgress } from "@mui/material";
 
 interface LoadingSpinnerProps {
   size?: number;
-  color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'inherit';
+  color?:
+    | "primary"
+    | "secondary"
+    | "error"
+    | "info"
+    | "success"
+    | "warning"
+    | "inherit";
   fullScreen?: boolean;
   minHeight?: string | number;
 }
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 40,
-  color = 'primary',
+  color = "primary",
   fullScreen = true,
-  minHeight = '100vh'
+  minHeight = "100vh",
 }) => {
   return (
     <Box
       display="flex"
       justifyContent="center"
       alignItems="center"
-      minHeight={fullScreen ? minHeight : '200px'}
+      minHeight={fullScreen ? minHeight : "200px"}
       width="100%"
       p={2}
     >
-      <CircularProgress 
-        size={size}
-        color={color}
-      />
+      <CircularProgress size={size} color={color} />
     </Box>
   );
 };

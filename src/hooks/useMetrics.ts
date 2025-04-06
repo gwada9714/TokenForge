@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface Metrics {
   totalTokens: number;
@@ -36,7 +36,7 @@ export const useMetrics = () => {
         setMetrics(response);
         setLoading(false);
       } catch (err) {
-        setError('Erreur lors de la récupération des métriques');
+        setError("Erreur lors de la récupération des métriques");
         setLoading(false);
       }
     };
@@ -50,4 +50,4 @@ export const useMetrics = () => {
   }, []);
 
   return { metrics, loading, error };
-}; 
+};

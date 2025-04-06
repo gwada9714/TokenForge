@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Paper,
@@ -12,8 +12,8 @@ import {
   TableHead,
   TableRow,
   Alert,
-} from '@mui/material';
-import { formatUnits, parseUnits } from 'viem';
+} from "@mui/material";
+import { formatUnits, parseUnits } from "viem";
 
 interface TokenSimulatorProps {
   tokenParams: {
@@ -28,7 +28,7 @@ interface TokenSimulatorProps {
 interface SimulationState {
   balance: bigint;
   transactions: {
-    type: 'transfer' | 'mint' | 'burn';
+    type: "transfer" | "mint" | "burn";
     amount: bigint;
     from: string;
     to: string;
@@ -36,30 +36,32 @@ interface SimulationState {
   }[];
 }
 
-export const TokenSimulator: React.FC<TokenSimulatorProps> = ({ tokenParams }) => {
+export const TokenSimulator: React.FC<TokenSimulatorProps> = ({
+  tokenParams,
+}) => {
   const [simulationState, setSimulationState] = useState<SimulationState>({
     balance: parseUnits(tokenParams.totalSupply, tokenParams.decimals),
     transactions: [],
   });
 
-  const [amount, setAmount] = useState('');
-  const [recipient, setRecipient] = useState('');
+  const [amount, setAmount] = useState("");
+  const [recipient, setRecipient] = useState("");
 
   const handleSimulateTransfer = () => {
     try {
       const transferAmount = parseUnits(amount, tokenParams.decimals);
-      
+
       if (transferAmount > simulationState.balance) {
-        throw new Error('Insufficient balance');
+        throw new Error("Insufficient balance");
       }
 
       setSimulationState((prev) => ({
         balance: prev.balance - transferAmount,
         transactions: [
           {
-            type: 'transfer',
+            type: "transfer",
             amount: transferAmount,
-            from: 'Owner',
+            from: "Owner",
             to: recipient,
             timestamp: Date.now(),
           },
@@ -67,15 +69,15 @@ export const TokenSimulator: React.FC<TokenSimulatorProps> = ({ tokenParams }) =
         ],
       }));
 
-      setAmount('');
-      setRecipient('');
+      setAmount("");
+      setRecipient("");
     } catch (error) {
-      console.error('Simulation error:', error);
+      console.error("Simulation error:", error);
     }
   };
 
-  const canMint = tokenParams.features.includes('mintable');
-  const canBurn = tokenParams.features.includes('burnable');
+  const canMint = tokenParams.features.includes("mintable");
+  const canBurn = tokenParams.features.includes("burnable");
 
   const handleSimulateMint = () => {
     if (!canMint) return;
@@ -87,19 +89,19 @@ export const TokenSimulator: React.FC<TokenSimulatorProps> = ({ tokenParams }) =
         balance: prev.balance + mintAmount,
         transactions: [
           {
-            type: 'mint',
+            type: "mint",
             amount: mintAmount,
-            from: 'Minter',
-            to: 'Supply',
+            from: "Minter",
+            to: "Supply",
             timestamp: Date.now(),
           },
           ...prev.transactions,
         ],
       }));
 
-      setAmount('');
+      setAmount("");
     } catch (error) {
-      console.error('Mint simulation error:', error);
+      console.error("Mint simulation error:", error);
     }
   };
 
@@ -108,28 +110,28 @@ export const TokenSimulator: React.FC<TokenSimulatorProps> = ({ tokenParams }) =
 
     try {
       const burnAmount = parseUnits(amount, tokenParams.decimals);
-      
+
       if (burnAmount > simulationState.balance) {
-        throw new Error('Insufficient balance to burn');
+        throw new Error("Insufficient balance to burn");
       }
 
       setSimulationState((prev) => ({
         balance: prev.balance - burnAmount,
         transactions: [
           {
-            type: 'burn',
+            type: "burn",
             amount: burnAmount,
-            from: 'Supply',
-            to: 'Burned',
+            from: "Supply",
+            to: "Burned",
             timestamp: Date.now(),
           },
           ...prev.transactions,
         ],
       }));
 
-      setAmount('');
+      setAmount("");
     } catch (error) {
-      console.error('Burn simulation error:', error);
+      console.error("Burn simulation error:", error);
     }
   };
 
@@ -141,10 +143,12 @@ export const TokenSimulator: React.FC<TokenSimulatorProps> = ({ tokenParams }) =
 
       <Box sx={{ mt: 2 }}>
         <Typography variant="body1">
-          Supply actuelle : {formatUnits(simulationState.balance, tokenParams.decimals)} {tokenParams.symbol}
+          Supply actuelle :{" "}
+          {formatUnits(simulationState.balance, tokenParams.decimals)}{" "}
+          {tokenParams.symbol}
         </Typography>
 
-        <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+        <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
           <TextField
             label="Montant"
             value={amount}
@@ -204,7 +208,8 @@ export const TokenSimulator: React.FC<TokenSimulatorProps> = ({ tokenParams }) =
                   <TableCell>{tx.from}</TableCell>
                   <TableCell>{tx.to}</TableCell>
                   <TableCell align="right">
-                    {formatUnits(tx.amount, tokenParams.decimals)} {tokenParams.symbol}
+                    {formatUnits(tx.amount, tokenParams.decimals)}{" "}
+                    {tokenParams.symbol}
                   </TableCell>
                   <TableCell>
                     {new Date(tx.timestamp).toLocaleTimeString()}
@@ -216,8 +221,9 @@ export const TokenSimulator: React.FC<TokenSimulatorProps> = ({ tokenParams }) =
         </TableContainer>
 
         <Alert severity="info" sx={{ mt: 2 }}>
-          Cette simulation permet de tester le comportement de votre token avant le déploiement.
-          Les transactions simulées n'ont aucun impact sur la blockchain.
+          Cette simulation permet de tester le comportement de votre token avant
+          le déploiement. Les transactions simulées n'ont aucun impact sur la
+          blockchain.
         </Alert>
       </Box>
     </Paper>

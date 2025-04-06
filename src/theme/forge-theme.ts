@@ -1,6 +1,12 @@
 import { createTheme, Theme, ThemeOptions } from "@mui/material/styles";
 import { Components } from "@mui/material/styles";
-import { COLORS, FORGE_COLORS, BLOCKCHAIN_COLORS, SPACING, THEME_CONFIG } from '@/config/constants/theme';
+import {
+  COLORS,
+  FORGE_COLORS,
+  BLOCKCHAIN_COLORS,
+  SPACING,
+  THEME_CONFIG,
+} from "@/config/constants/theme";
 
 // Extend the Material-UI theme interface
 declare module "@mui/material/styles" {
@@ -336,10 +342,10 @@ declare module "styled-components" {
         md: string;
         lg: string;
         xl: string;
-        '2xl': string;
-        '3xl': string;
-        '4xl': string;
-        '5xl': string;
+        "2xl": string;
+        "3xl": string;
+        "4xl": string;
+        "5xl": string;
       };
       headings: {
         h1: {
@@ -395,7 +401,7 @@ declare module "styled-components" {
       medium: string;
       large: string;
       xl: string;
-      '2xl': string;
+      "2xl": string;
       full: string;
     };
     shadows: {
@@ -448,47 +454,47 @@ const colors = {
   text: {
     primary: COLORS.text, // Blanc ivoire
     secondary: COLORS.textSecondary, // Gris acier
-    disabled: "#9ca3af"
+    disabled: "#9ca3af",
   },
   background: {
     default: COLORS.background, // Bleu nuit profond
-    paper: COLORS.surface // Version plus claire du bleu nuit
+    paper: COLORS.surface, // Version plus claire du bleu nuit
   },
   primary: {
     main: COLORS.primary, // Bleu nuit profond
     light: COLORS.primaryLight,
     dark: COLORS.primaryDark,
-    contrastText: FORGE_COLORS.ivory // Blanc ivoire
+    contrastText: FORGE_COLORS.ivory, // Blanc ivoire
   },
   secondary: {
     main: COLORS.secondary, // Orange incandescent
     light: COLORS.secondaryLight,
     dark: COLORS.secondaryDark,
-    contrastText: FORGE_COLORS.ivory // Blanc ivoire
+    contrastText: FORGE_COLORS.ivory, // Blanc ivoire
   },
   success: {
     main: COLORS.success, // Vert émeraude
     light: "#86efac", // Version plus claire
     dark: "#059669", // Version plus foncée
-    contrastText: FORGE_COLORS.ivory // Blanc ivoire
+    contrastText: FORGE_COLORS.ivory, // Blanc ivoire
   },
   warning: {
     main: COLORS.warning, // Ambre (même que l'orange)
     light: COLORS.secondaryLight,
     dark: COLORS.secondaryDark,
-    contrastText: FORGE_COLORS.ivory // Blanc ivoire
+    contrastText: FORGE_COLORS.ivory, // Blanc ivoire
   },
   error: {
     main: COLORS.error, // Rouge rubis
     light: "#fca5a5", // Version plus claire
     dark: "#b91c1c", // Version plus foncée
-    contrastText: FORGE_COLORS.ivory // Blanc ivoire
+    contrastText: FORGE_COLORS.ivory, // Blanc ivoire
   },
   info: {
     main: COLORS.info, // Bleu électrique
     light: "#93c5fd", // Version plus claire
     dark: "#1d4ed8", // Version plus foncée
-    contrastText: FORGE_COLORS.ivory // Blanc ivoire
+    contrastText: FORGE_COLORS.ivory, // Blanc ivoire
   },
   forge: {
     main: COLORS.primary, // Bleu nuit profond
@@ -497,7 +503,7 @@ const colors = {
     border: FORGE_COLORS.steel, // Gris acier
     hover: COLORS.primaryLight,
     metallic: FORGE_COLORS.steel, // Gris acier
-    glow: COLORS.info // Bleu électrique
+    glow: COLORS.info, // Bleu électrique
   },
   ember: {
     main: COLORS.secondary, // Orange incandescent
@@ -506,7 +512,7 @@ const colors = {
     border: COLORS.secondaryLight,
     hover: COLORS.secondaryDark,
     metallic: "#B87333", // Cuivre métallique
-    glow: "#FFA500" // Lueur orange
+    glow: "#FFA500", // Lueur orange
   },
   gold: {
     main: COLORS.gold, // Doré métallique
@@ -515,15 +521,15 @@ const colors = {
     border: "#F5D76E",
     hover: "#B7950B",
     metallic: COLORS.gold, // Doré métallique
-    glow: "#FFD700" // Lueur dorée
-  }
+    glow: "#FFD700", // Lueur dorée
+  },
 };
 
 const typography = {
   fontFamily: {
     heading: THEME_CONFIG.typography.fontFamily.heading,
     body: THEME_CONFIG.typography.fontFamily.body,
-    code: THEME_CONFIG.typography.fontFamily.code
+    code: THEME_CONFIG.typography.fontFamily.code,
   },
   fontWeight: {
     light: THEME_CONFIG.typography.fontWeightLight,
@@ -531,19 +537,19 @@ const typography = {
     medium: THEME_CONFIG.typography.fontWeightMedium,
     semibold: THEME_CONFIG.typography.fontWeightSemiBold,
     bold: THEME_CONFIG.typography.fontWeightBold,
-    extraBold: THEME_CONFIG.typography.fontWeightExtraBold
+    extraBold: THEME_CONFIG.typography.fontWeightExtraBold,
   },
   fontSizes: {
-    xs: '0.75rem', // 12px
-    sm: '0.875rem', // 14px
-    md: '1rem', // 16px
-    lg: '1.125rem', // 18px
-    xl: '1.25rem', // 20px
-    '2xl': '1.5rem', // 24px
-    '3xl': '1.875rem', // 30px
-    '4xl': '2.25rem', // 36px
-    '5xl': '3rem' // 48px
-  }
+    xs: "0.75rem", // 12px
+    sm: "0.875rem", // 14px
+    md: "1rem", // 16px
+    lg: "1.125rem", // 18px
+    xl: "1.25rem", // 20px
+    "2xl": "1.5rem", // 24px
+    "3xl": "1.875rem", // 30px
+    "4xl": "2.25rem", // 36px
+    "5xl": "3rem", // 48px
+  },
 };
 
 const breakpoints = {
@@ -552,31 +558,42 @@ const breakpoints = {
     sm: 600,
     md: 960,
     lg: 1280,
-    xl: 1920
+    xl: 1920,
   },
-  up: (key: string) => `@media (min-width: ${breakpoints.values[key as keyof typeof breakpoints.values]}px)`,
-  down: (key: string) => `@media (max-width: ${breakpoints.values[key as keyof typeof breakpoints.values] - 0.05}px)`,
-  between: (start: string, end: string) => `@media (min-width: ${breakpoints.values[start as keyof typeof breakpoints.values]}px) and (max-width: ${breakpoints.values[end as keyof typeof breakpoints.values] - 0.05}px)`
+  up: (key: string) =>
+    `@media (min-width: ${
+      breakpoints.values[key as keyof typeof breakpoints.values]
+    }px)`,
+  down: (key: string) =>
+    `@media (max-width: ${
+      breakpoints.values[key as keyof typeof breakpoints.values] - 0.05
+    }px)`,
+  between: (start: string, end: string) =>
+    `@media (min-width: ${
+      breakpoints.values[start as keyof typeof breakpoints.values]
+    }px) and (max-width: ${
+      breakpoints.values[end as keyof typeof breakpoints.values] - 0.05
+    }px)`,
 };
 
 const spacing = (value: number) => `${value * 0.25}rem`;
 
 const borderRadius = {
-  small: THEME_CONFIG.shape.borderRadius.small + 'px',
-  medium: THEME_CONFIG.shape.borderRadius.medium + 'px',
-  large: THEME_CONFIG.shape.borderRadius.large + 'px'
+  small: THEME_CONFIG.shape.borderRadius.small + "px",
+  medium: THEME_CONFIG.shape.borderRadius.medium + "px",
+  large: THEME_CONFIG.shape.borderRadius.large + "px",
 };
 
 const shadows = {
   small: THEME_CONFIG.shadows.small,
   medium: THEME_CONFIG.shadows.medium,
-  large: THEME_CONFIG.shadows.large
+  large: THEME_CONFIG.shadows.large,
 };
 
 const transitions = {
   default: THEME_CONFIG.transitions.normal,
   fast: THEME_CONFIG.transitions.fast,
-  slow: THEME_CONFIG.transitions.slow
+  slow: THEME_CONFIG.transitions.slow,
 };
 
 const zIndex = {
@@ -584,7 +601,7 @@ const zIndex = {
   drawer: 1200,
   modal: 1300,
   snackbar: 1400,
-  tooltip: 1500
+  tooltip: 1500,
 };
 
 // Effets spécifiques au thème "La Forge Numérique"
@@ -593,7 +610,7 @@ const effects = {
   metalShine: `linear-gradient(45deg, ${FORGE_COLORS.steel}22 0%, ${FORGE_COLORS.steel}88 50%, ${FORGE_COLORS.steel}22 100%)`,
   heatEffect: `linear-gradient(45deg, ${COLORS.secondary} 0%, ${COLORS.secondaryLight} 50%, ${COLORS.secondary} 100%)`,
   circuitPattern: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10h80v80h-80z' fill='none' stroke='%23475569' stroke-width='0.5' stroke-opacity='0.1'/%3E%3C/svg%3E")`,
-  metalTexture: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E")`
+  metalTexture: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E")`,
 };
 
 // Composants personnalisés pour le thème "La Forge Numérique"
@@ -656,7 +673,7 @@ const components: Components<Theme> = {
         font-weight: 400;
         src: local('JetBrains Mono Regular'), url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
       }
-    `
+    `,
   },
   MuiButton: {
     variants: [
@@ -829,7 +846,7 @@ const themeOptions: ThemeOptions = {
     info: colors.info,
     background: {
       default: colors.background.default,
-      paper: colors.background.paper
+      paper: colors.background.paper,
     },
     text: colors.text,
     gradient: {
@@ -852,7 +869,11 @@ const themeOptions: ThemeOptions = {
     h4: THEME_CONFIG.typography.h4,
     h5: {
       ...THEME_CONFIG.typography.h5,
-      textTransform: THEME_CONFIG.typography.h5.textTransform as "uppercase" | "lowercase" | "capitalize" | "none"
+      textTransform: THEME_CONFIG.typography.h5.textTransform as
+        | "uppercase"
+        | "lowercase"
+        | "capitalize"
+        | "none",
     },
     h6: {
       fontFamily: typography.fontFamily.heading,
@@ -944,13 +965,13 @@ export const styledTheme = {
       600: FORGE_COLORS.steel,
       700: "#374151",
       800: FORGE_COLORS.charcoal,
-      900: COLORS.primary
+      900: COLORS.primary,
     },
     forge: colors.forge,
     ember: colors.ember,
     gold: colors.gold,
     gradient: COLORS.gradient,
-    blockchain: BLOCKCHAIN_COLORS
+    blockchain: BLOCKCHAIN_COLORS,
   },
   typography,
   spacing,
@@ -962,10 +983,10 @@ export const styledTheme = {
     large: borderRadius.large,
     xl: "0.75rem",
     "2xl": "1rem",
-    full: "9999px"
+    full: "9999px",
   },
   shadows,
   transitions,
   zIndex,
-  effects
+  effects,
 };

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Container, Typography, Grid, Paper, Box } from '@mui/material';
+import React from "react";
+import { Container, Typography, Grid, Paper, Box } from "@mui/material";
 
 export const PlansPage: React.FC = () => {
   return (
@@ -41,4 +41,4 @@ export const PlansPage: React.FC = () => {
       </Grid>
     </Container>
   );
-}; 
+};

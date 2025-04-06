@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Paper,
@@ -9,15 +9,15 @@ import {
   ListItemIcon,
   ListItemText,
   Chip,
-  useTheme
-} from '@mui/material';
+  useTheme,
+} from "@mui/material";
 import {
   Check as CheckIcon,
   AccessTime as AccessTimeIcon,
-  Payment as PaymentIcon
-} from '@mui/icons-material';
-import { formatEther } from 'ethers';
-import { type PremiumService, type ServiceSubscription } from '@/types/premium';
+  Payment as PaymentIcon,
+} from "@mui/icons-material";
+import { formatEther } from "ethers";
+import { type PremiumService, type ServiceSubscription } from "@/types/premium";
 
 interface PremiumServiceCardProps {
   service: PremiumService;
@@ -28,7 +28,7 @@ interface PremiumServiceCardProps {
 export const PremiumServiceCard: React.FC<PremiumServiceCardProps> = ({
   service,
   subscription,
-  onSubscribe
+  onSubscribe,
 }) => {
   const theme = useTheme();
   const isActive = subscription?.isActive;
@@ -41,22 +41,22 @@ export const PremiumServiceCard: React.FC<PremiumServiceCardProps> = ({
       elevation={3}
       sx={{
         p: 3,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        border: isActive ? `2px solid ${theme.palette.primary.main}` : 'none'
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        border: isActive ? `2px solid ${theme.palette.primary.main}` : "none",
       }}
     >
       {/* Badge de statut */}
       {isActive && (
         <Chip
           label={`${daysRemaining} jours restants`}
-          color={daysRemaining > 30 ? 'success' : 'warning'}
+          color={daysRemaining > 30 ? "success" : "warning"}
           sx={{
-            position: 'absolute',
+            position: "absolute",
             top: 16,
-            right: 16
+            right: 16,
           }}
         />
       )}
@@ -93,11 +93,19 @@ export const PremiumServiceCard: React.FC<PremiumServiceCardProps> = ({
 
       {/* Informations supplémentaires */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+        <Typography
+          variant="subtitle2"
+          color="text.secondary"
+          sx={{ display: "flex", alignItems: "center", mb: 1 }}
+        >
           <AccessTimeIcon fontSize="small" sx={{ mr: 1 }} />
           Activation immédiate
         </Typography>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+        <Typography
+          variant="subtitle2"
+          color="text.secondary"
+          sx={{ display: "flex", alignItems: "center" }}
+        >
           <PaymentIcon fontSize="small" sx={{ mr: 1 }} />
           Paiement en ETH
         </Typography>
@@ -110,7 +118,7 @@ export const PremiumServiceCard: React.FC<PremiumServiceCardProps> = ({
         fullWidth
         onClick={onSubscribe}
       >
-        {isActive ? 'Prolonger l\'abonnement' : 'Souscrire maintenant'}
+        {isActive ? "Prolonger l'abonnement" : "Souscrire maintenant"}
       </Button>
     </Paper>
   );

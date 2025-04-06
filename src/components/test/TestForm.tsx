@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface TestFormProps {
   onSubmit: (params: any) => Promise<void>;
@@ -7,8 +7,8 @@ interface TestFormProps {
 
 export const TestForm = ({ onSubmit, disabled }: TestFormProps) => {
   const [testParams, setTestParams] = useState({
-    amount: '',
-    recipient: ''
+    amount: "",
+    recipient: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -26,7 +26,9 @@ export const TestForm = ({ onSubmit, disabled }: TestFormProps) => {
           <input
             type="number"
             value={testParams.amount}
-            onChange={e => setTestParams(prev => ({ ...prev, amount: e.target.value }))}
+            onChange={(e) =>
+              setTestParams((prev) => ({ ...prev, amount: e.target.value }))
+            }
             className="input"
             placeholder="Enter amount"
             disabled={disabled}
@@ -40,7 +42,9 @@ export const TestForm = ({ onSubmit, disabled }: TestFormProps) => {
           <input
             type="text"
             value={testParams.recipient}
-            onChange={e => setTestParams(prev => ({ ...prev, recipient: e.target.value }))}
+            onChange={(e) =>
+              setTestParams((prev) => ({ ...prev, recipient: e.target.value }))
+            }
             className="input"
             placeholder="0x..."
             disabled={disabled}
@@ -53,8 +57,8 @@ export const TestForm = ({ onSubmit, disabled }: TestFormProps) => {
         disabled={disabled}
         className="btn btn-primary w-full"
       >
-        {disabled ? 'Processing...' : 'Run Test'}
+        {disabled ? "Processing..." : "Run Test"}
       </button>
     </form>
   );
-}; 
+};

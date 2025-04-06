@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../../../config/firebase';
-import { logger } from '../../../core/logger';
+import { useState, useEffect } from "react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "../../../config/firebase";
+import { logger } from "../../../core/logger";
 
 export interface SystemSettings {
   maintenance: {
@@ -33,19 +33,19 @@ export interface SystemSettings {
 const DEFAULT_SETTINGS: SystemSettings = {
   maintenance: {
     enabled: false,
-    message: 'Site en maintenance. Veuillez réessayer plus tard.'
+    message: "Site en maintenance. Veuillez réessayer plus tard.",
   },
   security: {
     maxLoginAttempts: 5,
     sessionTimeout: 30,
     requireEmailVerification: true,
-    require2FA: false
+    require2FA: false,
   },
   fees: {
     tokenCreation: 0.1,
     stakingFee: 0.05,
     marketingFee: 0.5,
-    kycFee: 50
+    kycFee: 50,
   },
   networks: {
     ethereum: true,
@@ -53,8 +53,8 @@ const DEFAULT_SETTINGS: SystemSettings = {
     polygon: true,
     avalanche: true,
     solana: false,
-    arbitrum: false
-  }
+    arbitrum: false,
+  },
 };
 
 export const useSystemSettings = () => {
@@ -70,30 +70,30 @@ export const useSystemSettings = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const settingsDoc = await getDoc(doc(db, 'system', 'settings'));
-      
+
+      const settingsDoc = await getDoc(doc(db, "system", "settings"));
+
       if (settingsDoc.exists()) {
         const data = settingsDoc.data() as SystemSettings;
         setSettings(data);
-        logger.info({ 
-          message: 'Paramètres système chargés avec succès',
-          category: 'SystemSettings'
+        logger.info({
+          message: "Paramètres système chargés avec succès",
+          category: "SystemSettings",
         });
       } else {
         // Initialiser avec les paramètres par défaut si aucun document n'existe
         await saveSettings(DEFAULT_SETTINGS);
-        logger.info({ 
-          message: 'Paramètres système initialisés avec les valeurs par défaut',
-          category: 'SystemSettings'
+        logger.info({
+          message: "Paramètres système initialisés avec les valeurs par défaut",
+          category: "SystemSettings",
         });
       }
     } catch (err) {
-      const errorMessage = 'Erreur lors du chargement des paramètres système';
-      logger.error({ 
-        message: errorMessage, 
+      const errorMessage = "Erreur lors du chargement des paramètres système";
+      logger.error({
+        message: errorMessage,
         error: err as Error,
-        category: 'SystemSettings'
+        category: "SystemSettings",
       });
       setError(errorMessage);
     } finally {
@@ -104,19 +104,20 @@ export const useSystemSettings = () => {
   const saveSettings = async (newSettings: SystemSettings) => {
     try {
       setError(null);
-      await setDoc(doc(db, 'system', 'settings'), newSettings);
+      await setDoc(doc(db, "system", "settings"), newSettings);
       setSettings(newSettings);
-      logger.info({ 
-        message: 'Paramètres système sauvegardés avec succès',
-        category: 'SystemSettings'
+      logger.info({
+        message: "Paramètres système sauvegardés avec succès",
+        category: "SystemSettings",
       });
       return true;
     } catch (err) {
-      const errorMessage = 'Erreur lors de la sauvegarde des paramètres système';
-      logger.error({ 
-        message: errorMessage, 
+      const errorMessage =
+        "Erreur lors de la sauvegarde des paramètres système";
+      logger.error({
+        message: errorMessage,
         error: err as Error,
-        category: 'SystemSettings'
+        category: "SystemSettings",
       });
       setError(errorMessage);
       return false;
@@ -128,41 +129,45 @@ export const useSystemSettings = () => {
       ...settings,
       maintenance: {
         enabled,
-        message: message || settings.maintenance.message
-      }
+        message: message || settings.maintenance.message,
+      },
     };
     return saveSettings(newSettings);
   };
 
-  const updateSecuritySettings = async (securitySettings: Partial<SystemSettings['security']>) => {
+  const updateSecuritySettings = async (
+    securitySettings: Partial<SystemSettings["security"]>
+  ) => {
     const newSettings = {
       ...settings,
       security: {
         ...settings.security,
-        ...securitySettings
-      }
+        ...securitySettings,
+      },
     };
     return saveSettings(newSettings);
   };
 
-  const updateFees = async (fees: Partial<SystemSettings['fees']>) => {
+  const updateFees = async (fees: Partial<SystemSettings["fees"]>) => {
     const newSettings = {
       ...settings,
       fees: {
         ...settings.fees,
-        ...fees
-      }
+        ...fees,
+      },
     };
     return saveSettings(newSettings);
   };
 
-  const updateNetworks = async (networks: Partial<SystemSettings['networks']>) => {
+  const updateNetworks = async (
+    networks: Partial<SystemSettings["networks"]>
+  ) => {
     const newSettings = {
       ...settings,
       networks: {
         ...settings.networks,
-        ...networks
-      }
+        ...networks,
+      },
     };
     return saveSettings(newSettings);
   };
@@ -176,6 +181,6 @@ export const useSystemSettings = () => {
     updateSecuritySettings,
     updateFees,
     updateNetworks,
-    reloadSettings: loadSettings
+    reloadSettings: loadSettings,
   };
-}; 
+};

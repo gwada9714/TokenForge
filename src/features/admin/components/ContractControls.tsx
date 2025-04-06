@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box, Button } from '@mui/material';
-import { useTokenForgeContract } from '../../../hooks/useTokenForgeContract';
+import React from "react";
+import { Box, Button } from "@mui/material";
+import { useTokenForgeContract } from "../../../hooks/useTokenForgeContract";
 
 interface ContractControlsProps {
   onError: (message: string) => void;
@@ -17,7 +17,11 @@ const ContractControls: React.FC<ContractControlsProps> = ({ onError }) => {
         await pause();
       }
     } catch (error) {
-      onError(error instanceof Error ? error.message : 'Failed to toggle contract state');
+      onError(
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle contract state"
+      );
     }
   };
 

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { createWalletClient, custom, formatEther } from 'viem';
-import { mainnet } from 'viem/chains';
+import { useState, useEffect, useCallback } from "react";
+import { createWalletClient, custom, formatEther } from "viem";
+import { mainnet } from "viem/chains";
 
 interface WalletState {
   address: string | null;
@@ -21,14 +21,14 @@ export const useWallet = () => {
 
   const connectWallet = useCallback(async () => {
     if (!window.ethereum) {
-      setError('Veuillez installer MetaMask');
+      setError("Veuillez installer MetaMask");
       return;
     }
 
     try {
       const client = createWalletClient({
         chain: mainnet,
-        transport: custom(window.ethereum)
+        transport: custom(window.ethereum),
       });
 
       const [address] = await client.requestAddresses();
@@ -43,8 +43,8 @@ export const useWallet = () => {
       });
       setError(null);
     } catch (err) {
-      setError('Erreur lors de la connexion au wallet');
-      console.error('Erreur de connexion:', err);
+      setError("Erreur lors de la connexion au wallet");
+      console.error("Erreur de connexion:", err);
     }
   }, []);
 
@@ -59,19 +59,19 @@ export const useWallet = () => {
 
   useEffect(() => {
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', () => {
+      window.ethereum.on("accountsChanged", () => {
         connectWallet();
       });
 
-      window.ethereum.on('chainChanged', () => {
+      window.ethereum.on("chainChanged", () => {
         connectWallet();
       });
     }
 
     return () => {
       if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', connectWallet);
-        window.ethereum.removeListener('chainChanged', connectWallet);
+        window.ethereum.removeListener("accountsChanged", connectWallet);
+        window.ethereum.removeListener("chainChanged", connectWallet);
       }
     };
   }, [connectWallet]);
@@ -82,4 +82,4 @@ export const useWallet = () => {
     connectWallet,
     disconnectWallet,
   };
-}; 
+};

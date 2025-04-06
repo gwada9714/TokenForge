@@ -1,27 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Grid } from '@mui/material';
-import { motion } from 'framer-motion';
-import { styled } from '@mui/material/styles';
-import CountUp from 'react-countup';
+import React, { useEffect, useState } from "react";
+import { Box, Typography, Grid } from "@mui/material";
+import { motion } from "framer-motion";
+import { styled } from "@mui/material/styles";
+import CountUp from "react-countup";
 
 const MetricCard = styled(Box)(({ theme }) => ({
   padding: theme.spacing(3),
   borderRadius: theme.shape.borderRadius,
   background: theme.palette.background.paper,
   boxShadow: theme.shadows[1],
-  textAlign: 'center',
-  position: 'relative',
-  overflow: 'hidden',
-  '&::after': {
+  textAlign: "center",
+  position: "relative",
+  overflow: "hidden",
+  "&::after": {
     content: '""',
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     background: `linear-gradient(135deg, ${theme.palette.primary.main}10, transparent)`,
     opacity: 0.1,
-  }
+  },
 }));
 
 interface Metric {
@@ -32,10 +32,10 @@ interface Metric {
 }
 
 const initialMetrics: Metric[] = [
-  { label: 'Tokens Créés', value: 0, suffix: '+' },
-  { label: 'Volume Total', value: 0, prefix: '$', suffix: 'M' },
-  { label: 'Utilisateurs Actifs', value: 0, suffix: 'K' },
-  { label: 'Transactions', value: 0, suffix: 'K' }
+  { label: "Tokens Créés", value: 0, suffix: "+" },
+  { label: "Volume Total", value: 0, prefix: "$", suffix: "M" },
+  { label: "Utilisateurs Actifs", value: 0, suffix: "K" },
+  { label: "Transactions", value: 0, suffix: "K" },
 ];
 
 export const RealTimeMetrics: React.FC = () => {
@@ -45,10 +45,27 @@ export const RealTimeMetrics: React.FC = () => {
     // Simuler des mises à jour en temps réel
     const updateMetrics = () => {
       setMetrics([
-        { label: 'Tokens Créés', value: Math.floor(Math.random() * 500 + 1000), suffix: '+' },
-        { label: 'Volume Total', value: Math.floor(Math.random() * 50 + 100), prefix: '$', suffix: 'M' },
-        { label: 'Utilisateurs Actifs', value: Math.floor(Math.random() * 20 + 50), suffix: 'K' },
-        { label: 'Transactions', value: Math.floor(Math.random() * 100 + 200), suffix: 'K' }
+        {
+          label: "Tokens Créés",
+          value: Math.floor(Math.random() * 500 + 1000),
+          suffix: "+",
+        },
+        {
+          label: "Volume Total",
+          value: Math.floor(Math.random() * 50 + 100),
+          prefix: "$",
+          suffix: "M",
+        },
+        {
+          label: "Utilisateurs Actifs",
+          value: Math.floor(Math.random() * 20 + 50),
+          suffix: "K",
+        },
+        {
+          label: "Transactions",
+          value: Math.floor(Math.random() * 100 + 200),
+          suffix: "K",
+        },
       ]);
     };
 
@@ -82,10 +99,7 @@ export const RealTimeMetrics: React.FC = () => {
                 />
                 {metric.suffix}
               </Typography>
-              <Typography
-                variant="body2"
-                color="textSecondary"
-              >
+              <Typography variant="body2" color="textSecondary">
                 {metric.label}
               </Typography>
             </MetricCard>
@@ -94,4 +108,4 @@ export const RealTimeMetrics: React.FC = () => {
       ))}
     </Grid>
   );
-}; 
+};

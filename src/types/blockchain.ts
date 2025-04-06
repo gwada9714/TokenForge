@@ -1,4 +1,10 @@
-export type BlockchainNetwork = 'ethereum' | 'bsc' | 'polygon' | 'avalanche' | 'solana' | 'arbitrum';
+export type BlockchainNetwork =
+  | "ethereum"
+  | "bsc"
+  | "polygon"
+  | "avalanche"
+  | "solana"
+  | "arbitrum";
 
 export interface NetworkConfig {
   chainId: number;

@@ -75,9 +75,7 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onAction }) => {
           <Typography color="textSecondary" gutterBottom>
             Supply Total
           </Typography>
-          <Typography variant="body2">
-            {token.totalSupply}
-          </Typography>
+          <Typography variant="body2">{token.totalSupply}</Typography>
         </Box>
 
         <Box sx={{ mb: 1 }}>
@@ -90,14 +88,12 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onAction }) => {
         </Box>
 
         {/* Balance is optional and might not exist in all TokenInfo objects */}
-        {'balance' in token && (
+        {"balance" in token && (
           <Box sx={{ mb: 1 }}>
             <Typography color="textSecondary" gutterBottom>
               Balance
             </Typography>
-            <Typography variant="body2">
-              {(token as any).balance}
-            </Typography>
+            <Typography variant="body2">{(token as any).balance}</Typography>
           </Box>
         )}
 

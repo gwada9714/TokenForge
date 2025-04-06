@@ -1,5 +1,5 @@
-import { mainnet, sepolia } from 'viem/chains';
-import { type Chain } from 'viem';
+import { mainnet, sepolia } from "viem/chains";
+import { type Chain } from "viem";
 
 // Export des chaînes individuelles pour une utilisation directe
 export { mainnet, sepolia };
@@ -12,13 +12,20 @@ type ChainConfig = {
 };
 
 // Validation des adresses des contrats
-const validateContractAddress = (address: string | undefined, chainName: string): `0x${string}` | null => {
+const validateContractAddress = (
+  address: string | undefined,
+  chainName: string
+): `0x${string}` | null => {
   if (!address) {
-    console.warn(`Adresse TokenFactory manquante pour ${chainName} - cette chaîne sera désactivée`);
+    console.warn(
+      `Adresse TokenFactory manquante pour ${chainName} - cette chaîne sera désactivée`
+    );
     return null;
   }
   if (!address.match(/^0x[a-fA-F0-9]{40}$/)) {
-    console.warn(`Format d'adresse TokenFactory invalide pour ${chainName} - cette chaîne sera désactivée`);
+    console.warn(
+      `Format d'adresse TokenFactory invalide pour ${chainName} - cette chaîne sera désactivée`
+    );
     return null;
   }
   return address as `0x${string}`;
@@ -28,12 +35,12 @@ const validateContractAddress = (address: string | undefined, chainName: string)
 const contractAddresses = {
   mainnet: validateContractAddress(
     import.meta.env.VITE_TOKEN_FACTORY_MAINNET,
-    'Ethereum Mainnet'
+    "Ethereum Mainnet"
   ),
   sepolia: validateContractAddress(
     import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA,
-    'Sepolia'
-  )
+    "Sepolia"
+  ),
 };
 
 // Configuration des chaînes supportées
@@ -41,33 +48,37 @@ const chainConfigs: ChainConfig[] = [
   {
     chain: mainnet,
     contractAddress: contractAddresses.mainnet,
-    name: 'Ethereum Mainnet'
+    name: "Ethereum Mainnet",
   },
   {
     chain: sepolia,
     contractAddress: contractAddresses.sepolia,
-    name: 'Sepolia Testnet'
-  }
+    name: "Sepolia Testnet",
+  },
 ];
 
 // Filtrer les chaînes qui ont des adresses de contrat valides
 export const supportedChains = chainConfigs
-  .filter(config => config.contractAddress !== null)
-  .map(config => config.chain);
+  .filter((config) => config.contractAddress !== null)
+  .map((config) => config.chain);
 
 // Définir la chaîne par défaut (Sepolia si disponible, sinon la première chaîne supportée)
-export const defaultChain = supportedChains.find(chain => chain.id === sepolia.id) || supportedChains[0];
+export const defaultChain =
+  supportedChains.find((chain) => chain.id === sepolia.id) ||
+  supportedChains[0];
 
 if (!defaultChain) {
-  throw new Error('No valid chains configured. Please check your contract addresses and RPC URLs.');
+  throw new Error(
+    "No valid chains configured. Please check your contract addresses and RPC URLs."
+  );
 }
 
 // Export the chain IDs
-export const supportedChainIds = supportedChains.map(chain => chain.id);
+export const supportedChainIds = supportedChains.map((chain) => chain.id);
 
 // Configuration RPC par chaîne
 export const getRpcUrl = (chainId: number): string => {
-  const chain = supportedChains.find(chain => chain.id === chainId);
+  const chain = supportedChains.find((chain) => chain.id === chainId);
   if (!chain) {
     throw new Error(`Chaîne ID ${chainId} non supportée`);
   }

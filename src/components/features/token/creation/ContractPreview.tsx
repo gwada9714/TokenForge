@@ -59,11 +59,13 @@ ${parents
   .slice(1)
   .map(
     (p) =>
-      `import "@openzeppelin/contracts-upgradeable/token/${tokenType}/${p}Upgradeable.sol";`,
+      `import "@openzeppelin/contracts-upgradeable/token/${tokenType}/${p}Upgradeable.sol";`
   )
   .join("\n")}
 
-contract ${baseConfig.name}Token is ${parents.map((p) => `${p}Upgradeable`).join(", ")} {
+contract ${baseConfig.name}Token is ${parents
+        .map((p) => `${p}Upgradeable`)
+        .join(", ")} {
     constructor() {
         _disableInitializers();
     }
@@ -84,9 +86,9 @@ contract ${baseConfig.name}Token is ${parents.map((p) => `${p}Upgradeable`).join
           advancedConfig.accessControl === "roles"
             ? "_grantRole(DEFAULT_ADMIN_ROLE, initialOwner);"
             : typeof advancedConfig.accessControl === "string" &&
-                advancedConfig.accessControl === "ownable"
-              ? "_transferOwnership(initialOwner);"
-              : ""
+              advancedConfig.accessControl === "ownable"
+            ? "_transferOwnership(initialOwner);"
+            : ""
         }
     }
 }`;

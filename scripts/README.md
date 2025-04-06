@@ -51,8 +51,8 @@ Exemple de mapping pour les imports du logger:
 
 ```javascript
 const importMappings = {
-  '@/utils/logger': '@/core/logger',
-  '@/utils/firebase-logger': '@/core/logger',
+  "@/utils/logger": "@/core/logger",
+  "@/utils/firebase-logger": "@/core/logger",
   // ...
 };
 ```

@@ -19,7 +19,7 @@ export interface MarketplaceData {
   price: string;
   amount: string;
   seller: string;
-  status: 'active' | 'sold' | 'cancelled';
+  status: "active" | "sold" | "cancelled";
 }
 
 export interface UserData {
@@ -32,7 +32,7 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
+  sortDirection?: "asc" | "desc";
 }
 
 export interface TokenFilters extends PaginationParams {
@@ -42,7 +42,7 @@ export interface TokenFilters extends PaginationParams {
 
 export interface MarketplaceFilters extends PaginationParams {
   seller?: string;
-  status?: 'active' | 'sold' | 'cancelled';
+  status?: "active" | "sold" | "cancelled";
   minPrice?: string;
   maxPrice?: string;
 }

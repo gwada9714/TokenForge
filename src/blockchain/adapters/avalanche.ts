@@ -1,8 +1,15 @@
-import { BlockchainService } from '../services/BlockchainService';
-import { IPaymentService } from '../interfaces/IPaymentService';
-import { ITokenService } from '../interfaces/ITokenService';
-import { TokenConfig, DeploymentResult, TokenInfo, ValidationResult, LiquidityConfig, PaymentStatus } from '../types';
-import { parseEther } from 'viem';
+import { BlockchainService } from "../services/BlockchainService";
+import { IPaymentService } from "../interfaces/IPaymentService";
+import { ITokenService } from "../interfaces/ITokenService";
+import {
+  TokenConfig,
+  DeploymentResult,
+  TokenInfo,
+  ValidationResult,
+  LiquidityConfig,
+  PaymentStatus,
+} from "../types";
+import { parseEther } from "viem";
 
 /**
  * Service blockchain spécifique à Avalanche
@@ -10,7 +17,7 @@ import { parseEther } from 'viem';
  */
 export class AvalancheBlockchainService extends BlockchainService {
   constructor(walletProvider?: any) {
-    super('avalanche', walletProvider);
+    super("avalanche", walletProvider);
   }
 
   // Méthodes spécifiques à Avalanche si nécessaire
@@ -30,11 +37,11 @@ export class AvalancheBlockchainService extends BlockchainService {
     // Pour l'instant, on retourne des valeurs simulées
     const blockNumber = await this.publicClient.getBlockNumber();
     return {
-      networkName: 'Avalanche C-Chain',
+      networkName: "Avalanche C-Chain",
       blockHeight: blockNumber,
       isXChain: false,
       isPChain: false,
-      isCChain: true // Nous utilisons la C-Chain pour les smart contracts
+      isCChain: true, // Nous utilisons la C-Chain pour les smart contracts
     };
   }
 }
@@ -50,7 +57,10 @@ export class AvalanchePaymentService implements IPaymentService {
     this.blockchainService = new AvalancheBlockchainService(walletProvider);
   }
 
-  async createPaymentSession(amount: bigint, currency: string): Promise<string> {
+  async createPaymentSession(
+    amount: bigint,
+    currency: string
+  ): Promise<string> {
     // Implémentation pour Avalanche
     // Génère un identifiant de session et stocke les détails de paiement
     const sessionId = `avax-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -60,7 +70,7 @@ export class AvalanchePaymentService implements IPaymentService {
 
   async getPaymentStatus(sessionId: string): Promise<PaymentStatus> {
     // Vérifie le statut du paiement
-    return { status: 'pending', details: { sessionId } };
+    return { status: "pending", details: { sessionId } };
   }
 
   async verifyPayment(transactionHash: string): Promise<boolean> {
@@ -77,7 +87,7 @@ export class AvalanchePaymentService implements IPaymentService {
     // Avalanche a généralement des frais plus bas qu'Ethereum mais plus élevés que Polygon
     const gasPrice = await this.blockchainService.getGasPrice();
     // Estimation basique, à affiner selon les besoins réels
-    return (gasPrice * 21000n); // coût de base d'une transaction simple
+    return gasPrice * 21000n; // coût de base d'une transaction simple
   }
 }
 
@@ -98,17 +108,17 @@ export class AvalancheTokenService implements ITokenService {
     // Logique de déploiement de token sur Avalanche
     // Utilise walletClient pour signer et envoyer la transaction
     const { walletClient } = this.blockchainService.getProvider();
-    
+
     if (!walletClient) {
-      throw new Error('Wallet client not available for deployment');
+      throw new Error("Wallet client not available for deployment");
     }
 
     // Récupérer l'adresse du compte
     const accounts = await walletClient.getAddresses();
     if (!accounts || accounts.length === 0) {
-      throw new Error('No accounts available in wallet');
+      throw new Error("No accounts available in wallet");
     }
-    
+
     // Exemple simplifié - à adapter selon la structure réelle du contrat
     const hash = await walletClient.deployContract({
       abi: this.tokenFactoryAbi,
@@ -117,14 +127,14 @@ export class AvalancheTokenService implements ITokenService {
         tokenConfig.name,
         tokenConfig.symbol,
         tokenConfig.decimals,
-        parseEther(tokenConfig.initialSupply.toString())
+        parseEther(tokenConfig.initialSupply.toString()),
       ],
-      bytecode: '0x60806040...' // Bytecode du contrat (à remplacer par le vrai bytecode)
+      bytecode: "0x60806040...", // Bytecode du contrat (à remplacer par le vrai bytecode)
     });
 
     return {
       transactionHash: hash,
-      tokenAddress: '', // À récupérer après confirmation
+      tokenAddress: "", // À récupérer après confirmation
       chainId: await this.blockchainService.getNetworkId(),
     };
   }
@@ -132,8 +142,8 @@ export class AvalancheTokenService implements ITokenService {
   async getTokenInfo(tokenAddress: string): Promise<TokenInfo> {
     // Récupérer les informations d'un token déployé
     return {
-      name: '',
-      symbol: '',
+      name: "",
+      symbol: "",
       totalSupply: 0n,
       decimals: 18,
       // Autres informations...
@@ -150,23 +160,34 @@ export class AvalancheTokenService implements ITokenService {
     // Validation de la configuration du token selon les règles Avalanche
     const errors = [];
 
-    if (!tokenConfig.name || tokenConfig.name.length < 1 || tokenConfig.name.length > 50) {
-      errors.push('Token name must be between 1 and 50 characters');
+    if (
+      !tokenConfig.name ||
+      tokenConfig.name.length < 1 ||
+      tokenConfig.name.length > 50
+    ) {
+      errors.push("Token name must be between 1 and 50 characters");
     }
 
-    if (!tokenConfig.symbol || tokenConfig.symbol.length < 1 || tokenConfig.symbol.length > 10) {
-      errors.push('Token symbol must be between 1 and 10 characters');
+    if (
+      !tokenConfig.symbol ||
+      tokenConfig.symbol.length < 1 ||
+      tokenConfig.symbol.length > 10
+    ) {
+      errors.push("Token symbol must be between 1 and 10 characters");
     }
 
     // Ajoutez d'autres validations spécifiques à Avalanche
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
-  async setupAutoLiquidity(tokenAddress: string, config: LiquidityConfig): Promise<boolean> {
+  async setupAutoLiquidity(
+    tokenAddress: string,
+    config: LiquidityConfig
+  ): Promise<boolean> {
     // Configuration de la liquidité automatique sur Trader Joe (DEX principal sur Avalanche)
     // Implémentation à définir
     return true;

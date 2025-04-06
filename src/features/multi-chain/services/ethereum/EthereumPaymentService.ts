@@ -1,49 +1,48 @@
-import { AbstractChainService } from '../payment/base/AbstractChainService';
-import { 
+import { AbstractChainService } from "../payment/base/AbstractChainService";
+import {
   PaymentSession,
   PaymentStatus,
   PaymentToken,
-  PaymentNetwork
-} from '../payment/types';
-import { Provider, JsonRpcProvider } from 'ethers';
+  PaymentNetwork,
+} from "../payment/types";
+import { Provider, JsonRpcProvider } from "ethers";
 
 export class EthereumPaymentService extends AbstractChainService {
-  readonly chainName = 'Ethereum';
+  readonly chainName = "Ethereum";
   readonly supportedTokens: PaymentToken[] = [
     {
-      address: '0x0000000000000000000000000000000000000000',
-      symbol: 'ETH',
+      address: "0x0000000000000000000000000000000000000000",
+      symbol: "ETH",
       decimals: 18,
-      network: PaymentNetwork.ETHEREUM
+      network: PaymentNetwork.ETHEREUM,
     },
     {
-      address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-      symbol: 'USDT',
+      address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      symbol: "USDT",
       decimals: 6,
-      network: PaymentNetwork.ETHEREUM
+      network: PaymentNetwork.ETHEREUM,
     },
     {
-      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-      symbol: 'USDC',
+      address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      symbol: "USDC",
       decimals: 6,
-      network: PaymentNetwork.ETHEREUM
+      network: PaymentNetwork.ETHEREUM,
     },
     {
-      address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-      symbol: 'DAI',
+      address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      symbol: "DAI",
       decimals: 18,
-      network: PaymentNetwork.ETHEREUM
-    }
+      network: PaymentNetwork.ETHEREUM,
+    },
   ];
 
   private readonly provider: Provider;
-  private readonly destinationAddress = '0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A';
+  private readonly destinationAddress =
+    "0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A";
 
   constructor() {
     super();
-    this.provider = new JsonRpcProvider(
-      process.env.VITE_ETHEREUM_RPC_URL
-    );
+    this.provider = new JsonRpcProvider(process.env.VITE_ETHEREUM_RPC_URL);
   }
 
   async createPaymentSession(params: {
@@ -52,11 +51,11 @@ export class EthereumPaymentService extends AbstractChainService {
     amount: string;
   }): Promise<PaymentSession> {
     if (!this.validateAmount(params.amount)) {
-      throw this.createPaymentError('Montant invalide', 'INVALID_AMOUNT');
+      throw this.createPaymentError("Montant invalide", "INVALID_AMOUNT");
     }
 
     if (!this.validateToken(params.token)) {
-      throw this.createPaymentError('Token non supporté', 'UNSUPPORTED_TOKEN');
+      throw this.createPaymentError("Token non supporté", "UNSUPPORTED_TOKEN");
     }
 
     return {
@@ -68,7 +67,7 @@ export class EthereumPaymentService extends AbstractChainService {
       amount: params.amount,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      retryCount: 0
+      retryCount: 0,
     };
   }
 
@@ -78,12 +77,12 @@ export class EthereumPaymentService extends AbstractChainService {
   ): Promise<PaymentSession> {
     try {
       const txHash = await this.sendTransaction(session);
-      
+
       const updatedSession = {
         ...session,
         status: PaymentStatus.PROCESSING,
         txHash,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       // Attendre la confirmation
@@ -95,8 +94,9 @@ export class EthereumPaymentService extends AbstractChainService {
 
       return {
         ...updatedSession,
-        status: receipt.status === 1 ? PaymentStatus.CONFIRMED : PaymentStatus.FAILED,
-        updatedAt: Date.now()
+        status:
+          receipt.status === 1 ? PaymentStatus.CONFIRMED : PaymentStatus.FAILED,
+        updatedAt: Date.now(),
       };
     } catch (error) {
       await this.handleNetworkError(error as Error);
@@ -104,7 +104,7 @@ export class EthereumPaymentService extends AbstractChainService {
         ...session,
         status: PaymentStatus.FAILED,
         error: (error as Error).message,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
     }
   }
@@ -112,7 +112,7 @@ export class EthereumPaymentService extends AbstractChainService {
   async getPaymentStatus(sessionId: string): Promise<PaymentStatus> {
     const session = await this.getSession(sessionId);
     if (!session) {
-      throw this.createPaymentError('Session non trouvée', 'SESSION_NOT_FOUND');
+      throw this.createPaymentError("Session non trouvée", "SESSION_NOT_FOUND");
     }
     return session.status;
   }
@@ -127,14 +127,14 @@ export class EthereumPaymentService extends AbstractChainService {
   }
 
   protected async handleNetworkError(error: Error): Promise<void> {
-    console.error('Ethereum network error:', error);
+    console.error("Ethereum network error:", error);
     // Implémenter la logique de retry si nécessaire
   }
 
   private async sendTransaction(session: PaymentSession): Promise<string> {
     // Logique d'envoi de transaction à implémenter
     // Pour l'instant, retourne un hash fictif
-    return `0x${Array(64).fill('0').join('')}`;
+    return `0x${Array(64).fill("0").join("")}`;
   }
 
   private async getSession(sessionId: string): Promise<PaymentSession | null> {

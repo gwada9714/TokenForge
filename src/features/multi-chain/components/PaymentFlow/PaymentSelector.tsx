@@ -1,8 +1,8 @@
-import React from 'react';
-import { NetworkSelector } from '../shared/NetworkSelector';
-import { TokenSelector } from '../shared/TokenSelector';
-import { PaymentNetwork } from '../../services/payment/types/PaymentSession';
-import { PaymentToken } from '../../services/payment/types/PaymentSession';
+import React from "react";
+import { NetworkSelector } from "../shared/NetworkSelector";
+import { TokenSelector } from "../shared/TokenSelector";
+import { PaymentNetwork } from "../../services/payment/types/PaymentSession";
+import { PaymentToken } from "../../services/payment/types/PaymentSession";
 
 interface PaymentSelectorProps {
   onNetworkSelect: (network: PaymentNetwork) => void;
@@ -17,12 +17,14 @@ export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
   onTokenSelect,
   selectedNetwork,
   selectedToken,
-  amount
+  amount,
 }) => {
   return (
     <div className="flex flex-col gap-4 p-4 rounded-lg border border-gray-200">
-      <h2 className="text-xl font-semibold">Sélectionner le mode de paiement</h2>
-      
+      <h2 className="text-xl font-semibold">
+        Sélectionner le mode de paiement
+      </h2>
+
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -50,4 +52,4 @@ export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
       </div>
     </div>
   );
-}; 
+};

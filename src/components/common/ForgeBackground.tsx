@@ -1,5 +1,5 @@
-import React from 'react';
-import styled, { keyframes } from 'styled-components';
+import React from "react";
+import styled, { keyframes } from "styled-components";
 
 const moveGradient = keyframes`
   0% {
@@ -38,9 +38,9 @@ const Background = styled.div`
   z-index: -1;
   background: linear-gradient(
     135deg,
-    ${props => props.theme.colors.primary.dark}80,
-    ${props => props.theme.colors.primary.main}80,
-    ${props => props.theme.colors.secondary.dark}40
+    ${(props) => props.theme.colors.primary.dark}80,
+    ${(props) => props.theme.colors.primary.main}80,
+    ${(props) => props.theme.colors.secondary.dark}40
   );
   background-size: 400% 400%;
   animation: ${moveGradient} 15s ease infinite;
@@ -55,7 +55,7 @@ const Overlay = styled.div`
   background: radial-gradient(
     circle at center,
     transparent 0%,
-    ${props => props.theme.colors.primary.dark}80 100%
+    ${(props) => props.theme.colors.primary.dark}80 100%
   );
 `;
 
@@ -69,18 +69,18 @@ interface SparkleProps {
 
 const Sparkle = styled.div<SparkleProps>`
   position: absolute;
-  width: ${props => props.$size}px;
-  height: ${props => props.$size}px;
-  top: ${props => props.$top}%;
-  left: ${props => props.$left}%;
+  width: ${(props) => props.$size}px;
+  height: ${(props) => props.$size}px;
+  top: ${(props) => props.$top}%;
+  left: ${(props) => props.$left}%;
   background: radial-gradient(
     circle at center,
-    ${props => props.theme.colors.secondary.light}80,
+    ${(props) => props.theme.colors.secondary.light}80,
     transparent 70%
   );
   border-radius: 50%;
-  animation: ${sparkle} ${props => props.$duration}s ease-in-out infinite;
-  animation-delay: ${props => props.$delay}s;
+  animation: ${sparkle} ${(props) => props.$duration}s ease-in-out infinite;
+  animation-delay: ${(props) => props.$delay}s;
 `;
 
 interface ForgeBackgroundProps {
@@ -88,7 +88,7 @@ interface ForgeBackgroundProps {
 }
 
 const ForgeBackground: React.FC<ForgeBackgroundProps> = ({
-  sparkleCount = 15
+  sparkleCount = 15,
 }) => {
   const sparkles = Array.from({ length: sparkleCount }).map((_, i) => ({
     id: i,
@@ -96,13 +96,13 @@ const ForgeBackground: React.FC<ForgeBackgroundProps> = ({
     duration: 2 + Math.random() * 2,
     size: 10 + Math.random() * 20,
     top: Math.random() * 100,
-    left: Math.random() * 100
+    left: Math.random() * 100,
   }));
 
   return (
     <Background>
       <Overlay />
-      {sparkles.map(sparkle => (
+      {sparkles.map((sparkle) => (
         <Sparkle
           key={sparkle.id}
           $delay={sparkle.delay}

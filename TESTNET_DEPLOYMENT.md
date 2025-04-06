@@ -57,6 +57,7 @@ Pour un déploiement complet de l'application sur le testnet Sepolia :
 ```
 
 Ce script spécialement conçu pour le testnet Sepolia :
+
 1. Charge les variables d'environnement depuis `.env.testnet`
 2. Installe les dépendances
 3. Compile les smart contracts

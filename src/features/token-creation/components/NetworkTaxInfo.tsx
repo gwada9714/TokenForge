@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Card,
@@ -8,15 +8,16 @@ import {
   CircularProgress,
   Grid,
   Tooltip,
-  IconButton
-} from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { useNetworkTaxConfig } from '@/hooks/useNetworkTaxConfig';
-import { useNetwork } from '../hooks/useNetwork';
-import { ethers } from 'ethers';
+  IconButton,
+} from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { useNetworkTaxConfig } from "@/hooks/useNetworkTaxConfig";
+import { useNetwork } from "../hooks/useNetwork";
+import { ethers } from "ethers";
 
 export const NetworkTaxInfo: React.FC = () => {
-  const { taxConfig, isLoading, error, formatCost, isSupported } = useNetworkTaxConfig();
+  const { taxConfig, isLoading, error, formatCost, isSupported } =
+    useNetworkTaxConfig();
   const { chain } = useNetwork();
 
   if (isLoading) {
@@ -30,7 +31,7 @@ export const NetworkTaxInfo: React.FC = () => {
   if (error || !isSupported) {
     return (
       <Alert severity="error">
-        {error || 'Réseau non supporté. Veuillez changer de réseau.'}
+        {error || "Réseau non supporté. Veuillez changer de réseau."}
       </Alert>
     );
   }
@@ -55,10 +56,8 @@ export const NetworkTaxInfo: React.FC = () => {
             <Card variant="outlined">
               <CardContent>
                 <Box display="flex" alignItems="center">
-                  <Typography variant="subtitle1">
-                    Taxe de Base
-                  </Typography>
-                  {renderTooltip('Taxe fixe appliquée à chaque transaction')}
+                  <Typography variant="subtitle1">Taxe de Base</Typography>
+                  {renderTooltip("Taxe fixe appliquée à chaque transaction")}
                 </Box>
                 <Typography variant="h4" color="primary">
                   {taxConfig.baseTaxRate}%
@@ -74,7 +73,7 @@ export const NetworkTaxInfo: React.FC = () => {
                   <Typography variant="subtitle1">
                     Taxe Additionnelle Max
                   </Typography>
-                  {renderTooltip('Taxe maximale que vous pouvez configurer')}
+                  {renderTooltip("Taxe maximale que vous pouvez configurer")}
                 </Box>
                 <Typography variant="h4" color="primary">
                   {taxConfig.maxAdditionalTaxRate}%
@@ -90,7 +89,7 @@ export const NetworkTaxInfo: React.FC = () => {
                   <Typography variant="subtitle1">
                     Montant Minimum de Tokens
                   </Typography>
-                  {renderTooltip('Montant minimum requis pour le déploiement')}
+                  {renderTooltip("Montant minimum requis pour le déploiement")}
                 </Box>
                 <Typography variant="h4">
                   {ethers.formatEther(taxConfig.minTokenAmount)}
@@ -106,7 +105,7 @@ export const NetworkTaxInfo: React.FC = () => {
                   <Typography variant="subtitle1">
                     Coût de Déploiement Estimé
                   </Typography>
-                  {renderTooltip('Coût estimé pour le déploiement du contrat')}
+                  {renderTooltip("Coût estimé pour le déploiement du contrat")}
                 </Box>
                 <Typography variant="h4">
                   {formatCost(
@@ -120,8 +119,9 @@ export const NetworkTaxInfo: React.FC = () => {
         </Grid>
 
         <Alert severity="info" sx={{ mt: 3 }}>
-          Les coûts de déploiement peuvent varier en fonction de la congestion du réseau.
-          Assurez-vous d'avoir suffisamment de {taxConfig.deploymentCost.currency} dans votre portefeuille.
+          Les coûts de déploiement peuvent varier en fonction de la congestion
+          du réseau. Assurez-vous d'avoir suffisamment de{" "}
+          {taxConfig.deploymentCost.currency} dans votre portefeuille.
         </Alert>
       </CardContent>
     </Card>

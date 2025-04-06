@@ -1,8 +1,8 @@
-import { usePublicClient, useWalletClient } from 'wagmi';
-import { getContract } from 'viem';
-import { TokenInfo } from '../../../../types/tokens';
-import { useTokenForgeConfig } from '../../../../hooks/useTokenForgeConfig';
-import tokenABI from '../../../../contracts/abis/TokenForge.json';
+import { usePublicClient, useWalletClient } from "wagmi";
+import { getContract } from "viem";
+import { TokenInfo } from "../../../../types/tokens";
+import { useTokenForgeConfig } from "../../../../hooks/useTokenForgeConfig";
+import tokenABI from "../../../../contracts/abis/TokenForge.json";
 
 interface TokenContract {
   getTokenData: (tokenId: string) => Promise<TokenInfo>;

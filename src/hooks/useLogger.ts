@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { BaseLogger } from '../core/logger';
+import { useCallback } from "react";
+import { BaseLogger } from "../core/logger";
 
 export const useLogger = (context: string) => {
   const logger = new BaseLogger(context);
@@ -15,6 +15,6 @@ export const useLogger = (context: string) => {
   return {
     logError,
     logInfo,
-    logger
+    logger,
   };
 };

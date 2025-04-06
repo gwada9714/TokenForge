@@ -1,9 +1,9 @@
 // @ts-expect-error React is needed for JSX
-import React from 'react';
-import { Link } from 'react-router-dom';
-import styled from 'styled-components';
-import { useAuth } from '@/hooks/useAuth';
-import { APP_NAME } from '@/config/constants';
+import React from "react";
+import { Link } from "react-router-dom";
+import styled from "styled-components";
+import { useAuth } from "@/hooks/useAuth";
+import { APP_NAME } from "@/config/constants";
 
 const NavContainer = styled.nav`
   background-color: white;

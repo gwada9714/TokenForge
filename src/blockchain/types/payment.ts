@@ -3,11 +3,11 @@
  */
 
 export enum PaymentStatus {
-  PENDING = 'pending',
-  CONFIRMING = 'confirming',
-  COMPLETED = 'completed',
-  EXPIRED = 'expired',
-  FAILED = 'failed'
+  PENDING = "pending",
+  CONFIRMING = "confirming",
+  COMPLETED = "completed",
+  EXPIRED = "expired",
+  FAILED = "failed",
 }
 
 export interface CryptocurrencyInfo {
@@ -36,10 +36,14 @@ export interface FeeEstimate {
 export interface PaymentInitParams {
   userId: string;
   productId: string;
-  productType: 'token_creation' | 'subscription' | 'premium_service' | 'marketplace';
+  productType:
+    | "token_creation"
+    | "subscription"
+    | "premium_service"
+    | "marketplace";
   amount: number; // Montant en équivalent EUR
   discountCode?: string;
-  subscriptionPeriod?: 'monthly' | 'annual';
+  subscriptionPeriod?: "monthly" | "annual";
   currency: string; // Symbol or address of the cryptocurrency/token to use
   payerAddress: string; // Address of the user's wallet
 }
@@ -58,6 +62,6 @@ export interface PaymentSession {
 
 // Type pour la compatibilité avec l'ancien système
 export interface LegacyPaymentStatus {
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   details: Record<string, any>;
 }

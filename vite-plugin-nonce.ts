@@ -1,31 +1,31 @@
-import type { Plugin, IndexHtmlTransformContext } from 'vite';
-import crypto from 'crypto';
+import type { Plugin, IndexHtmlTransformContext } from "vite";
+import crypto from "crypto";
 
 export function vitePluginNonce(): Plugin {
   let nonce: string;
 
   return {
-    name: 'vite-plugin-nonce',
+    name: "vite-plugin-nonce",
     configResolved(config) {
       // Générer un nouveau nonce au démarrage du serveur
-      nonce = crypto.randomBytes(32).toString('base64');
+      nonce = crypto.randomBytes(32).toString("base64");
       process.env.VITE_CSP_NONCE = nonce;
     },
     transformIndexHtml: {
-      enforce: 'post',
+      enforce: "post",
       transform(html: string) {
         // Remplacer tous les placeholders de nonce
         return html.replace(/%%VITE_NONCE%%/g, nonce);
-      }
+      },
     },
     transform(code: string, id: string) {
       // Ne pas transformer les fichiers node_modules
-      if (id.includes('node_modules')) {
+      if (id.includes("node_modules")) {
         return null;
       }
 
       // Ajouter le nonce aux scripts React générés dynamiquement
-      if (id.endsWith('.tsx') || id.endsWith('.jsx')) {
+      if (id.endsWith(".tsx") || id.endsWith(".jsx")) {
         return {
           code: code
             .replace(
@@ -36,12 +36,12 @@ export function vitePluginNonce(): Plugin {
               /React\.createElement\("style"/g,
               `React.createElement("style", { nonce: "${nonce}" }`
             ),
-          map: null
+          map: null,
         };
       }
 
       // Ajouter le nonce aux styles générés dynamiquement
-      if (id.endsWith('.css')) {
+      if (id.endsWith(".css")) {
         return {
           code: `
             const style = document.createElement('style');
@@ -49,7 +49,7 @@ export function vitePluginNonce(): Plugin {
             style.textContent = ${JSON.stringify(code)};
             document.head.appendChild(style);
           `,
-          map: null
+          map: null,
         };
       }
 
@@ -58,9 +58,9 @@ export function vitePluginNonce(): Plugin {
     configureServer(server) {
       // Ajouter le nonce aux en-têtes de réponse
       server.middlewares.use((req, res, next) => {
-        res.setHeader('x-nonce', nonce);
+        res.setHeader("x-nonce", nonce);
         next();
       });
-    }
+    },
   };
 }

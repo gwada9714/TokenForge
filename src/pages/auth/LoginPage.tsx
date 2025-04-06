@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
-import { Container, Paper, Typography, Box, Link, CircularProgress } from '@mui/material';
-import { Link as RouterLink, Navigate, useLocation } from 'react-router-dom';
-import { LoginForm } from '../../features/auth';
-import { useTokenForgeAuth } from '../../hooks/useAuth';
-import { AuthError } from '../../features/auth/errors/AuthError';
+import React, { useState } from "react";
+import {
+  Container,
+  Paper,
+  Typography,
+  Box,
+  Link,
+  CircularProgress,
+} from "@mui/material";
+import { Link as RouterLink, Navigate, useLocation } from "react-router-dom";
+import { LoginForm } from "../../features/auth";
+import { useTokenForgeAuth } from "../../hooks/useAuth";
+import { AuthError } from "../../features/auth/errors/AuthError";
 
 const LoginPage: React.FC = () => {
   const { isAuthenticated, signIn } = useTokenForgeAuth();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || '/';
+  const from = (location.state as any)?.from?.pathname || "/";
   const [error, setError] = useState<AuthError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,23 +40,23 @@ const LoginPage: React.FC = () => {
       <Box
         sx={{
           marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+        <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Sign In
           </Typography>
-          <LoginForm 
+          <LoginForm
             onSubmit={handleSubmit}
             error={error}
             isLoading={isLoading}
           />
-          {isLoading && <CircularProgress data-testid='loading-spinner' />}
+          {isLoading && <CircularProgress data-testid="loading-spinner" />}
           {error && <Typography color="error">{error.message}</Typography>}
-          <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Box sx={{ mt: 2, textAlign: "center" }}>
             <Link component={RouterLink} to="/signup" variant="body2">
               Don't have an account? Sign Up
             </Link>

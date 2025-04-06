@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   Card,
@@ -13,21 +13,29 @@ import {
   TableHead,
   TableRow,
   Paper,
-  CircularProgress
-} from '@mui/material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TokenAnalytics, TokenEvent } from '@/types/analytics';
-import { RootState } from '@/store/store';
-import { TokenAnalyticsService } from '@/core/services/TokenAnalyticsService';
-import { formatNumber, formatDate, shortenAddress } from '@/utils/format';
-import { useNetwork } from '@/hooks/useNetwork';
+  CircularProgress,
+} from "@mui/material";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { TokenAnalytics, TokenEvent } from "@/types/analytics";
+import { RootState } from "@/store/store";
+import { TokenAnalyticsService } from "@/core/services/TokenAnalyticsService";
+import { formatNumber, formatDate, shortenAddress } from "@/utils/format";
+import { useNetwork } from "@/hooks/useNetwork";
 
-const MetricCard: React.FC<{ title: string; value: string; change?: string }> = ({
-  title,
-  value,
-  change
-}) => (
-  <Card sx={{ height: '100%' }}>
+const MetricCard: React.FC<{
+  title: string;
+  value: string;
+  change?: string;
+}> = ({ title, value, change }) => (
+  <Card sx={{ height: "100%" }}>
     <CardContent>
       <Typography color="textSecondary" gutterBottom>
         {title}
@@ -37,7 +45,7 @@ const MetricCard: React.FC<{ title: string; value: string; change?: string }> = 
       </Typography>
       {change && (
         <Typography
-          color={change.startsWith('-') ? 'error' : 'success'}
+          color={change.startsWith("-") ? "error" : "success"}
           variant="body2"
         >
           {change}
@@ -68,7 +76,11 @@ const EventsTable: React.FC<{ events: TokenEvent[] }> = ({ events }) => (
             <TableCell align="right">{formatNumber(event.amount)}</TableCell>
             <TableCell>
               <Typography>
-                {formatDate(typeof event.timestamp === 'string' ? new Date(event.timestamp) : event.timestamp)}
+                {formatDate(
+                  typeof event.timestamp === "string"
+                    ? new Date(event.timestamp)
+                    : event.timestamp
+                )}
               </Typography>
             </TableCell>
           </TableRow>
@@ -78,10 +90,14 @@ const EventsTable: React.FC<{ events: TokenEvent[] }> = ({ events }) => (
   </TableContainer>
 );
 
-export const TokenDashboard: React.FC<{ tokenAddress: string }> = ({ tokenAddress }) => {
+export const TokenDashboard: React.FC<{ tokenAddress: string }> = ({
+  tokenAddress,
+}) => {
   const dispatch = useDispatch();
   const { network } = useNetwork();
-  const analytics = useSelector((state: RootState) => state.analytics.tokens[tokenAddress]);
+  const analytics = useSelector(
+    (state: RootState) => state.analytics.tokens[tokenAddress]
+  );
   const loading = useSelector((state: RootState) => state.analytics.loading);
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout>();
 
@@ -94,7 +110,7 @@ export const TokenDashboard: React.FC<{ tokenAddress: string }> = ({ tokenAddres
         const data = await service.getTokenAnalytics(tokenAddress);
         // dispatch update action
       } catch (error) {
-        console.error('Error fetching analytics:', error);
+        console.error("Error fetching analytics:", error);
       }
     };
 
@@ -111,7 +127,12 @@ export const TokenDashboard: React.FC<{ tokenAddress: string }> = ({ tokenAddres
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     );
@@ -167,7 +188,11 @@ export const TokenDashboard: React.FC<{ tokenAddress: string }> = ({ tokenAddres
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="timestamp"
-                      tickFormatter={(value) => formatDate(typeof value === 'string' ? new Date(value) : value)}
+                      tickFormatter={(value) =>
+                        formatDate(
+                          typeof value === "string" ? new Date(value) : value
+                        )
+                      }
                     />
                     <YAxis />
                     <Tooltip />

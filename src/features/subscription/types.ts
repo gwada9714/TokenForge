@@ -1,7 +1,7 @@
 export enum SubscriptionTier {
-  APPRENTI = 'apprenti',
-  FORGERON = 'forgeron',
-  MAITRE = 'maitre'
+  APPRENTI = "apprenti",
+  FORGERON = "forgeron",
+  MAITRE = "maitre",
 }
 
 export interface SubscriptionFeatures {

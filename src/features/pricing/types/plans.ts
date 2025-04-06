@@ -1,12 +1,12 @@
-import { NetworkConfig } from '@/features/auth/types/wallet';
+import { NetworkConfig } from "@/features/auth/types/wallet";
 
 export enum PlanType {
-  APPRENTI = 'apprenti',
-  FORGERON = 'forgeron',
-  MAITRE_FORGERON = 'maitre_forgeron'
+  APPRENTI = "apprenti",
+  FORGERON = "forgeron",
+  MAITRE_FORGERON = "maitre_forgeron",
 }
 
-export type PaymentCurrency = 'BNB' | 'ETH' | 'MATIC' | 'USDT' | 'USDC';
+export type PaymentCurrency = "BNB" | "ETH" | "MATIC" | "USDT" | "USDC";
 
 export interface PlanPrice {
   amount: number;
@@ -44,6 +44,6 @@ export interface PaymentDetails {
   currency: PaymentCurrency;
   network: NetworkConfig;
   timestamp: number;
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   transactionHash?: string;
-} 
+}

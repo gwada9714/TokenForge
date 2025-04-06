@@ -1,13 +1,13 @@
-import React from 'react';
-import { Container, Typography, Box, Breadcrumbs, Link } from '@mui/material';
-import { ChainVotingSystem } from '../components/ChainVotingSystem';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import React from "react";
+import { Container, Typography, Box, Breadcrumbs, Link } from "@mui/material";
+import { ChainVotingSystem } from "../components/ChainVotingSystem";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 
 const ChainVotingPage: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs 
-        separator={<NavigateNextIcon fontSize="small" />} 
+      <Breadcrumbs
+        separator={<NavigateNextIcon fontSize="small" />}
         aria-label="breadcrumb"
         sx={{ mb: 3 }}
       >
@@ -25,8 +25,9 @@ const ChainVotingPage: React.FC = () => {
           Vote Communautaire pour les Blockchains
         </Typography>
         <Typography variant="subtitle1" color="text.secondary">
-          Aidez-nous à décider quelles blockchains nous devrions intégrer ensuite à TokenForge.
-          Votez pour vos préférées ou proposez-en de nouvelles!
+          Aidez-nous à décider quelles blockchains nous devrions intégrer
+          ensuite à TokenForge. Votez pour vos préférées ou proposez-en de
+          nouvelles!
         </Typography>
       </Box>
 

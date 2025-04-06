@@ -1,8 +1,8 @@
-import { app } from '@/config/firebase/index';
-import { getFirebaseAuth } from '@/lib/firebase/auth';
-import { firebaseManager } from './services';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage as getFirebaseStorage } from 'firebase/storage';
+import { app } from "@/config/firebase/index";
+import { getFirebaseAuth } from "@/lib/firebase/auth";
+import { firebaseManager } from "./services";
+import { getFirestore } from "firebase/firestore";
+import { getStorage as getFirebaseStorage } from "firebase/storage";
 
 // Exporter les services modulaires
 // Remarque: nous ne réexportons pas directement les instances car elles doivent

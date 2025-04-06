@@ -1,11 +1,11 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { QueryClient } from '@tanstack/react-query';
-import { setupListeners } from '@reduxjs/toolkit/query';
-import { rtkQueryErrorLogger } from './middleware/error';
-import authReducer from './slices/auth';
-import uiReducer from './slices/ui';
-import walletReducer from './slices/wallet';
-import pricingReducer from './slices/pricing';
+import { configureStore } from "@reduxjs/toolkit";
+import { QueryClient } from "@tanstack/react-query";
+import { setupListeners } from "@reduxjs/toolkit/query";
+import { rtkQueryErrorLogger } from "./middleware/error";
+import authReducer from "./slices/auth";
+import uiReducer from "./slices/ui";
+import walletReducer from "./slices/wallet";
+import pricingReducer from "./slices/pricing";
 
 // Configure Redux store
 export const store = configureStore({
@@ -18,7 +18,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST'],
+        ignoredActions: ["persist/PERSIST"],
       },
     }).concat(rtkQueryErrorLogger),
 });
@@ -43,7 +43,7 @@ setupListeners(store.dispatch);
 
 // Reset store helper for testing
 export const resetStore = () => {
-  store.dispatch({ type: 'RESET_STORE' });
+  store.dispatch({ type: "RESET_STORE" });
   queryClient.clear();
 };
 

@@ -33,50 +33,50 @@ export interface NetworkTaxConfig {
 export const SUPPORTED_NETWORKS: NetworkConfig[] = [
   {
     chainId: 1,
-    name: 'Ethereum',
+    name: "Ethereum",
     nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18
+      name: "Ether",
+      symbol: "ETH",
+      decimals: 18,
     },
-    rpcUrls: ['https://eth.llamarpc.com'],
-    blockExplorerUrls: ['https://etherscan.io'],
-    iconUrl: '/images/networks/ethereum.svg'
+    rpcUrls: ["https://eth.llamarpc.com"],
+    blockExplorerUrls: ["https://etherscan.io"],
+    iconUrl: "/images/networks/ethereum.svg",
   },
   {
     chainId: 56,
-    name: 'BNB Smart Chain',
+    name: "BNB Smart Chain",
     nativeCurrency: {
-      name: 'BNB',
-      symbol: 'BNB',
-      decimals: 18
+      name: "BNB",
+      symbol: "BNB",
+      decimals: 18,
     },
-    rpcUrls: ['https://bsc-dataseed.binance.org'],
-    blockExplorerUrls: ['https://bscscan.com'],
-    iconUrl: '/images/networks/binance.svg'
+    rpcUrls: ["https://bsc-dataseed.binance.org"],
+    blockExplorerUrls: ["https://bscscan.com"],
+    iconUrl: "/images/networks/binance.svg",
   },
   {
     chainId: 137,
-    name: 'Polygon',
+    name: "Polygon",
     nativeCurrency: {
-      name: 'MATIC',
-      symbol: 'MATIC',
-      decimals: 18
+      name: "MATIC",
+      symbol: "MATIC",
+      decimals: 18,
     },
-    rpcUrls: ['https://polygon-rpc.com'],
-    blockExplorerUrls: ['https://polygonscan.com'],
-    iconUrl: '/images/networks/polygon.svg'
+    rpcUrls: ["https://polygon-rpc.com"],
+    blockExplorerUrls: ["https://polygonscan.com"],
+    iconUrl: "/images/networks/polygon.svg",
   },
   {
     chainId: 43114,
-    name: 'Avalanche',
+    name: "Avalanche",
     nativeCurrency: {
-      name: 'AVAX',
-      symbol: 'AVAX',
-      decimals: 18
+      name: "AVAX",
+      symbol: "AVAX",
+      decimals: 18,
     },
-    rpcUrls: ['https://api.avax.network/ext/bc/C/rpc'],
-    blockExplorerUrls: ['https://snowtrace.io'],
-    iconUrl: '/images/networks/avalanche.svg'
-  }
+    rpcUrls: ["https://api.avax.network/ext/bc/C/rpc"],
+    blockExplorerUrls: ["https://snowtrace.io"],
+    iconUrl: "/images/networks/avalanche.svg",
+  },
 ];

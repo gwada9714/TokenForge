@@ -1,10 +1,14 @@
-import { useEffect, useCallback } from 'react';
-import { useAccount, useChainId, useDisconnect } from 'wagmi';
-import { logger } from '@/core/logger';
-import { SUPPORTED_CHAINS, DEFAULT_CHAIN, isChainSupported } from '@/config/constants/chains';
-import { EthereumError } from '../types/ethereum';
+import { useEffect, useCallback } from "react";
+import { useAccount, useChainId, useDisconnect } from "wagmi";
+import { logger } from "@/core/logger";
+import {
+  SUPPORTED_CHAINS,
+  DEFAULT_CHAIN,
+  isChainSupported,
+} from "@/config/constants/chains";
+import { EthereumError } from "../types/ethereum";
 
-const LOG_CATEGORY = 'WalletReconnection';
+const LOG_CATEGORY = "WalletReconnection";
 
 export const useWalletReconnection = () => {
   const { address, isConnected } = useAccount();
@@ -19,24 +23,24 @@ export const useWalletReconnection = () => {
   const handleNetworkChange = useCallback(async () => {
     try {
       if (!window.ethereum) {
-        throw new Error('Ethereum provider not found');
+        throw new Error("Ethereum provider not found");
       }
 
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const chainId = await window.ethereum.request({ method: "eth_chainId" });
       const chainIdNumber = parseInt(chainId, 16);
 
       if (!isChainSupported(chainIdNumber)) {
-        logger.warn('Réseau non supporté détecté', { chainId: chainIdNumber });
+        logger.warn("Réseau non supporté détecté", { chainId: chainIdNumber });
 
         try {
           await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
+            method: "wallet_switchEthereumChain",
             params: [{ chainId: `0x${DEFAULT_CHAIN.id.toString(16)}` }],
           });
         } catch (switchError) {
           const error = switchError as EthereumError;
-          if (error.code === '4902') {
-            logger.info('Tentative d\'ajout du réseau par défaut');
+          if (error.code === "4902") {
+            logger.info("Tentative d'ajout du réseau par défaut");
             // Ici, vous pouvez implémenter l'ajout du réseau
           } else {
             throw error;
@@ -45,10 +49,10 @@ export const useWalletReconnection = () => {
       }
     } catch (error) {
       const ethError = error as EthereumError;
-      logger.error('Erreur lors du changement de réseau', { 
+      logger.error("Erreur lors du changement de réseau", {
         code: ethError.code,
         message: ethError.message,
-        data: ethError.data
+        data: ethError.data,
       });
       disconnect();
     }
@@ -57,23 +61,23 @@ export const useWalletReconnection = () => {
   const attemptReconnection = useCallback(async () => {
     try {
       if (!window.ethereum) {
-        throw new Error('Ethereum provider not found');
+        throw new Error("Ethereum provider not found");
       }
 
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_accounts' 
+      const accounts = await window.ethereum.request({
+        method: "eth_accounts",
       });
 
       if (accounts && accounts.length > 0) {
-        logger.info('Wallet reconnecté avec succès', { address: accounts[0] });
+        logger.info("Wallet reconnecté avec succès", { address: accounts[0] });
         await handleNetworkChange();
       }
     } catch (error) {
       const ethError = error as EthereumError;
-      logger.error('Erreur lors de la tentative de reconnexion', {
+      logger.error("Erreur lors de la tentative de reconnexion", {
         code: ethError.code,
         message: ethError.message,
-        data: ethError.data
+        data: ethError.data,
       });
       disconnect();
     }
@@ -88,28 +92,33 @@ export const useWalletReconnection = () => {
   useEffect(() => {
     const handleAccountsChanged = (accounts: string[]) => {
       if (accounts.length === 0) {
-        logger.info('Déconnexion du wallet détectée');
+        logger.info("Déconnexion du wallet détectée");
         disconnect();
       } else if (address !== accounts[0]) {
-        logger.info('Changement de compte détecté', { newAddress: accounts[0] });
+        logger.info("Changement de compte détecté", {
+          newAddress: accounts[0],
+        });
         window.location.reload();
       }
     };
 
     const handleChainChanged = () => {
-      logger.info('Changement de réseau détecté');
+      logger.info("Changement de réseau détecté");
       window.location.reload();
     };
 
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', handleChainChanged);
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+      window.ethereum.on("chainChanged", handleChainChanged);
     }
 
     return () => {
       if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        window.ethereum.removeListener('chainChanged', handleChainChanged);
+        window.ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged
+        );
+        window.ethereum.removeListener("chainChanged", handleChainChanged);
       }
     };
   }, [address, disconnect]);
@@ -119,4 +128,4 @@ export const useWalletReconnection = () => {
     handleNetworkChange,
     isCorrectNetwork: isCorrectNetwork(),
   };
-}; 
+};

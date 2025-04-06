@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 interface StakingState {
   // Ajoutez vos propriétés d'état ici
@@ -10,7 +10,7 @@ const initialState: StakingState = {
 };
 
 const stakingSlice = createSlice({
-  name: 'staking',
+  name: "staking",
   initialState,
   reducers: {
     // Ajoutez vos reducers ici

@@ -1,8 +1,8 @@
-import { logService } from './logService';
-import { notificationService } from './notificationService';
-import type { NotificationOptions } from './notificationService';
+import { logService } from "./logService";
+import { notificationService } from "./notificationService";
+import type { NotificationOptions } from "./notificationService";
 
-const LOG_CATEGORY = 'NetworkRetryService';
+const LOG_CATEGORY = "NetworkRetryService";
 
 export interface RetryConfig {
   maxAttempts: number;
@@ -57,22 +57,28 @@ export class NetworkRetryService {
       try {
         const result = await operation();
         if (attempts > 1) {
-          notificationService.success(`${context} réussie après ${attempts} tentatives`, {
-            toastId: `${context}-success-${attempts}`,
-          } satisfies NotificationOptions);
+          notificationService.success(
+            `${context} réussie après ${attempts} tentatives`,
+            {
+              toastId: `${context}-success-${attempts}`,
+            } satisfies NotificationOptions
+          );
         }
         return { success: true, result, attempts };
       } catch (error) {
         await this.handleError(error, context, config.metadata);
-        
+
         if (attempts === config.maxAttempts) {
-          notificationService.error(`${context} échouée après ${attempts} tentatives`, {
-            toastId: `${context}-error-${attempts}`,
-          } satisfies NotificationOptions);
-          return { 
-            success: false, 
-            error: error instanceof Error ? error : new Error(String(error)), 
-            attempts 
+          notificationService.error(
+            `${context} échouée après ${attempts} tentatives`,
+            {
+              toastId: `${context}-error-${attempts}`,
+            } satisfies NotificationOptions
+          );
+          return {
+            success: false,
+            error: error instanceof Error ? error : new Error(String(error)),
+            attempts,
           };
         }
 
@@ -80,7 +86,7 @@ export class NetworkRetryService {
           config.baseDelay * Math.pow(2, attempts - 1),
           config.maxDelay
         );
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 

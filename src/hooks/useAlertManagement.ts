@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { toast } from 'react-hot-toast';
+import { useState, useCallback } from "react";
+import { toast } from "react-hot-toast";
 
-export type AlertType = 'info' | 'success' | 'warning' | 'error';
+export type AlertType = "info" | "success" | "warning" | "error";
 
 export interface AlertRule {
   id: string;
@@ -30,13 +30,13 @@ export const useAlertManagement = () => {
   });
 
   // Ajouter une nouvelle règle d'alerte
-  const addRule = useCallback((rule: Omit<AlertRule, 'id'>) => {
+  const addRule = useCallback((rule: Omit<AlertRule, "id">) => {
     const newRule: AlertRule = {
       ...rule,
       id: `rule-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       rules: [...prev.rules, newRule],
     }));
@@ -46,28 +46,31 @@ export const useAlertManagement = () => {
 
   // Supprimer une règle
   const removeRule = useCallback((ruleId: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      rules: prev.rules.filter(rule => rule.id !== ruleId),
+      rules: prev.rules.filter((rule) => rule.id !== ruleId),
     }));
   }, []);
 
   // Activer/désactiver une règle
   const toggleRule = useCallback((ruleId: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      rules: prev.rules.map(rule =>
+      rules: prev.rules.map((rule) =>
         rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule
       ),
     }));
   }, []);
 
   // Vérifier si un message correspond à une règle
-  const checkRules = useCallback((message: string): AlertRule | undefined => {
-    return state.rules.find(
-      rule => rule.enabled && new RegExp(rule.pattern).test(message)
-    );
-  }, [state.rules]);
+  const checkRules = useCallback(
+    (message: string): AlertRule | undefined => {
+      return state.rules.find(
+        (rule) => rule.enabled && new RegExp(rule.pattern).test(message)
+      );
+    },
+    [state.rules]
+  );
 
   // Afficher une alerte
   const showAlert = useCallback(
@@ -79,7 +82,7 @@ export const useAlertManagement = () => {
       const { duration = 5000, ruleId } = options || {};
 
       // Ajouter à l'historique
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         history: [
           {
@@ -94,30 +97,30 @@ export const useAlertManagement = () => {
 
       // Afficher la notification
       switch (type) {
-        case 'success':
+        case "success":
           toast.success(message, { duration });
           break;
-        case 'error':
+        case "error":
           toast.error(message, { duration });
           break;
-        case 'warning':
+        case "warning":
           toast(message, {
             duration,
-            icon: '⚠️',
+            icon: "⚠️",
             style: {
-              background: '#fff7cd',
-              color: '#7a4f01',
+              background: "#fff7cd",
+              color: "#7a4f01",
             },
           });
           break;
-        case 'info':
+        case "info":
         default:
           toast(message, {
             duration,
-            icon: 'ℹ️',
+            icon: "ℹ️",
             style: {
-              background: '#e5f6fd',
-              color: '#014361',
+              background: "#e5f6fd",
+              color: "#014361",
             },
           });
           break;
@@ -151,20 +154,20 @@ export const useAlertManagement = () => {
   const importRules = useCallback((rulesJson: string) => {
     try {
       const rules = JSON.parse(rulesJson) as AlertRule[];
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         rules,
       }));
       return true;
     } catch (error) {
-      console.error('Erreur lors de l\'import des règles:', error);
+      console.error("Erreur lors de l'import des règles:", error);
       return false;
     }
   }, []);
 
   // Nettoyer l'historique
   const clearHistory = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       history: [],
     }));

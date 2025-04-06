@@ -1,18 +1,20 @@
-import { ethers } from 'ethers';
-import { NetworkConfig } from '@/config/networks';
-import { TokenAnalytics, TokenMetrics, TokenEvent } from '@/types/analytics';
-import { ERC20_ABI } from '@/abi/ERC20ABI';
+import { ethers } from "ethers";
+import { NetworkConfig } from "@/config/networks";
+import { TokenAnalytics, TokenMetrics, TokenEvent } from "@/types/analytics";
+import { ERC20_ABI } from "@/abi/ERC20ABI";
 
 export class TokenAnalyticsService {
   private provider: ethers.JsonRpcProvider;
   private dexPairs: Record<string, string[]> = {
-    'uniswap': [],
-    'pancakeswap': [],
-    'quickswap': []
+    uniswap: [],
+    pancakeswap: [],
+    quickswap: [],
   };
 
   constructor(network: NetworkConfig) {
-    this.provider = new ethers.JsonRpcProvider(network.chain.rpcUrls.default.toString());
+    this.provider = new ethers.JsonRpcProvider(
+      network.chain.rpcUrls.default.toString()
+    );
   }
 
   async getTokenAnalytics(tokenAddress: string): Promise<TokenAnalytics> {
@@ -20,7 +22,7 @@ export class TokenAnalyticsService {
     const [name, symbol, decimals] = await Promise.all([
       token.name(),
       token.symbol(),
-      token.decimals()
+      token.decimals(),
     ]);
 
     const metrics = await this.getTokenMetrics(tokenAddress, token);
@@ -33,11 +35,11 @@ export class TokenAnalyticsService {
         network: (await this.provider.getNetwork()).name,
         name,
         symbol,
-        decimals
+        decimals,
       },
       metrics,
       history,
-      events
+      events,
     };
   }
 
@@ -47,7 +49,7 @@ export class TokenAnalyticsService {
   ): Promise<TokenMetrics> {
     const [totalSupply, holders] = await Promise.all([
       token.totalSupply(),
-      this.getHoldersCount(tokenAddress)
+      this.getHoldersCount(tokenAddress),
     ]);
 
     const networkName = (await this.provider.getNetwork()).name;
@@ -57,21 +59,24 @@ export class TokenAnalyticsService {
       network: networkName,
       holders,
       totalSupply: ethers.formatUnits(totalSupply, await token.decimals()),
-      circulatingSupply: ethers.formatUnits(totalSupply, await token.decimals()),
-      marketCap: '0',
-      price: '0',
-      volume24h: '0',
+      circulatingSupply: ethers.formatUnits(
+        totalSupply,
+        await token.decimals()
+      ),
+      marketCap: "0",
+      price: "0",
+      volume24h: "0",
       transactions: {
         total: 0,
         buy: 0,
         sell: 0,
-        transfer: 0
+        transfer: 0,
       },
       liquidity: {
-        total: '0',
-        pairs: []
+        total: "0",
+        pairs: [],
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     // Récupération des données de liquidité et de prix pour chaque DEX
@@ -84,7 +89,7 @@ export class TokenAnalyticsService {
             pair,
             liquidity: pairData.liquidity,
             price: pairData.price,
-            volume24h: pairData.volume24h
+            volume24h: pairData.volume24h,
           });
         }
       }
@@ -123,15 +128,15 @@ export class TokenAnalyticsService {
       if (!block) continue;
 
       const [from, to, value] = log.args;
-      
+
       events.push({
         type: await this.determineTransferType(log),
-        hash: log.hash || '',
+        hash: log.hash || "",
         from,
         to,
         amount: ethers.formatUnits(value, await token.decimals()),
         timestamp: new Date(Number(block.timestamp) * 1000),
-        blockNumber: log.blockNumber
+        blockNumber: log.blockNumber,
       });
     }
 
@@ -142,7 +147,7 @@ export class TokenAnalyticsService {
     return {
       prices: [],
       volumes: [],
-      holders: []
+      holders: [],
     };
   }
 
@@ -162,9 +167,9 @@ export class TokenAnalyticsService {
 
   private async determineTransferType(
     log: ethers.Log
-  ): Promise<TokenEvent['type']> {
+  ): Promise<TokenEvent["type"]> {
     // Logique pour déterminer si c'est un achat, une vente ou un transfert
-    return 'transfer';
+    return "transfer";
   }
 
   async subscribeToEvents(
@@ -173,19 +178,24 @@ export class TokenAnalyticsService {
   ): Promise<() => void> {
     const token = new ethers.Contract(tokenAddress, ERC20_ABI, this.provider);
     const filter = token.filters.Transfer();
-    
-    const listener = async (from: string, to: string, value: bigint, event: ethers.Log) => {
+
+    const listener = async (
+      from: string,
+      to: string,
+      value: bigint,
+      event: ethers.Log
+    ) => {
       const block = await this.provider.getBlock(event.blockNumber);
       if (!block) return;
 
       const tokenEvent: TokenEvent = {
         type: await this.determineTransferType(event),
-        hash: event.hash || '',
+        hash: event.hash || "",
         from,
         to,
         amount: ethers.formatUnits(value, await token.decimals()),
         timestamp: new Date(Number(block.timestamp) * 1000),
-        blockNumber: event.blockNumber
+        blockNumber: event.blockNumber,
       };
       callback(tokenEvent);
     };

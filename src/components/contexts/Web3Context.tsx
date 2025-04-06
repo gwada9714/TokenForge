@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 // Define the context value type
 interface Web3ContextType {
@@ -23,7 +29,7 @@ const Web3Context = createContext<Web3ContextType>({
   disconnect: () => {},
   switchNetwork: async () => {},
   isLoading: false,
-  error: null
+  error: null,
 });
 
 // Provider props type
@@ -51,8 +57,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         setChainId(null);
         setBalance(null);
       } catch (err) {
-        console.error('Error checking connection:', err);
-        setError('Failed to initialize Web3 connection');
+        console.error("Error checking connection:", err);
+        setError("Failed to initialize Web3 connection");
       }
     };
 
@@ -68,12 +74,12 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       // In a real implementation, this would connect to the user's wallet
       // For now, we'll simulate a successful connection
       setIsConnected(true);
-      setAccount('0x1234567890123456789012345678901234567890');
+      setAccount("0x1234567890123456789012345678901234567890");
       setChainId(1); // Ethereum Mainnet
-      setBalance('1.5');
+      setBalance("1.5");
     } catch (err) {
-      console.error('Error connecting wallet:', err);
-      setError('Failed to connect wallet');
+      console.error("Error connecting wallet:", err);
+      setError("Failed to connect wallet");
     } finally {
       setIsLoading(false);
     }
@@ -98,8 +104,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       // For now, we'll simulate a successful network switch
       setChainId(targetChainId);
     } catch (err) {
-      console.error('Error switching network:', err);
-      setError('Failed to switch network');
+      console.error("Error switching network:", err);
+      setError("Failed to switch network");
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +121,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     disconnect,
     switchNetwork,
     isLoading,
-    error
+    error,
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
@@ -125,7 +131,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 export const useWeb3 = (): Web3ContextType => {
   const context = useContext(Web3Context);
   if (context === undefined) {
-    throw new Error('useWeb3 must be used within a Web3Provider');
+    throw new Error("useWeb3 must be used within a Web3Provider");
   }
   return context;
 };

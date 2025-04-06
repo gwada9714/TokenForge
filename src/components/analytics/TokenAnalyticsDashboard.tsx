@@ -1,24 +1,29 @@
-import React, { useState } from 'react';
-import { Box, Grid, Typography } from '@mui/material';
-import { TokenContract } from '@/providers/contract/ContractProvider';
-import TokenVolumeChart from './charts/TokenVolumeChart';
-import TokenHoldersChart from './charts/TokenHoldersChart';
-import TokenTransactionsChart from './charts/TokenTransactionsChart';
-import { PeriodSelector } from './controls/PeriodSelector';
-import { ChartPeriod } from '@/types/analytics';
+import React, { useState } from "react";
+import { Box, Grid, Typography } from "@mui/material";
+import { TokenContract } from "@/providers/contract/ContractProvider";
+import TokenVolumeChart from "./charts/TokenVolumeChart";
+import TokenHoldersChart from "./charts/TokenHoldersChart";
+import TokenTransactionsChart from "./charts/TokenTransactionsChart";
+import { PeriodSelector } from "./controls/PeriodSelector";
+import { ChartPeriod } from "@/types/analytics";
 
 interface TokenAnalyticsDashboardProps {
   token?: TokenContract;
 }
 
-export const TokenAnalyticsDashboard: React.FC<TokenAnalyticsDashboardProps> = ({
-  token,
-}) => {
-  const [period, setPeriod] = useState<ChartPeriod>('daily');
+export const TokenAnalyticsDashboard: React.FC<
+  TokenAnalyticsDashboardProps
+> = ({ token }) => {
+  const [period, setPeriod] = useState<ChartPeriod>("daily");
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+      >
         <Typography variant="h5" component="h2">
           Analyses du Token
         </Typography>

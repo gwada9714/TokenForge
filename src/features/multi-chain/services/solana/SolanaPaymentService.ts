@@ -4,15 +4,28 @@ import {
   SystemProgram,
   Connection,
   Keypair,
-  LAMPORTS_PER_SOL
-} from '@solana/web3.js';
-import { PaymentSessionService } from '../payment/PaymentSessionService';
-import { PaymentNetwork, PaymentToken, PaymentSession, PaymentStatus } from '../payment/types/PaymentSession';
-import { BasePaymentService, PaymentAmount, PaymentOptions } from '../payment/types/PaymentService';
-import { SolanaTransactionOptions } from './types';
-import { AbstractChainService } from '../payment/base/AbstractChainService';
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createTransferInstruction } from '@solana/spl-token';
-import { Program, AnchorProvider } from '@project-serum/anchor';
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
+import { PaymentSessionService } from "../payment/PaymentSessionService";
+import {
+  PaymentNetwork,
+  PaymentToken,
+  PaymentSession,
+  PaymentStatus,
+} from "../payment/types/PaymentSession";
+import {
+  BasePaymentService,
+  PaymentAmount,
+  PaymentOptions,
+} from "../payment/types/PaymentService";
+import { SolanaTransactionOptions } from "./types";
+import { AbstractChainService } from "../payment/base/AbstractChainService";
+import {
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  createTransferInstruction,
+} from "@solana/spl-token";
+import { Program, AnchorProvider } from "@project-serum/anchor";
 
 // Configuration requise pour le service de paiement Solana
 export interface SolanaPaymentConfig {
@@ -26,33 +39,35 @@ export interface SolanaPaymentConfig {
  * Service de paiement pour la blockchain Solana
  */
 export class SolanaPaymentService extends AbstractChainService {
-  readonly chainName = 'Solana';
+  readonly chainName = "Solana";
   readonly supportedTokens: PaymentToken[] = [
     {
-      address: 'native', // SOL
-      symbol: 'SOL',
+      address: "native", // SOL
+      symbol: "SOL",
       decimals: 9,
-      network: PaymentNetwork.SOLANA
+      network: PaymentNetwork.SOLANA,
     },
     {
-      address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', // USDT
-      symbol: 'USDT',
+      address: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDT
+      symbol: "USDT",
       decimals: 6,
-      network: PaymentNetwork.SOLANA
+      network: PaymentNetwork.SOLANA,
     },
     {
-      address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
-      symbol: 'USDC',
+      address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+      symbol: "USDC",
       decimals: 6,
-      network: PaymentNetwork.SOLANA
-    }
+      network: PaymentNetwork.SOLANA,
+    },
   ];
 
   private static instance: SolanaPaymentService;
   private sessionService: PaymentSessionService;
   private config: SolanaPaymentConfig;
   private readonly connection: Connection;
-  private readonly destinationAddress = new PublicKey('TokenForgeDestinationAddressHere');
+  private readonly destinationAddress = new PublicKey(
+    "TokenForgeDestinationAddressHere"
+  );
   private readonly maxRetries = 3;
   private readonly defaultTimeout = 10000; // 10 secondes pour Solana
   private provider: AnchorProvider | null = null;
@@ -68,13 +83,20 @@ export class SolanaPaymentService extends AbstractChainService {
   /**
    * Récupère l'instance unique du service de paiement Solana
    */
-  public static async getInstance(config?: SolanaPaymentConfig): Promise<SolanaPaymentService> {
+  public static async getInstance(
+    config?: SolanaPaymentConfig
+  ): Promise<SolanaPaymentService> {
     if (!config) {
-      throw new Error('Invalid configuration: config is required');
+      throw new Error("Invalid configuration: config is required");
     }
-    
-    if (!config.connection || !config.wallet || !config.programId || !config.receiverAddress) {
-      throw new Error('Invalid configuration: missing required fields');
+
+    if (
+      !config.connection ||
+      !config.wallet ||
+      !config.programId ||
+      !config.receiverAddress
+    ) {
+      throw new Error("Invalid configuration: missing required fields");
     }
 
     if (!SolanaPaymentService.instance) {
@@ -89,50 +111,57 @@ export class SolanaPaymentService extends AbstractChainService {
     options: PaymentOptions & SolanaTransactionOptions = {}
   ): Promise<string> {
     let signature: string | undefined;
-    
+
     try {
       // Get latest blockhash
       const blockHashResult = await this.connection.getLatestBlockhash(
-        options.commitment || 'confirmed'
+        options.commitment || "confirmed"
       );
-      
+
       const blockhash = blockHashResult?.blockhash;
       const lastValidBlockHeight = blockHashResult?.lastValidBlockHeight;
 
-      if (!blockhash || typeof lastValidBlockHeight !== 'number') {
-        throw new Error('Invalid blockhash response');
+      if (!blockhash || typeof lastValidBlockHeight !== "number") {
+        throw new Error("Invalid blockhash response");
       }
 
       // Create transfer instruction
       const transferInstruction = SystemProgram.transfer({
         fromPubkey: this.config.wallet.publicKey,
         toPubkey: this.config.receiverAddress,
-        lamports: Number(session.amount)
+        lamports: Number(session.amount),
       });
 
       // Create transaction
       const transaction = new Transaction({
         feePayer: this.config.wallet.publicKey,
         blockhash,
-        lastValidBlockHeight
+        lastValidBlockHeight,
       }).add(transferInstruction);
 
       // Sign transaction
       transaction.sign(this.config.wallet);
 
       // Send transaction with options
-      signature = await this.connection.sendTransaction(transaction, [this.config.wallet], {
-        skipPreflight: options.skipPreflight,
-        preflightCommitment: options.commitment,
-        maxRetries: 3
-      });
+      signature = await this.connection.sendTransaction(
+        transaction,
+        [this.config.wallet],
+        {
+          skipPreflight: options.skipPreflight,
+          preflightCommitment: options.commitment,
+          maxRetries: 3,
+        }
+      );
 
       // Wait for confirmation
-      const confirmation = await this.connection.confirmTransaction({
-        signature,
-        blockhash,
-        lastValidBlockHeight
-      }, options.commitment || 'confirmed');
+      const confirmation = await this.connection.confirmTransaction(
+        {
+          signature,
+          blockhash,
+          lastValidBlockHeight,
+        },
+        options.commitment || "confirmed"
+      );
 
       if (confirmation.value.err) {
         throw new Error(`Payment failed: ${confirmation.value.err.toString()}`);
@@ -146,23 +175,25 @@ export class SolanaPaymentService extends AbstractChainService {
       );
 
       return signature;
-
     } catch (error) {
       // Update session status to FAILED
       await this.sessionService.updateSessionStatus(
         session.id,
         PaymentStatus.FAILED,
         signature,
-        error instanceof Error ? error.message : error?.toString() || 'Unknown error occurred'
+        error instanceof Error
+          ? error.message
+          : error?.toString() || "Unknown error occurred"
       );
 
       // Re-throw error with "Payment failed:" prefix if not already present
-      const message = error instanceof Error
-        ? error.message.startsWith('Payment failed:') 
-          ? error.message 
-          : `Payment failed: ${error.message}`
-        : `Payment failed: ${error?.toString() || 'Unknown error occurred'}`;
-      
+      const message =
+        error instanceof Error
+          ? error.message.startsWith("Payment failed:")
+            ? error.message
+            : `Payment failed: ${error.message}`
+          : `Payment failed: ${error?.toString() || "Unknown error occurred"}`;
+
       throw new Error(message);
     }
   }
@@ -177,23 +208,24 @@ export class SolanaPaymentService extends AbstractChainService {
     let session;
     try {
       // Validate amount
-      const paymentAmount = typeof amount === 'number' ? BigInt(Math.floor(amount)) : amount;
-      
+      const paymentAmount =
+        typeof amount === "number" ? BigInt(Math.floor(amount)) : amount;
+
       if (paymentAmount <= 0n) {
-        throw new Error('Payment failed: Amount must be greater than 0');
+        throw new Error("Payment failed: Amount must be greater than 0");
       }
 
       // Validate token
       if (!(await this.isTokenSupported(tokenAddress))) {
-        throw new Error('Payment failed: Token not supported');
+        throw new Error("Payment failed: Token not supported");
       }
 
       // Create payment session
       const token: PaymentToken = {
         address: tokenAddress,
         network: PaymentNetwork.SOLANA,
-        symbol: 'SOL',
-        decimals: 9
+        symbol: "SOL",
+        decimals: 9,
       };
 
       session = await this.sessionService.createSession(
@@ -205,11 +237,13 @@ export class SolanaPaymentService extends AbstractChainService {
 
       // Process payment and return signature
       return await this.processPayment(session, options);
-
     } catch (error: unknown) {
       // If we have a session, update its status
       if (session) {
-        const errorMessage = error instanceof Error ? error.message : error?.toString() || 'Unknown error occurred';
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : error?.toString() || "Unknown error occurred";
         await this.sessionService.updateSessionStatus(
           session.id,
           PaymentStatus.FAILED,
@@ -217,18 +251,20 @@ export class SolanaPaymentService extends AbstractChainService {
           errorMessage
         );
       }
-      
+
       // Re-throw the error
       if (error instanceof Error) {
         throw error; // Error should already have "Payment failed:" prefix
       }
-      throw new Error('Payment failed: Unknown error occurred');
+      throw new Error("Payment failed: Unknown error occurred");
     }
   }
 
   public async isTokenSupported(tokenAddress: PublicKey): Promise<boolean> {
     try {
-      const accountInfo = await this.connection.getParsedAccountInfo(tokenAddress);
+      const accountInfo = await this.connection.getParsedAccountInfo(
+        tokenAddress
+      );
       return accountInfo?.value !== null;
     } catch (error) {
       return false;
@@ -241,21 +277,27 @@ export class SolanaPaymentService extends AbstractChainService {
     amount: string;
   }): Promise<PaymentSession> {
     if (!this.validateAmount(params.amount)) {
-      throw this.createPaymentError('Montant invalide', 'INVALID_AMOUNT');
+      throw this.createPaymentError("Montant invalide", "INVALID_AMOUNT");
     }
 
     if (!this.validateToken(params.token)) {
-      throw this.createPaymentError('Token non supporté', 'UNSUPPORTED_TOKEN');
+      throw this.createPaymentError("Token non supporté", "UNSUPPORTED_TOKEN");
     }
 
     // Vérifier la disponibilité du réseau Solana
     try {
       const version = await this.connection.getVersion();
       if (!version) {
-        throw this.createPaymentError('Réseau Solana non disponible', 'NETWORK_ERROR');
+        throw this.createPaymentError(
+          "Réseau Solana non disponible",
+          "NETWORK_ERROR"
+        );
       }
     } catch (error) {
-      throw this.createPaymentError('Erreur de connexion Solana', 'NETWORK_ERROR');
+      throw this.createPaymentError(
+        "Erreur de connexion Solana",
+        "NETWORK_ERROR"
+      );
     }
 
     return {
@@ -267,7 +309,7 @@ export class SolanaPaymentService extends AbstractChainService {
       amount: params.amount,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      retryCount: 0
+      retryCount: 0,
     };
   }
 
@@ -283,38 +325,43 @@ export class SolanaPaymentService extends AbstractChainService {
       await this.checkBalance(session);
 
       const signature = await this.sendTransaction(session);
-      
+
       currentSession = {
         ...currentSession,
         status: PaymentStatus.PROCESSING,
         txHash: signature,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       // Attendre la confirmation
-      const confirmation = await this.connection.confirmTransaction({
-        signature,
-        blockhash: await (await this.connection.getLatestBlockhash()).blockhash,
-        lastValidBlockHeight: await this.connection.getBlockHeight()
-      }, 'confirmed');
+      const confirmation = await this.connection.confirmTransaction(
+        {
+          signature,
+          blockhash: await (
+            await this.connection.getLatestBlockhash()
+          ).blockhash,
+          lastValidBlockHeight: await this.connection.getBlockHeight(),
+        },
+        "confirmed"
+      );
 
       if (confirmation.value.err) {
-        throw new Error('Transaction échouée');
+        throw new Error("Transaction échouée");
       }
 
       return {
         ...currentSession,
         status: PaymentStatus.CONFIRMED,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message.includes('timeout')) {
+        if (error.message.includes("timeout")) {
           return {
             ...currentSession,
             status: PaymentStatus.TIMEOUT,
-            error: 'Transaction timeout',
-            updatedAt: Date.now()
+            error: "Transaction timeout",
+            updatedAt: Date.now(),
           };
         }
 
@@ -323,15 +370,15 @@ export class SolanaPaymentService extends AbstractChainService {
           ...currentSession,
           status: PaymentStatus.FAILED,
           error: error.message,
-          updatedAt: Date.now()
+          updatedAt: Date.now(),
         };
       }
 
       return {
         ...currentSession,
         status: PaymentStatus.FAILED,
-        error: 'Unknown error',
-        updatedAt: Date.now()
+        error: "Unknown error",
+        updatedAt: Date.now(),
       };
     }
   }
@@ -339,7 +386,7 @@ export class SolanaPaymentService extends AbstractChainService {
   async getPaymentStatus(sessionId: string): Promise<PaymentStatus> {
     const session = await this.getSession(sessionId);
     if (!session) {
-      throw this.createPaymentError('Session non trouvée', 'SESSION_NOT_FOUND');
+      throw this.createPaymentError("Session non trouvée", "SESSION_NOT_FOUND");
     }
 
     if (session.txHash) {
@@ -355,7 +402,7 @@ export class SolanaPaymentService extends AbstractChainService {
   async validateTransaction(signature: string): Promise<boolean> {
     try {
       const transaction = await this.connection.getTransaction(signature, {
-        commitment: 'confirmed'
+        commitment: "confirmed",
       });
 
       if (!transaction) return false;
@@ -363,34 +410,36 @@ export class SolanaPaymentService extends AbstractChainService {
       // Vérifier que la transaction est confirmée et réussie
       return transaction.meta?.err === null;
     } catch (error) {
-      console.error('Erreur lors de la validation de la transaction:', error);
+      console.error("Erreur lors de la validation de la transaction:", error);
       return false;
     }
-
   }
 
   protected async handleNetworkError(error: Error): Promise<void> {
-    console.error('Solana network error:', error);
-    
+    console.error("Solana network error:", error);
+
     // Logique spécifique pour les erreurs Solana
-    if (error.message.includes('blockhash')) {
+    if (error.message.includes("blockhash")) {
       // Récupérer un nouveau blockhash
       await this.connection.getLatestBlockhash();
     }
 
     // Gérer les erreurs de nonce
-    if (error.message.includes('nonce')) {
+    if (error.message.includes("nonce")) {
       await this.resetNonce();
     }
   }
 
   private async checkBalance(session: PaymentSession): Promise<void> {
-    if (session.token.address === 'native') {
+    if (session.token.address === "native") {
       // Vérifier le solde SOL
       const balance = await this.connection.getBalance(this.destinationAddress);
       const amount = parseFloat(session.amount) * Math.pow(10, 9); // Convertir en lamports
       if (balance < amount) {
-        throw this.createPaymentError('Solde SOL insuffisant', 'INSUFFICIENT_BALANCE');
+        throw this.createPaymentError(
+          "Solde SOL insuffisant",
+          "INSUFFICIENT_BALANCE"
+        );
       }
     } else {
       // Vérifier le solde des tokens SPL
@@ -401,16 +450,23 @@ export class SolanaPaymentService extends AbstractChainService {
       );
 
       if (tokenAccount.value.length === 0) {
-        throw this.createPaymentError('Compte token non trouvé', 'TOKEN_ACCOUNT_NOT_FOUND');
+        throw this.createPaymentError(
+          "Compte token non trouvé",
+          "TOKEN_ACCOUNT_NOT_FOUND"
+        );
       }
 
       const balance = await this.connection.getTokenAccountBalance(
         tokenAccount.value[0].pubkey
       );
 
-      const amount = parseFloat(session.amount) * Math.pow(10, session.token.decimals);
+      const amount =
+        parseFloat(session.amount) * Math.pow(10, session.token.decimals);
       if (parseFloat(balance.value.amount) < amount) {
-        throw this.createPaymentError('Solde token insuffisant', 'INSUFFICIENT_BALANCE');
+        throw this.createPaymentError(
+          "Solde token insuffisant",
+          "INSUFFICIENT_BALANCE"
+        );
       }
     }
   }
@@ -418,7 +474,7 @@ export class SolanaPaymentService extends AbstractChainService {
   private async sendTransaction(session: PaymentSession): Promise<string> {
     // Logique d'envoi de transaction à implémenter
     // Pour l'instant, retourne une signature fictive
-    return 'SolanaTransactionSignature';
+    return "SolanaTransactionSignature";
   }
 
   private async getSession(sessionId: string): Promise<PaymentSession | null> {

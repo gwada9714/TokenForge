@@ -1,18 +1,18 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Container, Grid } from '@mui/material';
-import { motion } from 'framer-motion';
-import TokenChart from '../common/TokenChart';
-import { ForgeHeading } from '../common/ForgeHeading';
-import { ParallaxContainer } from '../common/ParallaxContainer';
-import { ForgeCard } from '../common/ForgeCard';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import LocalAtmIcon from '@mui/icons-material/LocalAtm';
-import TimelineIcon from '@mui/icons-material/Timeline';
+import React from "react";
+import styled from "styled-components";
+import { Container, Grid } from "@mui/material";
+import { motion } from "framer-motion";
+import TokenChart from "../common/TokenChart";
+import { ForgeHeading } from "../common/ForgeHeading";
+import { ParallaxContainer } from "../common/ParallaxContainer";
+import { ForgeCard } from "../common/ForgeCard";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import LocalAtmIcon from "@mui/icons-material/LocalAtm";
+import TimelineIcon from "@mui/icons-material/Timeline";
 
 const SectionContainer = styled.section`
   padding: 6rem 0;
-  background: ${props => props.theme.colors.background.paper};
+  background: ${(props) => props.theme.colors.background.paper};
   position: relative;
   overflow: hidden;
 `;
@@ -23,7 +23,7 @@ const HeaderContainer = styled.div`
 `;
 
 const Subtitle = styled.p`
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${(props) => props.theme.colors.text.secondary};
   font-size: 1.25rem;
   max-width: 600px;
   margin: 1.5rem auto 0;
@@ -43,54 +43,54 @@ const IconWrapper = styled.div`
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: ${props => props.theme.colors.gradient.primary};
-  color: ${props => props.theme.colors.text.light};
+  background: ${(props) => props.theme.colors.gradient.primary};
+  color: ${(props) => props.theme.colors.text.light};
 `;
 
 const StatValue = styled.div`
-  font-family: ${props => props.theme.typography.fontFamily.heading};
+  font-family: ${(props) => props.theme.typography.fontFamily.heading};
   font-size: 1.75rem;
-  font-weight: ${props => props.theme.typography.fontWeight.bold};
-  color: ${props => props.theme.colors.primary.main};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
+  color: ${(props) => props.theme.colors.primary.main};
   margin-bottom: 0.5rem;
 `;
 
 const StatLabel = styled.div`
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${(props) => props.theme.colors.text.secondary};
   font-size: 1rem;
 `;
 
 const tokenDistributionData = [
-  { name: 'Vente Publique', value: 40, color: '#3B82F6' },
-  { name: 'Équipe', value: 20, color: '#10B981' },
-  { name: 'Réserve', value: 15, color: '#F59E0B' },
-  { name: 'Marketing', value: 15, color: '#8B5CF6' },
-  { name: 'Conseillers', value: 10, color: '#EC4899' }
+  { name: "Vente Publique", value: 40, color: "#3B82F6" },
+  { name: "Équipe", value: 20, color: "#10B981" },
+  { name: "Réserve", value: 15, color: "#F59E0B" },
+  { name: "Marketing", value: 15, color: "#8B5CF6" },
+  { name: "Conseillers", value: 10, color: "#EC4899" },
 ];
 
 const vestingScheduleData = [
-  { name: 'Débloqué au TGE', value: 20, color: '#3B82F6' },
-  { name: '3 mois', value: 20, color: '#10B981' },
-  { name: '6 mois', value: 30, color: '#F59E0B' },
-  { name: '12 mois', value: 30, color: '#8B5CF6' }
+  { name: "Débloqué au TGE", value: 20, color: "#3B82F6" },
+  { name: "3 mois", value: 20, color: "#10B981" },
+  { name: "6 mois", value: 30, color: "#F59E0B" },
+  { name: "12 mois", value: 30, color: "#8B5CF6" },
 ];
 
 const stats = [
   {
     icon: <AccountBalanceWalletIcon />,
-    value: '100M',
-    label: 'Supply Total'
+    value: "100M",
+    label: "Supply Total",
   },
   {
     icon: <LocalAtmIcon />,
-    value: '0.1 ETH',
-    label: 'Prix Initial'
+    value: "0.1 ETH",
+    label: "Prix Initial",
   },
   {
     icon: <TimelineIcon />,
-    value: '4 Ans',
-    label: 'Période de Vesting'
-  }
+    value: "4 Ans",
+    label: "Période de Vesting",
+  },
 ];
 
 export const TokenEconomicsSection: React.FC = () => {

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Line } from 'react-chartjs-2';
+import React from "react";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,10 +9,16 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
-import { Box, Card, CardContent, CardHeader, CircularProgress } from '@mui/material';
-import { useTokenChartData } from '@/hooks/analytics/useTokenChartData';
-import { TokenChartProps, ChartOptions } from '@/types/analytics';
+} from "chart.js";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  CircularProgress,
+} from "@mui/material";
+import { useTokenChartData } from "@/hooks/analytics/useTokenChartData";
+import { TokenChartProps, ChartOptions } from "@/types/analytics";
 
 ChartJS.register(
   CategoryScale,
@@ -29,7 +35,7 @@ const defaultOptions: ChartOptions = {
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      position: 'top',
+      position: "top",
     },
     tooltip: {
       enabled: true,
@@ -44,7 +50,7 @@ const defaultOptions: ChartOptions = {
 
 const TokenVolumeChart: React.FC<TokenChartProps> = ({
   token,
-  period = 'daily',
+  period = "daily",
   height = 300,
   className,
 }) => {
@@ -52,7 +58,12 @@ const TokenVolumeChart: React.FC<TokenChartProps> = ({
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height={height}>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height={height}
+      >
         <CircularProgress />
       </Box>
     );

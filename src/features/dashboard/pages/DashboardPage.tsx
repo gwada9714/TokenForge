@@ -1,11 +1,28 @@
-import React from 'react';
-import { Container, Typography, Grid, Paper, Box, Divider, List, ListItem, ListItemText, ListItemIcon, Chip } from '@mui/material';
-import { TimelineOutlined, NotificationsOutlined, AccountBalanceWalletOutlined, TokenOutlined } from '@mui/icons-material';
-import { StatCard } from '../components/StatCard';
-import { ActivityList } from '../components/ActivityList';
-import { NotificationPanel } from '../components/NotificationPanel';
-import { QuickActions } from '../components/QuickActions';
-import { useDashboardData } from '../hooks/useDashboardData';
+import React from "react";
+import {
+  Container,
+  Typography,
+  Grid,
+  Paper,
+  Box,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Chip,
+} from "@mui/material";
+import {
+  TimelineOutlined,
+  NotificationsOutlined,
+  AccountBalanceWalletOutlined,
+  TokenOutlined,
+} from "@mui/icons-material";
+import { StatCard } from "../components/StatCard";
+import { ActivityList } from "../components/ActivityList";
+import { NotificationPanel } from "../components/NotificationPanel";
+import { QuickActions } from "../components/QuickActions";
+import { useDashboardData } from "../hooks/useDashboardData";
 
 export const DashboardPage: React.FC = () => {
   const { stats, activities, notifications } = useDashboardData();
@@ -94,4 +111,4 @@ export const DashboardPage: React.FC = () => {
       </Box>
     </Container>
   );
-}; 
+};

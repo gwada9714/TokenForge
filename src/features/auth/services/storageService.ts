@@ -1,13 +1,22 @@
-import { TokenForgeUser, WalletState } from '../types';
+import { TokenForgeUser, WalletState } from "../types";
 
 const STORAGE_KEYS = {
-  AUTH: 'tokenforge_auth',
-  WALLET: 'tokenforge_wallet',
-  METRICS: 'tokenforge_metrics',
+  AUTH: "tokenforge_auth",
+  WALLET: "tokenforge_wallet",
+  METRICS: "tokenforge_metrics",
 } as const;
 
 interface StoredAuthState {
-  user: Pick<TokenForgeUser, 'uid' | 'email' | 'emailVerified' | 'isAdmin' | 'canCreateToken' | 'canUseServices' | 'customMetadata'> | null;
+  user: Pick<
+    TokenForgeUser,
+    | "uid"
+    | "email"
+    | "emailVerified"
+    | "isAdmin"
+    | "canCreateToken"
+    | "canUseServices"
+    | "customMetadata"
+  > | null;
   lastLogin: number;
 }
 
@@ -49,7 +58,7 @@ class StorageService {
           isAdmin: user.isAdmin,
           canCreateToken: user.canCreateToken,
           canUseServices: user.canUseServices,
-          customMetadata: user.customMetadata
+          customMetadata: user.customMetadata,
         },
         lastLogin: Date.now(),
       };
@@ -62,7 +71,7 @@ class StorageService {
   getAuthState(): StoredAuthState | null {
     const stored = localStorage.getItem(STORAGE_KEYS.AUTH);
     if (!stored) return null;
-    
+
     try {
       const state = JSON.parse(stored) as StoredAuthState;
       // Vérifier si la session n'a pas expiré (24h)
@@ -80,21 +89,21 @@ class StorageService {
     localStorage.removeItem(STORAGE_KEYS.AUTH);
   }
 
-  async getUserData(userId: string): Promise<StoredAuthState['user']> {
+  async getUserData(userId: string): Promise<StoredAuthState["user"]> {
     const authState = localStorage.getItem(STORAGE_KEYS.AUTH);
     if (!authState) return null;
-    
+
     const parsed = JSON.parse(authState) as StoredAuthState;
     return parsed.user && parsed.user.uid === userId ? parsed.user : null;
   }
 
   async updateUserData(
     userId: string,
-    updates: Partial<StoredAuthState['user']>
+    updates: Partial<StoredAuthState["user"]>
   ): Promise<void> {
     const currentData = await this.getUserData(userId);
     if (!currentData) {
-      throw new Error('User data not found');
+      throw new Error("User data not found");
     }
 
     const updatedData = {
@@ -159,9 +168,12 @@ class StorageService {
         ...currentMetrics,
         ...metrics,
       };
-      localStorage.setItem(STORAGE_KEYS.METRICS, JSON.stringify(updatedMetrics));
+      localStorage.setItem(
+        STORAGE_KEYS.METRICS,
+        JSON.stringify(updatedMetrics)
+      );
     } catch (error) {
-      console.error('Failed to save network metrics:', error);
+      console.error("Failed to save network metrics:", error);
     }
   }
 
@@ -173,7 +185,7 @@ class StorageService {
       }
       return JSON.parse(storedMetrics);
     } catch (error) {
-      console.error('Failed to get network metrics:', error);
+      console.error("Failed to get network metrics:", error);
       return this.getDefaultMetrics();
     }
   }
@@ -189,10 +201,12 @@ class StorageService {
       ...metrics,
       lastReconnectionAttempt: now,
       reconnectionAttempts: metrics.reconnectionAttempts + 1,
-      successfulReconnections: metrics.successfulReconnections + (success ? 1 : 0),
+      successfulReconnections:
+        metrics.successfulReconnections + (success ? 1 : 0),
       failedReconnections: metrics.failedReconnections + (success ? 0 : 1),
       averageReconnectionTime: success
-        ? (metrics.averageReconnectionTime * metrics.successfulReconnections + duration) /
+        ? (metrics.averageReconnectionTime * metrics.successfulReconnections +
+            duration) /
           (metrics.successfulReconnections + 1)
         : metrics.averageReconnectionTime,
     };
@@ -200,7 +214,10 @@ class StorageService {
     await this.saveNetworkMetrics(updatedMetrics);
   }
 
-  async recordNetworkChange(fromChainId: number | null, toChainId: number): Promise<void> {
+  async recordNetworkChange(
+    fromChainId: number | null,
+    toChainId: number
+  ): Promise<void> {
     const metrics = await this.getNetworkMetrics();
     const now = Date.now();
 
@@ -238,11 +255,11 @@ class StorageService {
 
   async clearUserData(): Promise<void> {
     const keys = Object.values(STORAGE_KEYS);
-    keys.forEach(key => {
+    keys.forEach((key) => {
       const pattern = new RegExp(`^${key}`);
       Object.keys(localStorage)
-        .filter(k => pattern.test(k))
-        .forEach(k => localStorage.removeItem(k));
+        .filter((k) => pattern.test(k))
+        .forEach((k) => localStorage.removeItem(k));
     });
   }
 }

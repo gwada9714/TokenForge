@@ -9,7 +9,7 @@ Le hook `useAuth` est un hook React personnalisé qui encapsule toutes les fonct
 Le hook est déjà intégré dans l'application TokenForge. Pour l'utiliser dans vos composants, importez-le simplement :
 
 ```tsx
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from "../hooks/useAuth";
 ```
 
 ## Fonctionnalités Principales
@@ -37,12 +37,12 @@ Le hook `useAuth` expose les fonctionnalités suivantes :
 Voici un exemple simple d'utilisation du hook `useAuth` dans un composant :
 
 ```tsx
-import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import React, { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 
 const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { signIn, isLoading, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +67,7 @@ const LoginForm: React.FC = () => {
         required
       />
       <button type="submit" disabled={isLoading}>
-        {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+        {isLoading ? "Connexion en cours..." : "Se connecter"}
       </button>
       {error && <p className="error">{error.message}</p>}
     </form>
@@ -80,8 +80,8 @@ const LoginForm: React.FC = () => {
 Pour une utilisation plus pratique dans toute l'application, le hook `useAuth` est encapsulé dans un contexte React (`AuthContext`). Vous pouvez utiliser le hook `useAuthContext` pour accéder à toutes les fonctionnalités d'authentification :
 
 ```tsx
-import React from 'react';
-import { useAuthContext } from '../contexts/AuthContext';
+import React from "react";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const UserProfile: React.FC = () => {
   const { user, isAuthenticated, signOut } = useAuthContext();
@@ -94,7 +94,7 @@ const UserProfile: React.FC = () => {
     <div>
       <h2>Profil Utilisateur</h2>
       <p>Email: {user?.email}</p>
-      <p>Nom: {user?.displayName || 'Non défini'}</p>
+      <p>Nom: {user?.displayName || "Non défini"}</p>
       <button onClick={signOut}>Se déconnecter</button>
     </div>
   );
@@ -106,9 +106,9 @@ const UserProfile: React.FC = () => {
 Le composant `AuthGuard` utilise le hook `useAuth` pour protéger les routes qui nécessitent une authentification :
 
 ```tsx
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -119,7 +119,7 @@ interface AuthGuardProps {
 export const AuthGuard: React.FC<AuthGuardProps> = ({
   children,
   requireAdmin = false,
-  redirectTo = '/auth',
+  redirectTo = "/auth",
 }) => {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
 

@@ -1,16 +1,19 @@
-import { BlockchainNetwork } from '@/types/blockchain';
-import { ServiceType } from '@/features/services/types/services';
-import { logger } from '@/core/logger';
-import { CurrencyConverter } from './currencyConverter';
+import { BlockchainNetwork } from "@/types/blockchain";
+import { ServiceType } from "@/features/services/types/services";
+import { logger } from "@/core/logger";
+import { CurrencyConverter } from "./currencyConverter";
 
 export class PaymentProcessor {
-  private readonly NETWORK_FEES: Record<BlockchainNetwork, { launchpad: number; staking: number }> = {
+  private readonly NETWORK_FEES: Record<
+    BlockchainNetwork,
+    { launchpad: number; staking: number }
+  > = {
     ethereum: { launchpad: 0.03, staking: 0.05 },
     bsc: { launchpad: 0.02, staking: 0.05 },
     polygon: { launchpad: 0.02, staking: 0.05 },
     avalanche: { launchpad: 0.02, staking: 0.05 },
     solana: { launchpad: 0.015, staking: 0.05 },
-    arbitrum: { launchpad: 0.015, staking: 0.05 }
+    arbitrum: { launchpad: 0.015, staking: 0.05 },
   };
 
   private readonly currencyConverter = CurrencyConverter.getInstance();
@@ -31,20 +34,30 @@ export class PaymentProcessor {
         case ServiceType.KYC:
           return this.processKYCFee();
         default:
-          throw new Error('Service type non supporté');
+          throw new Error("Service type non supporté");
       }
     } catch (error) {
-      logger.error('Erreur lors du calcul des frais', { error, serviceType, network });
+      logger.error("Erreur lors du calcul des frais", {
+        error,
+        serviceType,
+        network,
+      });
       throw error;
     }
   }
 
-  private async processLaunchpadFee(amount: bigint, network: BlockchainNetwork): Promise<bigint> {
+  private async processLaunchpadFee(
+    amount: bigint,
+    network: BlockchainNetwork
+  ): Promise<bigint> {
     const fee = this.NETWORK_FEES[network].launchpad;
     return this.calculateFee(amount, fee);
   }
 
-  private async processStakingFee(amount: bigint, network: BlockchainNetwork): Promise<bigint> {
+  private async processStakingFee(
+    amount: bigint,
+    network: BlockchainNetwork
+  ): Promise<bigint> {
     const fee = this.NETWORK_FEES[network].staking;
     return this.calculateFee(amount, fee);
   }
@@ -61,12 +74,12 @@ export class PaymentProcessor {
       const bnbAmount = await this.currencyConverter.convertUSDToBNB(50);
       return BigInt(Math.floor(bnbAmount * 1e18));
     } catch (error) {
-      logger.error('Erreur lors du calcul des frais KYC', { error });
+      logger.error("Erreur lors du calcul des frais KYC", { error });
       throw error;
     }
   }
 
   private calculateFee(amount: bigint, feePercentage: number): bigint {
-    return amount * BigInt(Math.floor(feePercentage * 1000)) / BigInt(1000);
+    return (amount * BigInt(Math.floor(feePercentage * 1000))) / BigInt(1000);
   }
 }

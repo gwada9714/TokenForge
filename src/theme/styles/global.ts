@@ -1,5 +1,5 @@
-import { createGlobalStyle } from 'styled-components';
-import { THEME, COLORS } from '@/config/constants/theme';
+import { createGlobalStyle } from "styled-components";
+import { THEME, COLORS } from "@/config/constants/theme";
 
 export const GlobalStyle = createGlobalStyle`
   :root {

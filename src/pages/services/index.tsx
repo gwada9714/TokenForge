@@ -1,10 +1,10 @@
-import React from 'react';
-import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import { Container, Title, Text } from '@/components/ui';
-import { ServiceSelection } from '@/features/services/components/ServiceSelection';
-import { ServiceType } from '@/features/services/types/services';
-import { spacing } from '@/theme';
+import React from "react";
+import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+import { Container, Title, Text } from "@/components/ui";
+import { ServiceSelection } from "@/features/services/components/ServiceSelection";
+import { ServiceType } from "@/features/services/types/services";
+import { spacing } from "@/theme";
 
 const ServicesContainer = styled(Container)`
   max-width: 1200px;
@@ -73,7 +73,7 @@ export const Services: React.FC = () => {
   const navigate = useNavigate();
 
   const handleServiceSelected = (serviceType: ServiceType) => {
-    navigate('/service-configuration', { state: { serviceType } });
+    navigate("/service-configuration", { state: { serviceType } });
   };
 
   return (
@@ -81,9 +81,9 @@ export const Services: React.FC = () => {
       <Header>
         <PageTitle>Services à la carte</PageTitle>
         <Description>
-          Découvrez notre gamme de services professionnels pour maximiser le potentiel 
-          de vos tokens et projets blockchain. Choisissez le service qui correspond 
-          le mieux à vos besoins.
+          Découvrez notre gamme de services professionnels pour maximiser le
+          potentiel de vos tokens et projets blockchain. Choisissez le service
+          qui correspond le mieux à vos besoins.
         </Description>
       </Header>
 
@@ -91,15 +91,15 @@ export const Services: React.FC = () => {
         <Feature>
           <h3>Sécurité Maximale</h3>
           <p>
-            Tous nos services sont audités et sécurisés par des experts en blockchain
-            pour garantir la protection de vos actifs.
+            Tous nos services sont audités et sécurisés par des experts en
+            blockchain pour garantir la protection de vos actifs.
           </p>
         </Feature>
         <Feature>
           <h3>Support Dédié</h3>
           <p>
-            Une équipe d'experts à votre disposition pour vous accompagner à chaque
-            étape de votre projet.
+            Une équipe d'experts à votre disposition pour vous accompagner à
+            chaque étape de votre projet.
           </p>
         </Feature>
         <Feature>
@@ -115,13 +115,14 @@ export const Services: React.FC = () => {
 
       <FAQ>
         <FAQTitle level={2}>Questions Fréquentes</FAQTitle>
-        
+
         <FAQItem>
           <h4>Comment choisir le service adapté ?</h4>
           <p>
-            Analysez vos besoins actuels et vos objectifs. Notre équipe est disponible
-            pour vous conseiller dans votre choix. Vous pouvez également commencer
-            par un service de base et évoluer selon vos besoins.
+            Analysez vos besoins actuels et vos objectifs. Notre équipe est
+            disponible pour vous conseiller dans votre choix. Vous pouvez
+            également commencer par un service de base et évoluer selon vos
+            besoins.
           </p>
         </FAQItem>
 
@@ -144,4 +145,4 @@ export const Services: React.FC = () => {
       </FAQ>
     </ServicesContainer>
   );
-}; 
+};

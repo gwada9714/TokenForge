@@ -1,6 +1,6 @@
-import React from 'react';
-import { Container, Typography } from '@mui/material';
-import { PlanSelector } from '../components/Plans/PlanSelector';
+import React from "react";
+import { Container, Typography } from "@mui/material";
+import { PlanSelector } from "../components/Plans/PlanSelector";
 
 const Pricing: React.FC = () => {
   return (
@@ -14,7 +14,7 @@ const Pricing: React.FC = () => {
       >
         Plans & Tarifs
       </Typography>
-      
+
       <Typography
         variant="subtitle1"
         align="center"

@@ -1,4 +1,12 @@
-import { PaymentStatus, LegacyPaymentStatus, CryptocurrencyInfo, FeeEstimate, CryptoAmount, PaymentInitParams, PaymentSession } from '../types/payment';
+import {
+  PaymentStatus,
+  LegacyPaymentStatus,
+  CryptocurrencyInfo,
+  FeeEstimate,
+  CryptoAmount,
+  PaymentInitParams,
+  PaymentSession,
+} from "../types/payment";
 
 /**
  * Interface pour les services de paiement blockchain
@@ -10,9 +18,15 @@ export interface IPaymentService {
   checkPaymentStatus(sessionId: string): Promise<PaymentStatus>;
   confirmPayment(sessionId: string, txHash: string): Promise<boolean>;
   getSupportedCryptocurrencies(): Promise<CryptocurrencyInfo[]>;
-  estimateTransactionFees(amount: number, currencyAddress: string | null): Promise<FeeEstimate>;
-  convertEURtoCrypto(amountEUR: number, currencySymbol: string): Promise<CryptoAmount>;
-  
+  estimateTransactionFees(
+    amount: number,
+    currencyAddress: string | null
+  ): Promise<FeeEstimate>;
+  convertEURtoCrypto(
+    amountEUR: number,
+    currencySymbol: string
+  ): Promise<CryptoAmount>;
+
   // Méthodes pour la compatibilité avec l'ancienne API
   createPaymentSession(amount: bigint, currency: string): Promise<string>;
   getPaymentStatus(sessionId: string): Promise<LegacyPaymentStatus>;

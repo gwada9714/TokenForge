@@ -1,28 +1,28 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { tokenService } from '../tokenService';
-import { getAuth } from 'firebase-admin/auth';
-import { SecureStorageService } from '@/services/secureStorageService';
-import { TokenForgeError } from '@/utils/errors';
-import type { TokenMetadata, TokenValidationResult } from '@/types/auth';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { tokenService } from "../tokenService";
+import { getAuth } from "firebase-admin/auth";
+import { SecureStorageService } from "@/services/secureStorageService";
+import { TokenForgeError } from "@/utils/errors";
+import type { TokenMetadata, TokenValidationResult } from "@/types/auth";
 
 // Mock Firebase Admin
-vi.mock('firebase-admin/auth', () => ({
+vi.mock("firebase-admin/auth", () => ({
   getAuth: vi.fn(() => ({
     verifyIdToken: vi.fn(),
-    createCustomToken: vi.fn()
-  }))
+    createCustomToken: vi.fn(),
+  })),
 }));
 
 // Mock SecureStorage
-vi.mock('@/services/secureStorageService', () => ({
+vi.mock("@/services/secureStorageService", () => ({
   SecureStorageService: vi.fn(() => ({
     getItem: vi.fn(),
     setItem: vi.fn(),
-    removeItem: vi.fn()
-  }))
+    removeItem: vi.fn(),
+  })),
 }));
 
-describe('Token Service', () => {
+describe("Token Service", () => {
   let mockStorage: any;
 
   beforeEach(() => {
@@ -31,39 +31,41 @@ describe('Token Service', () => {
     // Setup Firebase Admin mock
     vi.mocked(getAuth).mockReturnValue({
       verifyIdToken: vi.fn().mockResolvedValue({
-        uid: 'test-uid',
-        email: 'test@example.com'
+        uid: "test-uid",
+        email: "test@example.com",
       }),
-      createCustomToken: vi.fn().mockResolvedValue('custom-token')
+      createCustomToken: vi.fn().mockResolvedValue("custom-token"),
     } as any);
 
     // Setup SecureStorage mock
-    mockStorage = new SecureStorageService('tokens');
+    mockStorage = new SecureStorageService("tokens");
   });
 
-  describe('createToken', () => {
-    it('creates authentication token successfully', async () => {
+  describe("createToken", () => {
+    it("creates authentication token successfully", async () => {
       const metadata: TokenMetadata = {
-        userId: 'test-uid',
-        type: 'auth',
+        userId: "test-uid",
+        type: "auth",
         expiresIn: 3600,
-        permissions: ['read', 'write']
+        permissions: ["read", "write"],
       };
 
       const token = await tokenService.createToken(metadata);
 
       expect(token).toBeDefined();
-      expect(token.value).toMatch(/^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/);
+      expect(token.value).toMatch(
+        /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/
+      );
       expect(token.expiresAt).toBeGreaterThan(Date.now());
       expect(mockStorage.setItem).toHaveBeenCalled();
     });
 
-    it('creates refresh token with longer expiry', async () => {
+    it("creates refresh token with longer expiry", async () => {
       const metadata: TokenMetadata = {
-        userId: 'test-uid',
-        type: 'refresh',
+        userId: "test-uid",
+        type: "refresh",
         expiresIn: 86400, // 24 hours
-        permissions: ['refresh']
+        permissions: ["refresh"],
       };
 
       const token = await tokenService.createToken(metadata);
@@ -71,37 +73,37 @@ describe('Token Service', () => {
       expect(token.expiresAt).toBeGreaterThan(Date.now() + 85000000); // ~23.6 hours
     });
 
-    it('includes custom claims in token', async () => {
+    it("includes custom claims in token", async () => {
       const metadata: TokenMetadata = {
-        userId: 'test-uid',
-        type: 'auth',
+        userId: "test-uid",
+        type: "auth",
         expiresIn: 3600,
-        permissions: ['read'],
+        permissions: ["read"],
         customClaims: {
-          role: 'admin'
-        }
+          role: "admin",
+        },
       };
 
       await tokenService.createToken(metadata);
 
       expect(getAuth().createCustomToken).toHaveBeenCalledWith(
-        'test-uid',
+        "test-uid",
         expect.objectContaining({
-          role: 'admin'
+          role: "admin",
         })
       );
     });
 
-    it('handles token creation errors', async () => {
+    it("handles token creation errors", async () => {
       const metadata: TokenMetadata = {
-        userId: 'test-uid',
-        type: 'auth',
+        userId: "test-uid",
+        type: "auth",
         expiresIn: 3600,
-        permissions: ['read']
+        permissions: ["read"],
       };
 
       vi.mocked(getAuth().createCustomToken).mockRejectedValueOnce(
-        new Error('Token creation failed')
+        new Error("Token creation failed")
       );
 
       await expect(tokenService.createToken(metadata)).rejects.toThrow(
@@ -110,108 +112,108 @@ describe('Token Service', () => {
     });
   });
 
-  describe('validateToken', () => {
-    it('validates valid token', async () => {
-      const token = 'valid-token';
+  describe("validateToken", () => {
+    it("validates valid token", async () => {
+      const token = "valid-token";
       const mockTokenData = {
         value: token,
         expiresAt: Date.now() + 3600000,
         metadata: {
-          userId: 'test-uid',
-          type: 'auth',
-          permissions: ['read']
-        }
+          userId: "test-uid",
+          type: "auth",
+          permissions: ["read"],
+        },
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
       vi.mocked(getAuth().verifyIdToken).mockResolvedValueOnce({
-        uid: 'test-uid'
+        uid: "test-uid",
       });
 
       const result = await tokenService.validateToken(token);
       expect(result.isValid).toBe(true);
-      expect(result.userId).toBe('test-uid');
+      expect(result.userId).toBe("test-uid");
     });
 
-    it('detects expired token', async () => {
-      const token = 'expired-token';
+    it("detects expired token", async () => {
+      const token = "expired-token";
       const mockTokenData = {
         value: token,
         expiresAt: Date.now() - 3600000,
         metadata: {
-          userId: 'test-uid',
-          type: 'auth',
-          permissions: ['read']
-        }
+          userId: "test-uid",
+          type: "auth",
+          permissions: ["read"],
+        },
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
 
       const result = await tokenService.validateToken(token);
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Token expired');
+      expect(result.error).toBe("Token expired");
     });
 
-    it('validates token permissions', async () => {
-      const token = 'valid-token';
+    it("validates token permissions", async () => {
+      const token = "valid-token";
       const mockTokenData = {
         value: token,
         expiresAt: Date.now() + 3600000,
         metadata: {
-          userId: 'test-uid',
-          type: 'auth',
-          permissions: ['read']
-        }
+          userId: "test-uid",
+          type: "auth",
+          permissions: ["read"],
+        },
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
       vi.mocked(getAuth().verifyIdToken).mockResolvedValueOnce({
-        uid: 'test-uid'
+        uid: "test-uid",
       });
 
-      const result = await tokenService.validateToken(token, ['read']);
+      const result = await tokenService.validateToken(token, ["read"]);
       expect(result.isValid).toBe(true);
     });
 
-    it('detects insufficient permissions', async () => {
-      const token = 'valid-token';
+    it("detects insufficient permissions", async () => {
+      const token = "valid-token";
       const mockTokenData = {
         value: token,
         expiresAt: Date.now() + 3600000,
         metadata: {
-          userId: 'test-uid',
-          type: 'auth',
-          permissions: ['read']
-        }
+          userId: "test-uid",
+          type: "auth",
+          permissions: ["read"],
+        },
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
       vi.mocked(getAuth().verifyIdToken).mockResolvedValueOnce({
-        uid: 'test-uid'
+        uid: "test-uid",
       });
 
-      const result = await tokenService.validateToken(token, ['write']);
+      const result = await tokenService.validateToken(token, ["write"]);
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Insufficient permissions');
+      expect(result.error).toBe("Insufficient permissions");
     });
   });
 
-  describe('refreshToken', () => {
-    it('refreshes valid token', async () => {
-      const refreshToken = 'valid-refresh-token';
+  describe("refreshToken", () => {
+    it("refreshes valid token", async () => {
+      const refreshToken = "valid-refresh-token";
       const mockTokenData = {
         value: refreshToken,
         expiresAt: Date.now() + 86400000,
         metadata: {
-          userId: 'test-uid',
-          type: 'refresh',
-          permissions: ['refresh']
-        }
+          userId: "test-uid",
+          type: "refresh",
+          permissions: ["refresh"],
+        },
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
       vi.mocked(getAuth().verifyIdToken).mockResolvedValueOnce({
-        uid: 'test-uid'
+        uid: "test-uid",
       });
 
       const newToken = await tokenService.refreshToken(refreshToken);
@@ -219,17 +221,17 @@ describe('Token Service', () => {
       expect(newToken.value).not.toBe(refreshToken);
     });
 
-    it('prevents refresh token reuse', async () => {
-      const refreshToken = 'used-refresh-token';
+    it("prevents refresh token reuse", async () => {
+      const refreshToken = "used-refresh-token";
       const mockTokenData = {
         value: refreshToken,
         expiresAt: Date.now() + 86400000,
         metadata: {
-          userId: 'test-uid',
-          type: 'refresh',
-          permissions: ['refresh']
+          userId: "test-uid",
+          type: "refresh",
+          permissions: ["refresh"],
         },
-        used: true
+        used: true,
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
@@ -239,16 +241,16 @@ describe('Token Service', () => {
       );
     });
 
-    it('validates refresh token type', async () => {
-      const token = 'auth-token';
+    it("validates refresh token type", async () => {
+      const token = "auth-token";
       const mockTokenData = {
         value: token,
         expiresAt: Date.now() + 3600000,
         metadata: {
-          userId: 'test-uid',
-          type: 'auth',
-          permissions: ['read']
-        }
+          userId: "test-uid",
+          type: "auth",
+          permissions: ["read"],
+        },
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
@@ -259,17 +261,17 @@ describe('Token Service', () => {
     });
   });
 
-  describe('revokeToken', () => {
-    it('revokes active token', async () => {
-      const token = 'active-token';
+  describe("revokeToken", () => {
+    it("revokes active token", async () => {
+      const token = "active-token";
       const mockTokenData = {
         value: token,
         expiresAt: Date.now() + 3600000,
         metadata: {
-          userId: 'test-uid',
-          type: 'auth',
-          permissions: ['read']
-        }
+          userId: "test-uid",
+          type: "auth",
+          permissions: ["read"],
+        },
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
@@ -280,25 +282,25 @@ describe('Token Service', () => {
       );
     });
 
-    it('handles already revoked token', async () => {
-      const token = 'revoked-token';
+    it("handles already revoked token", async () => {
+      const token = "revoked-token";
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(null);
 
       await expect(tokenService.revokeToken(token)).resolves.not.toThrow();
     });
   });
 
-  describe('getTokenMetadata', () => {
-    it('retrieves token metadata', async () => {
-      const token = 'valid-token';
+  describe("getTokenMetadata", () => {
+    it("retrieves token metadata", async () => {
+      const token = "valid-token";
       const mockTokenData = {
         value: token,
         expiresAt: Date.now() + 3600000,
         metadata: {
-          userId: 'test-uid',
-          type: 'auth',
-          permissions: ['read']
-        }
+          userId: "test-uid",
+          type: "auth",
+          permissions: ["read"],
+        },
       };
 
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(mockTokenData);
@@ -307,8 +309,8 @@ describe('Token Service', () => {
       expect(metadata).toEqual(mockTokenData.metadata);
     });
 
-    it('returns null for invalid token', async () => {
-      const token = 'invalid-token';
+    it("returns null for invalid token", async () => {
+      const token = "invalid-token";
       vi.mocked(mockStorage.getItem).mockResolvedValueOnce(null);
 
       const metadata = await tokenService.getTokenMetadata(token);

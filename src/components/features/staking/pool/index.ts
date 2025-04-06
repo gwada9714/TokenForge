@@ -1,1 +1,1 @@
-export * from './StakingPool';
+export * from "./StakingPool";

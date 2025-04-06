@@ -1,6 +1,13 @@
-import React from 'react';
-import { Box, Typography, useTheme } from '@mui/material';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import React from "react";
+import { Box, Typography, useTheme } from "@mui/material";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 export interface TokenDistributionChartProps {
   data: Array<{
@@ -13,7 +20,9 @@ export interface TokenDistributionChartProps {
 /**
  * Composant affichant la distribution des tokens sous forme de graphique en camembert
  */
-export const TokenDistributionChart: React.FC<TokenDistributionChartProps> = ({ data }) => {
+export const TokenDistributionChart: React.FC<TokenDistributionChartProps> = ({
+  data,
+}) => {
   const theme = useTheme();
 
   // Formater les valeurs pour l'affichage
@@ -54,20 +63,20 @@ export const TokenDistributionChart: React.FC<TokenDistributionChartProps> = ({ 
 
   // Ajouter le pourcentage aux données
   const totalValue = data.reduce((sum, item) => sum + item.value, 0);
-  const dataWithPercentage = data.map(item => ({
+  const dataWithPercentage = data.map((item) => ({
     ...item,
-    percentage: Math.round((item.value / totalValue) * 100)
+    percentage: Math.round((item.value / totalValue) * 100),
   }));
 
   return (
-    <Box sx={{ width: '100%', height: 300 }}>
+    <Box sx={{ width: "100%", height: 300 }}>
       {data.length === 0 ? (
         <Box
           sx={{
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <Typography variant="body2" color="text.secondary">
@@ -104,10 +113,10 @@ export const TokenDistributionChart: React.FC<TokenDistributionChartProps> = ({ 
 // Valeurs par défaut pour le développement et les tests
 TokenDistributionChart.defaultProps = {
   data: [
-    { name: 'Ethereum', value: 4000, color: '#627EEA' },
-    { name: 'Binance', value: 3000, color: '#F3BA2F' },
-    { name: 'Polygon', value: 2000, color: '#8247E5' },
-    { name: 'Avalanche', value: 1500, color: '#E84142' },
-    { name: 'Solana', value: 1000, color: '#00FFA3' }
-  ]
+    { name: "Ethereum", value: 4000, color: "#627EEA" },
+    { name: "Binance", value: 3000, color: "#F3BA2F" },
+    { name: "Polygon", value: 2000, color: "#8247E5" },
+    { name: "Avalanche", value: 1500, color: "#E84142" },
+    { name: "Solana", value: 1000, color: "#00FFA3" },
+  ],
 };

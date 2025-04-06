@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTokenDeploy } from '../hooks/useTokenDeploy';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTokenDeploy } from "../hooks/useTokenDeploy";
+import { toast } from "react-hot-toast";
 import {
   Box,
   Container,
@@ -18,27 +18,33 @@ import {
   CircularProgress,
   Alert,
   AlertTitle,
-  Divider
-} from '@mui/material';
-import { CostEstimator } from '../components/features/token/estimation/CostEstimator';
-import { TokenSimulator } from '../components/features/token/simulation/TokenSimulator';
-import { useWalletStatus } from '@/features/auth/hooks/useWalletStatus';
-import { useTokenForgeAuth } from '@/hooks/useAuth';
+  Divider,
+} from "@mui/material";
+import { CostEstimator } from "../components/features/token/estimation/CostEstimator";
+import { TokenSimulator } from "../components/features/token/simulation/TokenSimulator";
+import { useWalletStatus } from "@/features/auth/hooks/useWalletStatus";
+import { useTokenForgeAuth } from "@/hooks/useAuth";
 
-const steps = ['Configuration', 'Simulation', 'Déploiement'];
+const steps = ["Configuration", "Simulation", "Déploiement"];
 
 const CreateToken = () => {
   const navigate = useNavigate();
-  const { deployToken, isDeploying, error, lastDeploymentResult, checkWalletStatus } = useTokenDeploy();
+  const {
+    deployToken,
+    isDeploying,
+    error,
+    lastDeploymentResult,
+    checkWalletStatus,
+  } = useTokenDeploy();
   const { isConnected } = useWalletStatus();
   const { connectWallet } = useTokenForgeAuth();
-  
+
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    name: '',
-    symbol: '',
-    initialSupply: '',
-    decimals: '18',
+    name: "",
+    symbol: "",
+    initialSupply: "",
+    decimals: "18",
     isMintable: false,
     isBurnable: false,
     isPausable: false,
@@ -68,7 +74,10 @@ const CreateToken = () => {
     if (!formData.symbol.trim()) {
       errors.symbol = "Le symbole est obligatoire";
       isValid = false;
-    } else if (formData.symbol.trim().length < 2 || formData.symbol.trim().length > 6) {
+    } else if (
+      formData.symbol.trim().length < 2 ||
+      formData.symbol.trim().length > 6
+    ) {
       errors.symbol = "Le symbole doit contenir entre 2 et 6 caractères";
       isValid = false;
     }
@@ -94,15 +103,15 @@ const CreateToken = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleNext = () => {
     if (activeStep === 0 && !validateForm()) {
-      toast.error('Veuillez corriger les erreurs du formulaire');
+      toast.error("Veuillez corriger les erreurs du formulaire");
       return;
     }
     setActiveStep((prevStep) => prevStep + 1);
@@ -114,19 +123,19 @@ const CreateToken = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       // Vérifier si l'utilisateur est connecté
       const isWalletReady = await checkWalletStatus();
-      
+
       if (!isWalletReady && !isConnected) {
-        toast.error('Veuillez connecter votre wallet pour déployer un token');
+        toast.error("Veuillez connecter votre wallet pour déployer un token");
         return;
       }
-      
+
       // Validation finale
       if (!validateForm()) {
-        toast.error('Veuillez corriger les erreurs du formulaire');
+        toast.error("Veuillez corriger les erreurs du formulaire");
         return;
       }
 
@@ -136,26 +145,29 @@ const CreateToken = () => {
         initialSupply: formData.initialSupply,
         decimals: parseInt(formData.decimals),
         isMintable: formData.isMintable,
-        isBurnable: formData.isBurnable
+        isBurnable: formData.isBurnable,
       });
 
       if (result.success) {
-        toast.success('Token déployé avec succès !');
+        toast.success("Token déployé avec succès !");
         // Attendre un peu avant de rediriger
         setTimeout(() => {
-          navigate('/dashboard', { 
-            state: { 
+          navigate("/dashboard", {
+            state: {
               deploymentSuccess: true,
               tokenAddress: result.contractAddress,
-              transactionHash: result.hash
-            } 
+              transactionHash: result.hash,
+            },
           });
         }, 2000);
       } else {
-        toast.error(`Erreur: ${result.error || 'Échec du déploiement'}`);
+        toast.error(`Erreur: ${result.error || "Échec du déploiement"}`);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Une erreur inconnue est survenue";
       toast.error(`Erreur: ${errorMessage}`);
     }
   };
@@ -175,7 +187,10 @@ const CreateToken = () => {
                   value={formData.name}
                   onChange={handleChange}
                   error={!!formErrors.name}
-                  helperText={formErrors.name || "Choisissez un nom mémorable pour votre token"}
+                  helperText={
+                    formErrors.name ||
+                    "Choisissez un nom mémorable pour votre token"
+                  }
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -187,7 +202,9 @@ const CreateToken = () => {
                   value={formData.symbol}
                   onChange={handleChange}
                   error={!!formErrors.symbol}
-                  helperText={formErrors.symbol || "Ex: BTC, ETH (2-6 caractères)"}
+                  helperText={
+                    formErrors.symbol || "Ex: BTC, ETH (2-6 caractères)"
+                  }
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -200,7 +217,10 @@ const CreateToken = () => {
                   value={formData.initialSupply}
                   onChange={handleChange}
                   error={!!formErrors.initialSupply}
-                  helperText={formErrors.initialSupply || "Quantité totale de tokens à créer"}
+                  helperText={
+                    formErrors.initialSupply ||
+                    "Quantité totale de tokens à créer"
+                  }
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -217,12 +237,12 @@ const CreateToken = () => {
                   inputProps={{ min: 0, max: 18 }}
                 />
               </Grid>
-              
+
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6">Fonctionnalités avancées</Typography>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
@@ -284,7 +304,7 @@ const CreateToken = () => {
                 />
               </Grid>
             </Grid>
-            
+
             <Box sx={{ mt: 4 }}>
               <CostEstimator
                 tokenParams={{
@@ -317,7 +337,7 @@ const CreateToken = () => {
             <Typography color="text.secondary" paragraph>
               Vérifiez les détails ci-dessous avant de procéder au déploiement.
             </Typography>
-            
+
             <Paper sx={{ p: 3, mt: 2 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
@@ -326,11 +346,15 @@ const CreateToken = () => {
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2">Symbole:</Typography>
-                  <Typography variant="body1">{formData.symbol.toUpperCase()}</Typography>
+                  <Typography variant="body1">
+                    {formData.symbol.toUpperCase()}
+                  </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2">Supply Initial:</Typography>
-                  <Typography variant="body1">{formData.initialSupply}</Typography>
+                  <Typography variant="body1">
+                    {formData.initialSupply}
+                  </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2">Décimales:</Typography>
@@ -338,54 +362,131 @@ const CreateToken = () => {
                 </Grid>
                 <Grid item xs={12}>
                   <Typography variant="subtitle2">Fonctionnalités:</Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                    {formData.isMintable && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Mintable</Box>}
-                    {formData.isBurnable && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Burnable</Box>}
-                    {formData.isPausable && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Pausable</Box>}
-                    {formData.hasPermit && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Permit</Box>}
-                    {formData.hasVotes && <Box component="span" sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>Votes</Box>}
+                  <Box
+                    sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}
+                  >
+                    {formData.isMintable && (
+                      <Box
+                        component="span"
+                        sx={{
+                          px: 1,
+                          py: 0.5,
+                          bgcolor: "primary.light",
+                          borderRadius: 1,
+                          color: "white",
+                        }}
+                      >
+                        Mintable
+                      </Box>
+                    )}
+                    {formData.isBurnable && (
+                      <Box
+                        component="span"
+                        sx={{
+                          px: 1,
+                          py: 0.5,
+                          bgcolor: "primary.light",
+                          borderRadius: 1,
+                          color: "white",
+                        }}
+                      >
+                        Burnable
+                      </Box>
+                    )}
+                    {formData.isPausable && (
+                      <Box
+                        component="span"
+                        sx={{
+                          px: 1,
+                          py: 0.5,
+                          bgcolor: "primary.light",
+                          borderRadius: 1,
+                          color: "white",
+                        }}
+                      >
+                        Pausable
+                      </Box>
+                    )}
+                    {formData.hasPermit && (
+                      <Box
+                        component="span"
+                        sx={{
+                          px: 1,
+                          py: 0.5,
+                          bgcolor: "primary.light",
+                          borderRadius: 1,
+                          color: "white",
+                        }}
+                      >
+                        Permit
+                      </Box>
+                    )}
+                    {formData.hasVotes && (
+                      <Box
+                        component="span"
+                        sx={{
+                          px: 1,
+                          py: 0.5,
+                          bgcolor: "primary.light",
+                          borderRadius: 1,
+                          color: "white",
+                        }}
+                      >
+                        Votes
+                      </Box>
+                    )}
                   </Box>
                 </Grid>
               </Grid>
             </Paper>
-            
+
             {!isConnected && (
               <Alert severity="warning" sx={{ mt: 3 }}>
                 <AlertTitle>Wallet non connecté</AlertTitle>
                 Vous devez connecter votre wallet pour déployer votre token.
-                <Button 
-                  variant="outlined" 
-                  size="small" 
-                  onClick={connectWallet} 
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={connectWallet}
                   sx={{ ml: 2, mt: 1 }}
                 >
                   Connecter Wallet
                 </Button>
               </Alert>
             )}
-            
+
             {lastDeploymentResult && (
-              <Alert 
-                severity={lastDeploymentResult.success ? "success" : "error"} 
+              <Alert
+                severity={lastDeploymentResult.success ? "success" : "error"}
                 sx={{ mt: 3 }}
               >
                 <AlertTitle>
-                  {lastDeploymentResult.success ? "Déploiement réussi!" : "Échec du déploiement"}
+                  {lastDeploymentResult.success
+                    ? "Déploiement réussi!"
+                    : "Échec du déploiement"}
                 </AlertTitle>
                 {lastDeploymentResult.success ? (
                   <>
                     <Typography variant="body2">
-                      Adresse du contrat: <strong>{lastDeploymentResult.contractAddress}</strong>
+                      Adresse du contrat:{" "}
+                      <strong>{lastDeploymentResult.contractAddress}</strong>
                     </Typography>
                     {lastDeploymentResult.hash && (
                       <Typography variant="body2">
-                        Transaction: <strong>{lastDeploymentResult.hash.substring(0, 10)}...{lastDeploymentResult.hash.substring(lastDeploymentResult.hash.length - 6)}</strong>
+                        Transaction:{" "}
+                        <strong>
+                          {lastDeploymentResult.hash.substring(0, 10)}...
+                          {lastDeploymentResult.hash.substring(
+                            lastDeploymentResult.hash.length - 6
+                          )}
+                        </strong>
                       </Typography>
                     )}
                   </>
                 ) : (
                   <Typography variant="body2">
-                    {lastDeploymentResult.error || "Une erreur s'est produite lors du déploiement"}
+                    {lastDeploymentResult.error ||
+                      "Une erreur s'est produite lors du déploiement"}
                   </Typography>
                 )}
               </Alert>
@@ -393,7 +494,7 @@ const CreateToken = () => {
           </Box>
         );
       default:
-        return 'Unknown step';
+        return "Unknown step";
     }
   };
 
@@ -414,7 +515,7 @@ const CreateToken = () => {
 
         {getStepContent(activeStep)}
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
           <Button
             disabled={activeStep === 0}
             onClick={handleBack}
@@ -430,7 +531,7 @@ const CreateToken = () => {
               disabled={isDeploying || !isFormValid}
               startIcon={isDeploying ? <CircularProgress size={20} /> : null}
             >
-              {isDeploying ? 'Déploiement...' : 'Déployer'}
+              {isDeploying ? "Déploiement..." : "Déployer"}
             </Button>
           ) : (
             <Button

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Snackbar, Alert, AlertProps } from '@mui/material';
+import React from "react";
+import { Snackbar, Alert, AlertProps } from "@mui/material";
 
-interface ToastProps extends Omit<AlertProps, 'children'> {
+interface ToastProps extends Omit<AlertProps, "children"> {
   open: boolean;
   message: string;
   autoHideDuration?: number;
@@ -11,7 +11,7 @@ interface ToastProps extends Omit<AlertProps, 'children'> {
 export const Toast: React.FC<ToastProps> = ({
   open,
   message,
-  severity = 'success',
+  severity = "success",
   autoHideDuration = 6000,
   onClose,
   ...alertProps
@@ -21,13 +21,13 @@ export const Toast: React.FC<ToastProps> = ({
       open={open}
       autoHideDuration={autoHideDuration}
       onClose={onClose}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
     >
       <Alert
         onClose={onClose}
         severity={severity}
         variant="filled"
-        sx={{ width: '100%' }}
+        sx={{ width: "100%" }}
         {...alertProps}
       >
         {message}

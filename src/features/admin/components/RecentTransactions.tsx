@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Table,
   TableBody,
@@ -9,14 +9,14 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  Box
-} from '@mui/material';
+  Box,
+} from "@mui/material";
 import {
   OpenInNew as OpenInNewIcon,
   CheckCircle as SuccessIcon,
   Error as ErrorIcon,
-  Pending as PendingIcon
-} from '@mui/icons-material';
+  Pending as PendingIcon,
+} from "@mui/icons-material";
 
 interface Transaction {
   id: string;
@@ -25,7 +25,7 @@ interface Transaction {
   from: string;
   to: string;
   network: string;
-  status: 'success' | 'pending' | 'failed';
+  status: "success" | "pending" | "failed";
   timestamp: string;
   hash: string;
 }
@@ -34,30 +34,32 @@ interface RecentTransactionsProps {
   transactions: Transaction[];
 }
 
-export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ transactions }) => {
-  const getStatusIcon = (status: Transaction['status']) => {
+export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
+  transactions,
+}) => {
+  const getStatusIcon = (status: Transaction["status"]) => {
     switch (status) {
-      case 'success':
+      case "success":
         return <SuccessIcon color="success" />;
-      case 'pending':
+      case "pending":
         return <PendingIcon color="warning" />;
-      case 'failed':
+      case "failed":
         return <ErrorIcon color="error" />;
       default:
         return null;
     }
   };
 
-  const getStatusColor = (status: Transaction['status']) => {
+  const getStatusColor = (status: Transaction["status"]) => {
     switch (status) {
-      case 'success':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'failed':
-        return 'error';
+      case "success":
+        return "success";
+      case "pending":
+        return "warning";
+      case "failed":
+        return "error";
       default:
-        return 'default';
+        return "default";
     }
   };
 
@@ -107,7 +109,12 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ transact
                 <Tooltip title="Voir sur l'explorateur">
                   <IconButton
                     size="small"
-                    onClick={() => window.open(`https://etherscan.io/tx/${tx.hash}`, '_blank')}
+                    onClick={() =>
+                      window.open(
+                        `https://etherscan.io/tx/${tx.hash}`,
+                        "_blank"
+                      )
+                    }
                   >
                     <OpenInNewIcon fontSize="small" />
                   </IconButton>
@@ -119,4 +126,4 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ transact
       </Table>
     </TableContainer>
   );
-}; 
+};

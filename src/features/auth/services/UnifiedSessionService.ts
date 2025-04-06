@@ -1,9 +1,17 @@
-import { BaseService } from '../../../services/BaseService';
-import { SessionService, TokenService, TabSyncService, SyncMessage } from '../../../types/services';
-import { TokenForgeUser } from '../../../types/auth';
-import { serviceRegistry } from '../../../services/ServiceRegistry';
+import { BaseService } from "../../../services/BaseService";
+import {
+  SessionService,
+  TokenService,
+  TabSyncService,
+  SyncMessage,
+} from "../../../types/services";
+import { TokenForgeUser } from "../../../types/auth";
+import { serviceRegistry } from "../../../services/ServiceRegistry";
 
-export class UnifiedSessionService extends BaseService implements SessionService {
+export class UnifiedSessionService
+  extends BaseService
+  implements SessionService
+{
   private static instance: UnifiedSessionService;
   private sessionCheckInterval: NodeJS.Timeout | null = null;
   private tabSyncService: TabSyncService;
@@ -19,8 +27,8 @@ export class UnifiedSessionService extends BaseService implements SessionService
 
   private constructor() {
     super();
-    this.tabSyncService = serviceRegistry.get<TabSyncService>('tabSync');
-    this.tokenService = serviceRegistry.get<TokenService>('token');
+    this.tabSyncService = serviceRegistry.get<TabSyncService>("tabSync");
+    this.tokenService = serviceRegistry.get<TokenService>("token");
     this.setupTabSync();
   }
 
@@ -36,17 +44,17 @@ export class UnifiedSessionService extends BaseService implements SessionService
   }
 
   private handleSyncMessage(message: SyncMessage): void {
-    if (message.type === 'SESSION_STATE') {
+    if (message.type === "SESSION_STATE") {
       this.lastActivity = Math.max(this.lastActivity, message.timestamp);
     }
   }
 
   private broadcastActivity(): void {
     const message: SyncMessage = {
-      type: 'SESSION_STATE',
+      type: "SESSION_STATE",
       payload: { lastActivity: this.lastActivity },
       timestamp: Date.now(),
-      tabId: crypto.randomUUID()
+      tabId: crypto.randomUUID(),
     };
     this.tabSyncService.broadcast(message);
   }
@@ -62,13 +70,13 @@ export class UnifiedSessionService extends BaseService implements SessionService
         [uid]: {
           isAdmin: false,
           canCreateToken: true,
-          canUseServices: true
-        }
+          canUseServices: true,
+        },
       };
 
       return mockUserData[uid] || null;
     } catch (error) {
-      throw this.handleError(error, 'Failed to get user session');
+      throw this.handleError(error, "Failed to get user session");
     }
   }
 
@@ -76,9 +84,9 @@ export class UnifiedSessionService extends BaseService implements SessionService
     try {
       await this.tokenService.initialize(this.currentUser);
       this.startSessionMonitoring();
-      this.notifySuccess('Session initialized');
+      this.notifySuccess("Session initialized");
     } catch (error) {
-      throw this.handleError(error, 'Failed to initialize session');
+      throw this.handleError(error, "Failed to initialize session");
     }
   }
 
@@ -88,10 +96,7 @@ export class UnifiedSessionService extends BaseService implements SessionService
     }
 
     this.sessionCheckInterval = setInterval(async () => {
-      await Promise.all([
-        this.checkSession(),
-        this.validateSessionHealth()
-      ]);
+      await Promise.all([this.checkSession(), this.validateSessionHealth()]);
     }, this.SESSION_CHECK_INTERVAL);
   }
 
@@ -99,7 +104,7 @@ export class UnifiedSessionService extends BaseService implements SessionService
     const now = Date.now();
     if (now - this.lastActivity > this.SESSION_TIMEOUT) {
       await this.endSession();
-      this.notifyWarning('Session expired due to inactivity');
+      this.notifyWarning("Session expired due to inactivity");
     } else if (this.tokenService.isTokenExpired()) {
       await this.refreshSession();
     }
@@ -108,10 +113,10 @@ export class UnifiedSessionService extends BaseService implements SessionService
   async refreshSession(): Promise<void> {
     try {
       await this.tokenService.refreshToken();
-      this.notifyInfo('Session refreshed');
+      this.notifyInfo("Session refreshed");
     } catch (error) {
       await this.endSession();
-      throw this.handleError(error, 'Failed to refresh session');
+      throw this.handleError(error, "Failed to refresh session");
     }
   }
 
@@ -129,9 +134,9 @@ export class UnifiedSessionService extends BaseService implements SessionService
 
       this.tokenService.cleanup();
       this.currentUser = null;
-      this.notifyInfo('Session ended');
+      this.notifyInfo("Session ended");
     } catch (error) {
-      throw this.handleError(error, 'Failed to end session');
+      throw this.handleError(error, "Failed to end session");
     }
   }
 
@@ -150,8 +155,10 @@ export class UnifiedSessionService extends BaseService implements SessionService
 
   private blockUser(uid: string): void {
     this.blockedUsers.add(uid);
-    this.notifyWarning(`Account temporarily blocked due to multiple failed attempts`);
-    
+    this.notifyWarning(
+      `Account temporarily blocked due to multiple failed attempts`
+    );
+
     setTimeout(() => {
       this.blockedUsers.delete(uid);
       this.failedAttempts.delete(uid);
@@ -165,11 +172,11 @@ export class UnifiedSessionService extends BaseService implements SessionService
   async validateSession(uid: string): Promise<boolean> {
     try {
       if (this.isUserBlocked(uid)) {
-        throw new Error('Account is temporarily blocked');
+        throw new Error("Account is temporarily blocked");
       }
 
-      const isValid = await this.tokenService.getToken() !== null;
-      
+      const isValid = (await this.tokenService.getToken()) !== null;
+
       if (!isValid) {
         this.incrementFailedAttempts(uid);
         return false;
@@ -178,7 +185,7 @@ export class UnifiedSessionService extends BaseService implements SessionService
       this.resetFailedAttempts(uid);
       return true;
     } catch (error) {
-      throw this.handleError(error, 'Session validation failed');
+      throw this.handleError(error, "Session validation failed");
     }
   }
 
@@ -188,7 +195,7 @@ export class UnifiedSessionService extends BaseService implements SessionService
     const isHealthy = await this.validateSession(this.currentUser.uid);
     if (!isHealthy) {
       await this.endSession();
-      this.notifyWarning('Session ended due to security concerns');
+      this.notifyWarning("Session ended due to security concerns");
     }
   }
 

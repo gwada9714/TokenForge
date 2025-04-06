@@ -18,7 +18,7 @@ export const BasicTokenForm: React.FC<BasicTokenFormProps> = ({
 
   const validateField = (
     field: keyof TokenBaseConfig,
-    value: string | number,
+    value: string | number
   ): string | undefined => {
     const newValue = value.toString().trim();
 

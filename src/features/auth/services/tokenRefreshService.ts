@@ -1,9 +1,9 @@
-import { User } from 'firebase/auth';
-import { logService } from './logService';
-import { errorService } from './errorService';
-import { AUTH_ERROR_CODES } from '../types';
+import { User } from "firebase/auth";
+import { logService } from "./logService";
+import { errorService } from "./errorService";
+import { AUTH_ERROR_CODES } from "../types";
 
-const LOG_CATEGORY = 'TokenRefreshService';
+const LOG_CATEGORY = "TokenRefreshService";
 const TOKEN_REFRESH_INTERVAL = 4 * 60 * 1000; // 4 minutes
 
 class TokenRefreshService {
@@ -28,13 +28,17 @@ class TokenRefreshService {
       try {
         await this.refreshToken();
       } catch (error) {
-        logService.error(LOG_CATEGORY, 'Auto refresh failed', error instanceof Error ? error : new Error('Unknown error'));
+        logService.error(
+          LOG_CATEGORY,
+          "Auto refresh failed",
+          error instanceof Error ? error : new Error("Unknown error")
+        );
       }
     }, TOKEN_REFRESH_INTERVAL);
 
-    logService.info(LOG_CATEGORY, 'Token refresh started', {
+    logService.info(LOG_CATEGORY, "Token refresh started", {
       userId: user.uid,
-      email: user.email
+      email: user.email,
     });
   }
 
@@ -42,11 +46,11 @@ class TokenRefreshService {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
-      
+
       if (this.user) {
-        logService.info(LOG_CATEGORY, 'Token refresh stopped', {
+        logService.info(LOG_CATEGORY, "Token refresh stopped", {
           userId: this.user.uid,
-          email: this.user.email
+          email: this.user.email,
         });
       }
     }
@@ -55,29 +59,29 @@ class TokenRefreshService {
 
   async refreshToken(): Promise<string> {
     if (!this.user) {
-      const error = new Error('No user found for token refresh');
+      const error = new Error("No user found for token refresh");
       error.name = AUTH_ERROR_CODES.NO_USER;
       throw error;
     }
 
     try {
       const token = await this.user.getIdToken(true);
-      logService.debug(LOG_CATEGORY, 'Token refreshed successfully');
-      
+      logService.debug(LOG_CATEGORY, "Token refreshed successfully");
+
       // Broadcast token refresh to other tabs
       this.channel?.postMessage({
-        type: 'SESSION_REFRESH',
+        type: "SESSION_REFRESH",
         payload: {
           timestamp: Date.now(),
           tabId: crypto.randomUUID(),
-          token
-        }
+          token,
+        },
       });
-      
+
       return token;
     } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      logService.error(LOG_CATEGORY, 'Failed to refresh token', err);
+      const err = error instanceof Error ? error : new Error("Unknown error");
+      logService.error(LOG_CATEGORY, "Failed to refresh token", err);
       throw errorService.handleError(error);
     }
   }
@@ -86,7 +90,7 @@ class TokenRefreshService {
     return this.refreshInterval !== null;
   }
 
-  private channel = new BroadcastChannel('tokenforge-token-refresh');
+  private channel = new BroadcastChannel("tokenforge-token-refresh");
 }
 
 export const tokenRefreshService = TokenRefreshService.getInstance();

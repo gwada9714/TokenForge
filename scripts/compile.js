@@ -11,7 +11,7 @@ const contractPath = path.resolve(
   "..",
   "src",
   "contracts",
-  "CustomToken.sol",
+  "CustomToken.sol"
 );
 const source = fs.readFileSync(contractPath, "utf8");
 
@@ -47,7 +47,7 @@ const input = {
 
 try {
   const output = JSON.parse(
-    solc.compile(JSON.stringify(input), { import: findImports }),
+    solc.compile(JSON.stringify(input), { import: findImports })
   );
 
   if (output.errors) {
@@ -64,18 +64,12 @@ try {
   };
 
   fs.writeFileSync(
-    path.resolve(
-      __dirname,
-      "..",
-      "src",
-      "contracts",
-      "compiled.json",
-    ),
-    JSON.stringify(compiledContract, null, 2),
+    path.resolve(__dirname, "..", "src", "contracts", "compiled.json"),
+    JSON.stringify(compiledContract, null, 2)
   );
 
   console.log(
-    "Compilation terminée ! Le bytecode et l'ABI ont été sauvegardés dans compiled.json",
+    "Compilation terminée ! Le bytecode et l'ABI ont été sauvegardés dans compiled.json"
   );
 } catch (error) {
   console.error("Error:", error);

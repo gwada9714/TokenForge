@@ -1,14 +1,14 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Typography,
   CircularProgress,
   Alert,
   AlertTitle,
-} from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { PaymentStatus as Status } from '../../services/payment/types/PaymentSession';
+} from "@mui/material";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { PaymentStatus as Status } from "../../services/payment/types/PaymentSession";
 
 interface PaymentStatusProps {
   status: Status;
@@ -24,7 +24,7 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
   const renderContent = () => {
     if (isProcessing) {
       return (
-        <Box sx={{ textAlign: 'center' }}>
+        <Box sx={{ textAlign: "center" }}>
           <CircularProgress size={48} sx={{ mb: 2 }} />
           <Typography variant="h6">Processing Payment</Typography>
           <Typography color="text.secondary">
@@ -41,8 +41,8 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
             severity="success"
             icon={<CheckCircleOutlineIcon fontSize="large" />}
             sx={{
-              '& .MuiAlert-icon': {
-                fontSize: '2rem',
+              "& .MuiAlert-icon": {
+                fontSize: "2rem",
               },
             }}
           >
@@ -57,13 +57,14 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
             severity="error"
             icon={<ErrorOutlineIcon fontSize="large" />}
             sx={{
-              '& .MuiAlert-icon': {
-                fontSize: '2rem',
+              "& .MuiAlert-icon": {
+                fontSize: "2rem",
               },
             }}
           >
             <AlertTitle>Payment Failed</AlertTitle>
-            {error || 'There was an error processing your payment. Please try again.'}
+            {error ||
+              "There was an error processing your payment. Please try again."}
           </Alert>
         );
 
@@ -72,8 +73,8 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
           <Alert
             severity="info"
             sx={{
-              '& .MuiAlert-icon': {
-                fontSize: '2rem',
+              "& .MuiAlert-icon": {
+                fontSize: "2rem",
               },
             }}
           >
@@ -87,8 +88,8 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
           <Alert
             severity="warning"
             sx={{
-              '& .MuiAlert-icon': {
-                fontSize: '2rem',
+              "& .MuiAlert-icon": {
+                fontSize: "2rem",
               },
             }}
           >
@@ -102,13 +103,14 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
           <Alert
             severity="info"
             sx={{
-              '& .MuiAlert-icon': {
-                fontSize: '2rem',
+              "& .MuiAlert-icon": {
+                fontSize: "2rem",
               },
             }}
           >
             <AlertTitle>Unknown Status</AlertTitle>
-            The payment status is unknown. Please contact support if this persists.
+            The payment status is unknown. Please contact support if this
+            persists.
           </Alert>
         );
     }
@@ -117,12 +119,12 @@ export const PaymentStatus: React.FC<PaymentStatusProps> = ({
   return (
     <Box
       sx={{
-        width: '100%',
+        width: "100%",
         p: 3,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {renderContent()}

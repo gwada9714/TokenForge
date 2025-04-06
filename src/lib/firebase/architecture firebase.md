@@ -16,10 +16,12 @@ L'architecture Firebase est organisée selon une structure modulaire où chaque 
 L'initialisation des services Firebase suit une séquence précise pour éviter les dépendances circulaires :
 
 1. **Initialisation du FirebaseManager** (`services.ts`)
+
    - Configuration de l'application Firebase avec les variables d'environnement
    - Initialisation des services Firebase de base (Firestore, Functions)
 
 2. **Initialisation d'Auth** (`auth.ts`)
+
    - Appel explicite à `firebaseManager.initAuth()` pour initialiser Auth
    - Configuration de l'écouteur d'état d'authentification
 
@@ -34,15 +36,15 @@ Pour obtenir une instance des services Firebase, utilisez toujours les fonctions
 
 ```typescript
 // Obtenir le FirebaseManager
-import { getFirebaseManager } from './services';
+import { getFirebaseManager } from "./services";
 const firebaseManager = await getFirebaseManager();
 
 // Obtenir le service d'authentification
-import { firebaseAuth } from './auth';
+import { firebaseAuth } from "./auth";
 const auth = await firebaseAuth.getAuth();
 
 // Obtenir Firestore
-import { firestoreService } from './firestore';
+import { firestoreService } from "./firestore";
 const db = await firestoreService.getDb();
 ```
 
@@ -91,10 +93,10 @@ Toutes les méthodes d'initialisation effectuent une gestion d'erreur approprié
 Utilisez les mocks pour tester les composants qui dépendent des services Firebase :
 
 ```typescript
-jest.mock('./services', () => ({
+jest.mock("./services", () => ({
   getFirebaseManager: jest.fn().mockResolvedValue({
     initAuth: jest.fn().mockResolvedValue(/* mock Auth object */),
     // Autres méthodes mockées...
-  })
+  }),
 }));
 ```

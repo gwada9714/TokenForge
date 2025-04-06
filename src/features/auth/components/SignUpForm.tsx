@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Alert } from '@mui/material';
-import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
-import { AuthError, AuthErrorCode, createAuthError } from '../errors/AuthError';
-import { logger } from '../../../core/logger';
+import React, { useState, useEffect } from "react";
+import { TextField, Button, Box, Alert } from "@mui/material";
+import { useTokenForgeAuth } from "../hooks/useTokenForgeAuth";
+import { AuthError, AuthErrorCode, createAuthError } from "../errors/AuthError";
+import { logger } from "../../../core/logger";
 
 export const SignUpForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [authReady, setAuthReady] = useState(false);
   const { error: contextError, signUp } = useTokenForgeAuth();
   const [localError, setLocalError] = useState<AuthError | null>(null);
@@ -18,10 +18,10 @@ export const SignUpForm: React.FC = () => {
       try {
         // Le service firebaseAuth est déjà initialisé automatiquement
         setAuthReady(true);
-        
+
         logger.debug({
-          category: 'Auth',
-          message: 'Service Auth initialisé avec succès'
+          category: "Auth",
+          message: "Service Auth initialisé avec succès",
         });
       } catch (error) {
         const authError = createAuthError(
@@ -29,13 +29,13 @@ export const SignUpForm: React.FC = () => {
           "Erreur lors de l'initialisation du service d'authentification",
           error instanceof Error ? error : undefined
         );
-        
+
         logger.error({
-          category: 'Auth',
+          category: "Auth",
           message: "Échec de l'initialisation du service Auth",
-          error: authError
+          error: authError,
         });
-        
+
         setLocalError(authError);
       }
     };
@@ -47,19 +47,21 @@ export const SignUpForm: React.FC = () => {
     e.preventDefault();
 
     if (!authReady) {
-      setLocalError(createAuthError(
-        AuthErrorCode.INTERNAL_ERROR,
-        'Le service d\'authentification n\'est pas prêt'
-      ));
+      setLocalError(
+        createAuthError(
+          AuthErrorCode.INTERNAL_ERROR,
+          "Le service d'authentification n'est pas prêt"
+        )
+      );
       return;
     }
 
     if (password !== confirmPassword) {
       const passwordError = createAuthError(
         AuthErrorCode.INVALID_PASSWORD,
-        'Les mots de passe ne correspondent pas'
+        "Les mots de passe ne correspondent pas"
       );
-      
+
       setLocalError(passwordError);
       return;
     }
@@ -69,28 +71,28 @@ export const SignUpForm: React.FC = () => {
       await signUp(email, password);
     } catch (err) {
       let errorCode: AuthErrorCode;
-      
+
       switch ((err as any)?.code) {
-        case 'auth/email-already-in-use':
+        case "auth/email-already-in-use":
           errorCode = AuthErrorCode.EMAIL_ALREADY_IN_USE;
           break;
-        case 'auth/invalid-email':
+        case "auth/invalid-email":
           errorCode = AuthErrorCode.INVALID_EMAIL;
           break;
-        case 'auth/weak-password':
+        case "auth/weak-password":
           errorCode = AuthErrorCode.WEAK_PASSWORD;
           break;
         default:
           errorCode = AuthErrorCode.UNKNOWN_ERROR;
           break;
       }
-      
+
       const authError = createAuthError(
         errorCode,
-        (err as any)?.message || 'Une erreur inconnue est survenue',
+        (err as any)?.message || "Une erreur inconnue est survenue",
         err
       );
-      
+
       setLocalError(authError);
     }
   };

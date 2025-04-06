@@ -1,1 +1,1 @@
-export * from './OwnershipManagement';
+export * from "./OwnershipManagement";

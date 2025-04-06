@@ -1,10 +1,10 @@
-import { createPublicClient, http, type PublicClient, type Hash } from 'viem';
-import { mainnet } from 'viem/chains';
-import { chainPolicies } from './security.policies';
+import { createPublicClient, http, type PublicClient, type Hash } from "viem";
+import { mainnet } from "viem/chains";
+import { chainPolicies } from "./security.policies";
 
 interface SecurityAlert {
-  type: 'transaction' | 'event' | 'error';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "transaction" | "event" | "error";
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   timestamp: number;
   data?: unknown;
@@ -36,8 +36,8 @@ class SecurityMonitoring {
 
       if (receipt.gasUsed > chainPolicies.transactionPolicies.maxGasLimit) {
         this.addAlert({
-          type: 'transaction',
-          severity: 'high',
+          type: "transaction",
+          severity: "high",
           message: `High gas usage detected in transaction ${hash}`,
           timestamp: Date.now(),
           data: { gasUsed: receipt.gasUsed, receipt },
@@ -47,8 +47,8 @@ class SecurityMonitoring {
       return receipt;
     } catch (error) {
       this.addAlert({
-        type: 'error',
-        severity: 'medium',
+        type: "error",
+        severity: "medium",
         message: `Transaction monitoring failed for ${hash}`,
         timestamp: Date.now(),
         data: { error },
@@ -61,8 +61,8 @@ class SecurityMonitoring {
     return this.client.watchPendingTransactions({
       onTransactionSent: (hash) => {
         this.addAlert({
-          type: 'transaction',
-          severity: 'low',
+          type: "transaction",
+          severity: "low",
           message: `New pending transaction detected for ${address}`,
           timestamp: Date.now(),
           data: { hash },
@@ -79,7 +79,7 @@ class SecurityMonitoring {
     }
 
     // TODO: Implement real-time notification system
-    console.log('Security Alert:', alert);
+    console.log("Security Alert:", alert);
   }
 
   getRecentAlerts(count = 10): SecurityAlert[] {
@@ -87,11 +87,13 @@ class SecurityMonitoring {
   }
 
   async validateChainId(chainId: number): Promise<boolean> {
-    const allowedChainIds = chainPolicies.allowedChains.map(chain => chain.id);
+    const allowedChainIds = chainPolicies.allowedChains.map(
+      (chain) => chain.id
+    );
     if (!allowedChainIds.includes(chainId)) {
       this.addAlert({
-        type: 'error',
-        severity: 'critical',
+        type: "error",
+        severity: "critical",
         message: `Unsupported chain ID detected: ${chainId}`,
         timestamp: Date.now(),
         data: { chainId, allowedChainIds },

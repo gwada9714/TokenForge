@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { adminService } from '../services/adminService';
-import { errorService } from '../services/errorService';
+import { useState, useEffect } from "react";
+import { adminService } from "../services/adminService";
+import { errorService } from "../services/errorService";
 
 interface AdminState {
   isAdmin: boolean;
@@ -12,7 +12,7 @@ export function useAdminStatus(userId: string | undefined) {
   const [state, setState] = useState<AdminState>({
     isAdmin: false,
     loading: true,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export function useAdminStatus(userId: string | undefined) {
         setState({
           isAdmin: false,
           loading: false,
-          error: null
+          error: null,
         });
         return;
       }
@@ -31,13 +31,13 @@ export function useAdminStatus(userId: string | undefined) {
         setState({
           isAdmin,
           loading: false,
-          error: null
+          error: null,
         });
       } catch (error) {
         setState({
           isAdmin: false,
           loading: false,
-          error: errorService.handleError(error)
+          error: errorService.handleError(error),
         });
       }
     };

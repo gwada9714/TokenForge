@@ -1,8 +1,8 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store';
-import { clearAuthError } from '../store/authSlice';
-import { AUTH_ERROR_CODES } from '../errors/AuthError';
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store";
+import { clearAuthError } from "../store/authSlice";
+import { AUTH_ERROR_CODES } from "../errors/AuthError";
 
 interface ErrorMessageMapping {
   title: string;
@@ -10,72 +10,75 @@ interface ErrorMessageMapping {
   action?: string;
 }
 
-const ERROR_MESSAGES: Record<keyof typeof AUTH_ERROR_CODES, ErrorMessageMapping> = {
+const ERROR_MESSAGES: Record<
+  keyof typeof AUTH_ERROR_CODES,
+  ErrorMessageMapping
+> = {
   SIGN_IN_ERROR: {
-    title: 'Erreur de connexion',
-    description: 'Impossible de vous connecter. Vérifiez vos identifiants.',
-    action: 'Réessayer'
+    title: "Erreur de connexion",
+    description: "Impossible de vous connecter. Vérifiez vos identifiants.",
+    action: "Réessayer",
   },
   SIGN_OUT_ERROR: {
-    title: 'Erreur de déconnexion',
-    description: 'Impossible de vous déconnecter. Veuillez réessayer.',
-    action: 'Réessayer'
+    title: "Erreur de déconnexion",
+    description: "Impossible de vous déconnecter. Veuillez réessayer.",
+    action: "Réessayer",
   },
   SESSION_EXPIRED: {
-    title: 'Session expirée',
-    description: 'Votre session a expiré. Veuillez vous reconnecter.',
-    action: 'Se reconnecter'
+    title: "Session expirée",
+    description: "Votre session a expiré. Veuillez vous reconnecter.",
+    action: "Se reconnecter",
   },
   INVALID_TOKEN: {
-    title: 'Token invalide',
-    description: 'Votre session n\'est plus valide. Veuillez vous reconnecter.',
-    action: 'Se reconnecter'
+    title: "Token invalide",
+    description: "Votre session n'est plus valide. Veuillez vous reconnecter.",
+    action: "Se reconnecter",
   },
   USER_NOT_FOUND: {
-    title: 'Utilisateur non trouvé',
-    description: 'Cet utilisateur n\'existe pas.',
-    action: 'Vérifier'
+    title: "Utilisateur non trouvé",
+    description: "Cet utilisateur n'existe pas.",
+    action: "Vérifier",
   },
   CREATE_USER_ERROR: {
-    title: 'Erreur de création',
-    description: 'Impossible de créer le compte. Veuillez réessayer.',
-    action: 'Réessayer'
+    title: "Erreur de création",
+    description: "Impossible de créer le compte. Veuillez réessayer.",
+    action: "Réessayer",
   },
   UPDATE_USER_ERROR: {
-    title: 'Erreur de mise à jour',
-    description: 'Impossible de mettre à jour le profil.',
-    action: 'Réessayer'
+    title: "Erreur de mise à jour",
+    description: "Impossible de mettre à jour le profil.",
+    action: "Réessayer",
   },
   DELETE_USER_ERROR: {
-    title: 'Erreur de suppression',
-    description: 'Impossible de supprimer le compte.',
-    action: 'Réessayer'
+    title: "Erreur de suppression",
+    description: "Impossible de supprimer le compte.",
+    action: "Réessayer",
   },
   INVALID_DATA: {
-    title: 'Données invalides',
-    description: 'Les données fournies sont invalides.',
-    action: 'Vérifier'
+    title: "Données invalides",
+    description: "Les données fournies sont invalides.",
+    action: "Vérifier",
   },
   SERVICE_NOT_INITIALIZED: {
-    title: 'Service non initialisé',
-    description: 'Le service d\'authentification n\'est pas initialisé.',
-    action: 'Réessayer'
+    title: "Service non initialisé",
+    description: "Le service d'authentification n'est pas initialisé.",
+    action: "Réessayer",
   },
   NETWORK_ERROR: {
-    title: 'Erreur réseau',
-    description: 'Impossible de se connecter au serveur.',
-    action: 'Réessayer'
+    title: "Erreur réseau",
+    description: "Impossible de se connecter au serveur.",
+    action: "Réessayer",
   },
   FIREBASE_ERROR: {
-    title: 'Erreur Firebase',
-    description: 'Une erreur est survenue avec Firebase.',
-    action: 'Réessayer'
+    title: "Erreur Firebase",
+    description: "Une erreur est survenue avec Firebase.",
+    action: "Réessayer",
   },
   UNKNOWN_ERROR: {
-    title: 'Erreur inconnue',
-    description: 'Une erreur inattendue est survenue.',
-    action: 'Réessayer'
-  }
+    title: "Erreur inconnue",
+    description: "Une erreur inattendue est survenue.",
+    action: "Réessayer",
+  },
 };
 
 export const AuthError: React.FC = () => {
@@ -84,10 +87,12 @@ export const AuthError: React.FC = () => {
 
   if (!error) return null;
 
-  const errorInfo = ERROR_MESSAGES[error.code as keyof typeof AUTH_ERROR_CODES] || {
-    title: 'Erreur',
-    description: error.message || 'Une erreur est survenue.',
-    action: 'Fermer'
+  const errorInfo = ERROR_MESSAGES[
+    error.code as keyof typeof AUTH_ERROR_CODES
+  ] || {
+    title: "Erreur",
+    description: error.message || "Une erreur est survenue.",
+    action: "Fermer",
   };
 
   const handleDismiss = () => {
@@ -101,7 +106,12 @@ export const AuthError: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between">
             <div className="flex w-0 flex-1 items-center">
               <span className="flex rounded-lg bg-red-800 p-2">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="h-6 w-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -112,7 +122,9 @@ export const AuthError: React.FC = () => {
               </span>
               <p className="ml-3 truncate font-medium text-white">
                 <span className="md:hidden">{errorInfo.title}</span>
-                <span className="hidden md:inline">{errorInfo.description}</span>
+                <span className="hidden md:inline">
+                  {errorInfo.description}
+                </span>
               </p>
             </div>
             <div className="order-3 mt-2 w-full flex-shrink-0 sm:order-2 sm:mt-0 sm:w-auto">

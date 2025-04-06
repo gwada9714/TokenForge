@@ -1,6 +1,6 @@
-import { User } from 'firebase/auth';
+import { User } from "firebase/auth";
 
-export type SessionStatus = 'active' | 'expired' | 'invalid' | 'refreshing';
+export type SessionStatus = "active" | "expired" | "invalid" | "refreshing";
 
 export interface SessionState {
   status: SessionStatus;
@@ -10,14 +10,14 @@ export interface SessionState {
 }
 
 export interface SessionConfig {
-  checkInterval: number;  // Intervalle de vérification en ms
-  tokenRefreshThreshold: number;  // Seuil de rafraîchissement en ms
+  checkInterval: number; // Intervalle de vérification en ms
+  tokenRefreshThreshold: number; // Seuil de rafraîchissement en ms
   maxRetries: number;
-  retryDelay: number;  // Délai entre les tentatives en ms
+  retryDelay: number; // Délai entre les tentatives en ms
 }
 
 export interface SessionEvent {
-  type: 'expired' | 'refreshed' | 'invalid' | 'error';
+  type: "expired" | "refreshed" | "invalid" | "error";
   timestamp: number;
   details?: Record<string, unknown>;
 }

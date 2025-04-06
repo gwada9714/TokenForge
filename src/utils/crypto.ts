@@ -1,6 +1,6 @@
-import { Buffer } from 'buffer';
+import { Buffer } from "buffer";
 
-const ALGORITHM = 'AES-GCM';
+const ALGORITHM = "AES-GCM";
 const KEY_LENGTH = 256;
 const SALT_LENGTH = 16;
 const IV_LENGTH = 12;
@@ -30,26 +30,29 @@ export class CryptoService {
     const key = masterKey || process.env.VITE_CRYPTO_KEY || crypto.randomUUID();
     const encoder = new TextEncoder();
     return crypto.subtle.importKey(
-      'raw',
+      "raw",
       encoder.encode(key),
-      'PBKDF2',
+      "PBKDF2",
       false,
-      ['deriveBits', 'deriveKey']
+      ["deriveBits", "deriveKey"]
     );
   }
 
-  private async deriveKey(keyMaterial: CryptoKey, salt: Uint8Array): Promise<CryptoKey> {
+  private async deriveKey(
+    keyMaterial: CryptoKey,
+    salt: Uint8Array
+  ): Promise<CryptoKey> {
     return crypto.subtle.deriveKey(
       {
-        name: 'PBKDF2',
+        name: "PBKDF2",
         salt,
         iterations: 100000,
-        hash: 'SHA-256'
+        hash: "SHA-256",
       },
       keyMaterial,
       { name: ALGORITHM, length: KEY_LENGTH },
       false,
-      ['encrypt', 'decrypt']
+      ["encrypt", "decrypt"]
     );
   }
 
@@ -60,11 +63,11 @@ export class CryptoService {
 
     const encoder = new TextEncoder();
     const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-    
+
     const encryptedContent = await crypto.subtle.encrypt(
       {
         name: ALGORITHM,
-        iv
+        iv,
       },
       this.key!,
       encoder.encode(data)
@@ -73,10 +76,10 @@ export class CryptoService {
     const encryptedArray = new Uint8Array(encryptedContent);
     const buffer = Buffer.concat([
       Buffer.from(iv),
-      Buffer.from(encryptedArray)
+      Buffer.from(encryptedArray),
     ]);
 
-    return buffer.toString('base64');
+    return buffer.toString("base64");
   }
 
   async decryptData(encryptedData: string): Promise<string> {
@@ -85,15 +88,15 @@ export class CryptoService {
     }
 
     const decoder = new TextDecoder();
-    const buffer = Buffer.from(encryptedData, 'base64');
-    
+    const buffer = Buffer.from(encryptedData, "base64");
+
     const iv = buffer.subarray(0, IV_LENGTH);
     const content = buffer.subarray(IV_LENGTH);
 
     const decryptedContent = await crypto.subtle.decrypt(
       {
         name: ALGORITHM,
-        iv
+        iv,
       },
       this.key!,
       content

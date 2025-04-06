@@ -1,8 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNetwork } from './useNetwork';
-import { GasEstimationService, GasEstimate, TokenDeploymentEstimate } from '@/core/services/GasEstimationService';
-import { NetworkConfig } from '@/config/networks';
-import { getDefaultNetworkConfig } from '@/config/networks';
+import { useState, useEffect, useCallback } from "react";
+import { useNetwork } from "./useNetwork";
+import {
+  GasEstimationService,
+  GasEstimate,
+  TokenDeploymentEstimate,
+} from "@/core/services/GasEstimationService";
+import { NetworkConfig } from "@/config/networks";
+import { getDefaultNetworkConfig } from "@/config/networks";
 
 interface UseGasEstimationReturn {
   gasEstimate: GasEstimate | null;
@@ -17,7 +21,8 @@ export function useGasEstimation(
 ): UseGasEstimationReturn {
   const { chain } = useNetwork();
   const [gasEstimate, setGasEstimate] = useState<GasEstimate | null>(null);
-  const [deploymentEstimate, setDeploymentEstimate] = useState<TokenDeploymentEstimate | null>(null);
+  const [deploymentEstimate, setDeploymentEstimate] =
+    useState<TokenDeploymentEstimate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,14 +30,16 @@ export function useGasEstimation(
     // Convertir la chaîne wagmi en notre format NetworkConfig
     const defaultConfig = getDefaultNetworkConfig(chainId);
     if (!defaultConfig) {
-      throw new Error(`Network configuration not found for chain ID ${chainId}`);
+      throw new Error(
+        `Network configuration not found for chain ID ${chainId}`
+      );
     }
     return defaultConfig;
   }, []);
 
   const fetchEstimates = useCallback(async () => {
     if (!chain) {
-      setError('No chain selected');
+      setError("No chain selected");
       setIsLoading(false);
       return;
     }
@@ -44,17 +51,22 @@ export function useGasEstimation(
       const networkConfig = getNetworkConfig(chain.id);
 
       // Récupérer l'estimation du gas
-      const gasEstimate = await GasEstimationService.getGasEstimate(networkConfig);
+      const gasEstimate = await GasEstimationService.getGasEstimate(
+        networkConfig
+      );
       setGasEstimate(gasEstimate);
 
       // Calculer l'estimation pour le déploiement
-      const deploymentEstimate = await GasEstimationService.estimateTokenDeployment(
-        networkConfig,
-        gasEstimate
-      );
+      const deploymentEstimate =
+        await GasEstimationService.estimateTokenDeployment(
+          networkConfig,
+          gasEstimate
+        );
       setDeploymentEstimate(deploymentEstimate);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch gas estimates');
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch gas estimates"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -84,6 +96,6 @@ export function useGasEstimation(
     deploymentEstimate,
     isLoading,
     error,
-    refetch: fetchEstimates
+    refetch: fetchEstimates,
   };
 }

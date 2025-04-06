@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Stepper,
   Step,
@@ -8,43 +8,43 @@ import {
   Typography,
   Paper,
   CircularProgress,
-} from '@mui/material';
-import BlockchainSelection from './steps/BlockchainSelection';
-import TokenConfiguration from './steps/TokenConfiguration';
-import TokenFeatures from './steps/TokenFeatures';
-import ForgeInfo from './steps/ForgeInfo';
-import ServiceTier from './steps/ServiceTier';
-import Summary from './steps/Summary';
-import Deployment from './steps/Deployment';
-import { useTokenForge } from '@/hooks/useTokenForge';
+} from "@mui/material";
+import BlockchainSelection from "./steps/BlockchainSelection";
+import TokenConfiguration from "./steps/TokenConfiguration";
+import TokenFeatures from "./steps/TokenFeatures";
+import ForgeInfo from "./steps/ForgeInfo";
+import ServiceTier from "./steps/ServiceTier";
+import Summary from "./steps/Summary";
+import Deployment from "./steps/Deployment";
+import { useTokenForge } from "@/hooks/useTokenForge";
 
 const steps = [
-  'Select Blockchain',
-  'Configure Token',
-  'Optional Features',
-  'Forge Tax Info',
-  'Service Tier',
-  'Review',
-  'Deploy'
+  "Select Blockchain",
+  "Configure Token",
+  "Optional Features",
+  "Forge Tax Info",
+  "Service Tier",
+  "Review",
+  "Deploy",
 ];
 
 const TokenWizard: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [showTestnets, setShowTestnets] = useState(true);
   const [tokenData, setTokenData] = useState({
-    blockchain: '',
-    name: '',
-    symbol: '',
-    supply: '',
-    decimals: '18',
+    blockchain: "",
+    name: "",
+    symbol: "",
+    supply: "",
+    decimals: "18",
     features: {
       mint: false,
-      burn: false
+      burn: false,
     },
-    serviceTier: 'basic',
-    paymentToken: ''
+    serviceTier: "basic",
+    paymentToken: "",
   });
-  
+
   const { createToken, isCreating } = useTokenForge();
 
   const handleNext = () => {
@@ -70,13 +70,20 @@ const TokenWizard: React.FC = () => {
           />
         );
       case 1:
-        return <TokenConfiguration data={tokenData} onUpdate={handleUpdateData} />;
+        return (
+          <TokenConfiguration data={tokenData} onUpdate={handleUpdateData} />
+        );
       case 2:
         return <TokenFeatures data={tokenData} onUpdate={handleUpdateData} />;
       case 3:
         return <ForgeInfo data={tokenData} onUpdate={handleUpdateData} />;
       case 4:
-        return <ServiceTier selectedTier={tokenData.serviceTier} onTierSelect={(tierId) => handleUpdateData({ serviceTier: tierId })} />;
+        return (
+          <ServiceTier
+            selectedTier={tokenData.serviceTier}
+            onTierSelect={(tierId) => handleUpdateData({ serviceTier: tierId })}
+          />
+        );
       case 5:
         return <Summary data={tokenData} />;
       case 6:
@@ -89,7 +96,7 @@ const TokenWizard: React.FC = () => {
           />
         );
       default:
-        return 'Unknown step';
+        return "Unknown step";
     }
   };
 
@@ -103,23 +110,23 @@ const TokenWizard: React.FC = () => {
         features: {
           mintable: tokenData.features.mint,
           burnable: tokenData.features.burn,
-          pausable: true
+          pausable: true,
         },
-        isPremium: tokenData.serviceTier === 'premium',
-        payWithTKN: tokenData.paymentToken === 'TKN'
+        isPremium: tokenData.serviceTier === "premium",
+        payWithTKN: tokenData.paymentToken === "TKN",
       });
     } catch (error) {
-      console.error('Error deploying token:', error);
+      console.error("Error deploying token:", error);
     }
   };
 
   return (
-    <Box sx={{ width: '100%', p: 3 }}>
+    <Box sx={{ width: "100%", p: 3 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom align="center">
           Create Your Token
         </Typography>
-        
+
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
           {steps.map((label) => (
             <Step key={label}>
@@ -128,29 +135,23 @@ const TokenWizard: React.FC = () => {
           ))}
         </Stepper>
 
-        <Box sx={{ mt: 4, mb: 4 }}>
-          {getStepContent(activeStep)}
-        </Box>
+        <Box sx={{ mt: 4, mb: 4 }}>{getStepContent(activeStep)}</Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
           <Button
             disabled={activeStep === 0 || isCreating}
             onClick={handleBack}
           >
             Back
           </Button>
-          
+
           {activeStep === steps.length - 1 ? (
             <Button
               variant="contained"
               onClick={handleDeploy}
               disabled={isCreating}
             >
-              {isCreating ? (
-                <CircularProgress size={24} />
-              ) : (
-                'Deploy Token'
-              )}
+              {isCreating ? <CircularProgress size={24} /> : "Deploy Token"}
             </Button>
           ) : (
             <Button

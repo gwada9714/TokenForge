@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Card,
@@ -18,9 +18,13 @@ import {
   Snackbar,
   Alert,
   AlertColor,
-} from '@mui/material';
-import { Delete as DeleteIcon, Edit as EditIcon, Add as AddIcon } from '@mui/icons-material';
-import { useContract } from '../../../hooks/useContract';
+} from "@mui/material";
+import {
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Add as AddIcon,
+} from "@mui/icons-material";
+import { useContract } from "../../../hooks/useContract";
 
 interface AlertItem {
   id: string;
@@ -30,7 +34,7 @@ interface AlertItem {
   timestamp: number;
 }
 
-type AlertType = 'info' | 'warning' | 'error';
+type AlertType = "info" | "warning" | "error";
 
 interface FormData {
   type: AlertType;
@@ -48,94 +52,112 @@ const AlertsManagement: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingAlert, setEditingAlert] = useState<AlertItem | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    type: 'info',
-    message: '',
+    type: "info",
+    message: "",
   });
   const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
-    message: '',
-    severity: 'success',
+    message: "",
+    severity: "success",
   });
 
-  const { contract } = useContract('token');
+  const { contract } = useContract("token");
 
   const handleAddAlert = useCallback(async () => {
     try {
       const tx = await contract?.addAlert(formData.type, formData.message);
       await tx?.wait();
-      
-      setAlerts(prev => [...prev, {
-        id: Date.now().toString(),
-        ...formData,
-        active: true,
-        timestamp: Date.now(),
-      }]);
-      
+
+      setAlerts((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          ...formData,
+          active: true,
+          timestamp: Date.now(),
+        },
+      ]);
+
       setOpenDialog(false);
-      setFormData({ type: 'info', message: '' });
+      setFormData({ type: "info", message: "" });
       setSnackbar({
         open: true,
-        message: 'Alert added successfully',
-        severity: 'success',
+        message: "Alert added successfully",
+        severity: "success",
       });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to add alert',
-        severity: 'error',
+        message: "Failed to add alert",
+        severity: "error",
       });
     }
   }, [contract, formData]);
 
-  const handleEditAlert = useCallback(async (alert: AlertItem) => {
-    try {
-      const tx = await contract?.updateAlert(alert.id, formData.type, formData.message);
-      await tx?.wait();
-      
-      setAlerts(prev =>
-        prev.map(a => (a.id === alert.id ? { ...a, ...formData } : a))
-      );
-      
-      setOpenDialog(false);
-      setEditingAlert(null);
-      setFormData({ type: 'info', message: '' });
-      setSnackbar({
-        open: true,
-        message: 'Alert updated successfully',
-        severity: 'success',
-      });
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: 'Failed to update alert',
-        severity: 'error',
-      });
-    }
-  }, [contract, formData]);
+  const handleEditAlert = useCallback(
+    async (alert: AlertItem) => {
+      try {
+        const tx = await contract?.updateAlert(
+          alert.id,
+          formData.type,
+          formData.message
+        );
+        await tx?.wait();
 
-  const handleDeleteAlert = useCallback(async (id: string) => {
-    try {
-      const tx = await contract?.deleteAlert(id);
-      await tx?.wait();
-      
-      setAlerts(prev => prev.filter(a => a.id !== id));
-      setSnackbar({
-        open: true,
-        message: 'Alert deleted successfully',
-        severity: 'success',
-      });
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: 'Failed to delete alert',
-        severity: 'error',
-      });
-    }
-  }, [contract]);
+        setAlerts((prev) =>
+          prev.map((a) => (a.id === alert.id ? { ...a, ...formData } : a))
+        );
+
+        setOpenDialog(false);
+        setEditingAlert(null);
+        setFormData({ type: "info", message: "" });
+        setSnackbar({
+          open: true,
+          message: "Alert updated successfully",
+          severity: "success",
+        });
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: "Failed to update alert",
+          severity: "error",
+        });
+      }
+    },
+    [contract, formData]
+  );
+
+  const handleDeleteAlert = useCallback(
+    async (id: string) => {
+      try {
+        const tx = await contract?.deleteAlert(id);
+        await tx?.wait();
+
+        setAlerts((prev) => prev.filter((a) => a.id !== id));
+        setSnackbar({
+          open: true,
+          message: "Alert deleted successfully",
+          severity: "success",
+        });
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: "Failed to delete alert",
+          severity: "error",
+        });
+      }
+    },
+    [contract]
+  );
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5">Alerts Management</Typography>
         <Button
           startIcon={<AddIcon />}
@@ -190,13 +212,16 @@ const AlertsManagement: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={openDialog} onClose={() => {
-        setOpenDialog(false);
-        setEditingAlert(null);
-        setFormData({ type: 'info', message: '' });
-      }}>
+      <Dialog
+        open={openDialog}
+        onClose={() => {
+          setOpenDialog(false);
+          setEditingAlert(null);
+          setFormData({ type: "info", message: "" });
+        }}
+      >
         <DialogTitle>
-          {editingAlert ? 'Edit Alert' : 'Add New Alert'}
+          {editingAlert ? "Edit Alert" : "Add New Alert"}
         </DialogTitle>
         <DialogContent>
           <TextField
@@ -204,7 +229,12 @@ const AlertsManagement: React.FC = () => {
             fullWidth
             label="Type"
             value={formData.type}
-            onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as AlertType }))}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                type: e.target.value as AlertType,
+              }))
+            }
             margin="normal"
           >
             <MenuItem value="info">Info</MenuItem>
@@ -215,26 +245,32 @@ const AlertsManagement: React.FC = () => {
             fullWidth
             label="Message"
             value={formData.message}
-            onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, message: e.target.value }))
+            }
             margin="normal"
             multiline
             rows={4}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => {
-            setOpenDialog(false);
-            setEditingAlert(null);
-            setFormData({ type: 'info', message: '' });
-          }}>
+          <Button
+            onClick={() => {
+              setOpenDialog(false);
+              setEditingAlert(null);
+              setFormData({ type: "info", message: "" });
+            }}
+          >
             Cancel
           </Button>
           <Button
-            onClick={() => editingAlert ? handleEditAlert(editingAlert) : handleAddAlert()}
+            onClick={() =>
+              editingAlert ? handleEditAlert(editingAlert) : handleAddAlert()
+            }
             variant="contained"
             disabled={!formData.message.trim()}
           >
-            {editingAlert ? 'Update' : 'Add'}
+            {editingAlert ? "Update" : "Add"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -242,11 +278,9 @@ const AlertsManagement: React.FC = () => {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
       >
-        <Alert severity={snackbar.severity}>
-          {snackbar.message}
-        </Alert>
+        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
       </Snackbar>
     </Box>
   );

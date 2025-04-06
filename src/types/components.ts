@@ -1,4 +1,4 @@
-import { TokenConfig } from './token';
+import { TokenConfig } from "./token";
 
 export interface FeatureProps {
   title: string;

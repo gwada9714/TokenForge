@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  getDocumentOptimized, 
-  queryOptimized, 
-  invalidateDocumentCache, 
-  invalidateCollectionCache, 
-  clearCache 
-} from '@/lib/firebase/firestore-optimized';
-import { where, limit, orderBy, QueryConstraint } from 'firebase/firestore';
-import { logger } from '@/core/logger';
-import { FirebaseError } from '@/utils/error-handler';
+import React, { useState, useEffect } from "react";
+import {
+  getDocumentOptimized,
+  queryOptimized,
+  invalidateDocumentCache,
+  invalidateCollectionCache,
+  clearCache,
+} from "@/lib/firebase/firestore-optimized";
+import { where, limit, orderBy, QueryConstraint } from "firebase/firestore";
+import { logger } from "@/core/logger";
+import { FirebaseError } from "@/utils/error-handler";
 
 interface TestResult {
   operation: string;
-  status: 'success' | 'error' | 'pending';
+  status: "success" | "error" | "pending";
   data?: any;
   error?: string;
   duration?: number;
@@ -22,12 +22,12 @@ interface TestResult {
 const FirestoreOptimizedTest: React.FC = () => {
   const [results, setResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-  const [collectionName, setCollectionName] = useState('tokens');
-  const [docId, setDocId] = useState('');
+  const [collectionName, setCollectionName] = useState("tokens");
+  const [docId, setDocId] = useState("");
 
   // Fonction pour ajouter un résultat
   const addResult = (result: TestResult) => {
-    setResults(prev => [result, ...prev]);
+    setResults((prev) => [result, ...prev]);
   };
 
   // Fonction pour effacer les résultats
@@ -39,90 +39,91 @@ const FirestoreOptimizedTest: React.FC = () => {
   const testDocumentCache = async () => {
     if (!docId) {
       addResult({
-        operation: 'Test document cache',
-        status: 'error',
-        error: 'Veuillez spécifier un ID de document'
+        operation: "Test document cache",
+        status: "error",
+        error: "Veuillez spécifier un ID de document",
       });
       return;
     }
 
     setIsRunning(true);
-    
+
     try {
       // Première requête (sans cache)
       addResult({
-        operation: 'Récupération document (1ère requête)',
-        status: 'pending'
+        operation: "Récupération document (1ère requête)",
+        status: "pending",
       });
-      
+
       const startTime1 = performance.now();
       const doc1 = await getDocumentOptimized(collectionName, docId);
       const duration1 = performance.now() - startTime1;
-      
+
       addResult({
-        operation: 'Récupération document (1ère requête)',
-        status: 'success',
+        operation: "Récupération document (1ère requête)",
+        status: "success",
         data: doc1,
         duration: duration1,
-        fromCache: false
+        fromCache: false,
       });
-      
+
       // Deuxième requête (devrait utiliser le cache)
       addResult({
-        operation: 'Récupération document (2ème requête - cache)',
-        status: 'pending'
+        operation: "Récupération document (2ème requête - cache)",
+        status: "pending",
       });
-      
+
       const startTime2 = performance.now();
       const doc2 = await getDocumentOptimized(collectionName, docId);
       const duration2 = performance.now() - startTime2;
-      
+
       addResult({
-        operation: 'Récupération document (2ème requête - cache)',
-        status: 'success',
+        operation: "Récupération document (2ème requête - cache)",
+        status: "success",
         data: doc2,
         duration: duration2,
-        fromCache: true
+        fromCache: true,
       });
-      
+
       // Invalider le cache
       invalidateDocumentCache(collectionName, docId);
-      
+
       addResult({
-        operation: 'Invalidation du cache',
-        status: 'success'
+        operation: "Invalidation du cache",
+        status: "success",
       });
-      
+
       // Troisième requête (après invalidation du cache)
       addResult({
-        operation: 'Récupération document (3ème requête - après invalidation)',
-        status: 'pending'
+        operation: "Récupération document (3ème requête - après invalidation)",
+        status: "pending",
       });
-      
+
       const startTime3 = performance.now();
       const doc3 = await getDocumentOptimized(collectionName, docId);
       const duration3 = performance.now() - startTime3;
-      
+
       addResult({
-        operation: 'Récupération document (3ème requête - après invalidation)',
-        status: 'success',
+        operation: "Récupération document (3ème requête - après invalidation)",
+        status: "success",
         data: doc3,
         duration: duration3,
-        fromCache: false
+        fromCache: false,
       });
     } catch (error) {
       logger.error({
-        category: 'FirestoreOptimizedTest',
-        message: 'Erreur lors du test de cache de document',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "FirestoreOptimizedTest",
+        message: "Erreur lors du test de cache de document",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
-      
+
       addResult({
-        operation: 'Test document cache',
-        status: 'error',
-        error: error instanceof FirebaseError 
-          ? error.message 
-          : 'Une erreur est survenue lors du test'
+        operation: "Test document cache",
+        status: "error",
+        error:
+          error instanceof FirebaseError
+            ? error.message
+            : "Une erreur est survenue lors du test",
       });
     } finally {
       setIsRunning(false);
@@ -132,89 +133,90 @@ const FirestoreOptimizedTest: React.FC = () => {
   // Test de requête avec mise en cache
   const testQueryCache = async () => {
     setIsRunning(true);
-    
+
     try {
       // Contraintes de requête
       const constraints: QueryConstraint[] = [
-        where('type', '==', 'token'),
-        orderBy('createdAt', 'desc'),
-        limit(5)
+        where("type", "==", "token"),
+        orderBy("createdAt", "desc"),
+        limit(5),
       ];
-      
+
       // Première requête (sans cache)
       addResult({
-        operation: 'Exécution requête (1ère requête)',
-        status: 'pending'
+        operation: "Exécution requête (1ère requête)",
+        status: "pending",
       });
-      
+
       const startTime1 = performance.now();
       const results1 = await queryOptimized(collectionName, constraints);
       const duration1 = performance.now() - startTime1;
-      
+
       addResult({
-        operation: 'Exécution requête (1ère requête)',
-        status: 'success',
+        operation: "Exécution requête (1ère requête)",
+        status: "success",
         data: results1,
         duration: duration1,
-        fromCache: false
+        fromCache: false,
       });
-      
+
       // Deuxième requête (devrait utiliser le cache)
       addResult({
-        operation: 'Exécution requête (2ème requête - cache)',
-        status: 'pending'
+        operation: "Exécution requête (2ème requête - cache)",
+        status: "pending",
       });
-      
+
       const startTime2 = performance.now();
       const results2 = await queryOptimized(collectionName, constraints);
       const duration2 = performance.now() - startTime2;
-      
+
       addResult({
-        operation: 'Exécution requête (2ème requête - cache)',
-        status: 'success',
+        operation: "Exécution requête (2ème requête - cache)",
+        status: "success",
         data: results2,
         duration: duration2,
-        fromCache: true
+        fromCache: true,
       });
-      
+
       // Invalider le cache de la collection
       invalidateCollectionCache(collectionName);
-      
+
       addResult({
-        operation: 'Invalidation du cache de collection',
-        status: 'success'
+        operation: "Invalidation du cache de collection",
+        status: "success",
       });
-      
+
       // Troisième requête (après invalidation du cache)
       addResult({
-        operation: 'Exécution requête (3ème requête - après invalidation)',
-        status: 'pending'
+        operation: "Exécution requête (3ème requête - après invalidation)",
+        status: "pending",
       });
-      
+
       const startTime3 = performance.now();
       const results3 = await queryOptimized(collectionName, constraints);
       const duration3 = performance.now() - startTime3;
-      
+
       addResult({
-        operation: 'Exécution requête (3ème requête - après invalidation)',
-        status: 'success',
+        operation: "Exécution requête (3ème requête - après invalidation)",
+        status: "success",
         data: results3,
         duration: duration3,
-        fromCache: false
+        fromCache: false,
       });
     } catch (error) {
       logger.error({
-        category: 'FirestoreOptimizedTest',
-        message: 'Erreur lors du test de cache de requête',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "FirestoreOptimizedTest",
+        message: "Erreur lors du test de cache de requête",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
-      
+
       addResult({
-        operation: 'Test query cache',
-        status: 'error',
-        error: error instanceof FirebaseError 
-          ? error.message 
-          : 'Une erreur est survenue lors du test'
+        operation: "Test query cache",
+        status: "error",
+        error:
+          error instanceof FirebaseError
+            ? error.message
+            : "Une erreur est survenue lors du test",
       });
     } finally {
       setIsRunning(false);
@@ -224,58 +226,56 @@ const FirestoreOptimizedTest: React.FC = () => {
   // Test de gestion des erreurs
   const testErrorHandling = async () => {
     setIsRunning(true);
-    
+
     try {
       // Test avec un document inexistant
       addResult({
-        operation: 'Test gestion erreurs - Document inexistant',
-        status: 'pending'
+        operation: "Test gestion erreurs - Document inexistant",
+        status: "pending",
       });
-      
+
       try {
-        await getDocumentOptimized('collection_inexistante', 'doc_inexistant');
+        await getDocumentOptimized("collection_inexistante", "doc_inexistant");
       } catch (error) {
         addResult({
-          operation: 'Test gestion erreurs - Document inexistant',
-          status: 'success',
-          error: error instanceof FirebaseError 
-            ? error.message 
-            : 'Erreur inconnue',
-          data: error instanceof FirebaseError ? error.toLog() : error
+          operation: "Test gestion erreurs - Document inexistant",
+          status: "success",
+          error:
+            error instanceof FirebaseError ? error.message : "Erreur inconnue",
+          data: error instanceof FirebaseError ? error.toLog() : error,
         });
       }
-      
+
       // Test avec une requête sur une collection inexistante
       addResult({
-        operation: 'Test gestion erreurs - Collection inexistante',
-        status: 'pending'
+        operation: "Test gestion erreurs - Collection inexistante",
+        status: "pending",
       });
-      
+
       try {
-        await queryOptimized('collection_inexistante', [
-          where('field', '==', 'value')
+        await queryOptimized("collection_inexistante", [
+          where("field", "==", "value"),
         ]);
       } catch (error) {
         addResult({
-          operation: 'Test gestion erreurs - Collection inexistante',
-          status: 'success',
-          error: error instanceof FirebaseError 
-            ? error.message 
-            : 'Erreur inconnue',
-          data: error instanceof FirebaseError ? error.toLog() : error
+          operation: "Test gestion erreurs - Collection inexistante",
+          status: "success",
+          error:
+            error instanceof FirebaseError ? error.message : "Erreur inconnue",
+          data: error instanceof FirebaseError ? error.toLog() : error,
         });
       }
     } catch (error) {
       logger.error({
-        category: 'FirestoreOptimizedTest',
-        message: 'Erreur lors du test de gestion des erreurs',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "FirestoreOptimizedTest",
+        message: "Erreur lors du test de gestion des erreurs",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
-      
+
       addResult({
-        operation: 'Test gestion erreurs',
-        status: 'error',
-        error: 'Une erreur inattendue est survenue lors du test'
+        operation: "Test gestion erreurs",
+        status: "error",
+        error: "Une erreur inattendue est survenue lors du test",
       });
     } finally {
       setIsRunning(false);
@@ -286,86 +286,90 @@ const FirestoreOptimizedTest: React.FC = () => {
   const testPerformance = async () => {
     setIsRunning(true);
     clearCache(); // Vider le cache avant le test
-    
+
     try {
       const iterations = 5;
       const results: { withCache: number[]; withoutCache: number[] } = {
         withCache: [],
-        withoutCache: []
+        withoutCache: [],
       };
-      
+
       // Test sans cache
       addResult({
         operation: `Test performance - ${iterations} itérations sans cache`,
-        status: 'pending'
+        status: "pending",
       });
-      
+
       for (let i = 0; i < iterations; i++) {
         clearCache(); // Vider le cache à chaque itération
-        
+
         const startTime = performance.now();
         await getDocumentOptimized(collectionName, docId, {
-          cache: { enabled: false, ttl: 0 }
+          cache: { enabled: false, ttl: 0 },
         });
         const duration = performance.now() - startTime;
-        
+
         results.withoutCache.push(duration);
       }
-      
+
       // Test avec cache
       addResult({
         operation: `Test performance - ${iterations} itérations avec cache`,
-        status: 'pending'
+        status: "pending",
       });
-      
+
       // Première requête pour remplir le cache
       await getDocumentOptimized(collectionName, docId, {
-        cache: { enabled: true, ttl: 60000 }
+        cache: { enabled: true, ttl: 60000 },
       });
-      
+
       for (let i = 0; i < iterations; i++) {
         const startTime = performance.now();
         await getDocumentOptimized(collectionName, docId, {
-          cache: { enabled: true, ttl: 60000 }
+          cache: { enabled: true, ttl: 60000 },
         });
         const duration = performance.now() - startTime;
-        
+
         results.withCache.push(duration);
       }
-      
+
       // Calculer les moyennes
-      const avgWithoutCache = results.withoutCache.reduce((a, b) => a + b, 0) / iterations;
-      const avgWithCache = results.withCache.reduce((a, b) => a + b, 0) / iterations;
-      const improvement = ((avgWithoutCache - avgWithCache) / avgWithoutCache) * 100;
-      
+      const avgWithoutCache =
+        results.withoutCache.reduce((a, b) => a + b, 0) / iterations;
+      const avgWithCache =
+        results.withCache.reduce((a, b) => a + b, 0) / iterations;
+      const improvement =
+        ((avgWithoutCache - avgWithCache) / avgWithoutCache) * 100;
+
       addResult({
-        operation: 'Test performance - Résultats',
-        status: 'success',
+        operation: "Test performance - Résultats",
+        status: "success",
         data: {
           withoutCache: {
             times: results.withoutCache,
-            average: avgWithoutCache
+            average: avgWithoutCache,
           },
           withCache: {
             times: results.withCache,
-            average: avgWithCache
+            average: avgWithCache,
           },
-          improvement: `${improvement.toFixed(2)}%`
-        }
+          improvement: `${improvement.toFixed(2)}%`,
+        },
       });
     } catch (error) {
       logger.error({
-        category: 'FirestoreOptimizedTest',
-        message: 'Erreur lors du test de performance',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "FirestoreOptimizedTest",
+        message: "Erreur lors du test de performance",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
-      
+
       addResult({
-        operation: 'Test performance',
-        status: 'error',
-        error: error instanceof FirebaseError 
-          ? error.message 
-          : 'Une erreur est survenue lors du test'
+        operation: "Test performance",
+        status: "error",
+        error:
+          error instanceof FirebaseError
+            ? error.message
+            : "Une erreur est survenue lors du test",
       });
     } finally {
       setIsRunning(false);
@@ -374,8 +378,10 @@ const FirestoreOptimizedTest: React.FC = () => {
 
   return (
     <div className="p-4 bg-white rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Test du module Firestore optimisé</h2>
-      
+      <h2 className="text-xl font-bold mb-4">
+        Test du module Firestore optimisé
+      </h2>
+
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -389,7 +395,7 @@ const FirestoreOptimizedTest: React.FC = () => {
             disabled={isRunning}
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             ID Document
@@ -404,7 +410,7 @@ const FirestoreOptimizedTest: React.FC = () => {
           />
         </div>
       </div>
-      
+
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <button
           onClick={testDocumentCache}
@@ -413,7 +419,7 @@ const FirestoreOptimizedTest: React.FC = () => {
         >
           Test Cache Document
         </button>
-        
+
         <button
           onClick={testQueryCache}
           disabled={isRunning}
@@ -421,7 +427,7 @@ const FirestoreOptimizedTest: React.FC = () => {
         >
           Test Cache Requête
         </button>
-        
+
         <button
           onClick={testErrorHandling}
           disabled={isRunning}
@@ -429,7 +435,7 @@ const FirestoreOptimizedTest: React.FC = () => {
         >
           Test Gestion Erreurs
         </button>
-        
+
         <button
           onClick={testPerformance}
           disabled={isRunning}
@@ -438,7 +444,7 @@ const FirestoreOptimizedTest: React.FC = () => {
           Test Performance
         </button>
       </div>
-      
+
       <div className="mb-4 flex justify-between items-center">
         <h3 className="text-lg font-semibold">Résultats</h3>
         <button
@@ -449,13 +455,13 @@ const FirestoreOptimizedTest: React.FC = () => {
           Effacer
         </button>
       </div>
-      
+
       {isRunning && (
         <div className="mb-4 p-3 bg-blue-100 text-blue-800 rounded">
           Test en cours d'exécution...
         </div>
       )}
-      
+
       <div className="overflow-auto max-h-96 border rounded">
         {results.length === 0 ? (
           <div className="p-4 text-gray-500 text-center">
@@ -488,18 +494,18 @@ const FirestoreOptimizedTest: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        result.status === 'success'
-                          ? 'bg-green-100 text-green-800'
-                          : result.status === 'error'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                        result.status === "success"
+                          ? "bg-green-100 text-green-800"
+                          : result.status === "error"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
-                      {result.status === 'success'
-                        ? 'Succès'
-                        : result.status === 'error'
-                        ? 'Erreur'
-                        : 'En cours'}
+                      {result.status === "success"
+                        ? "Succès"
+                        : result.status === "error"
+                        ? "Erreur"
+                        : "En cours"}
                     </span>
                     {result.fromCache && (
                       <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -508,7 +514,7 @@ const FirestoreOptimizedTest: React.FC = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {result.duration ? result.duration.toFixed(2) : '-'}
+                    {result.duration ? result.duration.toFixed(2) : "-"}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                     {result.error ? (
@@ -523,7 +529,7 @@ const FirestoreOptimizedTest: React.FC = () => {
                         </pre>
                       </details>
                     ) : (
-                      '-'
+                      "-"
                     )}
                   </td>
                 </tr>

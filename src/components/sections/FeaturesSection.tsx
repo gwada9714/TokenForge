@@ -1,24 +1,24 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Container, Grid } from '@mui/material';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import SecurityIcon from '@mui/icons-material/Security';
-import CodeIcon from '@mui/icons-material/Code';
-import BoltIcon from '@mui/icons-material/Bolt';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import GroupsIcon from '@mui/icons-material/Groups';
-import { ForgeHeading } from '../common/ForgeHeading';
-import FeatureCard from '../common/FeatureCard';
-import { ParallaxContainer } from '../common/ParallaxContainer';
+import React from "react";
+import styled from "styled-components";
+import { Container, Grid } from "@mui/material";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import SecurityIcon from "@mui/icons-material/Security";
+import CodeIcon from "@mui/icons-material/Code";
+import BoltIcon from "@mui/icons-material/Bolt";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import GroupsIcon from "@mui/icons-material/Groups";
+import { ForgeHeading } from "../common/ForgeHeading";
+import FeatureCard from "../common/FeatureCard";
+import { ParallaxContainer } from "../common/ParallaxContainer";
 
 const SectionContainer = styled.section`
   padding: 6rem 0;
-  background: ${props => props.theme.colors.background.default};
+  background: ${(props) => props.theme.colors.background.default};
   position: relative;
   overflow: hidden;
 
   &:before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -27,7 +27,7 @@ const SectionContainer = styled.section`
     background: linear-gradient(
       90deg,
       transparent,
-      ${props => props.theme.colors.primary.main}40,
+      ${(props) => props.theme.colors.primary.main}40,
       transparent
     );
   }
@@ -39,7 +39,7 @@ const HeaderContainer = styled.div`
 `;
 
 const Subtitle = styled.p`
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${(props) => props.theme.colors.text.secondary};
   font-size: 1.25rem;
   max-width: 600px;
   margin: 1.5rem auto 0;
@@ -50,7 +50,7 @@ const StyledFeatureCard = styled(FeatureCard)<{ $delay: number }>`
   height: 100%;
   opacity: 0;
   animation: fadeSlideUp 0.6s ease-out forwards;
-  animation-delay: ${props => props.$delay}s;
+  animation-delay: ${(props) => props.$delay}s;
 
   @keyframes fadeSlideUp {
     from {
@@ -67,34 +67,40 @@ const StyledFeatureCard = styled(FeatureCard)<{ $delay: number }>`
 const features = [
   {
     icon: <RocketLaunchIcon />,
-    title: 'Déploiement Rapide',
-    description: 'Créez et déployez vos tokens en quelques minutes grâce à notre interface intuitive et nos templates optimisés.'
+    title: "Déploiement Rapide",
+    description:
+      "Créez et déployez vos tokens en quelques minutes grâce à notre interface intuitive et nos templates optimisés.",
   },
   {
     icon: <SecurityIcon />,
-    title: 'Sécurité Maximale',
-    description: 'Profitez de smart contracts audités et de mécanismes de sécurité avancés pour protéger vos tokens.'
+    title: "Sécurité Maximale",
+    description:
+      "Profitez de smart contracts audités et de mécanismes de sécurité avancés pour protéger vos tokens.",
   },
   {
     icon: <CodeIcon />,
-    title: 'Personnalisation Totale',
-    description: 'Configurez chaque aspect de votre token selon vos besoins spécifiques avec notre éditeur avancé.'
+    title: "Personnalisation Totale",
+    description:
+      "Configurez chaque aspect de votre token selon vos besoins spécifiques avec notre éditeur avancé.",
   },
   {
     icon: <BoltIcon />,
-    title: 'Multi-Chain',
-    description: 'Déployez sur plusieurs blockchains en un clic et gérez tous vos tokens depuis une seule interface.'
+    title: "Multi-Chain",
+    description:
+      "Déployez sur plusieurs blockchains en un clic et gérez tous vos tokens depuis une seule interface.",
   },
   {
     icon: <BarChartIcon />,
-    title: 'Analytics Intégrés',
-    description: 'Suivez les performances de vos tokens avec des tableaux de bord détaillés et des métriques en temps réel.'
+    title: "Analytics Intégrés",
+    description:
+      "Suivez les performances de vos tokens avec des tableaux de bord détaillés et des métriques en temps réel.",
   },
   {
     icon: <GroupsIcon />,
-    title: 'Gouvernance DAO',
-    description: 'Implémentez facilement des mécanismes de gouvernance pour votre communauté avec nos outils DAO.'
-  }
+    title: "Gouvernance DAO",
+    description:
+      "Implémentez facilement des mécanismes de gouvernance pour votre communauté avec nos outils DAO.",
+  },
 ];
 
 export const FeaturesSection: React.FC = () => {
@@ -107,8 +113,8 @@ export const FeaturesSection: React.FC = () => {
               Fonctionnalités Puissantes
             </ForgeHeading>
             <Subtitle>
-              Découvrez tous les outils nécessaires pour créer, déployer et gérer
-              vos tokens en toute confiance.
+              Découvrez tous les outils nécessaires pour créer, déployer et
+              gérer vos tokens en toute confiance.
             </Subtitle>
           </ParallaxContainer>
         </HeaderContainer>

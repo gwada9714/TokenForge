@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, CardContent, Typography, Grid } from '@mui/material';
+import React from "react";
+import { Card, CardContent, Typography, Grid } from "@mui/material";
 
 interface StakingStatsProps {
   totalStaked?: string;
@@ -9,10 +9,10 @@ interface StakingStatsProps {
 }
 
 export const StakingStats: React.FC<StakingStatsProps> = ({
-  totalStaked = '0',
-  apy = '0%',
-  rewards = '0',
-  stakingPeriod = '0 days'
+  totalStaked = "0",
+  apy = "0%",
+  rewards = "0",
+  stakingPeriod = "0 days",
 }) => {
   return (
     <Card className="w-full">
@@ -48,4 +48,4 @@ export const StakingStats: React.FC<StakingStatsProps> = ({
   );
 };
 
-export default StakingStats; 
+export default StakingStats;

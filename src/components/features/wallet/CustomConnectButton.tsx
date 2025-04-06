@@ -1,11 +1,18 @@
-import React from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { CircularProgress, Box, Alert, Typography, Button, Stack } from '@mui/material';
-import { SwapHoriz as SwapIcon } from '@mui/icons-material';
-import { useWeb3 } from '../../contexts/Web3Context';
+import React from "react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import {
+  CircularProgress,
+  Box,
+  Alert,
+  Typography,
+  Button,
+  Stack,
+} from "@mui/material";
+import { SwapHoriz as SwapIcon } from "@mui/icons-material";
+import { useWeb3 } from "../../contexts/Web3Context";
 
 export const CustomConnectButton: React.FC = () => {
-  const { 
+  const {
     isLoading,
     network: {
       isSupported,
@@ -14,20 +21,20 @@ export const CustomConnectButton: React.FC = () => {
       switchToTestnet,
       switchToMainnet,
       isMainnet,
-      isTestnet
+      isTestnet,
     },
     hasError,
     errorMessage,
-    retryConnection
+    retryConnection,
   } = useWeb3();
 
   // Afficher un loader pendant la connexion ou le changement de réseau
   if (isLoading || isSwitching) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <CircularProgress size={20} />
         <Typography>
-          {isSwitching ? 'Changement de réseau...' : 'Connexion en cours...'}
+          {isSwitching ? "Changement de réseau..." : "Connexion en cours..."}
         </Typography>
       </Box>
     );
@@ -36,20 +43,16 @@ export const CustomConnectButton: React.FC = () => {
   // Afficher une erreur avec option de réessayer
   if (hasError) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Alert 
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Alert
           severity="error"
           action={
-            <Button
-              color="inherit"
-              size="small"
-              onClick={retryConnection}
-            >
+            <Button color="inherit" size="small" onClick={retryConnection}>
               Réessayer
             </Button>
           }
         >
-          {errorMessage || 'Erreur de connexion'}
+          {errorMessage || "Erreur de connexion"}
         </Alert>
       </Box>
     );
@@ -73,18 +76,22 @@ export const CustomConnectButton: React.FC = () => {
           return (
             <Box
               {...(!ready && {
-                'aria-hidden': true,
-                'style': {
+                "aria-hidden": true,
+                style: {
                   opacity: 0,
-                  pointerEvents: 'none',
-                  userSelect: 'none',
+                  pointerEvents: "none",
+                  userSelect: "none",
                 },
               })}
             >
               {(() => {
                 if (!connected) {
                   return (
-                    <Button onClick={openConnectModal} variant="contained" color="primary">
+                    <Button
+                      onClick={openConnectModal}
+                      variant="contained"
+                      color="primary"
+                    >
                       Se connecter
                     </Button>
                   );
@@ -92,7 +99,11 @@ export const CustomConnectButton: React.FC = () => {
 
                 return (
                   <Stack direction="row" spacing={1}>
-                    <Button onClick={openChainModal} variant="outlined" startIcon={<SwapIcon />}>
+                    <Button
+                      onClick={openChainModal}
+                      variant="outlined"
+                      startIcon={<SwapIcon />}
+                    >
                       {chain.name}
                     </Button>
                     <Button onClick={openAccountModal} variant="contained">

@@ -1,6 +1,6 @@
-import { formatUnits, parseUnits } from 'viem';
-import { ethers } from 'ethers';
-import type { BigNumberish } from 'ethers';
+import { formatUnits, parseUnits } from "viem";
+import { ethers } from "ethers";
+import type { BigNumberish } from "ethers";
 
 /**
  * Adaptateurs pour la compatibilité entre les différentes bibliothèques Web3
@@ -10,7 +10,7 @@ import type { BigNumberish } from 'ethers';
  * Convertit une valeur pour l'affichage
  */
 export const formatValue = (value: bigint | BigNumberish): string => {
-  if (typeof value === 'bigint') {
+  if (typeof value === "bigint") {
     // Utilisez directement formatUnits pour les bigint avec viem
     return formatUnits(value, 18);
   }
@@ -36,22 +36,22 @@ export const parseValue = (value: string): bigint => {
 export const compareValues = (
   value1: bigint | BigNumberish,
   value2: bigint | BigNumberish,
-  operator: '>' | '<' | '>=' | '<=' | '==' = '>'
+  operator: ">" | "<" | ">=" | "<=" | "==" = ">"
 ): boolean => {
   // Convertir les BigNumber en bigint si nécessaire
-  const v1 = typeof value1 === 'bigint' ? value1 : BigInt(value1.toString());
-  const v2 = typeof value2 === 'bigint' ? value2 : BigInt(value2.toString());
+  const v1 = typeof value1 === "bigint" ? value1 : BigInt(value1.toString());
+  const v2 = typeof value2 === "bigint" ? value2 : BigInt(value2.toString());
 
   switch (operator) {
-    case '>':
+    case ">":
       return v1 > v2;
-    case '<':
+    case "<":
       return v1 < v2;
-    case '>=':
+    case ">=":
       return v1 >= v2;
-    case '<=':
+    case "<=":
       return v1 <= v2;
-    case '==':
+    case "==":
       return v1 === v2;
     default:
       return false;
@@ -64,7 +64,7 @@ export const compareValues = (
  */
 export const toHexString = (value: bigint): `0x${string}` => {
   if (value < 0n) {
-    throw new Error('Cannot convert negative bigint to hex string');
+    throw new Error("Cannot convert negative bigint to hex string");
   }
   return `0x${value.toString(16)}` as `0x${string}`;
 };

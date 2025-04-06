@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Typography, Grid, Paper } from '@mui/material';
+import React from "react";
+import { Box, Typography, Grid, Paper } from "@mui/material";
 
 export const DashboardHome: React.FC = () => {
   return (
@@ -10,7 +10,7 @@ export const DashboardHome: React.FC = () => {
             Tableau de bord
           </Typography>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>

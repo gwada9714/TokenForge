@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface GlobalLoadingState {
   isLoading: boolean;
@@ -8,7 +8,7 @@ interface GlobalLoadingState {
 
 export const useGlobalLoading = create<GlobalLoadingState>((set) => ({
   isLoading: false,
-  message: '',
-  setLoading: (loading: boolean, message: string = 'Chargement en cours...') =>
-    set({ isLoading: loading, message: loading ? message : '' }),
+  message: "",
+  setLoading: (loading: boolean, message: string = "Chargement en cours...") =>
+    set({ isLoading: loading, message: loading ? message : "" }),
 }));

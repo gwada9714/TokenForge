@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useState, useEffect, useCallback } from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 
 export const useWeb3 = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const { address, isConnected } = useAccount();
@@ -15,7 +15,7 @@ export const useWeb3 = () => {
     try {
       await connect({ connector: connectors[0] });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect wallet');
+      setError(err instanceof Error ? err.message : "Failed to connect wallet");
     } finally {
       setIsLoading(false);
     }
@@ -25,7 +25,7 @@ export const useWeb3 = () => {
     try {
       await disconnect();
     } catch (err) {
-      console.error('Disconnect error:', err);
+      console.error("Disconnect error:", err);
     }
   }, [disconnect]);
 
@@ -35,6 +35,6 @@ export const useWeb3 = () => {
     isConnected,
     address,
     isLoading,
-    error
+    error,
   };
 };

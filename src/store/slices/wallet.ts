@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface WalletState {
   address: string | null;
@@ -17,10 +17,13 @@ const initialState: WalletState = {
 };
 
 const walletSlice = createSlice({
-  name: 'wallet',
+  name: "wallet",
   initialState,
   reducers: {
-    setWallet: (state, action: PayloadAction<{ address: string; chainId: number }>) => {
+    setWallet: (
+      state,
+      action: PayloadAction<{ address: string; chainId: number }>
+    ) => {
       state.address = action.payload.address;
       state.chainId = action.payload.chainId;
       state.isConnecting = false;
@@ -46,12 +49,7 @@ const walletSlice = createSlice({
   },
 });
 
-export const {
-  setWallet,
-  setBalance,
-  setConnecting,
-  disconnect,
-  setError,
-} = walletSlice.actions;
+export const { setWallet, setBalance, setConnecting, disconnect, setError } =
+  walletSlice.actions;
 
-export default walletSlice.reducer; 
+export default walletSlice.reducer;

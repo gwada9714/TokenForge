@@ -9,22 +9,26 @@
 ## Installation
 
 1. **Cloner le dépôt**
+
 ```bash
 git clone https://github.com/your-username/tokenforge-app.git
 cd tokenforge-app
 ```
 
 2. **Installer les dépendances**
+
 ```bash
 npm install
 ```
 
 3. **Configuration de l'environnement**
+
 ```bash
 cp .env.example .env
 ```
 
 Éditez le fichier `.env` avec vos paramètres :
+
 ```env
 REACT_APP_NETWORK_ID=1
 REACT_APP_RPC_URL=https://your-rpc-url
@@ -67,10 +71,12 @@ REACT_APP_IPFS_GATEWAY=https://your-ipfs-gateway
 ### Problèmes Courants
 
 1. **Transaction échouée**
+
    - Vérifiez que vous avez assez de tokens pour les frais
    - Assurez-vous d'être sur le bon réseau
 
 2. **Wallet non connecté**
+
    - Rafraîchissez la page
    - Déconnectez et reconnectez votre wallet
 
@@ -81,6 +87,7 @@ REACT_APP_IPFS_GATEWAY=https://your-ipfs-gateway
 ## Support
 
 Pour obtenir de l'aide supplémentaire :
+
 - Consultez notre FAQ
 - Rejoignez notre Discord
 - Ouvrez un ticket sur GitHub

@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
   TableRow,
   TablePagination,
   Chip,
   IconButton,
   Tooltip,
-  CircularProgress
-} from '@mui/material';
-import { 
+  CircularProgress,
+} from "@mui/material";
+import {
   Visibility as VisibilityIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  FilterList as FilterListIcon
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+  FilterList as FilterListIcon,
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 // Define token interface
 export interface Token {
@@ -33,7 +33,7 @@ export interface Token {
   decimals: number;
   createdAt: string;
   owner: string;
-  type?: 'standard' | 'mintable' | 'burnable' | 'capped';
+  type?: "standard" | "mintable" | "burnable" | "capped";
   network?: {
     id: number;
     name: string;
@@ -53,7 +53,7 @@ export const TokenList: React.FC<TokenListProps> = ({
   isLoading = false,
   onViewToken,
   onEditToken,
-  onDeleteToken
+  onDeleteToken,
 }) => {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
@@ -63,50 +63,50 @@ export const TokenList: React.FC<TokenListProps> = ({
   // Sample tokens for demonstration
   const sampleTokens: Token[] = [
     {
-      id: '1',
-      name: 'TokenForge Coin',
-      symbol: 'TFC',
-      address: '0x1234567890123456789012345678901234567890',
-      totalSupply: '1000000',
+      id: "1",
+      name: "TokenForge Coin",
+      symbol: "TFC",
+      address: "0x1234567890123456789012345678901234567890",
+      totalSupply: "1000000",
       decimals: 18,
-      createdAt: '2023-01-15',
-      owner: '0xabcdef1234567890abcdef1234567890abcdef12',
-      type: 'standard',
+      createdAt: "2023-01-15",
+      owner: "0xabcdef1234567890abcdef1234567890abcdef12",
+      type: "standard",
       network: {
         id: 1,
-        name: 'Ethereum'
-      }
+        name: "Ethereum",
+      },
     },
     {
-      id: '2',
-      name: 'Mintable Token',
-      symbol: 'MINT',
-      address: '0x2345678901234567890123456789012345678901',
-      totalSupply: '500000',
+      id: "2",
+      name: "Mintable Token",
+      symbol: "MINT",
+      address: "0x2345678901234567890123456789012345678901",
+      totalSupply: "500000",
       decimals: 18,
-      createdAt: '2023-02-20',
-      owner: '0xabcdef1234567890abcdef1234567890abcdef12',
-      type: 'mintable',
+      createdAt: "2023-02-20",
+      owner: "0xabcdef1234567890abcdef1234567890abcdef12",
+      type: "mintable",
       network: {
         id: 137,
-        name: 'Polygon'
-      }
+        name: "Polygon",
+      },
     },
     {
-      id: '3',
-      name: 'Burnable Token',
-      symbol: 'BURN',
-      address: '0x3456789012345678901234567890123456789012',
-      totalSupply: '750000',
+      id: "3",
+      name: "Burnable Token",
+      symbol: "BURN",
+      address: "0x3456789012345678901234567890123456789012",
+      totalSupply: "750000",
       decimals: 18,
-      createdAt: '2023-03-10',
-      owner: '0xabcdef1234567890abcdef1234567890abcdef12',
-      type: 'burnable',
+      createdAt: "2023-03-10",
+      owner: "0xabcdef1234567890abcdef1234567890abcdef12",
+      type: "burnable",
       network: {
         id: 56,
-        name: 'BSC'
-      }
-    }
+        name: "BSC",
+      },
+    },
   ];
 
   useEffect(() => {
@@ -118,7 +118,9 @@ export const TokenList: React.FC<TokenListProps> = ({
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -147,28 +149,30 @@ export const TokenList: React.FC<TokenListProps> = ({
 
   // Function to truncate address for display
   const truncateAddress = (address: string) => {
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    return `${address.substring(0, 6)}...${address.substring(
+      address.length - 4
+    )}`;
   };
 
   // Get token type color
   const getTokenTypeColor = (type?: string) => {
     switch (type) {
-      case 'standard':
-        return 'primary';
-      case 'mintable':
-        return 'success';
-      case 'burnable':
-        return 'warning';
-      case 'capped':
-        return 'info';
+      case "standard":
+        return "primary";
+      case "mintable":
+        return "success";
+      case "burnable":
+        return "warning";
+      case "capped":
+        return "info";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
         <CircularProgress />
       </Box>
     );
@@ -176,7 +180,7 @@ export const TokenList: React.FC<TokenListProps> = ({
 
   if (displayTokens.length === 0) {
     return (
-      <Paper sx={{ p: 3, textAlign: 'center' }}>
+      <Paper sx={{ p: 3, textAlign: "center" }}>
         <Typography variant="body1" color="text.secondary">
           Aucun token trouvé
         </Typography>
@@ -185,8 +189,15 @@ export const TokenList: React.FC<TokenListProps> = ({
   }
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+    <Paper sx={{ width: "100%", overflow: "hidden" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          p: 2,
+        }}
+      >
         <Typography variant="h6">Tokens</Typography>
         <Tooltip title="Filtrer la liste">
           <IconButton>
@@ -218,28 +229,45 @@ export const TokenList: React.FC<TokenListProps> = ({
                       <span>{truncateAddress(token.address)}</span>
                     </Tooltip>
                   </TableCell>
-                  <TableCell>{token.network?.name || 'Ethereum'}</TableCell>
+                  <TableCell>{token.network?.name || "Ethereum"}</TableCell>
                   <TableCell>
-                    <Chip 
-                      label={token.type || 'standard'} 
-                      color={getTokenTypeColor(token.type) as "primary" | "success" | "warning" | "info" | "default" | undefined}
+                    <Chip
+                      label={token.type || "standard"}
+                      color={
+                        getTokenTypeColor(token.type) as
+                          | "primary"
+                          | "success"
+                          | "warning"
+                          | "info"
+                          | "default"
+                          | undefined
+                      }
                       size="small"
                     />
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ display: "flex", gap: 1 }}>
                       <Tooltip title="Voir les détails">
-                        <IconButton size="small" onClick={() => handleViewToken(token)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleViewToken(token)}
+                        >
                           <VisibilityIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Modifier">
-                        <IconButton size="small" onClick={() => handleEditToken(token)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditToken(token)}
+                        >
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Supprimer">
-                        <IconButton size="small" onClick={() => handleDeleteToken(token)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteToken(token)}
+                        >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -259,7 +287,9 @@ export const TokenList: React.FC<TokenListProps> = ({
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         labelRowsPerPage="Lignes par page:"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} sur ${count}`}
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} sur ${count}`
+        }
       />
     </Paper>
   );

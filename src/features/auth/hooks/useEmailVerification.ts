@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
-import { TokenForgeUser } from '../types';
-import { emailVerificationService } from '../services/emailVerificationService';
+import { useCallback } from "react";
+import { TokenForgeUser } from "../types";
+import { emailVerificationService } from "../services/emailVerificationService";
 
 interface EmailVerificationState {
   sendVerificationEmail: (user: TokenForgeUser) => Promise<void>;
@@ -18,7 +18,7 @@ export function useEmailVerification(): EmailVerificationState {
       intervalMs: 2000,
       timeoutMs: 300000,
       onVerified: () => {
-        console.log('Email vérifié avec succès');
+        console.log("Email vérifié avec succès");
       },
     });
   }, []);

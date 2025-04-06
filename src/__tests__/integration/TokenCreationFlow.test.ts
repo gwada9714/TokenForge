@@ -1,13 +1,16 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { TokenDeploymentService } from '../../features/token-creation/services/tokenDeploymentService';
-import { TokenForgeFactory, TokenForgeToken } from '../../contracts/typechain-types';
-import { parseEther, getContract } from 'viem';
-import { mockPublicClient, mockWalletClient } from '../mocks/clients';
-import { setupTestEnvironment } from '../utils/testSetup';
-import { TokenConfig, DeploymentResult } from '../../types/deployment';
-import { TokenForgeABI } from '../../contracts/abis/TokenForgeABI';
+import { describe, it, expect, beforeEach } from "vitest";
+import { TokenDeploymentService } from "../../features/token-creation/services/tokenDeploymentService";
+import {
+  TokenForgeFactory,
+  TokenForgeToken,
+} from "../../contracts/typechain-types";
+import { parseEther, getContract } from "viem";
+import { mockPublicClient, mockWalletClient } from "../mocks/clients";
+import { setupTestEnvironment } from "../utils/testSetup";
+import { TokenConfig, DeploymentResult } from "../../types/deployment";
+import { TokenForgeABI } from "../../contracts/abis/TokenForgeABI";
 
-describe('Token Creation Flow Integration', () => {
+describe("Token Creation Flow Integration", () => {
   let deploymentService: TokenDeploymentService;
   let tokenFactory: TokenForgeFactory;
 
@@ -17,12 +20,12 @@ describe('Token Creation Flow Integration', () => {
     tokenFactory = env.tokenFactory;
   });
 
-  it('should complete full token creation process', async () => {
+  it("should complete full token creation process", async () => {
     const tokenConfig: TokenConfig = {
-      name: 'Integration Test Token',
-      symbol: 'ITT',
+      name: "Integration Test Token",
+      symbol: "ITT",
       decimals: 18,
-      initialSupply: parseEther('1000000'),
+      initialSupply: parseEther("1000000"),
       mintable: true,
       burnable: true,
       pausable: true,
@@ -30,29 +33,33 @@ describe('Token Creation Flow Integration', () => {
         enabled: true,
         buyTax: 2,
         sellTax: 2,
-        transferTax: 1
-      }
+        transferTax: 1,
+      },
     };
 
     // Étape 1: Validation de la configuration
-    const validationResult = await deploymentService.validateTokenConfig(tokenConfig);
+    const validationResult = await deploymentService.validateTokenConfig(
+      tokenConfig
+    );
     expect(validationResult.isValid).toBe(true);
 
     // Étape 2: Estimation des coûts
-    const costEstimation = await deploymentService.estimateDeploymentCost(tokenConfig);
+    const costEstimation = await deploymentService.estimateDeploymentCost(
+      tokenConfig
+    );
     expect(costEstimation.gasCost).toBeGreaterThan(0n);
 
     // Étape 3: Déploiement du token
     const deploymentResult = await deploymentService.deployToken(tokenConfig, {
-      chain: 'bsc',
-      verifyContract: true
+      chain: "bsc",
+      verifyContract: true,
     });
     expect(deploymentResult.success).toBe(true);
     expect(deploymentResult.tokenAddress).toMatch(/^0x[a-fA-F0-9]{40}$/);
 
     // Étape 4: Vérification post-déploiement
     if (!deploymentResult.tokenAddress) {
-      throw new Error('Token address not found');
+      throw new Error("Token address not found");
     }
 
     const tokenContract = getContract({
@@ -66,7 +73,7 @@ describe('Token Creation Flow Integration', () => {
       tokenContract.read.name(),
       tokenContract.read.symbol(),
       tokenContract.read.decimals(),
-      tokenContract.read.totalSupply()
+      tokenContract.read.totalSupply(),
     ]);
 
     expect(name).to.equal(tokenConfig.name);
@@ -99,7 +106,7 @@ describe('Token Creation Flow Integration', () => {
     }
   });
 
-  it('should handle multiple token creations efficiently', async () => {
+  it("should handle multiple token creations efficiently", async () => {
     const startTime = Date.now();
     const numberOfTokens = 3;
     const deploymentPromises: Promise<DeploymentResult>[] = [];
@@ -109,7 +116,7 @@ describe('Token Creation Flow Integration', () => {
         name: `Performance Test Token ${i}`,
         symbol: `PTT${i}`,
         decimals: 18,
-        initialSupply: parseEther('1000000'),
+        initialSupply: parseEther("1000000"),
         mintable: true,
         burnable: false,
         pausable: false,
@@ -117,12 +124,12 @@ describe('Token Creation Flow Integration', () => {
           enabled: false,
           buyTax: 0,
           sellTax: 0,
-          transferTax: 0
-        }
+          transferTax: 0,
+        },
       };
 
       deploymentPromises.push(
-        deploymentService.deployToken(tokenConfig, { chain: 'bsc' })
+        deploymentService.deployToken(tokenConfig, { chain: "bsc" })
       );
     }
 
@@ -139,11 +146,11 @@ describe('Token Creation Flow Integration', () => {
     // Vérification de la performance
     const averageDeployTime = totalTime / numberOfTokens;
     expect(averageDeployTime).toBeLessThan(30000); // Moins de 30 secondes par token
-    
+
     console.log(`Performance metrics:
       - Total time: ${totalTime}ms
       - Average deployment time: ${averageDeployTime}ms
       - Number of tokens: ${numberOfTokens}
     `);
   });
-}); 
+});

@@ -1,7 +1,12 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from "react";
 
-export type LogLevel = 'info' | 'warning' | 'error' | 'critical';
-export type LogCategory = 'security' | 'transaction' | 'network' | 'contract' | 'system';
+export type LogLevel = "info" | "warning" | "error" | "critical";
+export type LogCategory =
+  | "security"
+  | "transaction"
+  | "network"
+  | "contract"
+  | "system";
 
 export interface AuditLog {
   id: string;
@@ -42,14 +47,14 @@ export const useAuditLogs = ({ onError }: UseAuditLogsProps = {}) => {
   });
 
   // Ajouter un nouveau log
-  const addLog = useCallback((log: Omit<AuditLog, 'id' | 'timestamp'>) => {
+  const addLog = useCallback((log: Omit<AuditLog, "id" | "timestamp">) => {
     const newLog: AuditLog = {
       ...log,
       id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
     };
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       logs: [newLog, ...prev.logs].slice(0, MAX_LOGS),
     }));
@@ -60,7 +65,7 @@ export const useAuditLogs = ({ onError }: UseAuditLogsProps = {}) => {
   // Appliquer les filtres aux logs
   const getFilteredLogs = useCallback(
     (filters: LogFilter = state.filters) => {
-      return state.logs.filter(log => {
+      return state.logs.filter((log) => {
         if (filters.level && !filters.level.includes(log.level)) {
           return false;
         }
@@ -82,7 +87,8 @@ export const useAuditLogs = ({ onError }: UseAuditLogsProps = {}) => {
             log.action.toLowerCase().includes(searchLower) ||
             log.details.toLowerCase().includes(searchLower) ||
             (log.address && log.address.toLowerCase().includes(searchLower)) ||
-            (log.transactionHash && log.transactionHash.toLowerCase().includes(searchLower))
+            (log.transactionHash &&
+              log.transactionHash.toLowerCase().includes(searchLower))
           );
         }
         return true;
@@ -93,7 +99,7 @@ export const useAuditLogs = ({ onError }: UseAuditLogsProps = {}) => {
 
   // Mettre à jour les filtres
   const updateFilters = useCallback((newFilters: Partial<LogFilter>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       filters: { ...prev.filters, ...newFilters },
     }));
@@ -101,7 +107,7 @@ export const useAuditLogs = ({ onError }: UseAuditLogsProps = {}) => {
 
   // Réinitialiser les filtres
   const resetFilters = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       filters: {},
     }));
@@ -109,46 +115,57 @@ export const useAuditLogs = ({ onError }: UseAuditLogsProps = {}) => {
 
   // Nettoyer les logs
   const clearLogs = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       logs: [],
     }));
   }, []);
 
   // Exporter les logs
-  const exportLogs = useCallback((format: 'json' | 'csv' = 'json') => {
-    const filteredLogs = getFilteredLogs();
-    
-    if (format === 'csv') {
-      const headers = ['Timestamp', 'Level', 'Category', 'Action', 'Details', 'Address', 'Transaction Hash'];
-      const rows = filteredLogs.map(log => [
-        new Date(log.timestamp).toISOString(),
-        log.level,
-        log.category,
-        log.action,
-        log.details,
-        log.address || '',
-        log.transactionHash || '',
-      ]);
-      
-      const csv = [
-        headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
-      ].join('\n');
-      
-      return csv;
-    }
-    
-    return JSON.stringify(filteredLogs, null, 2);
-  }, [getFilteredLogs]);
+  const exportLogs = useCallback(
+    (format: "json" | "csv" = "json") => {
+      const filteredLogs = getFilteredLogs();
+
+      if (format === "csv") {
+        const headers = [
+          "Timestamp",
+          "Level",
+          "Category",
+          "Action",
+          "Details",
+          "Address",
+          "Transaction Hash",
+        ];
+        const rows = filteredLogs.map((log) => [
+          new Date(log.timestamp).toISOString(),
+          log.level,
+          log.category,
+          log.action,
+          log.details,
+          log.address || "",
+          log.transactionHash || "",
+        ]);
+
+        const csv = [
+          headers.join(","),
+          ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+        ].join("\n");
+
+        return csv;
+      }
+
+      return JSON.stringify(filteredLogs, null, 2);
+    },
+    [getFilteredLogs]
+  );
 
   // Purger les anciens logs
   const purgeLogs = useCallback((daysToKeep: number) => {
     const cutoffDate = Date.now() - daysToKeep * 24 * 60 * 60 * 1000;
-    
-    setState(prev => ({
+
+    setState((prev) => ({
       ...prev,
-      logs: prev.logs.filter(log => log.timestamp >= cutoffDate),
+      logs: prev.logs.filter((log) => log.timestamp >= cutoffDate),
     }));
   }, []);
 
@@ -157,12 +174,14 @@ export const useAuditLogs = ({ onError }: UseAuditLogsProps = {}) => {
       try {
         // Simuler le chargement des logs
         const auditLogs: AuditLog[] = [];
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           logs: auditLogs,
         }));
       } catch (error) {
-        onError?.(error instanceof Error ? error.message : 'Failed to load audit logs');
+        onError?.(
+          error instanceof Error ? error.message : "Failed to load audit logs"
+        );
       }
     };
 

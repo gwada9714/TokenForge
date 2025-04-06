@@ -21,6 +21,7 @@ VITE_CSP_REPORT_URI=/api/csp-report
 ### Vérification de la Configuration
 
 1. Exécutez la vérification de sécurité :
+
    ```bash
    npm run security-check
    ```
@@ -53,6 +54,7 @@ VITE_CSP_REPORT_URI=/api/csp-report
 ### Déploiement Sécurisé
 
 1. Utilisez le script de déploiement sécurisé :
+
    ```bash
    npm run deploy:secure
    ```
@@ -68,6 +70,7 @@ VITE_CSP_REPORT_URI=/api/csp-report
 ### Violations CSP
 
 Les violations CSP sont :
+
 1. Enregistrées dans Firestore
 2. Envoyées à Sentry
 3. Accessibles via le dashboard admin
@@ -75,6 +78,7 @@ Les violations CSP sont :
 ### Audit de Sécurité
 
 Effectuez régulièrement :
+
 1. `npm audit` pour les vulnérabilités
 2. Revue des logs de violation CSP
 3. Vérification des sessions actives
@@ -104,6 +108,7 @@ Effectuez régulièrement :
 ## Contact
 
 Pour signaler une vulnérabilité :
+
 1. Ne pas créer d'issue publique
 2. Contacter security@tokenforge.com
 3. Utiliser la clé PGP fournie

@@ -1,8 +1,8 @@
-import { createAuthError, AuthErrorCode } from '../errors/AuthError';
-import { SessionState } from '../types/session';
-import { cryptoService } from '@/utils/crypto';
+import { createAuthError, AuthErrorCode } from "../errors/AuthError";
+import { SessionState } from "../types/session";
+import { cryptoService } from "@/utils/crypto";
 
-const STORAGE_KEY = 'tokenforge_auth';
+const STORAGE_KEY = "tokenforge_auth";
 const VERSION = 1;
 
 export interface SessionInfo {
@@ -62,7 +62,9 @@ export class AuthPersistence {
     } catch (error) {
       throw createAuthError(
         AuthErrorCode.PERSISTENCE_ERROR,
-        error instanceof Error ? error.message : 'Erreur lors de la récupération des informations de session'
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la récupération des informations de session"
       );
     }
   }
@@ -74,12 +76,14 @@ export class AuthPersistence {
       await this.save({
         ...state,
         sessionInfo,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     } catch (error) {
       throw createAuthError(
         AuthErrorCode.PERSISTENCE_ERROR,
-        error instanceof Error ? error.message : 'Erreur lors de la sauvegarde des informations de session'
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la sauvegarde des informations de session"
       );
     }
   }
@@ -92,15 +96,19 @@ export class AuthPersistence {
         ...currentState,
         ...state,
         version: VERSION,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
-      const encryptedData = await cryptoService.encryptData(JSON.stringify(newState));
+      const encryptedData = await cryptoService.encryptData(
+        JSON.stringify(newState)
+      );
       this.storage.setItem(STORAGE_KEY, encryptedData);
     } catch (error) {
       throw createAuthError(
         AuthErrorCode.PERSISTENCE_ERROR,
-        error instanceof Error ? error.message : 'Erreur lors de la sauvegarde de l\'état'
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la sauvegarde de l'état"
       );
     }
   }
@@ -115,7 +123,7 @@ export class AuthPersistence {
 
       const decryptedData = await cryptoService.decryptData(encryptedData);
       const state = JSON.parse(decryptedData) as StoredAuthState;
-      
+
       if (state.version !== VERSION) {
         return this.migrateState(state);
       }
@@ -124,7 +132,9 @@ export class AuthPersistence {
     } catch (error) {
       throw createAuthError(
         AuthErrorCode.PERSISTENCE_ERROR,
-        error instanceof Error ? error.message : 'Erreur lors du chargement de l\'état'
+        error instanceof Error
+          ? error.message
+          : "Erreur lors du chargement de l'état"
       );
     }
   }
@@ -135,7 +145,9 @@ export class AuthPersistence {
     } catch (error) {
       throw createAuthError(
         AuthErrorCode.PERSISTENCE_ERROR,
-        error instanceof Error ? error.message : 'Erreur lors de la suppression de l\'état'
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la suppression de l'état"
       );
     }
   }
@@ -147,7 +159,7 @@ export class AuthPersistence {
       account: null,
       lastProvider: null,
       user: null,
-      lastLogin: 0
+      lastLogin: 0,
     };
   }
 
@@ -156,7 +168,7 @@ export class AuthPersistence {
     return {
       ...this.getInitialState(),
       ...oldState,
-      version: VERSION
+      version: VERSION,
     };
   }
 }

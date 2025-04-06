@@ -1,12 +1,12 @@
-import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
-import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
+import React from "react";
+import { Box, Button, Typography } from "@mui/material";
+import { useTokenForgeAuth } from "../hooks/useTokenForgeAuth";
 
 export const WalletConnection: React.FC = () => {
   const { walletState } = useTokenForgeAuth();
 
   return (
-    <Box sx={{ textAlign: 'center', p: 2 }}>
+    <Box sx={{ textAlign: "center", p: 2 }}>
       <Typography variant="h6" gutterBottom>
         Connect Your Wallet
       </Typography>

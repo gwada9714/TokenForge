@@ -45,9 +45,9 @@ export interface AntiBot {
 
 export interface TokenAudit {
   timestamp: number | null;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: "pending" | "in_progress" | "completed" | "failed";
   issues: Array<{
-    severity: 'critical' | 'high' | 'medium' | 'low';
+    severity: "critical" | "high" | "medium" | "low";
     description: string;
     recommendation: string;
   }>;
@@ -55,7 +55,7 @@ export interface TokenAudit {
 }
 
 export interface KYCVerification {
-  status: 'pending' | 'verified' | 'rejected';
+  status: "pending" | "verified" | "rejected";
   provider: string;
   date?: number;
   expiryDate?: number;

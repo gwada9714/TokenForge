@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -11,18 +11,18 @@ import {
   Alert,
   Tooltip,
   IconButton,
-  SelectChangeEvent
-} from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
-import { PaymentNetwork } from '../../../multi-chain/types/PaymentNetwork';
-import { PaymentToken } from '../../../multi-chain/types/PaymentToken';
-import { EthereumPaymentService } from '../../../multi-chain/services/ethereum/EthereumPaymentService';
-import { PolygonPaymentService } from '../../../multi-chain/services/polygon/PolygonPaymentService';
-import { BinancePaymentService } from '../../../multi-chain/services/binance/BinancePaymentService';
-import { SolanaPaymentService } from '../../../multi-chain/services/solana/SolanaPaymentService';
-import { PaymentSession } from '../../../multi-chain/types/PaymentSession';
-import { PaymentStatus } from '../../../multi-chain/types/PaymentStatus';
-import { AbstractChainService } from '../../../multi-chain/services/AbstractChainService';
+  SelectChangeEvent,
+} from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import { PaymentNetwork } from "../../../multi-chain/types/PaymentNetwork";
+import { PaymentToken } from "../../../multi-chain/types/PaymentToken";
+import { EthereumPaymentService } from "../../../multi-chain/services/ethereum/EthereumPaymentService";
+import { PolygonPaymentService } from "../../../multi-chain/services/polygon/PolygonPaymentService";
+import { BinancePaymentService } from "../../../multi-chain/services/binance/BinancePaymentService";
+import { SolanaPaymentService } from "../../../multi-chain/services/solana/SolanaPaymentService";
+import { PaymentSession } from "../../../multi-chain/types/PaymentSession";
+import { PaymentStatus } from "../../../multi-chain/types/PaymentStatus";
+import { AbstractChainService } from "../../../multi-chain/services/AbstractChainService";
 
 interface NetworkInfo {
   name: string;
@@ -32,25 +32,29 @@ interface NetworkInfo {
 
 const NETWORK_INFO: Record<PaymentNetwork, NetworkInfo> = {
   [PaymentNetwork.ETHEREUM]: {
-    name: 'Ethereum',
-    description: 'Réseau principal Ethereum - Frais de gas élevés mais sécurité maximale',
-    icon: '/icons/eth.svg'
+    name: "Ethereum",
+    description:
+      "Réseau principal Ethereum - Frais de gas élevés mais sécurité maximale",
+    icon: "/icons/eth.svg",
   },
   [PaymentNetwork.POLYGON]: {
-    name: 'Polygon',
-    description: 'Solution de mise à l\'échelle L2 - Frais de gas faibles et transactions rapides',
-    icon: '/icons/polygon.svg'
+    name: "Polygon",
+    description:
+      "Solution de mise à l'échelle L2 - Frais de gas faibles et transactions rapides",
+    icon: "/icons/polygon.svg",
   },
   [PaymentNetwork.BSC]: {
-    name: 'Binance Smart Chain',
-    description: 'Réseau Binance - Compatible EVM avec frais de transaction très bas',
-    icon: '/icons/bnb.svg'
+    name: "Binance Smart Chain",
+    description:
+      "Réseau Binance - Compatible EVM avec frais de transaction très bas",
+    icon: "/icons/bnb.svg",
   },
   [PaymentNetwork.SOLANA]: {
-    name: 'Solana',
-    description: 'Blockchain haute performance - Transactions ultra rapides et peu coûteuses',
-    icon: '/icons/sol.svg'
-  }
+    name: "Solana",
+    description:
+      "Blockchain haute performance - Transactions ultra rapides et peu coûteuses",
+    icon: "/icons/sol.svg",
+  },
 };
 
 interface PaymentSelectorProps {
@@ -60,9 +64,11 @@ interface PaymentSelectorProps {
 
 export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
   amount,
-  onPaymentComplete
+  onPaymentComplete,
 }) => {
-  const [selectedNetwork, setSelectedNetwork] = useState<PaymentNetwork | ''>('');
+  const [selectedNetwork, setSelectedNetwork] = useState<PaymentNetwork | "">(
+    ""
+  );
   const [selectedToken, setSelectedToken] = useState<PaymentToken | null>(null);
   const [availableTokens, setAvailableTokens] = useState<PaymentToken[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -83,7 +89,9 @@ export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
     }
   }, [selectedNetwork]);
 
-  const getChainService = (network: PaymentNetwork): AbstractChainService | null => {
+  const getChainService = (
+    network: PaymentNetwork
+  ): AbstractChainService | null => {
     switch (network) {
       case PaymentNetwork.ETHEREUM:
         return new EthereumPaymentService();
@@ -98,20 +106,24 @@ export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
     }
   };
 
-  const handleNetworkChange = (event: SelectChangeEvent<PaymentNetwork | ''>) => {
+  const handleNetworkChange = (
+    event: SelectChangeEvent<PaymentNetwork | "">
+  ) => {
     setSelectedNetwork(event.target.value as PaymentNetwork);
     setError(null);
   };
 
   const handleTokenChange = (event: SelectChangeEvent<string>) => {
-    const token = availableTokens.find((t: PaymentToken) => t.address === event.target.value);
+    const token = availableTokens.find(
+      (t: PaymentToken) => t.address === event.target.value
+    );
     setSelectedToken(token || null);
     setError(null);
   };
 
   const handleSubmit = async () => {
     if (!selectedNetwork || !selectedToken) {
-      setError('Veuillez sélectionner un réseau et un token');
+      setError("Veuillez sélectionner un réseau et un token");
       return;
     }
 
@@ -121,28 +133,33 @@ export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
     try {
       const chainService = getChainService(selectedNetwork);
       if (!chainService) {
-        throw new Error('Service de paiement non disponible');
+        throw new Error("Service de paiement non disponible");
       }
 
-      const newSession = await chainService.createPaymentSession(amount, selectedToken);
+      const newSession = await chainService.createPaymentSession(
+        amount,
+        selectedToken
+      );
       setSession(newSession);
 
       const processedSession = await chainService.processPayment(newSession);
-      
+
       if (processedSession.status === PaymentStatus.CONFIRMED) {
         onPaymentComplete(processedSession);
       } else {
-        setError(processedSession.error || 'Erreur lors du traitement du paiement');
+        setError(
+          processedSession.error || "Erreur lors du traitement du paiement"
+        );
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Erreur inconnue');
+      setError(error instanceof Error ? error.message : "Erreur inconnue");
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <Box sx={{ maxWidth: 400, mx: 'auto', p: 2 }}>
+    <Box sx={{ maxWidth: 400, mx: "auto", p: 2 }}>
       <Typography variant="h6" gutterBottom>
         Sélectionner le mode de paiement
       </Typography>
@@ -156,7 +173,7 @@ export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
         >
           {Object.entries(NETWORK_INFO).map(([network, info]) => (
             <MenuItem key={network} value={network}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
                 <img
                   src={info.icon}
                   alt={info.name}
@@ -178,7 +195,7 @@ export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
         <FormControl fullWidth sx={{ mb: 2 }}>
           <InputLabel>Token</InputLabel>
           <Select
-            value={selectedToken?.address || ''}
+            value={selectedToken?.address || ""}
             onChange={handleTokenChange}
             label="Token"
           >
@@ -217,7 +234,7 @@ export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
         {isProcessing ? (
           <CircularProgress size={24} color="inherit" />
         ) : (
-          `Payer ${amount} ${selectedToken?.symbol || ''}`
+          `Payer ${amount} ${selectedToken?.symbol || ""}`
         )}
       </Button>
     </Box>

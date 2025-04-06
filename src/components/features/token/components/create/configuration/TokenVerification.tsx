@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Typography,
@@ -10,9 +10,9 @@ import {
   ListItem,
   ListItemText,
   Alert,
-} from '@mui/material';
-import { TokenConfig } from '../../../../../../types/token';
-import { formatEther } from 'viem';
+} from "@mui/material";
+import { TokenConfig } from "../../../../../../types/token";
+import { formatEther } from "viem";
 
 interface TokenVerificationProps {
   config: TokenConfig;
@@ -26,9 +26,9 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
   payWithTKN,
 }) => {
   const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
     }).format(amount);
   };
 
@@ -37,11 +37,12 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
       <Typography variant="h6" gutterBottom>
         Vérification des détails du token
       </Typography>
-      
+
       <Alert severity="info" sx={{ mb: 3 }}>
-        Veuillez vérifier attentivement les détails de votre token avant de procéder au déploiement.
+        Veuillez vérifier attentivement les détails de votre token avant de
+        procéder au déploiement.
       </Alert>
-      
+
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Informations générales
@@ -80,23 +81,24 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
             </Typography>
           </Grid>
         </Grid>
-        
+
         <Divider sx={{ my: 2 }} />
-        
+
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Fonctionnalités
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-          {Object.entries(config.features).filter(([_, enabled]) => enabled).length > 0 ? (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+          {Object.entries(config.features).filter(([_, enabled]) => enabled)
+            .length > 0 ? (
             Object.entries(config.features)
               .filter(([_, enabled]) => enabled)
               .map(([feature, _]) => (
-                <Chip 
-                  key={feature} 
-                  label={feature} 
-                  color="primary" 
-                  variant="outlined" 
-                  size="small" 
+                <Chip
+                  key={feature}
+                  label={feature}
+                  color="primary"
+                  variant="outlined"
+                  size="small"
                 />
               ))
           ) : (
@@ -105,7 +107,7 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
             </Typography>
           )}
         </Box>
-        
+
         {config.taxConfig && (
           <>
             <Divider sx={{ my: 2 }} />
@@ -115,41 +117,41 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
             <List dense>
               {config.taxConfig.buyTax > 0 && (
                 <ListItem>
-                  <ListItemText 
-                    primary="Taxe d'achat" 
-                    secondary={`${config.taxConfig.buyTax}%`} 
+                  <ListItemText
+                    primary="Taxe d'achat"
+                    secondary={`${config.taxConfig.buyTax}%`}
                   />
                 </ListItem>
               )}
               {config.taxConfig.sellTax > 0 && (
                 <ListItem>
-                  <ListItemText 
-                    primary="Taxe de vente" 
-                    secondary={`${config.taxConfig.sellTax}%`} 
+                  <ListItemText
+                    primary="Taxe de vente"
+                    secondary={`${config.taxConfig.sellTax}%`}
                   />
                 </ListItem>
               )}
               {config.taxConfig.transferTax > 0 && (
                 <ListItem>
-                  <ListItemText 
-                    primary="Taxe de transfert" 
-                    secondary={`${config.taxConfig.transferTax}%`} 
+                  <ListItemText
+                    primary="Taxe de transfert"
+                    secondary={`${config.taxConfig.transferTax}%`}
                   />
                 </ListItem>
               )}
               {config.taxConfig.recipient && (
                 <ListItem>
-                  <ListItemText 
-                    primary="Adresse de réception" 
-                    secondary={config.taxConfig.recipient} 
+                  <ListItemText
+                    primary="Adresse de réception"
+                    secondary={config.taxConfig.recipient}
                   />
                 </ListItem>
               )}
               {config.taxConfig.distribution && (
                 <ListItem>
-                  <ListItemText 
-                    primary="Distribution" 
-                    secondary={`Treasury: ${config.taxConfig.distribution.treasury}%, Development: ${config.taxConfig.distribution.development}%, Buyback: ${config.taxConfig.distribution.buyback}%, Staking: ${config.taxConfig.distribution.staking}%`} 
+                  <ListItemText
+                    primary="Distribution"
+                    secondary={`Treasury: ${config.taxConfig.distribution.treasury}%, Development: ${config.taxConfig.distribution.development}%, Buyback: ${config.taxConfig.distribution.buyback}%, Staking: ${config.taxConfig.distribution.staking}%`}
                   />
                 </ListItem>
               )}
@@ -157,7 +159,7 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
           </>
         )}
       </Paper>
-      
+
       <Paper elevation={2} sx={{ p: 3 }}>
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Plan et paiement
@@ -167,7 +169,11 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
             <Typography variant="body2" color="text.secondary">
               Plan sélectionné
             </Typography>
-            <Typography variant="body1" fontWeight="medium" sx={{ textTransform: 'capitalize' }}>
+            <Typography
+              variant="body1"
+              fontWeight="medium"
+              sx={{ textTransform: "capitalize" }}
+            >
               {config.plan}
             </Typography>
           </Grid>
@@ -176,7 +182,7 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
               Méthode de paiement
             </Typography>
             <Typography variant="body1" fontWeight="medium">
-              {payWithTKN ? 'Token TKN' : 'ETH'}
+              {payWithTKN ? "Token TKN" : "ETH"}
             </Typography>
           </Grid>
           <Grid item xs={12}>
@@ -184,10 +190,9 @@ const TokenVerification: React.FC<TokenVerificationProps> = ({
               Prix total
             </Typography>
             <Typography variant="h6" color="primary" fontWeight="bold">
-              {payWithTKN 
-                ? `${formatEther(BigInt(Math.floor(price * 1e18)))} TKN` 
-                : formatPrice(price)
-              }
+              {payWithTKN
+                ? `${formatEther(BigInt(Math.floor(price * 1e18)))} TKN`
+                : formatPrice(price)}
             </Typography>
           </Grid>
         </Grid>

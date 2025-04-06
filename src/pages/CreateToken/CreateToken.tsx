@@ -1,6 +1,6 @@
-import React from 'react';
-import { Typography, Container } from '@mui/material';
-import { CreateTokenForm } from './CreateTokenForm';
+import React from "react";
+import { Typography, Container } from "@mui/material";
+import { CreateTokenForm } from "./CreateTokenForm";
 
 export const CreateToken: React.FC = () => {
   return (
@@ -11,4 +11,4 @@ export const CreateToken: React.FC = () => {
       <CreateTokenForm />
     </Container>
   );
-}; 
+};

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import { Box, CssBaseline, Toolbar, useMediaQuery, useTheme } from '@mui/material';
-import { useLocation, Outlet } from 'react-router-dom';
+import React, { useState } from "react";
+import {
+  Box,
+  CssBaseline,
+  Toolbar,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+import { useLocation, Outlet } from "react-router-dom";
 
 // Import components
-import { AdminAppBar } from './layout/AdminAppBar';
-import { AdminDrawer } from './layout/AdminDrawer';
-import { AdminHome } from './pages/AdminHome';
+import { AdminAppBar } from "./layout/AdminAppBar";
+import { AdminDrawer } from "./layout/AdminDrawer";
+import { AdminHome } from "./pages/AdminHome";
 
 /**
  * Dashboard administrateur principal
@@ -18,7 +24,7 @@ export const AdminDashboard: React.FC = () => {
   const [open, setOpen] = useState(true);
   const location = useLocation();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // Fermer automatiquement le drawer sur mobile
   React.useEffect(() => {
@@ -41,23 +47,23 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      
+
       {/* Barre d'application */}
-      <AdminAppBar 
-        open={open} 
+      <AdminAppBar
+        open={open}
         handleDrawerToggle={handleDrawerToggle}
         title="TokenForge Admin"
       />
-      
+
       {/* Tiroir de navigation */}
-      <AdminDrawer 
+      <AdminDrawer
         open={open}
         handleDrawerToggle={handleDrawerToggle}
         onNavigate={handleNavigate}
       />
-      
+
       {/* Contenu principal */}
       <Box
         component="main"
@@ -66,16 +72,15 @@ export const AdminDashboard: React.FC = () => {
           p: 3,
           width: { sm: `calc(100% - ${open ? 240 : 0}px)` },
           ml: { sm: `${open ? 240 : 0}px` },
-          transition: theme.transitions.create(['margin', 'width'], {
+          transition: theme.transitions.create(["margin", "width"], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
           }),
         }}
       >
         <Toolbar /> {/* Espace pour la barre d'application */}
-        
         {/* Afficher soit la page d'accueil, soit les routes enfants */}
-        {location.pathname === '/admin' ? <AdminHome /> : <Outlet />}
+        {location.pathname === "/admin" ? <AdminHome /> : <Outlet />}
       </Box>
     </Box>
   );

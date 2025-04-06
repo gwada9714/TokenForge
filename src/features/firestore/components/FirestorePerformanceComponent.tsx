@@ -1,15 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, Card, Typography, Button, Table, TableBody, 
-  TableCell, TableContainer, TableHead, TableRow, Paper, 
-  Divider, Switch, FormControlLabel, CircularProgress,
-  Tabs, Tab, Tooltip, IconButton, Alert
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import { firestorePerformance } from '@/lib/firebase/utils/firestore-performance';
-import { firestoreService } from '@/lib/firebase/firestore';
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Card,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Divider,
+  Switch,
+  FormControlLabel,
+  CircularProgress,
+  Tabs,
+  Tab,
+  Tooltip,
+  IconButton,
+  Alert,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import { firestorePerformance } from "@/lib/firebase/utils/firestore-performance";
+import { firestoreService } from "@/lib/firebase/firestore";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -47,7 +63,7 @@ export const FirestorePerformanceComponent: React.FC = () => {
   const fetchMetrics = () => {
     const currentMetrics = firestorePerformance.getMetrics();
     setMetrics(currentMetrics);
-    
+
     const performanceReport = firestorePerformance.generatePerformanceReport();
     setReport(performanceReport);
   };
@@ -68,82 +84,75 @@ export const FirestorePerformanceComponent: React.FC = () => {
   const runTestQueries = async () => {
     setIsLoading(true);
     setTestResult(null);
-    
+
     try {
       // Tester différentes opérations Firestore
-      const userId = 'test_user_' + Date.now();
-      const testDocId = 'test_' + Date.now();
-      
+      const userId = "test_user_" + Date.now();
+      const testDocId = "test_" + Date.now();
+
       // Test 1: Écriture simple
-      await firestorePerformance.measureAsync(
-        'set',
-        `test/${testDocId}`,
-        () => firestoreService.setDocument('test', testDocId, {
-          name: 'Test Document',
+      await firestorePerformance.measureAsync("set", `test/${testDocId}`, () =>
+        firestoreService.setDocument("test", testDocId, {
+          name: "Test Document",
           timestamp: new Date(),
-          userId
+          userId,
         })
       );
-      
+
       // Test 2: Lecture
-      await firestorePerformance.measureAsync(
-        'get',
-        `test/${testDocId}`,
-        () => firestoreService.getDocument('test', testDocId)
+      await firestorePerformance.measureAsync("get", `test/${testDocId}`, () =>
+        firestoreService.getDocument("test", testDocId)
       );
-      
+
       // Test 3: Requête avec filtre
-      await firestorePerformance.measureAsync(
-        'query',
-        'test',
-        () => firestoreService.queryDocuments('test', 'userId', '==', userId)
+      await firestorePerformance.measureAsync("query", "test", () =>
+        firestoreService.queryDocuments("test", "userId", "==", userId)
       );
-      
+
       // Test 4: Mise à jour
       await firestorePerformance.measureAsync(
-        'update',
+        "update",
         `test/${testDocId}`,
-        () => firestoreService.updateDocument('test', testDocId, {
-          updated: true,
-          counter: Math.floor(Math.random() * 100)
-        })
+        () =>
+          firestoreService.updateDocument("test", testDocId, {
+            updated: true,
+            counter: Math.floor(Math.random() * 100),
+          })
       );
-      
+
       // Test 5: Batch
       const batch = await firestoreService.createBatch();
-      await firestorePerformance.measureAsync(
-        'batch',
-        'test',
-        async () => {
-          for (let i = 0; i < 5; i++) {
-            batch.set('test', `batch_${Date.now()}_${i}`, {
-              index: i,
-              batch: true,
-              userId
-            });
-          }
-          await batch.commit();
+      await firestorePerformance.measureAsync("batch", "test", async () => {
+        for (let i = 0; i < 5; i++) {
+          batch.set("test", `batch_${Date.now()}_${i}`, {
+            index: i,
+            batch: true,
+            userId,
+          });
         }
-      );
-      
+        await batch.commit();
+      });
+
       // Test 6: Suppression du document de test
       await firestorePerformance.measureAsync(
-        'delete',
+        "delete",
         `test/${testDocId}`,
-        () => firestoreService.deleteDocument('test', testDocId)
+        () => firestoreService.deleteDocument("test", testDocId)
       );
-      
+
       // Mettre à jour les métriques après les tests
       fetchMetrics();
-      setTestResult('Tests de performance complétés avec succès!');
+      setTestResult("Tests de performance complétés avec succès!");
     } catch (error) {
-      console.error('Erreur lors des tests:', error);
-      setTestResult(`Erreur: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("Erreur lors des tests:", error);
+      setTestResult(
+        `Erreur: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   // Charger les métriques au chargement du composant
   useEffect(() => {
     fetchMetrics();
@@ -151,11 +160,18 @@ export const FirestorePerformanceComponent: React.FC = () => {
 
   return (
     <Card elevation={3} sx={{ p: 2, mx: 2, my: 3 }}>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box
+        sx={{
+          mb: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Typography variant="h5" color="primary">
           Monitoring des Performances Firestore
         </Typography>
-        
+
         <Box>
           <FormControlLabel
             control={
@@ -179,18 +195,22 @@ export const FirestorePerformanceComponent: React.FC = () => {
           </Tooltip>
         </Box>
       </Box>
-      
+
       <Divider sx={{ mb: 2 }} />
-      
+
       <Box sx={{ mb: 2 }}>
-        <Tabs value={tabValue} onChange={(_, val) => setTabValue(val)} aria-label="performances tabs">
+        <Tabs
+          value={tabValue}
+          onChange={(_, val) => setTabValue(val)}
+          aria-label="performances tabs"
+        >
           <Tab label="Résumé" id="performance-tab-0" />
           <Tab label="Requêtes les plus lentes" id="performance-tab-1" />
           <Tab label="Toutes les métriques" id="performance-tab-2" />
           <Tab label="Tests" id="performance-tab-3" />
         </Tabs>
       </Box>
-      
+
       {/* Onglet Résumé */}
       <TabPanel value={tabValue} index={0}>
         {report ? (
@@ -198,23 +218,30 @@ export const FirestorePerformanceComponent: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               Statistiques générales
             </Typography>
-            
+
             <Paper sx={{ p: 2, mb: 3 }}>
               <Typography variant="body2">
                 Nombre total de requêtes: <strong>{report.totalQueries}</strong>
               </Typography>
-              
+
               {report.timeRange.from && (
                 <Typography variant="body2">
-                  Période: <strong>{new Date(report.timeRange.from).toLocaleString()}</strong> à <strong>{new Date(report.timeRange.to).toLocaleString()}</strong>
+                  Période:{" "}
+                  <strong>
+                    {new Date(report.timeRange.from).toLocaleString()}
+                  </strong>{" "}
+                  à{" "}
+                  <strong>
+                    {new Date(report.timeRange.to).toLocaleString()}
+                  </strong>
                 </Typography>
               )}
             </Paper>
-            
+
             <Typography variant="h6" gutterBottom>
               Statistiques par opération
             </Typography>
-            
+
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableHead>
@@ -228,29 +255,40 @@ export const FirestorePerformanceComponent: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Object.entries(report.operationStats).map(([operation, stats]: [string, any]) => (
-                    <TableRow key={operation}>
-                      <TableCell component="th" scope="row">{operation}</TableCell>
-                      <TableCell align="right">{stats.count}</TableCell>
-                      <TableCell align="right">{stats.avgDurationMs}</TableCell>
-                      <TableCell align="right">{stats.minDurationMs}</TableCell>
-                      <TableCell align="right">{stats.maxDurationMs}</TableCell>
-                      <TableCell align="right">{stats.successRate}</TableCell>
-                    </TableRow>
-                  ))}
+                  {Object.entries(report.operationStats).map(
+                    ([operation, stats]: [string, any]) => (
+                      <TableRow key={operation}>
+                        <TableCell component="th" scope="row">
+                          {operation}
+                        </TableCell>
+                        <TableCell align="right">{stats.count}</TableCell>
+                        <TableCell align="right">
+                          {stats.avgDurationMs}
+                        </TableCell>
+                        <TableCell align="right">
+                          {stats.minDurationMs}
+                        </TableCell>
+                        <TableCell align="right">
+                          {stats.maxDurationMs}
+                        </TableCell>
+                        <TableCell align="right">{stats.successRate}</TableCell>
+                      </TableRow>
+                    )
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <Typography variant="body1" color="text.secondary">
-              Aucune métrique disponible. Exécutez des requêtes Firestore pour collecter des données.
+              Aucune métrique disponible. Exécutez des requêtes Firestore pour
+              collecter des données.
             </Typography>
           </Box>
         )}
       </TabPanel>
-      
+
       {/* Onglet Requêtes les plus lentes */}
       <TabPanel value={tabValue} index={1}>
         {report && report.slowestQueries.length > 0 ? (
@@ -266,27 +304,44 @@ export const FirestorePerformanceComponent: React.FC = () => {
               </TableHead>
               <TableBody>
                 {report.slowestQueries.map((query: any, index: number) => (
-                  <TableRow key={index} sx={{ backgroundColor: query.durationMs > 500 ? 'rgba(255, 0, 0, 0.05)' : undefined }}>
+                  <TableRow
+                    key={index}
+                    sx={{
+                      backgroundColor:
+                        query.durationMs > 500
+                          ? "rgba(255, 0, 0, 0.05)"
+                          : undefined,
+                    }}
+                  >
                     <TableCell>{query.operation}</TableCell>
                     <TableCell>{query.path}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: query.durationMs > 500 ? 'error.main' : undefined }}>
+                    <TableCell
+                      align="right"
+                      sx={{
+                        fontWeight: "bold",
+                        color:
+                          query.durationMs > 500 ? "error.main" : undefined,
+                      }}
+                    >
                       {query.durationMs}
                     </TableCell>
-                    <TableCell>{new Date(query.timestamp).toLocaleString()}</TableCell>
+                    <TableCell>
+                      {new Date(query.timestamp).toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </TableContainer>
         ) : (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <Typography variant="body1" color="text.secondary">
               Aucune requête lente détectée.
             </Typography>
           </Box>
         )}
       </TabPanel>
-      
+
       {/* Onglet Toutes les métriques */}
       <TabPanel value={tabValue} index={2}>
         {metrics.length > 0 ? (
@@ -306,13 +361,17 @@ export const FirestorePerformanceComponent: React.FC = () => {
                   <TableRow key={index}>
                     <TableCell>{metric.operation}</TableCell>
                     <TableCell>{metric.path}</TableCell>
-                    <TableCell align="right">{Math.round(metric.duration)}</TableCell>
-                    <TableCell>{new Date(metric.timestamp).toLocaleString()}</TableCell>
+                    <TableCell align="right">
+                      {Math.round(metric.duration)}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(metric.timestamp).toLocaleString()}
+                    </TableCell>
                     <TableCell align="center">
                       {metric.success ? (
                         <Typography color="success.main">Succès</Typography>
                       ) : (
-                        <Tooltip title={metric.error || 'Erreur inconnue'}>
+                        <Tooltip title={metric.error || "Erreur inconnue"}>
                           <Typography color="error.main">Échec</Typography>
                         </Tooltip>
                       )}
@@ -323,14 +382,15 @@ export const FirestorePerformanceComponent: React.FC = () => {
             </Table>
           </TableContainer>
         ) : (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <Typography variant="body1" color="text.secondary">
-              Aucune métrique disponible. Exécutez des requêtes Firestore pour collecter des données.
+              Aucune métrique disponible. Exécutez des requêtes Firestore pour
+              collecter des données.
             </Typography>
           </Box>
         )}
       </TabPanel>
-      
+
       {/* Onglet Tests */}
       <TabPanel value={tabValue} index={3}>
         <Box sx={{ mb: 3 }}>
@@ -338,30 +398,43 @@ export const FirestorePerformanceComponent: React.FC = () => {
             Exécuter des requêtes de test
           </Typography>
           <Typography variant="body2" paragraph>
-            Cette fonction exécute une série de requêtes Firestore (création, lecture, mise à jour, requête, batch, suppression) 
-            pour générer des métriques de performance à des fins de test.
+            Cette fonction exécute une série de requêtes Firestore (création,
+            lecture, mise à jour, requête, batch, suppression) pour générer des
+            métriques de performance à des fins de test.
           </Typography>
-          
+
           <Button
             variant="contained"
             color="primary"
-            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <BarChartIcon />}
+            startIcon={
+              isLoading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <BarChartIcon />
+              )
+            }
             onClick={runTestQueries}
             disabled={isLoading || !isEnabled}
             sx={{ mb: 2 }}
           >
-            {isLoading ? 'Exécution en cours...' : 'Exécuter des requêtes de test'}
+            {isLoading
+              ? "Exécution en cours..."
+              : "Exécuter des requêtes de test"}
           </Button>
-          
+
           {testResult && (
-            <Alert severity={testResult.startsWith('Erreur') ? 'error' : 'success'} sx={{ mt: 2 }}>
+            <Alert
+              severity={testResult.startsWith("Erreur") ? "error" : "success"}
+              sx={{ mt: 2 }}
+            >
               {testResult}
             </Alert>
           )}
-          
+
           {!isEnabled && (
             <Alert severity="warning" sx={{ mt: 2 }}>
-              Le monitoring des performances est désactivé. Activez-le pour exécuter des tests.
+              Le monitoring des performances est désactivé. Activez-le pour
+              exécuter des tests.
             </Alert>
           )}
         </Box>

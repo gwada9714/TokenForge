@@ -1,7 +1,7 @@
-import { BaseLogger } from '../logger';
+import { BaseLogger } from "../logger";
 
 export class MonitoringService {
-  private logger = new BaseLogger('Monitoring');
+  private logger = new BaseLogger("Monitoring");
   private metrics: Map<string, number> = new Map();
 
   trackMetric(name: string, value: number) {
@@ -15,7 +15,7 @@ export class MonitoringService {
 
   clearMetrics() {
     this.metrics.clear();
-    this.logger.debug('Metrics cleared');
+    this.logger.debug("Metrics cleared");
   }
 }
 

@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box, Container } from '@mui/material';
-import TokenWizard from '@/components/TokenWizard/TokenWizard';
+import React from "react";
+import { Box, Container } from "@mui/material";
+import TokenWizard from "@/components/TokenWizard/TokenWizard";
 
 const CreateTokenWizard: React.FC = () => {
   return (

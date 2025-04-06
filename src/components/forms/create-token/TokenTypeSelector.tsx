@@ -14,7 +14,7 @@ export const TokenTypeSelector: React.FC<TokenTypeSelectorProps> = ({
 }) => {
   const handleChange = (
     _: React.MouseEvent<HTMLElement>,
-    newType: TokenType | null,
+    newType: TokenType | null
   ) => {
     if (newType) {
       onTypeSelect(newType);

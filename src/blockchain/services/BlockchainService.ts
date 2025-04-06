@@ -1,5 +1,5 @@
-import { IBlockchainService } from '../interfaces/IBlockchainService';
-import { createEvmProvider } from '../providers';
+import { IBlockchainService } from "../interfaces/IBlockchainService";
+import { createEvmProvider } from "../providers";
 
 /**
  * Service de base pour les blockchains EVM
@@ -28,7 +28,7 @@ export class BlockchainService implements IBlockchainService {
         estimateGas: async () => 21000n,
         getGasPrice: async () => 2000000000n,
         getTransaction: async () => null,
-        verifyMessage: async () => true
+        verifyMessage: async () => true,
       };
       this.walletClient = null;
     }
@@ -47,42 +47,46 @@ export class BlockchainService implements IBlockchainService {
     }
     try {
       const accounts = await this.walletClient.getAddresses();
-      return accounts.map(account => account.toString());
+      return accounts.map((account) => account.toString());
     } catch (error) {
-      console.error('Error getting accounts:', error);
+      console.error("Error getting accounts:", error);
       return [];
     }
   }
 
   async signMessage(message: string, address?: string): Promise<string> {
     if (!this.walletClient) {
-      throw new Error('Wallet client not available for signing');
+      throw new Error("Wallet client not available for signing");
     }
 
     const accounts = await this.getAccounts();
     const account = address || accounts[0];
 
     if (!account) {
-      throw new Error('No account available for signing');
+      throw new Error("No account available for signing");
     }
 
     return await this.walletClient.signMessage({
       account: account as `0x${string}`,
-      message
+      message,
     });
   }
 
-  async verifySignature(message: string, signature: string, address: string): Promise<boolean> {
+  async verifySignature(
+    message: string,
+    signature: string,
+    address: string
+  ): Promise<boolean> {
     try {
       // Utiliser viem pour vérifier la signature
       const valid = await this.publicClient.verifyMessage({
         address: address as `0x${string}`,
         message,
-        signature: signature as `0x${string}`
+        signature: signature as `0x${string}`,
       });
       return valid;
     } catch (error) {
-      console.error('Error verifying signature:', error);
+      console.error("Error verifying signature:", error);
       return false;
     }
   }
@@ -93,7 +97,7 @@ export class BlockchainService implements IBlockchainService {
       // Pour les tests, nous retournons simplement true
       return true;
     } catch (error) {
-      console.error('Error connecting:', error);
+      console.error("Error connecting:", error);
       return false;
     }
   }
@@ -104,7 +108,7 @@ export class BlockchainService implements IBlockchainService {
       // Pour les tests, nous retournons simplement true
       return true;
     } catch (error) {
-      console.error('Error disconnecting:', error);
+      console.error("Error disconnecting:", error);
       return false;
     }
   }
@@ -114,7 +118,9 @@ export class BlockchainService implements IBlockchainService {
   }
 
   async getBalance(address: string): Promise<bigint> {
-    return await this.publicClient.getBalance({ address: address as `0x${string}` });
+    return await this.publicClient.getBalance({
+      address: address as `0x${string}`,
+    });
   }
 
   async getNetworkId(): Promise<number> {

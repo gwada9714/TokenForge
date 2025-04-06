@@ -1,6 +1,7 @@
 // Utility to validate environment variables
 const requiredEnvVars = {
-  VITE_WALLET_CONNECT_PROJECT_ID: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
+  VITE_WALLET_CONNECT_PROJECT_ID: import.meta.env
+    .VITE_WALLET_CONNECT_PROJECT_ID,
   VITE_TOKEN_FACTORY_ADDRESS: import.meta.env.VITE_TOKEN_FACTORY_ADDRESS,
   VITE_ETHERSCAN_API_KEY: import.meta.env.VITE_ETHERSCAN_API_KEY,
 };
@@ -28,5 +29,5 @@ export const config = {
   alchemy: {
     apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
   },
-  isDevelopment: import.meta.env.MODE === 'development',
+  isDevelopment: import.meta.env.MODE === "development",
 } as const;

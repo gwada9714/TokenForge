@@ -1,12 +1,12 @@
-import { ITokenService } from '../interfaces/ITokenService';
-import { createTokenService } from '../factory';
-import { 
-  TokenConfig, 
-  DeploymentResult, 
-  TokenInfo, 
-  ValidationResult, 
-  LiquidityConfig 
-} from '../types';
+import { ITokenService } from "../interfaces/ITokenService";
+import { createTokenService } from "../factory";
+import {
+  TokenConfig,
+  DeploymentResult,
+  TokenInfo,
+  ValidationResult,
+  LiquidityConfig,
+} from "../types";
 
 /**
  * Service commun pour la gestion des tokens blockchain
@@ -40,14 +40,20 @@ export class TokenService implements ITokenService {
       // Valider la configuration du token
       const validation = this.validateTokenConfig(tokenConfig);
       if (!validation.valid) {
-        throw new Error(`Invalid token configuration: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid token configuration: ${validation.errors.join(", ")}`
+        );
       }
 
       // Déployer le token via le service spécifique à la blockchain
       return await this.tokenService.deployToken(tokenConfig);
     } catch (error) {
       console.error(`Error deploying token on ${this.chainName}:`, error);
-      throw new Error(`Failed to deploy token: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to deploy token: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
@@ -61,7 +67,11 @@ export class TokenService implements ITokenService {
       return await this.tokenService.getTokenInfo(tokenAddress);
     } catch (error) {
       console.error(`Error getting token info on ${this.chainName}:`, error);
-      throw new Error(`Failed to get token info: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get token info: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
@@ -74,7 +84,10 @@ export class TokenService implements ITokenService {
     try {
       return await this.tokenService.estimateDeploymentCost(tokenConfig);
     } catch (error) {
-      console.error(`Error estimating deployment cost on ${this.chainName}:`, error);
+      console.error(
+        `Error estimating deployment cost on ${this.chainName}:`,
+        error
+      );
       // Retourner une estimation par défaut en cas d'erreur
       return this.getDefaultDeploymentCost();
     }
@@ -92,46 +105,59 @@ export class TokenService implements ITokenService {
 
       // Vérifier le nom
       if (!tokenConfig.name || tokenConfig.name.length < 1) {
-        errors.push('Token name is required');
+        errors.push("Token name is required");
       } else if (tokenConfig.name.length > 50) {
-        errors.push('Token name must be less than 50 characters');
+        errors.push("Token name must be less than 50 characters");
       }
 
       // Vérifier le symbole
       if (!tokenConfig.symbol || tokenConfig.symbol.length < 1) {
-        errors.push('Token symbol is required');
+        errors.push("Token symbol is required");
       } else if (tokenConfig.symbol.length > 10) {
-        errors.push('Token symbol must be less than 10 characters');
+        errors.push("Token symbol must be less than 10 characters");
       }
 
       // Vérifier les décimales
       if (tokenConfig.decimals < 0 || tokenConfig.decimals > 18) {
-        errors.push('Token decimals must be between 0 and 18');
+        errors.push("Token decimals must be between 0 and 18");
       }
 
       // Vérifier le supply initial
       if (tokenConfig.initialSupply <= 0) {
-        errors.push('Initial supply must be greater than 0');
+        errors.push("Initial supply must be greater than 0");
       }
 
       // Vérifier le supply maximum (si spécifié)
-      if (tokenConfig.maxSupply !== undefined && tokenConfig.maxSupply < tokenConfig.initialSupply) {
-        errors.push('Max supply must be greater than or equal to initial supply');
+      if (
+        tokenConfig.maxSupply !== undefined &&
+        tokenConfig.maxSupply < tokenConfig.initialSupply
+      ) {
+        errors.push(
+          "Max supply must be greater than or equal to initial supply"
+        );
       }
 
       // Vérifier les configurations spécifiques à la blockchain
-      const blockchainValidation = this.tokenService.validateTokenConfig(tokenConfig);
+      const blockchainValidation =
+        this.tokenService.validateTokenConfig(tokenConfig);
       errors.push(...blockchainValidation.errors);
 
       return {
         valid: errors.length === 0,
-        errors
+        errors,
       };
     } catch (error) {
-      console.error(`Error validating token config on ${this.chainName}:`, error);
+      console.error(
+        `Error validating token config on ${this.chainName}:`,
+        error
+      );
       return {
         valid: false,
-        errors: [`Validation error: ${error instanceof Error ? error.message : String(error)}`]
+        errors: [
+          `Validation error: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        ],
       };
     }
   }
@@ -142,11 +168,17 @@ export class TokenService implements ITokenService {
    * @param config Configuration de la liquidité
    * @returns true si la configuration a réussi, false sinon
    */
-  async setupAutoLiquidity(tokenAddress: string, config: LiquidityConfig): Promise<boolean> {
+  async setupAutoLiquidity(
+    tokenAddress: string,
+    config: LiquidityConfig
+  ): Promise<boolean> {
     try {
       return await this.tokenService.setupAutoLiquidity(tokenAddress, config);
     } catch (error) {
-      console.error(`Error setting up auto liquidity on ${this.chainName}:`, error);
+      console.error(
+        `Error setting up auto liquidity on ${this.chainName}:`,
+        error
+      );
       return false;
     }
   }
@@ -159,12 +191,15 @@ export class TokenService implements ITokenService {
   async isTokenVerified(tokenAddress: string): Promise<boolean> {
     try {
       // Cette méthode peut ne pas être disponible sur toutes les blockchains
-      if (typeof this.tokenService.isTokenVerified === 'function') {
+      if (typeof this.tokenService.isTokenVerified === "function") {
         return await this.tokenService.isTokenVerified(tokenAddress);
       }
       return false;
     } catch (error) {
-      console.error(`Error checking token verification on ${this.chainName}:`, error);
+      console.error(
+        `Error checking token verification on ${this.chainName}:`,
+        error
+      );
       return false;
     }
   }
@@ -175,11 +210,17 @@ export class TokenService implements ITokenService {
    * @param contractSource Code source du contrat
    * @returns true si la vérification a réussi, false sinon
    */
-  async verifyToken(tokenAddress: string, contractSource: string): Promise<boolean> {
+  async verifyToken(
+    tokenAddress: string,
+    contractSource: string
+  ): Promise<boolean> {
     try {
       // Cette méthode peut ne pas être disponible sur toutes les blockchains
-      if (typeof this.tokenService.verifyToken === 'function') {
-        return await this.tokenService.verifyToken(tokenAddress, contractSource);
+      if (typeof this.tokenService.verifyToken === "function") {
+        return await this.tokenService.verifyToken(
+          tokenAddress,
+          contractSource
+        );
       }
       return false;
     } catch (error) {
@@ -194,21 +235,21 @@ export class TokenService implements ITokenService {
    */
   private getDefaultDeploymentCost(): bigint {
     switch (this.chainName.toLowerCase()) {
-      case 'ethereum':
-        return BigInt('50000000000000000'); // 0.05 ETH
-      case 'binance':
-      case 'bsc':
-        return BigInt('100000000000000000'); // 0.1 BNB
-      case 'polygon':
-        return BigInt('50000000000000000000'); // 50 MATIC
-      case 'avalanche':
-        return BigInt('500000000000000000'); // 0.5 AVAX
-      case 'arbitrum':
-        return BigInt('10000000000000000'); // 0.01 ETH
-      case 'solana':
-        return BigInt('10000000'); // 0.01 SOL (en lamports)
+      case "ethereum":
+        return BigInt("50000000000000000"); // 0.05 ETH
+      case "binance":
+      case "bsc":
+        return BigInt("100000000000000000"); // 0.1 BNB
+      case "polygon":
+        return BigInt("50000000000000000000"); // 50 MATIC
+      case "avalanche":
+        return BigInt("500000000000000000"); // 0.5 AVAX
+      case "arbitrum":
+        return BigInt("10000000000000000"); // 0.01 ETH
+      case "solana":
+        return BigInt("10000000"); // 0.01 SOL (en lamports)
       default:
-        return BigInt('100000000000000000'); // 0.1 par défaut
+        return BigInt("100000000000000000"); // 0.1 par défaut
     }
   }
 }

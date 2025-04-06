@@ -22,7 +22,7 @@ const CONTRACT_ADDRESS = "0x9329fbad313f51f7dc01f0419947fcacd1beb40c";
 
 // Configuration du client
 const transport = http(
-  `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+  `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
 );
 
 const publicClient = createPublicClient({
@@ -196,7 +196,7 @@ async function main() {
       });
       console.log(
         "Transaction de mint confirmée dans le bloc:",
-        receipt.blockNumber,
+        receipt.blockNumber
       );
     } catch (error) {
       console.error("Erreur lors du mint:", error);
@@ -220,7 +220,7 @@ async function main() {
       });
       console.log(
         "Transaction de pause confirmée dans le bloc:",
-        receipt.blockNumber,
+        receipt.blockNumber
       );
     } catch (error) {
       console.error("Erreur lors de la pause:", error);
@@ -252,7 +252,7 @@ async function main() {
       });
       console.log(
         "Transaction de unpause confirmée dans le bloc:",
-        receipt.blockNumber,
+        receipt.blockNumber
       );
     } catch (error) {
       console.error("Erreur lors du unpause:", error);
@@ -278,7 +278,7 @@ async function main() {
       });
       console.log(
         "Transaction de burn confirmée dans le bloc:",
-        receipt.blockNumber,
+        receipt.blockNumber
       );
     } catch (error) {
       console.error("Erreur lors du burn:", error);

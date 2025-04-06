@@ -9,15 +9,17 @@ Le marketplace est composé de plusieurs composants React qui permettent aux uti
 ### MarketplaceList
 
 ```typescript
-import { MarketplaceList } from '@/components/features/marketplace';
+import { MarketplaceList } from "@/components/features/marketplace";
 ```
 
 Composant principal qui affiche la liste des items du marketplace.
 
 #### Props
+
 Aucune prop requise.
 
 #### Exemple d'utilisation
+
 ```tsx
 <MarketplaceList />
 ```
@@ -25,12 +27,13 @@ Aucune prop requise.
 ### MarketplaceItem
 
 ```typescript
-import { MarketplaceItem } from '@/components/features/marketplace';
+import { MarketplaceItem } from "@/components/features/marketplace";
 ```
 
 Affiche un item individuel du marketplace.
 
 #### Props
+
 ```typescript
 interface MarketplaceItemProps {
   item: {
@@ -42,7 +45,7 @@ interface MarketplaceItemProps {
     tokenAddress: string;
     tokenSymbol: string;
     tokenDecimals: number;
-    status: 'active' | 'sold' | 'cancelled';
+    status: "active" | "sold" | "cancelled";
     createdAt: number;
     updatedAt: number;
   };
@@ -50,6 +53,7 @@ interface MarketplaceItemProps {
 ```
 
 #### Exemple d'utilisation
+
 ```tsx
 <MarketplaceItem item={itemData} />
 ```
@@ -57,12 +61,13 @@ interface MarketplaceItemProps {
 ### MarketplaceFilters
 
 ```typescript
-import { MarketplaceFilters } from '@/components/features/marketplace';
+import { MarketplaceFilters } from "@/components/features/marketplace";
 ```
 
 Permet de filtrer et trier les items du marketplace.
 
 #### Props
+
 ```typescript
 interface MarketplaceFiltersProps {
   onFilter: (filters: MarketplaceFilters) => void;
@@ -70,6 +75,7 @@ interface MarketplaceFiltersProps {
 ```
 
 #### Exemple d'utilisation
+
 ```tsx
 <MarketplaceFilters onFilter={handleFilter} />
 ```
@@ -77,12 +83,13 @@ interface MarketplaceFiltersProps {
 ### MarketplaceStats
 
 ```typescript
-import { MarketplaceStats } from '@/components/features/marketplace';
+import { MarketplaceStats } from "@/components/features/marketplace";
 ```
 
 Affiche les statistiques globales du marketplace.
 
 #### Props
+
 ```typescript
 interface MarketplaceStatsProps {
   stats: {
@@ -95,6 +102,7 @@ interface MarketplaceStatsProps {
 ```
 
 #### Exemple d'utilisation
+
 ```tsx
 <MarketplaceStats stats={marketplaceStats} />
 ```
@@ -104,12 +112,13 @@ interface MarketplaceStatsProps {
 ### useMarketplace
 
 ```typescript
-import { useMarketplace } from '@/components/features/marketplace';
+import { useMarketplace } from "@/components/features/marketplace";
 ```
 
 Hook personnalisé pour gérer l'état et les interactions avec le marketplace.
 
 #### Retourne
+
 ```typescript
 {
   items: MarketplaceItem[];
@@ -123,6 +132,7 @@ Hook personnalisé pour gérer l'état et les interactions avec le marketplace.
 ```
 
 #### Exemple d'utilisation
+
 ```tsx
 const { items, stats, isLoading, error, loadItems } = useMarketplace();
 ```

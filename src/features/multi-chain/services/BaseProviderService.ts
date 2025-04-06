@@ -1,9 +1,9 @@
-import { Connection } from '@solana/web3.js';
-import { createPublicClient, fallback, http, PublicClient } from 'viem';
-import { ChainId, EVMChainConfig, SolanaChainConfig } from '../types/Chain';
-import { getChainConfig } from '../config/chains';
-import { PROVIDERS, NETWORK_CONFIG } from '../config/dependencies';
-import { mainnet, polygon, bsc } from 'viem/chains';
+import { Connection } from "@solana/web3.js";
+import { createPublicClient, fallback, http, PublicClient } from "viem";
+import { ChainId, EVMChainConfig, SolanaChainConfig } from "../types/Chain";
+import { getChainConfig } from "../config/chains";
+import { PROVIDERS, NETWORK_CONFIG } from "../config/dependencies";
+import { mainnet, polygon, bsc } from "viem/chains";
 
 export class BaseProviderService {
   private static evmClients: Map<ChainId, PublicClient> = new Map();
@@ -11,7 +11,7 @@ export class BaseProviderService {
 
   static async getProvider(chainId: ChainId) {
     const config = getChainConfig(chainId);
-    
+
     if (!config) {
       throw new Error(`Unsupported chain ID: ${chainId}`);
     }
@@ -26,7 +26,7 @@ export class BaseProviderService {
   }
 
   private static async getEVMProvider(
-    chainId: ChainId, 
+    chainId: ChainId,
     config: EVMChainConfig
   ): Promise<PublicClient> {
     // Vérifier si un client existe déjà
@@ -36,18 +36,19 @@ export class BaseProviderService {
     }
 
     // Créer les URLs RPC avec les clés API
-    const rpcUrls = config.rpcUrls.map(url => 
-      url.replace('${ALCHEMY_KEY}', PROVIDERS.ALCHEMY_KEY)
-         .replace('${INFURA_KEY}', PROVIDERS.INFURA_KEY)
-         .replace('${BSC_NODE_KEY}', PROVIDERS.BSC_NODE_KEY)
-         .replace('${POLYGON_NODE_KEY}', PROVIDERS.POLYGON_NODE_KEY)
+    const rpcUrls = config.rpcUrls.map((url) =>
+      url
+        .replace("${ALCHEMY_KEY}", PROVIDERS.ALCHEMY_KEY)
+        .replace("${INFURA_KEY}", PROVIDERS.INFURA_KEY)
+        .replace("${BSC_NODE_KEY}", PROVIDERS.BSC_NODE_KEY)
+        .replace("${POLYGON_NODE_KEY}", PROVIDERS.POLYGON_NODE_KEY)
     );
 
     // Sélectionner la chaîne appropriée
     const chain = this.getChainConfig(chainId);
 
     // Créer les transports HTTP pour chaque URL
-    const transports = rpcUrls.map(url => http(url));
+    const transports = rpcUrls.map((url) => http(url));
 
     // Créer le client avec fallback si plusieurs URLs
     const client = createPublicClient({
@@ -74,9 +75,7 @@ export class BaseProviderService {
     }
   }
 
-  private static getSolanaConnection(
-    config: SolanaChainConfig
-  ): Connection {
+  private static getSolanaConnection(config: SolanaChainConfig): Connection {
     // Vérifier si une connexion existe déjà
     const existingConnection = this.solanaConnections.get(ChainId.SOLANA);
     if (existingConnection) {
@@ -85,9 +84,12 @@ export class BaseProviderService {
 
     // Créer une nouvelle connexion
     const connection = new Connection(
-      config.rpcUrls[0].replace('${SOLANA_NODE_KEY}', PROVIDERS.SOLANA_NODE_KEY),
+      config.rpcUrls[0].replace(
+        "${SOLANA_NODE_KEY}",
+        PROVIDERS.SOLANA_NODE_KEY
+      ),
       {
-        commitment: 'confirmed',
+        commitment: "confirmed",
         wsEndpoint: config.wsEndpoint,
         confirmTransactionInitialTimeout: NETWORK_CONFIG.REQUEST_TIMEOUT,
       }

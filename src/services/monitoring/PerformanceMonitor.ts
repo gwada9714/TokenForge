@@ -1,4 +1,4 @@
-import { PERFORMANCE_THRESHOLDS } from '@/__tests__/test-utils/config';
+import { PERFORMANCE_THRESHOLDS } from "@/__tests__/test-utils/config";
 
 interface PerformanceMetrics {
   startTime: number;
@@ -32,20 +32,24 @@ export class PerformanceMonitor {
   private metrics: Map<string, PerformanceMetrics> = new Map();
   private readonly thresholds = PERFORMANCE_THRESHOLDS;
 
-  startMetrics(id: string = 'default'): string {
+  startMetrics(id: string = "default"): string {
     this.metrics.set(id, {
       startTime: performance.now(),
       measurements: {
         responseTime: [],
         memoryUsage: [],
         errors: [],
-        networkLatency: []
-      }
+        networkLatency: [],
+      },
     });
     return id;
   }
 
-  recordMeasurement(id: string, type: keyof PerformanceMetrics['measurements'], value: any): void {
+  recordMeasurement(
+    id: string,
+    type: keyof PerformanceMetrics["measurements"],
+    value: any
+  ): void {
     const metrics = this.metrics.get(id);
     if (!metrics) return;
 
@@ -68,9 +72,11 @@ export class PerformanceMonitor {
     return report;
   }
 
-  async measureBaseline(operation: () => Promise<void>): Promise<PerformanceReport> {
-    const id = this.startMetrics('baseline');
-    
+  async measureBaseline(
+    operation: () => Promise<void>
+  ): Promise<PerformanceReport> {
+    const id = this.startMetrics("baseline");
+
     try {
       await operation();
     } finally {
@@ -78,7 +84,9 @@ export class PerformanceMonitor {
     }
   }
 
-  async trackMemoryUsage(operation: () => Promise<void>): Promise<{ peak: number; leaked: number }> {
+  async trackMemoryUsage(
+    operation: () => Promise<void>
+  ): Promise<{ peak: number; leaked: number }> {
     const initialMemory = process.memoryUsage().heapUsed;
     const measurements: number[] = [];
 
@@ -97,11 +105,13 @@ export class PerformanceMonitor {
 
     return {
       peak,
-      leaked: Math.max(0, finalMemory - initialMemory)
+      leaked: Math.max(0, finalMemory - initialMemory),
     };
   }
 
-  async trackConnections(operation: () => Promise<void>): Promise<{ peak: number; leaked: number }> {
+  async trackConnections(
+    operation: () => Promise<void>
+  ): Promise<{ peak: number; leaked: number }> {
     const activeConnections = new Set<string>();
     const measurements: number[] = [];
 
@@ -122,12 +132,16 @@ export class PerformanceMonitor {
 
     return {
       peak: Math.max(...measurements),
-      leaked: activeConnections.size
+      leaked: activeConnections.size,
     };
   }
 
-  private generateReport(metrics: PerformanceMetrics, totalTime: number): PerformanceReport {
-    const { responseTime, memoryUsage, errors, networkLatency } = metrics.measurements;
+  private generateReport(
+    metrics: PerformanceMetrics,
+    totalTime: number
+  ): PerformanceReport {
+    const { responseTime, memoryUsage, errors, networkLatency } =
+      metrics.measurements;
 
     const sortedResponseTimes = [...responseTime].sort((a, b) => a - b);
     const p95Index = Math.floor(responseTime.length * 0.95);
@@ -147,26 +161,34 @@ export class PerformanceMonitor {
       networkLatency: {
         average: this.calculateAverage(networkLatency),
         max: Math.max(...networkLatency),
-        p95: this.calculatePercentile(networkLatency, 95)
-      }
+        p95: this.calculatePercentile(networkLatency, 95),
+      },
     };
   }
 
   private validateThresholds(report: PerformanceReport): void {
     if (report.averageResponseTime > this.thresholds.averageResponseTime) {
-      console.warn(`Average response time (${report.averageResponseTime}ms) exceeds threshold (${this.thresholds.averageResponseTime}ms)`);
+      console.warn(
+        `Average response time (${report.averageResponseTime}ms) exceeds threshold (${this.thresholds.averageResponseTime}ms)`
+      );
     }
 
     if (report.maxResponseTime > this.thresholds.maxResponseTime) {
-      console.warn(`Max response time (${report.maxResponseTime}ms) exceeds threshold (${this.thresholds.maxResponseTime}ms)`);
+      console.warn(
+        `Max response time (${report.maxResponseTime}ms) exceeds threshold (${this.thresholds.maxResponseTime}ms)`
+      );
     }
 
     if (report.throughput < this.thresholds.minThroughput) {
-      console.warn(`Throughput (${report.throughput}/s) below threshold (${this.thresholds.minThroughput}/s)`);
+      console.warn(
+        `Throughput (${report.throughput}/s) below threshold (${this.thresholds.minThroughput}/s)`
+      );
     }
 
     if (report.peakMemoryUsage > this.thresholds.maxMemoryUsage) {
-      console.warn(`Peak memory usage (${report.peakMemoryUsage} bytes) exceeds threshold (${this.thresholds.maxMemoryUsage} bytes)`);
+      console.warn(
+        `Peak memory usage (${report.peakMemoryUsage} bytes) exceeds threshold (${this.thresholds.maxMemoryUsage} bytes)`
+      );
     }
   }
 
@@ -181,4 +203,4 @@ export class PerformanceMonitor {
     const index = Math.floor((percentile / 100) * sorted.length);
     return sorted[index];
   }
-} 
+}

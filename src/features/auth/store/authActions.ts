@@ -1,30 +1,30 @@
-import { TokenForgeUser } from '../types/auth';
-import { AuthError } from '../types/errors';
-import { AUTH_ACTIONS, AuthAction } from './authReducer';
+import { TokenForgeUser } from "../types/auth";
+import { AuthError } from "../types/errors";
+import { AUTH_ACTIONS, AuthAction } from "./authReducer";
 
 // Action creators
 export const authActions = {
   loginStart: (): AuthAction => ({
-    type: AUTH_ACTIONS.LOGIN_START
+    type: AUTH_ACTIONS.LOGIN_START,
   }),
 
   loginSuccess: (user: TokenForgeUser): AuthAction => ({
     type: AUTH_ACTIONS.LOGIN_SUCCESS,
-    payload: { user }
+    payload: { user },
   }),
 
   loginFailure: (error: AuthError): AuthAction => ({
     type: AUTH_ACTIONS.LOGIN_FAILURE,
-    payload: error
+    payload: error,
   }),
 
   logout: (): AuthAction => ({
-    type: AUTH_ACTIONS.LOGOUT
+    type: AUTH_ACTIONS.LOGOUT,
   }),
 
   updateUser: (userData: Partial<TokenForgeUser>): AuthAction => ({
     type: AUTH_ACTIONS.UPDATE_USER,
-    payload: userData
+    payload: userData,
   }),
 
   updateWallet: (walletData: {
@@ -33,15 +33,15 @@ export const authActions = {
     chainId?: number;
   }): AuthAction => ({
     type: AUTH_ACTIONS.UPDATE_WALLET,
-    payload: walletData
+    payload: walletData,
   }),
 
   setError: (error: AuthError): AuthAction => ({
     type: AUTH_ACTIONS.SET_ERROR,
-    payload: error
+    payload: error,
   }),
 
   clearError: (): AuthAction => ({
-    type: AUTH_ACTIONS.CLEAR_ERROR
-  })
+    type: AUTH_ACTIONS.CLEAR_ERROR,
+  }),
 };

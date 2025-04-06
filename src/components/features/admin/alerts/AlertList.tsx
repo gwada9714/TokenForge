@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   List,
   ListItem,
@@ -10,9 +10,9 @@ import {
   Typography,
   Box,
   Skeleton,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import type { AlertRule } from '../../../../types/contracts';
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import type { AlertRule } from "../../../../types/contracts";
 
 interface AlertListProps {
   rules: AlertRule[];
@@ -45,7 +45,7 @@ export const AlertList: React.FC<AlertListProps> = ({
 
   if (rules.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
+      <Box sx={{ textAlign: "center", py: 4 }}>
         <Typography variant="body2" color="text.secondary">
           Aucune règle d'alerte configurée
         </Typography>
@@ -59,11 +59,11 @@ export const AlertList: React.FC<AlertListProps> = ({
         <ListItem
           key={rule.id}
           sx={{
-            bgcolor: 'background.paper',
+            bgcolor: "background.paper",
             borderRadius: 1,
             mb: 1,
-            '&:hover': {
-              bgcolor: 'action.hover',
+            "&:hover": {
+              bgcolor: "action.hover",
             },
           }}
         >
@@ -74,7 +74,11 @@ export const AlertList: React.FC<AlertListProps> = ({
               </Typography>
             }
             secondary={
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.5 }}
+              >
                 {rule.condition}
               </Typography>
             }

@@ -1,9 +1,4 @@
-import {
-  createPublicClient,
-  createWalletClient,
-  http,
-  parseUnits,
-} from "viem";
+import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 import fs from "fs";
@@ -48,7 +43,7 @@ async function main() {
     throw new Error("Please set your ALCHEMY_API_KEY in the .env file");
   }
   const transport = http(
-    `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+    `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
   );
 
   const publicClient = createPublicClient({

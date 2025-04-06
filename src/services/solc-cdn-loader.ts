@@ -13,7 +13,7 @@ function getWorker(): Worker {
 
 export async function compile(
   source: string,
-  settings?: CompilerInput["settings"],
+  settings?: CompilerInput["settings"]
 ): Promise<CompilerOutput> {
   const worker = getWorker();
 

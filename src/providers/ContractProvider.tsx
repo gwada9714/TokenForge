@@ -1,16 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAccount, useSwitchChain, useChainId } from 'wagmi';
-import { getContractAddress } from '../config/contracts';
-import { CircularProgress, Box, Alert, Button } from '@mui/material';
-import { sepolia } from 'viem/chains';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useAccount, useSwitchChain, useChainId } from "wagmi";
+import { getContractAddress } from "../config/contracts";
+import { CircularProgress, Box, Alert, Button } from "@mui/material";
+import { sepolia } from "viem/chains";
 
 // Types spécifiques pour la gestion des erreurs
-type ContractError = 
-  | 'WALLET_DISCONNECTED'
-  | 'NETWORK_NOT_DETECTED'
-  | 'WRONG_NETWORK'
-  | 'CONTRACT_LOAD_ERROR'
-  | 'NETWORK_SWITCH_ERROR';
+type ContractError =
+  | "WALLET_DISCONNECTED"
+  | "NETWORK_NOT_DETECTED"
+  | "WRONG_NETWORK"
+  | "CONTRACT_LOAD_ERROR"
+  | "NETWORK_SWITCH_ERROR";
 
 interface ContractContextType {
   contractAddress: `0x${string}` | null;
@@ -27,12 +27,16 @@ const ContractContext = createContext<ContractContextType>({
 
 export const useContract = () => useContext(ContractContext);
 
-export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const chainId = useChainId();
   const { isConnected } = useAccount();
   const { switchChain } = useSwitchChain();
-  
-  const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(null);
+
+  const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ContractError | null>(null);
 
@@ -42,7 +46,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await switchChain({ chainId: sepolia.id });
       setError(null);
     } catch (err) {
-      setError('NETWORK_SWITCH_ERROR');
+      setError("NETWORK_SWITCH_ERROR");
     }
   };
 
@@ -52,28 +56,28 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsLoading(true);
 
         if (!isConnected) {
-          setError('WALLET_DISCONNECTED');
+          setError("WALLET_DISCONNECTED");
           return;
         }
 
         if (!chainId) {
-          setError('NETWORK_NOT_DETECTED');
+          setError("NETWORK_NOT_DETECTED");
           return;
         }
 
         if (chainId !== sepolia.id) {
-          setError('WRONG_NETWORK');
+          setError("WRONG_NETWORK");
           return;
         }
 
-        const address = await getContractAddress('TOKEN_FACTORY', chainId);
-        if (!address || !address.startsWith('0x')) {
-          throw new Error('Invalid contract address format');
+        const address = await getContractAddress("TOKEN_FACTORY", chainId);
+        if (!address || !address.startsWith("0x")) {
+          throw new Error("Invalid contract address format");
         }
         setContractAddress(address as `0x${string}`);
         setError(null);
       } catch (err) {
-        setError('CONTRACT_LOAD_ERROR');
+        setError("CONTRACT_LOAD_ERROR");
       } finally {
         setIsLoading(false);
       }
@@ -84,23 +88,26 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="200px"
+      >
         <CircularProgress />
       </Box>
     );
   }
 
-  if (error === 'WALLET_DISCONNECTED') {
+  if (error === "WALLET_DISCONNECTED") {
     return (
-      <Alert severity="warning">
-        Please connect your wallet to continue.
-      </Alert>
+      <Alert severity="warning">Please connect your wallet to continue.</Alert>
     );
   }
 
-  if (error === 'WRONG_NETWORK') {
+  if (error === "WRONG_NETWORK") {
     return (
-      <Alert 
+      <Alert
         severity="warning"
         action={
           <Button color="inherit" size="small" onClick={switchToSepolia}>
@@ -113,7 +120,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   }
 
-  if (error === 'NETWORK_NOT_DETECTED') {
+  if (error === "NETWORK_NOT_DETECTED") {
     return (
       <Alert severity="error">
         Unable to detect network. Please check your wallet connection.
@@ -121,7 +128,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   }
 
-  if (error === 'CONTRACT_LOAD_ERROR') {
+  if (error === "CONTRACT_LOAD_ERROR") {
     return (
       <Alert severity="error">
         Failed to load smart contract. Please try again later.
@@ -129,16 +136,19 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   }
 
-  if (error === 'NETWORK_SWITCH_ERROR') {
+  if (error === "NETWORK_SWITCH_ERROR") {
     return (
       <Alert severity="error">
-        Failed to switch network. Please try manually switching to Sepolia in your wallet.
+        Failed to switch network. Please try manually switching to Sepolia in
+        your wallet.
       </Alert>
     );
   }
 
   return (
-    <ContractContext.Provider value={{ contractAddress, isLoading, error, switchToSepolia }}>
+    <ContractContext.Provider
+      value={{ contractAddress, isLoading, error, switchToSepolia }}
+    >
       {children}
     </ContractContext.Provider>
   );

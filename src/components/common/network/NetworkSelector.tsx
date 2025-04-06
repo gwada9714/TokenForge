@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Card,
@@ -9,9 +9,13 @@ import {
   FormControlLabel,
   Button,
   Tooltip,
-} from '@mui/material';
-import { NetworkConfig, getMainnetNetworks, getTestnetNetworks } from '@/config/networks';
-import Image from 'next/image';
+} from "@mui/material";
+import {
+  NetworkConfig,
+  getMainnetNetworks,
+  getTestnetNetworks,
+} from "@/config/networks";
+import Image from "next/image";
 
 interface NetworkSelectorProps {
   selectedNetwork?: NetworkConfig;
@@ -27,51 +31,61 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
   onShowTestnetsChange,
 }) => {
   const networks = React.useMemo(() => {
-    return showTestnets ? [...getMainnetNetworks(), ...getTestnetNetworks()] : getMainnetNetworks();
+    return showTestnets
+      ? [...getMainnetNetworks(), ...getTestnetNetworks()]
+      : getMainnetNetworks();
   }, [showTestnets]);
 
-  const NetworkCard: React.FC<{ network: NetworkConfig }> = React.memo(({ network }) => {
-    const isSelected = selectedNetwork?.chain.id === network.chain.id;
+  const NetworkCard: React.FC<{ network: NetworkConfig }> = React.memo(
+    ({ network }) => {
+      const isSelected = selectedNetwork?.chain.id === network.chain.id;
 
-    return (
-      <Card
-        sx={{
-          cursor: 'pointer',
-          border: theme => isSelected ? `2px solid ${theme.palette.primary.main}` : 'none',
-          transition: 'transform 0.2s',
-          '&:hover': {
-            transform: 'scale(1.02)',
-          },
-        }}
-        onClick={() => onNetworkSelect(network)}
-      >
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={2}>
-            {network.icon && (
-              <Image
-                src={network.icon}
-                alt={network.name}
-                width={32}
-                height={32}
-              />
-            )}
-            <Box>
-              <Typography variant="h6" component="div">
-                {network.name}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {network.isTestnet ? '🔧 Testnet' : '🌐 Mainnet'}
-              </Typography>
+      return (
+        <Card
+          sx={{
+            cursor: "pointer",
+            border: (theme) =>
+              isSelected ? `2px solid ${theme.palette.primary.main}` : "none",
+            transition: "transform 0.2s",
+            "&:hover": {
+              transform: "scale(1.02)",
+            },
+          }}
+          onClick={() => onNetworkSelect(network)}
+        >
+          <CardContent>
+            <Box display="flex" alignItems="center" gap={2}>
+              {network.icon && (
+                <Image
+                  src={network.icon}
+                  alt={network.name}
+                  width={32}
+                  height={32}
+                />
+              )}
+              <Box>
+                <Typography variant="h6" component="div">
+                  {network.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {network.isTestnet ? "🔧 Testnet" : "🌐 Mainnet"}
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    );
-  });
+          </CardContent>
+        </Card>
+      );
+    }
+  );
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5" component="div">
           Select Network
         </Typography>

@@ -1,7 +1,14 @@
-import React from 'react';
-import styled from 'styled-components';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import { ForgeCard } from './ForgeCard';
+import React from "react";
+import styled from "styled-components";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+} from "recharts";
+import { ForgeCard } from "./ForgeCard";
 
 interface TokenChartProps {
   data: Array<{
@@ -10,7 +17,7 @@ interface TokenChartProps {
     color: string;
   }>;
   title?: string;
-  type?: 'pie' | 'donut';
+  type?: "pie" | "donut";
   className?: string;
 }
 
@@ -20,29 +27,29 @@ const ChartContainer = styled.div`
 `;
 
 const Title = styled.h4`
-  font-family: ${props => props.theme.typography.fontFamily.heading};
+  font-family: ${(props) => props.theme.typography.fontFamily.heading};
   font-size: 1.25rem;
-  font-weight: ${props => props.theme.typography.fontWeight.semibold};
-  color: ${props => props.theme.colors.text.primary};
+  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
+  color: ${(props) => props.theme.colors.text.primary};
   margin-bottom: 1rem;
   text-align: center;
 `;
 
 const CustomTooltip = styled.div`
-  background: ${props => props.theme.colors.background.paper};
-  border: 1px solid ${props => props.theme.colors.primary.main}20;
+  background: ${(props) => props.theme.colors.background.paper};
+  border: 1px solid ${(props) => props.theme.colors.primary.main}20;
   border-radius: 8px;
   padding: 0.75rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 `;
 
 const TooltipLabel = styled.p`
-  font-weight: ${props => props.theme.typography.fontWeight.medium};
+  font-weight: ${(props) => props.theme.typography.fontWeight.medium};
   margin-bottom: 0.25rem;
 `;
 
 const TooltipValue = styled.p`
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${(props) => props.theme.colors.text.secondary};
 `;
 
 const CustomLegend = styled.div`
@@ -63,12 +70,12 @@ const LegendColor = styled.div<{ $color: string }>`
   width: 12px;
   height: 12px;
   border-radius: 3px;
-  background-color: ${props => props.$color};
+  background-color: ${(props) => props.$color};
 `;
 
 const LegendLabel = styled.span`
   font-size: 0.875rem;
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${(props) => props.theme.colors.text.secondary};
 `;
 
 const CustomizedTooltip: React.FC<any> = ({ active, payload }) => {
@@ -84,12 +91,16 @@ const CustomizedTooltip: React.FC<any> = ({ active, payload }) => {
   return null;
 };
 
-const CustomizedLegend: React.FC<{ data: TokenChartProps['data'] }> = ({ data }) => (
+const CustomizedLegend: React.FC<{ data: TokenChartProps["data"] }> = ({
+  data,
+}) => (
   <CustomLegend>
     {data.map((entry, index) => (
       <LegendItem key={index}>
         <LegendColor $color={entry.color} />
-        <LegendLabel>{entry.name} ({entry.value}%)</LegendLabel>
+        <LegendLabel>
+          {entry.name} ({entry.value}%)
+        </LegendLabel>
       </LegendItem>
     ))}
   </CustomLegend>
@@ -98,11 +109,11 @@ const CustomizedLegend: React.FC<{ data: TokenChartProps['data'] }> = ({ data })
 const TokenChart: React.FC<TokenChartProps> = ({
   data,
   title,
-  type = 'donut',
-  className
+  type = "donut",
+  className,
 }) => {
-  const innerRadius = type === 'donut' ? '60%' : '0';
-  
+  const innerRadius = type === "donut" ? "60%" : "0";
+
   return (
     <ForgeCard className={className}>
       {title && <Title>{title}</Title>}

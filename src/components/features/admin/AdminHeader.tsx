@@ -1,5 +1,5 @@
-import React from 'react';
-import { Paper, Typography } from '@mui/material';
+import React from "react";
+import { Paper, Typography } from "@mui/material";
 
 export const AdminHeader: React.FC = () => {
   return (
@@ -8,7 +8,8 @@ export const AdminHeader: React.FC = () => {
         Tableau de bord administrateur
       </Typography>
       <Typography color="textSecondary" paragraph>
-        Gérez les paramètres du contrat, les alertes et consultez les logs d'audit.
+        Gérez les paramètres du contrat, les alertes et consultez les logs
+        d'audit.
       </Typography>
     </Paper>
   );

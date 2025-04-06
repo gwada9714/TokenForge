@@ -1,5 +1,5 @@
-import type { RouteObject } from 'react-router-dom';
-import type { PageComponent } from './pages';
+import type { RouteObject } from "react-router-dom";
+import type { PageComponent } from "./pages";
 
 export interface AppRoute {
   path: string;
@@ -12,6 +12,6 @@ export interface LazyRouteProps {
   component: React.LazyExoticComponent<React.ComponentType<any>>;
 }
 
-export type AppRouteObject = Omit<RouteObject, 'children'> & {
+export type AppRouteObject = Omit<RouteObject, "children"> & {
   children?: AppRouteObject[];
 };

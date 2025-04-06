@@ -1,13 +1,20 @@
-import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { routes, RouteConfig } from '../../config/routes';
-import { Layout } from '../Layout';
-import { ProtectedRoute } from '../auth/ProtectedRoute';
-import { Box, CircularProgress } from '@mui/material';
-import { routerConfig } from '../../router/router.config';
+import React, { Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { routes, RouteConfig } from "../../config/routes";
+import { Layout } from "../Layout";
+import { ProtectedRoute } from "../auth/ProtectedRoute";
+import { Box, CircularProgress } from "@mui/material";
+import { routerConfig } from "../../router/router.config";
 
 const LoadingFallback = () => (
-  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+  <Box
+    sx={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+    }}
+  >
     <CircularProgress />
   </Box>
 );
@@ -38,10 +45,7 @@ const RouteElement: React.FC<{ route: RouteConfig }> = ({ route }) => {
 const renderRoutes = (routes: RouteConfig[]) => {
   return routes.map((route) => (
     <React.Fragment key={route.path}>
-      <Route
-        path={route.path}
-        element={<RouteElement route={route} />}
-      />
+      <Route path={route.path} element={<RouteElement route={route} />} />
       {route.children && renderRoutes(route.children)}
     </React.Fragment>
   ));

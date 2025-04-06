@@ -1,5 +1,5 @@
-import { ethers } from 'ethers';
-import logger from '../utils/logger';
+import { ethers } from "ethers";
+import logger from "../utils/logger";
 
 export class ProviderService {
   private provider: ethers.Provider;
@@ -7,14 +7,14 @@ export class ProviderService {
   constructor() {
     const providerUrl = process.env.PROVIDER_URL;
     if (!providerUrl) {
-      throw new Error('PROVIDER_URL environment variable is not set');
+      throw new Error("PROVIDER_URL environment variable is not set");
     }
 
     try {
       this.provider = new ethers.JsonRpcProvider(providerUrl);
-      logger.info('Ethereum provider initialized successfully');
+      logger.info("Ethereum provider initialized successfully");
     } catch (error) {
-      logger.error('Failed to initialize Ethereum provider:', error);
+      logger.error("Failed to initialize Ethereum provider:", error);
       throw error;
     }
   }
@@ -28,7 +28,7 @@ export class ProviderService {
       const network = await this.provider.getNetwork();
       return network;
     } catch (error) {
-      logger.error('Error getting network information:', error);
+      logger.error("Error getting network information:", error);
       throw error;
     }
   }
@@ -38,7 +38,7 @@ export class ProviderService {
       const gasPrice = await this.provider.getFeeData();
       return gasPrice;
     } catch (error) {
-      logger.error('Error getting gas price:', error);
+      logger.error("Error getting gas price:", error);
       throw error;
     }
   }
@@ -47,7 +47,12 @@ export class ProviderService {
     try {
       const tokenContract = new ethers.Contract(
         address,
-        ['function name() view returns (string)', 'function symbol() view returns (string)', 'function decimals() view returns (uint8)', 'function totalSupply() view returns (uint256)'],
+        [
+          "function name() view returns (string)",
+          "function symbol() view returns (string)",
+          "function decimals() view returns (uint8)",
+          "function totalSupply() view returns (uint256)",
+        ],
         this.provider
       );
 
@@ -55,7 +60,7 @@ export class ProviderService {
         tokenContract.name(),
         tokenContract.symbol(),
         tokenContract.decimals(),
-        tokenContract.totalSupply()
+        tokenContract.totalSupply(),
       ]);
 
       return {
@@ -63,10 +68,10 @@ export class ProviderService {
         name,
         symbol,
         decimals,
-        totalSupply: totalSupply.toString()
+        totalSupply: totalSupply.toString(),
       };
     } catch (error) {
-      logger.error('Error getting token details:', error);
+      logger.error("Error getting token details:", error);
       throw error;
     }
   }
@@ -77,7 +82,7 @@ export class ProviderService {
       // Cette implémentation dépendra de votre contrat TokenForgeFactory
       return [];
     } catch (error) {
-      logger.error('Error getting user tokens:', error);
+      logger.error("Error getting user tokens:", error);
       throw error;
     }
   }
@@ -88,10 +93,10 @@ export class ProviderService {
       // Cette implémentation dépendra de votre contrat TokenForgeFactory
       return {
         success: true,
-        tokenAddress: '0x...'
+        tokenAddress: "0x...",
       };
     } catch (error) {
-      logger.error('Error deploying token:', error);
+      logger.error("Error deploying token:", error);
       throw error;
     }
   }

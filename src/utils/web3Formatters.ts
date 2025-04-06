@@ -1,5 +1,5 @@
-import { type Address } from 'viem';
-import { hexToBigInt } from 'viem';
+import { type Address } from "viem";
+import { hexToBigInt } from "viem";
 
 /**
  * Utilitaires de conversion pour les valeurs Web3
@@ -12,7 +12,7 @@ import { hexToBigInt } from 'viem';
  */
 export const toHexString = (value: bigint): bigint => {
   if (value < 0n) {
-    throw new Error('Cannot convert negative bigint');
+    throw new Error("Cannot convert negative bigint");
   }
   return hexToBigInt(`0x${value.toString(16)}`);
 };
@@ -32,7 +32,7 @@ export const fromHexString = (hex: `0x${string}`): bigint => {
  * @returns boolean
  */
 export const isHexString = (value: string): value is `0x${string}` => {
-  return value.startsWith('0x') && /^0x[0-9a-fA-F]*$/.test(value);
+  return value.startsWith("0x") && /^0x[0-9a-fA-F]*$/.test(value);
 };
 
 /**
@@ -41,7 +41,7 @@ export const isHexString = (value: string): value is `0x${string}` => {
  * @returns Adresse normalisée
  */
 export const normalizeAddress = (address: string): Address => {
-  if (!address.startsWith('0x')) {
+  if (!address.startsWith("0x")) {
     return `0x${address}` as Address;
   }
   return address.toLowerCase() as Address;

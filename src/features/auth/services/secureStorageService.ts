@@ -1,9 +1,9 @@
-import { AES, enc } from 'crypto-js';
-import { errorService } from './errorService';
-import { AuthErrorCode } from '../errors/AuthError';
+import { AES, enc } from "crypto-js";
+import { errorService } from "./errorService";
+import { AuthErrorCode } from "../errors/AuthError";
 
-const STORAGE_PREFIX = 'tokenforge_';
-const ENCRYPTION_KEY = process.env.REACT_APP_STORAGE_KEY || 'default-dev-key';
+const STORAGE_PREFIX = "tokenforge_";
+const ENCRYPTION_KEY = process.env.REACT_APP_STORAGE_KEY || "default-dev-key";
 
 interface StorageItem<T = unknown> {
   data: T;
@@ -41,10 +41,11 @@ class SecureStorageService {
     } catch (error) {
       throw errorService.createAuthError(
         AuthErrorCode.STORAGE_ERROR,
-        'Failed to decrypt data. Storage might be compromised.',
+        "Failed to decrypt data. Storage might be compromised.",
         {
-          context: 'secureStorageService.decrypt',
-          originalError: error instanceof Error ? error : new Error(String(error))
+          context: "secureStorageService.decrypt",
+          originalError:
+            error instanceof Error ? error : new Error(String(error)),
         }
       );
     }
@@ -55,7 +56,7 @@ class SecureStorageService {
       const item: StorageItem<T> = {
         data: value,
         timestamp: Date.now(),
-        version: '1.0'
+        version: "1.0",
       };
       const serialized = JSON.stringify(item);
       const encrypted = this.encrypt(serialized);
@@ -63,10 +64,11 @@ class SecureStorageService {
     } catch (error) {
       throw errorService.createAuthError(
         AuthErrorCode.STORAGE_ERROR,
-        'Failed to store data',
+        "Failed to store data",
         {
-          context: 'secureStorageService.setItem',
-          originalError: error instanceof Error ? error : new Error(String(error))
+          context: "secureStorageService.setItem",
+          originalError:
+            error instanceof Error ? error : new Error(String(error)),
         }
       );
     }
@@ -91,10 +93,11 @@ class SecureStorageService {
     } catch (error) {
       throw errorService.createAuthError(
         AuthErrorCode.STORAGE_ERROR,
-        'Failed to retrieve data',
+        "Failed to retrieve data",
         {
-          context: 'secureStorageService.getItem',
-          originalError: error instanceof Error ? error : new Error(String(error))
+          context: "secureStorageService.getItem",
+          originalError:
+            error instanceof Error ? error : new Error(String(error)),
         }
       );
     }
@@ -106,7 +109,7 @@ class SecureStorageService {
 
   clear(): void {
     const keys = Object.keys(this.storage);
-    keys.forEach(key => {
+    keys.forEach((key) => {
       if (key.startsWith(STORAGE_PREFIX)) {
         this.storage.removeItem(key);
       }
@@ -115,15 +118,15 @@ class SecureStorageService {
 
   // Méthode spécifique pour le stockage du token JWT
   setAuthToken(token: string): void {
-    this.setItem('auth_token', token);
+    this.setItem("auth_token", token);
   }
 
   getAuthToken(): string | null {
-    return this.getItem('auth_token');
+    return this.getItem("auth_token");
   }
 
   removeAuthToken(): void {
-    this.removeItem('auth_token');
+    this.removeItem("auth_token");
   }
 }
 

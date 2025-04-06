@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { web3Service } from '../services/web3';
-import { useAccount } from 'wagmi';
-import { useWeb3 } from '../providers';
+import { useState, useEffect } from "react";
+import { web3Service } from "../services/web3";
+import { useAccount } from "wagmi";
+import { useWeb3 } from "../providers";
 
 interface TokenInfo {
   address: string;
@@ -38,7 +38,7 @@ export const useTokenList = () => {
             token.name(),
             token.symbol(),
             token.decimals(),
-            token.totalSupply()
+            token.totalSupply(),
           ]);
 
           return {
@@ -46,7 +46,7 @@ export const useTokenList = () => {
             name,
             symbol,
             decimals,
-            totalSupply
+            totalSupply,
           };
         } catch (err) {
           console.error(`Error loading token ${tokenAddress}:`, err);
@@ -54,13 +54,18 @@ export const useTokenList = () => {
         }
       });
 
-      const loadedTokens = (await Promise.all(tokenPromises))
-        .filter((token): token is TokenInfo => token !== null);
+      const loadedTokens = (await Promise.all(tokenPromises)).filter(
+        (token): token is TokenInfo => token !== null
+      );
 
       setTokens(loadedTokens);
     } catch (err) {
-      console.error('Error loading tokens:', err);
-      setError(err instanceof Error ? err.message : 'Erreur lors du chargement des tokens');
+      console.error("Error loading tokens:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors du chargement des tokens"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +79,6 @@ export const useTokenList = () => {
     tokens,
     isLoading,
     error,
-    refresh: loadTokens
+    refresh: loadTokens,
   };
 };

@@ -1,10 +1,10 @@
-import { User } from 'firebase/auth';
+import { User } from "firebase/auth";
 
 export enum SessionStatus {
-  INITIALIZING = 'INITIALIZING',
-  AUTHENTICATED = 'AUTHENTICATED',
-  UNAUTHENTICATED = 'UNAUTHENTICATED',
-  ERROR = 'ERROR'
+  INITIALIZING = "INITIALIZING",
+  AUTHENTICATED = "AUTHENTICATED",
+  UNAUTHENTICATED = "UNAUTHENTICATED",
+  ERROR = "ERROR",
 }
 
 export interface SessionState {
@@ -20,7 +20,7 @@ export interface AuthError extends Error {
 }
 
 export interface SessionEventPayload {
-  type: 'SESSION_CHANGED' | 'SESSION_ERROR';
+  type: "SESSION_CHANGED" | "SESSION_ERROR";
   state: SessionState;
 }
 

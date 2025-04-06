@@ -3,9 +3,9 @@
  * Ce script crée un fichier de déclaration de types pour étendre les types de @solana/web3.js
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // Obtenir le répertoire courant en ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -13,13 +13,13 @@ const __dirname = path.dirname(__filename);
 
 // Couleurs pour les logs
 const colors = {
-  reset: '\x1b[0m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m'
+  reset: "\x1b[0m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
 };
 
 // Fonction pour logger avec couleur
@@ -28,8 +28,8 @@ function log(message, color = colors.reset) {
 }
 
 // Chemin vers le répertoire des types
-const typesDir = path.join(path.resolve(__dirname, '..'), 'src', 'types');
-const solanaTypesPath = path.join(typesDir, 'solana.d.ts');
+const typesDir = path.join(path.resolve(__dirname, ".."), "src", "types");
+const solanaTypesPath = path.join(typesDir, "solana.d.ts");
 
 // Créer le répertoire des types s'il n'existe pas
 if (!fs.existsSync(typesDir)) {
@@ -142,43 +142,61 @@ declare module '@solana/spl-token' {
 // Écrire le fichier de déclaration de types
 try {
   fs.writeFileSync(solanaTypesPath, typesContent);
-  log(`Fichier de déclaration de types créé avec succès: ${solanaTypesPath}`, colors.green);
+  log(
+    `Fichier de déclaration de types créé avec succès: ${solanaTypesPath}`,
+    colors.green
+  );
 } catch (error) {
-  log(`Erreur lors de la création du fichier de déclaration de types: ${error.message}`, colors.red);
+  log(
+    `Erreur lors de la création du fichier de déclaration de types: ${error.message}`,
+    colors.red
+  );
   process.exit(1);
 }
 
 // Mettre à jour tsconfig.json pour inclure le fichier de déclaration de types
-const tsconfigPath = path.join(path.resolve(__dirname, '..'), 'tsconfig.json');
+const tsconfigPath = path.join(path.resolve(__dirname, ".."), "tsconfig.json");
 if (fs.existsSync(tsconfigPath)) {
   try {
-    const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
-    
+    const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
+
     // Vérifier si le fichier est déjà inclus
     if (!tsconfig.include) {
-      tsconfig.include = ['src/**/*'];
+      tsconfig.include = ["src/**/*"];
     }
-    
+
     // Vérifier si les types sont déjà configurés
     if (!tsconfig.compilerOptions) {
       tsconfig.compilerOptions = {};
     }
-    
+
     if (!tsconfig.compilerOptions.typeRoots) {
-      tsconfig.compilerOptions.typeRoots = ['./node_modules/@types', './src/types'];
-    } else if (!tsconfig.compilerOptions.typeRoots.includes('./src/types')) {
-      tsconfig.compilerOptions.typeRoots.push('./src/types');
+      tsconfig.compilerOptions.typeRoots = [
+        "./node_modules/@types",
+        "./src/types",
+      ];
+    } else if (!tsconfig.compilerOptions.typeRoots.includes("./src/types")) {
+      tsconfig.compilerOptions.typeRoots.push("./src/types");
     }
-    
+
     // Écrire le fichier tsconfig.json mis à jour
     fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2));
     log(`tsconfig.json mis à jour avec succès`, colors.green);
   } catch (error) {
-    log(`Erreur lors de la mise à jour de tsconfig.json: ${error.message}`, colors.red);
+    log(
+      `Erreur lors de la mise à jour de tsconfig.json: ${error.message}`,
+      colors.red
+    );
   }
 } else {
   log(`tsconfig.json non trouvé`, colors.yellow);
 }
 
-log('Script terminé. Les problèmes de typage TypeScript dans l\'adaptateur Solana devraient être résolus.', colors.green);
-log('Pour appliquer les changements, redémarrez le serveur TypeScript ou votre IDE.', colors.cyan);
+log(
+  "Script terminé. Les problèmes de typage TypeScript dans l'adaptateur Solana devraient être résolus.",
+  colors.green
+);
+log(
+  "Pour appliquer les changements, redémarrez le serveur TypeScript ou votre IDE.",
+  colors.cyan
+);

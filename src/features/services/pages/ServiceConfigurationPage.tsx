@@ -1,5 +1,5 @@
-import React from 'react';
-import { Container, Typography, Paper, Box, Grid } from '@mui/material';
+import React from "react";
+import { Container, Typography, Paper, Box, Grid } from "@mui/material";
 
 export const ServiceConfigurationPage: React.FC = () => {
   return (
@@ -21,4 +21,4 @@ export const ServiceConfigurationPage: React.FC = () => {
       </Grid>
     </Container>
   );
-}; 
+};

@@ -22,7 +22,7 @@ export interface StakingState {
   totalStaked: bigint;
   stakingHistory: Array<{
     timestamp: number;
-    action: 'stake' | 'unstake' | 'claim';
+    action: "stake" | "unstake" | "claim";
     amount: bigint;
   }>;
   isLoading: boolean;
@@ -33,8 +33,8 @@ export interface StakingState {
 }
 
 export const SUPPORTED_CHAINS = {
-  1: 'Ethereum Mainnet',
-  11155111: 'Sepolia Testnet'
+  1: "Ethereum Mainnet",
+  11155111: "Sepolia Testnet",
 } as const;
 
-export type SupportedChainId = keyof typeof SUPPORTED_CHAINS; 
+export type SupportedChainId = keyof typeof SUPPORTED_CHAINS;

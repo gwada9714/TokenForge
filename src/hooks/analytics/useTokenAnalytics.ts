@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { TokenContract } from '@/providers/contract/ContractProvider';
-import { TokenMetrics } from '@/types/analytics';
+import { useEffect, useState } from "react";
+import { TokenContract } from "@/providers/contract/ContractProvider";
+import { TokenMetrics } from "@/types/analytics";
 
 export interface TransactionData {
   date: string;
@@ -32,13 +32,13 @@ export const useTokenAnalytics = (token?: TokenContract): TokenAnalytics => {
 
   useEffect(() => {
     if (!token) {
-      setAnalytics(prev => ({ ...prev, loading: false }));
+      setAnalytics((prev) => ({ ...prev, loading: false }));
       return;
     }
 
     const fetchAnalytics = async () => {
       try {
-        setAnalytics(prev => ({ ...prev, loading: true }));
+        setAnalytics((prev) => ({ ...prev, loading: true }));
 
         const tokenMetrics: TokenMetrics = {
           address: token.address || null,
@@ -46,7 +46,7 @@ export const useTokenAnalytics = (token?: TokenContract): TokenAnalytics => {
           name: token.name || null,
           symbol: token.symbol || null,
           decimals: token.decimals,
-          totalSupply: token.totalSupply?.toString() || '0',
+          totalSupply: token.totalSupply?.toString() || "0",
           holders: 1000, // Mock data
           transactions: {
             total: 5000,
@@ -54,12 +54,14 @@ export const useTokenAnalytics = (token?: TokenContract): TokenAnalytics => {
             sell: 1500,
             transfer: 1500,
           },
-          volume: '10000000000000000000000',
+          volume: "10000000000000000000000",
         };
 
         // Mock transaction data
         const mockTransactions = Array.from({ length: 7 }, (_, i) => ({
-          date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date: new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
           volume: (Math.random() * 1000000000000000000000).toString(),
           count: Math.floor(Math.random() * 100),
           transactionTypes: {
@@ -77,8 +79,8 @@ export const useTokenAnalytics = (token?: TokenContract): TokenAnalytics => {
           monthlyTransactions: mockTransactions,
         });
       } catch (error) {
-        console.error('Error fetching analytics:', error);
-        setAnalytics(prev => ({ ...prev, loading: false }));
+        console.error("Error fetching analytics:", error);
+        setAnalytics((prev) => ({ ...prev, loading: false }));
       }
     };
 

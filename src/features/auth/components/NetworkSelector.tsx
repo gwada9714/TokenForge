@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Button,
   Menu,
@@ -6,44 +6,40 @@ import {
   ListItemIcon,
   ListItemText,
   CircularProgress,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CheckIcon from '@mui/icons-material/Check';
-import { useAuthManager } from '../hooks/useAuthManager';
-import { SupportedChainId } from '../hooks/useNetworkManagement';
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import CheckIcon from "@mui/icons-material/Check";
+import { useAuthManager } from "../hooks/useAuthManager";
+import { SupportedChainId } from "../hooks/useNetworkManagement";
 
 const StyledButton = styled(Button)(({ theme }) => ({
   borderRadius: theme.spacing(3),
   padding: theme.spacing(1, 2),
-  textTransform: 'none',
+  textTransform: "none",
   minWidth: 140,
 }));
 
-const NetworkIcon = styled('div')<{ color: string }>(({ color }) => ({
+const NetworkIcon = styled("div")<{ color: string }>(({ color }) => ({
   width: 8,
   height: 8,
-  borderRadius: '50%',
+  borderRadius: "50%",
   backgroundColor: color,
   marginRight: 8,
 }));
 
 interface NetworkSelectorProps {
-  variant?: 'text' | 'outlined' | 'contained';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "text" | "outlined" | "contained";
+  size?: "small" | "medium" | "large";
 }
 
 export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
-  variant = 'outlined',
-  size = 'medium',
+  variant = "outlined",
+  size = "medium",
 }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const {
-    chainId,
-    isChangingNetwork,
-    supportedNetworks,
-    switchNetwork,
-  } = useAuthManager();
+  const { chainId, isChangingNetwork, supportedNetworks, switchNetwork } =
+    useAuthManager();
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -63,11 +59,11 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
   const getNetworkColor = (networkChainId: number): string => {
     switch (networkChainId) {
       case 1: // Mainnet
-        return '#29B6AF';
+        return "#29B6AF";
       case 11155111: // Sepolia
-        return '#FF4A8D';
+        return "#FF4A8D";
       default:
-        return '#666666';
+        return "#666666";
     }
   };
 
@@ -75,7 +71,9 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
     return supportedNetworks[networkChainId as SupportedChainId].chainName;
   };
 
-  const currentNetworkName = chainId ? getNetworkName(chainId) : 'Select Network';
+  const currentNetworkName = chainId
+    ? getNetworkName(chainId)
+    : "Select Network";
 
   return (
     <>
@@ -83,12 +81,16 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
         variant={variant}
         size={size}
         onClick={handleClick}
-        endIcon={isChangingNetwork ? <CircularProgress size={16} /> : <ExpandMoreIcon />}
+        endIcon={
+          isChangingNetwork ? (
+            <CircularProgress size={16} />
+          ) : (
+            <ExpandMoreIcon />
+          )
+        }
         disabled={isChangingNetwork}
       >
-        {chainId && (
-          <NetworkIcon color={getNetworkColor(chainId)} />
-        )}
+        {chainId && <NetworkIcon color={getNetworkColor(chainId)} />}
         {currentNetworkName}
       </StyledButton>
       <Menu
@@ -96,12 +98,12 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
         open={Boolean(anchorEl)}
         onClose={handleClose}
         anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
+          vertical: "bottom",
+          horizontal: "center",
         }}
         transformOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
+          vertical: "top",
+          horizontal: "center",
         }}
       >
         {Object.keys(supportedNetworks).map((networkChainId) => {
@@ -109,15 +111,15 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
           return (
             <MenuItem
               key={networkChainId}
-              onClick={() => handleNetworkSelect(chainIdNumber as SupportedChainId)}
+              onClick={() =>
+                handleNetworkSelect(chainIdNumber as SupportedChainId)
+              }
               selected={chainId === chainIdNumber}
             >
               <ListItemIcon>
                 <NetworkIcon color={getNetworkColor(chainIdNumber)} />
               </ListItemIcon>
-              <ListItemText>
-                {getNetworkName(chainIdNumber)}
-              </ListItemText>
+              <ListItemText>{getNetworkName(chainIdNumber)}</ListItemText>
               {chainId === chainIdNumber && (
                 <CheckIcon fontSize="small" color="primary" />
               )}

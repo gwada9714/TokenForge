@@ -1,13 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap");
 
 /* Animations globales */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     transform: translateY(20px);
     opacity: 0;
   }
@@ -18,9 +22,15 @@
 }
 
 @keyframes glow {
-  0% { box-shadow: 0 0 5px rgba(217, 119, 6, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(217, 119, 6, 0.4); }
-  100% { box-shadow: 0 0 5px rgba(217, 119, 6, 0.2); }
+  0% {
+    box-shadow: 0 0 5px rgba(217, 119, 6, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(217, 119, 6, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(217, 119, 6, 0.2);
+  }
 }
 
 /* Classes d'animation */
@@ -56,12 +66,7 @@
 
 /* Effets métalliques */
 .metallic-gradient {
-  background: linear-gradient(
-    45deg,
-    #182038 0%,
-    #2a3654 50%,
-    #182038 100%
-  );
+  background: linear-gradient(45deg, #182038 0%, #2a3654 50%, #182038 100%);
 }
 
 .forge-glow {
@@ -69,7 +74,7 @@
 }
 
 .forge-glow::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -81,14 +86,19 @@
 
 /* Styles de base */
 body {
-  font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
+  font-family: "Open Sans", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #F5F5F5;
-  color: #1F2937;
+  background-color: #f5f5f5;
+  color: #1f2937;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Montserrat', system-ui, sans-serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Montserrat", system-ui, sans-serif;
   font-weight: 700;
 }

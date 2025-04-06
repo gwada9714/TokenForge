@@ -1,4 +1,4 @@
-import { BaseWalletState } from '../types/baseWalletState';
+import { BaseWalletState } from "../types/baseWalletState";
 
 interface TabSyncMessage {
   type: string;
@@ -19,7 +19,7 @@ class TabSyncService {
   private channel: BroadcastChannel;
 
   private constructor() {
-    this.channel = new BroadcastChannel('tokenforge_tab_sync');
+    this.channel = new BroadcastChannel("tokenforge_tab_sync");
     this.setupMessageListener();
   }
 
@@ -33,11 +33,11 @@ class TabSyncService {
   private setupMessageListener(): void {
     this.channel.onmessage = (event) => {
       const message = event.data as TabSyncMessage;
-      this.handlers.forEach(handler => {
+      this.handlers.forEach((handler) => {
         try {
           handler(message);
         } catch (error) {
-          console.error('Error in tab sync handler:', error);
+          console.error("Error in tab sync handler:", error);
         }
       });
     };
@@ -47,7 +47,7 @@ class TabSyncService {
     try {
       this.channel.postMessage(message);
     } catch (error) {
-      console.error('Error broadcasting message:', error);
+      console.error("Error broadcasting message:", error);
     }
   }
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Container,
   Typography,
@@ -15,66 +15,68 @@ import {
   Chip,
   TextField,
   InputAdornment,
-  Button
-} from '@mui/material';
+  Button,
+} from "@mui/material";
 import {
   Search as SearchIcon,
   Edit as EditIcon,
   Block as BlockIcon,
   Delete as DeleteIcon,
-  Add as AddIcon
-} from '@mui/icons-material';
+  Add as AddIcon,
+} from "@mui/icons-material";
 
 interface User {
   id: string;
   username: string;
   email: string;
-  role: 'admin' | 'user' | 'moderator';
-  status: 'active' | 'blocked' | 'pending';
+  role: "admin" | "user" | "moderator";
+  status: "active" | "blocked" | "pending";
   createdAt: string;
   lastLogin: string;
 }
 
 const mockUsers: User[] = [
   {
-    id: '1',
-    username: 'john_doe',
-    email: 'john@example.com',
-    role: 'admin',
-    status: 'active',
-    createdAt: '2024-01-01',
-    lastLogin: '2024-02-24 10:30'
+    id: "1",
+    username: "john_doe",
+    email: "john@example.com",
+    role: "admin",
+    status: "active",
+    createdAt: "2024-01-01",
+    lastLogin: "2024-02-24 10:30",
   },
   {
-    id: '2',
-    username: 'jane_smith',
-    email: 'jane@example.com',
-    role: 'user',
-    status: 'active',
-    createdAt: '2024-01-15',
-    lastLogin: '2024-02-23 15:45'
+    id: "2",
+    username: "jane_smith",
+    email: "jane@example.com",
+    role: "user",
+    status: "active",
+    createdAt: "2024-01-15",
+    lastLogin: "2024-02-23 15:45",
   },
   {
-    id: '3',
-    username: 'bob_wilson',
-    email: 'bob@example.com',
-    role: 'moderator',
-    status: 'blocked',
-    createdAt: '2024-02-01',
-    lastLogin: '2024-02-20 09:15'
-  }
+    id: "3",
+    username: "bob_wilson",
+    email: "bob@example.com",
+    role: "moderator",
+    status: "blocked",
+    createdAt: "2024-02-01",
+    lastLogin: "2024-02-20 09:15",
+  },
 ];
 
 export const UsersManagementPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -84,33 +86,34 @@ export const UsersManagementPage: React.FC = () => {
     setPage(0);
   };
 
-  const getRoleColor = (role: User['role']) => {
+  const getRoleColor = (role: User["role"]) => {
     switch (role) {
-      case 'admin':
-        return 'error';
-      case 'moderator':
-        return 'warning';
+      case "admin":
+        return "error";
+      case "moderator":
+        return "warning";
       default:
-        return 'primary';
+        return "primary";
     }
   };
 
-  const getStatusColor = (status: User['status']) => {
+  const getStatusColor = (status: User["status"]) => {
     switch (status) {
-      case 'active':
-        return 'success';
-      case 'blocked':
-        return 'error';
-      case 'pending':
-        return 'warning';
+      case "active":
+        return "success";
+      case "blocked":
+        return "error";
+      case "pending":
+        return "warning";
       default:
-        return 'default';
+        return "default";
     }
   };
 
-  const filteredUsers = mockUsers.filter(user =>
-    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = mockUsers.filter(
+    (user) =>
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -124,7 +127,12 @@ export const UsersManagementPage: React.FC = () => {
       <Paper elevation={1}>
         <Box p={3}>
           {/* Barre d'outils */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={3}
+          >
             <TextField
               size="small"
               placeholder="Rechercher un utilisateur..."
@@ -135,14 +143,10 @@ export const UsersManagementPage: React.FC = () => {
                   <InputAdornment position="start">
                     <SearchIcon />
                   </InputAdornment>
-                )
+                ),
               }}
             />
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-            >
+            <Button variant="contained" color="primary" startIcon={<AddIcon />}>
               Nouvel Utilisateur
             </Button>
           </Box>

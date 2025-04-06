@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box, Paper, Typography, Divider } from '@mui/material';
-import { DashboardStats } from './DashboardStats';
+import React from "react";
+import { Box, Paper, Typography, Divider } from "@mui/material";
+import { DashboardStats } from "./DashboardStats";
 
 interface DashboardOverviewProps {
   isLoading?: boolean;
@@ -16,7 +16,7 @@ interface DashboardOverviewProps {
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   isLoading = false,
   stats,
-  userName = 'Utilisateur'
+  userName = "Utilisateur",
 }) => {
   return (
     <Box sx={{ mb: 4 }}>
@@ -25,7 +25,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           Tableau de bord
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph>
-          Bienvenue, {userName}. Voici un aperçu de votre activité sur TokenForge.
+          Bienvenue, {userName}. Voici un aperçu de votre activité sur
+          TokenForge.
         </Typography>
         <Divider sx={{ my: 2 }} />
         <DashboardStats stats={stats} isLoading={isLoading} />

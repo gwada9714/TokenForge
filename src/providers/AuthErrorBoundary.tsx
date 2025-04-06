@@ -1,6 +1,6 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AuthError } from '../features/auth/errors/AuthError';
-import { logger, LogLevel } from '../core/logger';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { AuthError } from "../features/auth/errors/AuthError";
+import { logger, LogLevel } from "../core/logger";
 
 interface Props {
   children: ReactNode;
@@ -15,21 +15,21 @@ interface State {
 export class AuthErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null
+    error: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    logger.log(LogLevel.ERROR, 'Erreur capturée par AuthErrorBoundary:', {
+    logger.log(LogLevel.ERROR, "Erreur capturée par AuthErrorBoundary:", {
       error,
       errorInfo,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     if (error instanceof AuthError) {
@@ -44,17 +44,17 @@ export class AuthErrorBoundary extends Component<Props, State> {
       message: error.message,
       details: error.details,
       timestamp: new Date().toISOString(),
-      url: window.location.href
+      url: window.location.href,
     };
 
     // TODO: Implémenter l'envoi à un service de monitoring
-    console.error('Auth Error:', errorDetails);
+    console.error("Auth Error:", errorDetails);
   }
 
   private handleRetry = (): void => {
     this.setState({
       hasError: false,
-      error: null
+      error: null,
     });
   };
 

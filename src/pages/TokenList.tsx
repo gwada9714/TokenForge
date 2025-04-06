@@ -1,17 +1,17 @@
-import React from 'react';
-import { 
-  Typography, 
-  Button, 
-  Box, 
-  Stack, 
+import React from "react";
+import {
+  Typography,
+  Button,
+  Box,
+  Stack,
   CircularProgress,
   Card,
   CardContent,
-  Grid
-} from '@mui/material';
-import { useWeb3 } from '../providers';
-import { useTokenList } from '../hooks/useTokenList';
-import { formatValue } from '../utils/web3Adapters';
+  Grid,
+} from "@mui/material";
+import { useWeb3 } from "../providers";
+import { useTokenList } from "../hooks/useTokenList";
+import { formatValue } from "../utils/web3Adapters";
 
 const TokenList: React.FC = () => {
   const { isConnected, connect, isInitializing } = useWeb3();
@@ -19,10 +19,10 @@ const TokenList: React.FC = () => {
 
   if (isInitializing) {
     return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         minHeight="50vh"
       >
         <CircularProgress />
@@ -31,36 +31,28 @@ const TokenList: React.FC = () => {
   }
 
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         padding: 2,
-        width: '100%',
-        maxWidth: 'lg',
-        margin: '0 auto'
+        width: "100%",
+        maxWidth: "lg",
+        margin: "0 auto",
       }}
     >
-      <Stack spacing={4} sx={{ width: '100%' }}>
+      <Stack spacing={4} sx={{ width: "100%" }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography 
-            component="h1" 
-            variant="h4" 
-            sx={{ fontWeight: "bold" }}
-          >
+          <Typography component="h1" variant="h4" sx={{ fontWeight: "bold" }}>
             Mes Tokens
           </Typography>
           {isConnected && (
-            <Button 
-              variant="outlined" 
-              onClick={refresh}
-              disabled={isLoading}
-            >
+            <Button variant="outlined" onClick={refresh} disabled={isLoading}>
               Actualiser
             </Button>
           )}
         </Box>
 
         {error && (
-          <Box sx={{ bgcolor: 'error.light', p: 2, borderRadius: 1 }}>
+          <Box sx={{ bgcolor: "error.light", p: 2, borderRadius: 1 }}>
             <Typography color="error.main" variant="body1">
               {error}
             </Typography>
@@ -69,17 +61,17 @@ const TokenList: React.FC = () => {
 
         {!isConnected && (
           <Box textAlign="center" py={4}>
-            <Typography 
-              variant="body1" 
-              color="text.secondary" 
+            <Typography
+              variant="body1"
+              color="text.secondary"
               gutterBottom
               mb={2}
             >
               Connectez votre wallet pour voir vos tokens
             </Typography>
-            <Button 
-              variant="contained" 
-              color="primary" 
+            <Button
+              variant="contained"
+              color="primary"
               onClick={() => connect()}
             >
               Connecter mon wallet

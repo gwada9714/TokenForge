@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import {
   Box,
   FormControl,
@@ -9,11 +9,17 @@ import {
   Alert,
   Grid,
   Paper,
-  SelectChangeEvent
-} from '@mui/material';
-import { useSubscription } from '@/features/subscription/hooks/useSubscription';
+  SelectChangeEvent,
+} from "@mui/material";
+import { useSubscription } from "@/features/subscription/hooks/useSubscription";
 
-export type BlockchainNetwork = 'ethereum' | 'bsc' | 'polygon' | 'avalanche' | 'solana' | 'arbitrum';
+export type BlockchainNetwork =
+  | "ethereum"
+  | "bsc"
+  | "polygon"
+  | "avalanche"
+  | "solana"
+  | "arbitrum";
 
 interface NetworkInfo {
   name: string;
@@ -25,47 +31,47 @@ interface NetworkInfo {
 
 const NETWORKS: Record<BlockchainNetwork, NetworkInfo> = {
   ethereum: {
-    name: 'Ethereum',
+    name: "Ethereum",
     chainId: 1,
-    currency: 'ETH',
+    currency: "ETH",
     testnet: false,
-    deploymentFee: '0.1'
+    deploymentFee: "0.1",
   },
   bsc: {
-    name: 'BNB Smart Chain',
+    name: "BNB Smart Chain",
     chainId: 56,
-    currency: 'BNB',
+    currency: "BNB",
     testnet: false,
-    deploymentFee: '0.05'
+    deploymentFee: "0.05",
   },
   polygon: {
-    name: 'Polygon',
+    name: "Polygon",
     chainId: 137,
-    currency: 'MATIC',
+    currency: "MATIC",
     testnet: false,
-    deploymentFee: '50'
+    deploymentFee: "50",
   },
   avalanche: {
-    name: 'Avalanche',
+    name: "Avalanche",
     chainId: 43114,
-    currency: 'AVAX',
+    currency: "AVAX",
     testnet: false,
-    deploymentFee: '1'
+    deploymentFee: "1",
   },
   solana: {
-    name: 'Solana',
+    name: "Solana",
     chainId: 1,
-    currency: 'SOL',
+    currency: "SOL",
     testnet: false,
-    deploymentFee: '0.5'
+    deploymentFee: "0.5",
   },
   arbitrum: {
-    name: 'Arbitrum',
+    name: "Arbitrum",
     chainId: 42161,
-    currency: 'ETH',
+    currency: "ETH",
     testnet: false,
-    deploymentFee: '0.01'
-  }
+    deploymentFee: "0.01",
+  },
 };
 
 interface DeploymentOptionsProps {
@@ -76,17 +82,19 @@ interface DeploymentOptionsProps {
 }
 
 export const DeploymentOptions: React.FC<DeploymentOptionsProps> = ({
-  selectedNetwork = 'bsc',
+  selectedNetwork = "bsc",
   isTestnet = true,
   canDeployMainnet = false,
-  onNetworkChange
+  onNetworkChange,
 }) => {
   const { checkFeature } = useSubscription();
-  const [network, setNetwork] = React.useState<BlockchainNetwork>(selectedNetwork);
+  const [network, setNetwork] =
+    React.useState<BlockchainNetwork>(selectedNetwork);
   const [testnet, setTestnet] = React.useState<boolean>(isTestnet);
 
   // Utilise les valeurs par défaut ou les valeurs de souscription
-  const canDeployToMainnet = canDeployMainnet || checkFeature('canDeployMainnet');
+  const canDeployToMainnet =
+    canDeployMainnet || checkFeature("canDeployMainnet");
 
   // S'assurer que l'état local est synchronisé avec les props
   useEffect(() => {
@@ -97,16 +105,16 @@ export const DeploymentOptions: React.FC<DeploymentOptionsProps> = ({
   const handleNetworkChange = (event: SelectChangeEvent) => {
     const newNetwork = event.target.value as BlockchainNetwork;
     setNetwork(newNetwork);
-    
+
     if (onNetworkChange) {
       onNetworkChange(newNetwork, testnet);
     }
   };
 
   const handleTestnetChange = (event: SelectChangeEvent) => {
-    const isTestnetValue = event.target.value === 'testnet';
+    const isTestnetValue = event.target.value === "testnet";
     setTestnet(isTestnetValue);
-    
+
     if (onNetworkChange) {
       onNetworkChange(network, isTestnetValue);
     }
@@ -138,7 +146,7 @@ export const DeploymentOptions: React.FC<DeploymentOptionsProps> = ({
           <FormControl fullWidth>
             <InputLabel>Type de Réseau</InputLabel>
             <Select
-              value={testnet ? 'testnet' : 'mainnet'}
+              value={testnet ? "testnet" : "mainnet"}
               label="Type de Réseau"
               onChange={handleTestnetChange}
             >
@@ -156,13 +164,14 @@ export const DeploymentOptions: React.FC<DeploymentOptionsProps> = ({
               Détails du Déploiement
             </Typography>
             <Typography variant="body1">
-              Réseau: {networkInfo.name} {testnet ? '(Testnet)' : '(Mainnet)'}
+              Réseau: {networkInfo.name} {testnet ? "(Testnet)" : "(Mainnet)"}
             </Typography>
             <Typography variant="body1">
               Chain ID: {networkInfo.chainId}
             </Typography>
             <Typography variant="body1">
-              Frais de déploiement: {networkInfo.deploymentFee} {networkInfo.currency}
+              Frais de déploiement: {networkInfo.deploymentFee}{" "}
+              {networkInfo.currency}
             </Typography>
           </Paper>
         </Grid>
@@ -170,14 +179,16 @@ export const DeploymentOptions: React.FC<DeploymentOptionsProps> = ({
         {!canDeployToMainnet && !testnet && (
           <Grid item xs={12}>
             <Alert severity="warning">
-              Le déploiement sur Mainnet nécessite un abonnement Forgeron ou Maître Forgeron
+              Le déploiement sur Mainnet nécessite un abonnement Forgeron ou
+              Maître Forgeron
             </Alert>
           </Grid>
         )}
 
         <Grid item xs={12}>
           <Alert severity="info">
-            N'oubliez pas d'avoir suffisamment de {networkInfo.currency} pour couvrir les frais de déploiement
+            N'oubliez pas d'avoir suffisamment de {networkInfo.currency} pour
+            couvrir les frais de déploiement
           </Alert>
         </Grid>
       </Grid>

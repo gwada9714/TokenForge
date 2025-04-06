@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,9 +9,9 @@ import {
   List,
   ListItem,
   ListItemButton,
-  ListItemText
-} from '@mui/material';
-import { Chain } from 'viem';
+  ListItemText,
+} from "@mui/material";
+import { Chain } from "viem";
 
 interface NetworkAlertDialogProps {
   open: boolean;
@@ -26,7 +26,7 @@ export const NetworkAlertDialog: React.FC<NetworkAlertDialogProps> = ({
   onClose,
   onNetworkSelect,
   networks,
-  currentNetwork
+  currentNetwork,
 }) => {
   return (
     <Dialog open={open} onClose={onClose}>
@@ -38,13 +38,15 @@ export const NetworkAlertDialog: React.FC<NetworkAlertDialogProps> = ({
         <List>
           {networks.map((network) => (
             <ListItem key={network.id} disablePadding>
-              <ListItemButton 
+              <ListItemButton
                 onClick={() => onNetworkSelect(network)}
                 selected={currentNetwork === network.id}
               >
-                <ListItemText 
+                <ListItemText
                   primary={network.name}
-                  secondary={currentNetwork === network.id ? '(Réseau actuel)' : ''}
+                  secondary={
+                    currentNetwork === network.id ? "(Réseau actuel)" : ""
+                  }
                 />
               </ListItemButton>
             </ListItem>

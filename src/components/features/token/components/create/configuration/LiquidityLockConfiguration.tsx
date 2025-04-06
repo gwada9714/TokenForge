@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Card,
@@ -12,11 +12,11 @@ import {
   InputAdornment,
   Tooltip,
   Alert,
-} from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { LiquidityLock } from '../../../../../../types/tokenFeatures';
-import InfoIcon from '@mui/icons-material/Info';
-import LockIcon from '@mui/icons-material/Lock';
+} from "@mui/material";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LiquidityLock } from "../../../../../../types/tokenFeatures";
+import InfoIcon from "@mui/icons-material/Info";
+import LockIcon from "@mui/icons-material/Lock";
 
 interface LiquidityLockConfigurationProps {
   lockConfig: LiquidityLock;
@@ -27,16 +27,14 @@ interface LiquidityLockConfigurationProps {
 const MIN_LOCK_DURATION = 30 * 24 * 60 * 60; // 30 jours en secondes
 const RECOMMENDED_LOCK_DURATION = 180 * 24 * 60 * 60; // 180 jours en secondes
 
-export const LiquidityLockConfiguration: React.FC<LiquidityLockConfigurationProps> = ({
-  lockConfig,
-  onChange,
-  disabled = false,
-}) => {
+export const LiquidityLockConfiguration: React.FC<
+  LiquidityLockConfigurationProps
+> = ({ lockConfig, onChange, disabled = false }) => {
   const handleChange = (field: keyof LiquidityLock, value: any) => {
     const newConfig = { ...lockConfig, [field]: value };
 
     // Si on change la date de déverrouillage, on la convertit en timestamp
-    if (field === 'unlockDate' && value instanceof Date) {
+    if (field === "unlockDate" && value instanceof Date) {
       newConfig.unlockDate = Math.floor(value.getTime() / 1000);
     }
 
@@ -46,8 +44,11 @@ export const LiquidityLockConfiguration: React.FC<LiquidityLockConfigurationProp
   // Convertir le timestamp en Date pour le DateTimePicker
   const unlockDate = new Date(lockConfig.unlockDate * 1000);
 
-  const isLockDurationTooShort = lockConfig.unlockDate - Math.floor(Date.now() / 1000) < MIN_LOCK_DURATION;
-  const isLockDurationRecommended = lockConfig.unlockDate - Math.floor(Date.now() / 1000) >= RECOMMENDED_LOCK_DURATION;
+  const isLockDurationTooShort =
+    lockConfig.unlockDate - Math.floor(Date.now() / 1000) < MIN_LOCK_DURATION;
+  const isLockDurationRecommended =
+    lockConfig.unlockDate - Math.floor(Date.now() / 1000) >=
+    RECOMMENDED_LOCK_DURATION;
 
   return (
     <Card>
@@ -64,7 +65,7 @@ export const LiquidityLockConfiguration: React.FC<LiquidityLockConfigurationProp
           control={
             <Switch
               checked={lockConfig.enabled}
-              onChange={(e) => handleChange('enabled', e.target.checked)}
+              onChange={(e) => handleChange("enabled", e.target.checked)}
               disabled={disabled}
             />
           }
@@ -82,12 +83,14 @@ export const LiquidityLockConfiguration: React.FC<LiquidityLockConfigurationProp
                   <TextField
                     type="number"
                     value={lockConfig.amount}
-                    onChange={(e) => handleChange('amount', e.target.value)}
+                    onChange={(e) => handleChange("amount", e.target.value)}
                     inputProps={{ min: 0, max: 100, step: 1 }}
                     disabled={disabled}
                     size="small"
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                      endAdornment: (
+                        <InputAdornment position="end">%</InputAdornment>
+                      ),
                     }}
                   />
                 </FormControl>
@@ -100,7 +103,9 @@ export const LiquidityLockConfiguration: React.FC<LiquidityLockConfigurationProp
                   </Typography>
                   <TextField
                     value={lockConfig.beneficiary}
-                    onChange={(e) => handleChange('beneficiary', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("beneficiary", e.target.value)
+                    }
                     placeholder="Adresse du bénéficiaire"
                     disabled={disabled}
                     size="small"
@@ -115,9 +120,13 @@ export const LiquidityLockConfiguration: React.FC<LiquidityLockConfigurationProp
                   </Typography>
                   <DateTimePicker
                     value={unlockDate}
-                    onChange={(date) => date && handleChange('unlockDate', date)}
+                    onChange={(date) =>
+                      date && handleChange("unlockDate", date)
+                    }
                     disabled={disabled}
-                    minDateTime={new Date(Date.now() + MIN_LOCK_DURATION * 1000)}
+                    minDateTime={
+                      new Date(Date.now() + MIN_LOCK_DURATION * 1000)
+                    }
                   />
                 </FormControl>
               </Grid>
@@ -129,15 +138,17 @@ export const LiquidityLockConfiguration: React.FC<LiquidityLockConfigurationProp
                     La durée de verrouillage doit être d'au moins 30 jours.
                   </Alert>
                 )}
-                
+
                 {!isLockDurationRecommended && (
                   <Alert severity="warning" sx={{ mb: 2 }}>
-                    Une durée de verrouillage d'au moins 180 jours est recommandée pour établir la confiance.
+                    Une durée de verrouillage d'au moins 180 jours est
+                    recommandée pour établir la confiance.
                   </Alert>
                 )}
 
                 <Alert severity="info">
-                  Le verrouillage de liquidité est irréversible et ne pourra pas être modifié une fois le token déployé.
+                  Le verrouillage de liquidité est irréversible et ne pourra pas
+                  être modifié une fois le token déployé.
                 </Alert>
               </Grid>
             </Grid>

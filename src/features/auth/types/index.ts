@@ -1,24 +1,24 @@
-import { User as FirebaseUser } from 'firebase/auth';
-import { JsonRpcSigner } from 'ethers';
-import type { PublicClient } from 'viem';
-import { AuthError } from '../errors/AuthError';
-import type { Dispatch } from 'react';
+import { User as FirebaseUser } from "firebase/auth";
+import { JsonRpcSigner } from "ethers";
+import type { PublicClient } from "viem";
+import { AuthError } from "../errors/AuthError";
+import type { Dispatch } from "react";
 
-export * from '../schemas/auth.schema';
+export * from "../schemas/auth.schema";
 
 export enum AuthProvider {
-  EMAIL = 'email',
-  GOOGLE = 'google',
-  GITHUB = 'github',
-  METAMASK = 'metamask'
+  EMAIL = "email",
+  GOOGLE = "google",
+  GITHUB = "github",
+  METAMASK = "metamask",
 }
 
 export enum AuthEventType {
-  SIGN_IN = 'sign_in',
-  SIGN_OUT = 'sign_out',
-  TOKEN_REFRESH = 'token_refresh',
-  SESSION_EXPIRED = 'session_expired',
-  PROFILE_UPDATE = 'profile_update'
+  SIGN_IN = "sign_in",
+  SIGN_OUT = "sign_out",
+  TOKEN_REFRESH = "token_refresh",
+  SESSION_EXPIRED = "session_expired",
+  PROFILE_UPDATE = "profile_update",
 }
 
 export interface AuthEvent {
@@ -34,7 +34,7 @@ export interface AuthConfig {
   refreshThreshold: number;
   maxRetries: number;
   retryDelay: number;
-  persistenceType: 'local' | 'session' | 'none';
+  persistenceType: "local" | "session" | "none";
 }
 
 export interface UseAuthReturn {
@@ -52,7 +52,7 @@ export interface UseAuthStateReturn {
   dispatch: React.Dispatch<AuthAction>;
 }
 
-export interface TokenForgeUser extends Omit<FirebaseUser, 'metadata'> {
+export interface TokenForgeUser extends Omit<FirebaseUser, "metadata"> {
   isAdmin: boolean;
   canCreateToken: boolean;
   canUseServices: boolean;
@@ -76,16 +76,16 @@ export interface TokenForgeAuthState {
   walletState: WalletState;
 }
 
-export type AuthAction = 
-  | { type: 'auth/loginStart' }
-  | { type: 'auth/loginSuccess'; payload: TokenForgeUser }
-  | { type: 'auth/loginFailure'; payload: AuthError }
-  | { type: 'auth/logout' }
-  | { type: 'auth/setError'; payload: AuthError }
-  | { type: 'auth/clearError' }
-  | { type: 'auth/updateUser'; payload: Partial<TokenForgeUser> }
-  | { type: 'auth/connectWallet'; payload: WalletState }
-  | { type: 'auth/disconnectWallet' };
+export type AuthAction =
+  | { type: "auth/loginStart" }
+  | { type: "auth/loginSuccess"; payload: TokenForgeUser }
+  | { type: "auth/loginFailure"; payload: AuthError }
+  | { type: "auth/logout" }
+  | { type: "auth/setError"; payload: AuthError }
+  | { type: "auth/clearError" }
+  | { type: "auth/updateUser"; payload: Partial<TokenForgeUser> }
+  | { type: "auth/connectWallet"; payload: WalletState }
+  | { type: "auth/disconnectWallet" };
 
 export interface TokenForgeAuthContextValue extends TokenForgeAuthState {
   dispatch: Dispatch<AuthAction>;

@@ -1,10 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Request, Response } from 'express';
-import { TokensController } from '../controllers/tokens';
-import { mockTokenForgeFactory, mockTokenContract } from '../__mocks__/contracts';
-import { Contract } from 'ethers';
-import { AuthenticatedRequest } from '../middleware/auth';
-import { ParsedQs } from 'qs';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Request, Response } from "express";
+import { TokensController } from "../controllers/tokens";
+import {
+  mockTokenForgeFactory,
+  mockTokenContract,
+} from "../__mocks__/contracts";
+import { Contract } from "ethers";
+import { AuthenticatedRequest } from "../middleware/auth";
+import { ParsedQs } from "qs";
 
 interface TokenRequest extends Request {
   params: {
@@ -29,12 +32,12 @@ interface TokenAuthRequest extends AuthenticatedRequest {
   };
 }
 
-vi.mock('ethers', () => ({
-  ...vi.importActual('ethers'),
+vi.mock("ethers", () => ({
+  ...vi.importActual("ethers"),
   Contract: vi.fn().mockImplementation(() => mockTokenContract),
 }));
 
-describe('TokensController', () => {
+describe("TokensController", () => {
   let controller: TokensController;
   let mockReq: Partial<TokenRequest | TokenSearchRequest | TokenAuthRequest>;
   let mockRes: Partial<Response>;
@@ -51,92 +54,112 @@ describe('TokensController', () => {
     mockStatus.mockClear();
   });
 
-  describe('getUserTokens', () => {
+  describe("getUserTokens", () => {
     beforeEach(() => {
       mockReq = {
-        params: { address: '0x1234567890123456789012345678901234567890' },
-        user: { address: '0x1234567890123456789012345678901234567890', timestamp: Date.now() },
+        params: { address: "0x1234567890123456789012345678901234567890" },
+        user: {
+          address: "0x1234567890123456789012345678901234567890",
+          timestamp: Date.now(),
+        },
       } as TokenAuthRequest;
     });
 
-    it('should return user tokens when authorized', async () => {
-      await controller.getUserTokens(mockReq as TokenAuthRequest, mockRes as Response);
+    it("should return user tokens when authorized", async () => {
+      await controller.getUserTokens(
+        mockReq as TokenAuthRequest,
+        mockRes as Response
+      );
 
-      expect(mockTokenForgeFactory.getUserTokens).toHaveBeenCalledWith(mockReq.params.address);
+      expect(mockTokenForgeFactory.getUserTokens).toHaveBeenCalledWith(
+        mockReq.params.address
+      );
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
         data: expect.arrayContaining([
           expect.objectContaining({
-            name: 'Test Token',
-            symbol: 'TEST',
+            name: "Test Token",
+            symbol: "TEST",
             decimals: 18,
           }),
         ]),
       });
     });
 
-    it('should return 403 when unauthorized', async () => {
-      (mockReq as TokenAuthRequest).user = { 
-        address: '0x9999999999999999999999999999999999999999', 
-        timestamp: Date.now() 
+    it("should return 403 when unauthorized", async () => {
+      (mockReq as TokenAuthRequest).user = {
+        address: "0x9999999999999999999999999999999999999999",
+        timestamp: Date.now(),
       };
 
-      await controller.getUserTokens(mockReq as TokenAuthRequest, mockRes as Response);
+      await controller.getUserTokens(
+        mockReq as TokenAuthRequest,
+        mockRes as Response
+      );
 
       expect(mockStatus).toHaveBeenCalledWith(403);
       expect(mockJson).toHaveBeenCalledWith({
         success: false,
-        error: 'Unauthorized access',
+        error: "Unauthorized access",
       });
     });
 
-    it('should return 400 when address is missing', async () => {
+    it("should return 400 when address is missing", async () => {
       delete (mockReq as TokenAuthRequest).params.address;
 
-      await controller.getUserTokens(mockReq as TokenAuthRequest, mockRes as Response);
+      await controller.getUserTokens(
+        mockReq as TokenAuthRequest,
+        mockRes as Response
+      );
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
         success: false,
-        error: 'Address parameter is required',
+        error: "Address parameter is required",
       });
     });
   });
 
-  describe('getTokenDetails', () => {
+  describe("getTokenDetails", () => {
     beforeEach(() => {
       mockReq = {
-        params: { address: '0x1234567890123456789012345678901234567890' },
+        params: { address: "0x1234567890123456789012345678901234567890" },
       } as TokenRequest;
     });
 
-    it('should return token details', async () => {
-      await controller.getTokenDetails(mockReq as TokenRequest, mockRes as Response);
+    it("should return token details", async () => {
+      await controller.getTokenDetails(
+        mockReq as TokenRequest,
+        mockRes as Response
+      );
 
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
         data: expect.objectContaining({
-          name: 'Test Token',
-          symbol: 'TEST',
+          name: "Test Token",
+          symbol: "TEST",
           decimals: 18,
         }),
       });
     });
   });
 
-  describe('searchTokens', () => {
+  describe("searchTokens", () => {
     beforeEach(() => {
       mockReq = {
         query: {
-          owner: '0x1234567890123456789012345678901234567890',
-          page: '1',
-          limit: '10',
+          owner: "0x1234567890123456789012345678901234567890",
+          page: "1",
+          limit: "10",
         },
       } as TokenSearchRequest;
     });
 
-    it('should return filtered tokens', async () => {
-      await controller.searchTokens(mockReq as TokenSearchRequest, mockRes as Response);
+    it("should return filtered tokens", async () => {
+      await controller.searchTokens(
+        mockReq as TokenSearchRequest,
+        mockRes as Response
+      );
 
       expect(mockTokenForgeFactory.getUserTokens).toHaveBeenCalledWith(
         (mockReq as TokenSearchRequest).query.owner
@@ -145,18 +168,21 @@ describe('TokensController', () => {
         success: true,
         data: expect.arrayContaining([
           expect.objectContaining({
-            name: 'Test Token',
-            symbol: 'TEST',
+            name: "Test Token",
+            symbol: "TEST",
             decimals: 18,
           }),
         ]),
       });
     });
 
-    it('should return empty array when no owner specified', async () => {
+    it("should return empty array when no owner specified", async () => {
       mockReq = { query: {} } as TokenSearchRequest;
 
-      await controller.searchTokens(mockReq as TokenSearchRequest, mockRes as Response);
+      await controller.searchTokens(
+        mockReq as TokenSearchRequest,
+        mockRes as Response
+      );
 
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
@@ -164,16 +190,19 @@ describe('TokensController', () => {
       });
     });
 
-    it('should filter by symbol when specified', async () => {
-      (mockReq as TokenSearchRequest).query.symbol = 'TEST';
+    it("should filter by symbol when specified", async () => {
+      (mockReq as TokenSearchRequest).query.symbol = "TEST";
 
-      await controller.searchTokens(mockReq as TokenSearchRequest, mockRes as Response);
+      await controller.searchTokens(
+        mockReq as TokenSearchRequest,
+        mockRes as Response
+      );
 
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
         data: expect.arrayContaining([
           expect.objectContaining({
-            symbol: 'TEST',
+            symbol: "TEST",
           }),
         ]),
       });

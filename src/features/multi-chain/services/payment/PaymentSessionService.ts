@@ -1,6 +1,11 @@
-import { v4 as uuidv4 } from 'uuid';
-import { PaymentSession, PaymentStatus, PaymentNetwork, PaymentToken } from './types/PaymentSession';
-import EventEmitter from 'events';
+import { v4 as uuidv4 } from "uuid";
+import {
+  PaymentSession,
+  PaymentStatus,
+  PaymentNetwork,
+  PaymentToken,
+} from "./types/PaymentSession";
+import EventEmitter from "events";
 
 interface CreateSessionParams {
   network: PaymentNetwork;
@@ -34,14 +39,16 @@ export class PaymentSessionService {
     return PaymentSessionService.instance;
   }
 
-  public async createSession(params: CreateSessionParams): Promise<PaymentSession> {
+  public async createSession(
+    params: CreateSessionParams
+  ): Promise<PaymentSession> {
     const sessionId = uuidv4();
     const now = new Date();
-    
+
     const session: PaymentSession = {
       id: sessionId,
       userId: params.userId,
-      status: 'PENDING',
+      status: "PENDING",
       network: params.network,
       token: params.token,
       amount: params.amount,
@@ -63,8 +70,9 @@ export class PaymentSessionService {
   }
 
   public getAllUserSessions(userId: string): PaymentSession[] {
-    return Array.from(this.sessions.values())
-      .filter(session => session.userId === userId);
+    return Array.from(this.sessions.values()).filter(
+      (session) => session.userId === userId
+    );
   }
 
   public updateSessionStatus(
@@ -87,12 +95,15 @@ export class PaymentSessionService {
     this.sessions.set(sessionId, updatedSession);
     this.eventEmitter.emit(`session:${sessionId}`, updatedSession);
 
-    if (status === 'COMPLETED' || status === 'FAILED') {
+    if (status === "COMPLETED" || status === "FAILED") {
       this.cleanupSession(sessionId);
     }
   }
 
-  public onSessionUpdate(sessionId: string, callback: SessionUpdateCallback): () => void {
+  public onSessionUpdate(
+    sessionId: string,
+    callback: SessionUpdateCallback
+  ): () => void {
     const eventName = `session:${sessionId}`;
     this.eventEmitter.on(eventName, callback);
     return () => this.eventEmitter.off(eventName, callback);
@@ -101,8 +112,13 @@ export class PaymentSessionService {
   private setupSessionTimeout(sessionId: string): void {
     const timeout = setTimeout(() => {
       const session = this.sessions.get(sessionId);
-      if (session && session.status === 'PENDING') {
-        this.updateSessionStatus(sessionId, 'FAILED', undefined, 'Session expired');
+      if (session && session.status === "PENDING") {
+        this.updateSessionStatus(
+          sessionId,
+          "FAILED",
+          undefined,
+          "Session expired"
+        );
       }
     }, this.SESSION_EXPIRY_MS);
 
@@ -120,7 +136,7 @@ export class PaymentSessionService {
   }
 
   public cleanup(): void {
-    this.timeouts.forEach(timeout => clearTimeout(timeout));
+    this.timeouts.forEach((timeout) => clearTimeout(timeout));
     this.timeouts.clear();
     this.sessions.clear();
     this.eventEmitter.removeAllListeners();

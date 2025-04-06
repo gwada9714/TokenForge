@@ -1,4 +1,8 @@
-import { PaymentSession, PaymentStatus, PaymentNetwork } from './types/PaymentSession';
+import {
+  PaymentSession,
+  PaymentStatus,
+  PaymentNetwork,
+} from "./types/PaymentSession";
 
 export class PaymentSessionService {
   private static instance: PaymentSessionService;
@@ -19,7 +23,7 @@ export class PaymentSessionService {
     serviceType: string;
   }): Promise<PaymentSession> {
     return {
-      id: 'test-session-id',
+      id: "test-session-id",
       userId: params.userId,
       amount: params.amount,
       network: params.network,
@@ -29,7 +33,7 @@ export class PaymentSessionService {
       updatedAt: new Date(),
       expiresAt: new Date(Date.now() + 3600000),
       retryCount: 0,
-      options: {}
+      options: {},
     };
   }
 

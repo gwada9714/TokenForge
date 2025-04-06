@@ -1,19 +1,27 @@
-import React from 'react';
-import { List, ListItem, ListItemText, ListItemIcon, Typography, Chip, Box } from '@mui/material';
-import { 
+import React from "react";
+import {
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Typography,
+  Chip,
+  Box,
+} from "@mui/material";
+import {
   TokenOutlined,
   SwapHorizOutlined,
   AccountBalanceWalletOutlined,
-  LockOutlined
-} from '@mui/icons-material';
+  LockOutlined,
+} from "@mui/icons-material";
 
 interface Activity {
   id: string;
-  type: 'token_creation' | 'transaction' | 'staking' | 'withdrawal';
+  type: "token_creation" | "transaction" | "staking" | "withdrawal";
   title: string;
   description: string;
   timestamp: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
 }
 
 interface ActivityListProps {
@@ -21,31 +29,31 @@ interface ActivityListProps {
 }
 
 export const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
-  const getActivityIcon = (type: Activity['type']) => {
+  const getActivityIcon = (type: Activity["type"]) => {
     switch (type) {
-      case 'token_creation':
+      case "token_creation":
         return <TokenOutlined />;
-      case 'transaction':
+      case "transaction":
         return <SwapHorizOutlined />;
-      case 'staking':
+      case "staking":
         return <LockOutlined />;
-      case 'withdrawal':
+      case "withdrawal":
         return <AccountBalanceWalletOutlined />;
       default:
         return <TokenOutlined />;
     }
   };
 
-  const getStatusColor = (status: Activity['status']) => {
+  const getStatusColor = (status: Activity["status"]) => {
     switch (status) {
-      case 'completed':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'failed':
-        return 'error';
+      case "completed":
+        return "success";
+      case "pending":
+        return "warning";
+      case "failed":
+        return "error";
       default:
-        return 'default';
+        return "default";
     }
   };
 
@@ -53,15 +61,15 @@ export const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
     <List>
       {activities.map((activity) => (
         <ListItem key={activity.id} divider>
-          <ListItemIcon>
-            {getActivityIcon(activity.type)}
-          </ListItemIcon>
+          <ListItemIcon>{getActivityIcon(activity.type)}</ListItemIcon>
           <ListItemText
             primary={
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="subtitle1">
-                  {activity.title}
-                </Typography>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography variant="subtitle1">{activity.title}</Typography>
                 <Chip
                   size="small"
                   label={activity.status}
@@ -70,7 +78,11 @@ export const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
               </Box>
             }
             secondary={
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography variant="body2" color="text.secondary">
                   {activity.description}
                 </Typography>
@@ -84,4 +96,4 @@ export const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
       ))}
     </List>
   );
-}; 
+};

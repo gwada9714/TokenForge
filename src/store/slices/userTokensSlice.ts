@@ -1,6 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppThunk } from '../store';
-import { getUserTokens } from '../../services/tokenService';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AppThunk } from "../store";
+import { getUserTokens } from "../../services/tokenService";
 
 export interface UserToken {
   address: string;
@@ -25,10 +25,10 @@ const initialState: UserTokensState = {
 };
 
 export const userTokensSlice = createSlice({
-  name: 'userTokens',
+  name: "userTokens",
   initialState,
   reducers: {
-    setTokens: (state, action: PayloadAction<UserTokensState['tokens']>) => {
+    setTokens: (state, action: PayloadAction<UserTokensState["tokens"]>) => {
       state.tokens = action.payload;
       state.loading = false;
       state.error = null;
@@ -44,7 +44,9 @@ export const userTokensSlice = createSlice({
       state.tokens.push(action.payload);
     },
     removeToken: (state, action: PayloadAction<string>) => {
-      state.tokens = state.tokens.filter(token => token.address !== action.payload);
+      state.tokens = state.tokens.filter(
+        (token) => token.address !== action.payload
+      );
     },
     clearTokens: (state) => {
       state.tokens = [];
@@ -63,14 +65,20 @@ export const {
   clearTokens,
 } = userTokensSlice.actions;
 
-export const fetchUserTokens = (address: string): AppThunk => async (dispatch) => {
-  try {
-    dispatch(setLoading(true));
-    const tokens = await getUserTokens(address);
-    dispatch(setTokens(tokens));
-  } catch (error) {
-    dispatch(setError(error instanceof Error ? error.message : 'Failed to fetch tokens'));
-  }
-};
+export const fetchUserTokens =
+  (address: string): AppThunk =>
+  async (dispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const tokens = await getUserTokens(address);
+      dispatch(setTokens(tokens));
+    } catch (error) {
+      dispatch(
+        setError(
+          error instanceof Error ? error.message : "Failed to fetch tokens"
+        )
+      );
+    }
+  };
 
 export default userTokensSlice.reducer;

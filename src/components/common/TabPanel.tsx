@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Fade } from '@mui/material';
+import React from "react";
+import { Box, Fade } from "@mui/material";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -7,7 +7,11 @@ interface TabPanelProps {
   value: number;
 }
 
-export const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
+export const TabPanel: React.FC<TabPanelProps> = ({
+  children,
+  value,
+  index,
+}) => {
   const isSelected = value === index;
 
   return (
@@ -19,9 +23,7 @@ export const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) =>
       aria-hidden={!isSelected}
     >
       <Fade in={isSelected} timeout={300}>
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
+        <Box sx={{ p: 3 }}>{children}</Box>
       </Fade>
     </div>
   );
@@ -30,6 +32,6 @@ export const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) =>
 export const a11yProps = (index: number) => {
   return {
     id: `admin-tab-${index}`,
-    'aria-controls': `admin-tabpanel-${index}`,
+    "aria-controls": `admin-tabpanel-${index}`,
   };
 };

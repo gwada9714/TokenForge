@@ -1,8 +1,8 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Box, Typography, Button, Paper } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { errorService, ErrorSeverity } from '../../../core/errors/ErrorService';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Box, Typography, Button, Paper } from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { errorService, ErrorSeverity } from "../../../core/errors/ErrorService";
 
 interface Props {
   children: ReactNode;
@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo,
     });
-    
+
     // Journaliser l'erreur
     errorService.handleError(
       error,
@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<Props, State> {
       ErrorSeverity.ERROR,
       { errorInfo: errorInfo.componentStack }
     );
-    
+
     // Appeler le callback onError si fourni
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -69,7 +69,8 @@ export class ErrorBoundary extends Component<Props, State> {
       this.state.hasError &&
       this.props.resetOnChange &&
       prevProps.resetOnChange &&
-      JSON.stringify(prevProps.resetOnChange) !== JSON.stringify(this.props.resetOnChange)
+      JSON.stringify(prevProps.resetOnChange) !==
+        JSON.stringify(this.props.resetOnChange)
     ) {
       this.handleReset();
     }
@@ -108,39 +109,40 @@ export class ErrorBoundary extends Component<Props, State> {
             sx={{
               p: 4,
               maxWidth: 600,
-              width: '100%',
+              width: "100%",
               borderRadius: 2,
-              textAlign: 'center',
+              textAlign: "center",
             }}
           >
             <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
-            
+
             <Typography variant="h5" gutterBottom fontWeight="bold">
               Oups ! Quelque chose s'est mal passé.
             </Typography>
-            
+
             <Typography variant="body1" color="text.secondary" paragraph>
-              {this.state.error?.message || 'Une erreur inattendue est survenue.'}
+              {this.state.error?.message ||
+                "Une erreur inattendue est survenue."}
             </Typography>
-            
-            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
+
+            {process.env.NODE_ENV === "development" && this.state.errorInfo && (
               <Box
                 component="pre"
                 sx={{
                   mt: 2,
                   p: 2,
-                  bgcolor: 'grey.100',
+                  bgcolor: "grey.100",
                   borderRadius: 1,
-                  overflow: 'auto',
-                  fontSize: '0.8rem',
-                  textAlign: 'left',
-                  maxHeight: '200px',
+                  overflow: "auto",
+                  fontSize: "0.8rem",
+                  textAlign: "left",
+                  maxHeight: "200px",
                 }}
               >
                 {this.state.errorInfo.componentStack}
               </Box>
             )}
-            
+
             <Button
               variant="contained"
               color="primary"

@@ -1,15 +1,18 @@
-import React from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { AuthStatus } from '../../types';
-import { messages } from '../../constants/messages';
+import React from "react";
+import { Box, CircularProgress, Typography } from "@mui/material";
+import { AuthStatus } from "../../types";
+import { messages } from "../../constants/messages";
 
 interface AuthProgressProps {
   status: AuthStatus;
   showText?: boolean;
 }
 
-export const AuthProgress: React.FC<AuthProgressProps> = ({ status, showText = true }) => {
-  const isLoading = status === 'loading' || status === 'verifying';
+export const AuthProgress: React.FC<AuthProgressProps> = ({
+  status,
+  showText = true,
+}) => {
+  const isLoading = status === "loading" || status === "verifying";
   const statusMessage = messages.fr.status[status];
 
   if (!isLoading) return null;

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import { formatUnits } from 'viem';
-import { usePublicClient } from 'wagmi';
-import { tokenStatsAbi } from '@/contracts/abis/tokenStats';
-import { TokenContract } from '@/providers/contract/ContractProvider';
+import { useCallback, useEffect, useState } from "react";
+import { formatUnits } from "viem";
+import { usePublicClient } from "wagmi";
+import { tokenStatsAbi } from "@/contracts/abis/tokenStats";
+import { TokenContract } from "@/providers/contract/ContractProvider";
 
 interface TokenStats {
   totalSupply: {
@@ -23,11 +23,11 @@ export const useTokenStats = (token?: TokenContract) => {
   const [stats, setStats] = useState<TokenStats>({
     totalSupply: {
       raw: 0n,
-      formatted: '0',
+      formatted: "0",
     },
     circulatingSupply: {
       raw: 0n,
-      formatted: '0',
+      formatted: "0",
     },
     holders: 0,
     loading: false,
@@ -39,31 +39,32 @@ export const useTokenStats = (token?: TokenContract) => {
       return;
     }
 
-    setStats(prev => ({ ...prev, loading: true, error: null }));
+    setStats((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const [totalSupply, circulatingSupply, holders] = await publicClient.multicall({
-        contracts: [
-          {
-            address: token.address,
-            abi: tokenStatsAbi,
-            functionName: 'totalSupply',
-          },
-          {
-            address: token.address,
-            abi: tokenStatsAbi,
-            functionName: 'circulatingSupply',
-          },
-          {
-            address: token.address,
-            abi: tokenStatsAbi,
-            functionName: 'holders',
-          },
-        ],
-      });
+      const [totalSupply, circulatingSupply, holders] =
+        await publicClient.multicall({
+          contracts: [
+            {
+              address: token.address,
+              abi: tokenStatsAbi,
+              functionName: "totalSupply",
+            },
+            {
+              address: token.address,
+              abi: tokenStatsAbi,
+              functionName: "circulatingSupply",
+            },
+            {
+              address: token.address,
+              abi: tokenStatsAbi,
+              functionName: "holders",
+            },
+          ],
+        });
 
       if (!totalSupply.result || !circulatingSupply.result || !holders.result) {
-        throw new Error('Failed to fetch token stats');
+        throw new Error("Failed to fetch token stats");
       }
 
       setStats({
@@ -80,10 +81,13 @@ export const useTokenStats = (token?: TokenContract) => {
         error: null,
       });
     } catch (error) {
-      setStats(prev => ({
+      setStats((prev) => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error : new Error('Failed to fetch token stats'),
+        error:
+          error instanceof Error
+            ? error
+            : new Error("Failed to fetch token stats"),
       }));
     }
   }, [token, publicClient]);

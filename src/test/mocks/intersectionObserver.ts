@@ -4,24 +4,29 @@ export const mockIntersectionObserver = class IntersectionObserver {
   }
 
   callback: IntersectionObserverCallback;
-  
+
   observe(target: Element) {
     // Trigger the callback with mock entries
-    this.callback([{
-      target,
-      isIntersecting: true,
-      boundingClientRect: target.getBoundingClientRect(),
-      intersectionRatio: 1,
-      intersectionRect: target.getBoundingClientRect(),
-      rootBounds: null,
-      time: Date.now()
-    }], this);
+    this.callback(
+      [
+        {
+          target,
+          isIntersecting: true,
+          boundingClientRect: target.getBoundingClientRect(),
+          intersectionRatio: 1,
+          intersectionRect: target.getBoundingClientRect(),
+          rootBounds: null,
+          time: Date.now(),
+        },
+      ],
+      this
+    );
   }
-  
+
   unobserve() {
     // No-op
   }
-  
+
   disconnect() {
     // No-op
   }
@@ -31,6 +36,6 @@ export const mockIntersectionObserver = class IntersectionObserver {
   }
 
   root: Element | null = null;
-  rootMargin: string = '0px';
+  rootMargin: string = "0px";
   thresholds: readonly number[] = [0];
 };

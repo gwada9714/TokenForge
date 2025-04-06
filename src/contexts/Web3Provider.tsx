@@ -1,5 +1,10 @@
- 
-import { createContext, useContext, ReactNode, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import { useAccount, useChainId } from "wagmi";
 
 interface Web3ProviderProps {

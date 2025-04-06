@@ -1,10 +1,14 @@
-import { FirebaseError } from 'firebase/app';
-import { Request, Response, NextFunction } from 'express';
-import { Middleware } from '@reduxjs/toolkit';
-import { AuthError, AuthErrorCode, handleUnknownError } from '../errors/AuthError';
-import { logger, LogLevel } from '../../../core/logger';
+import { FirebaseError } from "firebase/app";
+import { Request, Response, NextFunction } from "express";
+import { Middleware } from "@reduxjs/toolkit";
+import {
+  AuthError,
+  AuthErrorCode,
+  handleUnknownError,
+} from "../errors/AuthError";
+import { logger, LogLevel } from "../../../core/logger";
 
-const LOG_CATEGORY = 'ErrorMiddleware';
+const LOG_CATEGORY = "ErrorMiddleware";
 
 // Express middleware pour gérer les erreurs d'authentification
 export const handleAuthError = (
@@ -46,7 +50,7 @@ export const handleAuthError = (
   } else {
     errorResponse = new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Une erreur inattendue est survenue',
+      "Une erreur inattendue est survenue",
       error
     );
   }
@@ -54,14 +58,14 @@ export const handleAuthError = (
   logger.error(`${LOG_CATEGORY}: [${req.method} ${req.path}]`, {
     code: errorResponse.code,
     message: errorResponse.message,
-    originalError: error
+    originalError: error,
   });
 
   res.status(statusCode).json({
     error: {
       code: errorResponse.code,
-      message: errorResponse.message
-    }
+      message: errorResponse.message,
+    },
   });
 };
 
@@ -83,25 +87,26 @@ export const errorMiddleware: Middleware = (store) => (next) => (action) => {
   try {
     return next(action);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     const stack = error instanceof Error ? error.stack : undefined;
-    
-    logger.error('Erreur Redux Auth:', { 
+
+    logger.error("Erreur Redux Auth:", {
       error: errorMessage,
-      actionType: (action as { type?: string }).type || 'unknown',
-      stack
+      actionType: (action as { type?: string }).type || "unknown",
+      stack,
     });
-    
+
     if (error instanceof AuthError) {
       store.dispatch({
-        type: 'auth/setAuthError',
+        type: "auth/setAuthError",
         payload: {
           code: error.code,
-          message: error.message
-        }
+          message: error.message,
+        },
       });
     }
-    
+
     throw error;
   }
 };

@@ -20,15 +20,15 @@ class MoonPayService {
   async getQuote(
     baseCurrencyAmount: number,
     baseCurrency: string = "usd",
-    quoteCurrency: string = "eth",
+    quoteCurrency: string = "eth"
   ): Promise<MoonPayQuote> {
     const url = new URL(
-      `${this.config.baseUrl}/v3/currencies/${quoteCurrency}/quote`,
+      `${this.config.baseUrl}/v3/currencies/${quoteCurrency}/quote`
     );
     url.searchParams.append("apiKey", this.config.apiKey);
     url.searchParams.append(
       "baseCurrencyAmount",
-      baseCurrencyAmount.toString(),
+      baseCurrencyAmount.toString()
     );
     url.searchParams.append("baseCurrency", baseCurrency);
 
@@ -44,7 +44,7 @@ class MoonPayService {
     walletAddress: string,
     baseCurrencyAmount: number,
     baseCurrency: string = "usd",
-    quoteCurrency: string = "eth",
+    quoteCurrency: string = "eth"
   ): Promise<MoonPayTransaction> {
     const url = new URL(`${this.config.baseUrl}/v3/transactions`);
     url.searchParams.append("apiKey", this.config.apiKey);

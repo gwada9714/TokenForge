@@ -1,4 +1,4 @@
-import { toast, ToastOptions } from 'react-hot-toast';
+import { toast, ToastOptions } from "react-hot-toast";
 
 interface NotificationOptions extends ToastOptions {
   autoClose?: number;
@@ -20,32 +20,32 @@ class NotificationService {
   success(message: string, options?: NotificationOptions): void {
     toast.success(message, {
       duration: options?.autoClose || 3000,
-      ...options
+      ...options,
     });
   }
 
   error(message: string, options?: NotificationOptions): void {
     toast.error(message, {
       duration: options?.autoClose || 5000,
-      ...options
+      ...options,
     });
   }
 
   warning(message: string, options?: NotificationOptions): void {
     toast(message, {
       duration: options?.autoClose || 4000,
-      icon: '⚠️',
-      ...options
+      icon: "⚠️",
+      ...options,
     });
   }
 
   info(message: string, options?: NotificationOptions): void {
     toast(message, {
       duration: options?.autoClose || 3000,
-      icon: 'ℹ️',
-      ...options
+      icon: "ℹ️",
+      ...options,
     });
   }
 }
 
-export const notificationService = NotificationService.getInstance(); 
+export const notificationService = NotificationService.getInstance();

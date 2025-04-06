@@ -22,7 +22,7 @@ const renderWithProviders = (component: React.ReactElement) => {
       <ThemeProvider theme={theme}>
         <Web3Provider>{component}</Web3Provider>
       </ThemeProvider>
-    </BrowserRouter>,
+    </BrowserRouter>
   );
 };
 

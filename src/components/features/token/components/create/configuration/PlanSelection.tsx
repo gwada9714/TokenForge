@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Card,
@@ -8,15 +8,15 @@ import {
   FormControlLabel,
   Switch,
   Tooltip,
-  Stack
-} from '@mui/material';
-import { formatEther } from 'viem';
-import TokenIcon from '@mui/icons-material/Token';
-import StarIcon from '@mui/icons-material/Star';
+  Stack,
+} from "@mui/material";
+import { formatEther } from "viem";
+import TokenIcon from "@mui/icons-material/Token";
+import StarIcon from "@mui/icons-material/Star";
 
 interface PlanSelectionProps {
-  selectedPlan: 'basic' | 'premium';
-  onPlanSelect: (plan: 'basic' | 'premium') => void;
+  selectedPlan: "basic" | "premium";
+  onPlanSelect: (plan: "basic" | "premium") => void;
   price: bigint;
   tknBalance: bigint;
   payWithTKN: boolean;
@@ -31,23 +31,23 @@ const PlanCard: React.FC<{
   isPremium?: boolean;
   onClick: () => void;
 }> = ({ title, price, features, selected, isPremium, onClick }) => (
-  <Card 
-    sx={{ 
-      height: '100%',
+  <Card
+    sx={{
+      height: "100%",
       border: selected ? 2 : 1,
-      borderColor: selected ? 'primary.main' : 'divider',
-      position: 'relative',
-      cursor: 'pointer'
+      borderColor: selected ? "primary.main" : "divider",
+      position: "relative",
+      cursor: "pointer",
     }}
     onClick={onClick}
   >
     {isPremium && (
       <Box
         sx={{
-          position: 'absolute',
+          position: "absolute",
           top: 16,
           right: 16,
-          color: 'warning.main'
+          color: "warning.main",
         }}
       >
         <StarIcon />
@@ -82,21 +82,21 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
   price,
   tknBalance,
   payWithTKN,
-  onPaymentMethodChange
+  onPaymentMethodChange,
 }) => {
   const basicFeatures = [
-    'Création de token ERC20',
-    'Fonctions de base (Mint, Burn)',
-    'Support multi-chain',
-    'Taxe de la forge incluse'
+    "Création de token ERC20",
+    "Fonctions de base (Mint, Burn)",
+    "Support multi-chain",
+    "Taxe de la forge incluse",
   ];
 
   const premiumFeatures = [
     ...basicFeatures,
-    'Fonctionnalités avancées',
-    'Priorité dans le support',
-    'Accès aux futures fonctionnalités',
-    'Badge Premium'
+    "Fonctionnalités avancées",
+    "Priorité dans le support",
+    "Accès aux futures fonctionnalités",
+    "Badge Premium",
   ];
 
   const formattedPrice = formatEther(price);
@@ -107,15 +107,15 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
       <Typography variant="h6" gutterBottom>
         Choisissez votre Plan
       </Typography>
-      
+
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={6}>
           <PlanCard
             title="Forgeron"
             price={formattedPrice}
             features={basicFeatures}
-            selected={selectedPlan === 'basic'}
-            onClick={() => onPlanSelect('basic')}
+            selected={selectedPlan === "basic"}
+            onClick={() => onPlanSelect("basic")}
           />
         </Grid>
         <Grid item xs={12} md={6}>
@@ -123,19 +123,17 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
             title="Maître Forgeron"
             price={formattedPrice}
             features={premiumFeatures}
-            selected={selectedPlan === 'premium'}
+            selected={selectedPlan === "premium"}
             isPremium
-            onClick={() => onPlanSelect('premium')}
+            onClick={() => onPlanSelect("premium")}
           />
         </Grid>
       </Grid>
 
       <Stack spacing={2}>
         <Box display="flex" alignItems="center" gap={2}>
-          <TokenIcon color={hasEnoughTKN ? 'primary' : 'error'} />
-          <Typography>
-            Balance TKN: {formatEther(tknBalance)} TKN
-          </Typography>
+          <TokenIcon color={hasEnoughTKN ? "primary" : "error"} />
+          <Typography>Balance TKN: {formatEther(tknBalance)} TKN</Typography>
         </Box>
 
         <FormControlLabel
@@ -147,16 +145,15 @@ const PlanSelection: React.FC<PlanSelectionProps> = ({
           }
           label={
             <Tooltip title="Payez en TKN pour obtenir une réduction de 20%">
-              <Typography>
-                Payer en TKN (-20%)
-              </Typography>
+              <Typography>Payer en TKN (-20%)</Typography>
             </Tooltip>
           }
         />
 
         {!hasEnoughTKN && payWithTKN && (
           <Typography color="error">
-            Balance TKN insuffisante. Veuillez acheter plus de TKN ou choisir un autre mode de paiement.
+            Balance TKN insuffisante. Veuillez acheter plus de TKN ou choisir un
+            autre mode de paiement.
           </Typography>
         )}
       </Stack>

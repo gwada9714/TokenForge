@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Drawer,
   List,
@@ -12,7 +12,7 @@ import {
   useMediaQuery,
   IconButton,
   Collapse,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Token as TokenIcon,
   Dashboard as DashboardIcon,
@@ -22,14 +22,14 @@ import {
   ExpandMore,
   AdminPanelSettings as AdminIcon,
   Menu as MenuIcon,
-} from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+} from "@mui/icons-material";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const DRAWER_WIDTH = 240;
 
 export const Navigation: React.FC = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,15 +46,15 @@ export const Navigation: React.FC = () => {
   const isCurrentPath = (path: string) => location.pathname === path;
 
   const navigationItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Token Manager', icon: <TokenIcon />, path: '/tokens' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/" },
+    { text: "Token Manager", icon: <TokenIcon />, path: "/tokens" },
+    { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
   ];
 
   const adminItems = [
-    { text: 'Contract Controls', path: '/admin/contracts' },
-    { text: 'Alerts Management', path: '/admin/alerts' },
-    { text: 'Audit Logs', icon: <AuditIcon />, path: '/admin/audit' },
+    { text: "Contract Controls", path: "/admin/contracts" },
+    { text: "Alerts Management", path: "/admin/alerts" },
+    { text: "Audit Logs", icon: <AuditIcon />, path: "/admin/audit" },
   ];
 
   const drawer = (
@@ -119,12 +119,12 @@ export const Navigation: React.FC = () => {
           aria-label="open drawer"
           edge="start"
           onClick={handleDrawerToggle}
-          sx={{ mr: 2, display: { sm: 'none' } }}
+          sx={{ mr: 2, display: { sm: "none" } }}
         >
           <MenuIcon />
         </IconButton>
       )}
-      
+
       {isMobile ? (
         <Drawer
           variant="temporary"
@@ -133,9 +133,9 @@ export const Navigation: React.FC = () => {
           onClose={handleDrawerToggle}
           ModalProps={{ keepMounted: true }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
               width: DRAWER_WIDTH,
             },
           }}
@@ -146,11 +146,11 @@ export const Navigation: React.FC = () => {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
               width: DRAWER_WIDTH,
-              mt: '64px',
+              mt: "64px",
             },
           }}
           open

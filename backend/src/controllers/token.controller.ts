@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import logger from '../utils/logger';
-import { ProviderService } from '../services/provider.service';
+import { Request, Response } from "express";
+import logger from "../utils/logger";
+import { ProviderService } from "../services/provider.service";
 
 export class TokenController {
   private providerService: ProviderService;
@@ -15,8 +15,8 @@ export class TokenController {
       const tokenDetails = await this.providerService.getTokenDetails(address);
       res.json(tokenDetails);
     } catch (error) {
-      logger.error('Error in getTokenDetails:', error);
-      res.status(500).json({ error: 'Failed to get token details' });
+      logger.error("Error in getTokenDetails:", error);
+      res.status(500).json({ error: "Failed to get token details" });
     }
   };
 
@@ -26,8 +26,8 @@ export class TokenController {
       const tokens = await this.providerService.getUserTokens(address);
       res.json(tokens);
     } catch (error) {
-      logger.error('Error in getUserTokens:', error);
-      res.status(500).json({ error: 'Failed to get user tokens' });
+      logger.error("Error in getUserTokens:", error);
+      res.status(500).json({ error: "Failed to get user tokens" });
     }
   };
 
@@ -37,8 +37,8 @@ export class TokenController {
       const result = await this.providerService.deployToken(tokenData);
       res.json(result);
     } catch (error) {
-      logger.error('Error in deployToken:', error);
-      res.status(500).json({ error: 'Failed to deploy token' });
+      logger.error("Error in deployToken:", error);
+      res.status(500).json({ error: "Failed to deploy token" });
     }
   };
 }

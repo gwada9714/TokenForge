@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
-import { useAccount, useSignMessage, useChainId } from 'wagmi';
-import { PaymentNetwork } from '../../multi-chain/services/payment/types/PaymentSession';
-import { SUPPORTED_NETWORKS } from '../../multi-chain/services/payment/config/SupportedTokens';
-import WalletConnectService from '../../multi-chain/services/wallet/WalletConnectService';
+import { useState, useCallback } from "react";
+import { useAccount, useSignMessage, useChainId } from "wagmi";
+import { PaymentNetwork } from "../../multi-chain/services/payment/types/PaymentSession";
+import { SUPPORTED_NETWORKS } from "../../multi-chain/services/payment/config/SupportedTokens";
+import WalletConnectService from "../../multi-chain/services/wallet/WalletConnectService";
 
 export interface WalletState {
   isConnected: boolean;
@@ -27,7 +27,9 @@ export function useWallet() {
       setError(undefined);
       await walletService.connect();
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to connect wallet'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to connect wallet")
+      );
     } finally {
       setIsConnecting(false);
     }
@@ -37,19 +39,25 @@ export function useWallet() {
     try {
       await walletService.disconnect();
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to disconnect wallet'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to disconnect wallet")
+      );
     }
   }, []);
 
   const switchNetwork = useCallback(async (network: PaymentNetwork) => {
     try {
-      const networkConfig = SUPPORTED_NETWORKS.find(n => n.network === network);
+      const networkConfig = SUPPORTED_NETWORKS.find(
+        (n) => n.network === network
+      );
       if (!networkConfig) {
-        throw new Error('Network not supported');
+        throw new Error("Network not supported");
       }
       await walletService.switchNetwork(networkConfig.chainId);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to switch network'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to switch network")
+      );
       throw err;
     }
   }, []);
@@ -57,24 +65,33 @@ export function useWallet() {
   // Conversion du réseau wagmi en PaymentNetwork
   const getCurrentNetwork = useCallback((): PaymentNetwork | undefined => {
     if (!chainId) return undefined;
-    
+
     switch (chainId) {
-      case 1: return PaymentNetwork.ETHEREUM;
-      case 137: return PaymentNetwork.POLYGON;
-      case 56: return PaymentNetwork.BINANCE;
-      default: return undefined;
+      case 1:
+        return PaymentNetwork.ETHEREUM;
+      case 137:
+        return PaymentNetwork.POLYGON;
+      case 56:
+        return PaymentNetwork.BINANCE;
+      default:
+        return undefined;
     }
   }, [chainId]);
 
-  const signPaymentMessage = useCallback(async (message: string): Promise<string> => {
-    try {
-      const signature = await signMessageAsync({ message });
-      return signature;
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to sign message'));
-      throw err;
-    }
-  }, [signMessageAsync]);
+  const signPaymentMessage = useCallback(
+    async (message: string): Promise<string> => {
+      try {
+        const signature = await signMessageAsync({ message });
+        return signature;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to sign message")
+        );
+        throw err;
+      }
+    },
+    [signMessageAsync]
+  );
 
   return {
     isConnected,

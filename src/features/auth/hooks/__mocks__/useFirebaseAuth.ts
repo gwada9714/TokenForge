@@ -1,4 +1,4 @@
-import type { AuthSession } from '../../services/firebaseAuth';
+import type { AuthSession } from "../../services/firebaseAuth";
 
 export const useFirebaseAuth = jest.fn(() => ({
   session: null as AuthSession | null,

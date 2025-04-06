@@ -1,10 +1,10 @@
-import React from 'react';
-import styled from 'styled-components';
-import { SERVICES } from '../config/services';
-import { ServiceType, ServiceFeature } from '../types/services';
-import { useService } from '../hooks/useService';
-import { Card, Button, Alert, Tooltip } from '@/components/ui';
-import { THEME_CONFIG } from '@/config/constants/theme';
+import React from "react";
+import styled from "styled-components";
+import { SERVICES } from "../config/services";
+import { ServiceType, ServiceFeature } from "../types/services";
+import { useService } from "../hooks/useService";
+import { Card, Button, Alert, Tooltip } from "@/components/ui";
+import { THEME_CONFIG } from "@/config/constants/theme";
 
 interface ServiceSelectionProps {
   onServiceSelected: (serviceType: ServiceType) => void;
@@ -21,8 +21,9 @@ const ServiceCard = styled(Card)<{ isSelected?: boolean }>`
   display: flex;
   flex-direction: column;
   padding: ${THEME_CONFIG.spacing.lg};
-  border: 2px solid ${({ theme, isSelected }) => 
-    isSelected ? theme.colors.primary : 'transparent'};
+  border: 2px solid
+    ${({ theme, isSelected }) =>
+      isSelected ? theme.colors.primary : "transparent"};
   transition: ${THEME_CONFIG.transition};
 
   &:hover {
@@ -86,9 +87,12 @@ const Feature = styled.li`
   }
 `;
 
-export const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSelected }) => {
+export const ServiceSelection: React.FC<ServiceSelectionProps> = ({
+  onServiceSelected,
+}) => {
   const { requestQuote, error, currentQuote, isProcessing } = useService();
-  const [selectedService, setSelectedService] = React.useState<ServiceType | null>(null);
+  const [selectedService, setSelectedService] =
+    React.useState<ServiceType | null>(null);
 
   const handleServiceClick = async (serviceType: ServiceType) => {
     try {
@@ -96,16 +100,12 @@ export const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSel
       await requestQuote(serviceType);
       onServiceSelected(serviceType);
     } catch (err) {
-      console.error('Erreur lors de la sélection du service:', err);
+      console.error("Erreur lors de la sélection du service:", err);
     }
   };
 
   const renderFeature = (feature: ServiceFeature) => (
-    <Tooltip 
-      key={feature.id}
-      content={feature.description}
-      position="top"
-    >
+    <Tooltip key={feature.id} content={feature.description} position="top">
       <Feature>{feature.name}</Feature>
     </Tooltip>
   );
@@ -140,9 +140,7 @@ export const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSel
               )}
             </PriceContainer>
 
-            <FeatureList>
-              {service.features.map(renderFeature)}
-            </FeatureList>
+            <FeatureList>{service.features.map(renderFeature)}</FeatureList>
 
             <Button
               variant="primary"
@@ -151,12 +149,12 @@ export const ServiceSelection: React.FC<ServiceSelectionProps> = ({ onServiceSel
               disabled={isProcessing}
             >
               {isProcessing && selectedService === service.id
-                ? 'Chargement...'
-                : 'Sélectionner'}
+                ? "Chargement..."
+                : "Sélectionner"}
             </Button>
           </ServiceCard>
         ))}
       </ServicesContainer>
     </div>
   );
-}; 
+};

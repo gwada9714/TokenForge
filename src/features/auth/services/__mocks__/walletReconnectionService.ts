@@ -5,7 +5,8 @@ class MockWalletReconnectionService {
 
   static getInstance(): MockWalletReconnectionService {
     if (!MockWalletReconnectionService.instance) {
-      MockWalletReconnectionService.instance = new MockWalletReconnectionService();
+      MockWalletReconnectionService.instance =
+        new MockWalletReconnectionService();
     }
     return MockWalletReconnectionService.instance;
   }
@@ -23,4 +24,5 @@ class MockWalletReconnectionService {
   stopReconnectionAttempts(): void {}
 }
 
-export const walletReconnectionService = MockWalletReconnectionService.getInstance();
+export const walletReconnectionService =
+  MockWalletReconnectionService.getInstance();

@@ -1,14 +1,15 @@
-import { createWeb3Modal, defaultConfig } from '@web3modal/wagmi/react'
-import { Chain, mainnet, polygon } from 'viem/chains'
-import { PaymentNetwork } from '../payment/types/PaymentSession';
-import { SUPPORTED_NETWORKS } from '../payment/config/SupportedTokens';
+import { createWeb3Modal, defaultConfig } from "@web3modal/wagmi/react";
+import { Chain, mainnet, polygon } from "viem/chains";
+import { PaymentNetwork } from "../payment/types/PaymentSession";
+import { SUPPORTED_NETWORKS } from "../payment/config/SupportedTokens";
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 
 // Conversion des réseaux supportés en chaînes wagmi
-const supportedChains = SUPPORTED_NETWORKS
-  .filter(network => network.network !== PaymentNetwork.SOLANA)
-  .map(network => {
+const supportedChains = SUPPORTED_NETWORKS.filter(
+  (network) => network.network !== PaymentNetwork.SOLANA
+)
+  .map((network) => {
     switch (network.network) {
       case PaymentNetwork.ETHEREUM:
         return mainnet;
@@ -21,11 +22,11 @@ const supportedChains = SUPPORTED_NETWORKS
   .filter((chain): chain is Chain => chain !== null);
 
 const metadata = {
-  name: 'TokenForge',
-  description: 'TokenForge Payment System',
-  url: 'https://tokenforge.io', 
-  icons: ['https://tokenforge.io/icon.png']
-}
+  name: "TokenForge",
+  description: "TokenForge Payment System",
+  url: "https://tokenforge.io",
+  icons: ["https://tokenforge.io/icon.png"],
+};
 
 class WalletConnectService {
   private static instance: WalletConnectService;
@@ -42,11 +43,11 @@ class WalletConnectService {
     this.modal = createWeb3Modal({
       wagmiConfig: this.config,
       projectId,
-      themeMode: 'light',
+      themeMode: "light",
       themeVariables: {
-        '--w3m-font-family': 'Roboto, sans-serif',
-        '--w3m-accent-color': '#3b82f6'
-      }
+        "--w3m-font-family": "Roboto, sans-serif",
+        "--w3m-accent-color": "#3b82f6",
+      },
     });
   }
 
@@ -70,7 +71,7 @@ class WalletConnectService {
       await this.modal.open();
       return true;
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
+      console.error("Failed to connect wallet:", error);
       return false;
     }
   }
@@ -80,7 +81,7 @@ class WalletConnectService {
       await this.modal.close();
       return true;
     } catch (error) {
-      console.error('Failed to disconnect wallet:', error);
+      console.error("Failed to disconnect wallet:", error);
       return false;
     }
   }
@@ -90,7 +91,7 @@ class WalletConnectService {
       await this.modal.setChain({ chainId });
       return true;
     } catch (error) {
-      console.error('Failed to switch network:', error);
+      console.error("Failed to switch network:", error);
       return false;
     }
   }

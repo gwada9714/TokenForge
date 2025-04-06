@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Address, formatUnits } from 'viem';
-import { usePublicClient } from 'wagmi';
-import { TokenContract } from '@/providers/contract/ContractProvider';
+import { useCallback, useEffect, useState } from "react";
+import { Address, formatUnits } from "viem";
+import { usePublicClient } from "wagmi";
+import { TokenContract } from "@/providers/contract/ContractProvider";
 
 export interface TokenEvent {
-  type: 'transfer' | 'approval';
+  type: "transfer" | "approval";
   from: Address;
   to: Address;
   value: {
@@ -39,19 +39,19 @@ export const useTokenEvents = (
       return;
     }
 
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       // Récupérer les événements Transfer
       const transferLogs = await publicClient.getLogs({
         address: token.address,
         event: {
-          type: 'event',
-          name: 'Transfer',
+          type: "event",
+          name: "Transfer",
           inputs: [
-            { indexed: true, name: 'from', type: 'address' },
-            { indexed: true, name: 'to', type: 'address' },
-            { indexed: false, name: 'value', type: 'uint256' },
+            { indexed: true, name: "from", type: "address" },
+            { indexed: true, name: "to", type: "address" },
+            { indexed: false, name: "value", type: "uint256" },
           ],
         },
         fromBlock,
@@ -62,12 +62,12 @@ export const useTokenEvents = (
       const approvalLogs = await publicClient.getLogs({
         address: token.address,
         event: {
-          type: 'event',
-          name: 'Approval',
+          type: "event",
+          name: "Approval",
           inputs: [
-            { indexed: true, name: 'owner', type: 'address' },
-            { indexed: true, name: 'spender', type: 'address' },
-            { indexed: false, name: 'value', type: 'uint256' },
+            { indexed: true, name: "owner", type: "address" },
+            { indexed: true, name: "spender", type: "address" },
+            { indexed: false, name: "value", type: "uint256" },
           ],
         },
         fromBlock,
@@ -75,25 +75,27 @@ export const useTokenEvents = (
       });
 
       // Récupérer les timestamps des blocs
-      const blockNumbers = [...new Set([
-        ...transferLogs.map(log => log.blockNumber),
-        ...approvalLogs.map(log => log.blockNumber),
-      ])];
+      const blockNumbers = [
+        ...new Set([
+          ...transferLogs.map((log) => log.blockNumber),
+          ...approvalLogs.map((log) => log.blockNumber),
+        ]),
+      ];
 
       const blocks = await Promise.all(
-        blockNumbers.map(blockNumber => 
+        blockNumbers.map((blockNumber) =>
           publicClient.getBlock({ blockNumber })
         )
       );
 
       const blockTimestamps = new Map(
-        blocks.map(block => [block.number, Number(block.timestamp)])
+        blocks.map((block) => [block.number, Number(block.timestamp)])
       );
 
       // Transformer les logs en événements
       const events: TokenEvent[] = [
-        ...transferLogs.map(log => ({
-          type: 'transfer' as const,
+        ...transferLogs.map((log) => ({
+          type: "transfer" as const,
           from: log.args.from as Address,
           to: log.args.to as Address,
           value: {
@@ -104,8 +106,8 @@ export const useTokenEvents = (
           transactionHash: log.transactionHash,
           timestamp: blockTimestamps.get(log.blockNumber) || 0,
         })),
-        ...approvalLogs.map(log => ({
-          type: 'approval' as const,
+        ...approvalLogs.map((log) => ({
+          type: "approval" as const,
           from: log.args.owner as Address,
           to: log.args.spender as Address,
           value: {
@@ -124,10 +126,11 @@ export const useTokenEvents = (
         error: null,
       });
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error : new Error('Failed to fetch events'),
+        error:
+          error instanceof Error ? error : new Error("Failed to fetch events"),
       }));
     }
   }, [token, publicClient, fromBlock, toBlock]);

@@ -1,2 +1,2 @@
-export * from './useNetworkStatus';
-export * from './useNetworkSwitcher';
+export * from "./useNetworkStatus";
+export * from "./useNetworkSwitcher";

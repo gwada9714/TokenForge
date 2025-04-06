@@ -62,14 +62,14 @@ Tous ces services héritent de la classe abstraite `BasePaymentService` qui impl
 
 Le système supporte les cryptomonnaies suivantes sur chaque blockchain :
 
-| Blockchain | Crypto Native | Stablecoins |
-|------------|---------------|-------------|
-| Ethereum   | ETH           | USDT, USDC, DAI |
-| BSC        | BNB           | BUSD, USDT, USDC |
-| Polygon    | MATIC         | USDT, USDC, DAI |
+| Blockchain | Crypto Native | Stablecoins       |
+| ---------- | ------------- | ----------------- |
+| Ethereum   | ETH           | USDT, USDC, DAI   |
+| BSC        | BNB           | BUSD, USDT, USDC  |
+| Polygon    | MATIC         | USDT, USDC, DAI   |
 | Avalanche  | AVAX          | USDT, USDC, DAI.e |
-| Solana     | SOL           | USDT, USDC |
-| Arbitrum   | ETH           | USDT, USDC, DAI |
+| Solana     | SOL           | USDT, USDC        |
+| Arbitrum   | ETH           | USDT, USDC, DAI   |
 
 ## Monitoring des Transactions
 
@@ -78,6 +78,7 @@ Le système surveille en continu les transactions entrantes sur toutes les block
 ## Conversion de Prix
 
 Pour assurer une tarification cohérente, le système :
+
 - Maintient tous les prix en EUR dans le backend
 - Convertit en temps réel les prix en crypto selon le taux de change actuel
 - Ajoute une marge de sécurité (2-5%) pour tenir compte de la volatilité
@@ -100,6 +101,7 @@ Le backend est implémenté en TypeScript avec Node.js. Les services de paiement
 ### Stockage des Données
 
 Dans une implémentation complète, les données seraient stockées dans Firebase :
+
 - Sessions de paiement
 - Transactions
 - Utilisateurs et leurs abonnements
@@ -108,6 +110,7 @@ Dans une implémentation complète, les données seraient stockées dans Firebas
 ### Sécurité
 
 Le système inclut plusieurs mesures de sécurité :
+
 - Vérification des transactions sur la blockchain
 - Validation des montants reçus
 - Vérification des adresses d'expéditeur et de destinataire
@@ -123,6 +126,7 @@ Le système inclut plusieurs mesures de sécurité :
 ## Implémentation Future
 
 Pour une implémentation complète, il faudrait :
+
 1. Intégrer avec Firebase pour la persistance des données
 2. Implémenter la vérification réelle des transactions sur chaque blockchain
 3. Ajouter des webhooks pour les notifications de paiement

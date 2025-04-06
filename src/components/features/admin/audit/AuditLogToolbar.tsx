@@ -1,9 +1,9 @@
-import React from 'react';
-import { Box, Tooltip, Typography } from '@mui/material';
-import LoadingButton from '@mui/lab/LoadingButton';
-import DownloadIcon from '@mui/icons-material/Download';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import React from "react";
+import { Box, Tooltip, Typography } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
+import DownloadIcon from "@mui/icons-material/Download";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 interface AuditLogToolbarProps {
   onExport: () => void;
@@ -23,9 +23,9 @@ export const AuditLogToolbar: React.FC<AuditLogToolbarProps> = ({
   return (
     <Box
       sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
         gap: 2,
         mb: 2,
       }}
@@ -34,7 +34,7 @@ export const AuditLogToolbar: React.FC<AuditLogToolbarProps> = ({
         Logs d'Audit
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box sx={{ display: "flex", gap: 1 }}>
         {onRefresh && (
           <Tooltip title="Rafraîchir les logs">
             <span>
@@ -53,7 +53,13 @@ export const AuditLogToolbar: React.FC<AuditLogToolbarProps> = ({
           </Tooltip>
         )}
 
-        <Tooltip title={disabled ? 'Aucun log disponible' : 'Exporter les logs au format CSV'}>
+        <Tooltip
+          title={
+            disabled
+              ? "Aucun log disponible"
+              : "Exporter les logs au format CSV"
+          }
+        >
           <span>
             <LoadingButton
               onClick={onExport}
@@ -69,7 +75,9 @@ export const AuditLogToolbar: React.FC<AuditLogToolbarProps> = ({
           </span>
         </Tooltip>
 
-        <Tooltip title={disabled ? 'Aucun log à supprimer' : 'Supprimer tous les logs'}>
+        <Tooltip
+          title={disabled ? "Aucun log à supprimer" : "Supprimer tous les logs"}
+        >
           <span>
             <LoadingButton
               onClick={onPurge}

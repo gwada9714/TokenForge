@@ -1,8 +1,11 @@
-import { useState, useCallback } from 'react';
-import { toast } from 'react-hot-toast';
-import { TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
-import { useNetwork } from '/useNetwork';
-import { getNetwork } from '../config/networks';
+import { useState, useCallback } from "react";
+import { toast } from "react-hot-toast";
+import {
+  TransactionResponse,
+  TransactionReceipt,
+} from "@ethersproject/abstract-provider";
+import { useNetwork } from "/useNetwork";
+import { getNetwork } from "../config/networks";
 
 interface TransactionState {
   isLoading: boolean;
@@ -45,26 +48,26 @@ export const useTransactionHandler = () => {
       const {
         onSuccess,
         onError,
-        successMessage = 'Transaction réussie',
-        pendingMessage = 'Transaction en cours',
-        errorPrefix = 'Erreur de transaction',
+        successMessage = "Transaction réussie",
+        pendingMessage = "Transaction en cours",
+        errorPrefix = "Erreur de transaction",
       } = options;
 
       try {
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-        
+        setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
         // Envoi de la transaction
         const tx = await transactionPromise;
-        setState(prev => ({ ...prev, hash: tx.hash }));
+        setState((prev) => ({ ...prev, hash: tx.hash }));
 
         // Notification de transaction en attente
         const pendingToast = toast.loading(pendingMessage);
 
         // Attente de la confirmation
         const receipt = await tx.wait();
-        setState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
           receipt,
         }));
 
@@ -79,23 +82,20 @@ export const useTransactionHandler = () => {
         const network = getNetwork(chain?.id || 0);
         if (network?.explorerUrl) {
           const explorerUrl = `${network.explorerUrl}/tx/${tx.hash}`;
-          toast.success(
-            `Transaction confirmée - ${explorerUrl}`,
-            {
-              duration: 5000,
-            }
-          );
+          toast.success(`Transaction confirmée - ${explorerUrl}`, {
+            duration: 5000,
+          });
         }
 
         return receipt;
       } catch (err) {
         const error = err as Error;
-        console.error('Transaction error:', error);
-        
-        setState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error
+        console.error("Transaction error:", error);
+
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error,
         }));
 
         // Notification d'erreur

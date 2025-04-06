@@ -1,7 +1,13 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { firebaseService } from '@/config/firebase/index';
-import { logger } from '@/core/logger';
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+} from "react";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { firebaseService } from "@/config/firebase/index";
+import { logger } from "@/core/logger";
 
 interface AuthContextType {
   user: User | null;
@@ -12,7 +18,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
-  error: null
+  error: null,
 });
 
 interface AuthProviderProps {
@@ -30,20 +36,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await firebaseService.initialize();
         const auth = firebaseService.getAuth();
 
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          setUser(user);
-          setIsLoading(false);
-        }, (error) => {
-          setError(error);
-          setIsLoading(false);
-        });
+        const unsubscribe = onAuthStateChanged(
+          auth,
+          (user) => {
+            setUser(user);
+            setIsLoading(false);
+          },
+          (error) => {
+            setError(error);
+            setIsLoading(false);
+          }
+        );
 
         return () => unsubscribe();
       } catch (error) {
         logger.error({
-          category: 'Auth',
-          message: 'Error initializing auth',
-          error: error instanceof Error ? error : new Error(String(error))
+          category: "Auth",
+          message: "Error initializing auth",
+          error: error instanceof Error ? error : new Error(String(error)),
         });
         setError(error instanceof Error ? error : new Error(String(error)));
         setIsLoading(false);
@@ -56,20 +66,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value = {
     user,
     isLoading,
-    error
+    error,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

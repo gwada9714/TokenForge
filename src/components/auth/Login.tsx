@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Login = () => {
   const { login, authError, isLoading } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +28,7 @@ export const Login = () => {
         required
       />
       <button type="submit" disabled={isLoading}>
-        {isLoading ? 'Connexion...' : 'Se connecter'}
+        {isLoading ? "Connexion..." : "Se connecter"}
       </button>
     </form>
   );

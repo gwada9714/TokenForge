@@ -1,20 +1,20 @@
-export function formatDate(date: Date | string, locale = 'fr-FR'): string {
+export function formatDate(date: Date | string, locale = "fr-FR"): string {
   const d = new Date(date);
   return d.toLocaleDateString(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
-export function formatDateTime(date: Date | string, locale = 'fr-FR'): string {
+export function formatDateTime(date: Date | string, locale = "fr-FR"): string {
   const d = new Date(date);
   return d.toLocaleString(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -30,22 +30,24 @@ export function formatRelativeTime(date: Date | string): string {
   if (days > 7) {
     return formatDate(d);
   } else if (days > 0) {
-    return `il y a ${days} jour${days > 1 ? 's' : ''}`;
+    return `il y a ${days} jour${days > 1 ? "s" : ""}`;
   } else if (hours > 0) {
-    return `il y a ${hours} heure${hours > 1 ? 's' : ''}`;
+    return `il y a ${hours} heure${hours > 1 ? "s" : ""}`;
   } else if (minutes > 0) {
-    return `il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
+    return `il y a ${minutes} minute${minutes > 1 ? "s" : ""}`;
   } else {
-    return 'à l\'instant';
+    return "à l'instant";
   }
 }
 
 export function isToday(date: Date | string): boolean {
   const d = new Date(date);
   const today = new Date();
-  return d.getDate() === today.getDate() &&
+  return (
+    d.getDate() === today.getDate() &&
     d.getMonth() === today.getMonth() &&
-    d.getFullYear() === today.getFullYear();
+    d.getFullYear() === today.getFullYear()
+  );
 }
 
 export function isFuture(date: Date | string): boolean {
@@ -54,4 +56,4 @@ export function isFuture(date: Date | string): boolean {
 
 export function isPast(date: Date | string): boolean {
   return new Date(date).getTime() < new Date().getTime();
-} 
+}

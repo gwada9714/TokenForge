@@ -1,5 +1,10 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, Timestamp } from 'firebase/firestore';
+import { initializeApp } from "firebase/app";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  Timestamp,
+} from "firebase/firestore";
 
 export interface CSPViolationReport {
   id?: string;
@@ -14,7 +19,7 @@ export interface CSPViolationReport {
 
 class CSPCollector {
   private db;
-  private readonly collectionName = 'csp-violations';
+  private readonly collectionName = "csp-violations";
 
   constructor() {
     // Initialisation de Firebase (à configurer avec vos credentials)
@@ -27,54 +32,56 @@ class CSPCollector {
     this.db = getFirestore(app);
   }
 
-  async reportViolation(violation: Omit<CSPViolationReport, 'id'>): Promise<string> {
+  async reportViolation(
+    violation: Omit<CSPViolationReport, "id">
+  ): Promise<string> {
     try {
       const docRef = await addDoc(collection(this.db, this.collectionName), {
         ...violation,
         timestamp: Timestamp.fromDate(violation.timestamp),
         reportedAt: Timestamp.now(),
       });
-      
-      console.debug('CSP violation logged with ID:', docRef.id);
+
+      console.debug("CSP violation logged with ID:", docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('Error logging CSP violation:', error);
+      console.error("Error logging CSP violation:", error);
       // En cas d'erreur, on stocke localement
       this.storeLocalViolation(violation);
       throw error;
     }
   }
 
-  private storeLocalViolation(violation: Omit<CSPViolationReport, 'id'>) {
+  private storeLocalViolation(violation: Omit<CSPViolationReport, "id">) {
     const violations = JSON.parse(
-      localStorage.getItem('csp-violations') || '[]'
-    ) as Array<Omit<CSPViolationReport, 'id'>>;
+      localStorage.getItem("csp-violations") || "[]"
+    ) as Array<Omit<CSPViolationReport, "id">>;
 
     violations.push({
       ...violation,
       timestamp: violation.timestamp,
     });
 
-    localStorage.setItem('csp-violations', JSON.stringify(violations));
+    localStorage.setItem("csp-violations", JSON.stringify(violations));
   }
 
   async syncLocalViolations() {
     const violations = JSON.parse(
-      localStorage.getItem('csp-violations') || '[]'
-    ) as Array<Omit<CSPViolationReport, 'id'>>;
-    
+      localStorage.getItem("csp-violations") || "[]"
+    ) as Array<Omit<CSPViolationReport, "id">>;
+
     if (violations.length === 0) return;
 
     for (const violation of violations) {
       try {
         await this.reportViolation(violation);
       } catch (error) {
-        console.error('Error syncing local violation:', error);
+        console.error("Error syncing local violation:", error);
         continue;
       }
     }
 
-    localStorage.removeItem('csp-violations');
+    localStorage.removeItem("csp-violations");
   }
 }
 

@@ -1,5 +1,5 @@
-import { WalletClient } from 'viem';
-import { EthereumProvider } from './ethereum';
+import { WalletClient } from "viem";
+import { EthereumProvider } from "./ethereum";
 
 export interface WalletState {
   isConnected: boolean;

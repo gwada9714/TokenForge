@@ -3,9 +3,9 @@ name: CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     tags:
-      - 'v*'
+      - "v*"
 
 env:
   AWS_REGION: eu-west-1
@@ -29,22 +29,22 @@ jobs:
       DISABLE_LINTING: true
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build
         run: npm run build
         env:
           VITE_API_URL: ${{ env.STAGING_API_URL }}
           VITE_BLOCKCHAIN_NETWORK: ${{ env.STAGING_BLOCKCHAIN_NETWORK }}
-      
+
       # Using a shell script approach instead of direct action
       - name: Setup deployment script
         run: |
@@ -57,13 +57,13 @@ jobs:
           echo "aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
           echo "[default]" > ~/.aws/config
           echo "region=${AWS_REGION}" >> ~/.aws/config
-          
+
           # Deploy to S3
           aws s3 sync dist/ s3://${S3_BUCKET} --delete
-          
+
           # Invalidate CloudFront cache
           aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_ID} --paths "/*"
-          
+
           # Notify via Slack if webhook is available
           if [ -n "${SLACK_WEBHOOK_URL}" ]; then
             curl -X POST -H "Content-Type: application/json" \
@@ -72,7 +72,7 @@ jobs:
           fi
           EOL
           chmod +x deploy.sh
-      
+
       - name: Deploy to staging
         run: ./deploy.sh
         env:
@@ -95,22 +95,22 @@ jobs:
       DISABLE_LINTING: true
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build
         run: npm run build
         env:
           VITE_API_URL: ${{ env.PRODUCTION_API_URL }}
           VITE_BLOCKCHAIN_NETWORK: ${{ env.PRODUCTION_BLOCKCHAIN_NETWORK }}
-      
+
       # Using a shell script approach instead of direct action
       - name: Setup deployment script
         run: |
@@ -123,13 +123,13 @@ jobs:
           echo "aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
           echo "[default]" > ~/.aws/config
           echo "region=${AWS_REGION}" >> ~/.aws/config
-          
+
           # Deploy to S3
           aws s3 sync dist/ s3://${S3_BUCKET} --delete
-          
+
           # Invalidate CloudFront cache
           aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_ID} --paths "/*"
-          
+
           # Notify via Slack if webhook is available
           if [ -n "${SLACK_WEBHOOK_URL}" ]; then
             curl -X POST -H "Content-Type: application/json" \
@@ -138,7 +138,7 @@ jobs:
           fi
           EOL
           chmod +x deploy.sh
-      
+
       - name: Deploy to production
         run: ./deploy.sh
         env:
@@ -150,7 +150,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           ENV_NAME: "Production"
           GITHUB_REF_NAME: ${{ github.ref_name }}
-      
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -159,15 +159,15 @@ jobs:
             dist/manifest.json
           body: |
             ## TokenForge ${{ github.ref_name }}
-            
+
             ### 🚀 New Features
             - Feature 1
             - Feature 2
-            
+
             ### 🐛 Bug Fixes
             - Fix 1
             - Fix 2
-            
+
             ### 📝 Notes
             - Note 1
             - Note 2

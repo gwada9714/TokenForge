@@ -1,12 +1,12 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Container, Typography, Button, Box } from '@mui/material';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import styled from "styled-components";
+import { Container, Typography, Button, Box } from "@mui/material";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const SectionContainer = styled.section`
   padding: 6rem 0;
-  background: linear-gradient(135deg, #182038 0%, #2A3352 100%);
+  background: linear-gradient(135deg, #182038 0%, #2a3352 100%);
   position: relative;
   overflow: hidden;
   color: white;
@@ -18,7 +18,11 @@ const GlowEffect = styled(motion.div)`
   left: 50%;
   width: 60vw;
   height: 60vw;
-  background: radial-gradient(circle, ${props => props.theme.colors.primary.main} 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    ${(props) => props.theme.colors.primary.main} 0%,
+    transparent 70%
+  );
   transform: translate(-50%, -50%);
   opacity: 0.1;
   filter: blur(100px);
@@ -32,17 +36,21 @@ const Content = styled(Container)`
 `;
 
 const Title = styled(Typography)`
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
-  
+
   @media (max-width: 768px) {
     font-size: 2rem;
   }
 
   span {
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary.main}, #FFD700);
+    background: linear-gradient(
+      135deg,
+      ${(props) => props.theme.colors.primary.main},
+      #ffd700
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -53,7 +61,7 @@ const ButtonGroup = styled(Box)`
   gap: 1rem;
   justify-content: center;
   margin-top: 2rem;
-  
+
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: center;
@@ -65,12 +73,12 @@ const SocialLinks = styled(Box)`
   display: flex;
   gap: 2rem;
   justify-content: center;
-  
+
   a {
     color: white;
     opacity: 0.8;
     transition: opacity 0.3s ease;
-    
+
     &:hover {
       opacity: 1;
     }
@@ -83,9 +91,9 @@ const containerVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.8
-    }
-  }
+      duration: 0.8,
+    },
+  },
 };
 
 export const CTASection: React.FC = () => {
@@ -101,10 +109,10 @@ export const CTASection: React.FC = () => {
         transition={{
           duration: 5,
           repeat: Infinity,
-          repeatType: "reverse"
+          repeatType: "reverse",
         }}
       />
-      
+
       <Content maxWidth="lg">
         <motion.div
           variants={containerVariants}
@@ -115,9 +123,10 @@ export const CTASection: React.FC = () => {
           <Title variant="h2">
             Rejoignez la Révolution <span>TokenForge</span>
           </Title>
-          
+
           <Typography variant="h5" sx={{ opacity: 0.9, mb: 4 }}>
-            Créez votre token dès aujourd'hui et participez à l'avenir de la finance décentralisée
+            Créez votre token dès aujourd'hui et participez à l'avenir de la
+            finance décentralisée
           </Typography>
 
           <ButtonGroup>
@@ -125,34 +134,36 @@ export const CTASection: React.FC = () => {
               variant="contained"
               color="primary"
               size="large"
-              onClick={() => navigate('/create')}
+              onClick={() => navigate("/create")}
               sx={{
                 px: 4,
                 py: 1.5,
                 borderRadius: 2,
-                bgcolor: '#FF8C00',
-                '&:hover': {
-                  bgcolor: '#E67E00'
-                }
+                bgcolor: "#FF8C00",
+                "&:hover": {
+                  bgcolor: "#E67E00",
+                },
               }}
             >
               Créer Mon Token
             </Button>
-            
+
             <Button
               variant="outlined"
               size="large"
-              onClick={() => window.open('https://discord.gg/tokenforge', '_blank')}
+              onClick={() =>
+                window.open("https://discord.gg/tokenforge", "_blank")
+              }
               sx={{
                 px: 4,
                 py: 1.5,
                 borderRadius: 2,
-                color: 'white',
-                borderColor: 'white',
-                '&:hover': {
-                  borderColor: '#FF8C00',
-                  color: '#FF8C00'
-                }
+                color: "white",
+                borderColor: "white",
+                "&:hover": {
+                  borderColor: "#FF8C00",
+                  color: "#FF8C00",
+                },
               }}
             >
               Rejoindre la Communauté
@@ -160,16 +171,32 @@ export const CTASection: React.FC = () => {
           </ButtonGroup>
 
           <SocialLinks>
-            <a href="https://twitter.com/tokenforge" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://twitter.com/tokenforge"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Twitter
             </a>
-            <a href="https://t.me/tokenforge" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://t.me/tokenforge"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Telegram
             </a>
-            <a href="https://discord.gg/tokenforge" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://discord.gg/tokenforge"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Discord
             </a>
-            <a href="https://medium.com/tokenforge" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://medium.com/tokenforge"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Medium
             </a>
           </SocialLinks>
@@ -177,4 +204,4 @@ export const CTASection: React.FC = () => {
       </Content>
     </SectionContainer>
   );
-}; 
+};

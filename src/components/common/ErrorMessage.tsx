@@ -1,17 +1,17 @@
-import React from 'react';
-import { Alert, AlertTitle, Box, Button } from '@mui/material';
+import React from "react";
+import { Alert, AlertTitle, Box, Button } from "@mui/material";
 
 interface ErrorMessageProps {
   message: string;
   title?: string;
-  severity?: 'error' | 'warning' | 'info' | 'success';
+  severity?: "error" | "warning" | "info" | "success";
   onRetry?: () => void;
 }
 
 const ErrorMessage: React.FC<ErrorMessageProps> = ({
   message,
-  title = 'Erreur',
-  severity = 'error',
+  title = "Erreur",
+  severity = "error",
   onRetry,
 }) => {
   return (

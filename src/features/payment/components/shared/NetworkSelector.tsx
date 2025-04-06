@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   FormControl,
   InputLabel,
@@ -9,10 +9,10 @@ import {
   Typography,
   Tooltip,
   Avatar,
-  useTheme
-} from '@mui/material';
-import { PaymentNetwork } from '@/features/multi-chain/services/payment/types';
-import { CHAIN_CONFIG } from '@/features/multi-chain/config/chains';
+  useTheme,
+} from "@mui/material";
+import { PaymentNetwork } from "@/features/multi-chain/services/payment/types";
+import { CHAIN_CONFIG } from "@/features/multi-chain/config/chains";
 
 interface NetworkSelectorProps {
   value: PaymentNetwork;
@@ -29,29 +29,31 @@ interface NetworkInfo {
 
 const NETWORK_INFO: Record<PaymentNetwork, NetworkInfo> = {
   [PaymentNetwork.ETHEREUM]: {
-    name: 'Ethereum',
-    icon: '🔷',
-    description: 'Réseau principal Ethereum - Frais élevés mais très sécurisé',
-    color: '#627EEA'
+    name: "Ethereum",
+    icon: "🔷",
+    description: "Réseau principal Ethereum - Frais élevés mais très sécurisé",
+    color: "#627EEA",
   },
   [PaymentNetwork.POLYGON]: {
-    name: 'Polygon',
-    icon: '💜',
-    description: 'Solution de mise à l\'échelle - Frais réduits et transactions rapides',
-    color: '#8247E5'
+    name: "Polygon",
+    icon: "💜",
+    description:
+      "Solution de mise à l'échelle - Frais réduits et transactions rapides",
+    color: "#8247E5",
   },
   [PaymentNetwork.BINANCE]: {
-    name: 'BNB Smart Chain',
-    icon: '💛',
-    description: 'Réseau Binance - Alternative économique avec écosystème riche',
-    color: '#F3BA2F'
+    name: "BNB Smart Chain",
+    icon: "💛",
+    description:
+      "Réseau Binance - Alternative économique avec écosystème riche",
+    color: "#F3BA2F",
   },
   [PaymentNetwork.SOLANA]: {
-    name: 'Solana',
-    icon: '🟣',
-    description: 'Blockchain haute performance - Transactions ultra rapides',
-    color: '#14F195'
-  }
+    name: "Solana",
+    icon: "🟣",
+    description: "Blockchain haute performance - Transactions ultra rapides",
+    color: "#14F195",
+  },
 };
 
 /**
@@ -61,7 +63,7 @@ const NETWORK_INFO: Record<PaymentNetwork, NetworkInfo> = {
 export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
   value,
   onChange,
-  disabled = false
+  disabled = false,
 }) => {
   const theme = useTheme();
 
@@ -74,33 +76,31 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
     const config = CHAIN_CONFIG[network];
 
     return (
-      <MenuItem 
-        key={network} 
+      <MenuItem
+        key={network}
         value={network}
         sx={{
-          display: 'flex',
-          alignItems: 'center',
+          display: "flex",
+          alignItems: "center",
           gap: 2,
-          py: 1.5
+          py: 1.5,
         }}
       >
-        <Avatar 
-          sx={{ 
+        <Avatar
+          sx={{
             bgcolor: info.color,
             width: 32,
-            height: 32
+            height: 32,
           }}
         >
           {info.icon}
         </Avatar>
         <Box>
-          <Typography variant="body1">
-            {info.name}
-          </Typography>
-          <Typography 
-            variant="caption" 
+          <Typography variant="body1">{info.name}</Typography>
+          <Typography
+            variant="caption"
             color="textSecondary"
-            sx={{ display: 'block' }}
+            sx={{ display: "block" }}
           >
             {config.nativeCurrency.symbol}
           </Typography>
@@ -111,25 +111,23 @@ export const NetworkSelector: React.FC<NetworkSelectorProps> = ({
 
   return (
     <FormControl fullWidth disabled={disabled}>
-      <InputLabel id="network-selector-label">
-        Réseau
-      </InputLabel>
+      <InputLabel id="network-selector-label">Réseau</InputLabel>
       <Select
         labelId="network-selector-label"
         value={value}
         label="Réseau"
         onChange={handleChange}
         renderValue={(selected) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography>{NETWORK_INFO[selected].icon}</Typography>
             <Typography>{NETWORK_INFO[selected].name}</Typography>
           </Box>
         )}
       >
         {Object.values(PaymentNetwork).map((network) => (
-          <Tooltip 
+          <Tooltip
             key={network}
-            title={NETWORK_INFO[network].description} 
+            title={NETWORK_INFO[network].description}
             placement="right"
           >
             {renderNetworkOption(network)}

@@ -1,17 +1,17 @@
 export enum PaymentStatus {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  CONFIRMED = 'CONFIRMED',
-  FAILED = 'FAILED',
-  TIMEOUT = 'TIMEOUT',
-  CANCELLED = 'CANCELLED'
+  PENDING = "PENDING",
+  PROCESSING = "PROCESSING",
+  CONFIRMED = "CONFIRMED",
+  FAILED = "FAILED",
+  TIMEOUT = "TIMEOUT",
+  CANCELLED = "CANCELLED",
 }
 
 export enum PaymentNetwork {
-  ETHEREUM = 'ETHEREUM',
-  POLYGON = 'POLYGON',
-  BINANCE = 'BINANCE',
-  SOLANA = 'SOLANA'
+  ETHEREUM = "ETHEREUM",
+  POLYGON = "POLYGON",
+  BINANCE = "BINANCE",
+  SOLANA = "SOLANA",
 }
 
 export interface PaymentToken {
@@ -45,4 +45,4 @@ export interface PaymentSessionOptions {
 export interface PaymentError extends Error {
   code: string;
   details?: unknown;
-} 
+}

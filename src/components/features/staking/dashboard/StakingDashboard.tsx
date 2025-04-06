@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Box,
   Card,
@@ -20,15 +20,23 @@ import {
   TableHead,
   TableRow,
   Paper,
-} from '@mui/material';
-import { formatValue } from '@/utils/web3Adapters';
-import { useStakingManager } from '@/hooks/useStakingManager';
-import TokenIcon from '@mui/icons-material/Token';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import InfoIcon from '@mui/icons-material/Info';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { toast } from 'react-hot-toast';
+} from "@mui/material";
+import { formatValue } from "@/utils/web3Adapters";
+import { useStakingManager } from "@/hooks/useStakingManager";
+import TokenIcon from "@mui/icons-material/Token";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import InfoIcon from "@mui/icons-material/Info";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { toast } from "react-hot-toast";
 
 const StatCard: React.FC<{
   title: string;
@@ -63,7 +71,7 @@ const StatCard: React.FC<{
 const StakingHistory: React.FC<{
   history: Array<{
     timestamp: number;
-    action: 'stake' | 'unstake' | 'claim';
+    action: "stake" | "unstake" | "claim";
     amount: bigint;
   }>;
 }> = ({ history }) => (
@@ -79,11 +87,13 @@ const StakingHistory: React.FC<{
       <TableBody>
         {history.map((entry, index) => (
           <TableRow key={index}>
-            <TableCell>{new Date(entry.timestamp * 1000).toLocaleString()}</TableCell>
             <TableCell>
-              {entry.action === 'stake' && 'Stake'}
-              {entry.action === 'unstake' && 'Unstake'}
-              {entry.action === 'claim' && 'Récompenses réclamées'}
+              {new Date(entry.timestamp * 1000).toLocaleString()}
+            </TableCell>
+            <TableCell>
+              {entry.action === "stake" && "Stake"}
+              {entry.action === "unstake" && "Unstake"}
+              {entry.action === "claim" && "Récompenses réclamées"}
             </TableCell>
             <TableCell align="right">{formatValue(entry.amount)} TKN</TableCell>
           </TableRow>
@@ -99,7 +109,7 @@ const RewardsChart: React.FC<{
     rewards: bigint;
   }>;
 }> = ({ rewardsHistory }) => {
-  const data = rewardsHistory.map(entry => ({
+  const data = rewardsHistory.map((entry) => ({
     date: new Date(entry.timestamp * 1000).toLocaleDateString(),
     rewards: Number(formatValue(entry.rewards)),
   }));
@@ -127,54 +137,59 @@ const StakingDashboard: React.FC = () => {
     isLoading,
     stake,
     unstake,
-    claimRewards
+    claimRewards,
   } = useStakingManager();
 
-  const [stakeAmount, setStakeAmount] = React.useState('');
-  const [unstakeAmount, setUnstakeAmount] = React.useState('');
+  const [stakeAmount, setStakeAmount] = React.useState("");
+  const [unstakeAmount, setUnstakeAmount] = React.useState("");
 
   const handleStake = async () => {
     try {
       await stake(stakeAmount);
-      setStakeAmount('');
-      toast.success('Stake successful!');
+      setStakeAmount("");
+      toast.success("Stake successful!");
     } catch (error) {
-      console.error('Stake error:', error);
-      toast.error('Failed to stake tokens');
+      console.error("Stake error:", error);
+      toast.error("Failed to stake tokens");
     }
   };
 
   const handleUnstake = async () => {
     try {
       await unstake(unstakeAmount);
-      setUnstakeAmount('');
-      toast.success('Unstake successful!');
+      setUnstakeAmount("");
+      toast.success("Unstake successful!");
     } catch (error) {
-      console.error('Unstake error:', error);
-      toast.error('Failed to unstake tokens');
+      console.error("Unstake error:", error);
+      toast.error("Failed to unstake tokens");
     }
   };
 
   const handleClaim = async () => {
     try {
       await claimRewards();
-      toast.success('Rewards claimed successfully!');
+      toast.success("Rewards claimed successfully!");
     } catch (error) {
-      console.error('Claim error:', error);
-      toast.error('Failed to claim rewards');
+      console.error("Claim error:", error);
+      toast.error("Failed to claim rewards");
     }
   };
 
   const chartData = useMemo(() => {
-    return stakingHistory.map(entry => ({
+    return stakingHistory.map((entry) => ({
       timestamp: new Date(entry.timestamp * 1000).toLocaleDateString(),
-      amount: Number(formatValue(entry.amount))
+      amount: Number(formatValue(entry.amount)),
     }));
   }, [stakingHistory]);
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     );

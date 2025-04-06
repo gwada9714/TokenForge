@@ -19,10 +19,24 @@ export const TokenPreview: React.FC<TokenPreviewProps> = ({
       "pragma solidity ^0.8.20;",
       "",
       'import "@openzeppelin/contracts/token/ERC20/ERC20.sol";',
-      ...(advancedConfig.burnable ? ['import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";'] : []),
-      ...(advancedConfig.pausable ? ['import "@openzeppelin/contracts/security/Pausable.sol";'] : []),
-      ...(advancedConfig.permit ? ['import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";'] : []),
-      ...(advancedConfig.votes ? ['import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";'] : []),
+      ...(advancedConfig.burnable
+        ? [
+            'import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";',
+          ]
+        : []),
+      ...(advancedConfig.pausable
+        ? ['import "@openzeppelin/contracts/security/Pausable.sol";']
+        : []),
+      ...(advancedConfig.permit
+        ? [
+            'import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";',
+          ]
+        : []),
+      ...(advancedConfig.votes
+        ? [
+            'import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";',
+          ]
+        : []),
     ];
 
     const inheritance = [
@@ -42,18 +56,26 @@ contract ${contractName} is ${inheritance.join(", ")} {
     constructor() ERC20("${baseConfig.name}", "${baseConfig.symbol}") {
         _mint(msg.sender, ${baseConfig.initialSupply} * 10 ** decimals());
     }
-    ${advancedConfig.mintable ? `
+    ${
+      advancedConfig.mintable
+        ? `
     function mint(address to, uint256 amount) public {
         _mint(to, amount);
-    }` : ""}
-    ${advancedConfig.pausable ? `
+    }`
+        : ""
+    }
+    ${
+      advancedConfig.pausable
+        ? `
     function pause() public {
         _pause();
     }
 
     function unpause() public {
         _unpause();
-    }` : ""}
+    }`
+        : ""
+    }
 }`;
 
     return code.trim();

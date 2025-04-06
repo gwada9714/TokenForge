@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { PaymentDetails, PlanType } from '@/features/pricing/types/plans';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { PaymentDetails, PlanType } from "@/features/pricing/types/plans";
 
 interface PricingState {
   selectedPlan: PlanType | null;
@@ -18,7 +18,7 @@ const initialState: PricingState = {
 };
 
 const pricingSlice = createSlice({
-  name: 'pricing',
+  name: "pricing",
   initialState,
   reducers: {
     setSelectedPlan: (state, action: PayloadAction<PlanType>) => {
@@ -58,4 +58,4 @@ export const {
   resetState,
 } = pricingSlice.actions;
 
-export default pricingSlice.reducer; 
+export default pricingSlice.reducer;

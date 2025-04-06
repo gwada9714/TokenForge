@@ -1,8 +1,11 @@
-import React from 'react';
-import { ThemeProvider as MUIThemeProvider, createTheme } from '@mui/material/styles';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components';
-import CssBaseline from '@mui/material/CssBaseline';
-import { theme as styledTheme } from './styledTheme';
+import React from "react";
+import {
+  ThemeProvider as MUIThemeProvider,
+  createTheme,
+} from "@mui/material/styles";
+import { ThemeProvider as StyledThemeProvider } from "styled-components";
+import CssBaseline from "@mui/material/CssBaseline";
+import { theme as styledTheme } from "./styledTheme";
 
 const muiTheme = createTheme({
   palette: {

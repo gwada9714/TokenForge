@@ -1,9 +1,9 @@
-import { BroadcastChannel } from 'broadcast-channel';
-import { TokenForgeUser } from '../types';
-import { AUTH_ACTIONS } from '../actions/authActions';
-import { AuthState } from '../types';
+import { BroadcastChannel } from "broadcast-channel";
+import { TokenForgeUser } from "../types";
+import { AUTH_ACTIONS } from "../actions/authActions";
+import { AuthState } from "../types";
 
-const SYNC_CHANNEL = 'tokenforge_auth_sync';
+const SYNC_CHANNEL = "tokenforge_auth_sync";
 const STATE_DEBOUNCE_MS = 100;
 
 type SyncMessage = {
@@ -21,14 +21,17 @@ class TabSyncService {
   private channel: BroadcastChannel;
   private tabId: string;
   private subscribers: Array<(message: SyncMessage) => void>;
-  private stateQueue: Map<string, { message: SyncMessage; timeout: NodeJS.Timeout }>;
+  private stateQueue: Map<
+    string,
+    { message: SyncMessage; timeout: NodeJS.Timeout }
+  >;
   private conflictResolvers: Map<string, StateConflictResolver>;
   private currentState: Map<string, any>;
 
   private constructor() {
     this.tabId = window.crypto.randomUUID();
     this.channel = new BroadcastChannel(SYNC_CHANNEL, {
-      webWorkerSupport: true
+      webWorkerSupport: true,
     });
     this.subscribers = [];
     this.stateQueue = new Map();
@@ -47,28 +50,34 @@ class TabSyncService {
 
   private setupConflictResolvers(): void {
     // Résolveur pour l'état utilisateur
-    this.conflictResolvers.set(AUTH_ACTIONS.UPDATE_USER, (current: TokenForgeUser | null, incoming: TokenForgeUser | null) => {
-      if (!current) return incoming;
-      if (!incoming) return current;
+    this.conflictResolvers.set(
+      AUTH_ACTIONS.UPDATE_USER,
+      (current: TokenForgeUser | null, incoming: TokenForgeUser | null) => {
+        if (!current) return incoming;
+        if (!incoming) return current;
 
-      const lastLoginTime = Math.max(
-        current.lastLoginTime ?? 0,
-        incoming.lastLoginTime ?? 0
-      );
+        const lastLoginTime = Math.max(
+          current.lastLoginTime ?? 0,
+          incoming.lastLoginTime ?? 0
+        );
 
-      return {
-        ...current,
-        ...incoming,
-        lastLoginTime: lastLoginTime || undefined
-      };
-    });
+        return {
+          ...current,
+          ...incoming,
+          lastLoginTime: lastLoginTime || undefined,
+        };
+      }
+    );
 
     // Résolveur pour l'état du wallet
-    this.conflictResolvers.set(AUTH_ACTIONS.WALLET_CONNECT, (current, incoming) => {
-      if (!current) return incoming;
-      if (!incoming) return current;
-      return incoming.timestamp > current.timestamp ? incoming : current;
-    });
+    this.conflictResolvers.set(
+      AUTH_ACTIONS.WALLET_CONNECT,
+      (current, incoming) => {
+        if (!current) return incoming;
+        if (!incoming) return current;
+        return incoming.timestamp > current.timestamp ? incoming : current;
+      }
+    );
   }
 
   private setupListeners(): void {
@@ -107,7 +116,7 @@ class TabSyncService {
 
     this.notifySubscribers({
       ...message,
-      payload: newState
+      payload: newState,
     });
   }
 
@@ -120,11 +129,11 @@ class TabSyncService {
   }
 
   private notifySubscribers(message: SyncMessage): void {
-    this.subscribers.forEach(callback => {
+    this.subscribers.forEach((callback) => {
       try {
         callback(message);
       } catch (error) {
-        console.error('Error in tab sync subscriber:', error);
+        console.error("Error in tab sync subscriber:", error);
       }
     });
   }
@@ -132,7 +141,7 @@ class TabSyncService {
   subscribe(callback: (message: SyncMessage) => void): () => void {
     this.subscribers.push(callback);
     return () => {
-      this.subscribers = this.subscribers.filter(sub => sub !== callback);
+      this.subscribers = this.subscribers.filter((sub) => sub !== callback);
     };
   }
 
@@ -149,7 +158,12 @@ class TabSyncService {
   }
 
   syncAuthState(state: AuthState) {
-    this.broadcast({ type: 'auth_state_change', payload: state, timestamp: Date.now(), tabId: this.tabId });
+    this.broadcast({
+      type: "auth_state_change",
+      payload: state,
+      timestamp: Date.now(),
+      tabId: this.tabId,
+    });
   }
 }
 

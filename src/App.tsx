@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Paper, CircularProgress } from '@mui/material';
-import { Router } from './router';
-import { logger } from './core/logger';
-import TokenForgeAuthProvider from './features/auth/providers/TokenForgeAuthProvider';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { theme } from './theme/theme';
+import React, { useEffect, useState } from "react";
+import { Box, Typography, Paper, CircularProgress } from "@mui/material";
+import { Router } from "./router";
+import { logger } from "./core/logger";
+import TokenForgeAuthProvider from "./features/auth/providers/TokenForgeAuthProvider";
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { theme } from "./theme/theme";
 // Import des éléments nécessaires pour Wagmi
-import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import '@rainbow-me/rainbowkit/styles.css';
+import { WagmiProvider } from "wagmi";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import "@rainbow-me/rainbowkit/styles.css";
 // Import nécessaire pour React Query
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Utiliser notre configuration de Wagmi unifiée
-import { getWagmiConfig } from './hooks/useWagmiConfig';
+import { getWagmiConfig } from "./hooks/useWagmiConfig";
 
 // Déclaration pour TypeScript
 declare global {
@@ -37,16 +37,16 @@ const App: React.FC = () => {
     const timer = setTimeout(() => {
       try {
         logger.info({
-          category: 'Application',
-          message: 'Application initialisée avec succès'
+          category: "Application",
+          message: "Application initialisée avec succès",
         });
         setIsInitialized(true);
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         logger.error({
-          category: 'Application',
+          category: "Application",
           message: `Erreur d'initialisation: ${error.message}`,
-          error
+          error,
         });
         setError(error);
       } finally {
@@ -61,12 +61,12 @@ const App: React.FC = () => {
     return (
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          bgcolor: 'background.default',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          bgcolor: "background.default",
         }}
       >
         <CircularProgress color="primary" />
@@ -81,13 +81,13 @@ const App: React.FC = () => {
     return (
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
           p: 3,
-          bgcolor: 'background.default',
+          bgcolor: "background.default",
         }}
       >
         <Paper
@@ -95,7 +95,7 @@ const App: React.FC = () => {
           sx={{
             p: 4,
             maxWidth: 600,
-            width: '100%',
+            width: "100%",
             borderRadius: 2,
           }}
         >
@@ -103,7 +103,9 @@ const App: React.FC = () => {
             Erreur d'initialisation de l'application
           </Typography>
           <Typography variant="body1">
-            {error ? error.message : "TokenForge n'a pas pu initialiser correctement."}
+            {error
+              ? error.message
+              : "TokenForge n'a pas pu initialiser correctement."}
           </Typography>
         </Paper>
       </Box>

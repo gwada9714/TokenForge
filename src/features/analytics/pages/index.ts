@@ -1,1 +1,1 @@
-export { default as HolderAnalyticsPage } from './HolderAnalyticsPage';
+export { default as HolderAnalyticsPage } from "./HolderAnalyticsPage";

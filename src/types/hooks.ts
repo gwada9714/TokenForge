@@ -1,4 +1,4 @@
-import { type Address } from 'viem';
+import { type Address } from "viem";
 
 // Types pour les vérifications
 export interface NetworkCheckResult {

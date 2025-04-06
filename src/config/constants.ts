@@ -1,4 +1,8 @@
-import { browserLocalPersistence, browserSessionPersistence, inMemoryPersistence } from 'firebase/auth';
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
+} from "firebase/auth";
 
 export const TEST_WALLET_ADDRESS =
   "0xc6E1e8A4AAb35210751F3C4366Da0717510e0f1A" as const;
@@ -30,8 +34,8 @@ export const REQUIRED_CONFIRMATIONS = {
 export const NETWORKS = {
   SEPOLIA: {
     ID: 11155111,
-    NAME: 'Sepolia',
-    RPC_URL: 'https://sepolia.infura.io/v3/',
+    NAME: "Sepolia",
+    RPC_URL: "https://sepolia.infura.io/v3/",
   },
 } as const;
 
@@ -39,7 +43,7 @@ export const NETWORKS = {
 export const VALIDATION = {
   ADDRESS: {
     LENGTH: 42,
-    PREFIX: '0x',
+    PREFIX: "0x",
     REGEX: /^0x[a-fA-F0-9]{40}$/,
   },
   TOKEN: {
@@ -57,14 +61,14 @@ export const VALIDATION = {
 /** Messages d'erreur */
 export const ERROR_MESSAGES = {
   NETWORK: {
-    WRONG_NETWORK: (current: string) => 
+    WRONG_NETWORK: (current: string) =>
       `Veuillez vous connecter au réseau ${NETWORKS.SEPOLIA.NAME} (actuel: ${current})`,
-    NOT_CONNECTED: 'Veuillez connecter votre portefeuille',
+    NOT_CONNECTED: "Veuillez connecter votre portefeuille",
   },
   CONTRACT: {
-    INVALID_ADDRESS: 'Adresse de contrat invalide',
-    NOT_FOUND: 'Contrat non trouvé',
-    NOT_OWNER: 'Seul le propriétaire peut effectuer cette action',
+    INVALID_ADDRESS: "Adresse de contrat invalide",
+    NOT_FOUND: "Contrat non trouvé",
+    NOT_OWNER: "Seul le propriétaire peut effectuer cette action",
   },
   VALIDATION: {
     INVALID_ADDRESS: "L'adresse doit être une adresse Ethereum valide",
@@ -74,24 +78,24 @@ export const ERROR_MESSAGES = {
     INVALID_CHARS: "L'adresse contient des caractères invalides",
   },
   TRANSACTION: {
-    FAILED: 'La transaction a échoué',
-    REJECTED: 'Transaction rejetée par l\'utilisateur',
-    PREPARATION_FAILED: 'Impossible de préparer la transaction',
+    FAILED: "La transaction a échoué",
+    REJECTED: "Transaction rejetée par l'utilisateur",
+    PREPARATION_FAILED: "Impossible de préparer la transaction",
   },
 } as const;
 
 /** Configuration des timeouts (en ms) */
 export const TIMEOUTS = {
   TRANSACTION: 30000, // 30 secondes
-  NOTIFICATION: 6000,  // 6 secondes
+  NOTIFICATION: 6000, // 6 secondes
 } as const;
 
 /** Configuration UI */
 export const UI = {
   NOTIFICATIONS: {
     POSITION: {
-      vertical: 'bottom' as const,
-      horizontal: 'right' as const,
+      vertical: "bottom" as const,
+      horizontal: "right" as const,
     },
     AUTO_HIDE_DURATION: TIMEOUTS.NOTIFICATION,
   },
@@ -104,25 +108,25 @@ export const FIREBASE_CONFIG = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Catégories de logging
 export const LOG_CATEGORIES = {
-  FIREBASE: 'Firebase',
-  AUTH: 'Auth',
-  TOKEN: 'Token',
-  SERVICES: 'Services',
-  ADMIN: 'Admin',
-  SYSTEM: 'System'
+  FIREBASE: "Firebase",
+  AUTH: "Auth",
+  TOKEN: "Token",
+  SERVICES: "Services",
+  ADMIN: "Admin",
+  SYSTEM: "System",
 } as const;
 
 /** Configuration de l'authentification */
 export const AUTH_CONFIG = {
   PERSISTENCE: {
-    LOCAL: browserLocalPersistence,    // Persistance locale (reste connecté après fermeture du navigateur)
+    LOCAL: browserLocalPersistence, // Persistance locale (reste connecté après fermeture du navigateur)
     SESSION: browserSessionPersistence, // Persistance de session (déconnecté à la fermeture du navigateur)
-    NONE: inMemoryPersistence,         // Pas de persistance (déconnecté au refresh de la page)
+    NONE: inMemoryPersistence, // Pas de persistance (déconnecté au refresh de la page)
   },
   SESSION_DURATION: 30 * 24 * 60 * 60 * 1000, // 30 jours en millisecondes
   MAX_LOGIN_ATTEMPTS: 5,
@@ -133,19 +137,19 @@ export const AUTH_PERSISTENCE = AUTH_CONFIG.PERSISTENCE.LOCAL; // Persistance pa
 
 /** Configuration de l'application */
 export const APP_CONFIG = {
-  NAME: 'TokenForge',
-  VERSION: '1.0.0',
-  DESCRIPTION: 'Plateforme de création et gestion de tokens',
-  AUTHOR: 'TokenForge Team',
-  CONTACT: 'contact@tokenforge.io',
-  SUPPORT_EMAIL: 'support@tokenforge.io',
-  WEBSITE: 'https://tokenforge.io',
+  NAME: "TokenForge",
+  VERSION: "1.0.0",
+  DESCRIPTION: "Plateforme de création et gestion de tokens",
+  AUTHOR: "TokenForge Team",
+  CONTACT: "contact@tokenforge.io",
+  SUPPORT_EMAIL: "support@tokenforge.io",
+  WEBSITE: "https://tokenforge.io",
   SOCIAL: {
-    TWITTER: 'https://twitter.com/tokenforge',
-    TELEGRAM: 'https://t.me/tokenforge',
-    DISCORD: 'https://discord.gg/tokenforge',
-    GITHUB: 'https://github.com/tokenforge',
-  }
+    TWITTER: "https://twitter.com/tokenforge",
+    TELEGRAM: "https://t.me/tokenforge",
+    DISCORD: "https://discord.gg/tokenforge",
+    GITHUB: "https://github.com/tokenforge",
+  },
 } as const;
 
 export const APP_NAME = APP_CONFIG.NAME;

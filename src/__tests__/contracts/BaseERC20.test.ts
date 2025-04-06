@@ -16,8 +16,9 @@ describe("BaseERC20", function () {
     otherAccount: HardhatEthersSigner;
   }> {
     const [owner, addr1, addr2, otherAccount] = await hre.ethers.getSigners();
-    const TokenFactoryFactory =
-      await hre.ethers.getContractFactory("TokenFactory");
+    const TokenFactoryFactory = await hre.ethers.getContractFactory(
+      "TokenFactory"
+    );
     const tokenFactory = await TokenFactoryFactory.deploy(owner.address);
     await tokenFactory.waitForDeployment();
     const deployedAddress = await tokenFactory.getAddress();
@@ -29,7 +30,7 @@ describe("BaseERC20", function () {
   describe("Token Creation", function () {
     it("Should create a token with correct parameters", async function () {
       const { tokenFactory, owner } = await loadFixture(
-        deployTokenFactoryFixture,
+        deployTokenFactoryFixture
       );
 
       const name = "Test Token";
@@ -48,7 +49,7 @@ describe("BaseERC20", function () {
         initialSupply,
         maxSupply,
         initialMintable,
-        salt,
+        salt
       );
 
       const receipt = await tx.wait();
@@ -112,7 +113,7 @@ describe("BaseERC20", function () {
         initialSupply,
         maxSupply,
         initialMintable,
-        salt,
+        salt
       );
 
       const receipt = await tx.wait();
@@ -130,8 +131,10 @@ describe("BaseERC20", function () {
 
       try {
         await token.mint(
-          (await hre.ethers.getSigners())[1].address,
-          parseEther("1"),
+          (
+            await hre.ethers.getSigners()
+          )[1].address,
+          parseEther("1")
         );
         expect.fail("Should have thrown MintingDisabled error");
       } catch (error: any) {
@@ -154,7 +157,7 @@ describe("BaseERC20", function () {
         initialSupply,
         maxSupply,
         initialMintable,
-        salt,
+        salt
       );
 
       const receipt = await tx.wait();
@@ -173,8 +176,10 @@ describe("BaseERC20", function () {
       // Try to mint beyond max supply
       try {
         await token.mint(
-          (await hre.ethers.getSigners())[1].address,
-          parseEther("1001"),
+          (
+            await hre.ethers.getSigners()
+          )[1].address,
+          parseEther("1001")
         );
         expect.fail("Should have thrown MaxSupplyExceeded error");
       } catch (error: any) {
@@ -197,7 +202,7 @@ describe("BaseERC20", function () {
         initialSupply,
         maxSupply,
         initialMintable,
-        salt,
+        salt
       );
 
       const receipt = await tx.wait();
@@ -215,13 +220,15 @@ describe("BaseERC20", function () {
 
       // Should be able to mint any amount
       await token.mint(
-        (await hre.ethers.getSigners())[1].address,
-        parseEther("1000000"),
+        (
+          await hre.ethers.getSigners()
+        )[1].address,
+        parseEther("1000000")
       );
       expect(
         Number(
-          await token.balanceOf((await hre.ethers.getSigners())[1].address),
-        ),
+          await token.balanceOf((await hre.ethers.getSigners())[1].address)
+        )
       ).to.equal(Number(parseEther("1000000")));
     });
   });
@@ -283,13 +290,14 @@ describe("BaseERC20", function () {
 
       // Tentative de mint par un compte non autorisé
       await expect(
-        token.connect(otherAccount).mint(otherAccount.address, parseEther("100"))
+        token
+          .connect(otherAccount)
+          .mint(otherAccount.address, parseEther("100"))
       ).to.be.revertedWith("Ownable: caller is not the owner");
 
       // Vérification que seul le owner peut mint
-      await expect(
-        token.connect(owner).mint(owner.address, parseEther("100"))
-      ).to.not.be.reverted;
+      await expect(token.connect(owner).mint(owner.address, parseEther("100")))
+        .to.not.be.reverted;
     });
 
     it("Should enforce transfer limits correctly", async function () {

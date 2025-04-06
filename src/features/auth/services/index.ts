@@ -1,29 +1,34 @@
-import { ErrorService, NotificationService, SessionService, WalletReconnectionService } from '../../../types/services';
-import { WalletState } from '../../../types/wallet';
+import {
+  ErrorService,
+  NotificationService,
+  SessionService,
+  WalletReconnectionService,
+} from "../../../types/services";
+import { WalletState } from "../../../types/wallet";
 
 export const errorService: ErrorService = {
   handle: (error: unknown) => {
-    console.error('Error:', error);
+    console.error("Error:", error);
   },
   handleError: (error: unknown) => {
     if (error instanceof Error) return error;
     return new Error(String(error));
-  }
+  },
 };
 
 export const notificationService: NotificationService = {
   success: (message: string) => {
-    console.log('Success:', message);
+    console.log("Success:", message);
   },
   error: (message: string) => {
-    console.error('Error:', message);
+    console.error("Error:", message);
   },
   warning: (message: string) => {
-    console.warn('Warning:', message);
+    console.warn("Warning:", message);
   },
   info: (message: string) => {
-    console.info('Info:', message);
-  }
+    console.info("Info:", message);
+  },
 };
 
 export const sessionService: SessionService = {
@@ -32,9 +37,9 @@ export const sessionService: SessionService = {
     return {
       isAdmin: false,
       canCreateToken: true,
-      canUseServices: true
+      canUseServices: true,
     };
-  }
+  },
 };
 
 export const walletReconnectionService: WalletReconnectionService = {
@@ -49,5 +54,5 @@ export const walletReconnectionService: WalletReconnectionService = {
   },
   cleanup: () => {
     // Nettoyage des ressources
-  }
+  },
 };

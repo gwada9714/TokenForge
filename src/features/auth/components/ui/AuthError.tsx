@@ -1,7 +1,7 @@
-import React from 'react';
-import { Alert, AlertTitle, Button, Box } from '@mui/material';
-import { AuthError } from '../../errors/AuthError';
-import { messages } from '../../constants/messages';
+import React from "react";
+import { Alert, AlertTitle, Button, Box } from "@mui/material";
+import { AuthError } from "../../errors/AuthError";
+import { messages } from "../../constants/messages";
 
 interface AuthErrorProps {
   error: AuthError;
@@ -9,23 +9,23 @@ interface AuthErrorProps {
   onDismiss?: () => void;
 }
 
-export const AuthErrorDisplay: React.FC<AuthErrorProps> = ({ 
-  error, 
-  onRetry, 
-  onDismiss 
+export const AuthErrorDisplay: React.FC<AuthErrorProps> = ({
+  error,
+  onRetry,
+  onDismiss,
 }) => {
   const errorMessage = messages.fr.errors[error.code] || error.message;
 
   return (
-    <Alert 
+    <Alert
       severity="error"
       sx={{ mb: 2 }}
       action={
         <Box>
           {onRetry && (
-            <Button 
-              color="inherit" 
-              size="small" 
+            <Button
+              color="inherit"
+              size="small"
               onClick={onRetry}
               sx={{ mr: 1 }}
             >
@@ -33,11 +33,7 @@ export const AuthErrorDisplay: React.FC<AuthErrorProps> = ({
             </Button>
           )}
           {onDismiss && (
-            <Button 
-              color="inherit" 
-              size="small" 
-              onClick={onDismiss}
-            >
+            <Button color="inherit" size="small" onClick={onDismiss}>
               {messages.fr.actions.cancel}
             </Button>
           )}

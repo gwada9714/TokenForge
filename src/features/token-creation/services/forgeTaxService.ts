@@ -1,9 +1,14 @@
-import { createPublicClient, http, type TransactionReceipt, parseEther } from 'viem';
-import { BlockchainNetwork } from '../components/DeploymentOptions';
+import {
+  createPublicClient,
+  http,
+  type TransactionReceipt,
+  parseEther,
+} from "viem";
+import { BlockchainNetwork } from "../components/DeploymentOptions";
 
 export interface TaxConfig {
-  baseTaxRate: number;      // 0.5% taxe de forge
-  customTaxRate: number;    // Taxe personnalisée (max 1.5%)
+  baseTaxRate: number; // 0.5% taxe de forge
+  customTaxRate: number; // Taxe personnalisée (max 1.5%)
   forgeWallet: `0x${string}`;
   treasuryWallet: `0x${string}`;
 }
@@ -17,14 +22,17 @@ export class ForgeTaxService {
     private readonly treasuryWallet: `0x${string}`
   ) {}
 
-  calculateTaxDistribution(amount: bigint, customTaxRate: number): {
+  calculateTaxDistribution(
+    amount: bigint,
+    customTaxRate: number
+  ): {
     forgeAmount: bigint;
     treasuryAmount: bigint;
     creatorAmount: bigint;
   } {
     // Valider les entrées
     if (amount <= 0n) {
-      throw new Error('Le montant doit être positif');
+      throw new Error("Le montant doit être positif");
     }
 
     const validCustomRate = Math.min(
@@ -44,11 +52,14 @@ export class ForgeTaxService {
     return {
       forgeAmount,
       treasuryAmount,
-      creatorAmount
+      creatorAmount,
     };
   }
 
-  async validateTaxPayment(receipt: TransactionReceipt, expectedTax: bigint): Promise<boolean> {
+  async validateTaxPayment(
+    receipt: TransactionReceipt,
+    expectedTax: bigint
+  ): Promise<boolean> {
     if (!receipt.status) return false;
     const taxPaid = this.extractTaxFromReceipt(receipt);
     return taxPaid >= expectedTax;
@@ -59,7 +70,7 @@ export class ForgeTaxService {
       baseTaxRate: this.BASE_TAX_RATE,
       customTaxRate: Math.min(customTaxRate, this.MAX_CUSTOM_TAX_RATE),
       forgeWallet: this.forgeWallet,
-      treasuryWallet: this.treasuryWallet
+      treasuryWallet: this.treasuryWallet,
     };
   }
 

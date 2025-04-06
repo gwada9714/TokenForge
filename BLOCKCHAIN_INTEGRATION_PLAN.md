@@ -5,6 +5,7 @@ Ce document détaille le plan d'intégration multi-chain pour le projet TokenFor
 ## 1. Architecture d'intégration multi-chain
 
 ### 1.1 Structure fondamentale
+
 ```
 src/
   blockchain/
@@ -54,11 +55,13 @@ src/
 ## 2. État d'avancement par blockchain
 
 ### Phase 1: Fondation (Mois 1-3) ✅ Terminé
+
 - Configuration initiale des providers et création des interfaces communes
 - Implémentation du service de base BlockchainService
 - Définition des types partagés
 
 ### Phase 2: Développement Core (Mois 4-6) ✅ En cours
+
 - Ethereum & BSC (Semaines 13-14) ✅ Terminé
 - Polygon & Avalanche (Semaines 15-16) ✅ Terminé
 - Hooks React pour l'UI ✅ Terminé
@@ -68,6 +71,7 @@ src/
   - useTokenDeployment ✅ Terminé
 
 ### Phase 3: Extension & Services (Mois 7-9) ⏳ À venir
+
 - Arbitrum (Semaines 25-28) ✅ Implémenté
 - Services communs ⏳ À implémenter
   - PaymentService
@@ -79,6 +83,7 @@ src/
   - gas-estimators.ts
 
 ### Phase 4: Optimisation & Scaling (Mois 10-12) ⏳ À venir
+
 - Solana (Semaines 37-40) 🔄 Ébauche implémentée avec dépendances installées
 - Tests d'intégration et E2E ⏳ À implémenter
 - Documentation complète ⏳ À implémenter

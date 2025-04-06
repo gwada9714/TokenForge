@@ -1,15 +1,18 @@
-import React, { useState, useCallback } from 'react';
-import { TokenEvent } from '../services/eventMonitorService';
-import { EventExportService, ExportOptions } from '../services/eventExportService';
-import { Button } from '@/components/ui/button';
-import { MultiSelect } from '@/components/ui/multi-select';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { X, FileText, Code } from '@/components/ui/icons';
-import { parseEther } from 'viem';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import React, { useState, useCallback } from "react";
+import { TokenEvent } from "../services/eventMonitorService";
+import {
+  EventExportService,
+  ExportOptions,
+} from "../services/eventExportService";
+import { Button } from "@/components/ui/button";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { X, FileText, Code } from "@/components/ui/icons";
+import { parseEther } from "viem";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface EventFilterBarProps {
   events: TokenEvent[];
@@ -21,7 +24,7 @@ export interface EventFilters {
     start: Date;
     end: Date;
   };
-  eventTypes: TokenEvent['type'][];
+  eventTypes: TokenEvent["type"][];
   minAmount?: bigint;
 }
 
@@ -31,19 +34,22 @@ export const EventFilterBar: React.FC<EventFilterBarProps> = ({
 }) => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [minAmount, setMinAmount] = useState<string>('');
+  const [minAmount, setMinAmount] = useState<string>("");
 
-  const handleTypeChange = useCallback((types: string[]) => {
-    setSelectedTypes(types);
-    onFiltersChange({
-      eventTypes: types,
-      dateRange,
-      minAmount: minAmount ? parseEther(minAmount) : undefined,
-    });
-  }, [dateRange, minAmount, onFiltersChange]);
+  const handleTypeChange = useCallback(
+    (types: string[]) => {
+      setSelectedTypes(types);
+      onFiltersChange({
+        eventTypes: types,
+        dateRange,
+        minAmount: minAmount ? parseEther(minAmount) : undefined,
+      });
+    },
+    [dateRange, minAmount, onFiltersChange]
+  );
 
   const exportEvents = useCallback(
-    (events: TokenEvent[], format: 'csv' | 'json', options: ExportOptions) => {
+    (events: TokenEvent[], format: "csv" | "json", options: ExportOptions) => {
       const exportService = new EventExportService();
       exportService.downloadEvents(events, options);
     },
@@ -58,10 +64,10 @@ export const EventFilterBar: React.FC<EventFilterBarProps> = ({
           value={selectedTypes}
           onValueChange={handleTypeChange}
           options={[
-            { label: 'Transferts', value: 'Transfer' },
-            { label: 'Taxes', value: 'TaxCollected' },
-            { label: 'Mints', value: 'Mint' },
-            { label: 'Burns', value: 'Burn' },
+            { label: "Transferts", value: "Transfer" },
+            { label: "Taxes", value: "TaxCollected" },
+            { label: "Mints", value: "Mint" },
+            { label: "Burns", value: "Burn" },
           ]}
           placeholder="Filtrer par type"
           className="w-[200px]"
@@ -108,7 +114,7 @@ export const EventFilterBar: React.FC<EventFilterBarProps> = ({
             variant="outline"
             size="sm"
             onClick={() =>
-              exportEvents(events, 'csv', {
+              exportEvents(events, "csv", {
                 types: selectedTypes,
                 dateRange,
                 minAmount: minAmount ? parseEther(minAmount) : undefined,
@@ -122,7 +128,7 @@ export const EventFilterBar: React.FC<EventFilterBarProps> = ({
             variant="outline"
             size="sm"
             onClick={() =>
-              exportEvents(events, 'json', {
+              exportEvents(events, "json", {
                 types: selectedTypes,
                 dateRange,
                 minAmount: minAmount ? parseEther(minAmount) : undefined,
@@ -164,8 +170,8 @@ export const EventFilterBar: React.FC<EventFilterBarProps> = ({
                 });
               }}
             >
-              {format(dateRange.from, 'dd/MM/yyyy')} -{' '}
-              {format(dateRange.to, 'dd/MM/yyyy')}
+              {format(dateRange.from, "dd/MM/yyyy")} -{" "}
+              {format(dateRange.to, "dd/MM/yyyy")}
               <X className="w-3 h-3 ml-1" />
             </Badge>
           )}
@@ -174,7 +180,7 @@ export const EventFilterBar: React.FC<EventFilterBarProps> = ({
               variant="secondary"
               className="cursor-pointer"
               onClick={() => {
-                setMinAmount('');
+                setMinAmount("");
                 onFiltersChange({
                   eventTypes: selectedTypes,
                   dateRange,

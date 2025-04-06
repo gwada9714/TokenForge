@@ -1,11 +1,11 @@
 export enum PaymentErrorType {
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  TIMEOUT_ERROR = 'TIMEOUT_ERROR',
-  INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
-  TRANSACTION_FAILED = 'TRANSACTION_FAILED',
-  SESSION_ERROR = 'SESSION_ERROR',
-  WALLET_ERROR = 'WALLET_ERROR'
+  VALIDATION_ERROR = "VALIDATION_ERROR",
+  NETWORK_ERROR = "NETWORK_ERROR",
+  TIMEOUT_ERROR = "TIMEOUT_ERROR",
+  INSUFFICIENT_FUNDS = "INSUFFICIENT_FUNDS",
+  TRANSACTION_FAILED = "TRANSACTION_FAILED",
+  SESSION_ERROR = "SESSION_ERROR",
+  WALLET_ERROR = "WALLET_ERROR",
 }
 
 export class PaymentError extends Error {
@@ -15,7 +15,7 @@ export class PaymentError extends Error {
     public details?: any
   ) {
     super(message);
-    this.name = 'PaymentError';
+    this.name = "PaymentError";
   }
 }
 

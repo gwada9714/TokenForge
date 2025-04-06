@@ -1,20 +1,24 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
-import { PaymentSessionService } from '../PaymentSessionService';
-import { PaymentNetwork, PaymentStatus, PaymentToken } from '../types/PaymentSession';
-import { PaymentSyncService } from '../PaymentSyncService';
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { PaymentSessionService } from "../PaymentSessionService";
+import {
+  PaymentNetwork,
+  PaymentStatus,
+  PaymentToken,
+} from "../types/PaymentSession";
+import { PaymentSyncService } from "../PaymentSyncService";
 
-describe('PaymentSessionService', () => {
+describe("PaymentSessionService", () => {
   let service: PaymentSessionService;
   let syncService: PaymentSyncService;
-  
+
   const mockToken: PaymentToken = {
-    symbol: 'USDT',
-    address: '0x1234567890123456789012345678901234567890',
+    symbol: "USDT",
+    address: "0x1234567890123456789012345678901234567890",
     decimals: 18,
     network: PaymentNetwork.ETHEREUM,
   };
 
-  const ONE_ETH = BigInt('1000000000000000000'); // 1 ETH en wei
+  const ONE_ETH = BigInt("1000000000000000000"); // 1 ETH en wei
 
   beforeEach(() => {
     service = PaymentSessionService.getInstance();
@@ -28,17 +32,17 @@ describe('PaymentSessionService', () => {
     vi.useRealTimers();
   });
 
-  describe('createSession', () => {
-    it('should create a new payment session', async () => {
+  describe("createSession", () => {
+    it("should create a new payment session", async () => {
       const params = {
-        userId: 'user123',
+        userId: "user123",
         amount: BigInt(1000000),
         network: PaymentNetwork.ETHEREUM,
         token: {
-          symbol: 'ETH',
-          address: '0x0000000000000000000000000000000000000000',
+          symbol: "ETH",
+          address: "0x0000000000000000000000000000000000000000",
         },
-        serviceType: 'SUBSCRIPTION',
+        serviceType: "SUBSCRIPTION",
       };
 
       const session = await service.createSession(params);
@@ -49,7 +53,7 @@ describe('PaymentSessionService', () => {
         network: params.network,
         token: params.token,
         serviceType: params.serviceType,
-        status: 'PENDING',
+        status: "PENDING",
         retryCount: 0,
       });
 
@@ -60,56 +64,56 @@ describe('PaymentSessionService', () => {
     });
   });
 
-  describe('updateSessionStatus', () => {
-    it('should update session status and emit event', async () => {
+  describe("updateSessionStatus", () => {
+    it("should update session status and emit event", async () => {
       const params = {
-        userId: 'user123',
+        userId: "user123",
         amount: BigInt(1000000),
         network: PaymentNetwork.ETHEREUM,
         token: {
-          symbol: 'ETH',
-          address: '0x0000000000000000000000000000000000000000',
+          symbol: "ETH",
+          address: "0x0000000000000000000000000000000000000000",
         },
-        serviceType: 'SUBSCRIPTION',
+        serviceType: "SUBSCRIPTION",
       };
 
       const session = await service.createSession(params);
-      const txHash = '0x123456789';
+      const txHash = "0x123456789";
 
       let eventEmitted = false;
       service.onSessionUpdate(session.id, (updatedSession) => {
-        expect(updatedSession.status).toBe('COMPLETED');
+        expect(updatedSession.status).toBe("COMPLETED");
         expect(updatedSession.txHash).toBe(txHash);
         eventEmitted = true;
       });
 
-      service.updateSessionStatus(session.id, 'COMPLETED', txHash);
+      service.updateSessionStatus(session.id, "COMPLETED", txHash);
       expect(eventEmitted).toBe(true);
 
       const updatedSession = service.getSession(session.id);
       expect(updatedSession).toBeUndefined(); // Session should be cleaned up after completion
     });
 
-    it('should handle session expiry', async () => {
+    it("should handle session expiry", async () => {
       jest.useFakeTimers();
 
       const params = {
-        userId: 'user123',
+        userId: "user123",
         amount: BigInt(1000000),
         network: PaymentNetwork.ETHEREUM,
         token: {
-          symbol: 'ETH',
-          address: '0x0000000000000000000000000000000000000000',
+          symbol: "ETH",
+          address: "0x0000000000000000000000000000000000000000",
         },
-        serviceType: 'SUBSCRIPTION',
+        serviceType: "SUBSCRIPTION",
       };
 
       const session = await service.createSession(params);
       let eventEmitted = false;
 
       service.onSessionUpdate(session.id, (updatedSession) => {
-        expect(updatedSession.status).toBe('FAILED');
-        expect(updatedSession.error).toBe('Session expired');
+        expect(updatedSession.status).toBe("FAILED");
+        expect(updatedSession.error).toBe("Session expired");
         eventEmitted = true;
       });
 
@@ -123,18 +127,18 @@ describe('PaymentSessionService', () => {
     });
   });
 
-  describe('getAllUserSessions', () => {
-    it('should return all sessions for a user', async () => {
-      const userId = 'user123';
+  describe("getAllUserSessions", () => {
+    it("should return all sessions for a user", async () => {
+      const userId = "user123";
       const params = {
         userId,
         amount: BigInt(1000000),
         network: PaymentNetwork.ETHEREUM,
         token: {
-          symbol: 'ETH',
-          address: '0x0000000000000000000000000000000000000000',
+          symbol: "ETH",
+          address: "0x0000000000000000000000000000000000000000",
         },
-        serviceType: 'SUBSCRIPTION',
+        serviceType: "SUBSCRIPTION",
       };
 
       await service.createSession(params);
@@ -147,13 +151,13 @@ describe('PaymentSessionService', () => {
     });
   });
 
-  describe('retryPayment', () => {
-    it('should allow retry within limit', async () => {
+  describe("retryPayment", () => {
+    it("should allow retry within limit", async () => {
       const session = service.createSession(
-        'user123',
+        "user123",
         ONE_ETH,
         mockToken,
-        'token_creation'
+        "token_creation"
       );
 
       const canRetry = await service.retryPayment(session.id);
@@ -164,12 +168,12 @@ describe('PaymentSessionService', () => {
       expect(updatedSession?.status).toBe(PaymentStatus.PENDING);
     });
 
-    it('should fail after retry limit', async () => {
+    it("should fail after retry limit", async () => {
       const session = service.createSession(
-        'user123',
+        "user123",
         ONE_ETH,
         mockToken,
-        'token_creation'
+        "token_creation"
       );
 
       // Perform 3 retries
@@ -181,17 +185,17 @@ describe('PaymentSessionService', () => {
 
       expect(canRetry).toBe(false);
       expect(updatedSession?.status).toBe(PaymentStatus.FAILED);
-      expect(updatedSession?.error).toBe('Retry limit exceeded');
+      expect(updatedSession?.error).toBe("Retry limit exceeded");
     });
   });
 
-  describe('payment timeout', () => {
-    it('should timeout pending payments after TIMEOUT_MS', () => {
+  describe("payment timeout", () => {
+    it("should timeout pending payments after TIMEOUT_MS", () => {
       const session = service.createSession(
-        'user123',
+        "user123",
         ONE_ETH,
         mockToken,
-        'token_creation'
+        "token_creation"
       );
 
       // Fast-forward time by 10 seconds
@@ -199,19 +203,23 @@ describe('PaymentSessionService', () => {
 
       const timedOutSession = service.getSession(session.id);
       expect(timedOutSession?.status).toBe(PaymentStatus.TIMEOUT);
-      expect(timedOutSession?.error).toBe('Payment timeout exceeded');
+      expect(timedOutSession?.error).toBe("Payment timeout exceeded");
     });
 
-    it('should not timeout confirmed payments', () => {
+    it("should not timeout confirmed payments", () => {
       const session = service.createSession(
-        'user123',
+        "user123",
         ONE_ETH,
         mockToken,
-        'token_creation'
+        "token_creation"
       );
 
       // Confirm the payment
-      service.updateSessionStatus(session.id, PaymentStatus.CONFIRMED, '0xtxhash');
+      service.updateSessionStatus(
+        session.id,
+        PaymentStatus.CONFIRMED,
+        "0xtxhash"
+      );
 
       // Fast-forward time
       vi.advanceTimersByTime(10000);
@@ -220,12 +228,12 @@ describe('PaymentSessionService', () => {
       expect(confirmedSession?.status).toBe(PaymentStatus.CONFIRMED);
     });
 
-    it('should reset timeout on retry', async () => {
+    it("should reset timeout on retry", async () => {
       const session = service.createSession(
-        'user123',
+        "user123",
         ONE_ETH,
         mockToken,
-        'token_creation'
+        "token_creation"
       );
 
       // Advance time by 5 seconds

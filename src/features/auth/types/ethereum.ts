@@ -13,7 +13,7 @@ export interface EthereumError extends Error {
   data?: unknown;
 }
 
-export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+export type LogLevel = "info" | "warn" | "error" | "debug";
 
 export interface LogMessage {
   level: LogLevel;
@@ -23,10 +23,10 @@ export interface LogMessage {
 }
 
 export interface AuthErrorCode {
-  SESSION_NOT_FOUND: 'auth/session-not-found';
-  SESSION_INVALID: 'auth/session-invalid';
-  SESSION_EXPIRED: 'SESSION_EXPIRED';
-  WALLET_NOT_FOUND: 'auth/wallet-not-found';
-  WALLET_DISCONNECTED: 'WALLET_DISCONNECTED';
-  NETWORK_NOT_SUPPORTED: 'auth/network-not-supported';
-} 
+  SESSION_NOT_FOUND: "auth/session-not-found";
+  SESSION_INVALID: "auth/session-invalid";
+  SESSION_EXPIRED: "SESSION_EXPIRED";
+  WALLET_NOT_FOUND: "auth/wallet-not-found";
+  WALLET_DISCONNECTED: "WALLET_DISCONNECTED";
+  NETWORK_NOT_SUPPORTED: "auth/network-not-supported";
+}

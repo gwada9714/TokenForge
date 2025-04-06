@@ -4,7 +4,7 @@ export enum TokenType {
   STANDARD = "STANDARD",
   TAX = "TAX",
   LIQUIDITY = "LIQUIDITY",
-  STAKING = "STAKING"
+  STAKING = "STAKING",
 }
 
 export interface TokenBaseConfig {

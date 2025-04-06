@@ -1,25 +1,25 @@
-import { FirebaseError } from 'firebase/app';
-import { 
-  Auth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
+import { FirebaseError } from "firebase/app";
+import {
+  Auth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
   User,
   sendEmailVerification,
   getIdToken,
-  onIdTokenChanged
-} from 'firebase/auth';
+  onIdTokenChanged,
+} from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
 import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { firestoreService } from "@/lib/firebase/firestore";
 import { AuthErrorCode } from "../errors/AuthError";
 import { ErrorService } from "./errorService";
-import { logger } from '../../../core/logger';
-import { TokenEncryption } from '../../../utils/token-encryption';
-import * as Sentry from '@sentry/react';
+import { logger } from "../../../core/logger";
+import { TokenEncryption } from "../../../utils/token-encryption";
+import * as Sentry from "@sentry/react";
 import { getFirebaseManager } from "@/lib/firebase/services";
 
-const LOG_CATEGORY = 'FirebaseService';
+const LOG_CATEGORY = "FirebaseService";
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 1000; // 1 second
 
@@ -44,7 +44,9 @@ export class FirebaseService {
     if (!FirebaseService.instance) {
       FirebaseService.instance = new FirebaseService();
       // Ne pas initialiser automatiquement - déprécié
-      logger.warn(`${LOG_CATEGORY}: Ce service est déprécié. Utilisez firebaseAuth depuis @/lib/firebase/auth`);
+      logger.warn(
+        `${LOG_CATEGORY}: Ce service est déprécié. Utilisez firebaseAuth depuis @/lib/firebase/auth`
+      );
     }
     return FirebaseService.instance;
   }
@@ -53,10 +55,12 @@ export class FirebaseService {
     if (this._initialized) {
       return;
     }
-    
+
     try {
-      logger.debug(`${LOG_CATEGORY}: 🔄 Initialisation des services Firebase (déprécié)`);
-      
+      logger.debug(
+        `${LOG_CATEGORY}: 🔄 Initialisation des services Firebase (déprécié)`
+      );
+
       // Vérifier si les services sont déjà disponibles
       try {
         // Essayer d'obtenir les services déjà initialisés
@@ -66,19 +70,21 @@ export class FirebaseService {
         this._functions = fbManager.functions;
         this._initialized = true;
         this.setupTokenRefresh();
-        logger.info(`${LOG_CATEGORY}: ✅ Services Firebase initialisés (déprécié)`);
+        logger.info(
+          `${LOG_CATEGORY}: ✅ Services Firebase initialisés (déprécié)`
+        );
       } catch (error) {
         // Si les services ne sont pas encore disponibles, signaler mais ne pas bloquer
         logger.warn({
           message: `${LOG_CATEGORY}: Service déprécié - certains services Firebase ne sont pas encore disponibles`,
-          error
+          error,
         });
         // Ne pas propager l'erreur - le service est déprécié
       }
     } catch (error) {
       logger.warn({
         message: `${LOG_CATEGORY}: ⚠️ Initialisation différée (déprécié)`,
-        error
+        error,
       });
       // Ne pas propager l'erreur - le service est déprécié
     }
@@ -89,7 +95,7 @@ export class FirebaseService {
       logger.error(`${LOG_CATEGORY}: Auth service not initialized`);
       return;
     }
-    
+
     onIdTokenChanged(this._auth, async (user) => {
       if (user) {
         try {
@@ -100,7 +106,7 @@ export class FirebaseService {
         } catch (error) {
           logger.error({
             message: `${LOG_CATEGORY}: Error refreshing token`,
-            error
+            error,
           });
           Sentry.captureException(error);
         }
@@ -113,15 +119,18 @@ export class FirebaseService {
   private async updateSessionToken(token: string): Promise<void> {
     try {
       if (!this._functions) {
-        throw new Error('Functions not initialized');
+        throw new Error("Functions not initialized");
       }
-      
-      const updateSession = httpsCallable(this._functions, 'updateSessionToken');
+
+      const updateSession = httpsCallable(
+        this._functions,
+        "updateSessionToken"
+      );
       await updateSession({ token });
     } catch (error) {
       logger.error({
         message: `${LOG_CATEGORY}: Error updating session token`,
-        error
+        error,
       });
       Sentry.captureException(error);
     }
@@ -130,52 +139,57 @@ export class FirebaseService {
   private async updateUserLastActivity(userId: string): Promise<void> {
     try {
       // Utiliser la bonne API de Firestore
-      await firestoreService.setDocument('users', userId, {
+      await firestoreService.setDocument("users", userId, {
         lastActivity: new Date(),
-        lastTokenRefresh: new Date()
+        lastTokenRefresh: new Date(),
       });
     } catch (error) {
       logger.error({
         message: `${LOG_CATEGORY}: Error updating user activity`,
-        error
+        error,
       });
-      Sentry.captureException(error instanceof Error ? error : new Error(String(error)));
+      Sentry.captureException(
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
-  private async retryOperation<T>(operation: () => Promise<T>, attempts: number = MAX_RETRY_ATTEMPTS): Promise<T> {
+  private async retryOperation<T>(
+    operation: () => Promise<T>,
+    attempts: number = MAX_RETRY_ATTEMPTS
+  ): Promise<T> {
     for (let i = 0; i < attempts; i++) {
       try {
         return await operation();
       } catch (error) {
         if (i === attempts - 1) throw error;
         const delay = RETRY_DELAY * Math.pow(2, i); // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         logger.warn({
           message: `${LOG_CATEGORY}: Retry attempt ${i + 1}/${attempts}`,
-          error
+          error,
         });
       }
     }
-    throw new Error('Max retry attempts reached');
+    throw new Error("Max retry attempts reached");
   }
 
   public async signInWithEmail(email: string, password: string): Promise<User> {
     if (!this._auth) {
-      throw new Error('Auth service not initialized');
+      throw new Error("Auth service not initialized");
     }
-    
+
     const startTime = Date.now();
     try {
-      const userCredential = await this.retryOperation(() => 
+      const userCredential = await this.retryOperation(() =>
         signInWithEmailAndPassword(this._auth!, email, password)
       );
-      
+
       if (!userCredential.user.emailVerified) {
         await sendEmailVerification(userCredential.user);
         throw ErrorService.createAuthError(
           AuthErrorCode.INVALID_EMAIL,
-          'Veuillez vérifier votre email avant de vous connecter'
+          "Veuillez vérifier votre email avant de vous connecter"
         );
       }
 
@@ -184,7 +198,7 @@ export class FirebaseService {
         message: `${LOG_CATEGORY}: User signed in successfully`,
         uid: userCredential.user.uid,
         email: userCredential.user.email,
-        authTime: Date.now() - startTime
+        authTime: Date.now() - startTime,
       });
 
       // Mise à jour des tentatives de connexion
@@ -194,7 +208,10 @@ export class FirebaseService {
     } catch (error) {
       // Mise à jour des tentatives de connexion en cas d'échec
       if (error instanceof FirebaseError) {
-        await this.updateLoginAttempts(error.code === 'auth/user-not-found' ? 'unknown' : email, false);
+        await this.updateLoginAttempts(
+          error.code === "auth/user-not-found" ? "unknown" : email,
+          false
+        );
       }
 
       if (error instanceof FirebaseError) {
@@ -202,46 +219,57 @@ export class FirebaseService {
       }
       throw ErrorService.createAuthError(
         AuthErrorCode.INTERNAL_ERROR,
-        'Une erreur inattendue est survenue lors de la connexion'
+        "Une erreur inattendue est survenue lors de la connexion"
       );
     }
   }
 
-  private async updateLoginAttempts(identifier: string, success: boolean): Promise<void> {
+  private async updateLoginAttempts(
+    identifier: string,
+    success: boolean
+  ): Promise<void> {
     try {
       const now = new Date();
 
       if (success) {
         // Réinitialiser les tentatives en cas de succès
-        await firestoreService.setDocument('userAttempts', identifier, {
+        await firestoreService.setDocument("userAttempts", identifier, {
           attempts: 0,
           lastAttempt: now,
-          lastSuccess: now
+          lastSuccess: now,
         });
       } else {
         // Récupérer d'abord les données actuelles
-        const currentData = await firestoreService.getDocument('userAttempts', identifier) || { attempts: 0 };
+        const currentData = (await firestoreService.getDocument(
+          "userAttempts",
+          identifier
+        )) || { attempts: 0 };
 
-        await firestoreService.setDocument('userAttempts', identifier, {
+        await firestoreService.setDocument("userAttempts", identifier, {
           attempts: (currentData.attempts || 0) + 1,
           lastAttempt: now,
-          lastFailure: now
+          lastFailure: now,
         });
       }
     } catch (error) {
       logger.error({
         message: `${LOG_CATEGORY}: Error updating login attempts`,
-        error
+        error,
       });
-      Sentry.captureException(error instanceof Error ? error : new Error(String(error)));
+      Sentry.captureException(
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
-  public async createUserWithEmail(email: string, password: string): Promise<User> {
+  public async createUserWithEmail(
+    email: string,
+    password: string
+  ): Promise<User> {
     if (!this._auth) {
-      throw new Error('Auth service not initialized');
+      throw new Error("Auth service not initialized");
     }
-    
+
     const startTime = Date.now();
     try {
       const userCredential = await this.retryOperation(() =>
@@ -252,12 +280,12 @@ export class FirebaseService {
       await sendEmailVerification(userCredential.user);
 
       // Créer le profil utilisateur dans Firestore
-      await firestoreService.setDocument('users', userCredential.user.uid, {
+      await firestoreService.setDocument("users", userCredential.user.uid, {
         email: userCredential.user.email,
         createdAt: new Date(),
         lastLogin: new Date(),
         emailVerified: false,
-        attempts: 0
+        attempts: 0,
       });
 
       // Log successful account creation
@@ -265,7 +293,7 @@ export class FirebaseService {
         message: `${LOG_CATEGORY}: User account created successfully`,
         uid: userCredential.user.uid,
         email: userCredential.user.email,
-        creationTime: Date.now() - startTime
+        creationTime: Date.now() - startTime,
       });
 
       return userCredential.user;
@@ -275,31 +303,31 @@ export class FirebaseService {
       }
       throw ErrorService.createAuthError(
         AuthErrorCode.INTERNAL_ERROR,
-        'Une erreur inattendue est survenue lors de la création du compte'
+        "Une erreur inattendue est survenue lors de la création du compte"
       );
     }
   }
 
   public async signOut(): Promise<void> {
     if (!this._auth) {
-      throw new Error('Auth service not initialized');
+      throw new Error("Auth service not initialized");
     }
-    
+
     try {
       logger.info(`${LOG_CATEGORY}: Signing out user`);
-      
+
       await signOut(this._auth);
-      
+
       logger.info(`${LOG_CATEGORY}: User signed out successfully`);
     } catch (error) {
       logger.error({
         message: `${LOG_CATEGORY}: Error signing out user`,
-        error
+        error,
       });
-      
+
       throw ErrorService.createAuthError(
         AuthErrorCode.SIGNOUT_ERROR,
-        'Une erreur est survenue lors de la déconnexion'
+        "Une erreur est survenue lors de la déconnexion"
       );
     }
   }
@@ -309,45 +337,45 @@ export class FirebaseService {
       logger.info({
         message: `${LOG_CATEGORY}: Sending verification email`,
         uid: user.uid,
-        email: user.email
+        email: user.email,
       });
-      
+
       await sendEmailVerification(user);
-      
+
       logger.info({
         message: `${LOG_CATEGORY}: Verification email sent successfully`,
-        uid: user.uid
+        uid: user.uid,
       });
     } catch (error) {
       logger.error({
         message: `${LOG_CATEGORY}: Error sending verification email`,
-        error
+        error,
       });
-      
+
       throw ErrorService.createAuthError(
         AuthErrorCode.INTERNAL_ERROR,
-        'Une erreur est survenue lors de l\'envoi de l\'email de vérification'
+        "Une erreur est survenue lors de l'envoi de l'email de vérification"
       );
     }
   }
 
   get auth(): Auth {
     if (!this._auth) {
-      throw new Error('Auth service not initialized');
+      throw new Error("Auth service not initialized");
     }
     return this._auth;
   }
 
   get db(): any {
     if (!this._db) {
-      throw new Error('Firestore service not initialized');
+      throw new Error("Firestore service not initialized");
     }
     return this._db;
   }
 
   get functions(): any {
     if (!this._functions) {
-      throw new Error('Functions service not initialized');
+      throw new Error("Functions service not initialized");
     }
     return this._functions;
   }

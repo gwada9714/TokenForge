@@ -14,34 +14,34 @@ class PriceOracleService {
       SOL: { EUR: 100, USD: 110 },
       USDT: { EUR: 0.91, USD: 1 },
       USDC: { EUR: 0.91, USD: 1 },
-      DAI: { EUR: 0.91, USD: 1 }
+      DAI: { EUR: 0.91, USD: 1 },
     };
-    
+
     // Taux de change EUR/USD
     this.eurUsdRate = 1.1;
   }
-  
+
   /**
    * Récupère le prix d'une cryptomonnaie dans une devise donnée
    * @param {string} cryptoSymbol Symbole de la cryptomonnaie
    * @param {string} currency Devise (EUR, USD)
    * @returns {Promise<number>} Prix de la cryptomonnaie
    */
-  async getCryptoPrice(cryptoSymbol, currency = 'EUR') {
+  async getCryptoPrice(cryptoSymbol, currency = "EUR") {
     const symbol = cryptoSymbol.toUpperCase();
     const curr = currency.toUpperCase();
-    
+
     if (!this.prices[symbol]) {
       throw new Error(`Cryptocurrency ${symbol} not supported`);
     }
-    
+
     if (!this.prices[symbol][curr]) {
       throw new Error(`Currency ${curr} not supported`);
     }
-    
+
     return this.prices[symbol][curr];
   }
-  
+
   /**
    * Récupère le taux de change EUR/USD
    * @returns {Promise<number>} Taux de change EUR/USD
@@ -49,7 +49,7 @@ class PriceOracleService {
   async getEURUSDRate() {
     return this.eurUsdRate;
   }
-  
+
   /**
    * Convertit un montant d'une devise à une autre
    * @param {number} amount Montant à convertir
@@ -60,19 +60,19 @@ class PriceOracleService {
   async convertCurrency(amount, fromCurrency, toCurrency) {
     const from = fromCurrency.toUpperCase();
     const to = toCurrency.toUpperCase();
-    
+
     if (from === to) {
       return amount;
     }
-    
-    if (from === 'EUR' && to === 'USD') {
+
+    if (from === "EUR" && to === "USD") {
       return amount * this.eurUsdRate;
     }
-    
-    if (from === 'USD' && to === 'EUR') {
+
+    if (from === "USD" && to === "EUR") {
       return amount / this.eurUsdRate;
     }
-    
+
     throw new Error(`Conversion from ${from} to ${to} not supported`);
   }
 }

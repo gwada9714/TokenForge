@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useWeb3 } from '@core/web3/Web3Context';
+import { useState, useEffect, useCallback } from "react";
+import { useWeb3 } from "@core/web3/Web3Context";
 
 // Define the staking pool type
 export interface StakingPool {
@@ -26,7 +26,7 @@ export interface StakingPool {
 // Define the staking transaction type
 export interface StakingTransaction {
   id: string;
-  type: 'stake' | 'unstake' | 'claim';
+  type: "stake" | "unstake" | "claim";
   amount: string;
   timestamp: number;
   hash: string;
@@ -74,79 +74,79 @@ export const useStaking = (): UseStakingReturn => {
 
       const mockPools: StakingPool[] = [
         {
-          id: '1',
-          name: 'TKN Staking Pool',
+          id: "1",
+          name: "TKN Staking Pool",
           token: {
-            address: '0x' + '1'.repeat(40),
-            symbol: 'TKN',
-            decimals: 18
+            address: "0x" + "1".repeat(40),
+            symbol: "TKN",
+            decimals: 18,
           },
           rewardToken: {
-            address: '0x' + '1'.repeat(40),
-            symbol: 'TKN',
-            decimals: 18
+            address: "0x" + "1".repeat(40),
+            symbol: "TKN",
+            decimals: 18,
           },
-          totalStaked: '1000000',
+          totalStaked: "1000000",
           apr: 12.5,
           lockDuration: 30,
-          userStaked: '100',
-          userRewards: '5.2',
-          userUnlockTime: Date.now() / 1000 + 86400 * 15 // 15 days from now
+          userStaked: "100",
+          userRewards: "5.2",
+          userUnlockTime: Date.now() / 1000 + 86400 * 15, // 15 days from now
         },
         {
-          id: '2',
-          name: 'LP Staking Pool',
+          id: "2",
+          name: "LP Staking Pool",
           token: {
-            address: '0x' + '2'.repeat(40),
-            symbol: 'LP',
-            decimals: 18
+            address: "0x" + "2".repeat(40),
+            symbol: "LP",
+            decimals: 18,
           },
           rewardToken: {
-            address: '0x' + '1'.repeat(40),
-            symbol: 'TKN',
-            decimals: 18
+            address: "0x" + "1".repeat(40),
+            symbol: "TKN",
+            decimals: 18,
           },
-          totalStaked: '500000',
+          totalStaked: "500000",
           apr: 25,
           lockDuration: 90,
-          userStaked: '50',
-          userRewards: '3.8',
-          userUnlockTime: Date.now() / 1000 + 86400 * 45 // 45 days from now
-        }
+          userStaked: "50",
+          userRewards: "3.8",
+          userUnlockTime: Date.now() / 1000 + 86400 * 45, // 45 days from now
+        },
       ];
 
       const mockTransactions: StakingTransaction[] = [
         {
-          id: '1',
-          type: 'stake',
-          amount: '100',
+          id: "1",
+          type: "stake",
+          amount: "100",
           timestamp: Date.now() / 1000 - 86400 * 15, // 15 days ago
-          hash: '0x' + '1'.repeat(64),
-          poolId: '1'
+          hash: "0x" + "1".repeat(64),
+          poolId: "1",
         },
         {
-          id: '2',
-          type: 'stake',
-          amount: '50',
+          id: "2",
+          type: "stake",
+          amount: "50",
           timestamp: Date.now() / 1000 - 86400 * 45, // 45 days ago
-          hash: '0x' + '2'.repeat(64),
-          poolId: '2'
+          hash: "0x" + "2".repeat(64),
+          poolId: "2",
         },
         {
-          id: '3',
-          type: 'claim',
-          amount: '2.5',
+          id: "3",
+          type: "claim",
+          amount: "2.5",
           timestamp: Date.now() / 1000 - 86400 * 7, // 7 days ago
-          hash: '0x' + '3'.repeat(64),
-          poolId: '1'
-        }
+          hash: "0x" + "3".repeat(64),
+          poolId: "1",
+        },
       ];
 
       setPools(mockPools);
       setTransactions(mockTransactions);
     } catch (err) {
-      console.error('Error fetching staking pools:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error("Error fetching staking pools:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
@@ -161,7 +161,7 @@ export const useStaking = (): UseStakingReturn => {
   const stake = useCallback(
     async (poolId: string, amount: string): Promise<boolean> => {
       if (!isConnected || !account) {
-        setError('Wallet not connected');
+        setError("Wallet not connected");
         return false;
       }
 
@@ -182,8 +182,10 @@ export const useStaking = (): UseStakingReturn => {
                 : amount;
               return {
                 ...pool,
-                totalStaked: (parseFloat(pool.totalStaked) + parseFloat(amount)).toString(),
-                userStaked
+                totalStaked: (
+                  parseFloat(pool.totalStaked) + parseFloat(amount)
+                ).toString(),
+                userStaked,
               };
             }
             return pool;
@@ -193,18 +195,18 @@ export const useStaking = (): UseStakingReturn => {
         // Add a new transaction
         const newTransaction: StakingTransaction = {
           id: Date.now().toString(),
-          type: 'stake',
+          type: "stake",
           amount,
           timestamp: Date.now() / 1000,
-          hash: '0x' + Math.random().toString(16).substring(2) + '0'.repeat(40),
-          poolId
+          hash: "0x" + Math.random().toString(16).substring(2) + "0".repeat(40),
+          poolId,
         };
         setTransactions((prev) => [newTransaction, ...prev]);
 
         return true;
       } catch (err) {
-        console.error('Error staking tokens:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error("Error staking tokens:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
         return false;
       } finally {
         setIsLoading(false);
@@ -217,7 +219,7 @@ export const useStaking = (): UseStakingReturn => {
   const unstake = useCallback(
     async (poolId: string, amount: string): Promise<boolean> => {
       if (!isConnected || !account) {
-        setError('Wallet not connected');
+        setError("Wallet not connected");
         return false;
       }
 
@@ -234,12 +236,18 @@ export const useStaking = (): UseStakingReturn => {
           prevPools.map((pool) => {
             if (pool.id === poolId) {
               const userStaked = pool.userStaked
-                ? Math.max(0, parseFloat(pool.userStaked) - parseFloat(amount)).toString()
-                : '0';
+                ? Math.max(
+                    0,
+                    parseFloat(pool.userStaked) - parseFloat(amount)
+                  ).toString()
+                : "0";
               return {
                 ...pool,
-                totalStaked: Math.max(0, parseFloat(pool.totalStaked) - parseFloat(amount)).toString(),
-                userStaked
+                totalStaked: Math.max(
+                  0,
+                  parseFloat(pool.totalStaked) - parseFloat(amount)
+                ).toString(),
+                userStaked,
               };
             }
             return pool;
@@ -249,18 +257,18 @@ export const useStaking = (): UseStakingReturn => {
         // Add a new transaction
         const newTransaction: StakingTransaction = {
           id: Date.now().toString(),
-          type: 'unstake',
+          type: "unstake",
           amount,
           timestamp: Date.now() / 1000,
-          hash: '0x' + Math.random().toString(16).substring(2) + '0'.repeat(40),
-          poolId
+          hash: "0x" + Math.random().toString(16).substring(2) + "0".repeat(40),
+          poolId,
         };
         setTransactions((prev) => [newTransaction, ...prev]);
 
         return true;
       } catch (err) {
-        console.error('Error unstaking tokens:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error("Error unstaking tokens:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
         return false;
       } finally {
         setIsLoading(false);
@@ -273,7 +281,7 @@ export const useStaking = (): UseStakingReturn => {
   const claimRewards = useCallback(
     async (poolId: string): Promise<boolean> => {
       if (!isConnected || !account) {
-        setError('Wallet not connected');
+        setError("Wallet not connected");
         return false;
       }
 
@@ -288,7 +296,7 @@ export const useStaking = (): UseStakingReturn => {
         // Get the pool and rewards
         const pool = pools.find((p) => p.id === poolId);
         if (!pool || !pool.userRewards) {
-          setError('Pool not found or no rewards available');
+          setError("Pool not found or no rewards available");
           return false;
         }
 
@@ -298,7 +306,7 @@ export const useStaking = (): UseStakingReturn => {
             if (p.id === poolId) {
               return {
                 ...p,
-                userRewards: '0'
+                userRewards: "0",
               };
             }
             return p;
@@ -308,18 +316,18 @@ export const useStaking = (): UseStakingReturn => {
         // Add a new transaction
         const newTransaction: StakingTransaction = {
           id: Date.now().toString(),
-          type: 'claim',
+          type: "claim",
           amount: pool.userRewards,
           timestamp: Date.now() / 1000,
-          hash: '0x' + Math.random().toString(16).substring(2) + '0'.repeat(40),
-          poolId
+          hash: "0x" + Math.random().toString(16).substring(2) + "0".repeat(40),
+          poolId,
         };
         setTransactions((prev) => [newTransaction, ...prev]);
 
         return true;
       } catch (err) {
-        console.error('Error claiming rewards:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error("Error claiming rewards:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
         return false;
       } finally {
         setIsLoading(false);
@@ -341,6 +349,6 @@ export const useStaking = (): UseStakingReturn => {
     stake,
     unstake,
     claimRewards,
-    refreshPools
+    refreshPools,
   };
 };

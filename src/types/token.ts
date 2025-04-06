@@ -1,5 +1,11 @@
-import { TaxConfig, LiquidityLock, MaxLimits, TokenAudit, KYCVerification } from './tokenFeatures';
-import { NetworkConfig } from '@/config/networks';
+import {
+  TaxConfig,
+  LiquidityLock,
+  MaxLimits,
+  TokenAudit,
+  KYCVerification,
+} from "./tokenFeatures";
+import { NetworkConfig } from "@/config/networks";
 
 // Réexporter les types pour les rendre disponibles
 export { TaxConfig, LiquidityLock, MaxLimits, TokenAudit, KYCVerification };
@@ -10,10 +16,10 @@ export interface TokenConfig {
   symbol: string;
   supply: string;
   decimals: number;
-  
+
   // Réseau
   network?: NetworkConfig;
-  
+
   // Fonctionnalités
   features: {
     burnable: boolean;
@@ -24,10 +30,10 @@ export interface TokenConfig {
     deflation: boolean;
     reflection: boolean;
   };
-  
+
   // Plan de service
   plan: string;
-  
+
   // Configurations avancées
   taxConfig?: TaxConfig;
   liquidityLock?: {
@@ -37,21 +43,21 @@ export interface TokenConfig {
     beneficiary: string;
   };
   maxLimits?: MaxLimits;
-  
+
   // Vérification et Audit
   audit?: TokenAudit;
   kyc?: KYCVerification;
-  
+
   // Métadonnées
   description?: string;
   website?: string;
   telegram?: string;
   twitter?: string;
   github?: string;
-  
+
   // État de déploiement
   deploymentStatus?: {
-    status: 'pending' | 'deploying' | 'success' | 'failed';
+    status: "pending" | "deploying" | "success" | "failed";
     txHash?: string;
     error?: string;
     contractAddress?: string;

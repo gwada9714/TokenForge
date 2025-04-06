@@ -1,9 +1,9 @@
-import { Contract } from 'ethers';
+import { Contract } from "ethers";
 
 export enum PlanType {
   Apprenti,
   Forgeron,
-  MaitreForgeron
+  MaitreForgeron,
 }
 
 export interface Plan {
@@ -30,7 +30,11 @@ export interface Lock {
 
 export interface LiquidityLockerContract extends Contract {
   locks(owner: string, index: number): Promise<Lock>;
-  lockLiquidity(token: string, amount: bigint, lockDuration: bigint): Promise<any>;
+  lockLiquidity(
+    token: string,
+    amount: bigint,
+    lockDuration: bigint
+  ): Promise<any>;
   unlockLiquidity(lockIndex: number): Promise<any>;
   getLocks(owner: string): Promise<Lock[]>;
 }

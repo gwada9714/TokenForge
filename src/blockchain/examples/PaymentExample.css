@@ -132,7 +132,8 @@ button:disabled {
   font-weight: bold;
 }
 
-.crypto-amount, .fees {
+.crypto-amount,
+.fees {
   margin-top: 15px;
   padding: 10px;
   background-color: #f5f5f5;

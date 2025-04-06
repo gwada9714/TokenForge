@@ -3,7 +3,7 @@ require("@nomicfoundation/hardhat-viem");
 require("@nomicfoundation/hardhat-ethers");
 require("dotenv").config();
 require("ts-node").register({
-  project: "tsconfig.hardhat.json"
+  project: "tsconfig.hardhat.json",
 });
 
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL;
@@ -17,46 +17,46 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
-      }
-    }
+        runs: 200,
+      },
+    },
   },
   networks: {
     hardhat: {
       chainId: 1337,
       mining: {
         auto: true,
-        interval: 0
-      }
+        interval: 0,
+      },
     },
     sepolia: {
       url: SEPOLIA_RPC_URL,
       accounts: [PRIVATE_KEY],
-      chainId: 11155111
-    }
+      chainId: 11155111,
+    },
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY
+    apiKey: ETHERSCAN_API_KEY,
   },
   paths: {
     sources: "./contracts",
     tests: "./src/__tests__/contracts",
     cache: "./cache",
-    artifacts: "./artifacts"
+    artifacts: "./artifacts",
   },
   mocha: {
     timeout: 40000,
     require: ["ts-node/register"],
     extension: [".ts"],
-    spec: ["src/__tests__/contracts/**/*.test.ts"]
+    spec: ["src/__tests__/contracts/**/*.test.ts"],
   },
   typechain: {
     outDir: "typechain-types",
-    target: "ethers-v6"
+    target: "ethers-v6",
   },
   gasReporter: {
     enabled: true,
     currency: "USD",
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY
-  }
-}; 
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+  },
+};

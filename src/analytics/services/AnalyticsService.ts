@@ -1,35 +1,35 @@
-import { logger } from '@/core/logger';
+import { logger } from "@/core/logger";
 
 /**
  * Types d'événements pour l'analytique
  */
 export enum AnalyticsEventType {
   // Événements utilisateur
-  USER_SIGNUP = 'user_signup',
-  USER_LOGIN = 'user_login',
-  USER_LOGOUT = 'user_logout',
-  USER_PROFILE_UPDATE = 'user_profile_update',
-  
+  USER_SIGNUP = "user_signup",
+  USER_LOGIN = "user_login",
+  USER_LOGOUT = "user_logout",
+  USER_PROFILE_UPDATE = "user_profile_update",
+
   // Événements de token
-  TOKEN_CREATION_STARTED = 'token_creation_started',
-  TOKEN_CREATION_COMPLETED = 'token_creation_completed',
-  TOKEN_CREATION_FAILED = 'token_creation_failed',
-  TOKEN_TRANSFER = 'token_transfer',
-  TOKEN_BURN = 'token_burn',
-  TOKEN_MINT = 'token_mint',
-  
+  TOKEN_CREATION_STARTED = "token_creation_started",
+  TOKEN_CREATION_COMPLETED = "token_creation_completed",
+  TOKEN_CREATION_FAILED = "token_creation_failed",
+  TOKEN_TRANSFER = "token_transfer",
+  TOKEN_BURN = "token_burn",
+  TOKEN_MINT = "token_mint",
+
   // Événements de paiement
-  PAYMENT_INITIATED = 'payment_initiated',
-  PAYMENT_COMPLETED = 'payment_completed',
-  PAYMENT_FAILED = 'payment_failed',
-  
+  PAYMENT_INITIATED = "payment_initiated",
+  PAYMENT_COMPLETED = "payment_completed",
+  PAYMENT_FAILED = "payment_failed",
+
   // Événements de navigation
-  PAGE_VIEW = 'page_view',
-  FEATURE_USAGE = 'feature_usage',
-  
+  PAGE_VIEW = "page_view",
+  FEATURE_USAGE = "feature_usage",
+
   // Événements système
-  SYSTEM_ERROR = 'system_error',
-  PERFORMANCE_METRIC = 'performance_metric'
+  SYSTEM_ERROR = "system_error",
+  PERFORMANCE_METRIC = "performance_metric",
 }
 
 /**
@@ -99,7 +99,7 @@ export class AnalyticsService {
   private static instance: AnalyticsService;
   private events: AnalyticsEvent[] = [];
   private metrics: AnalyticsMetric[] = [];
-  private sessionId: string = '';
+  private sessionId: string = "";
   private isInitialized: boolean = false;
   private externalProviders: Array<(event: AnalyticsEvent) => void> = [];
 
@@ -122,7 +122,10 @@ export class AnalyticsService {
    * @param userId ID de l'utilisateur actuel (si connecté)
    * @param options Options d'initialisation
    */
-  public initialize(userId?: string, options: { enableExternalProviders?: boolean } = {}): void {
+  public initialize(
+    userId?: string,
+    options: { enableExternalProviders?: boolean } = {}
+  ): void {
     if (this.isInitialized) {
       return;
     }
@@ -137,14 +140,14 @@ export class AnalyticsService {
 
     // Enregistrer l'événement d'initialisation
     this.trackEvent(AnalyticsEventType.PAGE_VIEW, {
-      page: 'initialization',
-      userId
+      page: "initialization",
+      userId,
     });
 
     this.isInitialized = true;
-    logger.info('AnalyticsService', 'Service d\'analytique initialisé', {
+    logger.info("AnalyticsService", "Service d'analytique initialisé", {
       sessionId: this.sessionId,
-      userId
+      userId,
     });
   }
 
@@ -154,7 +157,11 @@ export class AnalyticsService {
    * @param properties Propriétés de l'événement
    * @param userId ID de l'utilisateur (optionnel)
    */
-  public trackEvent(type: AnalyticsEventType, properties: Record<string, any>, userId?: string): void {
+  public trackEvent(
+    type: AnalyticsEventType,
+    properties: Record<string, any>,
+    userId?: string
+  ): void {
     if (!this.isInitialized) {
       this.initialize(userId);
     }
@@ -165,7 +172,7 @@ export class AnalyticsService {
       userId,
       sessionId: this.sessionId,
       properties,
-      metadata: this.collectMetadata()
+      metadata: this.collectMetadata(),
     };
 
     // Stocker l'événement localement
@@ -175,10 +182,10 @@ export class AnalyticsService {
     this.sendToExternalProviders(event);
 
     // Journaliser l'événement
-    logger.debug('AnalyticsService', `Événement suivi: ${type}`, {
+    logger.debug("AnalyticsService", `Événement suivi: ${type}`, {
       eventType: type,
       userId,
-      properties
+      properties,
     });
   }
 
@@ -189,7 +196,12 @@ export class AnalyticsService {
    * @param dimensions Dimensions de la métrique (optionnel)
    * @param userId ID de l'utilisateur (optionnel)
    */
-  public recordMetric(name: string, value: number, dimensions?: Record<string, string>, userId?: string): void {
+  public recordMetric(
+    name: string,
+    value: number,
+    dimensions?: Record<string, string>,
+    userId?: string
+  ): void {
     if (!this.isInitialized) {
       this.initialize(userId);
     }
@@ -199,18 +211,18 @@ export class AnalyticsService {
       value,
       timestamp: Date.now(),
       dimensions,
-      userId
+      userId,
     };
 
     // Stocker la métrique localement
     this.metrics.push(metric);
 
     // Journaliser la métrique
-    logger.debug('AnalyticsService', `Métrique enregistrée: ${name}`, {
+    logger.debug("AnalyticsService", `Métrique enregistrée: ${name}`, {
       metricName: name,
       value,
       dimensions,
-      userId
+      userId,
     });
   }
 
@@ -225,28 +237,36 @@ export class AnalyticsService {
     // Filtrer par date de début
     if (filter.startDate) {
       const startTimestamp = filter.startDate.getTime();
-      filteredEvents = filteredEvents.filter(event => event.timestamp >= startTimestamp);
+      filteredEvents = filteredEvents.filter(
+        (event) => event.timestamp >= startTimestamp
+      );
     }
 
     // Filtrer par date de fin
     if (filter.endDate) {
       const endTimestamp = filter.endDate.getTime();
-      filteredEvents = filteredEvents.filter(event => event.timestamp <= endTimestamp);
+      filteredEvents = filteredEvents.filter(
+        (event) => event.timestamp <= endTimestamp
+      );
     }
 
     // Filtrer par types d'événements
     if (filter.eventTypes && filter.eventTypes.length > 0) {
-      filteredEvents = filteredEvents.filter(event => filter.eventTypes!.includes(event.type));
+      filteredEvents = filteredEvents.filter((event) =>
+        filter.eventTypes!.includes(event.type)
+      );
     }
 
     // Filtrer par ID utilisateur
     if (filter.userId) {
-      filteredEvents = filteredEvents.filter(event => event.userId === filter.userId);
+      filteredEvents = filteredEvents.filter(
+        (event) => event.userId === filter.userId
+      );
     }
 
     // Filtrer par propriétés
     if (filter.properties) {
-      filteredEvents = filteredEvents.filter(event => {
+      filteredEvents = filteredEvents.filter((event) => {
         return Object.entries(filter.properties!).every(([key, value]) => {
           return event.properties[key] === value;
         });
@@ -269,24 +289,33 @@ export class AnalyticsService {
    * @param filter Filtre de requête
    * @returns Métriques filtrées
    */
-  public getMetrics(name: string, filter: AnalyticsQueryFilter = {}): AnalyticsMetric[] {
-    let filteredMetrics = this.metrics.filter(metric => metric.name === name);
+  public getMetrics(
+    name: string,
+    filter: AnalyticsQueryFilter = {}
+  ): AnalyticsMetric[] {
+    let filteredMetrics = this.metrics.filter((metric) => metric.name === name);
 
     // Filtrer par date de début
     if (filter.startDate) {
       const startTimestamp = filter.startDate.getTime();
-      filteredMetrics = filteredMetrics.filter(metric => metric.timestamp >= startTimestamp);
+      filteredMetrics = filteredMetrics.filter(
+        (metric) => metric.timestamp >= startTimestamp
+      );
     }
 
     // Filtrer par date de fin
     if (filter.endDate) {
       const endTimestamp = filter.endDate.getTime();
-      filteredMetrics = filteredMetrics.filter(metric => metric.timestamp <= endTimestamp);
+      filteredMetrics = filteredMetrics.filter(
+        (metric) => metric.timestamp <= endTimestamp
+      );
     }
 
     // Filtrer par ID utilisateur
     if (filter.userId) {
-      filteredMetrics = filteredMetrics.filter(metric => metric.userId === filter.userId);
+      filteredMetrics = filteredMetrics.filter(
+        (metric) => metric.userId === filter.userId
+      );
     }
 
     // Appliquer la pagination
@@ -314,14 +343,14 @@ export class AnalyticsService {
     // Filtrer les événements
     const events = this.getEvents({
       ...filter,
-      eventTypes: [eventType]
+      eventTypes: [eventType],
     });
 
     // Agréger les événements par propriété
     const aggregation: Record<string, number> = {};
     let total = 0;
 
-    events.forEach(event => {
+    events.forEach((event) => {
       const value = event.properties[property];
       if (value !== undefined) {
         const key = String(value);
@@ -334,7 +363,7 @@ export class AnalyticsService {
     const data = Object.entries(aggregation).map(([key, value]) => ({
       key,
       value,
-      percentage: total > 0 ? (value / total) * 100 : 0
+      percentage: total > 0 ? (value / total) * 100 : 0,
     }));
 
     // Trier par valeur décroissante
@@ -344,10 +373,13 @@ export class AnalyticsService {
       name: `${eventType}_by_${property}`,
       data,
       total,
-      period: filter.startDate && filter.endDate ? {
-        start: filter.startDate,
-        end: filter.endDate
-      } : undefined
+      period:
+        filter.startDate && filter.endDate
+          ? {
+              start: filter.startDate,
+              end: filter.endDate,
+            }
+          : undefined,
     };
   }
 
@@ -357,13 +389,16 @@ export class AnalyticsService {
    * @param filter Filtre de requête
    * @returns Valeur moyenne
    */
-  public calculateMetricAverage(name: string, filter: AnalyticsQueryFilter = {}): number {
+  public calculateMetricAverage(
+    name: string,
+    filter: AnalyticsQueryFilter = {}
+  ): number {
     const metrics = this.getMetrics(name, filter);
-    
+
     if (metrics.length === 0) {
       return 0;
     }
-    
+
     const sum = metrics.reduce((acc, metric) => acc + metric.value, 0);
     return sum / metrics.length;
   }
@@ -380,13 +415,19 @@ export class AnalyticsService {
     currentPeriodFilter: AnalyticsQueryFilter,
     previousPeriodFilter: AnalyticsQueryFilter
   ): number {
-    const currentAverage = this.calculateMetricAverage(name, currentPeriodFilter);
-    const previousAverage = this.calculateMetricAverage(name, previousPeriodFilter);
-    
+    const currentAverage = this.calculateMetricAverage(
+      name,
+      currentPeriodFilter
+    );
+    const previousAverage = this.calculateMetricAverage(
+      name,
+      previousPeriodFilter
+    );
+
     if (previousAverage === 0) {
       return currentAverage > 0 ? 100 : 0;
     }
-    
+
     return ((currentAverage - previousAverage) / previousAverage) * 100;
   }
 
@@ -397,7 +438,7 @@ export class AnalyticsService {
   public clearData(): void {
     this.events = [];
     this.metrics = [];
-    logger.info('AnalyticsService', 'Données d\'analytique effacées');
+    logger.info("AnalyticsService", "Données d'analytique effacées");
   }
 
   // Méthodes privées
@@ -407,28 +448,32 @@ export class AnalyticsService {
    * @returns ID de session
    */
   private generateSessionId(): string {
-    return 'session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    return (
+      "session_" +
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
   }
 
   /**
    * Collecte les métadonnées pour un événement
    * @returns Métadonnées
    */
-  private collectMetadata(): AnalyticsEvent['metadata'] {
+  private collectMetadata(): AnalyticsEvent["metadata"] {
     // Dans un environnement navigateur
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       return {
         userAgent: navigator.userAgent,
         locale: navigator.language,
         referrer: document.referrer,
         screenSize: `${window.innerWidth}x${window.innerHeight}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
     }
-    
+
     // Dans un environnement serveur
     return {
-      environment: 'server'
+      environment: "server",
     };
   }
 
@@ -440,9 +485,13 @@ export class AnalyticsService {
     // Dans une implémentation réelle, on initialiserait des fournisseurs comme Google Analytics, Mixpanel, etc.
     this.externalProviders.push((event: AnalyticsEvent) => {
       // Simuler l'envoi à un fournisseur externe
-      logger.debug('AnalyticsService', 'Événement envoyé au fournisseur externe', {
-        event
-      });
+      logger.debug(
+        "AnalyticsService",
+        "Événement envoyé au fournisseur externe",
+        {
+          event,
+        }
+      );
     });
   }
 
@@ -451,11 +500,15 @@ export class AnalyticsService {
    * @param event Événement à envoyer
    */
   private sendToExternalProviders(event: AnalyticsEvent): void {
-    this.externalProviders.forEach(provider => {
+    this.externalProviders.forEach((provider) => {
       try {
         provider(event);
       } catch (error) {
-        logger.error('AnalyticsService', 'Erreur lors de l\'envoi à un fournisseur externe', error);
+        logger.error(
+          "AnalyticsService",
+          "Erreur lors de l'envoi à un fournisseur externe",
+          error
+        );
       }
     });
   }

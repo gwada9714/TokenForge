@@ -1,12 +1,12 @@
-import { PaymentSession, PaymentStatus } from '../types';
-import { EventEmitter } from 'eventemitter3';
+import { PaymentSession, PaymentStatus } from "../types";
+import { EventEmitter } from "eventemitter3";
 
 /**
  * Interface pour les messages de synchronisation
  * @interface SyncMessage
  */
 interface SyncMessage {
-  type: 'SESSION_UPDATE' | 'SESSION_DELETE' | 'STATUS_UPDATE';
+  type: "SESSION_UPDATE" | "SESSION_DELETE" | "STATUS_UPDATE";
   payload: any;
   timestamp: number;
 }
@@ -15,7 +15,7 @@ interface SyncMessage {
  * Service de synchronisation des sessions de paiement entre onglets
  * @class PaymentSessionSync
  * @extends EventEmitter
- * 
+ *
  * @fires PaymentSessionSync#sessionUpdated
  * @fires PaymentSessionSync#statusUpdated
  * @fires PaymentSessionSync#sessionDeleted
@@ -29,7 +29,7 @@ export class PaymentSessionSync extends EventEmitter {
    */
   constructor() {
     super();
-    this.channel = new BroadcastChannel('payment_sync');
+    this.channel = new BroadcastChannel("payment_sync");
     this.sessionCache = new Map();
     this.setupListeners();
   }
@@ -41,15 +41,15 @@ export class PaymentSessionSync extends EventEmitter {
   private setupListeners(): void {
     this.channel.onmessage = (event: MessageEvent<SyncMessage>) => {
       const { type, payload, timestamp } = event.data;
-      
+
       switch (type) {
-        case 'SESSION_UPDATE':
+        case "SESSION_UPDATE":
           this.handleSessionUpdate(payload, timestamp);
           break;
-        case 'STATUS_UPDATE':
+        case "STATUS_UPDATE":
           this.handleStatusUpdate(payload, timestamp);
           break;
-        case 'SESSION_DELETE':
+        case "SESSION_DELETE":
           this.handleSessionDelete(payload);
           break;
       }
@@ -63,11 +63,14 @@ export class PaymentSessionSync extends EventEmitter {
    * @param {number} timestamp - Timestamp de la mise à jour
    * @fires PaymentSessionSync#sessionUpdated
    */
-  private handleSessionUpdate(session: PaymentSession, timestamp: number): void {
+  private handleSessionUpdate(
+    session: PaymentSession,
+    timestamp: number
+  ): void {
     const cachedSession = this.sessionCache.get(session.id);
     if (!cachedSession || cachedSession.updatedAt < timestamp) {
       this.sessionCache.set(session.id, session);
-      this.emit('sessionUpdated', session);
+      this.emit("sessionUpdated", session);
     }
   }
 
@@ -89,10 +92,10 @@ export class PaymentSessionSync extends EventEmitter {
       const updatedSession = {
         ...session,
         status,
-        updatedAt: timestamp
+        updatedAt: timestamp,
       };
       this.sessionCache.set(sessionId, updatedSession);
-      this.emit('statusUpdated', updatedSession);
+      this.emit("statusUpdated", updatedSession);
     }
   }
 
@@ -104,7 +107,7 @@ export class PaymentSessionSync extends EventEmitter {
    */
   private handleSessionDelete(sessionId: string): void {
     this.sessionCache.delete(sessionId);
-    this.emit('sessionDeleted', sessionId);
+    this.emit("sessionDeleted", sessionId);
   }
 
   /**
@@ -114,9 +117,9 @@ export class PaymentSessionSync extends EventEmitter {
    */
   public updateSession(session: PaymentSession): void {
     const message: SyncMessage = {
-      type: 'SESSION_UPDATE',
+      type: "SESSION_UPDATE",
       payload: session,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     this.channel.postMessage(message);
     this.handleSessionUpdate(session, message.timestamp);
@@ -130,9 +133,9 @@ export class PaymentSessionSync extends EventEmitter {
    */
   public updateStatus(sessionId: string, status: PaymentStatus): void {
     const message: SyncMessage = {
-      type: 'STATUS_UPDATE',
+      type: "STATUS_UPDATE",
       payload: { sessionId, status },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     this.channel.postMessage(message);
     this.handleStatusUpdate(message.payload, message.timestamp);
@@ -145,9 +148,9 @@ export class PaymentSessionSync extends EventEmitter {
    */
   public deleteSession(sessionId: string): void {
     const message: SyncMessage = {
-      type: 'SESSION_DELETE',
+      type: "SESSION_DELETE",
       payload: sessionId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     this.channel.postMessage(message);
     this.handleSessionDelete(sessionId);
@@ -172,4 +175,4 @@ export class PaymentSessionSync extends EventEmitter {
     this.sessionCache.clear();
     this.removeAllListeners();
   }
-} 
+}

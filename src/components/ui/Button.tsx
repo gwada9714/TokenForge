@@ -1,16 +1,16 @@
-import React from 'react';
-import styled, { DefaultTheme } from 'styled-components';
+import React from "react";
+import styled, { DefaultTheme } from "styled-components";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline";
+  size?: "small" | "medium" | "large";
   fullWidth?: boolean;
 }
 
 interface StyledButtonProps extends ButtonProps {
   theme: DefaultTheme;
-  $variant: ButtonProps['variant'];
-  $size: ButtonProps['size'];
+  $variant: ButtonProps["variant"];
+  $size: ButtonProps["size"];
   $fullWidth: boolean;
 }
 
@@ -43,64 +43,64 @@ const getButtonStyles = (props: StyledButtonProps) => {
   const sizeStyles = {
     small: {
       padding: theme.spacing(2),
-      fontSize: typography.fontSizes.xs
+      fontSize: typography.fontSizes.xs,
     },
     medium: {
       padding: theme.spacing(3),
-      fontSize: typography.fontSizes.md
+      fontSize: typography.fontSizes.md,
     },
     large: {
       padding: theme.spacing(4),
-      fontSize: typography.fontSizes.lg
-    }
+      fontSize: typography.fontSizes.lg,
+    },
   };
 
   const variantStyles = {
     primary: {
       backgroundColor: themeColors.primary.main,
       color: themeColors.text.primary,
-      '&:hover': {
-        backgroundColor: themeColors.primary.dark
-      }
+      "&:hover": {
+        backgroundColor: themeColors.primary.dark,
+      },
     },
     secondary: {
       backgroundColor: themeColors.secondary.main,
       color: themeColors.text.primary,
-      '&:hover': {
-        backgroundColor: themeColors.secondary.dark
-      }
+      "&:hover": {
+        backgroundColor: themeColors.secondary.dark,
+      },
     },
     outline: {
-      backgroundColor: 'transparent',
+      backgroundColor: "transparent",
       border: `1px solid ${themeColors.primary.main}`,
       color: themeColors.primary.main,
-      '&:hover': {
+      "&:hover": {
         backgroundColor: themeColors.primary.main,
-        color: themeColors.text.primary
-      }
-    }
+        color: themeColors.text.primary,
+      },
+    },
   };
 
-  const size = $size || 'medium';
-  const variant = $variant || 'primary';
+  const size = $size || "medium";
+  const variant = $variant || "primary";
 
   return {
     ...sizeStyles[size],
     ...variantStyles[variant],
-    width: $fullWidth ? '100%' : 'auto',
+    width: $fullWidth ? "100%" : "auto",
     borderRadius: borderRadius.medium,
-    border: 'none',
-    cursor: 'pointer',
+    border: "none",
+    cursor: "pointer",
     transition: transitions.default,
     fontFamily: typography.fontFamily.body,
     fontWeight: typography.fontWeight.medium,
-    '&:disabled': {
+    "&:disabled": {
       opacity: 0.5,
-      cursor: 'not-allowed',
+      cursor: "not-allowed",
       backgroundColor: themeColors.grey[300],
       color: themeColors.text.disabled,
-      border: 'none'
-    }
+      border: "none",
+    },
   };
 };
 
@@ -110,8 +110,8 @@ export const StyledButton = styled.button<StyledButtonProps>`
 
 export const Button: React.FC<ButtonProps> = ({
   children,
-  variant = 'primary',
-  size = 'medium',
+  variant = "primary",
+  size = "medium",
   fullWidth = false,
   onClick,
   disabled,

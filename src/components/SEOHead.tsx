@@ -1,5 +1,5 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import React from "react";
+import { Helmet } from "react-helmet-async";
 
 interface SEOHeadProps {
   title?: string;
@@ -9,10 +9,10 @@ interface SEOHeadProps {
 }
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
-  title = 'TokenForge - Créez vos tokens en quelques clics',
-  description = 'Plateforme de création de tokens simple, sécurisée et professionnelle. Lancez votre projet crypto en toute confiance avec TokenForge.',
-  image = '/assets/images/tokenforge-preview.jpg',
-  url = 'https://tokenforge.io'
+  title = "TokenForge - Créez vos tokens en quelques clics",
+  description = "Plateforme de création de tokens simple, sécurisée et professionnelle. Lancez votre projet crypto en toute confiance avec TokenForge.",
+  image = "/assets/images/tokenforge-preview.jpg",
+  url = "https://tokenforge.io",
 }) => {
   return (
     <Helmet>
@@ -36,25 +36,49 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="twitter:image" content={image} />
 
       {/* Métadonnées supplémentaires */}
-      <meta name="keywords" content="token, crypto, blockchain, ethereum, binance smart chain, création de token, smart contract, tokenomics, defi" />
+      <meta
+        name="keywords"
+        content="token, crypto, blockchain, ethereum, binance smart chain, création de token, smart contract, tokenomics, defi"
+      />
       <meta name="author" content="TokenForge" />
       <meta name="robots" content="index, follow" />
 
       {/* PWA */}
       <meta name="theme-color" content="#1976d2" />
       <meta name="mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+      />
       <meta name="apple-mobile-web-app-title" content="TokenForge" />
 
       {/* Favicons */}
-      <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-      <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+      <link
+        rel="icon"
+        type="image/png"
+        sizes="32x32"
+        href="/favicon-32x32.png"
+      />
+      <link
+        rel="icon"
+        type="image/png"
+        sizes="16x16"
+        href="/favicon-16x16.png"
+      />
+      <link
+        rel="apple-touch-icon"
+        sizes="180x180"
+        href="/apple-touch-icon.png"
+      />
       <link rel="manifest" href="/site.webmanifest" />
 
       {/* Préconnexions */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
     </Helmet>
   );
-}; 
+};

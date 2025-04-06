@@ -1,6 +1,9 @@
-import { useState, useCallback } from 'react';
-import { useWeb3 } from '../contexts/Web3Context';
-import { deployTokenContract, DeploymentStatus } from '../services/contractDeployment';
+import { useState, useCallback } from "react";
+import { useWeb3 } from "../contexts/Web3Context";
+import {
+  deployTokenContract,
+  DeploymentStatus,
+} from "../services/contractDeployment";
 
 // Define the token configuration type
 export interface TokenFactoryConfig {
@@ -45,7 +48,7 @@ export const useTokenFactory = (): UseTokenFactoryReturn => {
   const createToken = useCallback(
     async (config: TokenFactoryConfig): Promise<string | null> => {
       if (!isConnected || !account) {
-        setError('Wallet not connected');
+        setError("Wallet not connected");
         return null;
       }
 
@@ -62,14 +65,14 @@ export const useTokenFactory = (): UseTokenFactoryReturn => {
             name: config.name,
             symbol: config.symbol,
             totalSupply: config.totalSupply,
-            decimals: config.decimals
+            decimals: config.decimals,
           },
           {
             address: account,
             signMessage: async (message: string) => {
-              console.log('Signing message:', message);
-              return '0x' + '1'.repeat(130); // Simulated signature
-            }
+              console.log("Signing message:", message);
+              return "0x" + "1".repeat(130); // Simulated signature
+            },
           }
         );
 
@@ -81,11 +84,11 @@ export const useTokenFactory = (): UseTokenFactoryReturn => {
 
         // Simulate a successful deployment
         setStatus(DeploymentStatus.SUCCESS);
-        
-        return '0x' + '1'.repeat(40); // Simulated contract address
+
+        return "0x" + "1".repeat(40); // Simulated contract address
       } catch (err) {
-        console.error('Error creating token:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error("Error creating token:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
         setStatus(DeploymentStatus.FAILED);
         return null;
       } finally {
@@ -100,6 +103,6 @@ export const useTokenFactory = (): UseTokenFactoryReturn => {
     isCreating,
     error,
     txHash,
-    status
+    status,
   };
 };

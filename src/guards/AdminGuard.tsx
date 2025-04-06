@@ -1,7 +1,7 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useTokenForgeAuth } from '@/hooks/useAuth';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useTokenForgeAuth } from "@/hooks/useAuth";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface AdminGuardProps {
   children: React.ReactNode;

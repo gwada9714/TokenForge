@@ -5,22 +5,27 @@ export const mockResizeObserver = class ResizeObserver {
   }
 
   callback: ResizeObserverCallback;
-  
+
   observe(target: Element) {
     // Trigger the callback with mock entries
-    this.callback([{
-      target,
-      contentRect: target.getBoundingClientRect(),
-      borderBoxSize: [],
-      contentBoxSize: [],
-      devicePixelContentBoxSize: []
-    }], this);
+    this.callback(
+      [
+        {
+          target,
+          contentRect: target.getBoundingClientRect(),
+          borderBoxSize: [],
+          contentBoxSize: [],
+          devicePixelContentBoxSize: [],
+        },
+      ],
+      this
+    );
   }
-  
+
   unobserve() {
     // No-op
   }
-  
+
   disconnect() {
     // No-op
   }

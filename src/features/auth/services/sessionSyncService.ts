@@ -1,12 +1,16 @@
-import { BroadcastChannel } from 'broadcast-channel';
-import { logService } from './logService';
-import { TokenForgeUser } from '../types';
-import { storageService } from './storageService';
+import { BroadcastChannel } from "broadcast-channel";
+import { logService } from "./logService";
+import { TokenForgeUser } from "../types";
+import { storageService } from "./storageService";
 
-const LOG_CATEGORY = 'SessionSyncService';
+const LOG_CATEGORY = "SessionSyncService";
 
 type SessionEvent = {
-  type: 'SESSION_EXPIRED' | 'SESSION_REFRESH' | 'SESSION_LOGOUT' | 'SESSION_UPDATE';
+  type:
+    | "SESSION_EXPIRED"
+    | "SESSION_REFRESH"
+    | "SESSION_LOGOUT"
+    | "SESSION_UPDATE";
   payload?: {
     user?: TokenForgeUser;
     timestamp?: number;
@@ -21,7 +25,7 @@ class SessionSyncService {
   private lastSyncTimestamp: number;
 
   constructor() {
-    this.channel = new BroadcastChannel('tokenforge-session-sync');
+    this.channel = new BroadcastChannel("tokenforge-session-sync");
     this.tabId = crypto.randomUUID();
     this.listeners = new Set();
     this.lastSyncTimestamp = Date.now();
@@ -35,8 +39,8 @@ class SessionSyncService {
       } catch (error) {
         logService.error(
           LOG_CATEGORY,
-          'Error handling session event',
-          error instanceof Error ? error : new Error('Unknown error'),
+          "Error handling session event",
+          error instanceof Error ? error : new Error("Unknown error"),
           { event }
         );
       }
@@ -45,7 +49,10 @@ class SessionSyncService {
 
   private async handleSessionEvent(event: SessionEvent) {
     // Ignorer les événements plus anciens
-    if (event.payload?.timestamp && event.payload.timestamp < this.lastSyncTimestamp) {
+    if (
+      event.payload?.timestamp &&
+      event.payload.timestamp < this.lastSyncTimestamp
+    ) {
       return;
     }
 
@@ -57,17 +64,17 @@ class SessionSyncService {
     this.lastSyncTimestamp = event.payload?.timestamp || Date.now();
 
     // Notifier tous les listeners
-    this.listeners.forEach(listener => listener(event));
+    this.listeners.forEach((listener) => listener(event));
 
     // Gérer les événements spécifiques
     switch (event.type) {
-      case 'SESSION_EXPIRED':
+      case "SESSION_EXPIRED":
         await this.handleSessionExpired();
         break;
-      case 'SESSION_UPDATE':
+      case "SESSION_UPDATE":
         await this.handleSessionUpdate(event.payload?.user);
         break;
-      case 'SESSION_LOGOUT':
+      case "SESSION_LOGOUT":
         await this.handleSessionLogout();
         break;
     }
@@ -76,16 +83,14 @@ class SessionSyncService {
   private async handleSessionExpired() {
     try {
       await storageService.clearAuthState();
-      logService.warn(
-        LOG_CATEGORY,
-        'Session expired in another tab',
-        { tabId: this.tabId }
-      );
+      logService.warn(LOG_CATEGORY, "Session expired in another tab", {
+        tabId: this.tabId,
+      });
     } catch (error) {
       logService.error(
         LOG_CATEGORY,
-        'Error handling session expiration',
-        error instanceof Error ? error : new Error('Unknown error')
+        "Error handling session expiration",
+        error instanceof Error ? error : new Error("Unknown error")
       );
     }
   }
@@ -95,16 +100,15 @@ class SessionSyncService {
 
     try {
       await storageService.saveAuthState(user);
-      logService.info(
-        LOG_CATEGORY,
-        'Session updated from another tab',
-        { tabId: this.tabId, userEmail: user.email }
-      );
+      logService.info(LOG_CATEGORY, "Session updated from another tab", {
+        tabId: this.tabId,
+        userEmail: user.email,
+      });
     } catch (error) {
       logService.error(
         LOG_CATEGORY,
-        'Error handling session update',
-        error instanceof Error ? error : new Error('Unknown error')
+        "Error handling session update",
+        error instanceof Error ? error : new Error("Unknown error")
       );
     }
   }
@@ -112,50 +116,48 @@ class SessionSyncService {
   private async handleSessionLogout() {
     try {
       await storageService.clearAuthState();
-      logService.info(
-        LOG_CATEGORY,
-        'Logout triggered from another tab',
-        { tabId: this.tabId }
-      );
+      logService.info(LOG_CATEGORY, "Logout triggered from another tab", {
+        tabId: this.tabId,
+      });
     } catch (error) {
       logService.error(
         LOG_CATEGORY,
-        'Error handling session logout',
-        error instanceof Error ? error : new Error('Unknown error')
+        "Error handling session logout",
+        error instanceof Error ? error : new Error("Unknown error")
       );
     }
   }
 
   public async broadcastSessionExpired() {
     const event: SessionEvent = {
-      type: 'SESSION_EXPIRED',
+      type: "SESSION_EXPIRED",
       payload: {
         timestamp: Date.now(),
-        tabId: this.tabId
-      }
+        tabId: this.tabId,
+      },
     };
     await this.channel.postMessage(event);
   }
 
   public async broadcastSessionUpdate(user: TokenForgeUser) {
     const event: SessionEvent = {
-      type: 'SESSION_UPDATE',
+      type: "SESSION_UPDATE",
       payload: {
         user,
         timestamp: Date.now(),
-        tabId: this.tabId
-      }
+        tabId: this.tabId,
+      },
     };
     await this.channel.postMessage(event);
   }
 
   public async broadcastLogout() {
     const event: SessionEvent = {
-      type: 'SESSION_LOGOUT',
+      type: "SESSION_LOGOUT",
       payload: {
         timestamp: Date.now(),
-        tabId: this.tabId
-      }
+        tabId: this.tabId,
+      },
     };
     await this.channel.postMessage(event);
   }

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Address } from 'viem';
+import { useEffect, useRef } from "react";
+import { Address } from "viem";
 
 interface CacheEntry<T> {
   value: T;
@@ -64,7 +64,8 @@ export function useContractCache<T>(
         const newData = await fetcher();
         updateCache(newData);
       } catch (err) {
-        errorRef.current = err instanceof Error ? err : new Error('Unknown error');
+        errorRef.current =
+          err instanceof Error ? err : new Error("Unknown error");
         loadingRef.current = false;
       }
     };

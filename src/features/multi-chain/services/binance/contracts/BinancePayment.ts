@@ -1,48 +1,48 @@
-import { 
-  Address, 
-  PublicClient, 
+import {
+  Address,
+  PublicClient,
   WalletClient,
   Hash,
   decodeEventLog,
-  Abi
-} from 'viem';
+  Abi,
+} from "viem";
 
 const CONTRACT_ABI = [
   // Ajout des définitions d'ABI explicites
   {
-    type: 'function',
-    name: 'processPayment',
+    type: "function",
+    name: "processPayment",
     inputs: [
-      { type: 'address', name: 'tokenAddress' },
-      { type: 'uint256', name: 'amount' },
-      { type: 'string', name: 'sessionId' }
+      { type: "address", name: "tokenAddress" },
+      { type: "uint256", name: "amount" },
+      { type: "string", name: "sessionId" },
     ],
     outputs: [],
-    stateMutability: 'payable'
+    stateMutability: "payable",
   },
   {
-    type: 'function',
-    name: 'supportedTokens',
-    inputs: [{ type: 'address', name: 'tokenAddress' }],
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view'
+    type: "function",
+    name: "supportedTokens",
+    inputs: [{ type: "address", name: "tokenAddress" }],
+    outputs: [{ type: "bool" }],
+    stateMutability: "view",
   },
   {
-    type: 'function',
-    name: 'receiverAddress',
+    type: "function",
+    name: "receiverAddress",
     inputs: [],
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view'
+    outputs: [{ type: "address" }],
+    stateMutability: "view",
   },
   {
-    type: 'event',
-    name: 'PaymentProcessed',
+    type: "event",
+    name: "PaymentProcessed",
     inputs: [
-      { type: 'address', name: 'payer', indexed: true },
-      { type: 'uint256', name: 'amount', indexed: false },
-      { type: 'string', name: 'sessionId', indexed: false }
-    ]
-  }
+      { type: "address", name: "payer", indexed: true },
+      { type: "uint256", name: "amount", indexed: false },
+      { type: "string", name: "sessionId", indexed: false },
+    ],
+  },
 ] as const;
 
 export class BinancePaymentContract {
@@ -69,38 +69,38 @@ export class BinancePaymentContract {
     options: { gasLimit?: bigint; value?: bigint } = {}
   ): Promise<Hash> {
     const account = await this.walletClient.account;
-    if (!account) throw new Error('No account connected');
+    if (!account) throw new Error("No account connected");
 
     const { request } = await this.publicClient.simulateContract({
       address: this.address,
       abi: this.abi,
-      functionName: 'processPayment',
+      functionName: "processPayment",
       args: [tokenAddress, amount, sessionId],
       account,
-      ...options
+      ...options,
     });
 
     return this.walletClient.writeContract(request);
   }
 
   public async isTokenSupported(tokenAddress: Address): Promise<boolean> {
-    const result = await this.publicClient.readContract({
+    const result = (await this.publicClient.readContract({
       address: this.address,
       abi: this.abi,
-      functionName: 'supportedTokens',
-      args: [tokenAddress]
-    }) as boolean;
+      functionName: "supportedTokens",
+      args: [tokenAddress],
+    })) as boolean;
 
     return result;
   }
 
   public async getReceiverAddress(): Promise<Address> {
-    const result = await this.publicClient.readContract({
+    const result = (await this.publicClient.readContract({
       address: this.address,
       abi: this.abi,
-      functionName: 'receiverAddress',
-      args: []
-    }) as Address;
+      functionName: "receiverAddress",
+      args: [],
+    })) as Address;
 
     return result;
   }
@@ -113,18 +113,22 @@ export class BinancePaymentContract {
     const unwatch = await this.publicClient.watchContractEvent({
       address: this.address,
       abi: this.abi,
-      eventName: 'PaymentProcessed',
-      onLogs: logs => {
+      eventName: "PaymentProcessed",
+      onLogs: (logs) => {
         for (const log of logs) {
           const event = decodeEventLog({
             abi: this.abi,
             data: log.data,
-            topics: log.topics
+            topics: log.topics,
           });
-          const [payer, amount, sessionId] = event.args as [Address, bigint, string];
+          const [payer, amount, sessionId] = event.args as [
+            Address,
+            bigint,
+            string
+          ];
           onEvent(payer, amount, sessionId);
         }
-      }
+      },
     });
 
     this.unsubscribeEvent = unwatch;

@@ -1,5 +1,5 @@
 // En mode diagnostic, nous utilisons des hooks simulés pour éviter les dépendances à Wagmi et Firebase
-export * from './diagnosticHooks';
+export * from "./diagnosticHooks";
 
 // Exports originaux - commentés pour le mode diagnostic
 // export * from './network';

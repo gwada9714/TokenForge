@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useContractRead, usePublicClient } from 'wagmi';
-import { getNetwork } from '@/config/networks';
-import { TokenFactoryABI } from '@/contracts/abis/TokenFactory';
+import { useState, useEffect } from "react";
+import { useContractRead, usePublicClient } from "wagmi";
+import { getNetwork } from "@/config/networks";
+import { TokenFactoryABI } from "@/contracts/abis/TokenFactory";
 
 interface TokenStats {
   totalValue: bigint;
@@ -17,10 +17,14 @@ export const useTokenStats = (chainId?: number) => {
   const network = chainId ? getNetwork(chainId) : undefined;
   const publicClient = usePublicClient();
 
-  const { data: factoryStats, isError, isLoading: isLoadingStats } = useContractRead({
+  const {
+    data: factoryStats,
+    isError,
+    isLoading: isLoadingStats,
+  } = useContractRead({
     address: network?.factoryAddress,
     abi: TokenFactoryABI,
-    functionName: 'getStats',
+    functionName: "getStats",
     chainId,
     watch: true,
   });
@@ -35,15 +39,19 @@ export const useTokenStats = (chainId?: number) => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         if (!network?.factoryAddress) {
-          throw new Error('Network configuration not found');
+          throw new Error("Network configuration not found");
         }
-        
+
         // Si nous avons les stats du contrat factory
         if (factoryStats) {
-          const [totalValue, volume, holders] = factoryStats as [bigint, bigint, number];
-          
+          const [totalValue, volume, holders] = factoryStats as [
+            bigint,
+            bigint,
+            number
+          ];
+
           setStats({
             totalValue,
             transactionVolume: volume,
@@ -51,8 +59,10 @@ export const useTokenStats = (chainId?: number) => {
           });
         }
       } catch (err) {
-        console.error('Error fetching token stats:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch token stats'));
+        console.error("Error fetching token stats:", err);
+        setError(
+          err instanceof Error ? err : new Error("Failed to fetch token stats")
+        );
       } finally {
         setIsLoading(false);
       }

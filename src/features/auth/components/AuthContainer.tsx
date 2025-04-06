@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Stack, Divider, Typography } from '@mui/material';
-import { useAuthManager } from '../hooks/useAuthManager';
-import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
-import { AuthButton } from './AuthButton';
-import { GoogleAuthButton } from './GoogleAuthButton';
-import { NetworkSelector } from './NetworkSelector';
-import { AuthFeedback } from './AuthFeedback';
-import { EmailVerification } from './EmailVerification';
-import { SupportedChainId } from '../hooks/useNetworkManagement';
+import React, { useState, useEffect } from "react";
+import { Box, Stack, Divider, Typography } from "@mui/material";
+import { useAuthManager } from "../hooks/useAuthManager";
+import { useFirebaseAuth } from "../hooks/useFirebaseAuth";
+import { AuthButton } from "./AuthButton";
+import { GoogleAuthButton } from "./GoogleAuthButton";
+import { NetworkSelector } from "./NetworkSelector";
+import { AuthFeedback } from "./AuthFeedback";
+import { EmailVerification } from "./EmailVerification";
+import { SupportedChainId } from "../hooks/useNetworkManagement";
 
 interface AuthContainerProps {
   requiredChainId?: SupportedChainId;
-  variant?: 'text' | 'outlined' | 'contained';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "text" | "outlined" | "contained";
+  size?: "small" | "medium" | "large";
   showNetworkSelector?: boolean;
   requireEmailVerification?: boolean;
   showGoogleAuth?: boolean;
@@ -21,21 +21,24 @@ interface AuthContainerProps {
 
 export const AuthContainer: React.FC<AuthContainerProps> = ({
   requiredChainId,
-  variant = 'contained',
-  size = 'medium',
+  variant = "contained",
+  size = "medium",
   showNetworkSelector = true,
   requireEmailVerification = true,
   showGoogleAuth = true,
   spacing = 2,
 }) => {
-  const { error: walletError, resetError: resetWalletError } = useAuthManager(requiredChainId);
+  const { error: walletError, resetError: resetWalletError } =
+    useAuthManager(requiredChainId);
   const { session, error: firebaseError } = useFirebaseAuth();
   const [showEmailVerification, setShowEmailVerification] = useState(false);
 
   // Gérer l'affichage de la vérification d'email
   useEffect(() => {
     if (session) {
-      setShowEmailVerification(requireEmailVerification && !session.emailVerified);
+      setShowEmailVerification(
+        requireEmailVerification && !session.emailVerified
+      );
     }
   }, [session, requireEmailVerification]);
 
@@ -53,7 +56,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({
   const showGoogleButton = showGoogleAuth && !session?.provider;
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 400 }}>
+    <Box sx={{ width: "100%", maxWidth: 400 }}>
       <Stack spacing={3}>
         {/* Section Wallet */}
         <Box>
@@ -69,7 +72,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({
             />
             {showNetworkSelector && (
               <NetworkSelector
-                variant={variant === 'contained' ? 'outlined' : variant}
+                variant={variant === "contained" ? "outlined" : variant}
                 size={size}
               />
             )}
@@ -79,7 +82,12 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({
         {/* Section Google */}
         {showGoogleButton && (
           <Box>
-            <Stack direction="row" alignItems="center" spacing={2} sx={{ my: 1 }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={2}
+              sx={{ my: 1 }}
+            >
               <Divider sx={{ flex: 1 }} />
               <Typography variant="body2" color="text.secondary">
                 or continue with
@@ -87,21 +95,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({
               <Divider sx={{ flex: 1 }} />
             </Stack>
 
-            <GoogleAuthButton
-              variant={variant}
-              size={size}
-              fullWidth
-            />
+            <GoogleAuthButton variant={variant} size={size} fullWidth />
           </Box>
         )}
       </Stack>
 
       {/* Feedback et Vérification */}
       <Box sx={{ mt: 2 }}>
-        <AuthFeedback
-          error={error}
-          onClose={handleErrorClose}
-        />
+        <AuthFeedback error={error} onClose={handleErrorClose} />
         <EmailVerification
           open={showEmailVerification}
           onClose={handleEmailVerificationClose}

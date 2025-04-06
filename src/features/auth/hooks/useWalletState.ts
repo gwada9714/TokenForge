@@ -1,7 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useAccount, useDisconnect, useChainId, useConnect, type Connector } from 'wagmi';
-import { ErrorService } from '../services/errorService';
-import { AuthErrorCode } from '../errors/AuthError';
+import { useState, useEffect } from "react";
+import {
+  useAccount,
+  useDisconnect,
+  useChainId,
+  useConnect,
+  type Connector,
+} from "wagmi";
+import { ErrorService } from "../services/errorService";
+import { AuthErrorCode } from "../errors/AuthError";
 
 interface WalletState {
   address: `0x${string}` | null;
@@ -21,80 +27,82 @@ export function useWalletState() {
     address: null,
     isConnected: false,
     loading: false,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
-    setWallet(prevState => ({
+    setWallet((prevState) => ({
       ...prevState,
       address: address || null,
       isConnected,
-      chainId
+      chainId,
     }));
   }, [address, isConnected, chainId]);
 
   const handleConnect = async (address: string, chainId: number) => {
     try {
-      setWallet(prevState => ({
+      setWallet((prevState) => ({
         ...prevState,
-        loading: true
+        loading: true,
       }));
 
-      console.log('Connect wallet called with:', { address, chainId });
+      console.log("Connect wallet called with:", { address, chainId });
 
       // Use the connect function from wagmi
       // This will trigger the wallet connection dialog
-      const injectedConnector = connectors.find((c: Connector) => c.id === 'injected');
+      const injectedConnector = connectors.find(
+        (c: Connector) => c.id === "injected"
+      );
       if (injectedConnector) {
         await connect({
           connector: injectedConnector,
-          chainId
+          chainId,
         });
       } else {
-        throw new Error('Injected connector not found');
+        throw new Error("Injected connector not found");
       }
 
-      setWallet(prevState => ({
+      setWallet((prevState) => ({
         ...prevState,
-        loading: false
+        loading: false,
       }));
     } catch (error) {
       const authError = ErrorService.createAuthError(
         AuthErrorCode.INTERNAL_ERROR,
-        'Failed to connect wallet',
+        "Failed to connect wallet",
         error instanceof Error ? error : new Error(String(error))
       );
-      setWallet(prevState => ({
+      setWallet((prevState) => ({
         ...prevState,
         error: authError,
-        loading: false
+        loading: false,
       }));
     }
   };
 
   const handleDisconnect = async () => {
     try {
-      setWallet(prevState => ({
+      setWallet((prevState) => ({
         ...prevState,
-        loading: true
+        loading: true,
       }));
 
       await disconnect();
 
-      setWallet(prevState => ({
+      setWallet((prevState) => ({
         ...prevState,
-        loading: false
+        loading: false,
       }));
     } catch (error) {
       const authError = ErrorService.createAuthError(
         AuthErrorCode.INTERNAL_ERROR,
-        'Failed to disconnect wallet',
+        "Failed to disconnect wallet",
         error instanceof Error ? error : new Error(String(error))
       );
-      setWallet(prevState => ({
+      setWallet((prevState) => ({
         ...prevState,
         error: authError,
-        loading: false
+        loading: false,
       }));
     }
   };
@@ -106,6 +114,6 @@ export function useWalletState() {
     loading: wallet.loading,
     error: wallet.error,
     connect: handleConnect,
-    disconnect: handleDisconnect
+    disconnect: handleDisconnect,
   };
 }

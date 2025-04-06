@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { PaymentNetwork } from '../services/payment/types/PaymentSession';
+import { useState, useEffect } from "react";
+import { PaymentNetwork } from "../services/payment/types/PaymentSession";
 
 interface TokenInfo {
   symbol: string;
@@ -22,16 +22,18 @@ export const useTokenInfo = (network: PaymentNetwork, tokenAddress: string) => {
       try {
         // TODO: Replace with actual token info API calls
         const mockTokenInfo: TokenInfo = {
-          symbol: 'USDC',
-          name: 'USD Coin',
+          symbol: "USDC",
+          name: "USD Coin",
           decimals: 6,
-          icon: '/assets/tokens/usdc.svg',
+          icon: "/assets/tokens/usdc.svg",
           estimatedGasFee: 0.001,
         };
 
         setTokenInfo(mockTokenInfo);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load token info');
+        setError(
+          err instanceof Error ? err.message : "Failed to load token info"
+        );
       } finally {
         setIsLoading(false);
       }

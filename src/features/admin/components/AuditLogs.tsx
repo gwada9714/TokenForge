@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  Typography, 
+import React, { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
   Chip,
   TablePagination,
   Box,
-  useTheme
-} from '@mui/material';
-import { 
-  Info as InfoIcon, 
-  Warning as WarningIcon, 
-  Error as ErrorIcon 
-} from '@mui/icons-material';
+  useTheme,
+} from "@mui/material";
+import {
+  Info as InfoIcon,
+  Warning as WarningIcon,
+  Error as ErrorIcon,
+} from "@mui/icons-material";
 
 // Types pour les logs d'audit
 interface AuditLog {
@@ -26,7 +26,7 @@ interface AuditLog {
   user: string;
   action: string;
   resource: string;
-  status: 'success' | 'warning' | 'error';
+  status: "success" | "warning" | "error";
   details?: string;
 }
 
@@ -42,67 +42,67 @@ export const AuditLogs: React.FC = () => {
   // Données de démonstration
   const logs: AuditLog[] = [
     {
-      id: '1',
-      timestamp: '2025-03-01T14:32:21',
-      user: 'admin@tokenforge.com',
-      action: 'Création de token',
-      resource: 'TokenFactory',
-      status: 'success',
-      details: 'Token ERC-20 "DEMO" créé avec succès'
+      id: "1",
+      timestamp: "2025-03-01T14:32:21",
+      user: "admin@tokenforge.com",
+      action: "Création de token",
+      resource: "TokenFactory",
+      status: "success",
+      details: 'Token ERC-20 "DEMO" créé avec succès',
     },
     {
-      id: '2',
-      timestamp: '2025-03-01T13:45:12',
-      user: 'user1@example.com',
-      action: 'Connexion',
-      resource: 'AuthService',
-      status: 'success'
+      id: "2",
+      timestamp: "2025-03-01T13:45:12",
+      user: "user1@example.com",
+      action: "Connexion",
+      resource: "AuthService",
+      status: "success",
     },
     {
-      id: '3',
-      timestamp: '2025-03-01T12:22:45',
-      user: 'user2@example.com',
-      action: 'Paiement',
-      resource: 'PaymentService',
-      status: 'error',
-      details: 'Transaction échouée: solde insuffisant'
+      id: "3",
+      timestamp: "2025-03-01T12:22:45",
+      user: "user2@example.com",
+      action: "Paiement",
+      resource: "PaymentService",
+      status: "error",
+      details: "Transaction échouée: solde insuffisant",
     },
     {
-      id: '4',
-      timestamp: '2025-03-01T11:15:33',
-      user: 'admin@tokenforge.com',
-      action: 'Modification de paramètres',
-      resource: 'SystemSettings',
-      status: 'success',
-      details: 'Frais de service mis à jour'
+      id: "4",
+      timestamp: "2025-03-01T11:15:33",
+      user: "admin@tokenforge.com",
+      action: "Modification de paramètres",
+      resource: "SystemSettings",
+      status: "success",
+      details: "Frais de service mis à jour",
     },
     {
-      id: '5',
-      timestamp: '2025-03-01T10:05:18',
-      user: 'user3@example.com',
-      action: 'Déploiement de contrat',
-      resource: 'ContractService',
-      status: 'warning',
-      details: 'Déploiement réussi mais avec des avertissements'
+      id: "5",
+      timestamp: "2025-03-01T10:05:18",
+      user: "user3@example.com",
+      action: "Déploiement de contrat",
+      resource: "ContractService",
+      status: "warning",
+      details: "Déploiement réussi mais avec des avertissements",
     },
     {
-      id: '6',
-      timestamp: '2025-03-01T09:42:51',
-      user: 'user1@example.com',
-      action: 'Création de token',
-      resource: 'TokenFactory',
-      status: 'success',
-      details: 'Token ERC-20 "TEST" créé avec succès'
+      id: "6",
+      timestamp: "2025-03-01T09:42:51",
+      user: "user1@example.com",
+      action: "Création de token",
+      resource: "TokenFactory",
+      status: "success",
+      details: 'Token ERC-20 "TEST" créé avec succès',
     },
     {
-      id: '7',
-      timestamp: '2025-03-01T08:30:22',
-      user: 'system',
-      action: 'Maintenance',
-      resource: 'System',
-      status: 'success',
-      details: 'Maintenance planifiée terminée'
-    }
+      id: "7",
+      timestamp: "2025-03-01T08:30:22",
+      user: "system",
+      action: "Maintenance",
+      resource: "System",
+      status: "success",
+      details: "Maintenance planifiée terminée",
+    },
   ];
 
   // Gestion de la pagination
@@ -110,7 +110,9 @@ export const AuditLogs: React.FC = () => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -122,26 +124,26 @@ export const AuditLogs: React.FC = () => {
   };
 
   // Fonction pour obtenir l'icône en fonction du statut
-  const getStatusIcon = (status: 'success' | 'warning' | 'error') => {
+  const getStatusIcon = (status: "success" | "warning" | "error") => {
     switch (status) {
-      case 'success':
+      case "success":
         return <InfoIcon sx={{ color: theme.palette.success.main }} />;
-      case 'warning':
+      case "warning":
         return <WarningIcon sx={{ color: theme.palette.warning.main }} />;
-      case 'error':
+      case "error":
         return <ErrorIcon sx={{ color: theme.palette.error.main }} />;
     }
   };
 
   // Fonction pour obtenir la couleur en fonction du statut
-  const getStatusColor = (status: 'success' | 'warning' | 'error') => {
+  const getStatusColor = (status: "success" | "warning" | "error") => {
     switch (status) {
-      case 'success':
-        return 'success';
-      case 'warning':
-        return 'warning';
-      case 'error':
-        return 'error';
+      case "success":
+        return "success";
+      case "warning":
+        return "warning";
+      case "error":
+        return "error";
     }
   };
 
@@ -165,7 +167,7 @@ export const AuditLogs: React.FC = () => {
               .map((log) => (
                 <TableRow
                   key={log.id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 >
                   <TableCell component="th" scope="row">
                     {formatDate(log.timestamp)}
@@ -183,7 +185,7 @@ export const AuditLogs: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary">
-                      {log.details || '-'}
+                      {log.details || "-"}
                     </Typography>
                   </TableCell>
                 </TableRow>

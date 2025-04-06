@@ -1,113 +1,119 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Import services first
-import { walletReconnectionService, AUTH_ACTIONS } from '../walletReconnectionService';
-import { networkRetryService } from '../networkRetryService';
-import { useTokenForgeAuthContext } from '../../providers/TokenForgeAuthProvider';
-import type { WalletCallbacks, BaseWalletState } from '../walletReconnectionService';
-import type { TokenForgeUser, AuthStatus } from '../../types/auth';
-import type { WalletClientType } from '../../types';
+import {
+  walletReconnectionService,
+  AUTH_ACTIONS,
+} from "../walletReconnectionService";
+import { networkRetryService } from "../networkRetryService";
+import { useTokenForgeAuthContext } from "../../providers/TokenForgeAuthProvider";
+import type {
+  WalletCallbacks,
+  BaseWalletState,
+} from "../walletReconnectionService";
+import type { TokenForgeUser, AuthStatus } from "../../types/auth";
+import type { WalletClientType } from "../../types";
 
 // Mock des chaînes
-vi.mock('../../../../config/chains', () => ({
+vi.mock("../../../../config/chains", () => ({
   mainnet: {
     id: 1,
-    name: 'Ethereum',
-    network: 'mainnet',
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    name: "Ethereum",
+    network: "mainnet",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     rpcUrls: {
-      default: { http: ['https://eth-mainnet.mock.rpc'] },
-      public: { http: ['https://eth-mainnet.mock.rpc'] }
-    }
+      default: { http: ["https://eth-mainnet.mock.rpc"] },
+      public: { http: ["https://eth-mainnet.mock.rpc"] },
+    },
   },
   sepolia: {
     id: 11155111,
-    name: 'Sepolia',
-    network: 'sepolia',
-    nativeCurrency: { name: 'Sepolia Ether', symbol: 'ETH', decimals: 18 },
+    name: "Sepolia",
+    network: "sepolia",
+    nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
     rpcUrls: {
-      default: { http: ['https://eth-sepolia.mock.rpc'] },
-      public: { http: ['https://eth-sepolia.mock.rpc'] }
-    }
+      default: { http: ["https://eth-sepolia.mock.rpc"] },
+      public: { http: ["https://eth-sepolia.mock.rpc"] },
+    },
   },
   defaultChain: {
     id: 1,
-    name: 'Ethereum',
-    network: 'mainnet'
-  }
+    name: "Ethereum",
+    network: "mainnet",
+  },
 }));
 
 // Mock tabSyncService
-vi.mock('../tabSyncService', () => ({
+vi.mock("../tabSyncService", () => ({
   tabSyncService: {
     broadcast: vi.fn((message) => {
       // Simuler le comportement de BroadcastChannel
-      const event = new MessageEvent('message', {
+      const event = new MessageEvent("message", {
         data: {
           ...message,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       });
       // Déclencher l'événement immédiatement
       window.dispatchEvent(event);
     }),
     subscribe: vi.fn((callback) => {
       // Ajouter l'écouteur d'événements
-      window.addEventListener('message', (event) => callback(event.data));
+      window.addEventListener("message", (event) => callback(event.data));
       // Retourner une fonction de nettoyage
       return () => {
-        window.removeEventListener('message', (event) => callback(event.data));
+        window.removeEventListener("message", (event) => callback(event.data));
       };
-    })
-  }
+    }),
+  },
 }));
 
 // Mock networkRetryService
-vi.mock('../networkRetryService', () => ({
+vi.mock("../networkRetryService", () => ({
   networkRetryService: {
     retryWithTimeout: vi.fn().mockImplementation(async (operation) => {
       try {
         const result = await operation();
         return { success: true, result, attempts: 1 };
       } catch (error) {
-        return { 
-          success: false, 
-          error: error instanceof Error ? error : new Error(String(error)), 
-          attempts: 1 
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+          attempts: 1,
         };
       }
-    })
-  }
+    }),
+  },
 }));
 
 // Création des mocks hoistés
 const createMockGoogleAuthProvider = vi.hoisted(() => ({
   addScope: vi.fn().mockReturnThis(),
-  setCustomParameters: vi.fn().mockReturnThis()
+  setCustomParameters: vi.fn().mockReturnThis(),
 }));
 
 const mockEthereumProvider = {
   request: vi.fn().mockImplementation(async (params: { method: string }) => {
     switch (params.method) {
-      case 'eth_chainId':
-        return '0x1';
-      case 'eth_accounts':
-        return ['0x742d35Cc6634C0532925a3b844Bc454e4438f44e'];
+      case "eth_chainId":
+        return "0x1";
+      case "eth_accounts":
+        return ["0x742d35Cc6634C0532925a3b844Bc454e4438f44e"];
       default:
         return null;
     }
-  })
+  }),
 };
 
 // Mock modules
-vi.mock('../../../../config/firebase', () => ({
+vi.mock("../../../../config/firebase", () => ({
   auth: {
     currentUser: null,
-    signOut: vi.fn()
-  }
+    signOut: vi.fn(),
+  },
 }));
 
-vi.mock('firebase/auth', () => ({
+vi.mock("firebase/auth", () => ({
   GoogleAuthProvider: createMockGoogleAuthProvider,
   signInWithPopup: vi.fn(),
   onAuthStateChanged: vi.fn((_, callback) => {
@@ -117,36 +123,36 @@ vi.mock('firebase/auth', () => ({
   signOut: vi.fn(),
   getAuth: vi.fn(() => ({
     currentUser: null,
-    signOut: vi.fn()
-  }))
+    signOut: vi.fn(),
+  })),
 }));
 
 // Mock hooks
-vi.mock('../../providers/TokenForgeAuthProvider', () => ({
+vi.mock("../../providers/TokenForgeAuthProvider", () => ({
   useTokenForgeAuthContext: vi.fn().mockReturnValue({
     state: {
       walletState: {
         isConnected: true,
         isCorrectNetwork: true,
-        address: '0x123',
+        address: "0x123",
         chainId: 1,
         provider: {},
-        walletClient: {}
-      }
-    }
-  })
+        walletClient: {},
+      },
+    },
+  }),
 }));
 
 // Mock autres services
-vi.mock('ethers');
-vi.mock('viem');
+vi.mock("ethers");
+vi.mock("viem");
 
 // Mock implementations
 const mockedUseTokenForgeAuthContext = vi.mocked(useTokenForgeAuthContext);
 
-describe('Auth Integration Tests', () => {
+describe("Auth Integration Tests", () => {
   // Mock data
-  const mockAddress = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
+  const mockAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
   const mockChainId = 1;
 
   // Reset all mocks before each test
@@ -155,24 +161,24 @@ describe('Auth Integration Tests', () => {
     walletReconnectionService.disconnect();
 
     // Assigner le mock provider
-    Object.defineProperty(window, 'ethereum', {
+    Object.defineProperty(window, "ethereum", {
       value: mockEthereumProvider,
       writable: true,
-      configurable: true
+      configurable: true,
     });
   });
 
-  describe('Flux d\'authentification complet', () => {
-    it('devrait gérer le flux complet de connexion wallet et authentification', async () => {
+  describe("Flux d'authentification complet", () => {
+    it("devrait gérer le flux complet de connexion wallet et authentification", async () => {
       // Setup des mocks
       const mockAuthState = {
-        status: 'idle' as AuthStatus,
+        status: "idle" as AuthStatus,
         isAuthenticated: false,
         user: null as TokenForgeUser | null,
         error: null,
         login: vi.fn(),
         logout: vi.fn(),
-        dispatch: vi.fn()
+        dispatch: vi.fn(),
       };
 
       const mockWalletState = {
@@ -187,14 +193,14 @@ describe('Auth Integration Tests', () => {
         updateNetwork: vi.fn(),
         updateProvider: vi.fn(),
         connect: vi.fn(),
-        disconnect: vi.fn()
+        disconnect: vi.fn(),
       };
 
       // Mock des hooks
       mockedUseTokenForgeAuthContext.mockReturnValue({
         state: {
-          walletState: mockWalletState
-        }
+          walletState: mockWalletState,
+        },
       });
 
       // Définir les callbacks
@@ -216,10 +222,13 @@ describe('Auth Integration Tests', () => {
       expect(state.isConnected).toBe(true);
 
       // Vérification des callbacks
-      expect(callbacks.onConnect).toHaveBeenCalledWith(mockAddress, mockChainId);
+      expect(callbacks.onConnect).toHaveBeenCalledWith(
+        mockAddress,
+        mockChainId
+      );
     });
 
-    it('devrait gérer correctement la déconnexion', () => {
+    it("devrait gérer correctement la déconnexion", () => {
       // Définir les callbacks
       const callbacks: WalletCallbacks = {
         onConnect: vi.fn(),
@@ -248,8 +257,8 @@ describe('Auth Integration Tests', () => {
     });
   });
 
-  describe('Synchronisation des états', () => {
-    it('devrait synchroniser les états entre les onglets', async () => {
+  describe("Synchronisation des états", () => {
+    it("devrait synchroniser les états entre les onglets", async () => {
       const callbacks: WalletCallbacks = {
         onConnect: vi.fn(),
         onDisconnect: vi.fn(),
@@ -264,7 +273,7 @@ describe('Auth Integration Tests', () => {
       const mockState: BaseWalletState = {
         address: mockAddress,
         chainId: mockChainId,
-        isConnected: true
+        isConnected: true,
       };
 
       // Simuler un message de synchronisation
@@ -272,27 +281,30 @@ describe('Auth Integration Tests', () => {
         type: AUTH_ACTIONS.WALLET_CONNECT,
         payload: mockState,
         timestamp: Date.now(),
-        tabId: 'mock-tab-id',
-        priority: 800
+        tabId: "mock-tab-id",
+        priority: 800,
       };
 
       // Simuler directement l'événement de message
-      const event = new MessageEvent('message', {
-        data: mockMessage
+      const event = new MessageEvent("message", {
+        data: mockMessage,
       });
 
       // Déclencher l'événement
       window.dispatchEvent(event);
 
       // Attendre que le callback soit appelé
-      await vi.waitFor(() => {
-        expect(callbacks.onWalletStateSync).toHaveBeenCalledWith(mockState);
-      }, { timeout: 1000, interval: 50 });
+      await vi.waitFor(
+        () => {
+          expect(callbacks.onWalletStateSync).toHaveBeenCalledWith(mockState);
+        },
+        { timeout: 1000, interval: 50 }
+      );
     });
   });
 
-  describe('Gestion des erreurs', () => {
-    it('devrait gérer les erreurs de reconnexion', async () => {
+  describe("Gestion des erreurs", () => {
+    it("devrait gérer les erreurs de reconnexion", async () => {
       const callbacks: WalletCallbacks = {
         onConnect: vi.fn(),
         onDisconnect: vi.fn(),
@@ -305,22 +317,24 @@ describe('Auth Integration Tests', () => {
 
       // Créer un mock provider avec une erreur
       const mockProviderWithError = {
-        request: vi.fn().mockImplementation(async ({ method }: { method: string }) => {
-          if (method === 'eth_chainId') {
-            return '0x1';
-          }
-          if (method === 'eth_accounts') {
-            throw new Error('Failed to connect');
-          }
-          return null;
-        })
+        request: vi
+          .fn()
+          .mockImplementation(async ({ method }: { method: string }) => {
+            if (method === "eth_chainId") {
+              return "0x1";
+            }
+            if (method === "eth_accounts") {
+              throw new Error("Failed to connect");
+            }
+            return null;
+          }),
       };
 
       // Assigner le mock provider avec erreur
-      Object.defineProperty(window, 'ethereum', {
+      Object.defineProperty(window, "ethereum", {
         value: mockProviderWithError,
         writable: true,
-        configurable: true
+        configurable: true,
       });
 
       // Mock retryWithTimeout pour utiliser notre configuration
@@ -336,7 +350,9 @@ describe('Auth Integration Tests', () => {
       );
 
       // Tenter la reconnexion
-      await expect(walletReconnectionService.startReconnection()).rejects.toThrow();
+      await expect(
+        walletReconnectionService.startReconnection()
+      ).rejects.toThrow();
 
       // Vérifier que networkRetryService a été appelé
       expect(networkRetryService.retryWithTimeout).toHaveBeenCalled();

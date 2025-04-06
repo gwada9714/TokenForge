@@ -1,6 +1,6 @@
-import React, { Component, ErrorInfo } from 'react';
-import { Box, Typography, Button } from '@mui/material';
-import { logger } from '@/core/logger';
+import React, { Component, ErrorInfo } from "react";
+import { Box, Typography, Button } from "@mui/material";
+import { logger } from "@/core/logger";
 
 interface Props {
   children: React.ReactNode;
@@ -16,30 +16,30 @@ export class ErrorBoundary extends Component<Props, State> {
     super(props);
     this.state = {
       hasError: false,
-      error: null
+      error: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     logger.error({
-      message: 'Erreur non gérée dans l\'application',
-      category: 'ErrorBoundary',
+      message: "Erreur non gérée dans l'application",
+      category: "ErrorBoundary",
       error,
-      errorInfo
+      errorInfo,
     });
   }
 
   handleReset = (): void => {
     this.setState({
       hasError: false,
-      error: null
+      error: null,
     });
   };
 
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
             Oups ! Quelque chose s'est mal passé.
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph>
-            {this.state.error?.message || 'Une erreur inattendue est survenue.'}
+            {this.state.error?.message || "Une erreur inattendue est survenue."}
           </Typography>
           <Button
             variant="contained"
@@ -74,4 +74,4 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children;
   }
-} 
+}

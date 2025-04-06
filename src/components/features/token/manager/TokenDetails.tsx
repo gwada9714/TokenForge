@@ -56,7 +56,7 @@ const TokenDetails: React.FC<TokenDetailsProps> = ({ token }) => {
                 onClick={() =>
                   window.open(
                     `https://etherscan.io/token/${token.address}`,
-                    "_blank",
+                    "_blank"
                   )
                 }
               >

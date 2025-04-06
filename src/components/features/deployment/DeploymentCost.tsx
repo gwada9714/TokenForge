@@ -49,15 +49,11 @@ export const DeploymentCost = ({ bytecode }: DeploymentCostProps) => {
 
   if (!estimatedCost) {
     return (
-      <Typography color="error">
-        Could not estimate deployment cost
-      </Typography>
+      <Typography color="error">Could not estimate deployment cost</Typography>
     );
   }
 
   return (
-    <Typography>
-      Estimated deployment cost: {estimatedCost} ETH
-    </Typography>
+    <Typography>Estimated deployment cost: {estimatedCost} ETH</Typography>
   );
 };

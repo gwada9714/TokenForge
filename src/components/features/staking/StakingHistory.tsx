@@ -1,5 +1,15 @@
-import React from 'react';
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import React from "react";
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 
 interface StakingHistoryProps {
   history?: Array<{
@@ -10,7 +20,9 @@ interface StakingHistoryProps {
   }>;
 }
 
-export const StakingHistory: React.FC<StakingHistoryProps> = ({ history = [] }) => {
+export const StakingHistory: React.FC<StakingHistoryProps> = ({
+  history = [],
+}) => {
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h6" gutterBottom>

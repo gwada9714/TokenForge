@@ -1,16 +1,16 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { StyledButton } from '@/components/ui/Button';
+import React from "react";
+import { motion } from "framer-motion";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { StyledButton } from "@/components/ui/Button";
 
 const TokenSection: React.FC = () => {
   // Données de tokenomics
   const tokenomicsData = [
-    { name: 'Réserve Communautaire', value: 30, color: '#182038' },
-    { name: 'Équipe & Conseillers', value: 20, color: '#2A3352' },
-    { name: 'Marketing', value: 15, color: '#D97706' },
-    { name: 'Développement', value: 20, color: '#F59E0B' },
-    { name: 'Liquidité', value: 15, color: '#B45309' },
+    { name: "Réserve Communautaire", value: 30, color: "#182038" },
+    { name: "Équipe & Conseillers", value: 20, color: "#2A3352" },
+    { name: "Marketing", value: 15, color: "#D97706" },
+    { name: "Développement", value: 20, color: "#F59E0B" },
+    { name: "Liquidité", value: 15, color: "#B45309" },
   ];
 
   const containerVariants = {
@@ -19,14 +19,14 @@ const TokenSection: React.FC = () => {
       opacity: 1,
       transition: {
         duration: 0.6,
-        staggerChildren: 0.2
-      }
-    }
+        staggerChildren: 0.2,
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   return (
@@ -47,7 +47,8 @@ const TokenSection: React.FC = () => {
             Token <span className="text-secondary">$TKN</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Le cœur de notre écosystème, conçu pour récompenser la communauté et alimenter l'innovation
+            Le cœur de notre écosystème, conçu pour récompenser la communauté et
+            alimenter l'innovation
           </p>
         </motion.div>
 
@@ -58,7 +59,9 @@ const TokenSection: React.FC = () => {
             variants={itemVariants}
             className="bg-white rounded-2xl shadow-xl p-8"
           >
-            <h3 className="text-2xl font-heading font-bold text-primary mb-6">Distribution des Tokens</h3>
+            <h3 className="text-2xl font-heading font-bold text-primary mb-6">
+              Distribution des Tokens
+            </h3>
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -99,24 +102,25 @@ const TokenSection: React.FC = () => {
             {[
               {
                 title: "Utilité",
-                description: "Paiements, staking et gouvernance de la plateforme",
-                icon: "💎"
+                description:
+                  "Paiements, staking et gouvernance de la plateforme",
+                icon: "💎",
               },
               {
                 title: "Mécanisme Déflationniste",
                 description: "Brûlage automatique de 2% sur chaque transaction",
-                icon: "🔥"
+                icon: "🔥",
               },
               {
                 title: "Staking Rewards",
                 description: "Jusqu'à 15% APY pour les stakers",
-                icon: "💰"
+                icon: "💰",
               },
               {
                 title: "Gouvernance",
                 description: "Votez sur l'avenir de la plateforme",
-                icon: "🏛️"
-              }
+                icon: "🏛️",
+              },
             ].map((feature, index) => (
               <motion.div
                 key={index}
@@ -136,10 +140,7 @@ const TokenSection: React.FC = () => {
         </div>
 
         {/* Call to Action */}
-        <motion.div
-          variants={itemVariants}
-          className="mt-16 text-center"
-        >
+        <motion.div variants={itemVariants} className="mt-16 text-center">
           <StyledButton
             $variant="primary"
             $size="large"

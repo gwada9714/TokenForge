@@ -3,49 +3,58 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="TokenForge - Créez et déployez vos tokens en toute simplicité. Une plateforme complète pour donner vie à vos projets blockchain." />
+    <meta
+      name="description"
+      content="TokenForge - Créez et déployez vos tokens en toute simplicité. Une plateforme complète pour donner vie à vos projets blockchain."
+    />
     <meta name="theme-color" content="#7b3fe4" />
-    <meta name="keywords" content="token, blockchain, crypto, ethereum, binance, polygon, forge, création token" />
-    
+    <meta
+      name="keywords"
+      content="token, blockchain, crypto, ethereum, binance, polygon, forge, création token"
+    />
+
     <!-- Configuration CSP sécurisée pour le développement -->
-    <meta http-equiv="Content-Security-Policy" 
+    <meta
+      http-equiv="Content-Security-Policy"
       content="default-src 'self' 'unsafe-inline' 'unsafe-eval' http: https: ws: wss: data: blob:;
-              connect-src 'self' http: https: ws: wss:;">
-    
+              connect-src 'self' http: https: ws: wss:;"
+    />
+
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
-    
+
     <title>TokenForge | Créez vos tokens en toute simplicité</title>
-    
+
     <!-- Style de base pour éviter le FOUC -->
     <style>
       @font-face {
-        font-family: 'Montserrat';
-        src: local('Montserrat'), local('Segoe UI'), local('Helvetica Neue'), local('Arial'), sans-serif;
+        font-family: "Montserrat";
+        src: local("Montserrat"), local("Segoe UI"), local("Helvetica Neue"),
+          local("Arial"), sans-serif;
       }
-      
+
       html {
         background-color: #0f172a;
       }
-      
+
       body {
         margin: 0;
-        font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-          sans-serif;
+        font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+          "Helvetica Neue", sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         background-color: #0f172a;
         color: #f8fafc;
       }
-      
+
       #root {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
       }
-      
+
       /* Animation de chargement */
       .loading-spinner {
         width: 50px;
@@ -60,10 +69,14 @@
         margin-top: -25px;
         margin-left: -25px;
       }
-      
+
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
     </style>
   </head>

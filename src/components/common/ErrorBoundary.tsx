@@ -1,6 +1,6 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { Box, Typography, Button } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { Component, ErrorInfo, ReactNode } from "react";
+import { Box, Typography, Button } from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 interface Props {
   children: ReactNode;
@@ -25,7 +25,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    console.error("Error caught by ErrorBoundary:", error, errorInfo);
   }
 
   private handleRetry = () => {
@@ -37,21 +37,22 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '60vh',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "60vh",
             p: 3,
-            textAlign: 'center',
+            textAlign: "center",
           }}
         >
-          <ErrorOutlineIcon sx={{ fontSize: 60, color: 'error.main', mb: 2 }} />
+          <ErrorOutlineIcon sx={{ fontSize: 60, color: "error.main", mb: 2 }} />
           <Typography variant="h5" component="h1" gutterBottom>
             Une erreur est survenue
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph>
-            {this.state.error?.message || 'Une erreur inattendue s\'est produite.'}
+            {this.state.error?.message ||
+              "Une erreur inattendue s'est produite."}
           </Typography>
           <Button
             variant="contained"

@@ -1,6 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AuthState, User, SessionInfo } from '../schemas/auth.schema';
-import { AuthErrorCode } from '../errors/AuthError';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AuthState, User, SessionInfo } from "../schemas/auth.schema";
+import { AuthErrorCode } from "../errors/AuthError";
 
 export type AuthError = {
   code: keyof typeof AuthErrorCode;
@@ -12,11 +12,11 @@ const initialState: AuthState = {
   isLoading: true,
   user: null,
   sessionInfo: null,
-  error: undefined
+  error: undefined,
 };
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     setAuthLoading: (state, action: PayloadAction<boolean>) => {
@@ -32,7 +32,7 @@ const authSlice = createSlice({
     },
     setAuthError: (state, action: PayloadAction<AuthError>) => {
       state.error = action.payload;
-      if (action.payload.code === 'USER_NOT_FOUND') {
+      if (action.payload.code === "USER_NOT_FOUND") {
         state.isAuthenticated = false;
         state.user = null;
         state.sessionInfo = null;
@@ -41,8 +41,8 @@ const authSlice = createSlice({
     clearAuthError: (state) => {
       state.error = undefined;
     },
-    resetAuthState: () => initialState
-  }
+    resetAuthState: () => initialState,
+  },
 });
 
 export const {
@@ -51,7 +51,7 @@ export const {
   setSessionInfo,
   setAuthError,
   clearAuthError,
-  resetAuthState
+  resetAuthState,
 } = authSlice.actions;
 
 export default authSlice.reducer;

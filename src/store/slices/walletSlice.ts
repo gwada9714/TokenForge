@@ -1,15 +1,15 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { WalletState } from '../types';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { WalletState } from "../types";
 
 const initialState: WalletState = {
   address: null,
   chainId: null,
   isConnected: false,
-  balance: '0'
+  balance: "0",
 };
 
 const walletSlice = createSlice({
-  name: 'wallet',
+  name: "wallet",
   initialState,
   reducers: {
     setWalletAddress: (state, action: PayloadAction<string | null>) => {
@@ -26,16 +26,12 @@ const walletSlice = createSlice({
       state.address = null;
       state.chainId = null;
       state.isConnected = false;
-      state.balance = '0';
-    }
-  }
+      state.balance = "0";
+    },
+  },
 });
 
-export const {
-  setWalletAddress,
-  setChainId,
-  setBalance,
-  disconnectWallet
-} = walletSlice.actions;
+export const { setWalletAddress, setChainId, setBalance, disconnectWallet } =
+  walletSlice.actions;
 
 export default walletSlice.reducer;

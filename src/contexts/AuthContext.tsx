@@ -1,5 +1,5 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth, AuthUser } from '../hooks/useAuth';
+import React, { createContext, useContext, ReactNode } from "react";
+import { useAuth, AuthUser } from "../hooks/useAuth";
 
 // Type pour le contexte d'authentification
 interface AuthContextType {
@@ -7,14 +7,17 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isLoading: boolean;
-  status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+  status: "idle" | "loading" | "authenticated" | "unauthenticated" | "error";
   error: Error | null;
   signIn: (email: string, password: string) => Promise<AuthUser>;
   signUp: (email: string, password: string) => Promise<AuthUser>;
   signInAnonymously: () => Promise<AuthUser>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  updateUserProfile: (profileData: { displayName?: string; photoURL?: string }) => Promise<void>;
+  updateUserProfile: (profileData: {
+    displayName?: string;
+    photoURL?: string;
+  }) => Promise<void>;
 }
 
 // Création du contexte avec une valeur par défaut
@@ -31,23 +34,19 @@ interface AuthProviderProps {
  * Fournisseur de contexte d'authentification
  * Enveloppe l'application pour fournir l'accès à l'authentification
  */
-export const AuthProvider: React.FC<AuthProviderProps> = ({ 
+export const AuthProvider: React.FC<AuthProviderProps> = ({
   children,
   onAuthStateChanged,
-  onError
+  onError,
 }) => {
   // Utiliser le hook useAuth avec les callbacks fournis
   const auth = useAuth({
     onAuthStateChanged,
-    onError
+    onError,
   });
 
   // Fournir toutes les fonctionnalités d'authentification via le contexte
-  return (
-    <AuthContext.Provider value={auth}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
 /**
@@ -57,11 +56,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
  */
 export const useAuthContext = (): AuthContextType => {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
-    throw new Error('useAuthContext doit être utilisé à l\'intérieur d\'un AuthProvider');
+    throw new Error(
+      "useAuthContext doit être utilisé à l'intérieur d'un AuthProvider"
+    );
   }
-  
+
   return context;
 };
 

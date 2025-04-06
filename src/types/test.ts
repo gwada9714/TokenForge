@@ -4,7 +4,7 @@ import {
   type TestClient,
   type PublicActions,
   type WalletActions,
-  type Hash
+  type Hash,
 } from "viem";
 import { type SupportedChain } from "./chains";
 
@@ -37,4 +37,4 @@ export interface TokenTestResult {
     hasLiquidity: boolean;
     hasStaking: boolean;
   };
-} 
+}

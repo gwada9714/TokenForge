@@ -1,6 +1,6 @@
-import React from 'react';
-import { Container } from '@mui/material';
-import ProfitDashboard from '@/components/Dashboard/ProfitDashboard';
+import React from "react";
+import { Container } from "@mui/material";
+import ProfitDashboard from "@/components/Dashboard/ProfitDashboard";
 
 const ProfitDashboardPage: React.FC = () => {
   return (

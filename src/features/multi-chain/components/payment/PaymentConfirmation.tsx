@@ -1,15 +1,8 @@
-import React from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Divider,
-  Avatar,
-  Stack,
-} from '@mui/material';
-import { PaymentNetwork } from '../../services/payment/types/PaymentSession';
-import { useTokenInfo } from '../../hooks/useTokenInfo';
-import { formatCurrency } from '../../utils/currency';
+import React from "react";
+import { Box, Typography, Paper, Divider, Avatar, Stack } from "@mui/material";
+import { PaymentNetwork } from "../../services/payment/types/PaymentSession";
+import { useTokenInfo } from "../../hooks/useTokenInfo";
+import { formatCurrency } from "../../utils/currency";
 
 interface PaymentConfirmationProps {
   network: PaymentNetwork;
@@ -28,7 +21,7 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
 
   if (isLoading) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Box sx={{ p: 3, textAlign: "center" }}>
         <Typography>Loading payment details...</Typography>
       </Box>
     );
@@ -36,7 +29,7 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
 
   if (error || !tokenInfo) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Box sx={{ p: 3, textAlign: "center" }}>
         <Typography color="error">Error loading payment details</Typography>
       </Box>
     );
@@ -45,7 +38,7 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
   const formattedAmount = formatCurrency(amount, tokenInfo.decimals);
 
   return (
-    <Box sx={{ width: '100%', p: 2 }}>
+    <Box sx={{ width: "100%", p: 2 }}>
       <Typography variant="h6" align="center" gutterBottom>
         Confirm Payment
       </Typography>
@@ -54,8 +47,8 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
         elevation={0}
         sx={{
           p: 3,
-          border: '1px solid',
-          borderColor: 'divider',
+          border: "1px solid",
+          borderColor: "divider",
           borderRadius: 2,
         }}
       >
@@ -109,11 +102,19 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
             <>
               <Divider />
               <Box>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  gutterBottom
+                >
                   Estimated Gas Fee
                 </Typography>
                 <Typography>
-                  {formatCurrency(tokenInfo.estimatedGasFee, tokenInfo.decimals)} {tokenInfo.symbol}
+                  {formatCurrency(
+                    tokenInfo.estimatedGasFee,
+                    tokenInfo.decimals
+                  )}{" "}
+                  {tokenInfo.symbol}
                 </Typography>
               </Box>
             </>
@@ -126,7 +127,11 @@ export const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
               Total Amount
             </Typography>
             <Typography variant="h6">
-              {formatCurrency(amount + (tokenInfo.estimatedGasFee || 0), tokenInfo.decimals)} {tokenInfo.symbol}
+              {formatCurrency(
+                amount + (tokenInfo.estimatedGasFee || 0),
+                tokenInfo.decimals
+              )}{" "}
+              {tokenInfo.symbol}
             </Typography>
           </Box>
         </Stack>

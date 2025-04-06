@@ -1,10 +1,10 @@
-import React from 'react';
-import styled from 'styled-components';
-import { useForm } from 'react-hook-form';
-import { Card, Button, Input, Alert } from '@/components/ui';
-import { THEME_CONFIG } from '@/config/constants/theme';
-import { useService } from '../hooks/useService';
-import { StakingConfig as IStakingConfig } from '../types/services';
+import React from "react";
+import styled from "styled-components";
+import { useForm } from "react-hook-form";
+import { Card, Button, Input, Alert } from "@/components/ui";
+import { THEME_CONFIG } from "@/config/constants/theme";
+import { useService } from "../hooks/useService";
+import { StakingConfig as IStakingConfig } from "../types/services";
 
 const Container = styled.div`
   max-width: 800px;
@@ -40,23 +40,27 @@ const TokenList = styled.div`
 `;
 
 export const StakingConfig: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<IStakingConfig>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IStakingConfig>();
   const { configureService, error, isProcessing } = useService();
   const [rewardTokens, setRewardTokens] = React.useState<string[]>([]);
 
   const onSubmit = async (data: IStakingConfig) => {
     try {
-      await configureService('STAKING', {
+      await configureService("STAKING", {
         ...data,
         rewardTokens,
       });
     } catch (err) {
-      console.error('Erreur lors de la configuration du staking:', err);
+      console.error("Erreur lors de la configuration du staking:", err);
     }
   };
 
   const addRewardToken = () => {
-    setRewardTokens([...rewardTokens, '']);
+    setRewardTokens([...rewardTokens, ""]);
   };
 
   const updateRewardToken = (index: number, value: string) => {
@@ -68,7 +72,7 @@ export const StakingConfig: React.FC = () => {
   return (
     <Container>
       <h2>Configuration du Staking</h2>
-      
+
       {error && (
         <div style={{ marginBottom: THEME_CONFIG.spacing.md }}>
           <Alert type="error">{error}</Alert>
@@ -82,9 +86,9 @@ export const StakingConfig: React.FC = () => {
             <Label>APR (%)</Label>
             <Input
               type="number"
-              {...register('flexibleApr', { 
-                required: 'L\'APR est requis',
-                min: { value: 0, message: 'L\'APR doit être positif' }
+              {...register("flexibleApr", {
+                required: "L'APR est requis",
+                min: { value: 0, message: "L'APR doit être positif" },
               })}
               error={errors.flexibleApr?.message}
             />
@@ -93,7 +97,7 @@ export const StakingConfig: React.FC = () => {
             <Label>Période minimale (jours)</Label>
             <Input
               type="number"
-              {...register('flexibleMinPeriod', { min: 0 })}
+              {...register("flexibleMinPeriod", { min: 0 })}
               error={errors.flexibleMinPeriod?.message}
             />
           </FormGroup>
@@ -105,9 +109,9 @@ export const StakingConfig: React.FC = () => {
             <Label>APR de Base (%)</Label>
             <Input
               type="number"
-              {...register('lockedBaseApr', {
-                required: 'L\'APR de base est requis',
-                min: { value: 0, message: 'L\'APR doit être positif' }
+              {...register("lockedBaseApr", {
+                required: "L'APR de base est requis",
+                min: { value: 0, message: "L'APR doit être positif" },
               })}
               error={errors.lockedBaseApr?.message}
             />
@@ -116,7 +120,7 @@ export const StakingConfig: React.FC = () => {
             <Label>Bonus Maximum (%)</Label>
             <Input
               type="number"
-              {...register('lockedMaxBonus', { min: 0 })}
+              {...register("lockedMaxBonus", { min: 0 })}
               error={errors.lockedMaxBonus?.message}
             />
           </FormGroup>
@@ -124,7 +128,7 @@ export const StakingConfig: React.FC = () => {
             <Label>Période maximale (jours)</Label>
             <Input
               type="number"
-              {...register('lockedMaxPeriod', { min: 0 })}
+              {...register("lockedMaxPeriod", { min: 0 })}
               error={errors.lockedMaxPeriod?.message}
             />
           </FormGroup>
@@ -136,11 +140,11 @@ export const StakingConfig: React.FC = () => {
             <Label>Fréquence de Distribution (heures)</Label>
             <Input
               type="number"
-              {...register('rewardFrequency', { min: 1 })}
+              {...register("rewardFrequency", { min: 1 })}
               error={errors.rewardFrequency?.message}
             />
           </FormGroup>
-          
+
           <Button
             type="button"
             variant="secondary"
@@ -170,9 +174,9 @@ export const StakingConfig: React.FC = () => {
           fullWidth
           disabled={isProcessing}
         >
-          {isProcessing ? 'Configuration en cours...' : 'Configurer le Staking'}
+          {isProcessing ? "Configuration en cours..." : "Configurer le Staking"}
         </Button>
       </form>
     </Container>
   );
-}; 
+};

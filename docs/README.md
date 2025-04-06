@@ -7,11 +7,13 @@ TokenForge est une plateforme décentralisée permettant la création et la gest
 ## Structure de la Documentation
 
 - 📁 `/guides` - Guides utilisateur et tutoriels
+
   - Guide de création de token
   - Guide d'utilisation du marketplace
   - Guide d'administration
 
 - 📁 `/api` - Documentation technique de l'API
+
   - Endpoints
   - Types et interfaces
   - Exemples d'utilisation
@@ -24,6 +26,7 @@ TokenForge est une plateforme décentralisée permettant la création et la gest
 ## Démarrage Rapide
 
 1. Installation
+
 ```bash
 git clone https://github.com/your-username/tokenforge-app.git
 cd tokenforge-app
@@ -31,12 +34,14 @@ npm install
 ```
 
 2. Configuration
+
 ```bash
 cp .env.example .env
 # Configurez vos variables d'environnement
 ```
 
 3. Lancement
+
 ```bash
 npm run dev
 ```

@@ -1,6 +1,6 @@
-import React from 'react';
-import { CircularProgress } from '@mui/material';
-import styled from 'styled-components';
+import React from "react";
+import { CircularProgress } from "@mui/material";
+import styled from "styled-components";
 
 const LoadingContainer = styled.div`
   display: flex;

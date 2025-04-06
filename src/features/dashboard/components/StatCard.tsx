@@ -1,6 +1,6 @@
-import React from 'react';
-import { Paper, Box, Typography, Avatar } from '@mui/material';
-import { TrendingUp, TrendingDown } from '@mui/icons-material';
+import React from "react";
+import { Paper, Box, Typography, Avatar } from "@mui/material";
+import { TrendingUp, TrendingDown } from "@mui/icons-material";
 
 interface StatCardProps {
   title: string;
@@ -9,16 +9,24 @@ interface StatCardProps {
   trend: number;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend }) => {
+export const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  icon,
+  trend,
+}) => {
   const isPositiveTrend = trend >= 0;
 
   return (
     <Paper elevation={1}>
       <Box p={2} display="flex" flexDirection="column">
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Avatar sx={{ bgcolor: 'primary.main' }}>
-            {icon}
-          </Avatar>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+        >
+          <Avatar sx={{ bgcolor: "primary.main" }}>{icon}</Avatar>
           <Box display="flex" alignItems="center">
             {trend !== 0 && (
               <>
@@ -29,7 +37,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend })
                 )}
                 <Typography
                   variant="body2"
-                  color={isPositiveTrend ? 'success.main' : 'error.main'}
+                  color={isPositiveTrend ? "success.main" : "error.main"}
                   ml={0.5}
                 >
                   {Math.abs(trend)}%
@@ -47,4 +55,4 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend })
       </Box>
     </Paper>
   );
-}; 
+};

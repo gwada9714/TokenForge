@@ -1,1 +1,1 @@
-export { default as TokenomicsDesignerPage } from './TokenomicsDesignerPage';
+export { default as TokenomicsDesignerPage } from "./TokenomicsDesignerPage";

@@ -1,20 +1,20 @@
 /**
  * Utilitaires pour la définition et la gestion des index Firestore
- * 
- * Ce module fournit des outils pour documenter les index nécessaires pour 
+ *
+ * Ce module fournit des outils pour documenter les index nécessaires pour
  * les requêtes complexes et générer le fichier firestore.indexes.json
  */
 
 // Structure des index composés Firestore
 interface FirestoreFieldConfig {
   fieldPath: string;
-  order?: 'ASCENDING' | 'DESCENDING';
-  arrayConfig?: 'CONTAINS';
+  order?: "ASCENDING" | "DESCENDING";
+  arrayConfig?: "CONTAINS";
 }
 
 interface FirestoreIndexConfig {
   collectionGroup: string;
-  queryScope: 'COLLECTION' | 'COLLECTION_GROUP';
+  queryScope: "COLLECTION" | "COLLECTION_GROUP";
   fields: FirestoreFieldConfig[];
 }
 
@@ -22,57 +22,57 @@ interface FirestoreIndexConfig {
 export const FIRESTORE_INDEXES: FirestoreIndexConfig[] = [
   // Index pour les requêtes sur les NFTs par propriétaire et date de création
   {
-    collectionGroup: 'nfts',
-    queryScope: 'COLLECTION',
+    collectionGroup: "nfts",
+    queryScope: "COLLECTION",
     fields: [
-      { fieldPath: 'ownerId' },
-      { fieldPath: 'createdAt', order: 'DESCENDING' }
-    ]
+      { fieldPath: "ownerId" },
+      { fieldPath: "createdAt", order: "DESCENDING" },
+    ],
   },
-  
+
   // Index pour les transactions par utilisateur et date
   {
-    collectionGroup: 'transactions',
-    queryScope: 'COLLECTION',
+    collectionGroup: "transactions",
+    queryScope: "COLLECTION",
     fields: [
-      { fieldPath: 'userId' },
-      { fieldPath: 'status' },
-      { fieldPath: 'timestamp', order: 'DESCENDING' }
-    ]
+      { fieldPath: "userId" },
+      { fieldPath: "status" },
+      { fieldPath: "timestamp", order: "DESCENDING" },
+    ],
   },
-  
+
   // Index pour les collections NFT par propriétaire et statut
   {
-    collectionGroup: 'nftCollections',
-    queryScope: 'COLLECTION',
+    collectionGroup: "nftCollections",
+    queryScope: "COLLECTION",
     fields: [
-      { fieldPath: 'ownerId' },
-      { fieldPath: 'status' },
-      { fieldPath: 'createdAt', order: 'DESCENDING' }
-    ]
+      { fieldPath: "ownerId" },
+      { fieldPath: "status" },
+      { fieldPath: "createdAt", order: "DESCENDING" },
+    ],
   },
-  
+
   // Index pour les wallets par utilisateur et type
   {
-    collectionGroup: 'wallets',
-    queryScope: 'COLLECTION',
+    collectionGroup: "wallets",
+    queryScope: "COLLECTION",
     fields: [
-      { fieldPath: 'userId' },
-      { fieldPath: 'walletType' },
-      { fieldPath: 'lastUpdated', order: 'DESCENDING' }
-    ]
+      { fieldPath: "userId" },
+      { fieldPath: "walletType" },
+      { fieldPath: "lastUpdated", order: "DESCENDING" },
+    ],
   },
-  
+
   // Index pour les notifications non lues par utilisateur
   {
-    collectionGroup: 'notifications',
-    queryScope: 'COLLECTION',
+    collectionGroup: "notifications",
+    queryScope: "COLLECTION",
     fields: [
-      { fieldPath: 'userId' },
-      { fieldPath: 'read' },
-      { fieldPath: 'createdAt', order: 'DESCENDING' }
-    ]
-  }
+      { fieldPath: "userId" },
+      { fieldPath: "read" },
+      { fieldPath: "createdAt", order: "DESCENDING" },
+    ],
+  },
 ];
 
 /**
@@ -81,9 +81,9 @@ export const FIRESTORE_INDEXES: FirestoreIndexConfig[] = [
 export function generateFirestoreIndexesJson(): string {
   const indexesJson = {
     indexes: FIRESTORE_INDEXES,
-    fieldOverrides: []
+    fieldOverrides: [],
   };
-  
+
   return JSON.stringify(indexesJson, null, 2);
 }
 
@@ -93,34 +93,34 @@ export function generateFirestoreIndexesJson(): string {
  */
 export function getIndexRecommendations(): Record<string, string[]> {
   const recommendations: Record<string, string[]> = {};
-  
+
   // Recommandations pour les requêtes sur les NFTs
-  recommendations['nfts'] = [
+  recommendations["nfts"] = [
     "Pour requêtes de type 'getUserNFTs': Créer un index composite sur (ownerId ASC, createdAt DESC)",
-    "Pour requêtes de type 'getNFTsByCollection': Créer un index composite sur (collectionId ASC, tokenId ASC)"
+    "Pour requêtes de type 'getNFTsByCollection': Créer un index composite sur (collectionId ASC, tokenId ASC)",
   ];
-  
+
   // Recommandations pour les transactions
-  recommendations['transactions'] = [
+  recommendations["transactions"] = [
     "Pour requêtes de type 'getUserTransactions': Créer un index composite sur (userId ASC, status ASC, timestamp DESC)",
-    "Pour requêtes de type 'getRecentTransactions': Créer un index composite sur (status ASC, timestamp DESC)"
+    "Pour requêtes de type 'getRecentTransactions': Créer un index composite sur (status ASC, timestamp DESC)",
   ];
-  
+
   // Recommandations pour les collections NFT
-  recommendations['nftCollections'] = [
-    "Pour requêtes de type 'getUserCollections': Créer un index composite sur (ownerId ASC, status ASC, createdAt DESC)"
+  recommendations["nftCollections"] = [
+    "Pour requêtes de type 'getUserCollections': Créer un index composite sur (ownerId ASC, status ASC, createdAt DESC)",
   ];
-  
+
   // Recommandations pour les wallets
-  recommendations['wallets'] = [
-    "Pour requêtes de type 'getUserWallets': Créer un index composite sur (userId ASC, walletType ASC, lastUpdated DESC)"
+  recommendations["wallets"] = [
+    "Pour requêtes de type 'getUserWallets': Créer un index composite sur (userId ASC, walletType ASC, lastUpdated DESC)",
   ];
-  
+
   // Recommandations pour les notifications
-  recommendations['notifications'] = [
-    "Pour requêtes de type 'getUnreadNotifications': Créer un index composite sur (userId ASC, read ASC, createdAt DESC)"
+  recommendations["notifications"] = [
+    "Pour requêtes de type 'getUnreadNotifications': Créer un index composite sur (userId ASC, read ASC, createdAt DESC)",
   ];
-  
+
   return recommendations;
 }
 
@@ -130,11 +130,11 @@ export function getIndexRecommendations(): Record<string, string[]> {
  */
 export async function exportIndexesToFile(filePath: string): Promise<boolean> {
   try {
-    const fs = await import('fs/promises');
+    const fs = await import("fs/promises");
     await fs.writeFile(filePath, generateFirestoreIndexesJson());
     return true;
   } catch (error) {
-    console.error('Erreur lors de l\'export des index:', error);
+    console.error("Erreur lors de l'export des index:", error);
     return false;
   }
 }

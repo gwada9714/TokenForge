@@ -1,14 +1,14 @@
-import { Auth, User } from 'firebase/auth';
-import { firebaseService } from '@/config/firebase/index';
-import { getFirebaseAuth, initializeAuth } from '@/lib/firebase/auth';
-import { logger } from '@/core/logger';
-import { AUTH_CONFIG } from '@/config/constants';
+import { Auth, User } from "firebase/auth";
+import { firebaseService } from "@/config/firebase/index";
+import { getFirebaseAuth, initializeAuth } from "@/lib/firebase/auth";
+import { logger } from "@/core/logger";
+import { AUTH_CONFIG } from "@/config/constants";
 
 export enum SessionState {
-  INITIALIZING = 'INITIALIZING',
-  AUTHENTICATED = 'AUTHENTICATED',
-  UNAUTHENTICATED = 'UNAUTHENTICATED',
-  ERROR = 'ERROR'
+  INITIALIZING = "INITIALIZING",
+  AUTHENTICATED = "AUTHENTICATED",
+  UNAUTHENTICATED = "UNAUTHENTICATED",
+  ERROR = "ERROR",
 }
 
 export class SessionService {
@@ -22,11 +22,11 @@ export class SessionService {
 
   private constructor() {
     // Initialisation différée de l'auth
-    this.initAuth().catch(error => {
+    this.initAuth().catch((error) => {
       logger.error({
-        category: 'Session',
-        message: 'Erreur lors de l\'initialisation de l\'authentification',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Session",
+        message: "Erreur lors de l'initialisation de l'authentification",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
     });
     this.setupSessionMonitoring();
@@ -47,12 +47,18 @@ export class SessionService {
    */
   private setupSessionMonitoring(): void {
     // Écouter les événements d'activité utilisateur
-    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    
-    activityEvents.forEach(event => {
+    const activityEvents = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+    ];
+
+    activityEvents.forEach((event) => {
       window.addEventListener(event, () => this.updateLastActivity());
     });
-    
+
     // Démarrer l'intervalle de vérification de session
     this.sessionCheckIntervalId = window.setInterval(() => {
       this.checkSessionActivity();
@@ -73,24 +79,24 @@ export class SessionService {
     if (this.currentState !== SessionState.AUTHENTICATED) {
       return; // Ne vérifier que si l'utilisateur est authentifié
     }
-    
+
     const now = Date.now();
     const inactiveTime = now - this.lastActivity;
-    
+
     // Si inactif pendant plus longtemps que la durée de session configurée
     if (inactiveTime > AUTH_CONFIG.SESSION_DURATION) {
       logger.warn({
-        category: 'Session',
-        message: 'Session expirée en raison d\'inactivité',
-        data: { inactiveTime, threshold: AUTH_CONFIG.SESSION_DURATION }
+        category: "Session",
+        message: "Session expirée en raison d'inactivité",
+        data: { inactiveTime, threshold: AUTH_CONFIG.SESSION_DURATION },
       });
-      
+
       // Déconnecter l'utilisateur
-      this.endSession().catch(error => {
+      this.endSession().catch((error) => {
         logger.error({
-          category: 'Session',
-          message: 'Erreur lors de la terminaison de session pour inactivité',
-          error: error instanceof Error ? error : new Error(String(error))
+          category: "Session",
+          message: "Erreur lors de la terminaison de session pour inactivité",
+          error: error instanceof Error ? error : new Error(String(error)),
         });
       });
     }
@@ -121,25 +127,25 @@ export class SessionService {
   async startSession(): Promise<void> {
     try {
       this.currentState = SessionState.INITIALIZING;
-      
+
       // S'assurer que Firebase est initialisé
       if (!firebaseService.isInitialized()) {
         await firebaseService.initialize();
       }
-      
+
       // S'assurer que l'authentification est initialisée
       if (!this.auth) {
         await this.initAuth();
       }
-      
+
       const auth = this.auth!; // Non-null assertion pour TypeScript
       const user: User | null = auth.currentUser;
 
       if (!user) {
         this.currentState = SessionState.UNAUTHENTICATED;
         logger.info({
-          category: 'Session',
-          message: 'Session non authentifiée'
+          category: "Session",
+          message: "Session non authentifiée",
         });
         return;
       }
@@ -149,9 +155,9 @@ export class SessionService {
         await user.getIdToken(true);
       } catch (error) {
         logger.error({
-          category: 'Session',
-          message: 'Token invalide lors du démarrage de la session',
-          error: error instanceof Error ? error : new Error(String(error))
+          category: "Session",
+          message: "Token invalide lors du démarrage de la session",
+          error: error instanceof Error ? error : new Error(String(error)),
         });
         this.currentState = SessionState.ERROR;
         throw error;
@@ -159,18 +165,18 @@ export class SessionService {
 
       this.currentState = SessionState.AUTHENTICATED;
       this.updateLastActivity(); // Mettre à jour le timestamp d'activité
-      
+
       logger.info({
-        category: 'Session',
-        message: 'Session démarrée avec succès',
-        data: { userId: user.uid }
+        category: "Session",
+        message: "Session démarrée avec succès",
+        data: { userId: user.uid },
       });
     } catch (error) {
       this.currentState = SessionState.ERROR;
       logger.error({
-        category: 'Session',
-        message: 'Erreur lors du démarrage de la session',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Session",
+        message: "Erreur lors du démarrage de la session",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -183,27 +189,27 @@ export class SessionService {
         window.clearTimeout(this.sessionTimeout);
         this.sessionTimeout = null;
       }
-      
+
       // Nettoyer les ressources de surveillance
       this.cleanupSessionMonitoring();
-      
+
       // S'assurer que l'authentification est initialisée
       if (!this.auth) {
         await this.initAuth();
       }
-      
+
       const auth = this.auth!; // Non-null assertion pour TypeScript
       await auth.signOut();
       this.currentState = SessionState.UNAUTHENTICATED;
       logger.info({
-        category: 'Session',
-        message: 'Session terminée avec succès'
+        category: "Session",
+        message: "Session terminée avec succès",
       });
     } catch (error) {
       logger.error({
-        category: 'Session',
-        message: 'Erreur lors de la terminaison de la session',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Session",
+        message: "Erreur lors de la terminaison de la session",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -216,8 +222,8 @@ export class SessionService {
     if (this.currentState === SessionState.AUTHENTICATED) {
       this.updateLastActivity();
       logger.debug({
-        category: 'Session',
-        message: 'Session prolongée'
+        category: "Session",
+        message: "Session prolongée",
       });
     }
   }
@@ -235,8 +241,9 @@ export class SessionService {
   public getCurrentUser(): User | null {
     if (!this.auth) {
       logger.warn({
-        category: 'Session',
-        message: 'Tentative d\'accès à l\'utilisateur avant initialisation de l\'auth'
+        category: "Session",
+        message:
+          "Tentative d'accès à l'utilisateur avant initialisation de l'auth",
       });
       return null;
     }
@@ -255,7 +262,7 @@ export class SessionService {
       if (!this.auth) {
         await this.initAuth();
       }
-      
+
       const auth = this.auth!; // Non-null assertion pour TypeScript
       const user = auth.currentUser;
       if (!user) {
@@ -268,9 +275,9 @@ export class SessionService {
       return true;
     } catch (error) {
       logger.error({
-        category: 'Session',
-        message: 'Erreur lors de la validation de la session',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Session",
+        message: "Erreur lors de la validation de la session",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       return false;
     }

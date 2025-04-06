@@ -1,8 +1,8 @@
-import { createContext } from 'react';
-import { TokenForgeAuthState } from '../types/auth';
-import { AuthAction } from '../actions/authActions';
-import { TokenForgeAuthActions } from '../actions/authActions'; // Assuming this type exists
-import { Partial, TokenForgeUser } from '../types/user'; // Assuming this type exists
+import { createContext } from "react";
+import { TokenForgeAuthState } from "../types/auth";
+import { AuthAction } from "../actions/authActions";
+import { TokenForgeAuthActions } from "../actions/authActions"; // Assuming this type exists
+import { Partial, TokenForgeUser } from "../types/user"; // Assuming this type exists
 
 interface TokenForgeAuthContextType extends TokenForgeAuthState {
   dispatch: React.Dispatch<AuthAction>;
@@ -20,4 +20,5 @@ interface TokenForgeAuthContextType extends TokenForgeAuthState {
   validateAdminAccess: () => boolean;
 }
 
-export const TokenForgeAuthContext = createContext<TokenForgeAuthContextType | null>(null);
+export const TokenForgeAuthContext =
+  createContext<TokenForgeAuthContextType | null>(null);

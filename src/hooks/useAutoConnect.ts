@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useAccount, useConnect } from 'wagmi';
+import { useEffect, useState } from "react";
+import { useAccount, useConnect } from "wagmi";
 
 interface AutoConnectOptions {
   enabled?: boolean;
@@ -23,20 +23,20 @@ export const useAutoConnect = (options: AutoConnectOptions = {}) => {
 
       try {
         // Vérifier si l'utilisateur a déjà autorisé la connexion
-        const accounts = await window.ethereum.request({ 
-          method: 'eth_accounts' 
-        }) as string[];
+        const accounts = (await window.ethereum.request({
+          method: "eth_accounts",
+        })) as string[];
 
         if (accounts.length > 0) {
           // Si des comptes sont déjà autorisés, on se connecte avec le premier connecteur disponible
-          const injectedConnector = connectors.find(c => c.id === 'injected');
+          const injectedConnector = connectors.find((c) => c.id === "injected");
           if (injectedConnector) {
             await connect({ connector: injectedConnector });
             onSuccess?.();
           }
         }
       } catch (error) {
-        console.error('Erreur lors de la connexion automatique:', error);
+        console.error("Erreur lors de la connexion automatique:", error);
         onError?.(error as Error);
       } finally {
         setIsAttempting(false);
@@ -47,6 +47,6 @@ export const useAutoConnect = (options: AutoConnectOptions = {}) => {
   }, [enabled, isConnected, connect, connectors, onSuccess, onError]);
 
   return {
-    isAttempting
+    isAttempting,
   };
-}; 
+};

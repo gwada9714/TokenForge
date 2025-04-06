@@ -1,5 +1,5 @@
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
 });
 
 /** @type {import('next').NextConfig} */
@@ -16,7 +16,7 @@ const nextConfig = {
   },
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ['@mui/material', '@mui/icons-material'],
+    optimizePackageImports: ["@mui/material", "@mui/icons-material"],
   },
   webpack: (config, { dev, isServer }) => {
     // Optimisations pour la production uniquement
@@ -25,7 +25,7 @@ const nextConfig = {
         ...config.optimization,
         minimize: true,
         splitChunks: {
-          chunks: 'all',
+          chunks: "all",
           minSize: 20000,
           maxSize: 244000,
           minChunks: 1,

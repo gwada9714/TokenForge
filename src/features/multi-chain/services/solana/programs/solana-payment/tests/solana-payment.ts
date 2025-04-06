@@ -2,7 +2,12 @@ import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { SolanaPayment } from "../target/types/solana_payment";
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, createMint, createAssociatedTokenAccount, mintTo } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  createMint,
+  createAssociatedTokenAccount,
+  mintTo,
+} from "@solana/spl-token";
 import { assert } from "chai";
 
 describe("solana-payment", () => {
@@ -10,7 +15,7 @@ describe("solana-payment", () => {
   anchor.setProvider(provider);
 
   const program = anchor.workspace.SolanaPayment as Program<SolanaPayment>;
-  
+
   let treasury: anchor.web3.Keypair;
   let paymentState: PublicKey;
   let paymentStateBump: number;
@@ -20,7 +25,7 @@ describe("solana-payment", () => {
 
   before(async () => {
     treasury = anchor.web3.Keypair.generate();
-    
+
     // Créer le compte de paiement PDA
     const [paymentStateKey, bump] = await PublicKey.findProgramAddress(
       [Buffer.from("payment_state")],
@@ -92,7 +97,9 @@ describe("solana-payment", () => {
     const sessionId = "test-session-1";
     const amount = new anchor.BN(1 * LAMPORTS_PER_SOL);
 
-    const treasuryBalanceBefore = await provider.connection.getBalance(treasury.publicKey);
+    const treasuryBalanceBefore = await provider.connection.getBalance(
+      treasury.publicKey
+    );
 
     await program.methods
       .processPayment(sessionId, amount)
@@ -105,8 +112,13 @@ describe("solana-payment", () => {
       })
       .rpc();
 
-    const treasuryBalanceAfter = await provider.connection.getBalance(treasury.publicKey);
-    assert.equal(treasuryBalanceAfter - treasuryBalanceBefore, amount.toNumber());
+    const treasuryBalanceAfter = await provider.connection.getBalance(
+      treasury.publicKey
+    );
+    assert.equal(
+      treasuryBalanceAfter - treasuryBalanceBefore,
+      amount.toNumber()
+    );
 
     const state = await program.account.paymentState.fetch(paymentState);
     assert.include(state.processedSessions, sessionId);
@@ -116,7 +128,8 @@ describe("solana-payment", () => {
     const sessionId = "test-session-2";
     const amount = new anchor.BN(10 * LAMPORTS_PER_SOL);
 
-    const treasuryBalanceBefore = await provider.connection.getTokenAccountBalance(treasuryTokenAccount);
+    const treasuryBalanceBefore =
+      await provider.connection.getTokenAccountBalance(treasuryTokenAccount);
 
     await program.methods
       .processPayment(sessionId, amount)
@@ -131,7 +144,8 @@ describe("solana-payment", () => {
       })
       .rpc();
 
-    const treasuryBalanceAfter = await provider.connection.getTokenAccountBalance(treasuryTokenAccount);
+    const treasuryBalanceAfter =
+      await provider.connection.getTokenAccountBalance(treasuryTokenAccount);
     assert.equal(
       treasuryBalanceAfter.value.amount - treasuryBalanceBefore.value.amount,
       amount.toString()
@@ -182,4 +196,4 @@ describe("solana-payment", () => {
       assert.include(error.toString(), "Montant invalide");
     }
   });
-}); 
+});

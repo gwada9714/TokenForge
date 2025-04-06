@@ -1,8 +1,15 @@
-import { BlockchainService } from '../services/BlockchainService';
-import { IPaymentService } from '../interfaces/IPaymentService';
-import { ITokenService } from '../interfaces/ITokenService';
-import { TokenConfig, DeploymentResult, TokenInfo, ValidationResult, LiquidityConfig, PaymentStatus } from '../types';
-import { parseEther } from 'viem';
+import { BlockchainService } from "../services/BlockchainService";
+import { IPaymentService } from "../interfaces/IPaymentService";
+import { ITokenService } from "../interfaces/ITokenService";
+import {
+  TokenConfig,
+  DeploymentResult,
+  TokenInfo,
+  ValidationResult,
+  LiquidityConfig,
+  PaymentStatus,
+} from "../types";
+import { parseEther } from "viem";
 
 /**
  * Service blockchain spécifique à Arbitrum
@@ -10,7 +17,7 @@ import { parseEther } from 'viem';
  */
 export class ArbitrumBlockchainService extends BlockchainService {
   constructor(walletProvider?: any) {
-    super('arbitrum', walletProvider);
+    super("arbitrum", walletProvider);
   }
 
   // Méthodes spécifiques à Arbitrum si nécessaire
@@ -29,16 +36,16 @@ export class ArbitrumBlockchainService extends BlockchainService {
     // Pour l'instant, on retourne des valeurs simulées
     const blockNumber = await this.publicClient.getBlockNumber();
     const gasPrice = await this.getGasPrice();
-    
+
     // Simuler les informations L1 (ces valeurs seraient obtenues via des appels spécifiques à Arbitrum)
     const l1BlockNumber = blockNumber - 100n; // Simuler un décalage entre L1 et L2
     const l1GasPrice = gasPrice * 5n; // L1 gas price est généralement plus élevé
-    
+
     return {
       l2BlockNumber: blockNumber,
       l1BlockNumber,
       l2GasPrice: gasPrice,
-      l1GasPrice
+      l1GasPrice,
     };
   }
 }
@@ -54,7 +61,10 @@ export class ArbitrumPaymentService implements IPaymentService {
     this.blockchainService = new ArbitrumBlockchainService(walletProvider);
   }
 
-  async createPaymentSession(amount: bigint, currency: string): Promise<string> {
+  async createPaymentSession(
+    amount: bigint,
+    currency: string
+  ): Promise<string> {
     // Implémentation pour Arbitrum
     // Génère un identifiant de session et stocke les détails de paiement
     const sessionId = `arb-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -64,7 +74,7 @@ export class ArbitrumPaymentService implements IPaymentService {
 
   async getPaymentStatus(sessionId: string): Promise<PaymentStatus> {
     // Vérifie le statut du paiement
-    return { status: 'pending', details: { sessionId } };
+    return { status: "pending", details: { sessionId } };
   }
 
   async verifyPayment(transactionHash: string): Promise<boolean> {
@@ -81,12 +91,12 @@ export class ArbitrumPaymentService implements IPaymentService {
     // Arbitrum a généralement des frais plus bas qu'Ethereum mais variables selon la congestion L1
     const l2Info = await this.blockchainService.getL2Info();
     const gasPrice = l2Info.l2GasPrice;
-    
+
     // Estimation basique, à affiner selon les besoins réels
     // Pour Arbitrum, on doit prendre en compte les frais L2 et une partie des frais L1
     const l2GasCost = gasPrice * 21000n; // coût de base d'une transaction L2
     const l1DataFee = (l2Info.l1GasPrice * 1500n) / 10n; // estimation simplifiée des frais de données L1
-    
+
     return l2GasCost + l1DataFee;
   }
 }
@@ -108,17 +118,17 @@ export class ArbitrumTokenService implements ITokenService {
     // Logique de déploiement de token sur Arbitrum
     // Utilise walletClient pour signer et envoyer la transaction
     const { walletClient } = this.blockchainService.getProvider();
-    
+
     if (!walletClient) {
-      throw new Error('Wallet client not available for deployment');
+      throw new Error("Wallet client not available for deployment");
     }
 
     // Récupérer l'adresse du compte
     const accounts = await walletClient.getAddresses();
     if (!accounts || accounts.length === 0) {
-      throw new Error('No accounts available in wallet');
+      throw new Error("No accounts available in wallet");
     }
-    
+
     // Exemple simplifié - à adapter selon la structure réelle du contrat
     const hash = await walletClient.deployContract({
       abi: this.tokenFactoryAbi,
@@ -127,14 +137,14 @@ export class ArbitrumTokenService implements ITokenService {
         tokenConfig.name,
         tokenConfig.symbol,
         tokenConfig.decimals,
-        parseEther(tokenConfig.initialSupply.toString())
+        parseEther(tokenConfig.initialSupply.toString()),
       ],
-      bytecode: '0x60806040...' // Bytecode du contrat (à remplacer par le vrai bytecode)
+      bytecode: "0x60806040...", // Bytecode du contrat (à remplacer par le vrai bytecode)
     });
 
     return {
       transactionHash: hash,
-      tokenAddress: '', // À récupérer après confirmation
+      tokenAddress: "", // À récupérer après confirmation
       chainId: await this.blockchainService.getNetworkId(),
     };
   }
@@ -142,8 +152,8 @@ export class ArbitrumTokenService implements ITokenService {
   async getTokenInfo(tokenAddress: string): Promise<TokenInfo> {
     // Récupérer les informations d'un token déployé
     return {
-      name: '',
-      symbol: '',
+      name: "",
+      symbol: "",
       totalSupply: 0n,
       decimals: 18,
       // Autres informations...
@@ -154,12 +164,12 @@ export class ArbitrumTokenService implements ITokenService {
     // Estimer le coût de déploiement
     // Pour Arbitrum, on doit prendre en compte les frais L2 et une partie des frais L1
     const l2Info = await this.blockchainService.getL2Info();
-    
+
     // Estimation simplifiée - à affiner selon les besoins réels
     const deploymentGas = 2000000n; // Estimation du gas pour le déploiement
     const l2GasCost = l2Info.l2GasPrice * deploymentGas;
     const l1DataFee = (l2Info.l1GasPrice * 100000n) / 10n; // estimation simplifiée des frais de données L1
-    
+
     return l2GasCost + l1DataFee;
   }
 
@@ -167,23 +177,34 @@ export class ArbitrumTokenService implements ITokenService {
     // Validation de la configuration du token selon les règles Arbitrum
     const errors = [];
 
-    if (!tokenConfig.name || tokenConfig.name.length < 1 || tokenConfig.name.length > 50) {
-      errors.push('Token name must be between 1 and 50 characters');
+    if (
+      !tokenConfig.name ||
+      tokenConfig.name.length < 1 ||
+      tokenConfig.name.length > 50
+    ) {
+      errors.push("Token name must be between 1 and 50 characters");
     }
 
-    if (!tokenConfig.symbol || tokenConfig.symbol.length < 1 || tokenConfig.symbol.length > 10) {
-      errors.push('Token symbol must be between 1 and 10 characters');
+    if (
+      !tokenConfig.symbol ||
+      tokenConfig.symbol.length < 1 ||
+      tokenConfig.symbol.length > 10
+    ) {
+      errors.push("Token symbol must be between 1 and 10 characters");
     }
 
     // Ajoutez d'autres validations spécifiques à Arbitrum
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
-  async setupAutoLiquidity(tokenAddress: string, config: LiquidityConfig): Promise<boolean> {
+  async setupAutoLiquidity(
+    tokenAddress: string,
+    config: LiquidityConfig
+  ): Promise<boolean> {
     // Configuration de la liquidité automatique sur SushiSwap ou Camelot (DEX principaux sur Arbitrum)
     // Implémentation à définir
     return true;

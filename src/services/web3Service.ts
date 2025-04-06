@@ -4,7 +4,7 @@ import { TokenFactoryABI } from "../contracts/abi/TokenFactory";
 // Fonction pour obtenir le contrat TokenFactory
 export const getTokenFactoryContract = (
   address: string,
-  signer: ethers.Signer,
+  signer: ethers.Signer
 ): ethers.Contract => {
   return new ethers.Contract(address, TokenFactoryABI, signer);
 };
@@ -15,14 +15,14 @@ export const createToken = async (
   name: string,
   symbol: string,
   initialSupply: string,
-  decimals: number,
+  decimals: number
 ): Promise<ContractTransaction> => {
   try {
     const tx = await contract.createToken(
       name,
       symbol,
       initialSupply,
-      decimals,
+      decimals
     );
     return await tx.wait();
   } catch (error) {

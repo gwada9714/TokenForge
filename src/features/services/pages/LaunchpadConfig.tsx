@@ -1,10 +1,10 @@
-import React from 'react';
-import styled from 'styled-components';
-import { useForm } from 'react-hook-form';
-import { Card, Button, Input, Select, Switch, Alert } from '@/components/ui';
-import { THEME_CONFIG } from '@/config/constants/theme';
-import { useService } from '../hooks/useService';
-import { LaunchpadConfig as ILaunchpadConfig } from '../types/services';
+import React from "react";
+import styled from "styled-components";
+import { useForm } from "react-hook-form";
+import { Card, Button, Input, Select, Switch, Alert } from "@/components/ui";
+import { THEME_CONFIG } from "@/config/constants/theme";
+import { useService } from "../hooks/useService";
+import { LaunchpadConfig as ILaunchpadConfig } from "../types/services";
 
 const Container = styled.div`
   max-width: 800px;
@@ -33,21 +33,26 @@ const Label = styled.label`
 `;
 
 export const LaunchpadConfig: React.FC = () => {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<ILaunchpadConfig>();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<ILaunchpadConfig>();
   const { configureService, error, isProcessing } = useService();
 
   const onSubmit = async (data: ILaunchpadConfig) => {
     try {
-      await configureService('LAUNCHPAD', data);
+      await configureService("LAUNCHPAD", data);
     } catch (err) {
-      console.error('Erreur lors de la configuration du launchpad:', err);
+      console.error("Erreur lors de la configuration du launchpad:", err);
     }
   };
 
   return (
     <Container>
       <h2>Configuration du Launchpad</h2>
-      
+
       {error && (
         <Alert type="error" style={{ marginBottom: THEME_CONFIG.spacing.md }}>
           {error}
@@ -60,14 +65,18 @@ export const LaunchpadConfig: React.FC = () => {
           <FormGroup>
             <Label>Nom du Token</Label>
             <Input
-              {...register('tokenName', { required: 'Le nom du token est requis' })}
+              {...register("tokenName", {
+                required: "Le nom du token est requis",
+              })}
               error={errors.tokenName?.message}
             />
           </FormGroup>
           <FormGroup>
             <Label>Symbole</Label>
             <Input
-              {...register('tokenSymbol', { required: 'Le symbole est requis' })}
+              {...register("tokenSymbol", {
+                required: "Le symbole est requis",
+              })}
               error={errors.tokenSymbol?.message}
             />
           </FormGroup>
@@ -75,7 +84,9 @@ export const LaunchpadConfig: React.FC = () => {
             <Label>Supply Total</Label>
             <Input
               type="number"
-              {...register('totalSupply', { required: 'Le supply total est requis' })}
+              {...register("totalSupply", {
+                required: "Le supply total est requis",
+              })}
               error={errors.totalSupply?.message}
             />
           </FormGroup>
@@ -87,7 +98,7 @@ export const LaunchpadConfig: React.FC = () => {
             <Label>Période de Cliff (jours)</Label>
             <Input
               type="number"
-              {...register('vestingCliff', { min: 0 })}
+              {...register("vestingCliff", { min: 0 })}
               error={errors.vestingCliff?.message}
             />
           </FormGroup>
@@ -95,7 +106,7 @@ export const LaunchpadConfig: React.FC = () => {
             <Label>Durée du Vesting (jours)</Label>
             <Input
               type="number"
-              {...register('vestingDuration', { min: 0 })}
+              {...register("vestingDuration", { min: 0 })}
               error={errors.vestingDuration?.message}
             />
           </FormGroup>
@@ -105,16 +116,16 @@ export const LaunchpadConfig: React.FC = () => {
           <SectionTitle>Configuration de la Whitelist</SectionTitle>
           <FormGroup>
             <Switch
-              {...register('enableWhitelist')}
+              {...register("enableWhitelist")}
               label="Activer la whitelist"
             />
           </FormGroup>
-          {watch('enableWhitelist') && (
+          {watch("enableWhitelist") && (
             <FormGroup>
               <Label>Limite par Wallet (ETH)</Label>
               <Input
                 type="number"
-                {...register('whitelistLimit')}
+                {...register("whitelistLimit")}
                 error={errors.whitelistLimit?.message}
               />
             </FormGroup>
@@ -126,11 +137,11 @@ export const LaunchpadConfig: React.FC = () => {
           <FormGroup>
             <Label>Niveau d'Audit</Label>
             <Select
-              {...register('auditLevel')}
+              {...register("auditLevel")}
               options={[
-                { value: 'basic', label: 'Basic' },
-                { value: 'standard', label: 'Standard' },
-                { value: 'premium', label: 'Premium' },
+                { value: "basic", label: "Basic" },
+                { value: "standard", label: "Standard" },
+                { value: "premium", label: "Premium" },
               ]}
             />
           </FormGroup>
@@ -142,9 +153,11 @@ export const LaunchpadConfig: React.FC = () => {
           fullWidth
           disabled={isProcessing}
         >
-          {isProcessing ? 'Configuration en cours...' : 'Configurer le Launchpad'}
+          {isProcessing
+            ? "Configuration en cours..."
+            : "Configurer le Launchpad"}
         </Button>
       </form>
     </Container>
   );
-}; 
+};

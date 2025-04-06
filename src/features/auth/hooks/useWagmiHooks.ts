@@ -1,4 +1,4 @@
-import { useWalletClient, useAccount, useChainId, useConnect } from 'wagmi';
+import { useWalletClient, useAccount, useChainId, useConnect } from "wagmi";
 
 export function useWagmiHooks() {
   const { data: walletClient } = useWalletClient();
@@ -14,7 +14,7 @@ export function useWagmiHooks() {
     chain: chainId ? { id: chainId } : null,
     switchNetwork: async ({ chainId }: { chainId: number }) => {
       // Implémentation de switchNetwork avec wagmi
-      console.log('Switching to chain:', chainId);
-    }
+      console.log("Switching to chain:", chainId);
+    },
   };
 }

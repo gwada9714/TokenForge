@@ -1,17 +1,17 @@
-import { WalletClient, createWalletClient, custom } from 'viem';
-import { SUPPORTED_CHAINS } from '../../../types/common';
-import { notificationService } from '../../../services/notification/notificationService';
-import { tabSyncService } from '../../../services/sync/tabSyncService';
-import { AUTH_ACTIONS } from '../constants';
-import { logger } from '../../../core/logger';
-import { TabSyncMessage } from '../../../types/tabSync';
-import { BaseWalletState } from '../../../types/baseWalletState';
+import { WalletClient, createWalletClient, custom } from "viem";
+import { SUPPORTED_CHAINS } from "../../../types/common";
+import { notificationService } from "../../../services/notification/notificationService";
+import { tabSyncService } from "../../../services/sync/tabSyncService";
+import { AUTH_ACTIONS } from "../constants";
+import { logger } from "../../../core/logger";
+import { TabSyncMessage } from "../../../types/tabSync";
+import { BaseWalletState } from "../../../types/baseWalletState";
 
-const LOG_CATEGORY = 'WalletReconnectionService';
+const LOG_CATEGORY = "WalletReconnectionService";
 
 const firebaseConfig = {
-    apiKey: "AlzaSyAWCGLD1B4aTGRdsaA-Xa-anx4EJ0ZAA",
-    // autres paramètres...
+  apiKey: "AlzaSyAWCGLD1B4aTGRdsaA-Xa-anx4EJ0ZAA",
+  // autres paramètres...
 };
 
 export interface WalletState extends BaseWalletState {
@@ -58,18 +58,18 @@ class WalletReconnectionService {
 
   async startReconnection(): Promise<void> {
     if (this.isReconnecting || this.isConnected) return;
-    
+
     this.isReconnecting = true;
     try {
       await this.attemptReconnection();
     } catch (error) {
-      this.handleError(error, 'startReconnection');
+      this.handleError(error, "startReconnection");
       if (this.reconnectionAttempts < this.MAX_RECONNECTION_ATTEMPTS) {
         this.scheduleReconnection();
       } else {
-        notificationService.error('Échec de la reconnexion au portefeuille', { 
+        notificationService.error("Échec de la reconnexion au portefeuille", {
           autoClose: 3000,
-          hideProgressBar: false
+          hideProgressBar: false,
         });
       }
     } finally {
@@ -81,8 +81,11 @@ class WalletReconnectionService {
     if (this.reconnectionTimeout) {
       clearTimeout(this.reconnectionTimeout);
     }
-    
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectionAttempts), 30000);
+
+    const delay = Math.min(
+      1000 * Math.pow(2, this.reconnectionAttempts),
+      30000
+    );
     this.reconnectionTimeout = setTimeout(() => {
       this.reconnectionAttempts++;
       this.startReconnection();
@@ -91,33 +94,33 @@ class WalletReconnectionService {
 
   async attemptReconnection(): Promise<void> {
     if (!window.ethereum) {
-      throw new Error('Aucun fournisseur Ethereum trouvé');
+      throw new Error("Aucun fournisseur Ethereum trouvé");
     }
 
     try {
       const walletClient = createWalletClient({
-        transport: custom(window.ethereum)
+        transport: custom(window.ethereum),
       });
 
       const [address] = await walletClient.requestAddresses();
       const chainId = await walletClient.getChainId();
 
       await this.handleWalletConnection(address, chainId, walletClient);
-      
+
       // Vérifier si le réseau est supporté
       if (!(chainId in SUPPORTED_CHAINS)) {
         notificationService.warning(
-          'Le réseau actuel n\'est pas supporté par TokenForge',
-          { 
+          "Le réseau actuel n'est pas supporté par TokenForge",
+          {
             autoClose: 5000,
-            hideProgressBar: false
+            hideProgressBar: false,
           }
         );
       } else {
         this.reconnectionAttempts = 0; // Réinitialiser le compteur en cas de succès
-        notificationService.success('Portefeuille connecté avec succès', { 
+        notificationService.success("Portefeuille connecté avec succès", {
           autoClose: 3000,
-          hideProgressBar: false
+          hideProgressBar: false,
         });
       }
 
@@ -125,10 +128,10 @@ class WalletReconnectionService {
       this.broadcastWalletState({
         address,
         chainId,
-        isConnected: true
+        isConnected: true,
       });
     } catch (error) {
-      this.handleError(error, 'attemptReconnection');
+      this.handleError(error, "attemptReconnection");
       throw error;
     }
   }
@@ -155,14 +158,18 @@ class WalletReconnectionService {
       } else {
         const chainId = await this.walletClient?.getChainId();
         if (chainId) {
-          await this.handleWalletConnection(accounts[0], chainId, this.walletClient!);
+          await this.handleWalletConnection(
+            accounts[0],
+            chainId,
+            this.walletClient!
+          );
         }
       }
     };
 
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
+    window.ethereum.on("accountsChanged", handleAccountsChanged);
     this.cleanupListeners.push(() => {
-      window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
+      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
     });
   }
 
@@ -172,11 +179,11 @@ class WalletReconnectionService {
     this.chainId = null;
     this.walletClient = null;
     this.callbacks?.onDisconnect();
-    
+
     this.broadcastWalletState({
       address: null,
       chainId: null,
-      isConnected: false
+      isConnected: false,
     });
   }
 
@@ -186,15 +193,15 @@ class WalletReconnectionService {
       payload: { state },
       timestamp: Date.now(),
       tabId: this.tabId,
-      priority: 800
+      priority: 800,
     });
   }
 
   private handleError(error: unknown, context: string): void {
     logger.error(LOG_CATEGORY, {
       message: `Erreur dans ${context}`,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      context
+      error: error instanceof Error ? error.message : "Unknown error",
+      context,
     });
     this.callbacks?.onError?.(error);
   }
@@ -203,7 +210,7 @@ class WalletReconnectionService {
     if (this.reconnectionTimeout) {
       clearTimeout(this.reconnectionTimeout);
     }
-    this.cleanupListeners.forEach(cleanup => cleanup());
+    this.cleanupListeners.forEach((cleanup) => cleanup());
     this.cleanupListeners = [];
   }
 
@@ -226,11 +233,15 @@ class WalletReconnectionService {
 
     const handleNetworkChange = async (chainId: string) => {
       const numericChainId = parseInt(chainId, 16);
-      
+
       if (this.isSupportedChain(numericChainId)) {
-        notificationService.success(`Réseau changé : ${SUPPORTED_CHAINS[numericChainId as SupportedChainId]}`);
+        notificationService.success(
+          `Réseau changé : ${
+            SUPPORTED_CHAINS[numericChainId as SupportedChainId]
+          }`
+        );
       } else {
-        notificationService.warning('Réseau non supporté par TokenForge');
+        notificationService.warning("Réseau non supporté par TokenForge");
       }
 
       if (this.chainId !== numericChainId) {
@@ -239,9 +250,9 @@ class WalletReconnectionService {
       }
     };
 
-    window.ethereum.on('chainChanged', handleNetworkChange);
+    window.ethereum.on("chainChanged", handleNetworkChange);
     this.cleanupListeners.push(() => {
-      window.ethereum?.removeListener('chainChanged', handleNetworkChange);
+      window.ethereum?.removeListener("chainChanged", handleNetworkChange);
     });
   }
 
@@ -262,21 +273,22 @@ class WalletReconnectionService {
 
   async handleReconnection(address: string): Promise<void> {
     if (!window.ethereum) {
-      throw new Error('Aucun fournisseur Ethereum trouvé');
+      throw new Error("Aucun fournisseur Ethereum trouvé");
     }
 
     try {
       const walletClient = createWalletClient({
-        transport: custom(window.ethereum)
+        transport: custom(window.ethereum),
       });
 
       const chainId = await walletClient.getChainId();
       await this.handleWalletConnection(address, chainId, walletClient);
     } catch (error) {
-      this.handleError(error, 'handleReconnection');
+      this.handleError(error, "handleReconnection");
       throw error;
     }
   }
 }
 
-export const walletReconnectionService = WalletReconnectionService.getInstance();
+export const walletReconnectionService =
+  WalletReconnectionService.getInstance();

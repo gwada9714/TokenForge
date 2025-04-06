@@ -27,7 +27,7 @@ const DeploymentStatus: React.FC<DeploymentStatusProps> = ({
     try {
       const updatedStatus = await getDeploymentStatus(
         status.txHash!,
-        publicClient,
+        publicClient
       );
       setStatus(updatedStatus);
     } catch (error) {

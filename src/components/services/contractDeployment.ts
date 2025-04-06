@@ -3,10 +3,10 @@
  */
 
 export enum DeploymentStatus {
-  PENDING = 'PENDING',
-  DEPLOYING = 'DEPLOYING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED'
+  PENDING = "PENDING",
+  DEPLOYING = "DEPLOYING",
+  SUCCESS = "SUCCESS",
+  FAILED = "FAILED",
 }
 
 export interface DeploymentResult {
@@ -34,18 +34,18 @@ export const getDeploymentStatus = async (
     return {
       status: DeploymentStatus.SUCCESS,
       txHash,
-      contractAddress: '0x' + '1'.repeat(40),
+      contractAddress: "0x" + "1".repeat(40),
       blockNumber: 12345678,
       blockTimestamp: Date.now() / 1000,
-      gasUsed: '500000',
-      networkFee: '0.05'
+      gasUsed: "500000",
+      networkFee: "0.05",
     };
   } catch (error) {
-    console.error('Error getting deployment status:', error);
+    console.error("Error getting deployment status:", error);
     return {
       status: DeploymentStatus.FAILED,
       txHash,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };
@@ -78,18 +78,21 @@ export const deployTokenContract = async (
   try {
     // In a real implementation, this would deploy the contract using the tokenConfig and signer
     // For now, we'll simulate a successful deployment
-    console.log(`Deploying token ${tokenConfig.name} with signer ${signer.address}`);
-    const txHash = '0x' + Math.random().toString(16).substring(2) + '0'.repeat(40);
-    
+    console.log(
+      `Deploying token ${tokenConfig.name} with signer ${signer.address}`
+    );
+    const txHash =
+      "0x" + Math.random().toString(16).substring(2) + "0".repeat(40);
+
     return {
       status: DeploymentStatus.PENDING,
-      txHash
+      txHash,
     };
   } catch (error) {
-    console.error('Error deploying token contract:', error);
+    console.error("Error deploying token contract:", error);
     return {
       status: DeploymentStatus.FAILED,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };
@@ -111,13 +114,13 @@ export const verifyContract = async (
   _contractAddress: string,
   _contractArgs: ContractArg[]
 ): Promise<boolean> => {
-/* eslint-enable @typescript-eslint/no-unused-vars */
+  /* eslint-enable @typescript-eslint/no-unused-vars */
   try {
     // In a real implementation, this would verify the contract on the block explorer
     // For now, we'll simulate a successful verification
     return true;
   } catch (error) {
-    console.error('Error verifying contract:', error);
+    console.error("Error verifying contract:", error);
     return false;
   }
 };

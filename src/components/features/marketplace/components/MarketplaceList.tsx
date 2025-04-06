@@ -1,26 +1,14 @@
-import React, { useEffect } from 'react';
-import {
-  Box,
-  Grid,
-  Typography,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import { useMarketplace } from '../hooks/useMarketplace';
-import { MarketplaceItem as MarketplaceItemType } from '../types';
-import { MarketplaceFilters } from './MarketplaceFilters';
-import { MarketplaceStats } from './MarketplaceStats';
-import { MarketplaceItem } from './MarketplaceItem';
+import React, { useEffect } from "react";
+import { Box, Grid, Typography, CircularProgress, Alert } from "@mui/material";
+import { useMarketplace } from "../hooks/useMarketplace";
+import { MarketplaceItem as MarketplaceItemType } from "../types";
+import { MarketplaceFilters } from "./MarketplaceFilters";
+import { MarketplaceStats } from "./MarketplaceStats";
+import { MarketplaceItem } from "./MarketplaceItem";
 
 export const MarketplaceList: React.FC = () => {
-  const {
-    items,
-    stats,
-    isLoading,
-    error,
-    loadItems,
-    loadStats,
-  } = useMarketplace();
+  const { items, stats, isLoading, error, loadItems, loadStats } =
+    useMarketplace();
 
   useEffect(() => {
     loadItems();
@@ -29,7 +17,12 @@ export const MarketplaceList: React.FC = () => {
 
   if (isLoading && items.length === 0) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="200px"
+      >
         <CircularProgress />
       </Box>
     );
@@ -47,7 +40,7 @@ export const MarketplaceList: React.FC = () => {
     <Box>
       <MarketplaceStats stats={stats} />
       <MarketplaceFilters onFilter={loadItems} />
-      
+
       {items.length === 0 ? (
         <Typography variant="body1" textAlign="center" sx={{ mt: 4 }}>
           Aucun item disponible dans le marketplace

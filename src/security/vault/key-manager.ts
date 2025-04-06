@@ -1,4 +1,4 @@
-import vault from 'node-vault';
+import vault from "node-vault";
 
 interface VaultConfig {
   address: string;
@@ -16,7 +16,7 @@ export class KeyManager {
   constructor(config: VaultConfig) {
     this.config = config;
     this.client = vault({
-      apiVersion: 'v1',
+      apiVersion: "v1",
       endpoint: config.address,
       token: config.token,
     });
@@ -26,14 +26,14 @@ export class KeyManager {
     try {
       // Vérification de la connexion à Vault
       await this.client.health();
-      
+
       // Configuration initiale du moteur de secrets
       await this.setupSecretsEngine();
-      
+
       // Récupération de la clé initiale
       await this.rotateKey();
     } catch (error) {
-      console.error('Error initializing Vault key manager:', error);
+      console.error("Error initializing Vault key manager:", error);
       throw error;
     }
   }
@@ -44,8 +44,8 @@ export class KeyManager {
     } catch {
       await this.client.mount({
         mount_point: this.config.mount,
-        type: 'kv',
-        options: { version: '2' }
+        type: "kv",
+        options: { version: "2" },
       });
     }
   }
@@ -59,7 +59,7 @@ export class KeyManager {
 
   private shouldRotate(): boolean {
     if (!this.keyExpiry) return true;
-    
+
     // Rotation si moins de 1 heure avant l'expiration
     const oneHour = 60 * 60 * 1000;
     return Date.now() + oneHour >= this.keyExpiry.getTime();
@@ -85,9 +85,9 @@ export class KeyManager {
       this.currentKey = newKey;
       this.keyExpiry = expiryTime;
 
-      console.debug('Key rotated successfully');
+      console.debug("Key rotated successfully");
     } catch (error) {
-      console.error('Error rotating key:', error);
+      console.error("Error rotating key:", error);
       throw error;
     }
   }
@@ -102,8 +102,8 @@ export class KeyManager {
 
 // Instance singleton pour la gestion des clés
 export const keyManager = new KeyManager({
-  address: process.env.VITE_VAULT_ADDR || 'http://localhost:8200',
-  token: process.env.VITE_VAULT_TOKEN || '',
-  mount: 'tokenforge',
-  keyPath: 'csp-keys',
+  address: process.env.VITE_VAULT_ADDR || "http://localhost:8200",
+  token: process.env.VITE_VAULT_TOKEN || "",
+  mount: "tokenforge",
+  keyPath: "csp-keys",
 });

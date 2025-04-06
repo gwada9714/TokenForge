@@ -11,58 +11,70 @@ class PricingService {
       polygon: 200,
       avalanche: 250,
       arbitrum: 350,
-      solana: 200
+      solana: 200,
     };
-    
+
     // Plans d'abonnement
     this.subscriptionPlans = {
       basic: {
         monthly: 29.99,
-        annual: 299.90, // 2 mois gratuits
-        features: ['Création de token standard', 'Support par email']
+        annual: 299.9, // 2 mois gratuits
+        features: ["Création de token standard", "Support par email"],
       },
       pro: {
         monthly: 99.99,
-        annual: 999.90, // 2 mois gratuits
-        features: ['Création de token avancé', 'Support prioritaire', 'Audit de sécurité de base']
+        annual: 999.9, // 2 mois gratuits
+        features: [
+          "Création de token avancé",
+          "Support prioritaire",
+          "Audit de sécurité de base",
+        ],
       },
       enterprise: {
         monthly: 299.99,
-        annual: 2999.90, // 2 mois gratuits
-        features: ['Tokens illimités', 'Support dédié', 'Audit de sécurité complet', 'Déploiement multi-chaînes']
-      }
+        annual: 2999.9, // 2 mois gratuits
+        features: [
+          "Tokens illimités",
+          "Support dédié",
+          "Audit de sécurité complet",
+          "Déploiement multi-chaînes",
+        ],
+      },
     };
-    
+
     // Services premium
     this.premiumServices = {
       audit: {
-        id: 'security-audit',
-        name: 'Audit de sécurité',
+        id: "security-audit",
+        name: "Audit de sécurité",
         price: 1500,
-        description: 'Audit complet de la sécurité de votre token et de votre smart contract'
+        description:
+          "Audit complet de la sécurité de votre token et de votre smart contract",
       },
       marketing: {
-        id: 'marketing-package',
-        name: 'Package marketing',
+        id: "marketing-package",
+        name: "Package marketing",
         price: 2000,
-        description: 'Promotion de votre token sur les réseaux sociaux et les plateformes spécialisées'
+        description:
+          "Promotion de votre token sur les réseaux sociaux et les plateformes spécialisées",
       },
       liquidity: {
-        id: 'liquidity-provision',
-        name: 'Fourniture de liquidité',
+        id: "liquidity-provision",
+        name: "Fourniture de liquidité",
         price: 5000,
-        description: 'Mise en place de pools de liquidité sur les principales DEX'
-      }
+        description:
+          "Mise en place de pools de liquidité sur les principales DEX",
+      },
     };
-    
+
     // Codes promo
     this.promoCodes = {
-      'LAUNCH2025': 0.2, // 20% de réduction
-      'WELCOME': 0.1, // 10% de réduction
-      'EARLYBIRD': 0.15 // 15% de réduction
+      LAUNCH2025: 0.2, // 20% de réduction
+      WELCOME: 0.1, // 10% de réduction
+      EARLYBIRD: 0.15, // 15% de réduction
     };
   }
-  
+
   /**
    * Récupère le prix de création de token pour un réseau donné
    * @param {string} network Nom du réseau blockchain
@@ -70,14 +82,14 @@ class PricingService {
    */
   async getTokenCreationPrice(network) {
     const networkLower = network.toLowerCase();
-    
+
     if (!this.tokenCreationPrices[networkLower]) {
       throw new Error(`Network ${network} not supported`);
     }
-    
+
     return this.tokenCreationPrices[networkLower];
   }
-  
+
   /**
    * Calcule le prix de création de token pour un utilisateur
    * @param {string} network Nom du réseau blockchain
@@ -87,15 +99,15 @@ class PricingService {
   async calculateTokenCreationPrice(network, userId) {
     // Prix de base
     const basePrice = await this.getTokenCreationPrice(network);
-    
+
     // Dans une implémentation réelle, on vérifierait le type d'abonnement de l'utilisateur
     // et on appliquerait des réductions en conséquence
     // Pour la démo, on simule un utilisateur avec un abonnement pro (20% de réduction)
     const discount = 0.2;
-    
+
     return basePrice * (1 - discount);
   }
-  
+
   /**
    * Récupère un plan d'abonnement
    * @param {string} planId Identifiant du plan
@@ -105,13 +117,13 @@ class PricingService {
     if (!this.subscriptionPlans[planId]) {
       throw new Error(`Subscription plan ${planId} not found`);
     }
-    
+
     return {
       id: planId,
-      ...this.subscriptionPlans[planId]
+      ...this.subscriptionPlans[planId],
     };
   }
-  
+
   /**
    * Récupère un service premium
    * @param {string} serviceId Identifiant du service
@@ -123,10 +135,10 @@ class PricingService {
         return this.premiumServices[key];
       }
     }
-    
+
     throw new Error(`Premium service ${serviceId} not found`);
   }
-  
+
   /**
    * Récupère un article de la marketplace
    * @param {string} itemId Identifiant de l'article
@@ -137,12 +149,13 @@ class PricingService {
     // Pour la démo, on simule un article
     return {
       id: itemId,
-      name: 'Template de token ERC20 avancé',
+      name: "Template de token ERC20 avancé",
       price: 99.99,
-      description: 'Template de token ERC20 avec fonctionnalités avancées (taxation, anti-whale, etc.)'
+      description:
+        "Template de token ERC20 avec fonctionnalités avancées (taxation, anti-whale, etc.)",
     };
   }
-  
+
   /**
    * Récupère la réduction associée à un code promo
    * @param {string} code Code promo
@@ -150,12 +163,12 @@ class PricingService {
    */
   async getPromoCodeDiscount(code) {
     if (!code) return 0;
-    
+
     const upperCode = code.toUpperCase();
-    
+
     return this.promoCodes[upperCode] || 0;
   }
-  
+
   /**
    * Récupère la grille tarifaire complète
    * @returns {Promise<Object>} Grille tarifaire
@@ -164,7 +177,7 @@ class PricingService {
     return {
       tokenCreation: this.tokenCreationPrices,
       subscriptionPlans: this.subscriptionPlans,
-      premiumServices: this.premiumServices
+      premiumServices: this.premiumServices,
     };
   }
 }

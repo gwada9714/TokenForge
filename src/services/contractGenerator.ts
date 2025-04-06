@@ -3,17 +3,27 @@ import { compile } from "./solc-cdn-loader";
 
 const generateSoliditySource = (
   baseConfig: TokenBaseConfig,
-  advancedConfig: TokenAdvancedConfig,
+  advancedConfig: TokenAdvancedConfig
 ): string => {
   return `
     // SPDX-License-Identifier: MIT
     pragma solidity ^0.8.20;
 
     import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-    ${advancedConfig.burnable ? 'import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";' : ""}
-    ${advancedConfig.mintable ? 'import "@openzeppelin/contracts/access/Ownable.sol";' : ""}
+    ${
+      advancedConfig.burnable
+        ? 'import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";'
+        : ""
+    }
+    ${
+      advancedConfig.mintable
+        ? 'import "@openzeppelin/contracts/access/Ownable.sol";'
+        : ""
+    }
 
-    contract ${baseConfig.name}Token is ERC20${advancedConfig.burnable ? ", ERC20Burnable" : ""}${advancedConfig.mintable ? ", Ownable" : ""} {
+    contract ${baseConfig.name}Token is ERC20${
+    advancedConfig.burnable ? ", ERC20Burnable" : ""
+  }${advancedConfig.mintable ? ", Ownable" : ""} {
         constructor() ERC20("${baseConfig.name}", "${baseConfig.symbol}") {
             _mint(msg.sender, ${baseConfig.initialSupply} * 10 ** decimals());
         }
@@ -33,7 +43,7 @@ const generateSoliditySource = (
 
 export async function generateContractBytecode(
   baseConfig: TokenBaseConfig,
-  advancedConfig: TokenAdvancedConfig,
+  advancedConfig: TokenAdvancedConfig
 ): Promise<`0x${string}`> {
   const source = generateSoliditySource(baseConfig, advancedConfig);
 
@@ -46,7 +56,7 @@ export async function generateContractBytecode(
           output.errors
             .filter((error) => error.severity === "error")
             .map((error) => error.message)
-            .join("\n"),
+            .join("\n")
       );
     }
 

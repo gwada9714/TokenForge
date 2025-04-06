@@ -15,22 +15,28 @@ async function main() {
   const [deployer] = await hre.ethers.getSigners();
   console.log(`Déploiement depuis l'adresse : ${deployer.address}`);
 
-  const TokenForgeFactory = await hre.ethers.getContractFactory("TokenForgeFactory");
+  const TokenForgeFactory = await hre.ethers.getContractFactory(
+    "TokenForgeFactory"
+  );
   console.log("Déploiement du contrat...");
-  
+
   try {
-    const factory = await TokenForgeFactory.deploy(tknToken, treasury, taxSystem);
+    const factory = await TokenForgeFactory.deploy(
+      tknToken,
+      treasury,
+      taxSystem
+    );
     console.log("Contrat déployé !");
     console.log(`Adresse du contrat : ${await factory.getAddress()}`);
-    
+
     console.log("Attente de la confirmation...");
     await factory.waitForDeployment();
-    
+
     const deployedAddress = await factory.getAddress();
     console.log(`Adresse finale du contrat : ${deployedAddress}`);
 
     console.log("Attente avant vérification...");
-    await new Promise(r => setTimeout(r, 30000));
+    await new Promise((r) => setTimeout(r, 30000));
 
     try {
       await hre.run("verify:verify", {

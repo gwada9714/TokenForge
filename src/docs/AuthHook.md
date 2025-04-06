@@ -5,7 +5,7 @@ Cette documentation explique comment utiliser le hook `useAuth` pour gérer l'au
 ## Importation
 
 ```typescript
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from "@/hooks/useAuth";
 ```
 
 ## Utilisation de base
@@ -13,19 +13,19 @@ import { useAuth } from '@/hooks/useAuth';
 Le hook `useAuth` fournit toutes les fonctionnalités nécessaires pour gérer l'authentification dans votre application :
 
 ```typescript
-const { 
-  user,                // Utilisateur authentifié (null si non connecté)
-  status,              // État de l'authentification
-  error,               // Erreur éventuelle
-  isAuthenticated,     // Booléen indiquant si l'utilisateur est authentifié
-  isAdmin,             // Booléen indiquant si l'utilisateur est administrateur
-  isLoading,           // Booléen indiquant si une opération est en cours
-  signIn,              // Fonction pour se connecter avec email/mot de passe
-  signUp,              // Fonction pour s'inscrire avec email/mot de passe
-  signInAnonymously,   // Fonction pour se connecter anonymement
-  signOut,             // Fonction pour se déconnecter
-  resetPassword,       // Fonction pour réinitialiser le mot de passe
-  updateUserProfile    // Fonction pour mettre à jour le profil
+const {
+  user, // Utilisateur authentifié (null si non connecté)
+  status, // État de l'authentification
+  error, // Erreur éventuelle
+  isAuthenticated, // Booléen indiquant si l'utilisateur est authentifié
+  isAdmin, // Booléen indiquant si l'utilisateur est administrateur
+  isLoading, // Booléen indiquant si une opération est en cours
+  signIn, // Fonction pour se connecter avec email/mot de passe
+  signUp, // Fonction pour s'inscrire avec email/mot de passe
+  signInAnonymously, // Fonction pour se connecter anonymement
+  signOut, // Fonction pour se déconnecter
+  resetPassword, // Fonction pour réinitialiser le mot de passe
+  updateUserProfile, // Fonction pour mettre à jour le profil
 } = useAuth();
 ```
 
@@ -63,10 +63,10 @@ Le hook gère plusieurs états d'authentification :
 ```typescript
 const handleSignIn = async () => {
   try {
-    const user = await signIn('utilisateur@exemple.com', 'motdepasse');
-    console.log('Utilisateur connecté:', user);
+    const user = await signIn("utilisateur@exemple.com", "motdepasse");
+    console.log("Utilisateur connecté:", user);
   } catch (error) {
-    console.error('Erreur de connexion:', error);
+    console.error("Erreur de connexion:", error);
   }
 };
 ```
@@ -76,10 +76,10 @@ const handleSignIn = async () => {
 ```typescript
 const handleSignUp = async () => {
   try {
-    const user = await signUp('utilisateur@exemple.com', 'motdepasse');
-    console.log('Utilisateur inscrit:', user);
+    const user = await signUp("utilisateur@exemple.com", "motdepasse");
+    console.log("Utilisateur inscrit:", user);
   } catch (error) {
-    console.error('Erreur d\'inscription:', error);
+    console.error("Erreur d'inscription:", error);
   }
 };
 ```
@@ -90,9 +90,9 @@ const handleSignUp = async () => {
 const handleSignInAnonymously = async () => {
   try {
     const user = await signInAnonymously();
-    console.log('Utilisateur anonyme connecté:', user);
+    console.log("Utilisateur anonyme connecté:", user);
   } catch (error) {
-    console.error('Erreur de connexion anonyme:', error);
+    console.error("Erreur de connexion anonyme:", error);
   }
 };
 ```
@@ -103,9 +103,9 @@ const handleSignInAnonymously = async () => {
 const handleSignOut = async () => {
   try {
     await signOut();
-    console.log('Utilisateur déconnecté');
+    console.log("Utilisateur déconnecté");
   } catch (error) {
-    console.error('Erreur de déconnexion:', error);
+    console.error("Erreur de déconnexion:", error);
   }
 };
 ```
@@ -115,10 +115,10 @@ const handleSignOut = async () => {
 ```typescript
 const handleResetPassword = async () => {
   try {
-    await resetPassword('utilisateur@exemple.com');
-    console.log('Email de réinitialisation envoyé');
+    await resetPassword("utilisateur@exemple.com");
+    console.log("Email de réinitialisation envoyé");
   } catch (error) {
-    console.error('Erreur de réinitialisation:', error);
+    console.error("Erreur de réinitialisation:", error);
   }
 };
 ```
@@ -129,12 +129,12 @@ const handleResetPassword = async () => {
 const handleUpdateProfile = async () => {
   try {
     await updateUserProfile({
-      displayName: 'Nouveau Nom',
-      photoURL: 'https://exemple.com/photo.jpg'
+      displayName: "Nouveau Nom",
+      photoURL: "https://exemple.com/photo.jpg",
     });
-    console.log('Profil mis à jour');
+    console.log("Profil mis à jour");
   } catch (error) {
-    console.error('Erreur de mise à jour du profil:', error);
+    console.error("Erreur de mise à jour du profil:", error);
   }
 };
 ```
@@ -162,45 +162,38 @@ interface AuthUser {
 Voici un exemple complet d'utilisation du hook `useAuth` dans un composant :
 
 ```typescript
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const AuthExample: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  
-  const { 
-    user, 
-    status, 
-    error, 
-    isAuthenticated,
-    signIn,
-    signOut
-  } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const { user, status, error, isAuthenticated, signIn, signOut } = useAuth();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await signIn(email, password);
-      setEmail('');
-      setPassword('');
+      setEmail("");
+      setPassword("");
     } catch (error) {
       // L'erreur est déjà gérée par le hook
-      console.log('Erreur gérée par le hook');
+      console.log("Erreur gérée par le hook");
     }
   };
 
   return (
     <div>
       <h2>Exemple d'authentification</h2>
-      
+
       {/* Affichage de l'état d'authentification */}
       <div>
         <p>Statut: {status}</p>
-        <p>Authentifié: {isAuthenticated ? 'Oui' : 'Non'}</p>
+        <p>Authentifié: {isAuthenticated ? "Oui" : "Non"}</p>
         {error && <p>Erreur: {error.message}</p>}
       </div>
-      
+
       {/* Informations utilisateur */}
       {user && (
         <div>
@@ -210,7 +203,7 @@ const AuthExample: React.FC = () => {
           <p>Nom: {user.displayName}</p>
         </div>
       )}
-      
+
       {/* Formulaire de connexion */}
       {!isAuthenticated ? (
         <form onSubmit={handleSignIn}>
@@ -253,17 +246,19 @@ Pour voir un exemple complet d'utilisation du hook `useAuth`, consultez le compo
 Le hook `useAuth` peut être utilisé en combinaison avec les hooks Firestore pour créer des applications complètes avec authentification et gestion de données :
 
 ```typescript
-import { useAuth } from '@/hooks/useAuth';
-import { useDocument } from '@/hooks/useDocument';
+import { useAuth } from "@/hooks/useAuth";
+import { useDocument } from "@/hooks/useDocument";
 
 const UserProfile: React.FC = () => {
   const { user } = useAuth();
-  
+
   // Charger les données du profil utilisateur depuis Firestore
-  const { data: profile, loading, error } = useDocument(
-    user ? `users/${user.uid}` : null
-  );
-  
+  const {
+    data: profile,
+    loading,
+    error,
+  } = useDocument(user ? `users/${user.uid}` : null);
+
   // ...
 };
 ```

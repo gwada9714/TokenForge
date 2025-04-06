@@ -1,4 +1,4 @@
-import { TokenForgeUser } from '../../types';
+import { TokenForgeUser } from "../../types";
 
 class MockFirebaseService {
   private static instance: MockFirebaseService;
@@ -28,7 +28,10 @@ class MockFirebaseService {
     return Promise.resolve();
   }
 
-  async updateProfile(_displayName?: string, _photoURL?: string): Promise<TokenForgeUser> {
+  async updateProfile(
+    _displayName?: string,
+    _photoURL?: string
+  ): Promise<TokenForgeUser> {
     return Promise.resolve({} as TokenForgeUser);
   }
 
@@ -36,7 +39,9 @@ class MockFirebaseService {
     return Promise.resolve({} as TokenForgeUser);
   }
 
-  onAuthStateChanged(callback: (user: TokenForgeUser | null) => void): () => void {
+  onAuthStateChanged(
+    callback: (user: TokenForgeUser | null) => void
+  ): () => void {
     callback(null);
     return () => {};
   }

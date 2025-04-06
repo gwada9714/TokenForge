@@ -1,5 +1,5 @@
-import { usePublicClient } from 'wagmi';
-import { Address } from 'viem';
+import { usePublicClient } from "wagmi";
+import { Address } from "viem";
 
 interface TokenForgeConfig {
   contractAddress: Address;
@@ -9,14 +9,14 @@ interface TokenForgeConfig {
 
 const NETWORK_CONFIGS: Record<number, TokenForgeConfig> = {
   1: {
-    contractAddress: '0x1234567890123456789012345678901234567890' as Address, // Mainnet
+    contractAddress: "0x1234567890123456789012345678901234567890" as Address, // Mainnet
     chainId: 1,
-    networkName: 'Ethereum Mainnet'
+    networkName: "Ethereum Mainnet",
   },
   5: {
-    contractAddress: '0x2345678901234567890123456789012345678901' as Address, // Goerli
+    contractAddress: "0x2345678901234567890123456789012345678901" as Address, // Goerli
     chainId: 5,
-    networkName: 'Goerli Testnet'
+    networkName: "Goerli Testnet",
   },
 };
 

@@ -3,6 +3,7 @@
 ## 1. Pages Générales
 
 ### 1.1 Accueil
+
 - **Présentation de la plateforme**
   - Vision et mission de TokenForge
   - Introduction aux fonctionnalités principales
@@ -34,6 +35,7 @@
   - Aperçu des différents plans (Free, Basic, Pro, Enterprise)
 
 ### 1.2 À Propos
+
 - **Vision et mission**
   - Histoire de la création de TokenForge
   - Problèmes adressés dans l'industrie
@@ -55,6 +57,7 @@
   - Innovation: processus d'amélioration continue
 
 ### 1.3 Tarifs & Abonnements
+
 - **Comparatif des formules**
   - **Free**: Fonctionnalités limitées, création basique sur 2 blockchains
   - **Basic**: Fonctionnalités standard, 4 blockchains, support email
@@ -82,6 +85,7 @@
   - Détails sur les frais cachés (aucun)
 
 ### 1.4 FAQ Générale
+
 - **Questions générales**
   - Qu'est-ce que TokenForge?
   - Comment fonctionne la création de token?
@@ -114,6 +118,7 @@
   - Taxes et obligations fiscales
 
 ### 1.5 Contact & Support
+
 - **Formulaire de contact**
   - Champs: Nom, Email, Sujet, Message
   - Sélection du département (Support, Ventes, Partenariats)
@@ -141,6 +146,7 @@
   - Évaluation de la résolution
 
 ### 1.6 Blog & Ressources
+
 - **Articles techniques**
   - Tutoriels détaillés
   - Nouveautés techniques
@@ -170,6 +176,7 @@
 ## 2. Système d'Authentification
 
 ### 2.1 Connexion
+
 - **Connexion par email/mot de passe**
   - Interface sécurisée
   - Option "Se souvenir de moi"
@@ -184,6 +191,7 @@
   - Notifications de connexion
 
 ### 2.2 Inscription
+
 - **Formulaire d'inscription**
   - Informations basiques (nom, email, mot de passe)
   - Termes et conditions avec points clés surlignés
@@ -206,6 +214,7 @@
   - Récompenses pour complétion
 
 ### 2.3 Récupération de Compte
+
 - **Réinitialisation de mot de passe**
   - Processus par email
   - Questions de sécurité (optionnel)
@@ -223,6 +232,7 @@
   - Délais de traitement affichés
 
 ### 2.4 Profil Utilisateur
+
 - **Informations personnelles**
   - Données basiques (nom, email)
   - Photo de profil
@@ -247,6 +257,7 @@
 ## 3. Création de Token
 
 ### 3.1 Wizard de Création (Étape par étape)
+
 - **Étape 1: Choix de la blockchain**
   - Sélection parmi 6+ blockchains
   - Comparatif des avantages/inconvénients
@@ -284,6 +295,7 @@
   - Suivi de déploiement en temps réel
 
 ### 3.2 Templates de Tokens
+
 - **Marketplace de templates**
   - Interface de navigation et recherche
   - Filtres par type, prix, popularité
@@ -313,6 +325,7 @@
   - Validation des déploiements réussis
 
 ### 3.3 Tokenomics Designer
+
 - **Interface visuelle de conception**
   - Éditeur graphique drag-and-drop
   - Paramètres ajustables en temps réel
@@ -342,6 +355,7 @@
   - Explications accessibles
 
 ### 3.4 Anti-Rugpull Configurator
+
 - **Configuration des mécanismes anti-rugpull**
   - Liquidity locking automatisé
   - Timelock sur fonctions critiques
@@ -365,6 +379,7 @@
   - Recommandations d'audit tiers
 
 ### 3.5 Landing Page Builder
+
 - **Sélection de templates**
   - Designs modernes et responsifs
   - Variantes par secteur d'activité
@@ -397,6 +412,7 @@
 ## 4. Gestion de Token
 
 ### 4.1 Dashboard Tokens
+
 - **Liste des tokens créés**
   - Aperçu visuel avec logos
   - Statut actuel (live, pending, paused)
@@ -423,6 +439,7 @@
   - Mises à jour recommandées
 
 ### 4.2 Page Détail Token
+
 - **Informations générales**
   - Métadonnées complètes
   - Contract address
@@ -455,6 +472,7 @@
   - Actions d'urgence
 
 ### 4.3 Auto-Liquidity Manager
+
 - **Configuration des pools de liquidité**
   - Sélection des paires (TOKEN/ETH, TOKEN/USDT, etc.)
   - Allocation des montants
@@ -481,6 +499,7 @@
   - Opportunités d'arbitrage
 
 ### 4.4 Staking Manager
+
 - **Configuration des programmes**
   - Création de pools multiples
   - Définition des périodes (flexible, locked)
@@ -509,6 +528,7 @@
 ## 5. Services Premium
 
 ### 5.1 Holder Analytics
+
 - **Graphiques de distribution**
   - Répartition par taille de wallet
   - Évolution temporelle
@@ -541,6 +561,7 @@
   - Recommandations stratégiques
 
 ### 5.2 Multi-Chain Bridge
+
 - **Interface de transfert cross-chain**
   - Sélection chaîne source/destination
   - Calcul automatique des frais
@@ -573,6 +594,7 @@
   - Alertes opportunités
 
 ### 5.3 Expert Network
+
 - **Liste des experts certifiés**
   - Filtres de spécialisation
   - Notation et reviews
@@ -605,6 +627,7 @@
   - Programme de fidélité
 
 ### 5.4 DeFi Integration Hub
+
 - **Connecteurs vers protocoles DeFi**
   - Intégration majeurs protocoles
   - Configuration des connexions
@@ -631,6 +654,7 @@
   - Sécurités et limites
 
 ### 5.5 Token Spotlight Program
+
 - **Formulaire de candidature**
   - Critères de qualification
   - Documentation requise
@@ -663,6 +687,7 @@
   - Opportunités de participation
 
 ### 5.6 Legal Template Library
+
 - **Documentation légale par juridiction**
   - Sélection par pays/région
   - Filtres par type de document
@@ -691,6 +716,7 @@
 ## 6. Administration
 
 ### 6.1 Dashboard Administrateur
+
 - **Vue d'ensemble de la plateforme**
   - KPIs temps réel
   - Statut des services
@@ -717,6 +743,7 @@
   - Configuration globale
 
 ### 6.2 Gestion Utilisateurs
+
 - **Liste complète des utilisateurs**
   - Filtres avancés
   - Statut des comptes
@@ -743,6 +770,7 @@
   - Suivi des interventions
 
 ### 6.3 Gestion des Tokens
+
 - **Base de données complète**
   - Catalogue exhaustif
   - Filtres multi-critères
@@ -769,6 +797,7 @@
   - Documentation des interventions
 
 ### 6.4 Configuration Système
+
 - **Paramètres globaux**
   - Réglages plateforme
   - Limites système
@@ -795,6 +824,7 @@
   - Override d'urgence
 
 ### 6.5 Analytics & Reporting
+
 - **Rapports d'utilisation**
   - Activité quotidienne/hebdo/mensuelle
   - Métriques d'engagement
@@ -827,6 +857,7 @@
   - Stratégie d'évolution
 
 ### 6.6 Gestion de la Marketplace
+
 - **Approbation des templates**
   - File d'attente de revue
   - Critères de qualité
@@ -855,6 +886,7 @@
 ## 7. Pages Community & Support
 
 ### 7.1 Centre Communautaire
+
 - **Feed d'activité**
   - Actualités récentes
   - Créations de tokens
@@ -881,6 +913,7 @@
   - Processus de candidature
 
 ### 7.2 Knowledge Base
+
 - **Documentation technique**
   - Guides par fonctionnalité
   - Spécifications techniques
@@ -907,6 +940,7 @@
   - Historique des résolutions
 
 ### 7.3 Programme d'Ambassadeurs
+
 - **Conditions d'éligibilité**
   - Critères de sélection
   - Processus de candidature
@@ -933,6 +967,7 @@
   - Recognition program
 
 ### 7.4 Webinaires & Événements
+
 - **Calendrier des événements**
   - Programmation à venir
   - Filtres thématiques
@@ -961,6 +996,7 @@
 ## 8. Pages Mobiles
 
 ### 8.1 Application Mobile
+
 - **Dashboard simplifié**
   - Vue adaptée mobile
   - KPIs essentiels
@@ -987,6 +1023,7 @@
   - Process simplifiés
 
 ### 8.2 Versions Responsives
+
 - **Adaptations interfaces principales**
   - Redimensionnement intelligent
   - Prioritisation contenu

@@ -28,10 +28,7 @@ export function memoize<T extends (...args: any[]) => any>(
     const now = Date.now();
 
     // Check if cached and not expired
-    if (
-      cache[key] &&
-      (!ttl || now - cache[key].timestamp < ttl)
-    ) {
+    if (cache[key] && (!ttl || now - cache[key].timestamp < ttl)) {
       return cache[key].value;
     }
 

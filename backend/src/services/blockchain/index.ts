@@ -1,11 +1,11 @@
-import { IPaymentService } from './IPaymentService';
-import { BasePaymentService } from './BasePaymentService';
-import { EthereumPaymentService } from './EthereumPaymentService';
-import { BSCPaymentService } from './BSCPaymentService';
-import { PolygonPaymentService } from './PolygonPaymentService';
-import { AvalanchePaymentService } from './AvalanchePaymentService';
-import { SolanaPaymentService } from './SolanaPaymentService';
-import { ArbitrumPaymentService } from './ArbitrumPaymentService';
+import { IPaymentService } from "./IPaymentService";
+import { BasePaymentService } from "./BasePaymentService";
+import { EthereumPaymentService } from "./EthereumPaymentService";
+import { BSCPaymentService } from "./BSCPaymentService";
+import { PolygonPaymentService } from "./PolygonPaymentService";
+import { AvalanchePaymentService } from "./AvalanchePaymentService";
+import { SolanaPaymentService } from "./SolanaPaymentService";
+import { ArbitrumPaymentService } from "./ArbitrumPaymentService";
 
 /**
  * Crée un service de paiement pour une blockchain donnée
@@ -14,18 +14,18 @@ import { ArbitrumPaymentService } from './ArbitrumPaymentService';
  */
 export function createPaymentService(network: string): IPaymentService {
   switch (network.toLowerCase()) {
-    case 'ethereum':
+    case "ethereum":
       return new EthereumPaymentService();
-    case 'binance':
-    case 'bsc':
+    case "binance":
+    case "bsc":
       return new BSCPaymentService();
-    case 'polygon':
+    case "polygon":
       return new PolygonPaymentService();
-    case 'avalanche':
+    case "avalanche":
       return new AvalanchePaymentService();
-    case 'solana':
+    case "solana":
       return new SolanaPaymentService();
-    case 'arbitrum':
+    case "arbitrum":
       return new ArbitrumPaymentService();
     default:
       throw new Error(`Unsupported blockchain network: ${network}`);
@@ -40,5 +40,5 @@ export {
   PolygonPaymentService,
   AvalanchePaymentService,
   SolanaPaymentService,
-  ArbitrumPaymentService
+  ArbitrumPaymentService,
 };

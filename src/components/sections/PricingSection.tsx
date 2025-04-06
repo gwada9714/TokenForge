@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { StyledButton } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import React, { useState } from "react";
+import styled from "styled-components";
+import { StyledButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 const SectionContainer = styled.section`
   padding: 6rem 2rem;
-  background: linear-gradient(135deg, #182038 0%, #2A3352 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #182038 0%, #2a3352 100%);
+  color: #ffffff;
 `;
 
 const Content = styled.div`
@@ -20,22 +20,22 @@ const SectionHeader = styled.div`
 `;
 
 const Title = styled.h2`
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
 
   span {
-    background: linear-gradient(135deg, #D97706, #FFD700);
+    background: linear-gradient(135deg, #d97706, #ffd700);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 `;
 
 const Description = styled.p`
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   font-size: 1.125rem;
-  color: #F5F5F5;
+  color: #f5f5f5;
   opacity: 0.9;
   max-width: 600px;
   margin: 0 auto;
@@ -50,9 +50,9 @@ const PricingToggle = styled.div`
 `;
 
 const ToggleLabel = styled.span<{ isActive: boolean }>`
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-weight: 600;
-  color: ${props => props.isActive ? '#D97706' : '#F5F5F5'};
+  color: ${(props) => (props.isActive ? "#D97706" : "#F5F5F5")};
   cursor: pointer;
   transition: color 0.2s ease-in-out;
 `;
@@ -72,13 +72,18 @@ const PricingGrid = styled.div`
 `;
 
 const PricingCard = styled(Card)<{ isPopular?: boolean }>`
-  background: ${props => props.isPopular ? 'linear-gradient(135deg, #182038 0%, #2A3352 100%)' : '#FFFFFF'};
-  color: ${props => props.isPopular ? '#FFFFFF' : '#182038'};
-  border: ${props => props.isPopular ? '2px solid #D97706' : 'none'};
+  background: ${(props) =>
+    props.isPopular
+      ? "linear-gradient(135deg, #182038 0%, #2A3352 100%)"
+      : "#FFFFFF"};
+  color: ${(props) => (props.isPopular ? "#FFFFFF" : "#182038")};
+  border: ${(props) => (props.isPopular ? "2px solid #D97706" : "none")};
   position: relative;
   overflow: hidden;
 
-  ${props => props.isPopular && `
+  ${(props) =>
+    props.isPopular &&
+    `
     &::before {
       content: 'Plus Populaire';
       position: absolute;
@@ -95,19 +100,19 @@ const PricingCard = styled(Card)<{ isPopular?: boolean }>`
 `;
 
 const PlanName = styled.h3<{ isPopular?: boolean }>`
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: ${props => props.isPopular ? '#FFFFFF' : '#182038'};
+  color: ${(props) => (props.isPopular ? "#FFFFFF" : "#182038")};
 `;
 
 const PlanPrice = styled.div<{ isPopular?: boolean }>`
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 3rem;
   font-weight: 700;
   margin: 1.5rem 0;
-  color: ${props => props.isPopular ? '#D97706' : '#182038'};
+  color: ${(props) => (props.isPopular ? "#D97706" : "#182038")};
 
   span {
     font-size: 1rem;
@@ -122,15 +127,15 @@ const FeaturesList = styled.ul`
 `;
 
 const FeatureItem = styled.li<{ isPopular?: boolean }>`
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
-  color: ${props => props.isPopular ? '#F5F5F5' : '#4B5563'};
+  color: ${(props) => (props.isPopular ? "#F5F5F5" : "#4B5563")};
 
   svg {
-    color: #D97706;
+    color: #d97706;
     flex-shrink: 0;
   }
 `;
@@ -151,8 +156,8 @@ const plans: PricingPlan[] = [
       "Déploiement sur 2 blockchains",
       "Support par email",
       "Accès aux templates de base",
-      "Analytics basiques"
-    ]
+      "Analytics basiques",
+    ],
   },
   {
     name: "Forgeron",
@@ -164,9 +169,9 @@ const plans: PricingPlan[] = [
       "Templates personnalisables",
       "Analytics avancés",
       "Audit de sécurité basique",
-      "Verrouillage de liquidité"
+      "Verrouillage de liquidité",
     ],
-    isPopular: true
+    isPopular: true,
   },
   {
     name: "Maître Forgeron",
@@ -180,14 +185,25 @@ const plans: PricingPlan[] = [
       "Audit de sécurité complet",
       "Verrouillage de liquidité",
       "Marketing boost",
-      "API access"
-    ]
-  }
+      "API access",
+    ],
+  },
 ];
 
 const CheckIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-    <path d="M16.667 5L7.5 14.167L3.333 10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+  >
+    <path
+      d="M16.667 5L7.5 14.167L3.333 10"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -202,7 +218,8 @@ export const PricingSection: React.FC = () => {
             Choisissez votre <span>plan</span>
           </Title>
           <Description>
-            Des solutions adaptées à tous les projets, de l'entrepreneur solo aux grandes entreprises.
+            Des solutions adaptées à tous les projets, de l'entrepreneur solo
+            aux grandes entreprises.
           </Description>
         </SectionHeader>
 
@@ -217,11 +234,15 @@ export const PricingSection: React.FC = () => {
 
         <PricingGrid>
           {plans.map((plan, index) => (
-            <PricingCard key={index} $padding="large" isPopular={plan.isPopular}>
+            <PricingCard
+              key={index}
+              $padding="large"
+              isPopular={plan.isPopular}
+            >
               <PlanName isPopular={plan.isPopular}>{plan.name}</PlanName>
               <PlanPrice isPopular={plan.isPopular}>
                 {isAnnual ? plan.price.annual : plan.price.monthly}€
-                <span>/{isAnnual ? 'an' : 'mois'}</span>
+                <span>/{isAnnual ? "an" : "mois"}</span>
               </PlanPrice>
               <FeaturesList>
                 {plan.features.map((feature, featureIndex) => (
@@ -232,7 +253,7 @@ export const PricingSection: React.FC = () => {
                 ))}
               </FeaturesList>
               <StyledButton
-                $variant={plan.isPopular ? 'primary' : 'secondary'}
+                $variant={plan.isPopular ? "primary" : "secondary"}
                 $size="large"
                 $fullWidth
               >

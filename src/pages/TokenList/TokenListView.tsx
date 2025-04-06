@@ -1,6 +1,6 @@
-import React from 'react';
-import { Grid, Typography, Box } from '@mui/material';
-import { TokenDisplay } from '../../components/TokenDisplay/TokenDisplay';
+import React from "react";
+import { Grid, Typography, Box } from "@mui/material";
+import { TokenDisplay } from "../../components/TokenDisplay/TokenDisplay";
 
 interface Token {
   address: string;
@@ -18,13 +18,13 @@ interface TokenListViewProps {
   isLoading?: boolean;
 }
 
-export const TokenListView: React.FC<TokenListViewProps> = ({ 
+export const TokenListView: React.FC<TokenListViewProps> = ({
   tokens,
-  isLoading = false 
+  isLoading = false,
 }) => {
   if (isLoading) {
     return (
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
+      <Box sx={{ mt: 4, textAlign: "center" }}>
         <Typography>Chargement des tokens...</Typography>
       </Box>
     );
@@ -32,7 +32,7 @@ export const TokenListView: React.FC<TokenListViewProps> = ({
 
   if (tokens.length === 0) {
     return (
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
+      <Box sx={{ mt: 4, textAlign: "center" }}>
         <Typography>Aucun token trouvé</Typography>
       </Box>
     );
@@ -42,12 +42,9 @@ export const TokenListView: React.FC<TokenListViewProps> = ({
     <Grid container spacing={3}>
       {tokens.map((token) => (
         <Grid item xs={12} key={token.address}>
-          <TokenDisplay
-            token={token}
-            variant="card"
-          />
+          <TokenDisplay token={token} variant="card" />
         </Grid>
       ))}
     </Grid>
   );
-}; 
+};

@@ -1,10 +1,10 @@
-import { AuthError } from '../errors/AuthError';
+import { AuthError } from "../errors/AuthError";
 
 export enum LogLevel {
-  DEBUG = 'DEBUG',
-  INFO = 'INFO',
-  WARN = 'WARN',
-  ERROR = 'ERROR'
+  DEBUG = "DEBUG",
+  INFO = "INFO",
+  WARN = "WARN",
+  ERROR = "ERROR",
 }
 
 export interface LogEntry {
@@ -25,7 +25,7 @@ interface LogOptions {
 const DEFAULT_OPTIONS: LogOptions = {
   enableConsole: true,
   maxLogEntries: 1000,
-  logLevel: LogLevel.INFO
+  logLevel: LogLevel.INFO,
 };
 
 class LogService {
@@ -58,16 +58,17 @@ class LogService {
   private formatLogEntry(entry: LogEntry): string {
     const date = new Date(entry.timestamp).toISOString();
     let message = `[${date}] ${entry.level} [${entry.category}] ${entry.message}`;
-    
+
     if (entry.data) {
-      message += '\nData: ' + JSON.stringify(entry.data, null, 2);
+      message += "\nData: " + JSON.stringify(entry.data, null, 2);
     }
-    
+
     if (entry.error) {
       if (entry.error instanceof AuthError) {
         message += `\nError: ${entry.error.name} (${entry.error.code}): ${entry.error.message}`;
         if (entry.error.details) {
-          message += '\nDetails: ' + JSON.stringify(entry.error.details, null, 2);
+          message +=
+            "\nDetails: " + JSON.stringify(entry.error.details, null, 2);
         }
       } else {
         message += `\nError: ${entry.error.message}`;
@@ -76,7 +77,7 @@ class LogService {
         }
       }
     }
-    
+
     return message;
   }
 
@@ -112,59 +113,77 @@ class LogService {
     }
   }
 
-  debug(category: string, message: string, data?: Record<string, unknown>): void {
+  debug(
+    category: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void {
     this.addLogEntry({
       timestamp: Date.now(),
       level: LogLevel.DEBUG,
       category,
       message,
-      data
+      data,
     });
   }
 
-  info(category: string, message: string, data?: Record<string, unknown>): void {
+  info(
+    category: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void {
     this.addLogEntry({
       timestamp: Date.now(),
       level: LogLevel.INFO,
       category,
       message,
-      data
+      data,
     });
   }
 
-  warn(category: string, message: string, data?: Record<string, unknown>, error?: Error): void {
+  warn(
+    category: string,
+    message: string,
+    data?: Record<string, unknown>,
+    error?: Error
+  ): void {
     this.addLogEntry({
       timestamp: Date.now(),
       level: LogLevel.WARN,
       category,
       message,
       data,
-      error
+      error,
     });
   }
 
-  error(category: string, message: string, error: Error, data?: Record<string, unknown>): void {
+  error(
+    category: string,
+    message: string,
+    error: Error,
+    data?: Record<string, unknown>
+  ): void {
     this.addLogEntry({
       timestamp: Date.now(),
       level: LogLevel.ERROR,
       category,
       message,
       data,
-      error
+      error,
     });
   }
 
   getLogs(level?: LogLevel, category?: string): LogEntry[] {
     let filtered = this.logs;
-    
+
     if (level) {
-      filtered = filtered.filter(log => log.level === level);
+      filtered = filtered.filter((log) => log.level === level);
     }
-    
+
     if (category) {
-      filtered = filtered.filter(log => log.category === category);
+      filtered = filtered.filter((log) => log.category === category);
     }
-    
+
     return filtered;
   }
 

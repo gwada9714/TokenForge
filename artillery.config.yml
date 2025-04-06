@@ -1,5 +1,5 @@
 config:
-  target: "http://localhost:5173"  # URL de l'application en développement
+  target: "http://localhost:5173" # URL de l'application en développement
   phases:
     - duration: 60
       arrivalRate: 5
@@ -29,7 +29,7 @@ scenarios:
           capture:
             - json: "$.token"
               as: "authToken"
-      
+
       - think: 2
 
       - get:

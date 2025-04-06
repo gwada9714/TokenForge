@@ -1,12 +1,12 @@
-import { providers, utils, BigNumber } from 'ethers';
-import { 
-  Transaction as SolanaTransaction, 
+import { providers, utils, BigNumber } from "ethers";
+import {
+  Transaction as SolanaTransaction,
   Connection,
-  Commitment
-} from '@solana/web3.js';
-import { ChainId } from '../types/Chain';
-import { BaseProviderService } from './BaseProviderService';
-import { DEFAULT_GAS_CONFIG } from '../config/dependencies';
+  Commitment,
+} from "@solana/web3.js";
+import { ChainId } from "../types/Chain";
+import { BaseProviderService } from "./BaseProviderService";
+import { DEFAULT_GAS_CONFIG } from "../config/dependencies";
 
 export interface TransactionConfig {
   chainId: ChainId;
@@ -24,7 +24,7 @@ export interface TransactionResult {
   error?: string;
 }
 
-type ChainConfigKey = 'ETH' | 'BSC' | 'POLYGON';
+type ChainConfigKey = "ETH" | "BSC" | "POLYGON";
 
 export class TransactionService {
   static async sendTransaction(
@@ -47,8 +47,8 @@ export class TransactionService {
       );
     } catch (error: any) {
       return {
-        hash: '',
-        error: error.message || 'Transaction failed'
+        hash: "",
+        error: error.message || "Transaction failed",
       };
     }
   }
@@ -60,14 +60,14 @@ export class TransactionService {
     try {
       // Envoyer la transaction
       const tx = await provider.sendTransaction(signedTx);
-      
+
       // Attendre la confirmation
       const receipt = await tx.wait(1);
 
       return {
         hash: tx.hash,
         confirmation: receipt.confirmations,
-        receipt
+        receipt,
       };
     } catch (error: any) {
       throw new Error(`EVM Transaction failed: ${error.message}`);
@@ -87,7 +87,7 @@ export class TransactionService {
       // Attendre la confirmation avec un commitment "confirmed"
       const status = await connection.confirmTransaction(
         signature,
-        'confirmed' as Commitment
+        "confirmed" as Commitment
       );
 
       if (status.value.err) {
@@ -96,7 +96,7 @@ export class TransactionService {
 
       // Obtenir les détails de la transaction
       const transactionDetails = await connection.getTransaction(signature, {
-        commitment: 'confirmed'
+        commitment: "confirmed",
       });
 
       return {
@@ -106,35 +106,36 @@ export class TransactionService {
           signature,
           slot: transactionDetails?.slot,
           status: status.value,
-          details: transactionDetails
-        }
+          details: transactionDetails,
+        },
       };
     } catch (error: any) {
       throw new Error(`Solana Transaction failed: ${error.message}`);
     }
   }
 
-  static async estimateGas(
-    config: TransactionConfig
-  ): Promise<string> {
+  static async estimateGas(config: TransactionConfig): Promise<string> {
     if (config.chainId === ChainId.SOLANA) {
-      return '0'; // Solana utilise un système différent
+      return "0"; // Solana utilise un système différent
     }
 
     try {
-      const provider = await BaseProviderService.getProvider(config.chainId) as providers.Provider;
-      
+      const provider = (await BaseProviderService.getProvider(
+        config.chainId
+      )) as providers.Provider;
+
       const gasLimit = await provider.estimateGas({
         to: config.to,
         data: config.data,
-        value: config.value ? utils.parseEther(config.value) : undefined
+        value: config.value ? utils.parseEther(config.value) : undefined,
       });
 
       // Ajouter une marge de sécurité selon la chaîne
       const chainKey = this.getChainKey(config.chainId);
       const chainConfig = DEFAULT_GAS_CONFIG[chainKey];
-      const multiplier = config.gasPriceMultiplier || chainConfig.PRICE_MULTIPLIER;
-      
+      const multiplier =
+        config.gasPriceMultiplier || chainConfig.PRICE_MULTIPLIER;
+
       return gasLimit
         .mul(BigNumber.from(Math.floor(multiplier * 100)))
         .div(BigNumber.from(100))
@@ -147,11 +148,11 @@ export class TransactionService {
   private static getChainKey(chainId: ChainId): ChainConfigKey {
     switch (chainId) {
       case ChainId.ETH:
-        return 'ETH';
+        return "ETH";
       case ChainId.BSC:
-        return 'BSC';
+        return "BSC";
       case ChainId.POLYGON:
-        return 'POLYGON';
+        return "POLYGON";
       default:
         throw new Error(`Unsupported chain ID for gas estimation: ${chainId}`);
     }

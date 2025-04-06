@@ -1,9 +1,9 @@
 // App Constants
-export const APP_NAME = 'TokenForge';
-export const APP_VERSION = '0.1.0';
+export const APP_NAME = "TokenForge";
+export const APP_VERSION = "0.1.0";
 
 // Re-export des constantes de thème
-export * from './theme';
+export * from "./theme";
 
 // API Constants
 export const API_BASE_URL = process.env.VITE_API_BASE_URL;
@@ -20,7 +20,7 @@ export const FIREBASE_CONFIG = {
 };
 
 // Auth Constants
-export const AUTH_PERSISTENCE = 'LOCAL';
+export const AUTH_PERSISTENCE = "LOCAL";
 export const MAX_LOGIN_ATTEMPTS = 5;
 export const PASSWORD_MIN_LENGTH = 8;
 
@@ -46,4 +46,4 @@ export const SUPPORTED_CHAINS = {
   ARBITRUM: 42161,
 };
 
-export const DEFAULT_CHAIN = SUPPORTED_CHAINS.ETHEREUM; 
+export const DEFAULT_CHAIN = SUPPORTED_CHAINS.ETHEREUM;

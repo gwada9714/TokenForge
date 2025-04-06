@@ -1,4 +1,4 @@
-import { TokenContract } from '@/providers/contract/ContractProvider';
+import { TokenContract } from "@/providers/contract/ContractProvider";
 
 export interface TokenMetrics {
   address: string | null;
@@ -18,7 +18,14 @@ export interface TokenMetrics {
 }
 
 export interface TokenEvent {
-  type: 'transfer' | 'buy' | 'sell' | 'mint' | 'burn' | 'addLiquidity' | 'removeLiquidity';
+  type:
+    | "transfer"
+    | "buy"
+    | "sell"
+    | "mint"
+    | "burn"
+    | "addLiquidity"
+    | "removeLiquidity";
   hash: string;
   from: string;
   to: string;
@@ -54,7 +61,7 @@ export interface TokenAnalytics {
   events: TokenEvent[];
 }
 
-export type ChartPeriod = 'daily' | 'weekly' | 'monthly';
+export type ChartPeriod = "daily" | "weekly" | "monthly";
 
 export interface ChartDataPoint {
   timestamp: Date;
@@ -80,7 +87,7 @@ export interface ChartOptions {
   maintainAspectRatio?: boolean;
   plugins?: {
     legend?: {
-      position?: 'top' | 'bottom' | 'left' | 'right';
+      position?: "top" | "bottom" | "left" | "right";
       display?: boolean;
     };
     tooltip?: {

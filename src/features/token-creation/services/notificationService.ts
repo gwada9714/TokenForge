@@ -1,7 +1,7 @@
-import { TokenEvent } from './eventMonitorService';
-import { formatEther } from 'viem';
-import ErrorService from './ErrorService';
-import toast from './toast';
+import { TokenEvent } from "./eventMonitorService";
+import { formatEther } from "viem";
+import ErrorService from "./ErrorService";
+import toast from "./toast";
 
 export interface NotificationConfig {
   minTaxAmount?: bigint;
@@ -25,25 +25,28 @@ export class NotificationService {
     try {
       if (this.config.enableDesktopNotifications) {
         // Vérifier et demander la permission pour les notifications
-        if ('Notification' in window) {
+        if ("Notification" in window) {
           const permission = await Notification.requestPermission();
-          this.hasPermission = permission === 'granted';
+          this.hasPermission = permission === "granted";
         }
       }
 
       if (this.config.enableSoundAlerts) {
         // Initialiser le contexte audio
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
+        this.audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
+
         // Charger le son de notification
-        const response = await fetch('/sounds/notification.mp3');
+        const response = await fetch("/sounds/notification.mp3");
         const arrayBuffer = await response.arrayBuffer();
-        this.notificationSound = await this.audioContext.decodeAudioData(arrayBuffer);
+        this.notificationSound = await this.audioContext.decodeAudioData(
+          arrayBuffer
+        );
       }
     } catch (error) {
       errorService.handleError(error, {
-        context: 'NotificationService initialization',
-        config: this.config
+        context: "NotificationService initialization",
+        config: this.config,
       });
     }
   }
@@ -59,11 +62,11 @@ export class NotificationService {
 
       // Notification desktop
       if (this.config.enableDesktopNotifications && this.hasPermission) {
-        const notification = new Notification('TokenForge - Nouvel Événement', {
+        const notification = new Notification("TokenForge - Nouvel Événement", {
           body: this.formatNotificationMessage(event),
-          icon: '/images/logo.png',
-          tag: 'tokenforge-event',
-          requireInteraction: false
+          icon: "/images/logo.png",
+          tag: "tokenforge-event",
+          requireInteraction: false,
         });
 
         notification.onclick = () => {
@@ -73,7 +76,11 @@ export class NotificationService {
       }
 
       // Alerte sonore
-      if (this.config.enableSoundAlerts && this.audioContext && this.notificationSound) {
+      if (
+        this.config.enableSoundAlerts &&
+        this.audioContext &&
+        this.notificationSound
+      ) {
         const source = this.audioContext.createBufferSource();
         source.buffer = this.notificationSound;
         source.connect(this.audioContext.destination);
@@ -82,15 +89,14 @@ export class NotificationService {
 
       // Notification in-app (fallback)
       toast({
-        title: 'Nouvel Événement',
+        title: "Nouvel Événement",
         description: this.formatNotificationMessage(event),
-        variant: 'default'
+        variant: "default",
       });
-
     } catch (error) {
       errorService.handleError(error, {
-        context: 'Notification delivery',
-        event
+        context: "Notification delivery",
+        event,
       });
     }
   }
@@ -98,13 +104,13 @@ export class NotificationService {
   private formatNotificationMessage(event: TokenEvent): string {
     const amount = formatEther(event.amount);
     switch (event.type) {
-      case 'TaxCollected':
+      case "TaxCollected":
         return `${amount} tokens collectés en taxe`;
-      case 'Transfer':
+      case "Transfer":
         return `${amount} tokens transférés`;
-      case 'Mint':
+      case "Mint":
         return `${amount} tokens créés`;
-      case 'Burn':
+      case "Burn":
         return `${amount} tokens brûlés`;
       default:
         return `Nouvel événement : ${amount} tokens`;

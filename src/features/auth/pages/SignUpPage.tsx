@@ -1,6 +1,13 @@
-import React from 'react';
-import { Box, Paper, Typography, TextField, Button, Container } from '@mui/material';
-import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
+import React from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Container,
+} from "@mui/material";
+import { useTokenForgeAuth } from "../hooks/useTokenForgeAuth";
 
 export const SignUpPage: React.FC = () => {
   const { signUp } = useTokenForgeAuth();
@@ -12,8 +19,15 @@ export const SignUpPage: React.FC = () => {
 
   return (
     <Container maxWidth="sm">
-      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+      <Box
+        sx={{
+          mt: 8,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Créer un compte
           </Typography>

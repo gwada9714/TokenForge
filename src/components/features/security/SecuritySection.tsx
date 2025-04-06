@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Container,
@@ -7,14 +7,14 @@ import {
   Paper,
   Button,
   useTheme,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Security as SecurityIcon,
   Gavel as GavelIcon,
   VerifiedUser as VerifiedUserIcon,
   Warning as WarningIcon,
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 interface SecurityFeatureProps {
   icon: React.ReactNode;
@@ -28,25 +28,25 @@ const SecurityFeature: React.FC<SecurityFeatureProps> = ({
   description,
 }) => {
   const theme = useTheme();
-  
+
   return (
     <Paper
       elevation={2}
       sx={{
         p: 3,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-        transition: 'transform 0.2s',
-        '&:hover': {
-          transform: 'translateY(-4px)',
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+        transition: "transform 0.2s",
+        "&:hover": {
+          transform: "translateY(-4px)",
           boxShadow: theme.shadows[4],
         },
       }}
     >
-      <Box sx={{ color: 'primary.main', mb: 2 }}>{icon}</Box>
+      <Box sx={{ color: "primary.main", mb: 2 }}>{icon}</Box>
       <Typography variant="h6" gutterBottom>
         {title}
       </Typography>
@@ -63,28 +63,29 @@ export const SecuritySection: React.FC = () => {
   const securityFeatures = [
     {
       icon: <SecurityIcon sx={{ fontSize: 40 }} />,
-      title: 'Contrats Audités',
-      description: 'Tous nos contrats sont audités par des experts en sécurité blockchain',
+      title: "Contrats Audités",
+      description:
+        "Tous nos contrats sont audités par des experts en sécurité blockchain",
     },
     {
       icon: <GavelIcon sx={{ fontSize: 40 }} />,
-      title: 'Conformité',
-      description: 'Respect des normes et bonnes pratiques de l\'industrie',
+      title: "Conformité",
+      description: "Respect des normes et bonnes pratiques de l'industrie",
     },
     {
       icon: <VerifiedUserIcon sx={{ fontSize: 40 }} />,
-      title: 'Tests Rigoureux',
-      description: 'Tests automatisés et revue de code systématique',
+      title: "Tests Rigoureux",
+      description: "Tests automatisés et revue de code systématique",
     },
     {
       icon: <WarningIcon sx={{ fontSize: 40 }} />,
-      title: 'Alertes & Mises à jour',
-      description: 'Système d\'alerte en temps réel et mises à jour de sécurité',
+      title: "Alertes & Mises à jour",
+      description: "Système d'alerte en temps réel et mises à jour de sécurité",
     },
   ];
 
   return (
-    <Box sx={{ py: 8, bgcolor: 'background.default' }}>
+    <Box sx={{ py: 8, bgcolor: "background.default" }}>
       <Container>
         <Typography
           variant="h4"
@@ -104,12 +105,12 @@ export const SecuritySection: React.FC = () => {
           ))}
         </Grid>
 
-        <Box sx={{ mt: 6, textAlign: 'center' }}>
+        <Box sx={{ mt: 6, textAlign: "center" }}>
           <Button
             variant="contained"
             color="primary"
             size="large"
-            onClick={() => navigate('/docs/security')}
+            onClick={() => navigate("/docs/security")}
             startIcon={<SecurityIcon />}
           >
             En savoir plus sur notre sécurité

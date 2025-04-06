@@ -1,5 +1,5 @@
-import { logger } from '../logger/Logger';
-import { BaseService, ServiceStatus } from './BaseService';
+import { logger } from "../logger/Logger";
+import { BaseService, ServiceStatus } from "./BaseService";
 
 export class ServiceManager {
   private static instance: ServiceManager;
@@ -17,7 +17,7 @@ export class ServiceManager {
 
   async registerService(service: BaseService): Promise<void> {
     const serviceName = service.constructor.name;
-    
+
     if (this.services.has(serviceName)) {
       return;
     }
@@ -25,16 +25,16 @@ export class ServiceManager {
     try {
       await service.initialize();
       this.services.set(serviceName, service);
-      
+
       logger.info({
-        category: 'ServiceManager',
-        message: `Service ${serviceName} registered`
+        category: "ServiceManager",
+        message: `Service ${serviceName} registered`,
       });
     } catch (error) {
       logger.error({
-        category: 'ServiceManager',
+        category: "ServiceManager",
         message: `Failed to register service ${serviceName}`,
-        error: error as Error
+        error: error as Error,
       });
       throw error;
     }
@@ -45,8 +45,8 @@ export class ServiceManager {
 
     try {
       logger.info({
-        category: 'ServiceManager',
-        message: 'Initializing services'
+        category: "ServiceManager",
+        message: "Initializing services",
       });
 
       for (const [name, service] of this.services) {
@@ -56,9 +56,9 @@ export class ServiceManager {
       this.initialized = true;
     } catch (error) {
       logger.error({
-        category: 'ServiceManager',
-        message: 'Service initialization failed',
-        error: error as Error
+        category: "ServiceManager",
+        message: "Service initialization failed",
+        error: error as Error,
       });
       throw error;
     }
@@ -68,7 +68,7 @@ export class ServiceManager {
     for (const [name, service] of this.services) {
       await service.cleanup();
       logger.info(`Cleaned up service: ${name}`, {
-        category: 'ServiceManager'
+        category: "ServiceManager",
       });
     }
     this.services.clear();

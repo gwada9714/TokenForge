@@ -11,14 +11,18 @@ export interface IBlockchainService {
   getChainId(): Promise<number>;
   isConnected(): Promise<boolean>;
   estimateGas(transaction: any): Promise<bigint>;
-  
+
   // Méthodes pour la gestion des comptes
   getAccounts(): Promise<string[]>;
-  
+
   // Méthodes pour la signature et vérification
   signMessage(message: string, address?: string): Promise<string>;
-  verifySignature(message: string, signature: string, address: string): Promise<boolean>;
-  
+  verifySignature(
+    message: string,
+    signature: string,
+    address: string
+  ): Promise<boolean>;
+
   // Méthodes optionnelles pour la connexion/déconnexion
   connect?(): Promise<boolean>;
   disconnect?(): Promise<boolean>;

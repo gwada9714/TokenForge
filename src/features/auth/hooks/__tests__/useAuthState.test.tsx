@@ -1,31 +1,31 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useAuthState } from '../useAuthState';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from '../../store/authSlice';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useAuthState } from "../useAuthState";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "../../store/authSlice";
 
-vi.mock('firebase/auth', () => ({
+vi.mock("firebase/auth", () => ({
   getAuth: vi.fn(),
-  onAuthStateChanged: vi.fn()
+  onAuthStateChanged: vi.fn(),
 }));
 
-describe('useAuthState', () => {
+describe("useAuthState", () => {
   let mockAuth: any;
   let mockStore: any;
   let mockUnsubscribe: vi.Mock;
 
   const mockUser: Partial<User> = {
-    uid: 'test-uid',
-    email: 'test@example.com',
-    emailVerified: true
+    uid: "test-uid",
+    email: "test@example.com",
+    emailVerified: true,
   };
 
   beforeEach(() => {
     mockUnsubscribe = vi.fn();
     mockAuth = {
-      currentUser: null
+      currentUser: null,
     };
 
     vi.mocked(getAuth).mockReturnValue(mockAuth);
@@ -36,16 +36,16 @@ describe('useAuthState', () => {
 
     mockStore = configureStore({
       reducer: {
-        auth: authReducer
-      }
+        auth: authReducer,
+      },
     });
   });
 
-  it('initializes with loading state', () => {
+  it("initializes with loading state", () => {
     const { result } = renderHook(() => useAuthState(), {
       wrapper: ({ children }) => (
         <Provider store={mockStore}>{children}</Provider>
-      )
+      ),
     });
 
     expect(result.current.loading).toBe(true);
@@ -53,13 +53,13 @@ describe('useAuthState', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('updates state when user signs in', async () => {
+  it("updates state when user signs in", async () => {
     mockAuth.currentUser = mockUser;
 
     const { result } = renderHook(() => useAuthState(), {
       wrapper: ({ children }) => (
         <Provider store={mockStore}>{children}</Provider>
-      )
+      ),
     });
 
     await act(async () => {
@@ -72,11 +72,11 @@ describe('useAuthState', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('updates state when user signs out', async () => {
+  it("updates state when user signs out", async () => {
     const { result } = renderHook(() => useAuthState(), {
       wrapper: ({ children }) => (
         <Provider store={mockStore}>{children}</Provider>
-      )
+      ),
     });
 
     await act(async () => {
@@ -89,13 +89,13 @@ describe('useAuthState', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('handles authentication errors', async () => {
-    const mockError = new Error('Auth error');
+  it("handles authentication errors", async () => {
+    const mockError = new Error("Auth error");
 
     const { result } = renderHook(() => useAuthState(), {
       wrapper: ({ children }) => (
         <Provider store={mockStore}>{children}</Provider>
-      )
+      ),
     });
 
     await act(async () => {
@@ -108,11 +108,11 @@ describe('useAuthState', () => {
     expect(result.current.error).toEqual(mockError);
   });
 
-  it('unsubscribes from auth state changes on unmount', () => {
+  it("unsubscribes from auth state changes on unmount", () => {
     const { unmount } = renderHook(() => useAuthState(), {
       wrapper: ({ children }) => (
         <Provider store={mockStore}>{children}</Provider>
-      )
+      ),
     });
 
     unmount();

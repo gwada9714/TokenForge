@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import { formatUnits } from 'viem';
-import { usePublicClient, useAccount } from 'wagmi';
-import { TokenContract } from '@/providers/contract/ContractProvider';
-import { erc20Abi } from '@/contracts/abis/erc20';
+import { useCallback, useEffect, useState } from "react";
+import { formatUnits } from "viem";
+import { usePublicClient, useAccount } from "wagmi";
+import { TokenContract } from "@/providers/contract/ContractProvider";
+import { erc20Abi } from "@/contracts/abis/erc20";
 
 interface TokenBalance {
   raw: bigint;
@@ -17,8 +17,8 @@ export const useTokenBalance = (token?: TokenContract) => {
   const publicClient = usePublicClient();
   const [balance, setBalance] = useState<TokenBalance>({
     raw: 0n,
-    formatted: '0',
-    symbol: '',
+    formatted: "0",
+    symbol: "",
     loading: false,
     error: null,
   });
@@ -28,13 +28,13 @@ export const useTokenBalance = (token?: TokenContract) => {
       return;
     }
 
-    setBalance(prev => ({ ...prev, loading: true, error: null }));
+    setBalance((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       const rawBalance = await publicClient.readContract({
         address: token.address,
         abi: erc20Abi,
-        functionName: 'balanceOf',
+        functionName: "balanceOf",
         args: [account],
       });
 
@@ -46,10 +46,11 @@ export const useTokenBalance = (token?: TokenContract) => {
         error: null,
       });
     } catch (error) {
-      setBalance(prev => ({
+      setBalance((prev) => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error : new Error('Failed to fetch balance'),
+        error:
+          error instanceof Error ? error : new Error("Failed to fetch balance"),
       }));
     }
   }, [token, account, publicClient]);

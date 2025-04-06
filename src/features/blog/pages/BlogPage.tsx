@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { SEOHead } from '@/components';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { SEOHead } from "@/components";
 
 interface BlogPost {
   id: string;
@@ -17,69 +17,86 @@ export const BlogPage: React.FC = () => {
   // Données simulées des articles de blog
   const [blogPosts] = useState<BlogPost[]>([
     {
-      id: '1',
-      title: 'Comment créer un token ERC-20 en 10 minutes',
-      excerpt: 'Un guide étape par étape pour créer votre propre token ERC-20 sur Ethereum sans connaissances techniques préalables.',
-      date: '2025-02-15',
-      author: 'Jean Dupont',
-      category: 'Tutoriels',
-      image: '/images/blog/erc20-creation.jpg',
-      readTime: 8
+      id: "1",
+      title: "Comment créer un token ERC-20 en 10 minutes",
+      excerpt:
+        "Un guide étape par étape pour créer votre propre token ERC-20 sur Ethereum sans connaissances techniques préalables.",
+      date: "2025-02-15",
+      author: "Jean Dupont",
+      category: "Tutoriels",
+      image: "/images/blog/erc20-creation.jpg",
+      readTime: 8,
     },
     {
-      id: '2',
-      title: 'Les meilleures pratiques de tokenomics pour 2025',
-      excerpt: 'Découvrez les stratégies de tokenomics qui fonctionnent le mieux dans le marché actuel et comment les appliquer à votre projet.',
-      date: '2025-02-10',
-      author: 'Marie Martin',
-      category: 'Tokenomics',
-      image: '/images/blog/tokenomics-best-practices.jpg',
-      readTime: 12
+      id: "2",
+      title: "Les meilleures pratiques de tokenomics pour 2025",
+      excerpt:
+        "Découvrez les stratégies de tokenomics qui fonctionnent le mieux dans le marché actuel et comment les appliquer à votre projet.",
+      date: "2025-02-10",
+      author: "Marie Martin",
+      category: "Tokenomics",
+      image: "/images/blog/tokenomics-best-practices.jpg",
+      readTime: 12,
     },
     {
-      id: '3',
-      title: 'Sécuriser votre token : Guide anti-rugpull complet',
-      excerpt: 'Protégez votre communauté et votre réputation avec ces mécanismes anti-rugpull essentiels pour tout projet de token.',
-      date: '2025-02-05',
-      author: 'Alexandre Lefebvre',
-      category: 'Sécurité',
-      image: '/images/blog/anti-rugpull.jpg',
-      readTime: 10
+      id: "3",
+      title: "Sécuriser votre token : Guide anti-rugpull complet",
+      excerpt:
+        "Protégez votre communauté et votre réputation avec ces mécanismes anti-rugpull essentiels pour tout projet de token.",
+      date: "2025-02-05",
+      author: "Alexandre Lefebvre",
+      category: "Sécurité",
+      image: "/images/blog/anti-rugpull.jpg",
+      readTime: 10,
     },
     {
-      id: '4',
-      title: 'Comparatif des blockchains pour le déploiement de tokens en 2025',
-      excerpt: 'Ethereum, BSC, Polygon, Avalanche, Solana ou Arbitrum ? Quelle blockchain choisir pour votre token ?',
-      date: '2025-01-28',
-      author: 'Sophie Dubois',
-      category: 'Blockchain',
-      image: '/images/blog/blockchain-comparison.jpg',
-      readTime: 15
+      id: "4",
+      title: "Comparatif des blockchains pour le déploiement de tokens en 2025",
+      excerpt:
+        "Ethereum, BSC, Polygon, Avalanche, Solana ou Arbitrum ? Quelle blockchain choisir pour votre token ?",
+      date: "2025-01-28",
+      author: "Sophie Dubois",
+      category: "Blockchain",
+      image: "/images/blog/blockchain-comparison.jpg",
+      readTime: 15,
     },
     {
-      id: '5',
-      title: 'Comment lancer votre token avec un budget limité',
-      excerpt: 'Stratégies et astuces pour lancer votre token avec succès même avec des ressources financières limitées.',
-      date: '2025-01-20',
-      author: 'Thomas Bernard',
-      category: 'Stratégie',
-      image: '/images/blog/launch-budget.jpg',
-      readTime: 9
+      id: "5",
+      title: "Comment lancer votre token avec un budget limité",
+      excerpt:
+        "Stratégies et astuces pour lancer votre token avec succès même avec des ressources financières limitées.",
+      date: "2025-01-20",
+      author: "Thomas Bernard",
+      category: "Stratégie",
+      image: "/images/blog/launch-budget.jpg",
+      readTime: 9,
     },
   ]);
 
-  const [activeCategory, setActiveCategory] = useState<string>('Tous');
-  const categories = ['Tous', 'Tutoriels', 'Tokenomics', 'Sécurité', 'Blockchain', 'Stratégie'];
+  const [activeCategory, setActiveCategory] = useState<string>("Tous");
+  const categories = [
+    "Tous",
+    "Tutoriels",
+    "Tokenomics",
+    "Sécurité",
+    "Blockchain",
+    "Stratégie",
+  ];
 
   // Filtrer les articles par catégorie
-  const filteredPosts = activeCategory === 'Tous'
-    ? blogPosts
-    : blogPosts.filter(post => post.category === activeCategory);
+  const filteredPosts =
+    activeCategory === "Tous"
+      ? blogPosts
+      : blogPosts.filter((post) => post.category === activeCategory);
 
   // Formater la date
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('fr-FR', options);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString("fr-FR", options);
   };
 
   return (
@@ -96,20 +113,22 @@ export const BlogPage: React.FC = () => {
               Blog & Ressources
             </h1>
             <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400 sm:mt-4">
-              Découvrez nos derniers articles, tutoriels et analyses sur la création de tokens et la blockchain
+              Découvrez nos derniers articles, tutoriels et analyses sur la
+              création de tokens et la blockchain
             </p>
           </div>
 
           {/* Filtres par catégorie */}
           <div className="flex flex-wrap justify-center gap-2 mb-10">
-            {categories.map(category => (
+            {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium ${activeCategory === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  activeCategory === category
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                }`}
               >
                 {category}
               </button>
@@ -118,8 +137,11 @@ export const BlogPage: React.FC = () => {
 
           {/* Liste des articles */}
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {filteredPosts.map(post => (
-              <div key={post.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+            {filteredPosts.map((post) => (
+              <div
+                key={post.id}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1"
+              >
                 <Link to={`/blog/${post.id}`}>
                   <div className="h-48 bg-gray-300 dark:bg-gray-700 relative">
                     <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400">
@@ -185,7 +207,8 @@ export const BlogPage: React.FC = () => {
                 Restez informé des dernières actualités
               </h2>
               <p className="mt-2 text-gray-600 dark:text-gray-300">
-                Inscrivez-vous à notre newsletter pour recevoir nos derniers articles et mises à jour
+                Inscrivez-vous à notre newsletter pour recevoir nos derniers
+                articles et mises à jour
               </p>
               <div className="mt-4 flex max-w-md mx-auto">
                 <input

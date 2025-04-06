@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Typography,
@@ -9,11 +9,11 @@ import {
   Tooltip,
   IconButton,
   Grid,
-  Paper
-} from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
-import { useSubscription } from '@/features/subscription/hooks/useSubscription';
-import { AntiWhaleConfig } from './TokenConfigurationForm';
+  Paper,
+} from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import { useSubscription } from "@/features/subscription/hooks/useSubscription";
+import { AntiWhaleConfig } from "./TokenConfigurationForm";
 
 interface AntiWhaleConfigPanelProps {
   config: AntiWhaleConfig;
@@ -22,35 +22,35 @@ interface AntiWhaleConfigPanelProps {
 
 export const AntiWhaleConfigPanel: React.FC<AntiWhaleConfigPanelProps> = ({
   config,
-  onChange
+  onChange,
 }) => {
   const { checkFeature } = useSubscription();
-  const hasAdvancedFeatures = checkFeature('hasAdvancedFeatures');
+  const hasAdvancedFeatures = checkFeature("hasAdvancedFeatures");
 
   const handleToggle = () => {
     onChange({
       ...config,
-      enabled: !config.enabled
+      enabled: !config.enabled,
     });
   };
 
   const handleMaxTransactionChange = (_: Event, value: number | number[]) => {
     onChange({
       ...config,
-      maxTransactionPercentage: value as number
+      maxTransactionPercentage: value as number,
     });
   };
 
   const handleMaxWalletChange = (_: Event, value: number | number[]) => {
     onChange({
       ...config,
-      maxWalletPercentage: value as number
+      maxWalletPercentage: value as number,
     });
   };
 
   return (
     <Paper sx={{ p: 3, mt: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
         <Typography variant="h6">Protection Anti-Whale</Typography>
         <Tooltip title="La protection Anti-Whale limite la quantité de tokens qu'un utilisateur peut acheter ou détenir, empêchant ainsi la concentration des tokens dans quelques portefeuilles.">
           <IconButton size="small" sx={{ ml: 1 }}>
@@ -72,7 +72,8 @@ export const AntiWhaleConfigPanel: React.FC<AntiWhaleConfigPanelProps> = ({
 
       {!hasAdvancedFeatures && (
         <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
-          La protection Anti-Whale est disponible uniquement avec l'abonnement Maître Forgeron.
+          La protection Anti-Whale est disponible uniquement avec l'abonnement
+          Maître Forgeron.
         </Alert>
       )}
 
@@ -110,7 +111,8 @@ export const AntiWhaleConfigPanel: React.FC<AntiWhaleConfigPanelProps> = ({
 
           <Grid item xs={12}>
             <Alert severity="info">
-              Ces limitations empêchent les manipulations de marché et favorisent une distribution plus équitable des tokens.
+              Ces limitations empêchent les manipulations de marché et
+              favorisent une distribution plus équitable des tokens.
             </Alert>
           </Grid>
         </Grid>

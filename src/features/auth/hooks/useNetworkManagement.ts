@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react';
-import { WalletClient } from 'viem';
-import { mainnet, sepolia } from 'viem/chains';
-import { createAuthError } from '../errors/AuthError';
-import { AUTH_ERROR_CODES } from '../errors/AuthError';
+import { useCallback, useState } from "react";
+import { WalletClient } from "viem";
+import { mainnet, sepolia } from "viem/chains";
+import { createAuthError } from "../errors/AuthError";
+import { AUTH_ERROR_CODES } from "../errors/AuthError";
 
 export const SUPPORTED_NETWORKS = {
   [mainnet.id]: {
@@ -36,108 +36,114 @@ export const useNetworkManagement = (walletClient: WalletClient | null) => {
     lastAttemptedChainId: null,
   });
 
-  const switchNetwork = useCallback(async (targetChainId: SupportedChainId) => {
-    if (!walletClient || !window.ethereum) {
-      setState(prev => ({
+  const switchNetwork = useCallback(
+    async (targetChainId: SupportedChainId) => {
+      if (!walletClient || !window.ethereum) {
+        setState((prev) => ({
+          ...prev,
+          error: createAuthError(
+            AUTH_ERROR_CODES.PROVIDER_NOT_FOUND,
+            "No provider available for network switching"
+          ),
+        }));
+        return false;
+      }
+
+      setState((prev) => ({
         ...prev,
-        error: createAuthError(
-          AUTH_ERROR_CODES.PROVIDER_NOT_FOUND,
-          'No provider available for network switching'
-        ),
-      }));
-      return false;
-    }
-
-    setState(prev => ({
-      ...prev,
-      isChanging: true,
-      lastAttemptedChainId: targetChainId,
-      error: null,
-    }));
-
-    try {
-      // D'abord, essayons de changer de réseau
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: SUPPORTED_NETWORKS[targetChainId].chainId }],
-      });
-
-      setState(prev => ({
-        ...prev,
-        isChanging: false,
+        isChanging: true,
+        lastAttemptedChainId: targetChainId,
         error: null,
       }));
 
-      return true;
-    } catch (error: any) {
-      // Code 4902 signifie que le réseau n'existe pas encore
-      if (error.code === 4902) {
-        try {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [SUPPORTED_NETWORKS[targetChainId]],
-          });
+      try {
+        // D'abord, essayons de changer de réseau
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: SUPPORTED_NETWORKS[targetChainId].chainId }],
+        });
 
-          setState(prev => ({
-            ...prev,
-            isChanging: false,
-            error: null,
-          }));
+        setState((prev) => ({
+          ...prev,
+          isChanging: false,
+          error: null,
+        }));
 
-          return true;
-        } catch (addError) {
-          setState(prev => ({
-            ...prev,
-            isChanging: false,
-            error: createAuthError(
-              AUTH_ERROR_CODES.PROVIDER_ERROR,
-              'Failed to add network',
-              { originalError: addError }
-            ),
-          }));
-          return false;
+        return true;
+      } catch (error: any) {
+        // Code 4902 signifie que le réseau n'existe pas encore
+        if (error.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [SUPPORTED_NETWORKS[targetChainId]],
+            });
+
+            setState((prev) => ({
+              ...prev,
+              isChanging: false,
+              error: null,
+            }));
+
+            return true;
+          } catch (addError) {
+            setState((prev) => ({
+              ...prev,
+              isChanging: false,
+              error: createAuthError(
+                AUTH_ERROR_CODES.PROVIDER_ERROR,
+                "Failed to add network",
+                { originalError: addError }
+              ),
+            }));
+            return false;
+          }
         }
+
+        setState((prev) => ({
+          ...prev,
+          isChanging: false,
+          error: createAuthError(
+            AUTH_ERROR_CODES.NETWORK_MISMATCH,
+            "Failed to switch network",
+            { originalError: error }
+          ),
+        }));
+        return false;
       }
+    },
+    [walletClient]
+  );
 
-      setState(prev => ({
-        ...prev,
-        isChanging: false,
-        error: createAuthError(
-          AUTH_ERROR_CODES.NETWORK_MISMATCH,
-          'Failed to switch network',
-          { originalError: error }
-        ),
-      }));
-      return false;
-    }
-  }, [walletClient]);
+  const ensureNetwork = useCallback(
+    async (requiredChainId: SupportedChainId) => {
+      if (!walletClient) return false;
 
-  const ensureNetwork = useCallback(async (requiredChainId: SupportedChainId) => {
-    if (!walletClient) return false;
+      try {
+        const chainId = await walletClient.getChainId();
 
-    try {
-      const chainId = await walletClient.getChainId();
+        if (chainId !== requiredChainId) {
+          return await switchNetwork(requiredChainId);
+        }
 
-      if (chainId !== requiredChainId) {
-        return await switchNetwork(requiredChainId);
+        return true;
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          error: createAuthError(
+            AUTH_ERROR_CODES.PROVIDER_ERROR,
+            "Failed to check network",
+            { originalError: error }
+          ),
+        }));
+        return false;
       }
-
-      return true;
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        error: createAuthError(
-          AUTH_ERROR_CODES.PROVIDER_ERROR,
-          'Failed to check network',
-          { originalError: error }
-        ),
-      }));
-      return false;
-    }
-  }, [walletClient, switchNetwork]);
+    },
+    [walletClient, switchNetwork]
+  );
 
   const resetError = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       error: null,
     }));

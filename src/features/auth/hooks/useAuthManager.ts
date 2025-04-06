@@ -1,7 +1,7 @@
-import { useCallback, useMemo } from 'react';
-import { useWalletDetection } from './useWalletDetection';
-import { useNetworkManagement, SupportedChainId } from './useNetworkManagement';
-import { createAuthError } from '../errors/AuthError';
+import { useCallback, useMemo } from "react";
+import { useWalletDetection } from "./useWalletDetection";
+import { useNetworkManagement, SupportedChainId } from "./useNetworkManagement";
+import { createAuthError } from "../errors/AuthError";
 
 export const useAuthManager = (requiredChainId?: SupportedChainId) => {
   const wallet = useWalletDetection();
@@ -22,10 +22,11 @@ export const useAuthManager = (requiredChainId?: SupportedChainId) => {
 
   // État combiné
   const state = useMemo(() => {
-    const isReady = !wallet.isConnecting && 
-                   !network.isChanging && 
-                   wallet.account !== null &&
-                   (!requiredChainId || wallet.chainId === requiredChainId);
+    const isReady =
+      !wallet.isConnecting &&
+      !network.isChanging &&
+      wallet.account !== null &&
+      (!requiredChainId || wallet.chainId === requiredChainId);
 
     const error = wallet.error || network.error;
 
@@ -53,15 +54,15 @@ export const useAuthManager = (requiredChainId?: SupportedChainId) => {
   const connect = useCallback(async () => {
     if (!window.ethereum) {
       throw createAuthError(
-        'AUTH_001',
-        'No Web3 provider detected. Please install MetaMask or another Web3 wallet.'
+        "AUTH_001",
+        "No Web3 provider detected. Please install MetaMask or another Web3 wallet."
       );
     }
 
     try {
       // Demander la connexion au wallet
-      await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
+      await window.ethereum.request({
+        method: "eth_requestAccounts",
       });
 
       // Vérifier le réseau si nécessaire
@@ -71,11 +72,9 @@ export const useAuthManager = (requiredChainId?: SupportedChainId) => {
 
       return true;
     } catch (error) {
-      throw createAuthError(
-        'AUTH_009',
-        'Failed to connect wallet',
-        { originalError: error }
-      );
+      throw createAuthError("AUTH_009", "Failed to connect wallet", {
+        originalError: error,
+      });
     }
   }, [requiredChainId, network]);
 

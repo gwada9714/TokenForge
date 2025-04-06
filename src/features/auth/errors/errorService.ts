@@ -1,7 +1,7 @@
-import { AuthError, AUTH_ERROR_CODES, ErrorCode } from './AuthError';
-import { logService } from '../services/logService';
+import { AuthError, AUTH_ERROR_CODES, ErrorCode } from "./AuthError";
+import { logService } from "../services/logService";
 
-const LOG_CATEGORY = 'ErrorService';
+const LOG_CATEGORY = "ErrorService";
 
 class ErrorService {
   private static instance: ErrorService;
@@ -27,7 +27,7 @@ class ErrorService {
   private logError(error: AuthError): void {
     logService.error(LOG_CATEGORY, error.message, error, {
       code: error.code,
-      details: error.details
+      details: error.details,
     });
   }
 
@@ -40,7 +40,9 @@ class ErrorService {
     // Convertir les erreurs inconnues en AuthError
     const genericError = this.createAuthError(
       AUTH_ERROR_CODES.UNKNOWN_ERROR,
-      error instanceof Error ? error.message : 'Une erreur inconnue est survenue',
+      error instanceof Error
+        ? error.message
+        : "Une erreur inconnue est survenue",
       { originalError: error }
     );
 

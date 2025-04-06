@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Container,
@@ -8,31 +8,31 @@ import {
   CardContent,
   Button,
   LinearProgress,
-  useTheme
-} from '@mui/material';
-import { motion } from 'framer-motion';
+  useTheme,
+} from "@mui/material";
+import { motion } from "framer-motion";
 
 const Launchpad: React.FC = () => {
   const theme = useTheme();
 
   const projects = [
     {
-      name: 'Project Alpha',
-      description: 'Une nouvelle plateforme DeFi révolutionnaire',
+      name: "Project Alpha",
+      description: "Une nouvelle plateforme DeFi révolutionnaire",
       progress: 75,
-      raised: '150,000',
-      goal: '200,000',
-      startDate: '2025-02-01',
-      endDate: '2025-02-15',
+      raised: "150,000",
+      goal: "200,000",
+      startDate: "2025-02-01",
+      endDate: "2025-02-15",
     },
     {
-      name: 'Beta Chain',
-      description: 'Solution de scalabilité Layer 2',
+      name: "Beta Chain",
+      description: "Solution de scalabilité Layer 2",
       progress: 45,
-      raised: '900,000',
-      goal: '2,000,000',
-      startDate: '2025-02-10',
-      endDate: '2025-03-10',
+      raised: "900,000",
+      goal: "2,000,000",
+      startDate: "2025-02-10",
+      endDate: "2025-03-10",
     },
   ];
 
@@ -60,14 +60,14 @@ const Launchpad: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    transition: 'transform 0.3s ease-in-out',
-                    boxShadow: theme.shadows[4]
-                  }
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    transition: "transform 0.3s ease-in-out",
+                    boxShadow: theme.shadows[4],
+                  },
                 }}
               >
                 <CardContent sx={{ flexGrow: 1 }}>
@@ -77,24 +77,30 @@ const Launchpad: React.FC = () => {
                   <Typography variant="body2" color="text.secondary" paragraph>
                     {project.description}
                   </Typography>
-                  
+
                   <Box sx={{ mt: 2, mb: 1 }}>
-                    <LinearProgress 
-                      variant="determinate" 
+                    <LinearProgress
+                      variant="determinate"
                       value={project.progress}
                       sx={{
                         height: 8,
                         borderRadius: 4,
-                        backgroundColor: 'rgba(0,0,0,0.1)',
-                        '& .MuiLinearProgress-bar': {
+                        backgroundColor: "rgba(0,0,0,0.1)",
+                        "& .MuiLinearProgress-bar": {
                           borderRadius: 4,
-                          backgroundColor: theme.palette.primary.main
-                        }
+                          backgroundColor: theme.palette.primary.main,
+                        },
                       }}
                     />
                   </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 2,
+                    }}
+                  >
                     <Typography variant="body2" color="text.secondary">
                       {project.raised} USDT
                     </Typography>
@@ -103,7 +109,13 @@ const Launchpad: React.FC = () => {
                     </Typography>
                   </Box>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 3,
+                    }}
+                  >
                     <Box>
                       <Typography variant="caption" color="text.secondary">
                         Début
@@ -116,9 +128,7 @@ const Launchpad: React.FC = () => {
                       <Typography variant="caption" color="text.secondary">
                         Fin
                       </Typography>
-                      <Typography variant="body2">
-                        {project.endDate}
-                      </Typography>
+                      <Typography variant="body2">{project.endDate}</Typography>
                     </Box>
                   </Box>
 
@@ -126,9 +136,9 @@ const Launchpad: React.FC = () => {
                     variant="contained"
                     fullWidth
                     sx={{
-                      mt: 'auto',
-                      textTransform: 'none',
-                      borderRadius: 2
+                      mt: "auto",
+                      textTransform: "none",
+                      borderRadius: 2,
                     }}
                   >
                     Participer

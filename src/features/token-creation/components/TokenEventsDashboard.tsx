@@ -1,15 +1,15 @@
-import React from 'react';
-import { useTokenEvents } from '../hooks/useTokenEvents';
-import { BlockchainNetwork } from './DeploymentOptions';
+import React from "react";
+import { useTokenEvents } from "../hooks/useTokenEvents";
+import { BlockchainNetwork } from "./DeploymentOptions";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatEther } from 'viem';
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatEther } from "viem";
 
 interface TokenEventsDashboardProps {
   network: BlockchainNetwork;
@@ -18,7 +18,7 @@ interface TokenEventsDashboardProps {
 
 export const TokenEventsDashboard: React.FC<TokenEventsDashboardProps> = ({
   network,
-  tokenAddress
+  tokenAddress,
 }) => {
   const {
     taxEvents,
@@ -26,7 +26,7 @@ export const TokenEventsDashboard: React.FC<TokenEventsDashboardProps> = ({
     mintEvents,
     burnEvents,
     isLoading,
-    error
+    error,
   } = useTokenEvents(network, tokenAddress);
 
   if (error) {
@@ -156,16 +156,13 @@ interface EventListProps {
 const EventList: React.FC<EventListProps> = ({
   events,
   loading,
-  emptyMessage
+  emptyMessage,
 }) => {
   if (loading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3].map(i => (
-          <div
-            key={i}
-            className="h-16 bg-muted animate-pulse rounded"
-          />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 bg-muted animate-pulse rounded" />
         ))}
       </div>
     );
@@ -189,19 +186,15 @@ const EventList: React.FC<EventListProps> = ({
             <div className="flex justify-between items-center">
               <div>
                 <p className="font-medium">
-                  {event.type === 'TaxCollected' ? 'Taxe' : event.type}
+                  {event.type === "TaxCollected" ? "Taxe" : event.type}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   De: {event.from}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  À: {event.to}
-                </p>
+                <p className="text-sm text-muted-foreground">À: {event.to}</p>
               </div>
               <div className="text-right">
-                <p className="font-bold">
-                  {formatEther(event.amount)} tokens
-                </p>
+                <p className="font-bold">{formatEther(event.amount)} tokens</p>
                 <p className="text-sm text-muted-foreground">
                   {new Date(event.timestamp).toLocaleString()}
                 </p>

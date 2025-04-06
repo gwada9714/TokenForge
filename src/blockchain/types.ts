@@ -51,6 +51,6 @@ export interface LiquidityConfig {
 }
 
 export interface PaymentStatus {
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   details: Record<string, any>;
 }

@@ -1,6 +1,6 @@
-import { WalletState } from './wallet';
-import { TokenForgeUser, TokenForgeAuthState } from './auth';
-import { WalletClient } from 'viem';
+import { WalletState } from "./wallet";
+import { TokenForgeUser, TokenForgeAuthState } from "./auth";
+import { WalletClient } from "viem";
 
 export interface ErrorService {
   handle: (error: unknown) => void;
@@ -52,9 +52,12 @@ export interface StorageService {
   saveAuthState: (user: TokenForgeUser | null) => void;
   getAuthState: () => StoredAuthState | null;
   clearAuthState: () => void;
-  getUserData: (userId: string) => Promise<StoredAuthState['user']>;
-  updateUserData: (userId: string, updates: Partial<StoredAuthState['user']>) => Promise<void>;
-  
+  getUserData: (userId: string) => Promise<StoredAuthState["user"]>;
+  updateUserData: (
+    userId: string,
+    updates: Partial<StoredAuthState["user"]>
+  ) => Promise<void>;
+
   // Wallet Storage
   saveWalletState: (state: Partial<WalletState>) => void;
   getWalletState: () => (Partial<WalletState> & { lastUpdate?: number }) | null;
@@ -81,7 +84,10 @@ export interface WalletService {
 }
 
 export interface AuthSyncService {
-  synchronizeWalletAndAuth: (walletState: WalletState, authState: TokenForgeAuthState) => Promise<void>;
+  synchronizeWalletAndAuth: (
+    walletState: WalletState,
+    authState: TokenForgeAuthState
+  ) => Promise<void>;
   startSync: () => void;
   stopSync: () => void;
 }
@@ -93,7 +99,7 @@ export interface StoredAuthState {
 }
 
 export interface SyncMessage {
-  type: 'AUTH_STATE' | 'WALLET_STATE' | 'SESSION_STATE';
+  type: "AUTH_STATE" | "WALLET_STATE" | "SESSION_STATE";
   payload: any;
   timestamp: number;
   tabId: string;

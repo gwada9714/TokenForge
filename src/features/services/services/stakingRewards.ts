@@ -1,8 +1,8 @@
-import { logger } from '@/core/logger';
-import { BlockchainNetwork } from '@/types/blockchain';
-import { stakingFirestore } from './stakingFirestore';
-import { StakingContractService } from './stakingContract';
-import { type Address, type PublicClient, type WalletClient } from 'viem';
+import { logger } from "@/core/logger";
+import { BlockchainNetwork } from "@/types/blockchain";
+import { stakingFirestore } from "./stakingFirestore";
+import { StakingContractService } from "./stakingContract";
+import { type Address, type PublicClient, type WalletClient } from "viem";
 
 export interface StakingPool {
   id: string;
@@ -58,7 +58,7 @@ export class StakingRewardsService {
   ): Promise<StakingPool> {
     try {
       if (!this.publicClient || !this.walletClient) {
-        throw new Error('Clients non initialisés');
+        throw new Error("Clients non initialisés");
       }
 
       const pool: StakingPool = {
@@ -70,13 +70,17 @@ export class StakingRewardsService {
         rewardsDistributed: 0n,
         stakingPeriod,
         minStakeAmount,
-        isFlexible
+        isFlexible,
       };
 
       await stakingFirestore.savePool(pool);
       return pool;
     } catch (error) {
-      logger.error('Erreur lors de la création du pool', { error, network, tokenAddress });
+      logger.error("Erreur lors de la création du pool", {
+        error,
+        network,
+        tokenAddress,
+      });
       throw error;
     }
   }
@@ -84,23 +88,23 @@ export class StakingRewardsService {
   async distributeRewards(poolId: string): Promise<void> {
     try {
       if (!this.publicClient || !this.walletClient) {
-        throw new Error('Clients non initialisés');
+        throw new Error("Clients non initialisés");
       }
 
       const pool = await stakingFirestore.getPool(poolId);
       if (!pool) {
-        throw new Error('Pool non trouvé');
+        throw new Error("Pool non trouvé");
       }
 
       const stakingRewards = await this.calculateRewards(pool);
-      
+
       for (const reward of stakingRewards) {
         const platformFee = this.calculatePlatformFee(reward.amount);
         const userReward = reward.amount - platformFee;
 
         await stakingFirestore.saveReward({
           ...reward,
-          amount: userReward
+          amount: userReward,
         });
 
         await this.stakingContractService.transferRewards(
@@ -114,12 +118,16 @@ export class StakingRewardsService {
         );
       }
 
-      pool.rewardsDistributed = pool.rewardsDistributed + 
+      pool.rewardsDistributed =
+        pool.rewardsDistributed +
         stakingRewards.reduce((total, reward) => total + reward.amount, 0n);
 
       await stakingFirestore.updatePool(pool);
     } catch (error) {
-      logger.error('Erreur lors de la distribution des récompenses', { error, poolId });
+      logger.error("Erreur lors de la distribution des récompenses", {
+        error,
+        poolId,
+      });
       throw error;
     }
   }
@@ -135,20 +143,23 @@ export class StakingRewardsService {
   private async calculateRewards(pool: StakingPool): Promise<StakingReward[]> {
     const rewards = await stakingFirestore.getPoolRewards(pool.id);
     const currentTime = Date.now();
-    
+
     // Calculer les récompenses basées sur l'APR et la période de staking
     const annualRewardRate = pool.apr / 100;
     const dailyRewardRate = annualRewardRate / 365;
-    
-    return rewards.map(reward => {
+
+    return rewards.map((reward) => {
       const stakingDuration = currentTime - reward.timestamp;
       const daysStaked = stakingDuration / (24 * 60 * 60 * 1000);
-      const rewardAmount = (reward.amount * BigInt(Math.floor(dailyRewardRate * daysStaked * 10000))) / 10000n;
-      
+      const rewardAmount =
+        (reward.amount *
+          BigInt(Math.floor(dailyRewardRate * daysStaked * 10000))) /
+        10000n;
+
       return {
         ...reward,
-        amount: rewardAmount
+        amount: rewardAmount,
       };
     });
   }
-} 
+}

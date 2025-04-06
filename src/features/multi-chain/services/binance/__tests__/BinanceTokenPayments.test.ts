@@ -1,14 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { type Address, type Chain, type PublicClient, type WalletClient } from 'viem';
-import { BinancePaymentService } from '../BinancePaymentService';
-import { COMMON_TOKEN_ADDRESSES } from '../../payment/types/TokenConfig';
-import { PaymentSessionService } from '../../payment/PaymentSessionService';
-import { PaymentStatus } from '../../payment/types/PaymentSession';
-import { PAYMENT_CONTRACT_ABI } from '../../payment/abis/TokenABI';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import {
+  type Address,
+  type Chain,
+  type PublicClient,
+  type WalletClient,
+} from "viem";
+import { BinancePaymentService } from "../BinancePaymentService";
+import { COMMON_TOKEN_ADDRESSES } from "../../payment/types/TokenConfig";
+import { PaymentSessionService } from "../../payment/PaymentSessionService";
+import { PaymentStatus } from "../../payment/types/PaymentSession";
+import { PAYMENT_CONTRACT_ABI } from "../../payment/abis/TokenABI";
 
-vi.mock('../../payment/PaymentSessionService');
+vi.mock("../../payment/PaymentSessionService");
 
-describe('BinancePaymentService - Token Payments', () => {
+describe("BinancePaymentService - Token Payments", () => {
   let paymentService: BinancePaymentService;
   let mockPublicClient: PublicClient;
   let mockWalletClient: WalletClient;
@@ -17,7 +22,7 @@ describe('BinancePaymentService - Token Payments', () => {
   beforeEach(() => {
     // Create base mock objects
     const mockReadContract = vi.fn().mockImplementation(async (args: any) => {
-      if (args.functionName === 'isTokenSupported') {
+      if (args.functionName === "isTokenSupported") {
         return true;
       }
       return BigInt(0);
@@ -34,7 +39,7 @@ describe('BinancePaymentService - Token Payments', () => {
 
     // Setup WalletClient mock
     mockWalletClient = {
-      account: { address: '0x1234...' as Address },
+      account: { address: "0x1234..." as Address },
       signMessage: vi.fn(),
     } as unknown as WalletClient;
 
@@ -49,27 +54,29 @@ describe('BinancePaymentService - Token Payments', () => {
       createSession: mockCreateSession,
     } as unknown as PaymentSessionService;
 
-    vi.mocked(PaymentSessionService.getInstance).mockReturnValue(mockSessionService);
+    vi.mocked(PaymentSessionService.getInstance).mockReturnValue(
+      mockSessionService
+    );
 
     paymentService = BinancePaymentService.getInstance({
       publicClient: mockPublicClient,
       walletClient: mockWalletClient,
-      contractAddress: '0xcontract...' as Address,
-      receiverAddress: '0xreceiver...' as Address
+      contractAddress: "0xcontract..." as Address,
+      receiverAddress: "0xreceiver..." as Address,
     });
   });
 
-  describe('USDT (BEP20) Payments', () => {
-    it('should handle USDT payment creation', async () => {
-      const amount = BigInt('1000000000000000000'); // 1 USDT (18 decimals)
-      const sessionId = 'test-session-1';
+  describe("USDT (BEP20) Payments", () => {
+    it("should handle USDT payment creation", async () => {
+      const amount = BigInt("1000000000000000000"); // 1 USDT (18 decimals)
+      const sessionId = "test-session-1";
 
       mockSessionService.updateSessionStatus = vi.fn();
 
       const result = await paymentService.payWithToken(
         COMMON_TOKEN_ADDRESSES.BSC_USDT,
         amount,
-        'TEST_SERVICE',
+        "TEST_SERVICE",
         sessionId,
         { gasLimit: BigInt(100000) }
       );
@@ -85,24 +92,24 @@ describe('BinancePaymentService - Token Payments', () => {
         expect.objectContaining({
           address: expect.any(String),
           abi: PAYMENT_CONTRACT_ABI,
-          functionName: 'isTokenSupported',
+          functionName: "isTokenSupported",
           args: [COMMON_TOKEN_ADDRESSES.BSC_USDT],
         })
       );
     });
   });
 
-  describe('BUSD Payments', () => {
-    it('should handle BUSD payment creation', async () => {
-      const amount = BigInt('1000000000000000000'); // 1 BUSD (18 decimals)
-      const sessionId = 'test-session-2';
+  describe("BUSD Payments", () => {
+    it("should handle BUSD payment creation", async () => {
+      const amount = BigInt("1000000000000000000"); // 1 BUSD (18 decimals)
+      const sessionId = "test-session-2";
 
       mockSessionService.updateSessionStatus = vi.fn();
 
       const result = await paymentService.payWithToken(
         COMMON_TOKEN_ADDRESSES.BSC_BUSD,
         amount,
-        'TEST_SERVICE',
+        "TEST_SERVICE",
         sessionId,
         { gasLimit: BigInt(100000) }
       );
@@ -118,24 +125,24 @@ describe('BinancePaymentService - Token Payments', () => {
         expect.objectContaining({
           address: expect.any(String),
           abi: PAYMENT_CONTRACT_ABI,
-          functionName: 'isTokenSupported',
+          functionName: "isTokenSupported",
           args: [COMMON_TOKEN_ADDRESSES.BSC_BUSD],
         })
       );
     });
   });
 
-  describe('USDC (BEP20) Payments', () => {
-    it('should handle USDC payment creation', async () => {
-      const amount = BigInt('1000000000000000000'); // 1 USDC (18 decimals)
-      const sessionId = 'test-session-3';
+  describe("USDC (BEP20) Payments", () => {
+    it("should handle USDC payment creation", async () => {
+      const amount = BigInt("1000000000000000000"); // 1 USDC (18 decimals)
+      const sessionId = "test-session-3";
 
       mockSessionService.updateSessionStatus = vi.fn();
 
       const result = await paymentService.payWithToken(
         COMMON_TOKEN_ADDRESSES.BSC_USDC,
         amount,
-        'TEST_SERVICE',
+        "TEST_SERVICE",
         sessionId,
         { gasLimit: BigInt(100000) }
       );
@@ -151,7 +158,7 @@ describe('BinancePaymentService - Token Payments', () => {
         expect.objectContaining({
           address: expect.any(String),
           abi: PAYMENT_CONTRACT_ABI,
-          functionName: 'isTokenSupported',
+          functionName: "isTokenSupported",
           args: [COMMON_TOKEN_ADDRESSES.BSC_USDC],
         })
       );

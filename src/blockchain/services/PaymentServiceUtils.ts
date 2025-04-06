@@ -10,18 +10,18 @@
  */
 export function getMinConfirmations(chainName: string): number {
   switch (chainName.toLowerCase()) {
-    case 'ethereum':
+    case "ethereum":
       return 12; // Ethereum nécessite plus de confirmations
-    case 'binance':
-    case 'bsc':
+    case "binance":
+    case "bsc":
       return 15; // BSC nécessite beaucoup de confirmations
-    case 'polygon':
+    case "polygon":
       return 64; // Polygon nécessite beaucoup de confirmations
-    case 'avalanche':
+    case "avalanche":
       return 12; // Avalanche
-    case 'arbitrum':
+    case "arbitrum":
       return 12; // Arbitrum
-    case 'solana':
+    case "solana":
       return 32; // Solana
     default:
       return 12; // Par défaut
@@ -35,18 +35,18 @@ export function getMinConfirmations(chainName: string): number {
  */
 export function getEstimatedTransactionTime(chainName: string): number {
   switch (chainName.toLowerCase()) {
-    case 'ethereum':
+    case "ethereum":
       return 180; // ~3 minutes
-    case 'binance':
-    case 'bsc':
+    case "binance":
+    case "bsc":
       return 15; // ~15 secondes
-    case 'polygon':
+    case "polygon":
       return 10; // ~10 secondes
-    case 'avalanche':
+    case "avalanche":
       return 5; // ~5 secondes
-    case 'arbitrum':
+    case "arbitrum":
       return 15; // ~15 secondes
-    case 'solana':
+    case "solana":
       return 2; // ~2 secondes
     default:
       return 60; // Par défaut 1 minute
@@ -60,18 +60,18 @@ export function getEstimatedTransactionTime(chainName: string): number {
  */
 export function getChainId(chainName: string): number {
   switch (chainName.toLowerCase()) {
-    case 'ethereum':
+    case "ethereum":
       return 1; // Ethereum Mainnet
-    case 'binance':
-    case 'bsc':
+    case "binance":
+    case "bsc":
       return 56; // Binance Smart Chain
-    case 'polygon':
+    case "polygon":
       return 137; // Polygon
-    case 'avalanche':
+    case "avalanche":
       return 43114; // Avalanche C-Chain
-    case 'arbitrum':
+    case "arbitrum":
       return 42161; // Arbitrum One
-    case 'solana':
+    case "solana":
       return 0; // Solana n'a pas d'ID de chaîne EVM
     default:
       return 1; // Par défaut Ethereum

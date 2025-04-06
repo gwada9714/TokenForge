@@ -1,9 +1,9 @@
-import React from 'react';
-import { Box, Container } from '@mui/material';
-import { PremiumDashboard } from '@/components/premium/PremiumDashboard';
-import { useTokenForgePremium } from '@/hooks/useTokenForgePremium';
-import { PlanType } from '@/types/premium';
-import { RequirePlan } from '@/components/auth/RequirePlan';
+import React from "react";
+import { Box, Container } from "@mui/material";
+import { PremiumDashboard } from "@/components/premium/PremiumDashboard";
+import { useTokenForgePremium } from "@/hooks/useTokenForgePremium";
+import { PlanType } from "@/types/premium";
+import { RequirePlan } from "@/components/auth/RequirePlan";
 
 const PremiumServices: React.FC = () => {
   const { userPlan } = useTokenForgePremium();

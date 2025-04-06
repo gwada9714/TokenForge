@@ -3,11 +3,13 @@
 ## Étapes à suivre
 
 1. **Créer un projet Google Cloud Platform**
+
    - Aller sur [Google Cloud Console](https://console.cloud.google.com)
    - Créer un nouveau projet ou utiliser un projet existant
    - Noter l'ID du projet
 
 2. **Configurer reCAPTCHA**
+
    - Aller sur [Google reCAPTCHA Admin](https://www.google.com/recaptcha/admin)
    - Créer un nouveau site
    - Type : reCAPTCHA v3
@@ -15,6 +17,7 @@
    - Lier au projet Google Cloud Platform créé précédemment
 
 3. **Mettre à jour les variables d'environnement**
+
    ```env
    VITE_RECAPTCHA_SITE_KEY=votre_cle_site
    ```

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { createBlockchainService } from '../factory';
+import { useState, useEffect } from "react";
+import { createBlockchainService } from "../factory";
 
 /**
  * Hook React pour utiliser les services blockchain dans l'UI
@@ -14,12 +14,15 @@ export const useBlockchain = (chainName: string, walletProvider?: any) => {
   useEffect(() => {
     const initService = async () => {
       try {
-        const blockchainService = createBlockchainService(chainName, walletProvider);
+        const blockchainService = createBlockchainService(
+          chainName,
+          walletProvider
+        );
         setService(blockchainService);
-        
+
         const connected = await blockchainService.isConnected();
         setIsConnected(connected);
-        
+
         if (connected) {
           const networkId = await blockchainService.getNetworkId();
           setNetworkId(networkId);

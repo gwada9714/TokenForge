@@ -24,6 +24,7 @@ admin/
 ## 🔒 Contrôle d'Accès
 
 L'accès à l'interface d'administration est protégé par :
+
 - Guard d'authentification (`AdminRoute`)
 - Vérification de l'adresse propriétaire
 - Validation des droits administrateur
@@ -31,27 +32,32 @@ L'accès à l'interface d'administration est protégé par :
 ## 📊 Fonctionnalités
 
 ### Dashboard Principal
+
 - Vue d'ensemble des statistiques
 - Navigation vers les différentes sections
 - Statut du contrat
 
 ### Gestion des Alertes
+
 - Création de règles d'alerte
 - Activation/désactivation des alertes
 - Configuration des conditions
 
 ### Logs d'Audit
+
 - Historique des actions
 - Filtrage et recherche
 - Export des données
 - Purge des logs anciens
 
 ### Contrôle du Contrat
+
 - Pause/reprise du contrat
 - Mise à jour des paramètres
 - Gestion des fonctionnalités
 
 ### Gestion des Droits
+
 - Transfert de propriété
 - Gestion des rôles
 - Permissions spéciales
@@ -59,6 +65,7 @@ L'accès à l'interface d'administration est protégé par :
 ## 🧪 Tests
 
 Chaque composant dispose de ses propres tests :
+
 - Tests unitaires des composants
 - Tests d'intégration
 - Tests des fonctionnalités métier
@@ -73,6 +80,7 @@ Chaque composant dispose de ses propres tests :
 ## 🔄 État Global
 
 L'état de l'interface d'administration est géré via :
+
 - Redux pour l'état global
 - Context API pour les données partagées
 - État local pour les composants isolés

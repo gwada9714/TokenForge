@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useAccount, useDisconnect, useChainId } from 'wagmi';
-import { useNetworkManagement } from './useNetworkManagement';
-import { sepolia } from 'wagmi/chains';
+import { useEffect, useState, useCallback } from "react";
+import { useAccount, useDisconnect, useChainId } from "wagmi";
+import { useNetworkManagement } from "./useNetworkManagement";
+import { sepolia } from "wagmi/chains";
 
 interface WalletConnectionState {
   isInitialized: boolean;
@@ -28,35 +28,35 @@ export const useWalletConnection = () => {
     address: undefined,
     chainId: undefined,
     hasError: false,
-    errorMessage: null
+    errorMessage: null,
   });
 
   const disconnect = useCallback(() => {
     wagmiDisconnect();
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isConnected: false,
       isAdmin: false,
       address: undefined,
       chainId: undefined,
       hasError: false,
-      errorMessage: null
+      errorMessage: null,
     }));
   }, [wagmiDisconnect]);
 
   useEffect(() => {
     if (!isConnected) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isConnected: false,
         isAdmin: false,
         address: undefined,
-        chainId: undefined
+        chainId: undefined,
       }));
       return;
     }
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isInitialized: true,
       isConnected,
@@ -64,7 +64,7 @@ export const useWalletConnection = () => {
       address,
       chainId,
       hasError: false,
-      errorMessage: null
+      errorMessage: null,
     }));
   }, [isConnected, isCorrectNetwork, address, chainId]);
 
@@ -75,23 +75,26 @@ export const useWalletConnection = () => {
         try {
           // Pour l'instant, on considère que l'adresse qui a déployé TokenFactory est admin
           const tokenFactoryOwner = import.meta.env.VITE_TOKEN_FACTORY_SEPOLIA;
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
-            isAdmin: address.toLowerCase() === tokenFactoryOwner?.toLowerCase()
+            isAdmin: address.toLowerCase() === tokenFactoryOwner?.toLowerCase(),
           }));
         } catch (error) {
-          console.error("Erreur lors de la vérification du statut admin:", error);
-          setState(prev => ({
+          console.error(
+            "Erreur lors de la vérification du statut admin:",
+            error
+          );
+          setState((prev) => ({
             ...prev,
             isAdmin: false,
             hasError: true,
-            errorMessage: "Erreur lors de la vérification du statut admin"
+            errorMessage: "Erreur lors de la vérification du statut admin",
           }));
         }
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
-          isAdmin: false
+          isAdmin: false,
         }));
       }
     };
@@ -101,7 +104,7 @@ export const useWalletConnection = () => {
 
   return {
     ...state,
-    disconnect
+    disconnect,
   };
 };
 

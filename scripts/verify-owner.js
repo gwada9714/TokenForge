@@ -8,13 +8,15 @@ async function main() {
   console.log(`Adresse du contrat: ${contractAddress}`);
   console.log(`Adresse à vérifier: ${targetAddress}`);
 
-  const TokenForgeFactory = await hre.ethers.getContractFactory("TokenForgeFactory");
+  const TokenForgeFactory = await hre.ethers.getContractFactory(
+    "TokenForgeFactory"
+  );
   const contract = TokenForgeFactory.attach(contractAddress);
 
   try {
     const owner = await contract.owner();
     console.log(`Propriétaire actuel: ${owner}`);
-    
+
     const isPaused = await contract.paused();
     console.log(`État de pause: ${isPaused ? "En pause" : "Actif"}`);
 

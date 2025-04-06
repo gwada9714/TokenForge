@@ -1,23 +1,18 @@
-import { vi } from 'vitest';
-import { 
-  Address, 
-  Hash,
-  PublicClient,
-  WalletClient
-} from 'viem';
+import { vi } from "vitest";
+import { Address, Hash, PublicClient, WalletClient } from "viem";
 
 const mockChain = {
   id: 1,
-  name: 'Mock Chain',
-  network: 'mock',
+  name: "Mock Chain",
+  network: "mock",
   nativeCurrency: {
-    name: 'Mock Token',
-    symbol: 'MOCK',
+    name: "Mock Token",
+    symbol: "MOCK",
     decimals: 18,
   },
   rpcUrls: {
-    default: { http: ['http://localhost:8545'] },
-    public: { http: ['http://localhost:8545'] },
+    default: { http: ["http://localhost:8545"] },
+    public: { http: ["http://localhost:8545"] },
   },
 } as const;
 
@@ -26,16 +21,16 @@ export const mockPublicClient = {
   batch: undefined,
   cacheTime: 4_000,
   chain: mockChain,
-  key: 'mock',
-  name: 'Mock Client',
+  key: "mock",
+  name: "Mock Client",
   pollingInterval: 4_000,
-  type: 'publicClient',
-  uid: 'mock',
+  type: "publicClient",
+  uid: "mock",
   readContract: vi.fn(),
   simulateContract: vi.fn(),
   watchContractEvent: vi.fn(),
   getGasPrice: vi.fn(),
-  estimateContractGas: vi.fn()
+  estimateContractGas: vi.fn(),
 } as unknown as PublicClient & {
   readContract: ReturnType<typeof vi.fn>;
   simulateContract: ReturnType<typeof vi.fn>;
@@ -45,8 +40,8 @@ export const mockPublicClient = {
 };
 
 const mockAccount = {
-  address: '0x1234567890123456789012345678901234567890' as Address,
-  type: 'json-rpc'
+  address: "0x1234567890123456789012345678901234567890" as Address,
+  type: "json-rpc",
 } as const;
 
 export const mockWalletClient = {
@@ -54,13 +49,13 @@ export const mockWalletClient = {
   batch: undefined,
   cacheTime: 4_000,
   chain: mockChain,
-  key: 'mock',
-  name: 'Mock Wallet Client',
+  key: "mock",
+  name: "Mock Wallet Client",
   pollingInterval: 4_000,
-  type: 'walletClient',
-  uid: 'mock',
-  writeContract: vi.fn().mockResolvedValue('0xmocktxhash' as Hash),
-  estimateContractGas: vi.fn()
+  type: "walletClient",
+  uid: "mock",
+  writeContract: vi.fn().mockResolvedValue("0xmocktxhash" as Hash),
+  estimateContractGas: vi.fn(),
 } as unknown as WalletClient & {
   writeContract: ReturnType<typeof vi.fn>;
   estimateContractGas: ReturnType<typeof vi.fn>;
@@ -68,8 +63,8 @@ export const mockWalletClient = {
 
 export const mockContractEvent = {
   args: [] as unknown[],
-  data: '0x',
+  data: "0x",
   topics: [] as string[],
   blockNumber: 1n,
-  transactionHash: '0xmocktxhash' as Hash
+  transactionHash: "0xmocktxhash" as Hash,
 };

@@ -1,11 +1,11 @@
-const TOKEN_KEY = 'auth_token';
+const TOKEN_KEY = "auth_token";
 
 export const secureStorageService = {
   setAuthToken: async (token: string): Promise<void> => {
     try {
       localStorage.setItem(TOKEN_KEY, token);
     } catch (error) {
-      console.error('Error storing auth token:', error);
+      console.error("Error storing auth token:", error);
       throw error;
     }
   },
@@ -14,7 +14,7 @@ export const secureStorageService = {
     try {
       localStorage.removeItem(TOKEN_KEY);
     } catch (error) {
-      console.error('Error removing auth token:', error);
+      console.error("Error removing auth token:", error);
     }
   },
 
@@ -22,8 +22,8 @@ export const secureStorageService = {
     try {
       return localStorage.getItem(TOKEN_KEY);
     } catch (error) {
-      console.error('Error getting auth token:', error);
+      console.error("Error getting auth token:", error);
       return null;
     }
-  }
+  },
 };

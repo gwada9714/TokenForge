@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { secureWalletService } from '../services/SecureWalletService';
-import { IBlockchainService } from '../interfaces/IBlockchainService';
-import { logger } from '@/core/logger';
+import { useState, useEffect, useCallback } from "react";
+import { secureWalletService } from "../services/SecureWalletService";
+import { IBlockchainService } from "../interfaces/IBlockchainService";
+import { logger } from "@/core/logger";
 
 /**
  * Interface pour les résultats du hook useSecureBlockchain
@@ -21,7 +21,7 @@ interface UseSecureBlockchainResult {
 /**
  * Hook React sécurisé pour utiliser les services blockchain dans l'UI
  * Utilise le SecureWalletService pour une connexion wallet sécurisée
- * 
+ *
  * @param chainName Nom de la blockchain (ethereum, binance, polygon, avalanche, arbitrum, solana)
  * @param walletProvider Provider du wallet (window.ethereum, etc.)
  * @returns Résultat contenant le service blockchain, l'état de connexion, et les fonctions de connexion/déconnexion
@@ -44,54 +44,67 @@ export const useSecureBlockchain = (
   const connect = useCallback(async () => {
     try {
       setError(null);
-      
+
       if (!walletProvider) {
-        throw new Error('Provider de wallet non disponible');
+        throw new Error("Provider de wallet non disponible");
       }
-      
+
       // Connecter le wallet de manière sécurisée
-      const blockchainService = await secureWalletService.connectWallet(chainName, walletProvider);
-      
+      const blockchainService = await secureWalletService.connectWallet(
+        chainName,
+        walletProvider
+      );
+
       // Mettre à jour l'état
       setService(blockchainService);
       setIsConnected(true);
-      
+
       // Récupérer l'ID du réseau
       const networkId = await blockchainService.getNetworkId();
       setNetworkId(networkId);
-      
+
       // Vérifier si le réseau est autorisé
       const allowedNetworks = secureWalletService.getAllowedNetworks(chainName);
       setIsAllowedNetwork(allowedNetworks.includes(networkId));
-      
+
       // Récupérer le compte principal
       const primaryAccount = secureWalletService.getPrimaryAccount(chainName);
       setAccount(primaryAccount);
-      
+
       // Déterminer le type de wallet
       setWalletType(
-        walletProvider.isMetaMask ? 'metamask' :
-        walletProvider.isTrust ? 'trust' :
-        walletProvider.isCoinbaseWallet ? 'coinbase' :
-        walletProvider.isWalletConnect ? 'walletconnect' :
-        walletProvider.isBraveWallet ? 'brave' :
-        'unknown'
+        walletProvider.isMetaMask
+          ? "metamask"
+          : walletProvider.isTrust
+          ? "trust"
+          : walletProvider.isCoinbaseWallet
+          ? "coinbase"
+          : walletProvider.isWalletConnect
+          ? "walletconnect"
+          : walletProvider.isBraveWallet
+          ? "brave"
+          : "unknown"
       );
-      
-      logger.info('useSecureBlockchain', `Wallet connecté pour ${chainName}`, {
+
+      logger.info("useSecureBlockchain", `Wallet connecté pour ${chainName}`, {
         networkId,
         account: primaryAccount,
-        walletType
+        walletType,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       setError(errorMessage);
       setIsConnected(false);
       setService(null);
       setNetworkId(null);
       setAccount(null);
-      
-      logger.error('useSecureBlockchain', `Erreur lors de la connexion au wallet pour ${chainName}`, error);
+
+      logger.error(
+        "useSecureBlockchain",
+        `Erreur lors de la connexion au wallet pour ${chainName}`,
+        error
+      );
     }
   }, [chainName, walletProvider]);
 
@@ -103,20 +116,25 @@ export const useSecureBlockchain = (
       if (isConnected) {
         await secureWalletService.disconnectWallet(chainName);
       }
-      
+
       // Réinitialiser l'état
       setService(null);
       setIsConnected(false);
       setNetworkId(null);
       setAccount(null);
       setWalletType(null);
-      
-      logger.info('useSecureBlockchain', `Wallet déconnecté pour ${chainName}`);
+
+      logger.info("useSecureBlockchain", `Wallet déconnecté pour ${chainName}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       setError(errorMessage);
-      
-      logger.error('useSecureBlockchain', `Erreur lors de la déconnexion du wallet pour ${chainName}`, error);
+
+      logger.error(
+        "useSecureBlockchain",
+        `Erreur lors de la déconnexion du wallet pour ${chainName}`,
+        error
+      );
     }
   }, [chainName, isConnected]);
 
@@ -132,57 +150,76 @@ export const useSecureBlockchain = (
           if (service) {
             setService(service);
             setIsConnected(true);
-            
+
             const networkId = await service.getNetworkId();
             setNetworkId(networkId);
-            
-            const allowedNetworks = secureWalletService.getAllowedNetworks(chainName);
+
+            const allowedNetworks =
+              secureWalletService.getAllowedNetworks(chainName);
             setIsAllowedNetwork(allowedNetworks.includes(networkId));
-            
-            const primaryAccount = secureWalletService.getPrimaryAccount(chainName);
+
+            const primaryAccount =
+              secureWalletService.getPrimaryAccount(chainName);
             setAccount(primaryAccount);
-            
-            logger.info('useSecureBlockchain', `Wallet déjà connecté pour ${chainName}`, {
-              networkId,
-              account: primaryAccount
-            });
+
+            logger.info(
+              "useSecureBlockchain",
+              `Wallet déjà connecté pour ${chainName}`,
+              {
+                networkId,
+                account: primaryAccount,
+              }
+            );
           }
         }
       } catch (error) {
-        logger.error('useSecureBlockchain', `Erreur lors de la vérification de connexion pour ${chainName}`, error);
+        logger.error(
+          "useSecureBlockchain",
+          `Erreur lors de la vérification de connexion pour ${chainName}`,
+          error
+        );
       }
     };
-    
+
     checkConnection();
-    
+
     // Configurer les écouteurs d'événements pour les changements de compte et de réseau
     const setupListeners = () => {
       if (walletProvider?.on) {
         // Changement de compte
-        walletProvider.on('accountsChanged', (accounts: string[]) => {
+        walletProvider.on("accountsChanged", (accounts: string[]) => {
           setAccount(accounts.length > 0 ? accounts[0] : null);
-          
-          logger.info('useSecureBlockchain', `Comptes changés pour ${chainName}`, {
-            accounts
-          });
+
+          logger.info(
+            "useSecureBlockchain",
+            `Comptes changés pour ${chainName}`,
+            {
+              accounts,
+            }
+          );
         });
-        
+
         // Changement de chaîne
-        walletProvider.on('chainChanged', async (chainId: string) => {
+        walletProvider.on("chainChanged", async (chainId: string) => {
           // Convertir l'ID de chaîne en nombre
           const newNetworkId = parseInt(chainId, 16);
           setNetworkId(newNetworkId);
-          
+
           // Vérifier si le réseau est autorisé
-          const allowedNetworks = secureWalletService.getAllowedNetworks(chainName);
+          const allowedNetworks =
+            secureWalletService.getAllowedNetworks(chainName);
           const isAllowed = allowedNetworks.includes(newNetworkId);
           setIsAllowedNetwork(isAllowed);
-          
-          logger.info('useSecureBlockchain', `Réseau changé pour ${chainName}`, {
-            networkId: newNetworkId,
-            isAllowed
-          });
-          
+
+          logger.info(
+            "useSecureBlockchain",
+            `Réseau changé pour ${chainName}`,
+            {
+              networkId: newNetworkId,
+              isAllowed,
+            }
+          );
+
           // Si le réseau n'est pas autorisé, afficher une erreur
           if (!isAllowed) {
             setError(`Réseau non autorisé: ${newNetworkId}`);
@@ -190,31 +227,35 @@ export const useSecureBlockchain = (
             setError(null);
           }
         });
-        
+
         // Déconnexion
-        walletProvider.on('disconnect', (error: any) => {
+        walletProvider.on("disconnect", (error: any) => {
           setIsConnected(false);
           setService(null);
           setNetworkId(null);
           setAccount(null);
-          
-          logger.info('useSecureBlockchain', `Wallet déconnecté pour ${chainName}`, {
-            error
-          });
+
+          logger.info(
+            "useSecureBlockchain",
+            `Wallet déconnecté pour ${chainName}`,
+            {
+              error,
+            }
+          );
         });
       }
     };
-    
+
     if (walletProvider) {
       setupListeners();
     }
-    
+
     // Nettoyer les écouteurs d'événements lors du démontage
     return () => {
       if (walletProvider?.removeListener) {
-        walletProvider.removeListener('accountsChanged', () => {});
-        walletProvider.removeListener('chainChanged', () => {});
-        walletProvider.removeListener('disconnect', () => {});
+        walletProvider.removeListener("accountsChanged", () => {});
+        walletProvider.removeListener("chainChanged", () => {});
+        walletProvider.removeListener("disconnect", () => {});
       }
     };
   }, [chainName, walletProvider]);
@@ -228,6 +269,6 @@ export const useSecureBlockchain = (
     walletType,
     connect,
     disconnect,
-    isAllowedNetwork
+    isAllowedNetwork,
   };
 };

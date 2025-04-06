@@ -1,16 +1,12 @@
 // Export spécifique des fonctions d'adresse
-export { 
-  validateAddress,
-  shortenAddress,
-  checksumAddress
-} from './address';
+export { validateAddress, shortenAddress, checksumAddress } from "./address";
 
 // Re-export des utilitaires
-export * from './firebase-logger';
-export * from './validation';
-export * from './formatting';
-export * from './blockchain';
-export * from './date';
+export * from "./firebase-logger";
+export * from "./validation";
+export * from "./formatting";
+export * from "./blockchain";
+export * from "./date";
 
 // Types communs
 export interface Pagination {
@@ -21,12 +17,12 @@ export interface Pagination {
 
 export interface SortOptions {
   field: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
 // Utilitaires de base
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function debounce<T extends (...args: any[]) => any>(
@@ -63,15 +59,15 @@ export function throttle<T extends (...args: any[]) => any>(
 
 // Utilitaires de formatage
 export function formatNumber(num: number, decimals = 2): string {
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat("fr-FR", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(num);
 }
 
-export function formatCurrency(amount: number, currency = 'EUR'): string {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
+export function formatCurrency(amount: number, currency = "EUR"): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
     currency,
   }).format(amount);
 }
@@ -88,22 +84,22 @@ export function isValidEthereumAddress(address: string): boolean {
 }
 
 // Utilitaires de date
-export function formatDate(date: Date | string, locale = 'fr-FR'): string {
+export function formatDate(date: Date | string, locale = "fr-FR"): string {
   const d = new Date(date);
   return d.toLocaleDateString(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
-export function formatDateTime(date: Date | string, locale = 'fr-FR'): string {
+export function formatDateTime(date: Date | string, locale = "fr-FR"): string {
   const d = new Date(date);
   return d.toLocaleString(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }

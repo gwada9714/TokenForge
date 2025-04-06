@@ -1,21 +1,21 @@
-import { renderHook, act } from '@testing-library/react';
-import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
-import { useAccount, useDisconnect } from 'wagmi';
-import { usePublicClient } from 'wagmi';
-import { getWalletClient } from '@wagmi/core';
+import { renderHook, act } from "@testing-library/react";
+import { useTokenForgeAuth } from "../hooks/useTokenForgeAuth";
+import { useAccount, useDisconnect } from "wagmi";
+import { usePublicClient } from "wagmi";
+import { getWalletClient } from "@wagmi/core";
 
 // Mocks
-vi.mock('wagmi', () => ({
+vi.mock("wagmi", () => ({
   useAccount: vi.fn(),
   useDisconnect: vi.fn(),
   usePublicClient: vi.fn(),
 }));
 
-vi.mock('@wagmi/core', () => ({
+vi.mock("@wagmi/core", () => ({
   getWalletClient: vi.fn(),
 }));
 
-describe('useTokenForgeAuth', () => {
+describe("useTokenForgeAuth", () => {
   const mockWalletClient = {} as Awaited<ReturnType<typeof getWalletClient>>;
   const mockDisconnect = vi.fn();
 
@@ -25,7 +25,7 @@ describe('useTokenForgeAuth', () => {
       address: null,
       isConnected: false,
     });
-    
+
     (usePublicClient as vi.Mock).mockReturnValue({
       chain: null,
     });
@@ -37,9 +37,9 @@ describe('useTokenForgeAuth', () => {
     (getWalletClient as vi.Mock).mockResolvedValue(mockWalletClient);
   });
 
-  it('should initialize with default state', () => {
+  it("should initialize with default state", () => {
     const { result } = renderHook(() => useTokenForgeAuth());
-    
+
     expect(result.current).toMatchObject({
       isAuthenticated: false,
       isConnected: false,
@@ -53,9 +53,9 @@ describe('useTokenForgeAuth', () => {
     });
   });
 
-  it('should update wallet state when connected', async () => {
+  it("should update wallet state when connected", async () => {
     (useAccount as vi.Mock).mockReturnValue({
-      address: '0x123',
+      address: "0x123",
       isConnected: true,
     });
 
@@ -67,20 +67,20 @@ describe('useTokenForgeAuth', () => {
 
     // Wait for useEffect to complete
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     expect(result.current).toMatchObject({
       isConnected: true,
-      address: '0x123',
+      address: "0x123",
       chainId: 1,
       isCorrectNetwork: true,
     });
   });
 
-  it('should handle admin status correctly', async () => {
+  it("should handle admin status correctly", async () => {
     const { result } = renderHook(() => useTokenForgeAuth());
-    const mockUser = { email: 'admin@tokenforge.com' } as any;
+    const mockUser = { email: "admin@tokenforge.com" } as any;
 
     await act(async () => {
       result.current.login(mockUser);
@@ -90,9 +90,9 @@ describe('useTokenForgeAuth', () => {
     expect(result.current.canCreateToken).toBe(true);
   });
 
-  it('should handle logout and wallet disconnect', async () => {
+  it("should handle logout and wallet disconnect", async () => {
     const { result } = renderHook(() => useTokenForgeAuth());
-    const mockUser = { email: 'user@example.com' } as any;
+    const mockUser = { email: "user@example.com" } as any;
 
     await act(async () => {
       result.current.login(mockUser);

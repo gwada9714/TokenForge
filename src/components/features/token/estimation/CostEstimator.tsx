@@ -1,13 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import { formatEther } from 'viem';
-import { useGasPrice } from '../../../../hooks/useGasPrice';
+import React, { useEffect, useState } from "react";
+import { Box, Paper, Typography, CircularProgress, Alert } from "@mui/material";
+import { formatEther } from "viem";
+import { useGasPrice } from "../../../../hooks/useGasPrice";
 
 interface CostEstimatorProps {
   tokenParams: {
@@ -35,10 +29,12 @@ const BASE_GAS_ESTIMATE: GasEstimate = {
   },
 };
 
-export const CostEstimator: React.FC<CostEstimatorProps> = ({ tokenParams }) => {
+export const CostEstimator: React.FC<CostEstimatorProps> = ({
+  tokenParams,
+}) => {
   const { gasPrice, isLoading: isLoadingGas } = useGasPrice();
   const [totalGas, setTotalGas] = useState<bigint>(0n);
-  const [estimatedCost, setEstimatedCost] = useState<string>('0');
+  const [estimatedCost, setEstimatedCost] = useState<string>("0");
   const [isCalculating, setIsCalculating] = useState(true);
 
   useEffect(() => {
@@ -67,7 +63,7 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({ tokenParams }) => 
           setEstimatedCost(formatEther(cost));
         }
       } catch (error) {
-        console.error('Error calculating gas:', error);
+        console.error("Error calculating gas:", error);
       } finally {
         setIsCalculating(false);
       }
@@ -78,7 +74,7 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({ tokenParams }) => 
 
   if (isLoadingGas || isCalculating) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <CircularProgress size={24} />
       </Box>
     );
@@ -94,9 +90,9 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({ tokenParams }) => 
         <Typography variant="body2" color="text.secondary">
           Gas estimé : {totalGas.toString()} unités
         </Typography>
-        
+
         <Typography variant="body2" color="text.secondary">
-          Prix du gas : {gasPrice ? formatEther(gasPrice) : '0'} ETH
+          Prix du gas : {gasPrice ? formatEther(gasPrice) : "0"} ETH
         </Typography>
 
         <Typography variant="h6" sx={{ mt: 2 }}>
@@ -104,7 +100,8 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({ tokenParams }) => 
         </Typography>
 
         <Alert severity="info" sx={{ mt: 2 }}>
-          Cette estimation peut varier en fonction des conditions du réseau et des fonctionnalités choisies.
+          Cette estimation peut varier en fonction des conditions du réseau et
+          des fonctionnalités choisies.
         </Alert>
       </Box>
     </Paper>

@@ -1,43 +1,43 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 
 const plans = [
   {
-    name: 'Apprenti Forgeron',
-    price: '0',
+    name: "Apprenti Forgeron",
+    price: "0",
     features: [
-      'Création de tokens ERC-20 basiques',
-      'Déploiement sur testnet',
-      'Support communautaire',
-      'Documentation complète',
+      "Création de tokens ERC-20 basiques",
+      "Déploiement sur testnet",
+      "Support communautaire",
+      "Documentation complète",
     ],
-    cta: 'Commencer gratuitement',
+    cta: "Commencer gratuitement",
     highlighted: false,
   },
   {
-    name: 'Forgeron',
-    price: '99',
+    name: "Forgeron",
+    price: "99",
     features: [
-      'Tous les avantages Apprenti',
-      'Tokens personnalisables',
-      'Multi-chain deployment',
-      'Support prioritaire',
-      'Audit de sécurité basique',
+      "Tous les avantages Apprenti",
+      "Tokens personnalisables",
+      "Multi-chain deployment",
+      "Support prioritaire",
+      "Audit de sécurité basique",
     ],
-    cta: 'Choisir ce plan',
+    cta: "Choisir ce plan",
     highlighted: true,
   },
   {
-    name: 'Maître Forgeron',
-    price: '299',
+    name: "Maître Forgeron",
+    price: "299",
     features: [
-      'Tous les avantages Forgeron',
-      'Tokens avancés (NFT, DeFi)',
-      'Audit de sécurité complet',
-      'Support dédié 24/7',
-      'Personnalisation illimitée',
+      "Tous les avantages Forgeron",
+      "Tokens avancés (NFT, DeFi)",
+      "Audit de sécurité complet",
+      "Support dédié 24/7",
+      "Personnalisation illimitée",
     ],
-    cta: 'Contacter les ventes',
+    cta: "Contacter les ventes",
     highlighted: false,
   },
 ];
@@ -51,7 +51,8 @@ export const PricingSection: React.FC = () => {
             Choisissez votre Plan de Forge
           </h2>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-            Des solutions adaptées à tous les projets, de l'expérimentation à la production
+            Des solutions adaptées à tous les projets, de l'expérimentation à la
+            production
           </p>
         </div>
 
@@ -61,7 +62,7 @@ export const PricingSection: React.FC = () => {
               key={plan.name}
               className={`
                 relative bg-white rounded-lg shadow-xl overflow-hidden
-                ${plan.highlighted ? 'transform scale-105 z-10' : ''}
+                ${plan.highlighted ? "transform scale-105 z-10" : ""}
               `}
             >
               {plan.highlighted && (
@@ -101,8 +102,8 @@ export const PricingSection: React.FC = () => {
                     block w-full py-3 px-6 text-center rounded-md font-medium transition-colors duration-300
                     ${
                       plan.highlighted
-                        ? 'bg-secondary hover:bg-secondary-light text-white'
-                        : 'bg-gray-100 hover:bg-gray-200 text-primary'
+                        ? "bg-secondary hover:bg-secondary-light text-white"
+                        : "bg-gray-100 hover:bg-gray-200 text-primary"
                     }
                   `}
                 >

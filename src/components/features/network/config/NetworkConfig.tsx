@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   FormControlLabel,
@@ -8,10 +8,10 @@ import {
   CardContent,
   Grid,
   styled,
-  Theme
-} from '@mui/material';
-import { useNetwork } from '../hooks/useNetwork';
-import { mainnet, sepolia } from 'viem/chains';
+  Theme,
+} from "@mui/material";
+import { useNetwork } from "../hooks/useNetwork";
+import { mainnet, sepolia } from "viem/chains";
 
 interface StyledCardProps {
   selected: boolean;
@@ -19,13 +19,15 @@ interface StyledCardProps {
 }
 
 const StyledNetworkCard = styled(Card, {
-  shouldForwardProp: (prop) => prop !== 'selected'
+  shouldForwardProp: (prop) => prop !== "selected",
 })<StyledCardProps>(({ theme, selected }) => ({
-  cursor: 'pointer',
-  border: selected ? `2px solid ${theme.palette.primary.main}` : '1px solid rgba(0, 0, 0, 0.12)',
-  transition: 'all 0.2s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-2px)',
+  cursor: "pointer",
+  border: selected
+    ? `2px solid ${theme.palette.primary.main}`
+    : "1px solid rgba(0, 0, 0, 0.12)",
+  transition: "all 0.2s ease-in-out",
+  "&:hover": {
+    transform: "translateY(-2px)",
     boxShadow: theme.shadows[4],
   },
 }));
@@ -38,26 +40,29 @@ const NetworkConfig = () => {
   const networks = [
     {
       ...mainnet,
-      name: 'Ethereum Mainnet',
+      name: "Ethereum Mainnet",
       isTestnet: false,
     },
     {
       ...sepolia,
-      name: 'Sepolia Testnet',
+      name: "Sepolia Testnet",
       isTestnet: true,
     },
   ];
 
-  const visibleNetworks = networks.filter(network => 
-    !network.isTestnet || showTestnets
+  const visibleNetworks = networks.filter(
+    (network) => !network.isTestnet || showTestnets
   );
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">
-          Sélectionnez un réseau
-        </Typography>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Typography variant="h6">Sélectionnez un réseau</Typography>
         <FormControlLabel
           control={
             <Switch
@@ -77,9 +82,7 @@ const NetworkConfig = () => {
             >
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="subtitle1">
-                    {network.name}
-                  </Typography>
+                  <Typography variant="subtitle1">{network.name}</Typography>
                   {network.isTestnet && (
                     <Typography variant="caption" color="text.secondary">
                       (Testnet)

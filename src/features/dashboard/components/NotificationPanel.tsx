@@ -1,16 +1,24 @@
-import React from 'react';
-import { List, ListItem, ListItemText, ListItemIcon, IconButton, Typography, Box } from '@mui/material';
-import { 
+import React from "react";
+import {
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  IconButton,
+  Typography,
+  Box,
+} from "@mui/material";
+import {
   NotificationsOutlined,
   ErrorOutline,
   CheckCircleOutline,
   InfoOutlined,
-  Close as CloseIcon
-} from '@mui/icons-material';
+  Close as CloseIcon,
+} from "@mui/icons-material";
 
 interface Notification {
   id: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+  type: "success" | "error" | "info" | "warning";
   message: string;
   timestamp: string;
   read: boolean;
@@ -20,16 +28,18 @@ interface NotificationPanelProps {
   notifications: Notification[];
 }
 
-export const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications }) => {
-  const getNotificationIcon = (type: Notification['type']) => {
+export const NotificationPanel: React.FC<NotificationPanelProps> = ({
+  notifications,
+}) => {
+  const getNotificationIcon = (type: Notification["type"]) => {
     switch (type) {
-      case 'success':
+      case "success":
         return <CheckCircleOutline color="success" />;
-      case 'error':
+      case "error":
         return <ErrorOutline color="error" />;
-      case 'warning':
+      case "warning":
         return <NotificationsOutlined color="warning" />;
-      case 'info':
+      case "info":
         return <InfoOutlined color="info" />;
       default:
         return <NotificationsOutlined />;
@@ -38,7 +48,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ notificati
 
   const handleDismiss = (id: string) => {
     // TODO: Implémenter la logique de suppression
-    console.log('Dismissing notification:', id);
+    console.log("Dismissing notification:", id);
   };
 
   return (
@@ -60,7 +70,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ notificati
             divider
             sx={{
               opacity: notification.read ? 0.7 : 1,
-              bgcolor: notification.read ? 'transparent' : 'action.hover'
+              bgcolor: notification.read ? "transparent" : "action.hover",
             }}
           >
             <ListItemIcon>
@@ -68,10 +78,14 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ notificati
             </ListItemIcon>
             <ListItemText
               primary={
-                <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
                   <Typography
                     variant="body2"
-                    sx={{ fontWeight: notification.read ? 'normal' : 'bold' }}
+                    sx={{ fontWeight: notification.read ? "normal" : "bold" }}
                   >
                     {notification.message}
                   </Typography>
@@ -94,4 +108,4 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ notificati
       )}
     </List>
   );
-}; 
+};

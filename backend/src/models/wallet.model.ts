@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IWallet extends Document {
   address: string;
@@ -11,24 +11,24 @@ const WalletSchema: Schema = new Schema({
   address: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   privateKey: {
     type: String,
-    required: true
+    required: true,
   },
   expiresAt: {
     type: Date,
     required: true,
-    index: true
+    index: true,
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 // Index pour la recherche rapide des wallets expirés
 WalletSchema.index({ expiresAt: 1 });
 
-export const WalletModel = mongoose.model<IWallet>('Wallet', WalletSchema);
+export const WalletModel = mongoose.model<IWallet>("Wallet", WalletSchema);

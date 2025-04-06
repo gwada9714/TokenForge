@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { useWeb3 } from '../contexts/Web3Context';
-import { useContract } from '../contexts/ContractContext';
-import { useTokenForgeAdmin } from './useTokenForgeAdmin';
-import { useAccount } from 'wagmi';
+import { useEffect, useState } from "react";
+import { useWeb3 } from "../contexts/Web3Context";
+import { useContract } from "../contexts/ContractContext";
+import { useTokenForgeAdmin } from "./useTokenForgeAdmin";
+import { useAccount } from "wagmi";
 
 interface PageAccessState {
   canAccess: boolean;
@@ -29,17 +29,17 @@ export const usePageAccess = (requireAdmin: boolean = false) => {
           setState({
             canAccess: false,
             isLoading: false,
-            error: 'Veuillez connecter votre wallet',
+            error: "Veuillez connecter votre wallet",
           });
           return;
         }
 
         // Vérifier le réseau
-        if (!isCorrectNetwork || networkStatus === 'wrong_network') {
+        if (!isCorrectNetwork || networkStatus === "wrong_network") {
           setState({
             canAccess: false,
             isLoading: false,
-            error: 'Veuillez vous connecter au réseau Ethereum ou Sepolia',
+            error: "Veuillez vous connecter au réseau Ethereum ou Sepolia",
           });
           return;
         }
@@ -49,7 +49,7 @@ export const usePageAccess = (requireAdmin: boolean = false) => {
           setState({
             canAccess: false,
             isLoading: false,
-            error: 'Accès non autorisé',
+            error: "Accès non autorisé",
           });
           return;
         }
@@ -64,7 +64,8 @@ export const usePageAccess = (requireAdmin: boolean = false) => {
         setState({
           canAccess: false,
           isLoading: false,
-          error: error instanceof Error ? error.message : 'Une erreur est survenue',
+          error:
+            error instanceof Error ? error.message : "Une erreur est survenue",
         });
       }
     };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,24 +10,24 @@ import {
   Stack,
   Snackbar,
   Alert,
-} from '@mui/material';
-import { useLaunchpad } from '../../hooks/useLaunchpad';
+} from "@mui/material";
+import { useLaunchpad } from "../../hooks/useLaunchpad";
 
 export const CreatePool: React.FC = () => {
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'error' as 'error' | 'success' | 'info' | 'warning'
+    message: "",
+    severity: "error" as "error" | "success" | "info" | "warning",
   });
   const { createPool, isCreating } = useLaunchpad();
 
   const [formData, setFormData] = useState({
-    token: '',
-    tokenPrice: '',
-    hardCap: '',
-    softCap: '',
-    startTime: '',
-    endTime: '',
+    token: "",
+    tokenPrice: "",
+    hardCap: "",
+    softCap: "",
+    startTime: "",
+    endTime: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,11 +37,16 @@ export const CreatePool: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.token || !formData.tokenPrice || !formData.softCap || !formData.hardCap) {
+    if (
+      !formData.token ||
+      !formData.tokenPrice ||
+      !formData.softCap ||
+      !formData.hardCap
+    ) {
       setSnackbar({
         open: true,
-        message: 'Please fill in all fields',
-        severity: 'error'
+        message: "Please fill in all fields",
+        severity: "error",
       });
       return;
     }
@@ -52,8 +57,8 @@ export const CreatePool: React.FC = () => {
     if (startTimestamp >= endTimestamp) {
       setSnackbar({
         open: true,
-        message: 'End time must be after start time',
-        severity: 'error'
+        message: "End time must be after start time",
+        severity: "error",
       });
       return;
     }
@@ -67,23 +72,23 @@ export const CreatePool: React.FC = () => {
         startTimestamp,
         endTimestamp
       );
-      
+
       setSnackbar({
         open: true,
-        message: 'Pool created successfully',
-        severity: 'success'
+        message: "Pool created successfully",
+        severity: "success",
       });
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.message || 'Failed to create pool',
-        severity: 'error'
+        message: error.message || "Failed to create pool",
+        severity: "error",
       });
     }
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   return (
@@ -176,7 +181,7 @@ export const CreatePool: React.FC = () => {
               color="primary"
               disabled={isCreating}
             >
-              {isCreating ? 'Creating Pool...' : 'Create Pool'}
+              {isCreating ? "Creating Pool..." : "Create Pool"}
             </Button>
           </Stack>
         </form>
@@ -185,12 +190,12 @@ export const CreatePool: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
           <Alert
             onClose={handleCloseSnackbar}
             severity={snackbar.severity}
-            sx={{ width: '100%' }}
+            sx={{ width: "100%" }}
           >
             {snackbar.message}
           </Alert>

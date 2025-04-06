@@ -1,19 +1,19 @@
-import React from 'react';
-import { Box, Typography, Grid, Card, CardContent } from '@mui/material';
+import React from "react";
+import { Box, Typography, Grid, Card, CardContent } from "@mui/material";
 
 const services = [
   {
-    title: 'Création de Token',
-    description: 'Créez votre propre token personnalisé en quelques clics'
+    title: "Création de Token",
+    description: "Créez votre propre token personnalisé en quelques clics",
   },
   {
-    title: 'Gestion de Token',
-    description: 'Gérez et suivez vos tokens existants'
+    title: "Gestion de Token",
+    description: "Gérez et suivez vos tokens existants",
   },
   {
-    title: 'Analyse de Token',
-    description: 'Obtenez des insights détaillés sur vos tokens'
-  }
+    title: "Analyse de Token",
+    description: "Obtenez des insights détaillés sur vos tokens",
+  },
 ];
 
 export const ServicesPage: React.FC = () => {

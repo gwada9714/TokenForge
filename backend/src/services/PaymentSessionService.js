@@ -11,36 +11,36 @@ class PaymentSessionService {
   async getSupportedCryptocurrencies(network) {
     // Implémentation simplifiée pour la démo
     const cryptos = [];
-    
+
     switch (network.toLowerCase()) {
-      case 'ethereum':
+      case "ethereum":
         cryptos.push({
-          symbol: 'ETH',
-          name: 'Ethereum',
+          symbol: "ETH",
+          name: "Ethereum",
           isNative: true,
-          isStablecoin: false
+          isStablecoin: false,
         });
         cryptos.push({
-          symbol: 'USDT',
-          name: 'Tether USD',
+          symbol: "USDT",
+          name: "Tether USD",
           isNative: false,
-          isStablecoin: true
+          isStablecoin: true,
         });
         break;
-      case 'polygon':
+      case "polygon":
         cryptos.push({
-          symbol: 'MATIC',
-          name: 'Polygon',
+          symbol: "MATIC",
+          name: "Polygon",
           isNative: true,
-          isStablecoin: false
+          isStablecoin: false,
         });
         break;
       // Autres réseaux...
     }
-    
+
     return cryptos;
   }
-  
+
   /**
    * Récupère un service de paiement pour un réseau donné
    * @param {string} network Nom du réseau blockchain
@@ -53,27 +53,27 @@ class PaymentSessionService {
         return {
           amount: (amount * 0.0005).toString(),
           formatted: `${amount * 0.0005} ${currency}`,
-          valueEUR: amount
+          valueEUR: amount,
         };
       },
       estimateTransactionFees: async (amount, currencyAddress) => {
         return {
           baseFee: {
-            amount: '0.001',
-            formatted: '0.001 ETH',
-            valueEUR: 2
+            amount: "0.001",
+            formatted: "0.001 ETH",
+            valueEUR: 2,
           },
           maxFee: {
-            amount: '0.0015',
-            formatted: '0.0015 ETH',
-            valueEUR: 3
+            amount: "0.0015",
+            formatted: "0.0015 ETH",
+            valueEUR: 3,
           },
-          estimatedTimeSeconds: 60
+          estimatedTimeSeconds: 60,
         };
-      }
+      },
     };
   }
-  
+
   /**
    * Crée une session de paiement
    * @param {string} network Nom du réseau blockchain
@@ -87,11 +87,11 @@ class PaymentSessionService {
       network,
       amount: params.amount,
       currency: params.currency,
-      status: 'pending',
-      createdAt: new Date().toISOString()
+      status: "pending",
+      createdAt: new Date().toISOString(),
     };
   }
-  
+
   /**
    * Vérifie le statut d'une session de paiement
    * @param {string} sessionId Identifiant de la session
@@ -99,9 +99,9 @@ class PaymentSessionService {
    */
   async checkPaymentStatus(sessionId) {
     // Implémentation simplifiée pour la démo
-    return 'pending';
+    return "pending";
   }
-  
+
   /**
    * Confirme un paiement
    * @param {string} sessionId Identifiant de la session
@@ -112,7 +112,7 @@ class PaymentSessionService {
     // Implémentation simplifiée pour la démo
     return true;
   }
-  
+
   /**
    * Récupère les transactions d'un utilisateur
    * @param {string} userId Identifiant de l'utilisateur
@@ -122,12 +122,12 @@ class PaymentSessionService {
     // Implémentation simplifiée pour la démo
     return [
       {
-        id: 'tx1',
-        sessionId: 'session-123',
-        amount: '0.1 ETH',
-        status: 'completed',
-        date: new Date().toISOString()
-      }
+        id: "tx1",
+        sessionId: "session-123",
+        amount: "0.1 ETH",
+        status: "completed",
+        date: new Date().toISOString(),
+      },
     ];
   }
 }

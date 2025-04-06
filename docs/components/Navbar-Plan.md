@@ -3,6 +3,7 @@
 ## 1. Structure Générale de la Navbar
 
 ### 1.1 Layout et positionnement
+
 - **Type**: Navbar fixe (sticky) en haut de l'écran
 - **Hauteur**: 72px sur desktop, 60px sur mobile
 - **Largeur**: 100% avec contenu aligné dans un conteneur max-width: 1440px
@@ -10,6 +11,7 @@
 - **Comportement au scroll**: Réduction subtile de hauteur (64px) avec légère opacité (0.95) pour le fond
 
 ### 1.2 Fond et effets visuels
+
 - **Couleur de fond**: Bleu nuit profond (#0F172A) avec léger dégradé vertical
 - **Texture**: Pattern "circuit" à 5% d'opacité
 - **Ombre portée**: 0px 4px 8px rgba(0, 0, 0, 0.25)
@@ -19,6 +21,7 @@
 ## 2. Éléments et Organisation
 
 ### 2.1 Zone gauche: Branding
+
 - **Logo TokenForge**: SVG responsive, hauteur 36px
   - Animation: Subtil effet de lueur orangée au hover
   - Lien vers la page d'accueil
@@ -27,6 +30,7 @@
   - Séparé du logo par une fine ligne verticale
 
 ### 2.2 Zone centrale: Navigation Principale
+
 - **Structure**: Menu horizontal à espacement régulier sur desktop
 - **Typographie**: Space Grotesk Medium, 16px
 - **Espacement**: 32px entre les éléments
@@ -40,6 +44,7 @@
   6. **Ressources**
 
 ### 2.3 Zone droite: Actions Utilisateur
+
 - **Sélecteur de Blockchain**: Dropdown avec icône hexagonale
 - **Recherche**: Icône loupe avec expandable search
 - **Compte**: Avatar/icône utilisateur avec dropdown
@@ -48,25 +53,29 @@
 ## 3. Traitement des Items de Navigation
 
 ### 3.1 État de repos
+
 - **Couleur de texte**: Blanc ivoire (#F8FAFC) à 85% d'opacité
 - **Fond**: Transparent
 - **Padding**: 8px 12px
 - **Effet visuel**: Aucun
 
 ### 3.2 État de survol (Hover)
+
 - **Animation**: Transition de 0.2s
 - **Couleur de texte**: Blanc (#FFFFFF) 100% d'opacité
 - **Effet visuel**: Lueur subtile orange (box-shadow: 0 0 8px rgba(245, 158, 11, 0.3))
 - **Indicateur**: Fine ligne orange qui apparaît par le bas (transform scaleX)
 
 ### 3.3 État actif/sélectionné
+
 - **Couleur de texte**: Blanc (#FFFFFF) 100%
-- **Effet visuel**: 
+- **Effet visuel**:
   - Lueur orange plus prononcée (box-shadow: 0 0 12px rgba(245, 158, 11, 0.4))
   - Ligne orange complète sous le texte (2px)
 - **Fond**: Légère variation de fond (#1E293B)
 
 ### 3.4 État focus (navigation clavier)
+
 - **Indication**: Contour orange pointillé
 - **Animation**: Pulsation subtile de la lueur
 - **Contraste**: Assuré pour accessibilité (ratio min 4.5:1)
@@ -74,6 +83,7 @@
 ## 4. Dropdown Menus
 
 ### 4.1 Architecture des sous-menus
+
 - **Type**: Mega menu pour les catégories complexes (Services Premium, Ressources)
 - **Type**: Dropdown simple pour les autres
 - **Activation**: Hover sur desktop, click sur mobile/tablet
@@ -82,6 +92,7 @@
 - **Délai de disparition**: 300ms pour éviter fermeture accidentelle
 
 ### 4.2 Composants du mega menu "Services Premium"
+
 - **Layout**: Grille 3x2 avec icônes et descriptions
 - **Fond**: Dégradé du bleu nuit au noir charbon (#0F172A à #1E293B)
 - **Bordure**: Subtile ligne dorée sur les bords (1px #D4AF37 à 30%)
@@ -106,6 +117,7 @@
      - Description courte: "Mettez en valeur votre projet auprès de notre communauté"
 
 ### 4.3 Dropdown "Créer un Token"
+
 - **Layout**: Liste verticale avec séparation par blockchain
 - **Fonctionnalités**:
   - Icônes colorées par blockchain
@@ -113,6 +125,7 @@
   - Temps estimé de déploiement
 
 ### 4.4 Dropdown "Compte"
+
 - **Non connecté**:
   - Login/Signup options
   - "Connecter Wallet" avec icônes de wallets supportés
@@ -127,6 +140,7 @@
 ## 5. Éléments Interactifs Spécifiques
 
 ### 5.1 Blockchain Selector
+
 - **Apparence repos**: Hexagone avec couleur de la blockchain active
 - **Label**: Nom de la blockchain sélectionnée
 - **Indicator**: Petit point de couleur correspondant à la blockchain
@@ -138,25 +152,27 @@
   - Indicateur de coût relatif (symboles $)
 
 ### 5.2 Search System
+
 - **État repos**: Icône loupe (#F8FAFC)
 - **État actif**: Champ qui s'étend (animation slide)
   - Placeholder: "Rechercher tokens, services, docs..."
   - Fond: #1E293B avec bordure subtile (#475569)
   - Suggestions en temps réel avec highlight
-- **Résultats rapides**: 
+- **Résultats rapides**:
   - Affichage des 3 meilleurs résultats avant submit
   - Catégorisation par type (Token, Doc, Service)
 
 ### 5.3 CTA Principal "Forge ton Token"
+
 - **Dimensions**: 140px x 40px
 - **Fond**: Dégradé orange métallisé (#F59E0B à #EA580C)
 - **Texte**: Space Grotesk Bold, 15px, blanc
 - **Effet repos**: Léger effet métallique (reflet subtil)
-- **Effet hover**: 
+- **Effet hover**:
   - Intensification du dégradé
   - Augmentation de la lueur (glow effect)
   - Scale 1.02 subtil
-- **Effet click**: 
+- **Effet click**:
   - Impression de pression (scale Y 0.98)
   - Flash lumineux rapide
 - **Animation**: Subtile pulsation de la lueur (cycle de 3s)
@@ -164,6 +180,7 @@
 ## 6. Version Responsive
 
 ### 6.1 Breakpoints et adaptations
+
 - **Desktop**: >1024px (version complète)
 - **Tablet**: 768px-1024px
   - Réduction du menu (texte plus petit, espacement réduit)
@@ -174,7 +191,8 @@
   - CTA et toggle menu aux extrémités
 
 ### 6.2 Menu Mobile (Hamburger)
-- **Toggle icon**: 
+
+- **Toggle icon**:
   - Animation morphing de hamburger à X
   - Effet de forge sur les lignes
 - **Menu déployé**:
@@ -188,6 +206,7 @@
   - Animation de transition entre les niveaux
 
 ### 6.3 Adaptations spécifiques tablette
+
 - **Blockchain Selector**: Compact mode (icône seule)
 - **Search**: Icône seule, expansion au clic
 - **Espace réduit** entre les éléments de navigation
@@ -195,6 +214,7 @@
 ## 7. Fonctionnalités Avancées
 
 ### 7.1 État de réseau
+
 - **Indicateur discret**: Point coloré près du sélecteur blockchain
   - Vert: Réseau fluide (gas fees normaux)
   - Orange: Réseau chargé (gas fees élevés)
@@ -202,20 +222,23 @@
 - **Tooltip info**: Gas price actuel et congestion réseau au hover
 
 ### 7.2 Notifications système
+
 - **Icône**: Cloche forgée avec badge de compteur
 - **Animation**: Tintement subtil pour nouvelles notifications
-- **Dropdown**: 
+- **Dropdown**:
   - Liste des dernières notifications
   - Groupement par type (Système, Token, Communauté)
   - Actions rapides sur notifications
 
 ### 7.3 Mode langage
+
 - **Icon**: Globe stylisé
 - **Options**: EN, FR, ES, DE, JP (première phase)
 - **Détection**: Auto-détection initiale de la langue
 - **Persistance**: Sauvegarde de la préférence
 
 ### 7.4 Aide contextuelle
+
 - **Accès**: Icône "?" discrète à l'extrême droite
 - **Fonctionnement**: Activation du mode aide avec tooltips explicatifs
 - **Style**: Tooltips avec fond doré et explications détaillées
@@ -223,28 +246,29 @@
 ## 8. Styles et Spécifications CSS
 
 ### 8.1 Variables CSS principales
+
 ```css
 .navbar {
   /* Dimensions */
   --navbar-height: 72px;
   --navbar-height-scrolled: 64px;
   --navbar-padding: 0 24px;
-  
+
   /* Couleurs */
-  --navbar-bg: #0F172A;
+  --navbar-bg: #0f172a;
   --navbar-text: rgba(248, 250, 252, 0.85);
-  --navbar-text-hover: #FFFFFF;
-  --navbar-accent: #F59E0B;
+  --navbar-text-hover: #ffffff;
+  --navbar-accent: #f59e0b;
   --navbar-border: rgba(71, 85, 105, 0.15);
-  
+
   /* Transitions */
   --navbar-transition: all 0.2s ease-out;
   --dropdown-transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  
+
   /* Shadows */
   --navbar-shadow: 0px 4px 8px rgba(0, 0, 0, 0.25);
   --dropdown-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
-  
+
   /* Z-indices */
   --navbar-z: 1000;
   --dropdown-z: 1010;
@@ -252,6 +276,7 @@
 ```
 
 ### 8.2 Classes CSS principales
+
 ```css
 .navbar {
   position: sticky;
@@ -260,7 +285,7 @@
   height: var(--navbar-height);
   padding: var(--navbar-padding);
   background-color: var(--navbar-bg);
-  background-image: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+  background-image: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   box-shadow: var(--navbar-shadow);
   transition: var(--navbar-transition);
 }
@@ -285,7 +310,7 @@
   position: relative;
   padding: 8px 12px;
   color: var(--navbar-text);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
   font-weight: 500;
   transition: var(--navbar-transition);
 }
@@ -296,7 +321,7 @@
 }
 
 .nav-item::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
@@ -320,7 +345,7 @@
   top: 100%;
   left: -20px;
   min-width: 220px;
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   border: 1px solid rgba(212, 175, 55, 0.3);
   box-shadow: var(--dropdown-shadow);
   transform-origin: top center;
@@ -349,60 +374,62 @@
 ## 9. Interactions JavaScript
 
 ### 9.1 Événements principaux
+
 ```javascript
 // Navbar scroll effect
-window.addEventListener('scroll', () => {
-  const navbar = document.querySelector('.navbar');
+window.addEventListener("scroll", () => {
+  const navbar = document.querySelector(".navbar");
   if (window.scrollY > 20) {
-    navbar.classList.add('navbar-scrolled');
+    navbar.classList.add("navbar-scrolled");
   } else {
-    navbar.classList.remove('navbar-scrolled');
+    navbar.classList.remove("navbar-scrolled");
   }
 });
 
 // Mobile menu toggle
-const menuToggle = document.querySelector('.navbar-toggle');
-const mobileMenu = document.querySelector('.navbar-mobile');
+const menuToggle = document.querySelector(".navbar-toggle");
+const mobileMenu = document.querySelector(".navbar-mobile");
 
-menuToggle.addEventListener('click', () => {
-  menuToggle.classList.toggle('active');
-  mobileMenu.classList.toggle('open');
-  document.body.classList.toggle('menu-open');
+menuToggle.addEventListener("click", () => {
+  menuToggle.classList.toggle("active");
+  mobileMenu.classList.toggle("open");
+  document.body.classList.toggle("menu-open");
 });
 
 // Dropdown hover intention (desktop only)
-const navItems = document.querySelectorAll('.nav-item.has-dropdown');
+const navItems = document.querySelectorAll(".nav-item.has-dropdown");
 let hoverTimeout;
 
-navItems.forEach(item => {
-  item.addEventListener('mouseenter', () => {
+navItems.forEach((item) => {
+  item.addEventListener("mouseenter", () => {
     clearTimeout(hoverTimeout);
-    navItems.forEach(i => {
-      if (i !== item) i.classList.remove('dropdown-active');
+    navItems.forEach((i) => {
+      if (i !== item) i.classList.remove("dropdown-active");
     });
     hoverTimeout = setTimeout(() => {
-      item.classList.add('dropdown-active');
+      item.classList.add("dropdown-active");
     }, 200);
   });
-  
-  item.addEventListener('mouseleave', () => {
+
+  item.addEventListener("mouseleave", () => {
     hoverTimeout = setTimeout(() => {
-      item.classList.remove('dropdown-active');
+      item.classList.remove("dropdown-active");
     }, 300);
   });
 });
 ```
 
 ### 9.2 Animation avancée
+
 ```javascript
 // CTA button glow effect
-const forgeCTA = document.querySelector('.forge-cta');
+const forgeCTA = document.querySelector(".forge-cta");
 let glowInterval;
 
 const startGlowAnimation = () => {
   let intensity = 0;
   let increasing = true;
-  
+
   glowInterval = setInterval(() => {
     if (increasing) {
       intensity += 0.02;
@@ -411,21 +438,23 @@ const startGlowAnimation = () => {
       intensity -= 0.02;
       if (intensity <= 0.3) increasing = true;
     }
-    
-    forgeCTA.style.boxShadow = `0 0 ${Math.round(15 * intensity)}px ${Math.round(5 * intensity)}px rgba(245, 158, 11, ${intensity * 0.4})`;
+
+    forgeCTA.style.boxShadow = `0 0 ${Math.round(
+      15 * intensity
+    )}px ${Math.round(5 * intensity)}px rgba(245, 158, 11, ${intensity * 0.4})`;
   }, 50);
 };
 
 startGlowAnimation();
 
 // Search expansion animation
-const searchToggle = document.querySelector('.search-toggle');
-const searchInput = document.querySelector('.search-input');
+const searchToggle = document.querySelector(".search-toggle");
+const searchInput = document.querySelector(".search-input");
 
-searchToggle.addEventListener('click', () => {
-  searchToggle.classList.toggle('active');
-  searchInput.classList.toggle('expanded');
-  if (searchInput.classList.contains('expanded')) {
+searchToggle.addEventListener("click", () => {
+  searchToggle.classList.toggle("active");
+  searchInput.classList.toggle("expanded");
+  if (searchInput.classList.contains("expanded")) {
     setTimeout(() => searchInput.focus(), 300);
   }
 });
@@ -434,6 +463,7 @@ searchToggle.addEventListener('click', () => {
 ## 10. Accessibilité et Performance
 
 ### 10.1 Optimisations d'accessibilité
+
 - **ARIA attributes**:
   - `aria-expanded`: Pour indiquer l'état des dropdowns
   - `aria-current="page"`: Pour indiquer la page active
@@ -445,6 +475,7 @@ searchToggle.addEventListener('click', () => {
 - **Contrastes**: Vérifiés et conformes WCAG 2.1 AA (minimum 4.5:1)
 
 ### 10.2 Optimisations de performance
+
 - **Lazy Loading**:
   - Chargement différé des mega menus (HTML injecté au besoin)
   - Images mega menu en lazy load

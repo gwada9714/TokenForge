@@ -13,7 +13,9 @@ export class ServiceRegistry {
 
   public register<T>(name: string, service: T): void {
     if (this.services.has(name)) {
-      console.warn(`Service ${name} is already registered. It will be overwritten.`);
+      console.warn(
+        `Service ${name} is already registered. It will be overwritten.`
+      );
     }
     this.services.set(name, service);
   }

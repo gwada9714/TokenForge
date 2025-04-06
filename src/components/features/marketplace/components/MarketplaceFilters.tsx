@@ -1,33 +1,29 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  TextField,
-  MenuItem,
-  Button,
-  Grid,
-} from '@mui/material';
-import type { MarketplaceFilters as MarketplaceFiltersType } from '../types';
+import React, { useState } from "react";
+import { Box, TextField, MenuItem, Button, Grid } from "@mui/material";
+import type { MarketplaceFilters as MarketplaceFiltersType } from "../types";
 
 interface MarketplaceFiltersProps {
   onFilter: (filters: MarketplaceFiltersType) => void;
 }
 
-export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({ onFilter }) => {
+export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
+  onFilter,
+}) => {
   const [filters, setFilters] = useState<MarketplaceFiltersType>({
-    status: 'active',
-    sortBy: 'createdAt',
-    sortDirection: 'desc',
+    status: "active",
+    sortBy: "createdAt",
+    sortDirection: "desc",
   });
 
-  const handleChange = (field: keyof MarketplaceFiltersType) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newFilters = {
-      ...filters,
-      [field]: event.target.value,
+  const handleChange =
+    (field: keyof MarketplaceFiltersType) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newFilters = {
+        ...filters,
+        [field]: event.target.value,
+      };
+      setFilters(newFilters);
     };
-    setFilters(newFilters);
-  };
 
   const handleApplyFilters = () => {
     onFilter(filters);
@@ -35,9 +31,9 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({ onFilter
 
   const handleReset = () => {
     const defaultFilters: MarketplaceFiltersType = {
-      status: 'active',
-      sortBy: 'createdAt',
-      sortDirection: 'desc',
+      status: "active",
+      sortBy: "createdAt",
+      sortDirection: "desc",
     };
     setFilters(defaultFilters);
     onFilter(defaultFilters);
@@ -51,8 +47,8 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({ onFilter
             select
             fullWidth
             label="Statut"
-            value={filters.status || ''}
-            onChange={handleChange('status')}
+            value={filters.status || ""}
+            onChange={handleChange("status")}
             size="small"
           >
             <MenuItem value="active">Actif</MenuItem>
@@ -66,8 +62,8 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({ onFilter
             fullWidth
             label="Prix Min"
             type="number"
-            value={filters.minPrice || ''}
-            onChange={handleChange('minPrice')}
+            value={filters.minPrice || ""}
+            onChange={handleChange("minPrice")}
             size="small"
           />
         </Grid>
@@ -77,8 +73,8 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({ onFilter
             fullWidth
             label="Prix Max"
             type="number"
-            value={filters.maxPrice || ''}
-            onChange={handleChange('maxPrice')}
+            value={filters.maxPrice || ""}
+            onChange={handleChange("maxPrice")}
             size="small"
           />
         </Grid>
@@ -88,8 +84,8 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({ onFilter
             select
             fullWidth
             label="Trier par"
-            value={filters.sortBy || 'createdAt'}
-            onChange={handleChange('sortBy')}
+            value={filters.sortBy || "createdAt"}
+            onChange={handleChange("sortBy")}
             size="small"
           >
             <MenuItem value="price">Prix</MenuItem>
@@ -103,8 +99,8 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({ onFilter
             select
             fullWidth
             label="Direction"
-            value={filters.sortDirection || 'desc'}
-            onChange={handleChange('sortDirection')}
+            value={filters.sortDirection || "desc"}
+            onChange={handleChange("sortDirection")}
             size="small"
           >
             <MenuItem value="asc">Croissant</MenuItem>
@@ -122,11 +118,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({ onFilter
             >
               Appliquer
             </Button>
-            <Button
-              variant="outlined"
-              onClick={handleReset}
-              fullWidth
-            >
+            <Button variant="outlined" onClick={handleReset} fullWidth>
               Réinitialiser
             </Button>
           </Box>

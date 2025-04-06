@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
-import type { Address } from 'viem';
+import { useState, useEffect } from "react";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { parseEther, formatEther } from "viem";
+import type { Address } from "viem";
 
 interface StakingStats {
   totalStaked: bigint;
@@ -15,8 +15,8 @@ export const useStaking = (stakingContractAddress: Address) => {
   const [stakingStats, setStakingStats] = useState<StakingStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stakeAmount, setStakeAmount] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [stakeAmount, setStakeAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
   const { address } = useAccount();
   const publicClient = usePublicClient();
@@ -35,14 +35,14 @@ export const useStaking = (stakingContractAddress: Address) => {
         address: stakingContractAddress,
         abi: [
           {
-            inputs: [{ name: 'account', type: 'address' }],
-            name: 'balanceOf',
-            outputs: [{ name: '', type: 'uint256' }],
-            stateMutability: 'view',
-            type: 'function',
+            inputs: [{ name: "account", type: "address" }],
+            name: "balanceOf",
+            outputs: [{ name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'balanceOf',
+        functionName: "balanceOf",
         args: [address],
       });
 
@@ -53,14 +53,14 @@ export const useStaking = (stakingContractAddress: Address) => {
         address: stakingContractAddress,
         abi: [
           {
-            inputs: [{ name: 'account', type: 'address' }],
-            name: 'earned',
-            outputs: [{ name: '', type: 'uint256' }],
-            stateMutability: 'view',
-            type: 'function',
+            inputs: [{ name: "account", type: "address" }],
+            name: "earned",
+            outputs: [{ name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'earned',
+        functionName: "earned",
         args: [address],
       });
 
@@ -72,13 +72,13 @@ export const useStaking = (stakingContractAddress: Address) => {
         abi: [
           {
             inputs: [],
-            name: 'totalSupply',
-            outputs: [{ name: '', type: 'uint256' }],
-            stateMutability: 'view',
-            type: 'function',
+            name: "totalSupply",
+            outputs: [{ name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'totalSupply',
+        functionName: "totalSupply",
         args: [],
       });
 
@@ -88,25 +88,27 @@ export const useStaking = (stakingContractAddress: Address) => {
         abi: [
           {
             inputs: [],
-            name: 'rewardRate',
-            outputs: [{ name: '', type: 'uint256' }],
-            stateMutability: 'view',
-            type: 'function',
+            name: "rewardRate",
+            outputs: [{ name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'rewardRate',
+        functionName: "rewardRate",
         args: [],
       });
 
       // Calculer l'APY approximatif (ceci est une simplification)
       const totalStaked = totalStakedResult as bigint;
       const rewardRate = rewardRateResult as bigint;
-      
+
       // APY = (rewardRate * 365 * 86400 * 100) / totalStaked
       // (récompenses par seconde * secondes dans une année * 100) / total staké
-      const apy = totalStaked > 0n 
-        ? Number(formatEther(rewardRate * 365n * 86400n * 100n)) / Number(formatEther(totalStaked))
-        : 0;
+      const apy =
+        totalStaked > 0n
+          ? Number(formatEther(rewardRate * 365n * 86400n * 100n)) /
+            Number(formatEther(totalStaked))
+          : 0;
 
       // Récupérer le nombre de stakers (si disponible)
       let stakersCount = 0;
@@ -116,13 +118,13 @@ export const useStaking = (stakingContractAddress: Address) => {
           abi: [
             {
               inputs: [],
-              name: 'getStakersCount',
-              outputs: [{ name: '', type: 'uint256' }],
-              stateMutability: 'view',
-              type: 'function',
+              name: "getStakersCount",
+              outputs: [{ name: "", type: "uint256" }],
+              stateMutability: "view",
+              type: "function",
             },
           ],
-          functionName: 'getStakersCount',
+          functionName: "getStakersCount",
           args: [],
         });
         stakersCount = Number(countResult);
@@ -137,8 +139,8 @@ export const useStaking = (stakingContractAddress: Address) => {
         stakersCount,
       });
     } catch (err) {
-      console.error('Error fetching staking data:', err);
-      setError('Erreur lors de la récupération des données de staking');
+      console.error("Error fetching staking data:", err);
+      setError("Erreur lors de la récupération des données de staking");
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +157,7 @@ export const useStaking = (stakingContractAddress: Address) => {
   // Fonction pour staker des tokens
   const stake = async (amount: string) => {
     if (!walletClient || !address || !stakingContractAddress || !publicClient) {
-      setError('Wallet non connecté ou client non disponible');
+      setError("Wallet non connecté ou client non disponible");
       return;
     }
 
@@ -166,20 +168,20 @@ export const useStaking = (stakingContractAddress: Address) => {
       const amountInWei = parseEther(amount);
 
       // Approuver le contrat de staking pour dépenser les tokens
-      const tokenAddress = await publicClient.readContract({
+      const tokenAddress = (await publicClient.readContract({
         address: stakingContractAddress,
         abi: [
           {
             inputs: [],
-            name: 'stakingToken',
-            outputs: [{ name: '', type: 'address' }],
-            stateMutability: 'view',
-            type: 'function',
+            name: "stakingToken",
+            outputs: [{ name: "", type: "address" }],
+            stateMutability: "view",
+            type: "function",
           },
         ],
-        functionName: 'stakingToken',
+        functionName: "stakingToken",
         args: [],
-      }) as Address;
+      })) as Address;
 
       // Approuver le transfert
       const approveHash = await walletClient.writeContract({
@@ -187,16 +189,16 @@ export const useStaking = (stakingContractAddress: Address) => {
         abi: [
           {
             inputs: [
-              { name: 'spender', type: 'address' },
-              { name: 'amount', type: 'uint256' },
+              { name: "spender", type: "address" },
+              { name: "amount", type: "uint256" },
             ],
-            name: 'approve',
-            outputs: [{ name: '', type: 'bool' }],
-            stateMutability: 'nonpayable',
-            type: 'function',
+            name: "approve",
+            outputs: [{ name: "", type: "bool" }],
+            stateMutability: "nonpayable",
+            type: "function",
           },
         ],
-        functionName: 'approve',
+        functionName: "approve",
         args: [stakingContractAddress, amountInWei],
       });
 
@@ -207,14 +209,14 @@ export const useStaking = (stakingContractAddress: Address) => {
         address: stakingContractAddress,
         abi: [
           {
-            inputs: [{ name: 'amount', type: 'uint256' }],
-            name: 'stake',
+            inputs: [{ name: "amount", type: "uint256" }],
+            name: "stake",
             outputs: [],
-            stateMutability: 'nonpayable',
-            type: 'function',
+            stateMutability: "nonpayable",
+            type: "function",
           },
         ],
-        functionName: 'stake',
+        functionName: "stake",
         args: [amountInWei],
       });
 
@@ -222,10 +224,10 @@ export const useStaking = (stakingContractAddress: Address) => {
 
       // Rafraîchir les données
       fetchStakingData();
-      setStakeAmount('');
+      setStakeAmount("");
     } catch (err: any) {
-      console.error('Error staking tokens:', err);
-      setError(err.message || 'Erreur lors du staking');
+      console.error("Error staking tokens:", err);
+      setError(err.message || "Erreur lors du staking");
     } finally {
       setIsLoading(false);
     }
@@ -234,7 +236,7 @@ export const useStaking = (stakingContractAddress: Address) => {
   // Fonction pour retirer des tokens
   const withdraw = async (amount: string) => {
     if (!walletClient || !address || !stakingContractAddress || !publicClient) {
-      setError('Wallet non connecté ou client non disponible');
+      setError("Wallet non connecté ou client non disponible");
       return;
     }
 
@@ -249,14 +251,14 @@ export const useStaking = (stakingContractAddress: Address) => {
         address: stakingContractAddress,
         abi: [
           {
-            inputs: [{ name: 'amount', type: 'uint256' }],
-            name: 'withdraw',
+            inputs: [{ name: "amount", type: "uint256" }],
+            name: "withdraw",
             outputs: [],
-            stateMutability: 'nonpayable',
-            type: 'function',
+            stateMutability: "nonpayable",
+            type: "function",
           },
         ],
-        functionName: 'withdraw',
+        functionName: "withdraw",
         args: [amountInWei],
       });
 
@@ -264,10 +266,10 @@ export const useStaking = (stakingContractAddress: Address) => {
 
       // Rafraîchir les données
       fetchStakingData();
-      setWithdrawAmount('');
+      setWithdrawAmount("");
     } catch (err: any) {
-      console.error('Error withdrawing tokens:', err);
-      setError(err.message || 'Erreur lors du retrait');
+      console.error("Error withdrawing tokens:", err);
+      setError(err.message || "Erreur lors du retrait");
     } finally {
       setIsLoading(false);
     }
@@ -276,7 +278,7 @@ export const useStaking = (stakingContractAddress: Address) => {
   // Fonction pour réclamer les récompenses
   const claimRewards = async () => {
     if (!walletClient || !address || !stakingContractAddress || !publicClient) {
-      setError('Wallet non connecté ou client non disponible');
+      setError("Wallet non connecté ou client non disponible");
       return;
     }
 
@@ -290,13 +292,13 @@ export const useStaking = (stakingContractAddress: Address) => {
         abi: [
           {
             inputs: [],
-            name: 'getReward',
+            name: "getReward",
             outputs: [],
-            stateMutability: 'nonpayable',
-            type: 'function',
+            stateMutability: "nonpayable",
+            type: "function",
           },
         ],
-        functionName: 'getReward',
+        functionName: "getReward",
         args: [],
       });
 
@@ -305,8 +307,8 @@ export const useStaking = (stakingContractAddress: Address) => {
       // Rafraîchir les données
       fetchStakingData();
     } catch (err: any) {
-      console.error('Error claiming rewards:', err);
-      setError(err.message || 'Erreur lors de la réclamation des récompenses');
+      console.error("Error claiming rewards:", err);
+      setError(err.message || "Erreur lors de la réclamation des récompenses");
     } finally {
       setIsLoading(false);
     }

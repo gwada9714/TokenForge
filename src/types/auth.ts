@@ -1,6 +1,6 @@
-import { WalletState } from '../features/auth/types/wallet';
-import { WalletClient } from 'viem';
-import { User } from 'firebase/auth';
+import { WalletState } from "../features/auth/types/wallet";
+import { WalletClient } from "viem";
+import { User } from "firebase/auth";
 
 export interface TokenForgeUser {
   uid: string;
@@ -24,7 +24,7 @@ export interface WalletConnection {
 }
 
 export interface TokenForgeAuthState {
-  status: 'idle' | 'loading' | 'authenticated' | 'error';
+  status: "idle" | "loading" | "authenticated" | "error";
   isAuthenticated: boolean;
   loading: boolean;
   user: TokenForgeUser | null;
@@ -42,7 +42,11 @@ export interface AuthError extends Error {
 
 export interface AuthActions {
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName: string
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;

@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { SEOHead } from '@/components';
+import React from "react";
+import { Link } from "react-router-dom";
+import { SEOHead } from "@/components";
 
 export const HomePage: React.FC = () => {
   // Statistiques simulées
@@ -8,113 +8,118 @@ export const HomePage: React.FC = () => {
     tokensCreated: 12458,
     activeUsers: 8742,
     averageSavings: 32, // pourcentage
-    averageDeployTime: '2.5 minutes',
+    averageDeployTime: "2.5 minutes",
   };
 
   // Témoignages simulés
   const testimonials = [
     {
       id: 1,
-      name: 'Sophie Martin',
-      role: 'Fondatrice de CryptoStart',
-      image: '/images/testimonials/sophie-martin.jpg',
-      quote: 'TokenForge nous a permis de lancer notre token en quelques minutes, sans connaissances techniques préalables. Le support est exceptionnel !',
+      name: "Sophie Martin",
+      role: "Fondatrice de CryptoStart",
+      image: "/images/testimonials/sophie-martin.jpg",
+      quote:
+        "TokenForge nous a permis de lancer notre token en quelques minutes, sans connaissances techniques préalables. Le support est exceptionnel !",
       rating: 5,
-      project: 'CryptoStart Token (CST)',
+      project: "CryptoStart Token (CST)",
     },
     {
       id: 2,
-      name: 'Thomas Dubois',
-      role: 'CTO de GameChain',
-      image: '/images/testimonials/thomas-dubois.jpg',
-      quote: 'Les fonctionnalités anti-rugpull ont été déterminantes pour gagner la confiance de notre communauté. Nous avons économisé 40% par rapport à d\'autres solutions.',
+      name: "Thomas Dubois",
+      role: "CTO de GameChain",
+      image: "/images/testimonials/thomas-dubois.jpg",
+      quote:
+        "Les fonctionnalités anti-rugpull ont été déterminantes pour gagner la confiance de notre communauté. Nous avons économisé 40% par rapport à d'autres solutions.",
       rating: 5,
-      project: 'GameChain Token (GCT)',
+      project: "GameChain Token (GCT)",
     },
     {
       id: 3,
-      name: 'Julie Lefebvre',
-      role: 'Responsable Marketing chez DecentraHealth',
-      image: '/images/testimonials/julie-lefebvre.jpg',
-      quote: 'L\'interface intuitive et les templates prédéfinis nous ont fait gagner un temps précieux. Le déploiement multi-chain a été un jeu d\'enfant.',
+      name: "Julie Lefebvre",
+      role: "Responsable Marketing chez DecentraHealth",
+      image: "/images/testimonials/julie-lefebvre.jpg",
+      quote:
+        "L'interface intuitive et les templates prédéfinis nous ont fait gagner un temps précieux. Le déploiement multi-chain a été un jeu d'enfant.",
       rating: 4,
-      project: 'DecentraHealth Token (DHT)',
+      project: "DecentraHealth Token (DHT)",
     },
   ];
 
   // Fonctionnalités principales
   const features = [
     {
-      title: 'Multi-Chain',
-      description: 'Déployez sur 6+ blockchains (Ethereum, BSC, Polygon, Avalanche, Solana, Arbitrum)',
-      icon: '🔗',
+      title: "Multi-Chain",
+      description:
+        "Déployez sur 6+ blockchains (Ethereum, BSC, Polygon, Avalanche, Solana, Arbitrum)",
+      icon: "🔗",
     },
     {
-      title: 'Anti-Rugpull',
-      description: 'Protégez votre communauté avec des mécanismes de sécurité avancés',
-      icon: '🛡️',
+      title: "Anti-Rugpull",
+      description:
+        "Protégez votre communauté avec des mécanismes de sécurité avancés",
+      icon: "🛡️",
     },
     {
-      title: 'Économies',
-      description: 'Tarifs 20-40% inférieurs à la concurrence',
-      icon: '💰',
+      title: "Économies",
+      description: "Tarifs 20-40% inférieurs à la concurrence",
+      icon: "💰",
     },
     {
-      title: 'Simplicité',
-      description: 'Interface intuitive, accessible aux non-techniciens',
-      icon: '🔍',
+      title: "Simplicité",
+      description: "Interface intuitive, accessible aux non-techniciens",
+      icon: "🔍",
     },
     {
-      title: 'Tokenomics',
-      description: 'Outils avancés de conception et simulation économique',
-      icon: '📊',
+      title: "Tokenomics",
+      description: "Outils avancés de conception et simulation économique",
+      icon: "📊",
     },
     {
-      title: 'Templates',
-      description: 'Modèles prédéfinis pour tous les cas d\'usage',
-      icon: '📝',
+      title: "Templates",
+      description: "Modèles prédéfinis pour tous les cas d'usage",
+      icon: "📝",
     },
   ];
 
   // Plans tarifaires
   const plans = [
     {
-      name: 'Free',
-      price: '0€',
+      name: "Free",
+      price: "0€",
       features: [
-        'Création basique sur 2 blockchains',
-        'Templates standards',
-        'Support communautaire',
-        'Documentation complète',
+        "Création basique sur 2 blockchains",
+        "Templates standards",
+        "Support communautaire",
+        "Documentation complète",
       ],
-      cta: 'Commencer gratuitement',
+      cta: "Commencer gratuitement",
       popular: false,
     },
     {
-      name: 'Basic',
-      price: '99€',
+      name: "Basic",
+      price: "99€",
       features: [
-        'Création sur 4 blockchains',
-        'Fonctionnalités standard',
-        'Support email',
-        'Anti-Rugpull basique',
-        'Analytics de base',
+        "Création sur 4 blockchains",
+        "Fonctionnalités standard",
+        "Support email",
+        "Anti-Rugpull basique",
+        "Analytics de base",
       ],
-      cta: 'Choisir Basic',
+      cta: "Choisir Basic",
       popular: true,
     },
     {
-      name: 'Pro',
-      price: '299€',
+      name: "Pro",
+      price: "299€",
       features: [
-        'Toutes les blockchains (6+)',
-        'Fonctionnalités avancées',
-        'Support prioritaire',
-        'Anti-Rugpull avancé',
-        'Analytics détaillés',
-        'Multi-signature',
+        "Toutes les blockchains (6+)",
+        "Fonctionnalités avancées",
+        "Support prioritaire",
+        "Anti-Rugpull avancé",
+        "Analytics détaillés",
+        "Multi-signature",
       ],
-      cta: 'Choisir Pro',
+      cta: "Choisir Pro",
       popular: false,
     },
   ];
@@ -124,8 +129,11 @@ export const HomePage: React.FC = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <svg
         key={index}
-        className={`h-5 w-5 ${index < rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'
-          }`}
+        className={`h-5 w-5 ${
+          index < rating
+            ? "text-yellow-400"
+            : "text-gray-300 dark:text-gray-600"
+        }`}
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -150,7 +158,8 @@ export const HomePage: React.FC = () => {
                 Créez votre token en quelques minutes
               </h1>
               <p className="text-xl mb-8 text-blue-100">
-                Plateforme simple, sécurisée et économique pour déployer des tokens sur 6+ blockchains sans connaissances techniques.
+                Plateforme simple, sécurisée et économique pour déployer des
+                tokens sur 6+ blockchains sans connaissances techniques.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
@@ -189,25 +198,33 @@ export const HomePage: React.FC = () => {
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 {stats.tokensCreated.toLocaleString()}+
               </div>
-              <div className="text-gray-600 dark:text-gray-400">Tokens créés</div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Tokens créés
+              </div>
             </div>
             <div className="p-6 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 {stats.activeUsers.toLocaleString()}+
               </div>
-              <div className="text-gray-600 dark:text-gray-400">Utilisateurs actifs</div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Utilisateurs actifs
+              </div>
             </div>
             <div className="p-6 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 {stats.averageSavings}%
               </div>
-              <div className="text-gray-600 dark:text-gray-400">Économies moyennes</div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Économies moyennes
+              </div>
             </div>
             <div className="p-6 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 {stats.averageDeployTime}
               </div>
-              <div className="text-gray-600 dark:text-gray-400">Temps de déploiement</div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Temps de déploiement
+              </div>
             </div>
           </div>
         </div>
@@ -221,7 +238,8 @@ export const HomePage: React.FC = () => {
               Pourquoi choisir TokenForge ?
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Notre plateforme combine simplicité, sécurité et économies pour vous offrir la meilleure expérience de création de tokens.
+              Notre plateforme combine simplicité, sécurité et économies pour
+              vous offrir la meilleure expérience de création de tokens.
             </p>
           </div>
 
@@ -235,7 +253,9 @@ export const HomePage: React.FC = () => {
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
@@ -250,7 +270,8 @@ export const HomePage: React.FC = () => {
               Ce que disent nos utilisateurs
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Découvrez comment TokenForge aide les entrepreneurs et développeurs à lancer leurs projets blockchain.
+              Découvrez comment TokenForge aide les entrepreneurs et
+              développeurs à lancer leurs projets blockchain.
             </p>
           </div>
 
@@ -273,8 +294,12 @@ export const HomePage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex mb-4">{renderStars(testimonial.rating)}</div>
-                <p className="text-gray-700 dark:text-gray-300 mb-4">"{testimonial.quote}"</p>
+                <div className="flex mb-4">
+                  {renderStars(testimonial.rating)}
+                </div>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  "{testimonial.quote}"
+                </p>
                 <div className="text-sm text-blue-600 dark:text-blue-400">
                   Projet : {testimonial.project}
                 </div>
@@ -292,7 +317,8 @@ export const HomePage: React.FC = () => {
               Plans tarifaires transparents
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Économisez jusqu'à 40% par rapport à nos concurrents avec nos tarifs avantageux.
+              Économisez jusqu'à 40% par rapport à nos concurrents avec nos
+              tarifs avantageux.
             </p>
           </div>
 
@@ -300,10 +326,11 @@ export const HomePage: React.FC = () => {
             {plans.map((plan, index) => (
               <div
                 key={index}
-                className={`bg-white dark:bg-gray-700 rounded-xl shadow-sm overflow-hidden ${plan.popular
-                    ? 'ring-2 ring-blue-500 dark:ring-blue-400 relative'
-                    : ''
-                  }`}
+                className={`bg-white dark:bg-gray-700 rounded-xl shadow-sm overflow-hidden ${
+                  plan.popular
+                    ? "ring-2 ring-blue-500 dark:ring-blue-400 relative"
+                    : ""
+                }`}
               >
                 {plan.popular && (
                   <div className="bg-blue-500 text-white text-sm font-medium py-1 text-center">
@@ -319,7 +346,10 @@ export const HomePage: React.FC = () => {
                   </div>
                   <ul className="space-y-3 mb-6">
                     {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center text-gray-600 dark:text-gray-300">
+                      <li
+                        key={i}
+                        className="flex items-center text-gray-600 dark:text-gray-300"
+                      >
                         <svg
                           className="h-5 w-5 text-green-500 mr-2"
                           fill="none"
@@ -339,10 +369,11 @@ export const HomePage: React.FC = () => {
                   </ul>
                   <Link
                     to="/plans"
-                    className={`block text-center py-2 px-4 rounded-lg font-medium ${plan.popular
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white'
-                      }`}
+                    className={`block text-center py-2 px-4 rounded-lg font-medium ${
+                      plan.popular
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white"
+                    }`}
                   >
                     {plan.cta}
                   </Link>
@@ -356,9 +387,12 @@ export const HomePage: React.FC = () => {
       {/* CTA */}
       <section className="py-16 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6">Prêt à lancer votre token ?</h2>
+          <h2 className="text-3xl font-bold mb-6">
+            Prêt à lancer votre token ?
+          </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-            Rejoignez plus de 8,000 entrepreneurs et développeurs qui font confiance à TokenForge pour leurs projets blockchain.
+            Rejoignez plus de 8,000 entrepreneurs et développeurs qui font
+            confiance à TokenForge pour leurs projets blockchain.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link

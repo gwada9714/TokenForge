@@ -1,7 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Container, Title, Text } from '@/components/common/styles';
-import { SPACING } from '@/config/constants/theme';
+import React from "react";
+import styled from "styled-components";
+import { Container, Title, Text } from "@/components/common/styles";
+import { SPACING } from "@/config/constants/theme";
 
 const DocsContainer = styled(Container)`
   max-width: 1000px;
@@ -19,7 +19,7 @@ const DocsSidebar = styled.aside`
   height: calc(100vh - 80px);
   overflow-y: auto;
   padding: ${SPACING.lg};
-  border-right: 1px solid ${props => props.theme.colors.border};
+  border-right: 1px solid ${(props) => props.theme.colors.border};
 `;
 
 const DocsContent = styled.div`
@@ -36,8 +36,11 @@ export default function Documentation() {
   return (
     <DocsContainer>
       <Title>Centre de Documentation</Title>
-      <Text>Bienvenue dans la documentation de TokenForge. Trouvez ici toutes les ressources nécessaires pour utiliser notre plateforme.</Text>
-      
+      <Text>
+        Bienvenue dans la documentation de TokenForge. Trouvez ici toutes les
+        ressources nécessaires pour utiliser notre plateforme.
+      </Text>
+
       <DocsLayout>
         <DocsSidebar>
           <nav>
@@ -47,14 +50,14 @@ export default function Documentation() {
               <li>Création de Token</li>
               <li>Sécurité</li>
             </ul>
-            
+
             <h3>API</h3>
             <ul>
               <li>Introduction</li>
               <li>Authentication</li>
               <li>Endpoints</li>
             </ul>
-            
+
             <h3>Sécurité</h3>
             <ul>
               <li>Bonnes Pratiques</li>
@@ -67,8 +70,8 @@ export default function Documentation() {
         <DocsContent>
           <SectionTitle>Démarrage Rapide</SectionTitle>
           <Text>
-            Apprenez à utiliser TokenForge en quelques minutes. Ce guide vous accompagnera
-            dans vos premiers pas sur la plateforme.
+            Apprenez à utiliser TokenForge en quelques minutes. Ce guide vous
+            accompagnera dans vos premiers pas sur la plateforme.
           </Text>
 
           <SectionTitle>Guides Interactifs</SectionTitle>
@@ -86,4 +89,4 @@ export default function Documentation() {
       </DocsLayout>
     </DocsContainer>
   );
-} 
+}

@@ -2,34 +2,34 @@ name: CSP Security Checks
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   csp-validation:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
-          
+          node-version: "20.x"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
-        
+
       - name: Run CSP tests
         run: npm run test:e2e
         env:
           CI: true
-          
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -37,7 +37,7 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-          
+
       - name: Check for CSP violations
         run: |
           if [ -f "test-results/violations.json" ]; then

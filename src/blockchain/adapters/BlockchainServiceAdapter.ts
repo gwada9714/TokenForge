@@ -1,5 +1,5 @@
-import { IBlockchainService } from '../interfaces/IBlockchainService';
-import { ethers } from 'ethers';
+import { IBlockchainService } from "../interfaces/IBlockchainService";
+import { ethers } from "ethers";
 
 /**
  * Adaptateur pour les services blockchain
@@ -17,7 +17,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns true si connecté, false sinon
    */
   async isConnected(): Promise<boolean> {
-    if (typeof this.service.isConnected === 'function') {
+    if (typeof this.service.isConnected === "function") {
       return this.service.isConnected();
     }
     return !!this.service.provider;
@@ -36,7 +36,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns Signer blockchain
    */
   getSigner(): any {
-    if (typeof this.service.getSigner === 'function') {
+    if (typeof this.service.getSigner === "function") {
       return this.service.getSigner();
     }
     const provider = this.getProvider();
@@ -49,7 +49,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns Solde en wei
    */
   async getBalance(address: string): Promise<bigint> {
-    if (typeof this.service.getBalance === 'function') {
+    if (typeof this.service.getBalance === "function") {
       return this.service.getBalance(address);
     }
     const provider = this.getProvider();
@@ -61,10 +61,10 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns ID du réseau
    */
   async getNetworkId(): Promise<number> {
-    if (typeof this.service.getNetworkId === 'function') {
+    if (typeof this.service.getNetworkId === "function") {
       return this.service.getNetworkId();
     }
-    if (typeof this.service.getChainId === 'function') {
+    if (typeof this.service.getChainId === "function") {
       return this.service.getChainId();
     }
     const provider = this.getProvider();
@@ -77,7 +77,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns ID de la chaîne
    */
   async getChainId(): Promise<number> {
-    if (typeof this.service.getChainId === 'function') {
+    if (typeof this.service.getChainId === "function") {
       return this.service.getChainId();
     }
     return this.getNetworkId();
@@ -88,7 +88,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns Liste des adresses de comptes
    */
   async getAccounts(): Promise<string[]> {
-    if (typeof this.service.getAccounts === 'function') {
+    if (typeof this.service.getAccounts === "function") {
       return this.service.getAccounts();
     }
     const provider = this.getProvider();
@@ -102,7 +102,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns Signature
    */
   async signMessage(message: string, address?: string): Promise<string> {
-    if (typeof this.service.signMessage === 'function') {
+    if (typeof this.service.signMessage === "function") {
       return this.service.signMessage(message, address);
     }
     const provider = this.getProvider();
@@ -117,11 +117,15 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @param address Adresse du signataire
    * @returns true si la signature est valide, false sinon
    */
-  async verifySignature(message: string, signature: string, address: string): Promise<boolean> {
-    if (typeof this.service.verifySignature === 'function') {
+  async verifySignature(
+    message: string,
+    signature: string,
+    address: string
+  ): Promise<boolean> {
+    if (typeof this.service.verifySignature === "function") {
       return this.service.verifySignature(message, signature, address);
     }
-    
+
     // Utiliser ethers pour vérifier la signature
     const signerAddress = ethers.verifyMessage(message, signature);
     return signerAddress.toLowerCase() === address.toLowerCase();
@@ -133,7 +137,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns Estimation des frais de gaz
    */
   async estimateGas(transaction: any): Promise<bigint> {
-    if (typeof this.service.estimateGas === 'function') {
+    if (typeof this.service.estimateGas === "function") {
       return this.service.estimateGas(transaction);
     }
     const provider = this.getProvider();
@@ -146,7 +150,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns true si la connexion a réussi, false sinon
    */
   async connect(): Promise<boolean> {
-    if (typeof this.service.connect === 'function') {
+    if (typeof this.service.connect === "function") {
       return this.service.connect();
     }
     return true;
@@ -157,7 +161,7 @@ export class BlockchainServiceAdapter implements IBlockchainService {
    * @returns true si la déconnexion a réussi, false sinon
    */
   async disconnect(): Promise<boolean> {
-    if (typeof this.service.disconnect === 'function') {
+    if (typeof this.service.disconnect === "function") {
       return this.service.disconnect();
     }
     return true;

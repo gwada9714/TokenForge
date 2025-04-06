@@ -1,4 +1,4 @@
-import { ServiceType } from '@/features/services/types/services';
+import { ServiceType } from "@/features/services/types/services";
 
 export interface MockServiceHook {
   configureService: (type: ServiceType, config: any) => Promise<void>;
@@ -12,10 +12,10 @@ export interface MockComponentProps {
   error?: string | null;
 }
 
-declare module 'vitest' {
+declare module "vitest" {
   interface Assertion<T = any> {
     toBeDisabled(): void;
     toBeInTheDocument(): void;
     toHaveAttribute(attr: string, value?: string): void;
   }
-} 
+}

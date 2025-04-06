@@ -9,18 +9,21 @@ import {
   type ContractFunctionName,
   type Account,
   keccak256,
-  toBytes
+  toBytes,
 } from "viem";
 import { BASE_TAX_RATE } from "./constants";
 import TaxDistributorArtifact from "../../../artifacts/contracts/TaxDistributor.sol/TaxDistributor.json" assert { type: "json" };
 import TaxSystemArtifact from "../../../artifacts/contracts/TokenForgeTaxSystem.sol/TokenForgeTaxSystem.json" assert { type: "json" };
 import FactoryArtifact from "../../../artifacts/contracts/TokenForgeFactory.sol/TokenForgeFactory.json" assert { type: "json" };
 import { TokenType } from "../../types/tokens";
-import type { 
+import type {
   TokenDeploymentConfig,
-  TokenDeploymentResult
+  TokenDeploymentResult,
 } from "../../types/tokens";
-import type { ChainTestEnvironment, ExtendedTestClient } from "../../types/test";
+import type {
+  ChainTestEnvironment,
+  ExtendedTestClient,
+} from "../../types/test";
 import type { SupportedChain } from "../../types/chains";
 import { SUPPORTED_CHAINS } from "../../types/chains";
 
@@ -73,13 +76,13 @@ async function deployAndVerifyContract<T extends keyof ContractTypes>(
   params: ContractDeploymentParams<T>
 ): Promise<Address> {
   console.log(`Deploying ${params.name}...`);
-  
+
   const deploymentData = {
     abi: params.artifact.abi,
     bytecode: validateBytecode(params.artifact.bytecode),
     args: params.args,
     account: { address: params.account } as Account,
-    chain: params.chain
+    chain: params.chain,
   };
 
   try {
@@ -109,7 +112,7 @@ async function configureTaxSystem(
   owner: Address
 ): Promise<void> {
   console.log("Configuring tax system...");
-  
+
   try {
     const writeConfig = {
       address: taxSystemAddress,
@@ -117,31 +120,36 @@ async function configureTaxSystem(
       functionName: "configureTax",
       args: [config.factory, config.baseRate, config.treasury] as const,
       account: { address: owner } as Account,
-      chain: config.chain
+      chain: config.chain,
     } as const;
 
     const hash = await client.writeContract(writeConfig);
     const receipt = await client.waitForTransactionReceipt({ hash });
-    
+
     if (!receipt.status || receipt.status === "reverted") {
       throw new Error("Tax system configuration failed");
     }
 
-    console.log("Configured tax system with base rate:", config.baseRate.toString());
+    console.log(
+      "Configured tax system with base rate:",
+      config.baseRate.toString()
+    );
   } catch (error) {
     console.error("Failed to configure tax system:", error);
     throw error;
   }
 }
 
-export async function setupChainTestEnvironment(chain: SupportedChain): Promise<ChainTestEnvironment> {
+export async function setupChainTestEnvironment(
+  chain: SupportedChain
+): Promise<ChainTestEnvironment> {
   console.log(`Setting up test environment for ${chain.name}...`);
-  
+
   try {
     const client = createTestClient({
       chain,
       mode: "anvil",
-      transport: http()
+      transport: http(),
     })
       .extend(publicActions)
       .extend(walletActions) as unknown as ExtendedTestClient;
@@ -165,7 +173,7 @@ export async function setupChainTestEnvironment(chain: SupportedChain): Promise<
       args: [treasury, development, buyback, staking],
       account: owner,
       name: "TaxDistributor",
-      chain
+      chain,
     });
 
     const taxSystemAddress = await deployAndVerifyContract(client, {
@@ -173,7 +181,7 @@ export async function setupChainTestEnvironment(chain: SupportedChain): Promise<
       args: [taxDistributorAddress],
       account: owner,
       name: "TaxSystem",
-      chain
+      chain,
     });
 
     const factoryAddress = await deployAndVerifyContract(client, {
@@ -181,16 +189,21 @@ export async function setupChainTestEnvironment(chain: SupportedChain): Promise<
       args: [treasury, taxSystemAddress],
       account: owner,
       name: "Factory",
-      chain
+      chain,
     });
 
     // Configure tax system
-    await configureTaxSystem(client, {
-      factory: factoryAddress,
-      baseRate: BASE_TAX_RATE,
-      treasury,
-      chain
-    }, taxSystemAddress, owner);
+    await configureTaxSystem(
+      client,
+      {
+        factory: factoryAddress,
+        baseRate: BASE_TAX_RATE,
+        treasury,
+        chain,
+      },
+      taxSystemAddress,
+      owner
+    );
 
     console.log("Test environment setup completed!");
 
@@ -203,7 +216,7 @@ export async function setupChainTestEnvironment(chain: SupportedChain): Promise<
       staking,
       user,
       factory: factoryAddress,
-      client
+      client,
     };
   } catch (error) {
     console.error(`Failed to setup test environment for ${chain.name}:`, error);
@@ -217,7 +230,7 @@ export async function deployTokenOnChain(
   environment: ChainTestEnvironment
 ): Promise<TokenDeploymentResult> {
   console.log(`Deploying ${config.tokenType} token on ${chain.name}...`);
-  
+
   try {
     const { client, factory, owner } = environment;
 
@@ -230,7 +243,7 @@ export async function deployTokenOnChain(
       config.maxSupply,
       config.isBurnable,
       config.isMintable,
-      config.isPausable
+      config.isPausable,
     ] as const;
 
     let deployArgs;
@@ -251,20 +264,22 @@ export async function deployTokenOnChain(
           config.options.taxConfig.buyTax,
           config.options.taxConfig.sellTax,
           config.options.taxConfig.transferTax,
-          config.options.taxConfig.taxRecipient
+          config.options.taxConfig.taxRecipient,
         ] as const;
         functionName = "createTaxToken";
         break;
 
       case TokenType.LIQUIDITY:
         if (!config.options?.liquidityConfig) {
-          throw new Error("Liquidity configuration required for liquidity token");
+          throw new Error(
+            "Liquidity configuration required for liquidity token"
+          );
         }
         deployArgs = [
           ...baseArgs,
           config.options.liquidityConfig.router,
           config.options.liquidityConfig.pair,
-          config.options.liquidityConfig.lockDuration
+          config.options.liquidityConfig.lockDuration,
         ] as const;
         functionName = "createLiquidityToken";
         break;
@@ -277,7 +292,7 @@ export async function deployTokenOnChain(
           ...baseArgs,
           config.options.stakingConfig.rewardRate,
           config.options.stakingConfig.stakingDuration,
-          config.options.stakingConfig.earlyWithdrawalPenalty
+          config.options.stakingConfig.earlyWithdrawalPenalty,
         ] as const;
         functionName = "createStakingToken";
         break;
@@ -293,7 +308,7 @@ export async function deployTokenOnChain(
       functionName,
       args: deployArgs,
       account: { address: owner } as Account,
-      chain
+      chain,
     } as const;
 
     // Déployer le token
@@ -305,8 +320,8 @@ export async function deployTokenOnChain(
     }
 
     // Récupérer l'adresse du token depuis les logs
-    const tokenCreatedLog = receipt.logs.find(log => 
-      log.topics[0] === TOKEN_CREATED_TOPIC
+    const tokenCreatedLog = receipt.logs.find(
+      (log) => log.topics[0] === TOKEN_CREATED_TOPIC
     );
 
     if (!tokenCreatedLog) {
@@ -314,29 +329,34 @@ export async function deployTokenOnChain(
     }
 
     const tokenAddress = tokenCreatedLog.address as Address;
-    console.log(`${config.tokenType} token deployed at ${tokenAddress} on ${chain.name}`);
+    console.log(
+      `${config.tokenType} token deployed at ${tokenAddress} on ${chain.name}`
+    );
 
     return {
       address: tokenAddress,
       tokenType: config.tokenType,
       chain: {
         id: chain.id,
-        name: chain.name
+        name: chain.name,
       },
       deploymentTx: hash,
-      timestamp: Math.floor(Date.now() / 1000)
+      timestamp: Math.floor(Date.now() / 1000),
     };
   } catch (error) {
-    console.error(`Failed to deploy ${config.tokenType} token on ${chain.name}:`, error);
+    console.error(
+      `Failed to deploy ${config.tokenType} token on ${chain.name}:`,
+      error
+    );
     throw error;
   }
 }
 
 // Tests spécifiques par chaîne et par type de token
 describe("Token Deployment Tests", () => {
-  const chains = Object.values(SUPPORTED_CHAINS).map(config => config.chain);
-  
-  chains.forEach(chain => {
+  const chains = Object.values(SUPPORTED_CHAINS).map((config) => config.chain);
+
+  chains.forEach((chain) => {
     describe(`${chain.name} Token Deployments`, () => {
       let environment: ChainTestEnvironment;
 
@@ -354,7 +374,7 @@ describe("Token Deployment Tests", () => {
           isBurnable: true,
           isMintable: true,
           isPausable: true,
-          tokenType: TokenType.STANDARD
+          tokenType: TokenType.STANDARD,
         };
 
         const result = await deployTokenOnChain(chain, config, environment);
@@ -379,9 +399,9 @@ describe("Token Deployment Tests", () => {
               buyTax: 5,
               sellTax: 5,
               transferTax: 2,
-              taxRecipient: environment.treasury
-            }
-          }
+              taxRecipient: environment.treasury,
+            },
+          },
         };
 
         const result = await deployTokenOnChain(chain, config, environment);
@@ -406,9 +426,9 @@ describe("Token Deployment Tests", () => {
             liquidityConfig: {
               router: chainConfig.routerAddress,
               pair: chainConfig.routerAddress, // À remplacer par la vraie paire
-              lockDuration: 180 // 180 jours
-            }
-          }
+              lockDuration: 180, // 180 jours
+            },
+          },
         };
 
         const result = await deployTokenOnChain(chain, config, environment);
@@ -432,9 +452,9 @@ describe("Token Deployment Tests", () => {
             stakingConfig: {
               rewardRate: 10, // 10% APY
               stakingDuration: 365, // 1 an
-              earlyWithdrawalPenalty: 20 // 20% de pénalité
-            }
-          }
+              earlyWithdrawalPenalty: 20, // 20% de pénalité
+            },
+          },
         };
 
         const result = await deployTokenOnChain(chain, config, environment);

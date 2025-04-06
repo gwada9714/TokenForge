@@ -1,17 +1,11 @@
 // Types
-export * from './types';
+export * from "./types";
 
 // Context
-export {
-  TokenForgeAuthProvider,
-  useTokenForgeAuthContext,
-} from './context';
+export { TokenForgeAuthProvider, useTokenForgeAuthContext } from "./context";
 
 // Hooks
-export {
-  useAuthState,
-  useTokenForgeAuth,
-} from './hooks';
+export { useAuthState, useTokenForgeAuth } from "./hooks";
 
 // Components
 export {
@@ -20,4 +14,4 @@ export {
   ProtectedRoute,
   AdminRoute,
   AuthButtons,
-} from './components';
+} from "./components";

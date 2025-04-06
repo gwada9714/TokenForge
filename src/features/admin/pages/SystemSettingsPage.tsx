@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Container,
   Typography,
@@ -14,14 +14,14 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  CircularProgress
-} from '@mui/material';
+  CircularProgress,
+} from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
   Save as SaveIcon,
-  Refresh as RefreshIcon
-} from '@mui/icons-material';
-import { useSystemSettings } from '../hooks/useSystemSettings';
+  Refresh as RefreshIcon,
+} from "@mui/icons-material";
+import { useSystemSettings } from "../hooks/useSystemSettings";
 
 export const SystemSettingsPage: React.FC = () => {
   const {
@@ -33,39 +33,49 @@ export const SystemSettingsPage: React.FC = () => {
     updateSecuritySettings,
     updateFees,
     updateNetworks,
-    reloadSettings
+    reloadSettings,
   } = useSystemSettings();
 
-  const handleMaintenanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMaintenanceChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     updateMaintenanceMode(event.target.checked);
   };
 
   const handleNetworkChange = (network: keyof typeof settings.networks) => {
     updateNetworks({
-      [network]: !settings.networks[network]
+      [network]: !settings.networks[network],
     });
   };
 
-  const handleSecurityChange = (field: keyof typeof settings.security) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = event.target.type === 'checkbox' ? event.target.checked : Number(event.target.value);
-    updateSecuritySettings({
-      [field]: value
-    });
-  };
+  const handleSecurityChange =
+    (field: keyof typeof settings.security) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        event.target.type === "checkbox"
+          ? event.target.checked
+          : Number(event.target.value);
+      updateSecuritySettings({
+        [field]: value,
+      });
+    };
 
-  const handleFeeChange = (field: keyof typeof settings.fees) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    updateFees({
-      [field]: Number(event.target.value)
-    });
-  };
+  const handleFeeChange =
+    (field: keyof typeof settings.fees) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      updateFees({
+        [field]: Number(event.target.value),
+      });
+    };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="60vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -108,7 +118,12 @@ export const SystemSettingsPage: React.FC = () => {
                 rows={2}
                 label="Message de maintenance"
                 value={settings.maintenance.message}
-                onChange={(e) => updateMaintenanceMode(settings.maintenance.enabled, e.target.value)}
+                onChange={(e) =>
+                  updateMaintenanceMode(
+                    settings.maintenance.enabled,
+                    e.target.value
+                  )
+                }
                 sx={{ mt: 2 }}
               />
             </Box>
@@ -129,7 +144,7 @@ export const SystemSettingsPage: React.FC = () => {
                     type="number"
                     label="Tentatives de connexion max"
                     value={settings.security.maxLoginAttempts}
-                    onChange={handleSecurityChange('maxLoginAttempts')}
+                    onChange={handleSecurityChange("maxLoginAttempts")}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -138,7 +153,7 @@ export const SystemSettingsPage: React.FC = () => {
                     type="number"
                     label="Timeout de session (minutes)"
                     value={settings.security.sessionTimeout}
-                    onChange={handleSecurityChange('sessionTimeout')}
+                    onChange={handleSecurityChange("sessionTimeout")}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -146,7 +161,9 @@ export const SystemSettingsPage: React.FC = () => {
                     control={
                       <Switch
                         checked={settings.security.requireEmailVerification}
-                        onChange={handleSecurityChange('requireEmailVerification')}
+                        onChange={handleSecurityChange(
+                          "requireEmailVerification"
+                        )}
                       />
                     }
                     label="Exiger la vérification email"
@@ -157,7 +174,7 @@ export const SystemSettingsPage: React.FC = () => {
                     control={
                       <Switch
                         checked={settings.security.require2FA}
-                        onChange={handleSecurityChange('require2FA')}
+                        onChange={handleSecurityChange("require2FA")}
                       />
                     }
                     label="Exiger l'authentification à deux facteurs"
@@ -182,7 +199,7 @@ export const SystemSettingsPage: React.FC = () => {
                     type="number"
                     label="Frais de création de token (BNB)"
                     value={settings.fees.tokenCreation}
-                    onChange={handleFeeChange('tokenCreation')}
+                    onChange={handleFeeChange("tokenCreation")}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -191,7 +208,7 @@ export const SystemSettingsPage: React.FC = () => {
                     type="number"
                     label="Frais de staking (%)"
                     value={settings.fees.stakingFee}
-                    onChange={handleFeeChange('stakingFee')}
+                    onChange={handleFeeChange("stakingFee")}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -200,7 +217,7 @@ export const SystemSettingsPage: React.FC = () => {
                     type="number"
                     label="Frais de marketing (BNB)"
                     value={settings.fees.marketingFee}
-                    onChange={handleFeeChange('marketingFee')}
+                    onChange={handleFeeChange("marketingFee")}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -209,7 +226,7 @@ export const SystemSettingsPage: React.FC = () => {
                     type="number"
                     label="Frais KYC (USD)"
                     value={settings.fees.kycFee}
-                    onChange={handleFeeChange('kycFee')}
+                    onChange={handleFeeChange("kycFee")}
                   />
                 </Grid>
               </Grid>
@@ -231,7 +248,11 @@ export const SystemSettingsPage: React.FC = () => {
                       control={
                         <Switch
                           checked={enabled}
-                          onChange={() => handleNetworkChange(network as keyof typeof settings.networks)}
+                          onChange={() =>
+                            handleNetworkChange(
+                              network as keyof typeof settings.networks
+                            )
+                          }
                         />
                       }
                       label={network.charAt(0).toUpperCase() + network.slice(1)}
@@ -264,4 +285,4 @@ export const SystemSettingsPage: React.FC = () => {
       </Box>
     </Container>
   );
-}; 
+};

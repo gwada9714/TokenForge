@@ -1,7 +1,7 @@
-import { PaymentDetails, PlanType, PaymentCurrency } from '../types/plans';
-import { NetworkConfig } from '@/features/auth/types/wallet';
-import { logger } from '@/core/logger';
-import { PLANS } from '../config/plans';
+import { PaymentDetails, PlanType, PaymentCurrency } from "../types/plans";
+import { NetworkConfig } from "@/features/auth/types/wallet";
+import { logger } from "@/core/logger";
+import { PLANS } from "../config/plans";
 
 class PaymentService {
   private static instance: PaymentService;
@@ -21,14 +21,14 @@ class PaymentService {
     network: NetworkConfig
   ): Promise<PaymentDetails> {
     try {
-      const plan = PLANS.find(p => p.id === planId);
+      const plan = PLANS.find((p) => p.id === planId);
       if (!plan) {
-        throw new Error('Plan non trouvé');
+        throw new Error("Plan non trouvé");
       }
 
       // Vérifier si le réseau est supporté pour ce plan
       if (!plan.limitations.networks.includes(network.name)) {
-        throw new Error('Réseau non supporté pour ce plan');
+        throw new Error("Réseau non supporté pour ce plan");
       }
 
       // Créer les détails du paiement
@@ -38,21 +38,21 @@ class PaymentService {
         currency,
         network,
         timestamp: Date.now(),
-        status: 'pending'
+        status: "pending",
       };
 
       // Enregistrer le paiement dans la base de données
       await this.savePaymentDetails(paymentDetails);
 
-      logger.info('Paiement initié', {
+      logger.info("Paiement initié", {
         planId,
         currency,
-        network: network.name
+        network: network.name,
       });
 
       return paymentDetails;
     } catch (error) {
-      logger.error('Erreur lors de l\'initiation du paiement', { error });
+      logger.error("Erreur lors de l'initiation du paiement", { error });
       throw error;
     }
   }
@@ -63,30 +63,33 @@ class PaymentService {
   ): Promise<PaymentDetails> {
     try {
       // Vérifier la transaction sur la blockchain
-      const isValid = await this.verifyTransaction(transactionHash, paymentDetails);
-      
+      const isValid = await this.verifyTransaction(
+        transactionHash,
+        paymentDetails
+      );
+
       if (!isValid) {
-        throw new Error('Transaction invalide');
+        throw new Error("Transaction invalide");
       }
 
       // Mettre à jour le statut du paiement
       const updatedPayment: PaymentDetails = {
         ...paymentDetails,
-        status: 'completed',
-        transactionHash
+        status: "completed",
+        transactionHash,
       };
 
       // Sauvegarder les détails mis à jour
       await this.savePaymentDetails(updatedPayment);
 
-      logger.info('Paiement confirmé', {
+      logger.info("Paiement confirmé", {
         planId: paymentDetails.planId,
-        transactionHash
+        transactionHash,
       });
 
       return updatedPayment;
     } catch (error) {
-      logger.error('Erreur lors de la confirmation du paiement', { error });
+      logger.error("Erreur lors de la confirmation du paiement", { error });
       throw error;
     }
   }
@@ -102,22 +105,28 @@ class PaymentService {
       // - Vérifier que le destinataire est correct
       return true;
     } catch (error) {
-      logger.error('Erreur lors de la vérification de la transaction', { error });
+      logger.error("Erreur lors de la vérification de la transaction", {
+        error,
+      });
       return false;
     }
   }
 
-  private async savePaymentDetails(paymentDetails: PaymentDetails): Promise<void> {
+  private async savePaymentDetails(
+    paymentDetails: PaymentDetails
+  ): Promise<void> {
     try {
       // TODO: Implémenter la sauvegarde dans Firebase
-      logger.info('Détails du paiement sauvegardés', {
-        paymentId: paymentDetails.timestamp
+      logger.info("Détails du paiement sauvegardés", {
+        paymentId: paymentDetails.timestamp,
       });
     } catch (error) {
-      logger.error('Erreur lors de la sauvegarde des détails du paiement', { error });
+      logger.error("Erreur lors de la sauvegarde des détails du paiement", {
+        error,
+      });
       throw error;
     }
   }
 }
 
-export const paymentService = PaymentService.getInstance(); 
+export const paymentService = PaymentService.getInstance();

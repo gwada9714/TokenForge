@@ -32,7 +32,7 @@ Ces hooks sont conçus pour être faciles à utiliser tout en offrant des perfor
 Les hooks sont déjà intégrés dans l'application TokenForge. Pour les utiliser, il suffit de les importer depuis le module `@/hooks/useFirestore`.
 
 ```typescript
-import { useDocument, useQuery, useCollection } from '@/hooks/useFirestore';
+import { useDocument, useQuery, useCollection } from "@/hooks/useFirestore";
 ```
 
 ## Hooks disponibles
@@ -42,23 +42,25 @@ import { useDocument, useQuery, useCollection } from '@/hooks/useFirestore';
 Le hook `useDocument` permet de récupérer un document Firestore par son ID.
 
 ```typescript
-const { 
-  data,         // Données du document (null si non trouvé)
-  loading,      // État de chargement ('idle', 'loading', 'success', 'error')
-  error,        // Erreur éventuelle
-  reload,       // Fonction pour recharger les données
-  invalidateCache // Fonction pour invalider le cache du document
+const {
+  data, // Données du document (null si non trouvé)
+  loading, // État de chargement ('idle', 'loading', 'success', 'error')
+  error, // Erreur éventuelle
+  reload, // Fonction pour recharger les données
+  invalidateCache, // Fonction pour invalider le cache du document
 } = useDocument(
-  'collection',  // Nom de la collection
-  'documentId',  // ID du document (null pour désactiver la requête)
-  {              // Options (facultatives)
-    realtime: true,      // Abonnement en temps réel
-    cacheEnabled: true,  // Activation du cache
-    cacheTTL: 60000,     // Durée de vie du cache en ms (1 minute)
-    retry: {             // Configuration des tentatives
-      count: 3,          // Nombre de tentatives
-      delay: 1000        // Délai entre les tentatives en ms
-    }
+  "collection", // Nom de la collection
+  "documentId", // ID du document (null pour désactiver la requête)
+  {
+    // Options (facultatives)
+    realtime: true, // Abonnement en temps réel
+    cacheEnabled: true, // Activation du cache
+    cacheTTL: 60000, // Durée de vie du cache en ms (1 minute)
+    retry: {
+      // Configuration des tentatives
+      count: 3, // Nombre de tentatives
+      delay: 1000, // Délai entre les tentatives en ms
+    },
   }
 );
 ```
@@ -68,29 +70,32 @@ const {
 Le hook `useQuery` permet d'exécuter une requête Firestore avec des contraintes.
 
 ```typescript
-import { where, orderBy, limit } from 'firebase/firestore';
+import { where, orderBy, limit } from "firebase/firestore";
 
-const { 
-  data,         // Tableau des résultats
-  loading,      // État de chargement ('idle', 'loading', 'success', 'error')
-  error,        // Erreur éventuelle
-  reload,       // Fonction pour recharger les données
-  invalidateCache // Fonction pour invalider le cache de la requête
+const {
+  data, // Tableau des résultats
+  loading, // État de chargement ('idle', 'loading', 'success', 'error')
+  error, // Erreur éventuelle
+  reload, // Fonction pour recharger les données
+  invalidateCache, // Fonction pour invalider le cache de la requête
 } = useQuery(
-  'collection',  // Nom de la collection
-  [              // Contraintes de la requête
-    where('field', '==', 'value'),
-    orderBy('createdAt', 'desc'),
-    limit(10)
+  "collection", // Nom de la collection
+  [
+    // Contraintes de la requête
+    where("field", "==", "value"),
+    orderBy("createdAt", "desc"),
+    limit(10),
   ],
-  {              // Options (facultatives)
-    realtime: true,      // Abonnement en temps réel
-    cacheEnabled: true,  // Activation du cache
-    cacheTTL: 30000,     // Durée de vie du cache en ms (30 secondes)
-    retry: {             // Configuration des tentatives
-      count: 3,          // Nombre de tentatives
-      delay: 1000        // Délai entre les tentatives en ms
-    }
+  {
+    // Options (facultatives)
+    realtime: true, // Abonnement en temps réel
+    cacheEnabled: true, // Activation du cache
+    cacheTTL: 30000, // Durée de vie du cache en ms (30 secondes)
+    retry: {
+      // Configuration des tentatives
+      count: 3, // Nombre de tentatives
+      delay: 1000, // Délai entre les tentatives en ms
+    },
   }
 );
 ```
@@ -100,24 +105,30 @@ const {
 Le hook `useCollection` fournit des méthodes pour effectuer des opérations CRUD sur une collection.
 
 ```typescript
-const { 
-  addDocument,    // Fonction pour ajouter un document
+const {
+  addDocument, // Fonction pour ajouter un document
   updateDocument, // Fonction pour mettre à jour un document
-  deleteDocument  // Fonction pour supprimer un document
-} = useCollection('collection');
+  deleteDocument, // Fonction pour supprimer un document
+} = useCollection("collection");
 
 // Exemples d'utilisation
 const addNewDoc = async () => {
-  const docId = await addDocument({ name: 'Nouveau document', createdAt: new Date() });
+  const docId = await addDocument({
+    name: "Nouveau document",
+    createdAt: new Date(),
+  });
   console.log(`Document ajouté avec l'ID: ${docId}`);
 };
 
 const updateDoc = async () => {
-  await updateDocument('docId', { name: 'Document mis à jour', updatedAt: new Date() });
+  await updateDocument("docId", {
+    name: "Document mis à jour",
+    updatedAt: new Date(),
+  });
 };
 
 const deleteDoc = async () => {
-  await deleteDocument('docId');
+  await deleteDocument("docId");
 };
 ```
 
@@ -125,13 +136,13 @@ const deleteDoc = async () => {
 
 Tous les hooks acceptent des options de configuration pour personnaliser leur comportement :
 
-| Option | Description | Valeur par défaut |
-|--------|-------------|-------------------|
-| `realtime` | Active les mises à jour en temps réel | `true` |
-| `cacheEnabled` | Active la mise en cache des données | `true` |
-| `cacheTTL` | Durée de vie du cache en millisecondes | `60000` (1 minute) pour les documents, `30000` (30 secondes) pour les requêtes |
-| `retry.count` | Nombre de tentatives en cas d'échec | `3` |
-| `retry.delay` | Délai entre les tentatives en millisecondes | `1000` (1 seconde) |
+| Option         | Description                                 | Valeur par défaut                                                              |
+| -------------- | ------------------------------------------- | ------------------------------------------------------------------------------ |
+| `realtime`     | Active les mises à jour en temps réel       | `true`                                                                         |
+| `cacheEnabled` | Active la mise en cache des données         | `true`                                                                         |
+| `cacheTTL`     | Durée de vie du cache en millisecondes      | `60000` (1 minute) pour les documents, `30000` (30 secondes) pour les requêtes |
+| `retry.count`  | Nombre de tentatives en cas d'échec         | `3`                                                                            |
+| `retry.delay`  | Délai entre les tentatives en millisecondes | `1000` (1 seconde)                                                             |
 
 ## Gestion du cache
 
@@ -153,9 +164,9 @@ Les opérations d'écriture (ajout, mise à jour, suppression) invalident automa
 
 ```tsx
 function TokenDetails({ tokenId }) {
-  const { data: token, loading, error } = useDocument('tokens', tokenId);
+  const { data: token, loading, error } = useDocument("tokens", tokenId);
 
-  if (loading === 'loading') return <LoadingSpinner />;
+  if (loading === "loading") return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error.message} />;
   if (!token) return <p>Token non trouvé</p>;
 
@@ -174,30 +185,38 @@ function TokenDetails({ tokenId }) {
 ```tsx
 function TokenList({ type, limit = 10 }) {
   const [page, setPage] = useState(0);
-  
-  const { data: tokens, loading, error } = useQuery('tokens', [
-    where('type', '==', type),
-    orderBy('createdAt', 'desc'),
-    limit(limit)
+
+  const {
+    data: tokens,
+    loading,
+    error,
+  } = useQuery("tokens", [
+    where("type", "==", type),
+    orderBy("createdAt", "desc"),
+    limit(limit),
   ]);
 
-  const nextPage = () => setPage(p => p + 1);
-  const prevPage = () => setPage(p => Math.max(0, p - 1));
+  const nextPage = () => setPage((p) => p + 1);
+  const prevPage = () => setPage((p) => Math.max(0, p - 1));
 
   return (
     <div>
-      {loading === 'loading' && <LoadingSpinner />}
+      {loading === "loading" && <LoadingSpinner />}
       {error && <ErrorMessage message={error.message} />}
-      
+
       <div className="grid grid-cols-3 gap-4">
-        {tokens.map(token => (
+        {tokens.map((token) => (
           <TokenCard key={token.id} token={token} />
         ))}
       </div>
-      
+
       <div className="flex justify-between mt-4">
-        <button onClick={prevPage} disabled={page === 0}>Précédent</button>
-        <button onClick={nextPage} disabled={tokens.length < limit}>Suivant</button>
+        <button onClick={prevPage} disabled={page === 0}>
+          Précédent
+        </button>
+        <button onClick={nextPage} disabled={tokens.length < limit}>
+          Suivant
+        </button>
       </div>
     </div>
   );
@@ -208,28 +227,27 @@ function TokenList({ type, limit = 10 }) {
 
 ```tsx
 function AddTokenForm() {
-  const [name, setName] = useState('');
-  const [type, setType] = useState('');
-  const { addDocument } = useCollection('tokens');
+  const [name, setName] = useState("");
+  const [type, setType] = useState("");
+  const { addDocument } = useCollection("tokens");
   const [status, setStatus] = useState({ loading: false, error: null });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({ loading: true, error: null });
-    
+
     try {
       await addDocument({
         name,
         type,
         createdAt: new Date(),
-        createdBy: 'user123'
+        createdBy: "user123",
       });
-      
+
       // Réinitialiser le formulaire
-      setName('');
-      setType('');
+      setName("");
+      setType("");
       setStatus({ loading: false, error: null });
-      
     } catch (error) {
       setStatus({ loading: false, error: error.message });
     }
@@ -239,7 +257,7 @@ function AddTokenForm() {
     <form onSubmit={handleSubmit}>
       {/* Champs du formulaire */}
       <button type="submit" disabled={status.loading}>
-        {status.loading ? 'Ajout en cours...' : 'Ajouter'}
+        {status.loading ? "Ajout en cours..." : "Ajouter"}
       </button>
       {status.error && <p className="text-red-500">{status.error}</p>}
     </form>

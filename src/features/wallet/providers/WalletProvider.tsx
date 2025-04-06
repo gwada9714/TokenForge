@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { WalletService } from '../services/WalletService';
-import { WalletState, WalletConfig } from '../types';
-import { logger } from '@/core/logger/Logger';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { WalletService } from "../services/WalletService";
+import { WalletState, WalletConfig } from "../types";
+import { logger } from "@/core/logger/Logger";
 
 const WalletContext = createContext<WalletState | null>(null);
 
-export const WalletProvider: React.FC<{ 
+export const WalletProvider: React.FC<{
   children: React.ReactNode;
   config: WalletConfig;
 }> = ({ children, config }) => {
@@ -14,7 +14,7 @@ export const WalletProvider: React.FC<{
     chainId: null,
     connected: false,
     loading: true,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
@@ -25,8 +25,16 @@ export const WalletProvider: React.FC<{
         await walletService.initialize();
         setWalletState(walletService.getState());
       } catch (error) {
-        logger.error('WalletProvider', 'Failed to initialize wallet', error as Error);
-        setWalletState(prev => ({ ...prev, error: error as Error, loading: false }));
+        logger.error(
+          "WalletProvider",
+          "Failed to initialize wallet",
+          error as Error
+        );
+        setWalletState((prev) => ({
+          ...prev,
+          error: error as Error,
+          loading: false,
+        }));
       }
     };
 
@@ -43,7 +51,7 @@ export const WalletProvider: React.FC<{
 export const useWallet = () => {
   const context = useContext(WalletContext);
   if (!context) {
-    throw new Error('useWallet must be used within a WalletProvider');
+    throw new Error("useWallet must be used within a WalletProvider");
   }
   return context;
 };

@@ -1,6 +1,6 @@
-import { PaymentErrorType, PaymentError } from '../types/PaymentError';
-import { PaymentSession } from '../types/PaymentSession';
-import { PaymentConfig } from '../config/PaymentConfig';
+import { PaymentErrorType, PaymentError } from "../types/PaymentError";
+import { PaymentSession } from "../types/PaymentSession";
+import { PaymentConfig } from "../config/PaymentConfig";
 
 interface PaymentMetrics {
   totalTransactions: number;
@@ -42,7 +42,7 @@ export class PaymentMonitor {
         (acc, type) => ({ ...acc, [type]: 0 }),
         {} as Record<PaymentErrorType, number>
       ),
-      activeSessionsCount: 0
+      activeSessionsCount: 0,
     };
   }
 
@@ -50,7 +50,7 @@ export class PaymentMonitor {
     if (this.metricsInterval) {
       clearInterval(this.metricsInterval);
     }
-    
+
     this.metricsInterval = setInterval(() => {
       this.collectMetrics();
     }, PaymentConfig.monitoring.metricsInterval);
@@ -60,7 +60,8 @@ export class PaymentMonitor {
     // Calculate average processing time
     if (this.processingTimes.length > 0) {
       this.metrics.averageProcessingTime =
-        this.processingTimes.reduce((a, b) => a + b, 0) / this.processingTimes.length;
+        this.processingTimes.reduce((a, b) => a + b, 0) /
+        this.processingTimes.length;
     }
 
     // Check error thresholds
@@ -81,9 +82,9 @@ export class PaymentMonitor {
     this.metrics.totalTransactions++;
     this.processingTimes.push(Date.now() - startTime);
 
-    if (session.status === 'CONFIRMED') {
+    if (session.status === "CONFIRMED") {
       this.metrics.successfulTransactions++;
-    } else if (session.status === 'FAILED') {
+    } else if (session.status === "FAILED") {
       this.metrics.failedTransactions++;
     }
   }

@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useContractRead, useContractWrite } from 'wagmi';
-import { useAccount } from 'wagmi';
-import { parseEther } from 'viem';
+import { useState } from "react";
+import { useContractRead, useContractWrite } from "wagmi";
+import { useAccount } from "wagmi";
+import { parseEther } from "viem";
 
 // ABI for TokenForgeGovernance
 const GovernanceABI = [
@@ -9,13 +9,13 @@ const GovernanceABI = [
   "function vote(uint256 proposalId, bool support) external",
   "function getProposal(uint256 proposalId) external view returns (address creator, uint8 proposalType, string description, uint256 startTime, uint256 endTime, uint256 forVotes, uint256 againstVotes, bool executed)",
   "function hasVoted(uint256 proposalId, address voter) external view returns (bool)",
-  "function proposalCount() external view returns (uint256)"
+  "function proposalCount() external view returns (uint256)",
 ] as const;
 
 export enum ProposalType {
   ADD_BLOCKCHAIN = 0,
   UI_COLOR_THEME = 1,
-  ADD_LANGUAGE = 2
+  ADD_LANGUAGE = 2,
 }
 
 export interface Proposal {
@@ -43,14 +43,14 @@ export const useGovernance = ({ governanceAddress }: UseGovernanceProps) => {
   const { data: proposalCount } = useContractRead({
     address: governanceAddress,
     abi: GovernanceABI,
-    functionName: 'proposalCount',
+    functionName: "proposalCount",
   });
 
   // Get proposal details
   const { data: proposalDetails, refetch: refetchProposal } = useContractRead({
     address: governanceAddress,
     abi: GovernanceABI,
-    functionName: 'getProposal',
+    functionName: "getProposal",
     args: selectedProposal !== null ? [BigInt(selectedProposal)] : undefined,
     enabled: selectedProposal !== null,
   });
@@ -59,23 +59,27 @@ export const useGovernance = ({ governanceAddress }: UseGovernanceProps) => {
   const { data: hasVoted } = useContractRead({
     address: governanceAddress,
     abi: GovernanceABI,
-    functionName: 'hasVoted',
-    args: selectedProposal !== null && address ? [BigInt(selectedProposal), address] : undefined,
+    functionName: "hasVoted",
+    args:
+      selectedProposal !== null && address
+        ? [BigInt(selectedProposal), address]
+        : undefined,
     enabled: selectedProposal !== null && !!address,
   });
 
   // Create proposal
-  const { writeAsync: createProposal, isLoading: isCreatingProposal } = useContractWrite({
-    address: governanceAddress,
-    abi: GovernanceABI,
-    functionName: 'createProposal',
-  });
+  const { writeAsync: createProposal, isLoading: isCreatingProposal } =
+    useContractWrite({
+      address: governanceAddress,
+      abi: GovernanceABI,
+      functionName: "createProposal",
+    });
 
   // Vote on proposal
   const { writeAsync: vote, isLoading: isVoting } = useContractWrite({
     address: governanceAddress,
     abi: GovernanceABI,
-    functionName: 'vote',
+    functionName: "vote",
   });
 
   // Create a new proposal
@@ -91,7 +95,16 @@ export const useGovernance = ({ governanceAddress }: UseGovernanceProps) => {
   // Format proposal details
   const formatProposal = (
     id: number,
-    [creator, type, description, startTime, endTime, forVotes, againstVotes, executed]: any
+    [
+      creator,
+      type,
+      description,
+      startTime,
+      endTime,
+      forVotes,
+      againstVotes,
+      executed,
+    ]: any
   ): Proposal => ({
     id,
     creator,

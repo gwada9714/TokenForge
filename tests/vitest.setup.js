@@ -1,9 +1,9 @@
 // Configuration de base pour les tests Vitest
 
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 // Mock des modules Firebase
-vi.mock('@/lib/firebase/services', () => ({
+vi.mock("@/lib/firebase/services", () => ({
   getFirebaseManager: vi.fn().mockResolvedValue({
     db: {},
     auth: {},
@@ -11,7 +11,7 @@ vi.mock('@/lib/firebase/services', () => ({
   }),
 }));
 
-vi.mock('@/lib/firebase/firestore', () => ({
+vi.mock("@/lib/firebase/firestore", () => ({
   getFirestore: vi.fn().mockResolvedValue({}),
   firestoreService: {
     createUserProfile: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock('@/lib/firebase/firestore', () => ({
   },
 }));
 
-vi.mock('@/lib/firebase/auth', () => ({
+vi.mock("@/lib/firebase/auth", () => ({
   signInWithEmailAndPassword: vi.fn(),
   createUserWithEmailAndPassword: vi.fn(),
   signOut: vi.fn(),
@@ -29,19 +29,19 @@ vi.mock('@/lib/firebase/auth', () => ({
 }));
 
 // Mock pour viem au lieu d'ethers
-vi.mock('viem', () => ({
-  formatEther: vi.fn(val => `${val}`),
-  parseEther: vi.fn(val => BigInt(val)),
+vi.mock("viem", () => ({
+  formatEther: vi.fn((val) => `${val}`),
+  parseEther: vi.fn((val) => BigInt(val)),
   createPublicClient: vi.fn(),
   createWalletClient: vi.fn(),
   http: vi.fn(),
 }));
 
 // Mock pour wagmi
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn().mockReturnValue({ 
-    address: '0x1234567890123456789012345678901234567890',
-    isConnected: true
+vi.mock("wagmi", () => ({
+  useAccount: vi.fn().mockReturnValue({
+    address: "0x1234567890123456789012345678901234567890",
+    isConnected: true,
   }),
   useContractWrite: vi.fn().mockReturnValue({
     writeAsync: vi.fn().mockResolvedValue({}),
@@ -52,7 +52,7 @@ vi.mock('wagmi', () => ({
 }));
 
 // Mock pour react-hot-toast
-vi.mock('react-hot-toast', () => ({
+vi.mock("react-hot-toast", () => ({
   success: vi.fn(),
   error: vi.fn(),
   loading: vi.fn(),

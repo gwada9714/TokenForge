@@ -1,8 +1,8 @@
-import { AuthErrorCode } from '../errors/AuthError';
-import { errorService } from './errorService';
-import { logService } from './logService';
+import { AuthErrorCode } from "../errors/AuthError";
+import { errorService } from "./errorService";
+import { logService } from "./logService";
 
-const LOG_CATEGORY = 'ConfigService';
+const LOG_CATEGORY = "ConfigService";
 
 class ConfigService {
   private config: Record<string, any> = {};
@@ -21,17 +21,17 @@ class ConfigService {
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
         messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
         appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
       };
 
-      logService.info(LOG_CATEGORY, 'Configuration loaded successfully');
+      logService.info(LOG_CATEGORY, "Configuration loaded successfully");
     } catch (error) {
-      logService.error(LOG_CATEGORY, 'Failed to load configuration', { 
-        details: error instanceof Error ? error.message : String(error)
+      logService.error(LOG_CATEGORY, "Failed to load configuration", {
+        details: error instanceof Error ? error.message : String(error),
       });
       throw errorService.createAuthError(
         AuthErrorCode.INTERNAL_ERROR,
-        'Failed to load configuration'
+        "Failed to load configuration"
       );
     }
   }
@@ -47,9 +47,9 @@ class ConfigService {
       }
       return value as T;
     } catch (error) {
-      logService.error(LOG_CATEGORY, 'Failed to get configuration value', { 
+      logService.error(LOG_CATEGORY, "Failed to get configuration value", {
         key,
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
@@ -58,11 +58,13 @@ class ConfigService {
   setConfig<T>(key: string, value: T): void {
     try {
       this.config[key] = value;
-      logService.info(LOG_CATEGORY, 'Configuration value set successfully', { key });
-    } catch (error) {
-      logService.error(LOG_CATEGORY, 'Failed to set configuration value', { 
+      logService.info(LOG_CATEGORY, "Configuration value set successfully", {
         key,
-        details: error instanceof Error ? error.message : String(error)
+      });
+    } catch (error) {
+      logService.error(LOG_CATEGORY, "Failed to set configuration value", {
+        key,
+        details: error instanceof Error ? error.message : String(error),
       });
       throw errorService.createAuthError(
         AuthErrorCode.INTERNAL_ERROR,

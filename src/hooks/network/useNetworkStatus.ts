@@ -1,5 +1,5 @@
-import { useAccount, useChainId, useConfig } from 'wagmi';
-import { useCallback } from 'react';
+import { useAccount, useChainId, useConfig } from "wagmi";
+import { useCallback } from "react";
 
 export const useNetworkStatus = () => {
   const chainId = useChainId();
@@ -7,12 +7,12 @@ export const useNetworkStatus = () => {
   const { isConnected } = useAccount();
 
   const isSupported = useCallback(() => {
-    return chainId ? chains.some(c => c.id === chainId) : false;
+    return chainId ? chains.some((c) => c.id === chainId) : false;
   }, [chainId, chains]);
 
   const getNetworkName = useCallback(() => {
-    const currentChain = chains.find(c => c.id === chainId);
-    return currentChain?.name || 'Unknown Network';
+    const currentChain = chains.find((c) => c.id === chainId);
+    return currentChain?.name || "Unknown Network";
   }, [chainId, chains]);
 
   const getChainId = useCallback(() => {

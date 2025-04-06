@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Card,
@@ -9,26 +9,27 @@ import {
   Alert,
   Chip,
   Tooltip,
-  IconButton
-} from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { useGasEstimation } from '@/hooks/useGasEstimation';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { GasEstimate } from '@/core/services/GasEstimationService';
+  IconButton,
+} from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { useGasEstimation } from "@/hooks/useGasEstimation";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+import { GasEstimate } from "@/core/services/GasEstimationService";
 
-type PriorityLevel = 'low' | 'medium' | 'high';
+type PriorityLevel = "low" | "medium" | "high";
 
 const CongestionColors = {
-  Low: 'success',
-  Medium: 'warning',
-  High: 'error'
+  Low: "success",
+  Medium: "warning",
+  High: "error",
 } as const;
 
 export const GasEstimationPanel: React.FC = () => {
-  const { gasEstimate, deploymentEstimate, isLoading, error, refetch } = useGasEstimation();
+  const { gasEstimate, deploymentEstimate, isLoading, error, refetch } =
+    useGasEstimation();
 
   const renderTooltip = (text: string) => (
     <Tooltip title={text} arrow placement="top">
@@ -41,7 +42,7 @@ export const GasEstimationPanel: React.FC = () => {
   const getPriorityData = (priority: PriorityLevel, estimate: GasEstimate) => {
     return {
       price: estimate[priority].price,
-      time: estimate[priority].time
+      time: estimate[priority].time,
     };
   };
 
@@ -56,24 +57,29 @@ export const GasEstimationPanel: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+        >
           <Box display="flex" alignItems="center">
             <LocalGasStationIcon sx={{ mr: 1 }} />
-            <Typography variant="h6">
-              Estimations de Gas
-            </Typography>
-            {renderTooltip('Estimations des coûts de déploiement basées sur les conditions actuelles du réseau')}
+            <Typography variant="h6">Estimations de Gas</Typography>
+            {renderTooltip(
+              "Estimations des coûts de déploiement basées sur les conditions actuelles du réseau"
+            )}
           </Box>
-          
+
           {!isLoading && (
             <Box display="flex" alignItems="center">
               <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                Mis à jour {gasEstimate && 
-                  formatDistanceToNow(gasEstimate.updatedAt, { 
+                Mis à jour{" "}
+                {gasEstimate &&
+                  formatDistanceToNow(gasEstimate.updatedAt, {
                     addSuffix: true,
-                    locale: fr 
-                  })
-                }
+                    locale: fr,
+                  })}
               </Typography>
               <IconButton onClick={refetch} size="small">
                 <RefreshIcon fontSize="small" />
@@ -85,9 +91,7 @@ export const GasEstimationPanel: React.FC = () => {
         {!isLoading && gasEstimate && (
           <Box mb={3}>
             <Box display="flex" alignItems="center" mb={1}>
-              <Typography variant="subtitle2">
-                Congestion du Réseau:
-              </Typography>
+              <Typography variant="subtitle2">Congestion du Réseau:</Typography>
               <Chip
                 label={gasEstimate.networkCongestion}
                 color={CongestionColors[gasEstimate.networkCongestion]}
@@ -96,18 +100,28 @@ export const GasEstimationPanel: React.FC = () => {
               />
             </Box>
             <Typography variant="body2" color="text.secondary">
-              Gas de Base: {(Number(gasEstimate.estimatedBaseFee) / 1e9).toFixed(2)} Gwei
+              Gas de Base:{" "}
+              {(Number(gasEstimate.estimatedBaseFee) / 1e9).toFixed(2)} Gwei
             </Typography>
           </Box>
         )}
 
         <Grid container spacing={3}>
-          {(['low', 'medium', 'high'] as const).map((priority) => (
+          {(["low", "medium", "high"] as const).map((priority) => (
             <Grid item xs={12} md={4} key={priority}>
               <Card variant="outlined">
                 <CardContent>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Priorité {priority === 'low' ? 'Basse' : priority === 'medium' ? 'Moyenne' : 'Haute'}
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Priorité{" "}
+                    {priority === "low"
+                      ? "Basse"
+                      : priority === "medium"
+                      ? "Moyenne"
+                      : "Haute"}
                   </Typography>
 
                   {isLoading ? (
@@ -118,13 +132,20 @@ export const GasEstimationPanel: React.FC = () => {
                   ) : gasEstimate && deploymentEstimate ? (
                     <>
                       <Typography variant="h6" gutterBottom>
-                        {deploymentEstimate.totalCost[priority]} {deploymentEstimate.nativeCurrency}
+                        {deploymentEstimate.totalCost[priority]}{" "}
+                        {deploymentEstimate.nativeCurrency}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Gas Price: {(Number(getPriorityData(priority, gasEstimate).price) / 1e9).toFixed(2)} Gwei
+                        Gas Price:{" "}
+                        {(
+                          Number(getPriorityData(priority, gasEstimate).price) /
+                          1e9
+                        ).toFixed(2)}{" "}
+                        Gwei
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Temps Estimé: {getPriorityData(priority, gasEstimate).time}
+                        Temps Estimé:{" "}
+                        {getPriorityData(priority, gasEstimate).time}
                       </Typography>
                     </>
                   ) : null}
@@ -137,7 +158,8 @@ export const GasEstimationPanel: React.FC = () => {
         {!isLoading && deploymentEstimate && (
           <Box mt={2}>
             <Typography variant="body2" color="text.secondary">
-              Gas Limit Estimé: {Number(deploymentEstimate.gasLimit).toLocaleString()} unités
+              Gas Limit Estimé:{" "}
+              {Number(deploymentEstimate.gasLimit).toLocaleString()} unités
             </Typography>
           </Box>
         )}

@@ -4,14 +4,14 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import type {
   TokenForgeTaxSystem,
   TokenForgeToken,
-  TaxDistributor
+  TaxDistributor,
 } from "../../../typechain-types";
 import { ZeroAddress } from "ethers";
 import {
   INITIAL_SUPPLY,
   BASE_TAX_RATE,
   MAX_ADDITIONAL_TAX_RATE,
-  TEST_TOKEN_PARAMS
+  TEST_TOKEN_PARAMS,
 } from "./constants";
 
 describe("Système de Taxe TokenForge", () => {
@@ -29,7 +29,9 @@ describe("Système de Taxe TokenForge", () => {
 
     // Déploiement du système de taxe
     const TaxSystem = await ethers.getContractFactory("TokenForgeTaxSystem");
-    taxSystem = (await TaxSystem.deploy(treasury.address)) as unknown as TokenForgeTaxSystem;
+    taxSystem = (await TaxSystem.deploy(
+      treasury.address
+    )) as unknown as TokenForgeTaxSystem;
     await taxSystem.waitForDeployment();
 
     // Déploiement du token
@@ -46,7 +48,11 @@ describe("Système de Taxe TokenForge", () => {
     await token.waitForDeployment();
 
     // Configuration de la taxe pour le token
-    await taxSystem.configureTax(await token.getAddress(), 100n, creator.address); // 1% de taxe additionnelle
+    await taxSystem.configureTax(
+      await token.getAddress(),
+      100n,
+      creator.address
+    ); // 1% de taxe additionnelle
 
     // Transfert de tokens aux utilisateurs pour les tests
     await token.transfer(user1.address, INITIAL_SUPPLY / 10n);
@@ -59,12 +65,18 @@ describe("Système de Taxe TokenForge", () => {
     });
 
     it("devrait avoir le bon taux de taxe additionnel maximum", async () => {
-      expect(await taxSystem.MAX_ADDITIONAL_TAX_RATE()).to.equal(MAX_ADDITIONAL_TAX_RATE);
+      expect(await taxSystem.MAX_ADDITIONAL_TAX_RATE()).to.equal(
+        MAX_ADDITIONAL_TAX_RATE
+      );
     });
 
     it("ne devrait pas permettre un taux de taxe additionnel supérieur au maximum", async () => {
       await expect(
-        taxSystem.configureTax(await token.getAddress(), MAX_ADDITIONAL_TAX_RATE + 1n, creator.address)
+        taxSystem.configureTax(
+          await token.getAddress(),
+          MAX_ADDITIONAL_TAX_RATE + 1n,
+          creator.address
+        )
       ).to.be.rejectedWith("Taux de taxe trop élevé");
     });
   });
@@ -72,13 +84,16 @@ describe("Système de Taxe TokenForge", () => {
   describe("Calcul de la Taxe", () => {
     it("devrait calculer correctement les montants de taxe", async () => {
       const amount = INITIAL_SUPPLY / 100n; // 1% du supply total
-      const [baseTax, additionalTax] = await taxSystem.calculateTaxAmounts(await token.getAddress(), amount);
-      
+      const [baseTax, additionalTax] = await taxSystem.calculateTaxAmounts(
+        await token.getAddress(),
+        amount
+      );
+
       // La taxe de base devrait être de 0.5%
-      expect(baseTax).to.equal(amount * BASE_TAX_RATE / 10000n);
-      
+      expect(baseTax).to.equal((amount * BASE_TAX_RATE) / 10000n);
+
       // La taxe additionnelle devrait être de 1%
-      expect(additionalTax).to.equal(amount * 100n / 10000n);
+      expect(additionalTax).to.equal((amount * 100n) / 10000n);
     });
   });
 
@@ -87,7 +102,8 @@ describe("Système de Taxe TokenForge", () => {
       const transferAmount = INITIAL_SUPPLY / 100n; // 1% du supply total
       const expectedBaseTax = (transferAmount * BASE_TAX_RATE) / 10000n;
       const expectedAdditionalTax = (transferAmount * 100n) / 10000n;
-      const expectedTransferAmount = transferAmount - expectedBaseTax - expectedAdditionalTax;
+      const expectedTransferAmount =
+        transferAmount - expectedBaseTax - expectedAdditionalTax;
 
       // Obtention des soldes initiaux
       const initialTreasuryBalance = await token.balanceOf(treasury.address);
@@ -131,7 +147,9 @@ describe("Système de Taxe TokenForge", () => {
       const expectedTransferAmount = transferAmount - expectedBaseTax;
 
       // Obtention des soldes initiaux
-      const initialTreasuryBalance = await noTaxToken.balanceOf(treasury.address);
+      const initialTreasuryBalance = await noTaxToken.balanceOf(
+        treasury.address
+      );
       const initialUser2Balance = await noTaxToken.balanceOf(user2.address);
 
       // Exécution du transfert

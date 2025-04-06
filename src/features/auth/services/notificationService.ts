@@ -1,11 +1,17 @@
-import { toast, ToastOptions } from 'react-toastify';
+import { toast, ToastOptions } from "react-toastify";
 
-export type NotificationType = 'success' | 'error' | 'info' | 'warning';
+export type NotificationType = "success" | "error" | "info" | "warning";
 
 export interface NotificationOptions extends ToastOptions {
   type?: NotificationType;
   toastId?: string;
-  position?: 'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left';
+  position?:
+    | "top-right"
+    | "top-center"
+    | "top-left"
+    | "bottom-right"
+    | "bottom-center"
+    | "bottom-left";
   autoClose?: number | false;
   hideProgressBar?: boolean;
   closeOnClick?: boolean;
@@ -15,7 +21,7 @@ export interface NotificationOptions extends ToastOptions {
 
 class NotificationService {
   private static instance: NotificationService;
-  
+
   private constructor() {}
 
   static getInstance(): NotificationService {
@@ -27,7 +33,7 @@ class NotificationService {
 
   private getToastOptions(options?: NotificationOptions): ToastOptions {
     return {
-      position: options?.position || 'top-right',
+      position: options?.position || "top-right",
       autoClose: options?.autoClose || 5000,
       hideProgressBar: options?.hideProgressBar || false,
       closeOnClick: options?.closeOnClick || true,
@@ -46,7 +52,7 @@ class NotificationService {
   }
 
   notifyLogout(): void {
-    toast.info('Déconnexion réussie', this.getToastOptions());
+    toast.info("Déconnexion réussie", this.getToastOptions());
   }
 
   // Notifications de wallet
@@ -56,7 +62,7 @@ class NotificationService {
   }
 
   notifyWalletDisconnected(): void {
-    toast.info('Wallet déconnecté', this.getToastOptions());
+    toast.info("Wallet déconnecté", this.getToastOptions());
   }
 
   notifyNetworkChanged(networkName: string): void {
@@ -79,32 +85,29 @@ class NotificationService {
   }
 
   notifyEmailVerified(): void {
-    toast.success(
-      'Email vérifié avec succès',
-      this.getToastOptions()
-    );
+    toast.success("Email vérifié avec succès", this.getToastOptions());
   }
 
   // Notifications génériques
   notify(message: string, options?: NotificationOptions): void {
-    const { type = 'info', ...rest } = options || {};
+    const { type = "info", ...rest } = options || {};
     toast[type](message, this.getToastOptions(rest));
   }
 
-  success(message: string, options?: Omit<NotificationOptions, 'type'>): void {
-    this.notify(message, { ...options, type: 'success' });
+  success(message: string, options?: Omit<NotificationOptions, "type">): void {
+    this.notify(message, { ...options, type: "success" });
   }
 
-  error(message: string, options?: Omit<NotificationOptions, 'type'>): void {
-    this.notify(message, { ...options, type: 'error' });
+  error(message: string, options?: Omit<NotificationOptions, "type">): void {
+    this.notify(message, { ...options, type: "error" });
   }
 
-  info(message: string, options?: Omit<NotificationOptions, 'type'>): void {
-    this.notify(message, { ...options, type: 'info' });
+  info(message: string, options?: Omit<NotificationOptions, "type">): void {
+    this.notify(message, { ...options, type: "info" });
   }
 
-  warning(message: string, options?: Omit<NotificationOptions, 'type'>): void {
-    this.notify(message, { ...options, type: 'warning' });
+  warning(message: string, options?: Omit<NotificationOptions, "type">): void {
+    this.notify(message, { ...options, type: "warning" });
   }
 
   warn(message: string, options?: NotificationOptions): void {

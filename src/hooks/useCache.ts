@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { cacheInstance } from '@/utils/cache';
+import { useState, useEffect } from "react";
+import { cacheInstance } from "@/utils/cache";
 
 export function useCache<T>(
   key: string,
@@ -23,14 +23,14 @@ export function useCache<T>(
 
         // If not in cache, fetch new data
         const newData = await fetcher();
-        
+
         // Store in cache
         cacheInstance.set(key, newData, ttl);
-        
+
         setData(newData);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('An error occurred'));
+        setError(err instanceof Error ? err : new Error("An error occurred"));
       } finally {
         setIsLoading(false);
       }

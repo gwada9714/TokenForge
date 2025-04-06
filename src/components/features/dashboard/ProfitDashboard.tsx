@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Card,
@@ -7,7 +7,7 @@ import {
   Typography,
   CircularProgress,
   useTheme,
-} from '@mui/material';
+} from "@mui/material";
 import {
   BarChart,
   Bar,
@@ -16,12 +16,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
-import { formatEther } from 'ethers';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import PaidIcon from '@mui/icons-material/Paid';
-import { useTokenForgeStats } from '@/hooks/useTokenForgeStats';
+} from "recharts";
+import { formatEther } from "ethers";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import PaidIcon from "@mui/icons-material/Paid";
+import { useTokenForgeStats } from "@/hooks/useTokenForgeStats";
 
 const StatCard: React.FC<{
   title: string;
@@ -56,12 +56,17 @@ const ProfitDashboard: React.FC = () => {
     totalTransactions,
     totalValueLocked,
     isLoading,
-    taxHistory
+    taxHistory,
   } = useTokenForgeStats();
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="400px"
+      >
         <CircularProgress />
       </Box>
     );
@@ -155,18 +160,23 @@ const ProfitDashboard: React.FC = () => {
               </Typography>
               <Box mt={2}>
                 <Typography variant="body1">
-                  Average Tax per Transaction: {
-                    (Number(formattedTaxCollected) / (totalTransactions || 1)).toFixed(4)
-                  } TKN
+                  Average Tax per Transaction:{" "}
+                  {(
+                    Number(formattedTaxCollected) / (totalTransactions || 1)
+                  ).toFixed(4)}{" "}
+                  TKN
                 </Typography>
                 <Typography variant="body1">
                   Total Transactions: {totalTransactions}
                 </Typography>
                 <Typography variant="body1">
-                  Treasury Growth Rate: {
-                    ((Number(formatEther(totalTaxToForge || 0n)) / 
-                    Number(formattedTaxCollected)) * 100).toFixed(2)
-                  }%
+                  Treasury Growth Rate:{" "}
+                  {(
+                    (Number(formatEther(totalTaxToForge || 0n)) /
+                      Number(formattedTaxCollected)) *
+                    100
+                  ).toFixed(2)}
+                  %
                 </Typography>
               </Box>
             </CardContent>

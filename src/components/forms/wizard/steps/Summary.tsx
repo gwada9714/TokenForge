@@ -1,12 +1,5 @@
-import React from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Grid,
-  Chip,
-  Divider,
-} from '@mui/material';
+import React from "react";
+import { Box, Typography, Paper, Grid, Chip, Divider } from "@mui/material";
 
 interface SummaryProps {
   data: {
@@ -80,12 +73,8 @@ const Summary: React.FC<SummaryProps> = ({ data }) => {
               Enabled Features
             </Typography>
             <Box display="flex" gap={1}>
-              {data.features.mint && (
-                <Chip label="Mintable" color="success" />
-              )}
-              {data.features.burn && (
-                <Chip label="Burnable" color="success" />
-              )}
+              {data.features.mint && <Chip label="Mintable" color="success" />}
+              {data.features.burn && <Chip label="Burnable" color="success" />}
             </Box>
           </Paper>
         </Grid>
@@ -98,8 +87,12 @@ const Summary: React.FC<SummaryProps> = ({ data }) => {
             <Box mb={2}>
               <Typography color="text.secondary">Selected Tier</Typography>
               <Chip
-                label={data.serviceTier === 'premium' ? 'Master Forge' : 'Basic Forge'}
-                color={data.serviceTier === 'premium' ? 'secondary' : 'default'}
+                label={
+                  data.serviceTier === "premium"
+                    ? "Master Forge"
+                    : "Basic Forge"
+                }
+                color={data.serviceTier === "premium" ? "secondary" : "default"}
                 sx={{ mt: 1 }}
               />
             </Box>

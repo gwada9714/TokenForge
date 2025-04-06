@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Tabs,
-  Tab,
-  Grid,
-} from '@mui/material';
-import { CreatePool } from '../components/features/launchpad/CreatePool';
-import { LaunchpadPool } from '../components/features/launchpad/LaunchpadPool';
-import { useContractRead } from 'wagmi';
-import { useNetwork } from '../hooks/useNetwork';
-import { getContractAddress } from '../config/contracts';
-import { launchpadABI } from '../contracts/abis';
+import React, { useState } from "react";
+import { Container, Typography, Box, Tabs, Tab, Grid } from "@mui/material";
+import { CreatePool } from "../components/features/launchpad/CreatePool";
+import { LaunchpadPool } from "../components/features/launchpad/LaunchpadPool";
+import { useContractRead } from "wagmi";
+import { useNetwork } from "../hooks/useNetwork";
+import { getContractAddress } from "../config/contracts";
+import { launchpadABI } from "../contracts/abis";
 
 const LaunchpadPage: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
@@ -21,13 +14,15 @@ const LaunchpadPage: React.FC = () => {
 
   // Get total number of pools
   const { data: poolCount } = useContractRead({
-    address: getContractAddress('LAUNCHPAD', chainId) || undefined,
+    address: getContractAddress("LAUNCHPAD", chainId) || undefined,
     abi: launchpadABI,
-    functionName: 'getPoolCount',
+    functionName: "getPoolCount",
   });
 
   // Create array of pool IDs
-  const poolIds = poolCount ? Array.from({ length: Number(poolCount) }, (_, i) => i) : [];
+  const poolIds = poolCount
+    ? Array.from({ length: Number(poolCount) }, (_, i) => i)
+    : [];
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
@@ -41,19 +36,19 @@ const LaunchpadPage: React.FC = () => {
 
       <Box sx={{ mb: 4 }}>
         <Typography variant="body1" sx={{ mb: 2 }}>
-          Launch your token with TokenForge's secure and easy-to-use launchpad platform.
-          Create your own pool or participate in existing ones.
+          Launch your token with TokenForge's secure and easy-to-use launchpad
+          platform. Create your own pool or participate in existing ones.
         </Typography>
       </Box>
 
-      <Box sx={{ width: '100%' }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ width: "100%" }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={tabIndex} onChange={handleTabChange}>
             <Tab label="Active Pools" />
             <Tab label="Create Pool" />
           </Tabs>
         </Box>
-        
+
         <Box sx={{ mt: 3 }}>
           {tabIndex === 0 && (
             <Grid container spacing={3}>

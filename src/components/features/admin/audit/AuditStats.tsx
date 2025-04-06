@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Box,
   Card,
@@ -9,7 +9,7 @@ import {
   useTheme,
   Alert,
   CircularProgress,
-} from '@mui/material';
+} from "@mui/material";
 import {
   BarChart,
   Bar,
@@ -21,10 +21,14 @@ import {
   PieChart,
   Pie,
   Cell,
-} from 'recharts';
-import { useAuditLogs, LogLevel, LogCategory } from '../../../../hooks/useAuditLogs';
-import { AdminComponentProps } from '../types';
-import { ForgeCard } from '../../../common/ForgeCard';
+} from "recharts";
+import {
+  useAuditLogs,
+  LogLevel,
+  LogCategory,
+} from "../../../../hooks/useAuditLogs";
+import { AdminComponentProps } from "../types";
+import { ForgeCard } from "../../../common/ForgeCard";
 
 interface LogStats {
   byLevel: Record<LogLevel, number>;
@@ -95,7 +99,7 @@ export const AuditStats: React.FC<AdminComponentProps> = ({ onError }) => {
   const hourlyData = useMemo(
     () =>
       Array.from({ length: 24 }, (_, hour) => ({
-        hour: hour.toString().padStart(2, '0') + 'h',
+        hour: hour.toString().padStart(2, "0") + "h",
         count: stats.byHour[hour] || 0,
       })),
     [stats.byHour]
@@ -110,7 +114,7 @@ export const AuditStats: React.FC<AdminComponentProps> = ({ onError }) => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
         <CircularProgress />
       </Box>
     );
@@ -118,7 +122,7 @@ export const AuditStats: React.FC<AdminComponentProps> = ({ onError }) => {
 
   if (error) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -130,7 +134,7 @@ export const AuditStats: React.FC<AdminComponentProps> = ({ onError }) => {
         <ForgeCard>
           <CardHeader title="Statistiques Générales" />
           <CardContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Typography variant="h4">{stats.total}</Typography>
               <Typography color="text.secondary">Logs au Total</Typography>
 
