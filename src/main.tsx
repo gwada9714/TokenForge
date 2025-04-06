@@ -76,6 +76,56 @@ async function initializeServices() {
 
 async function startApp() {
   try {
+    // Vérifier si process.stdout.isTTY est défini
+    if (
+      typeof process !== "undefined" &&
+      process.stdout &&
+      typeof process.stdout.isTTY === "undefined"
+    ) {
+      console.warn(
+        "process.stdout.isTTY n'est pas défini dans main.tsx, vérification des polyfills"
+      );
+
+      // Vérifier si le polyfill global a été appliqué
+      if (
+        typeof window !== "undefined" &&
+        window.process &&
+        window.process.stdout &&
+        typeof window.process.stdout.isTTY !== "undefined"
+      ) {
+        // Utiliser la valeur du polyfill global
+        console.log(
+          "Utilisation de la valeur du polyfill global pour process.stdout.isTTY"
+        );
+        process.stdout.isTTY = window.process.stdout.isTTY;
+      } else {
+        // Appliquer le polyfill localement
+        try {
+          Object.defineProperty(process.stdout, "isTTY", {
+            value: false,
+            writable: false,
+            configurable: false,
+            enumerable: true,
+          });
+          console.log("process.stdout.isTTY défini avec succès dans main.tsx");
+        } catch (e) {
+          console.warn(
+            "Impossible de définir process.stdout.isTTY dans main.tsx:",
+            e
+          );
+          // Fallback: essayer d'assigner directement
+          try {
+            process.stdout.isTTY = false;
+          } catch (e2) {
+            console.error(
+              "Impossible d'assigner process.stdout.isTTY dans main.tsx:",
+              e2
+            );
+          }
+        }
+      }
+    }
+
     logger.info({
       category: LOG_CATEGORY,
       message: "🚀 Starting TokenForge application",
@@ -94,8 +144,42 @@ async function startApp() {
       }
     });
 
+    // Vérifier si un gestionnaire d'erreurs pour isTTY a déjà été ajouté
+    if (
+      typeof window !== "undefined" &&
+      !(window as any).__isTTYErrorHandlerAdded
+    ) {
+      // Marquer que le gestionnaire a été ajouté
+      (window as any).__isTTYErrorHandlerAdded = true;
+
+      // Intercepter les erreurs liées à isTTY
+      window.addEventListener(
+        "error",
+        function (event) {
+          if (event.message && event.message.includes("isTTY")) {
+            console.warn(
+              "Erreur isTTY interceptée dans main.tsx:",
+              event.message
+            );
+            event.preventDefault();
+            return true;
+          }
+        },
+        true
+      );
+
+      console.log("Gestionnaire d'erreurs pour isTTY ajouté dans main.tsx");
+    } else {
+      console.log("Gestionnaire d'erreurs pour isTTY déjà ajouté");
+    }
+
     // Initialize all services
-    await initializeServices();
+    try {
+      await initializeServices();
+    } catch (error) {
+      console.error("Erreur lors de l'initialisation des services:", error);
+      // Continuer malgré l'erreur pour permettre le rendu de l'application
+    }
 
     // Render the application
     const container = document.getElementById("root");
@@ -103,12 +187,21 @@ async function startApp() {
       throw new Error("Container #root not found in DOM");
     }
 
+    // Importer dynamiquement les composants pour éviter les problèmes de dépendances circulaires
+    const ErrorBoundary = (await import("./components/ErrorBoundary")).default;
+    const LoadingTimeout = (await import("./components/LoadingTimeout"))
+      .default;
+
     const root = createRoot(container);
     root.render(
       <StrictMode>
-        <Provider store={store}>
-          <App />
-        </Provider>
+        <ErrorBoundary>
+          <LoadingTimeout timeout={30000}>
+            <Provider store={store}>
+              <App />
+            </Provider>
+          </LoadingTimeout>
+        </ErrorBoundary>
       </StrictMode>
     );
 
