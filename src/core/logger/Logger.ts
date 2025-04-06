@@ -1,4 +1,4 @@
-import { LogLevel, LogEntry } from './types';
+import { LogLevel, LogEntry } from "./types";
 
 export interface LogMetadata {
   [key: string]: unknown;
@@ -16,7 +16,7 @@ class Logger {
   private readonly isDevelopment: boolean;
 
   private constructor() {
-    this.isDevelopment = import.meta.env.MODE === 'development';
+    this.isDevelopment = import.meta.env.MODE === "development";
   }
 
   static getInstance(): Logger {
@@ -28,10 +28,12 @@ class Logger {
 
   private formatMessage(entry: LogEntry): string {
     const timestamp = new Date().toISOString();
-    const metadata = entry.metadata ? 
-      `\nMetadata: ${JSON.stringify(entry.metadata, null, 2)}` : '';
-    const error = entry.error ? 
-      `\nError: ${entry.error.message}\nStack: ${entry.error.stack}` : '';
+    const metadata = entry.metadata
+      ? `\nMetadata: ${JSON.stringify(entry.metadata, null, 2)}`
+      : "";
+    const error = entry.error
+      ? `\nError: ${entry.error.message}\nStack: ${entry.error.stack}`
+      : "";
 
     return `[${timestamp}] [${entry.category}] ${entry.message}${metadata}${error}`;
   }

@@ -4,27 +4,27 @@
  * Il achemine les logs vers les systèmes appropriés (console, Sentry, Firebase, etc.)
  */
 
-import * as Sentry from '@sentry/react';
-import { LogLevel, LogEntry, LoggerOptions, LogAdapter } from './types';
-import { ConsoleLogger } from './adapters/ConsoleLogger';
+import * as Sentry from "@sentry/react";
+import { LogLevel, LogEntry, LoggerOptions, LogAdapter } from "./types";
+import { ConsoleLogger } from "./adapters/ConsoleLogger";
 
 /**
  * Logger central qui gère tous les logs de l'application
  */
 export class CentralLogger {
   private static instance: CentralLogger;
-  
+
   // Adaptateurs de logging
   private adapters: Map<string, LogAdapter> = new Map();
-  
+
   // Configuration
   private options: LoggerOptions = {
     minLevel: LogLevel.DEBUG,
     enableConsole: true,
-    enableSentry: import.meta.env.VITE_ERROR_REPORTING_ENABLED === 'true',
-    enableFirebase: import.meta.env.VITE_FIREBASE_LOGGING_ENABLED === 'true'
+    enableSentry: import.meta.env.VITE_ERROR_REPORTING_ENABLED === "true",
+    enableFirebase: import.meta.env.VITE_FIREBASE_LOGGING_ENABLED === "true",
   };
-  
+
   // Historique des logs (pour debug)
   private logHistory: LogEntry[] = [];
   private readonly MAX_HISTORY_SIZE = 1000;
@@ -32,18 +32,18 @@ export class CentralLogger {
   private constructor() {
     // Initialiser les adaptateurs par défaut
     this.initializeDefaultAdapters();
-    
+
     // Log de démarrage
     this.info({
-      category: 'Logger',
-      message: 'Système de logging centralisé initialisé',
-      data: { 
-        config: { 
+      category: "Logger",
+      message: "Système de logging centralisé initialisé",
+      data: {
+        config: {
           minLevel: this.options.minLevel,
           enableSentry: this.options.enableSentry,
-          enableFirebase: this.options.enableFirebase
-        } 
-      }
+          enableFirebase: this.options.enableFirebase,
+        },
+      },
     });
   }
 
@@ -52,25 +52,33 @@ export class CentralLogger {
    */
   private async initializeDefaultAdapters(): Promise<void> {
     // Toujours ajouter l'adaptateur console
-    this.registerAdapter('console', new ConsoleLogger());
-    
+    this.registerAdapter("console", new ConsoleLogger());
+
     // Ajouter l'adaptateur Firebase si activé
     if (this.options.enableFirebase) {
       try {
-        const { FirebaseLogger } = await import('./adapters/FirebaseLogger');
-        this.registerAdapter('firebase', new FirebaseLogger());
+        const { FirebaseLogger } = await import("./adapters/FirebaseLogger");
+        this.registerAdapter("firebase", new FirebaseLogger());
       } catch (error) {
-        console.warn('Impossible de charger l\'adaptateur Firebase Logger:', error);
+        console.warn(
+          "Impossible de charger l'adaptateur Firebase Logger:",
+          error
+        );
       }
     }
-    
+
     // Ajouter l'adaptateur LocalStorage en développement
     if (import.meta.env.DEV) {
       try {
-        const { LocalStorageLogger } = await import('./adapters/LocalStorageLogger');
-        this.registerAdapter('localStorage', new LocalStorageLogger());
+        const { LocalStorageLogger } = await import(
+          "./adapters/LocalStorageLogger"
+        );
+        this.registerAdapter("localStorage", new LocalStorageLogger());
       } catch (error) {
-        console.warn('Impossible de charger l\'adaptateur LocalStorage Logger:', error);
+        console.warn(
+          "Impossible de charger l'adaptateur LocalStorage Logger:",
+          error
+        );
       }
     }
   }
@@ -90,10 +98,10 @@ export class CentralLogger {
    */
   public configure(options: Partial<LoggerOptions>): void {
     this.options = { ...this.options, ...options };
-    
+
     // Mettre à jour les adaptateurs si nécessaire
     if (options.minLevel !== undefined) {
-      this.adapters.forEach(adapter => {
+      this.adapters.forEach((adapter) => {
         if (adapter.setLogLevel) {
           adapter.setLogLevel(options.minLevel!);
         }
@@ -124,9 +132,9 @@ export class CentralLogger {
       [LogLevel.INFO]: 1,
       [LogLevel.WARN]: 2,
       [LogLevel.ERROR]: 3,
-      [LogLevel.FATAL]: 4
+      [LogLevel.FATAL]: 4,
     };
-    
+
     return levels[level] >= levels[this.options.minLevel];
   }
 
@@ -134,22 +142,22 @@ export class CentralLogger {
    * Standardise une entrée de log
    */
   private standardizeEntry(entry: Partial<LogEntry> | string): LogEntry {
-    if (typeof entry === 'string') {
+    if (typeof entry === "string") {
       return {
         timestamp: new Date(),
         level: LogLevel.INFO,
-        category: 'General',
-        message: entry
+        category: "General",
+        message: entry,
       };
     }
-    
+
     return {
       timestamp: entry.timestamp || new Date(),
       level: entry.level || LogLevel.INFO,
-      category: entry.category || 'General',
-      message: entry.message || '',
+      category: entry.category || "General",
+      message: entry.message || "",
       data: entry.data,
-      error: entry.error
+      error: entry.error,
     };
   }
 
@@ -161,29 +169,31 @@ export class CentralLogger {
     if (!entry.timestamp) {
       entry.timestamp = new Date();
     }
-    
+
     // Stocker dans l'historique
     this.logHistory.unshift(entry);
     if (this.logHistory.length > this.MAX_HISTORY_SIZE) {
       this.logHistory.pop();
     }
-    
+
     // Envoyer à tous les adaptateurs
-    this.adapters.forEach(adapter => {
+    this.adapters.forEach((adapter) => {
       try {
         adapter.log(entry);
       } catch (error) {
-        console.error('Erreur dans l\'adaptateur de logging:', error);
+        console.error("Erreur dans l'adaptateur de logging:", error);
       }
     });
-    
+
     // Sentry pour les erreurs (toujours disponible même sans adaptateur)
-    if (this.options.enableSentry && 
-        (entry.level === LogLevel.ERROR || entry.level === LogLevel.FATAL) && 
-        entry.error) {
+    if (
+      this.options.enableSentry &&
+      (entry.level === LogLevel.ERROR || entry.level === LogLevel.FATAL) &&
+      entry.error
+    ) {
       Sentry.captureException(entry.error, {
         tags: { category: entry.category },
-        extra: entry.data || {}
+        extra: entry.data || {},
       });
     }
   }
@@ -207,7 +217,7 @@ export class CentralLogger {
    */
   public debug(entry: Partial<LogEntry> | string): void {
     if (!this.shouldLog(LogLevel.DEBUG)) return;
-    
+
     const standardEntry = this.standardizeEntry(entry);
     standardEntry.level = LogLevel.DEBUG;
     this.handleLog(standardEntry);
@@ -218,7 +228,7 @@ export class CentralLogger {
    */
   public info(entry: Partial<LogEntry> | string): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
-    
+
     const standardEntry = this.standardizeEntry(entry);
     standardEntry.level = LogLevel.INFO;
     this.handleLog(standardEntry);
@@ -229,7 +239,7 @@ export class CentralLogger {
    */
   public warn(entry: Partial<LogEntry> | string): void {
     if (!this.shouldLog(LogLevel.WARN)) return;
-    
+
     const standardEntry = this.standardizeEntry(entry);
     standardEntry.level = LogLevel.WARN;
     this.handleLog(standardEntry);
@@ -240,7 +250,7 @@ export class CentralLogger {
    */
   public error(entry: Partial<LogEntry> | string): void {
     if (!this.shouldLog(LogLevel.ERROR)) return;
-    
+
     const standardEntry = this.standardizeEntry(entry);
     standardEntry.level = LogLevel.ERROR;
     this.handleLog(standardEntry);
@@ -251,7 +261,7 @@ export class CentralLogger {
    */
   public fatal(entry: Partial<LogEntry> | string): void {
     if (!this.shouldLog(LogLevel.FATAL)) return;
-    
+
     const standardEntry = this.standardizeEntry(entry);
     standardEntry.level = LogLevel.FATAL;
     this.handleLog(standardEntry);
@@ -262,9 +272,9 @@ export class CentralLogger {
    */
   public logEvent(eventName: string, data?: Record<string, any>): void {
     this.info({
-      category: 'Event',
+      category: "Event",
       message: eventName,
-      data
+      data,
     });
   }
 
@@ -293,7 +303,7 @@ export class CentralLogger {
       },
       fatal: (message: string, data?: any, error?: Error) => {
         this.fatal({ category, message, data, error });
-      }
+      },
     };
   }
 }

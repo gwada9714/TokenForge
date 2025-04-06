@@ -1,4 +1,4 @@
-import { LogLevel, Logger, LogEntry } from './types';
+import { LogLevel, Logger, LogEntry } from "./types";
 
 export class BaseLogger implements Logger {
   private readonly category: string;
@@ -37,10 +37,17 @@ export class BaseLogger implements Logger {
     }
 
     const timestamp = new Date().toISOString();
-    const metadata = entry.metadata ? `\nMetadata: ${JSON.stringify(entry.metadata, null, 2)}` : '';
-    const errorInfo = entry.error ? 
-      `\nError: ${entry.error.message}${entry.error.stack ? `\nStack: ${entry.error.stack}` : ''}` : '';
-    
-    console.log(`[${timestamp}] [${level}] [${this.category}]: ${entry.message}${metadata}${errorInfo}`);
+    const metadata = entry.metadata
+      ? `\nMetadata: ${JSON.stringify(entry.metadata, null, 2)}`
+      : "";
+    const errorInfo = entry.error
+      ? `\nError: ${entry.error.message}${
+          entry.error.stack ? `\nStack: ${entry.error.stack}` : ""
+        }`
+      : "";
+
+    console.log(
+      `[${timestamp}] [${level}] [${this.category}]: ${entry.message}${metadata}${errorInfo}`
+    );
   }
 }
