@@ -24,6 +24,10 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
 
+    <!-- Polyfills globaux chargés avant tout le reste -->
+    <script src="/src/global-polyfill.js"></script>
+    <script src="/google-logging-fix.js"></script>
+
     <title>TokenForge | Créez vos tokens en toute simplicité</title>
 
     <!-- Style de base pour éviter le FOUC -->
@@ -84,6 +88,77 @@
     <div id="root">
       <div class="loading-spinner"></div>
     </div>
+
+    <!-- Script de détection des problèmes de chargement -->
+    <script>
+      // Journal des erreurs
+      window.errorLog = [];
+
+      // Intercepter les erreurs non gérées
+      window.addEventListener('error', function(event) {
+        window.errorLog.push({
+          type: 'error',
+          message: event.message,
+          source: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          error: event.error
+        });
+
+        // Si l'erreur est liée à isTTY, l'intercepter
+        if (event.message && event.message.includes('isTTY')) {
+          console.warn('Erreur isTTY interceptée:', event.message);
+          event.preventDefault();
+        }
+      });
+
+      // Intercepter les rejets de promesse non gérés
+      window.addEventListener('unhandledrejection', function(event) {
+        window.errorLog.push({
+          type: 'unhandledrejection',
+          message: event.reason ? (event.reason.message || String(event.reason)) : 'Rejet de promesse non géré',
+          error: event.reason
+        });
+      });
+
+      // Détecter si l'application ne se charge pas correctement
+      var loadTimeout = setTimeout(function() {
+        // Vérifier si l'application est chargée
+        var appLoaded = window.appInitialized === true;
+
+        if (!appLoaded) {
+          console.error('L\'application n\'a pas pu se charger dans le délai imparti');
+
+          // Essayer d'abord la version simplifiée
+          window.location.href = '/simple-app.html';
+
+          // Si la redirection ne fonctionne pas, afficher un message d'erreur après 2 secondes
+          setTimeout(function() {
+            var rootElement = document.getElementById('root');
+            if (rootElement) {
+              rootElement.innerHTML = `
+                <div style="padding: 20px; text-align: center;">
+                  <h1 style="color: #7b3fe4;">TokenForge</h1>
+                  <p>L'application n'a pas pu se charger correctement.</p>
+                  <p>Veuillez essayer de <a href="javascript:window.location.reload()" style="color: #7b3fe4;">rafraîchir la page</a> ou <a href="/fallback.html" style="color: #7b3fe4;">utiliser la version de secours</a>.</p>
+                </div>
+              `;
+            }
+          }, 2000);
+        }
+      }, 20000); // 20 secondes
+
+      // Fonction pour indiquer que l'application est chargée
+      window.markAppAsInitialized = function() {
+        window.appInitialized = true;
+        clearTimeout(loadTimeout);
+        console.log('Application initialisée avec succès');
+      };
+    </script>
+
+    <!-- Polyfill pour process.stdout.isTTY -->
+    <script src="/process-polyfill.js"></script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
