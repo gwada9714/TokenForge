@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { secureWalletService } from '../services/SecureWalletService';
 import { IBlockchainService } from '../interfaces/IBlockchainService';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 
 /**
  * Interface pour les résultats du hook useSecureBlockchain

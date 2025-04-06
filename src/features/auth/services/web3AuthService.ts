@@ -2,7 +2,7 @@ import { SiweMessage } from 'siwe';
 import { ethers } from 'ethers';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../config/firebase';
-import { logger } from '../../../utils/firebase-logger';
+import { logger } from '../../../core/logger';
 import * as Sentry from '@sentry/react';
 
 const LOG_CATEGORY = 'Web3Auth';

@@ -7,7 +7,7 @@ describe('Authentication Security', () => {
   let firebaseService: FirebaseService;
 
   beforeEach(() => {
-    firebaseService = new FirebaseService();
+    firebaseService = firebaseAuthService);
     vi.clearAllMocks();
   });
 

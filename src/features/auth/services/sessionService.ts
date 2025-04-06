@@ -1,4 +1,4 @@
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { secureStorageService } from './secureStorageService';
 import { firebaseAuth } from './firebaseAuth';
 import { AuthError, AuthErrorCode } from '../errors/AuthError';

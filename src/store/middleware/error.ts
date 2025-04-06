@@ -1,6 +1,6 @@
 import { isRejectedWithValue } from '@reduxjs/toolkit';
 import type { Middleware } from '@reduxjs/toolkit';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 
 /**
  * Middleware pour logger les erreurs RTK Query

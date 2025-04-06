@@ -1,11 +1,11 @@
 // @ts-expect-error React is needed for JSX
 import React, { createContext, ReactNode, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { firebaseService } from '@/config/firebase';
+import { firebaseService } from '@/config/firebase/index';
 import { onAuthStateChanged, User, Auth, setPersistence } from 'firebase/auth';
 import { AUTH_PERSISTENCE } from '@/config/constants';
 import { SessionService, SessionState } from '@/services/session/sessionService';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 import { getFirebaseAuth, initializeAuth } from '@/lib/firebase/auth';
 
 export interface AuthContextType {

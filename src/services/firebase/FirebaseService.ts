@@ -1,7 +1,7 @@
 import { BaseService } from '@/core/services/BaseService';
 import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Auth, getAuth } from 'firebase/auth';
-import { firebaseConfig } from '@/config/firebase';
+import { firebaseConfig } from '@/config/firebase/index';
 
 export class FirebaseService extends BaseService {
   private app: FirebaseApp | null = null;

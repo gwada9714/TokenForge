@@ -4,7 +4,7 @@ import { useTokenDeployment } from '../hooks/useTokenDeployment';
 import { TokenDeploymentService } from '../services/tokenDeploymentService';
 
 // Mock des dépendances
-vi.mock('@/features/auth/hooks/useTokenForgeAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useTokenForgeAuth: () => ({
     isAuthenticated: true
   })

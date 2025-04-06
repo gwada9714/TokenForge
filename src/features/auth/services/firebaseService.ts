@@ -14,7 +14,7 @@ import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { firestoreService } from "@/lib/firebase/firestore";
 import { AuthErrorCode } from "../errors/AuthError";
 import { ErrorService } from "./errorService";
-import { logger } from '../../../utils/firebase-logger';
+import { logger } from '../../../core/logger';
 import { TokenEncryption } from '../../../utils/token-encryption';
 import * as Sentry from '@sentry/react';
 import { getFirebaseManager } from "@/lib/firebase/services";

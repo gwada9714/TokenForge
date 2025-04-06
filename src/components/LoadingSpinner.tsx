@@ -4,18 +4,24 @@ import { Box, CircularProgress } from '@mui/material';
 interface LoadingSpinnerProps {
   size?: number;
   color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'inherit';
+  fullScreen?: boolean;
+  minHeight?: string | number;
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
   size = 40,
-  color = 'primary'
+  color = 'primary',
+  fullScreen = true,
+  minHeight = '100vh'
 }) => {
   return (
     <Box
       display="flex"
       justifyContent="center"
       alignItems="center"
-      minHeight="100vh"
+      minHeight={fullScreen ? minHeight : '200px'}
+      width="100%"
+      p={2}
     >
       <CircularProgress 
         size={size}
@@ -23,4 +29,4 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       />
     </Box>
   );
-}; 
+};

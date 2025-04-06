@@ -2,7 +2,7 @@ import { useContext, useCallback, useState } from 'react';
 import { AuthContext } from '../AuthProvider';
 import { AuthService } from '../services/AuthService';
 import { LoginCredentials, AuthResponse } from '../types/auth.types';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 
 /**
  * Hook personnalisé pour accéder au contexte d'authentification et aux fonctions associées

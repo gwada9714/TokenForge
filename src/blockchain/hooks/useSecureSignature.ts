@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { secureWalletService } from '../services/SecureWalletService';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 
 /**
  * Interface pour les résultats du hook useSecureSignature

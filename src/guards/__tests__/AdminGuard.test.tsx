@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { AdminGuard } from '../AdminGuard';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock the useTokenForgeAuth hook
-vi.mock('@/features/auth/hooks/useTokenForgeAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
     useTokenForgeAuth: vi.fn()
 }));
 

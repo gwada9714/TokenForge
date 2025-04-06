@@ -1,218 +1,328 @@
-import { Auth, getAuth, User, signInWithEmailAndPassword, signOut, AuthErrorCodes } from 'firebase/auth';
-import { app, firebaseService } from '@/config/firebase';
-import { logger } from '@/utils/logger';
-import type { LoginCredentials, AuthResponse, AuthError } from '../types/auth.types';
+import { User } from "firebase/auth";
+import { logger } from "../../logger";
+import {
+  errorService,
+  ErrorCode,
+  ErrorSeverity,
+} from "../../errors/ErrorService";
+import { configService } from "../../config";
+import {
+  AuthServiceBase,
+  LoginCredentials,
+  SignupCredentials,
+  AuthResponse,
+  AuthServiceOptions,
+  AuthType,
+} from "./AuthServiceBase";
+import { FirebaseAuthService } from "./FirebaseAuthService";
+import { Web3AuthService, Web3Credentials } from "./Web3AuthService";
 
+/**
+ * Service d'authentification unifié qui peut utiliser différents fournisseurs
+ */
 export class AuthService {
   private static instance: AuthService;
-  private auth: Auth;
-  private readonly TOKEN_REFRESH_INTERVAL = 55 * 60 * 1000; // 55 minutes
-  private tokenRefreshIntervals: Map<string, number> = new Map();
+  private firebaseAuthService: FirebaseAuthService;
+  private web3AuthService: Web3AuthService;
+  private currentAuthType: AuthType | null = null;
 
-  private constructor() {
-    this.auth = getAuth(app);
-    this.setupAuthListeners();
-    
-    // Vérifier si l'utilisateur est déjà connecté au démarrage
-    const currentUser = this.auth.currentUser;
-    if (currentUser) {
-      this.setupTokenRefresh(currentUser).catch(error => {
-        logger.error('Auth', 'Erreur lors de la configuration du rafraîchissement du token au démarrage', error);
-      });
-    }
-  }
+  private constructor(options: AuthServiceOptions = {}) {
+    // Fusionner les options avec les valeurs de configuration
+    const securityConfig = configService.getSecurityConfig();
+    const mergedOptions: AuthServiceOptions = {
+      enablePersistence: true,
+      tokenRefreshInterval: 55 * 60 * 1000, // 55 minutes
+      maxLoginAttempts: 5,
+      lockoutDuration: 15 * 60 * 1000, // 15 minutes
+      sessionTimeout: securityConfig.session.timeout * 1000,
+      requireEmailVerification: true,
+      ...options,
+    };
 
-  private setupAuthListeners(): void {
-    this.auth.onAuthStateChanged(
-      (user) => this.handleAuthStateChange(user),
-      (error) => this.handleAuthError(error)
-    );
-  }
+    this.firebaseAuthService = FirebaseAuthService.getInstance(mergedOptions);
+    this.web3AuthService = Web3AuthService.getInstance(mergedOptions);
 
-  private async handleAuthStateChange(user: User | null): Promise<void> {
-    if (user) {
-      await this.setupTokenRefresh(user);
-    } else {
-      // Nettoyer les intervalles existants lors de la déconnexion
-      this.clearAllTokenRefreshIntervals();
-    }
-  }
+    // Déterminer le type d'authentification actuel
+    this.checkCurrentAuthType();
 
-  private async setupTokenRefresh(user: User): Promise<void> {
-    try {
-      // Nettoyer tout intervalle existant pour cet utilisateur
-      this.clearTokenRefreshInterval(user.uid);
-      
-      // Vérifier si l'utilisateur est toujours valide
-      if (!user.uid) {
-        logger.warn('Auth', 'Tentative de rafraîchissement de token pour un utilisateur non valide');
-        return;
-      }
-      
-      // Rafraîchir le token immédiatement
-      try {
-        const token = await user.getIdToken(true);
-        logger.info('Auth', 'Token initial obtenu avec succès', { tokenLength: token.length });
-      } catch (error) {
-        logger.error('Auth', 'Échec de l\'obtention du token initial', error);
-        throw error; // Propager l'erreur pour éviter de configurer un intervalle qui échouera
-      }
-      
-      // Configurer un nouvel intervalle avec une fonction de rafraîchissement robuste
-      const intervalId = window.setInterval(async () => {
-        try {
-          // Vérifier si l'utilisateur est toujours connecté
-          const currentUser = this.auth.currentUser;
-          if (!currentUser || currentUser.uid !== user.uid) {
-            logger.warn('Auth', 'Utilisateur déconnecté, arrêt du rafraîchissement du token');
-            this.clearTokenRefreshInterval(user.uid);
-            return;
-          }
-          
-          const token = await user.getIdToken(true);
-          logger.info('Auth', 'Token rafraîchi avec succès', { tokenLength: token.length });
-        } catch (error) {
-          logger.error('Auth', 'Échec du rafraîchissement du token', error);
-          
-          // Analyser l'erreur pour déterminer si nous devons arrêter les tentatives
-          const authError = error as AuthError;
-          if (authError.code === AuthErrorCodes.TOKEN_EXPIRED || 
-              authError.code === AuthErrorCodes.USER_DISABLED ||
-              authError.code === AuthErrorCodes.USER_DELETED) {
-            logger.warn('Auth', 'Arrêt du rafraîchissement du token en raison d\'une erreur critique', { code: authError.code });
-            this.clearTokenRefreshInterval(user.uid);
-            
-            // Forcer la déconnexion si l'utilisateur n'est plus valide
-            this.logout().catch(e => {
-              logger.error('Auth', 'Échec de la déconnexion forcée après erreur de token', e);
-            });
-          }
-        }
-      }, this.TOKEN_REFRESH_INTERVAL);
-      
-      // Stocker l'ID de l'intervalle pour pouvoir le nettoyer plus tard
-      this.tokenRefreshIntervals.set(user.uid, intervalId);
-      logger.info('Auth', 'Rafraîchissement de token configuré avec succès', { userId: user.uid });
-    } catch (error) {
-      logger.error('Auth', 'Échec de la configuration du rafraîchissement du token', error);
-      throw error;
-    }
-  }
-
-  private clearTokenRefreshInterval(userId: string): void {
-    const intervalId = this.tokenRefreshIntervals.get(userId);
-    if (intervalId) {
-      window.clearInterval(intervalId);
-      this.tokenRefreshIntervals.delete(userId);
-    }
-  }
-
-  private clearAllTokenRefreshIntervals(): void {
-    this.tokenRefreshIntervals.forEach((intervalId) => {
-      window.clearInterval(intervalId);
+    logger.info({
+      category: "Auth",
+      message: "Service d'authentification unifié initialisé",
     });
-    this.tokenRefreshIntervals.clear();
   }
 
-  private handleAuthError(error: Error): void {
-    logger.error('Auth', 'Erreur de changement d\'état d\'authentification', error);
-  }
-
-  public static getInstance(): AuthService {
+  /**
+   * Obtient l'instance singleton du service d'authentification
+   */
+  public static getInstance(options: AuthServiceOptions = {}): AuthService {
     if (!AuthService.instance) {
-      AuthService.instance = new AuthService();
+      AuthService.instance = new AuthService(options);
     }
     return AuthService.instance;
   }
 
-  public async login(credentials: LoginCredentials): Promise<AuthResponse> {
+  /**
+   * Vérifie le type d'authentification actuel
+   */
+  private async checkCurrentAuthType(): Promise<void> {
+    // Vérifier d'abord Firebase
+    const firebaseUser = await this.firebaseAuthService.getCurrentUser();
+    if (firebaseUser) {
+      this.currentAuthType = AuthType.EMAIL_PASSWORD;
+      return;
+    }
+
+    // Ensuite vérifier Web3
+    const web3User = await this.web3AuthService.getCurrentUser();
+    if (web3User) {
+      this.currentAuthType = AuthType.WEB3;
+      return;
+    }
+
+    this.currentAuthType = null;
+  }
+
+  /**
+   * Connecte un utilisateur avec le type d'authentification spécifié
+   */
+  public async login(
+    credentials: LoginCredentials | Web3Credentials,
+    authType: AuthType = AuthType.EMAIL_PASSWORD
+  ): Promise<AuthResponse> {
     try {
-      // S'assurer que Firebase est initialisé
-      if (!firebaseService.isInitialized()) {
-        await firebaseService.initialize();
+      let response: AuthResponse;
+
+      switch (authType) {
+        case AuthType.EMAIL_PASSWORD:
+        case AuthType.GOOGLE:
+        case AuthType.FACEBOOK:
+        case AuthType.TWITTER:
+        case AuthType.GITHUB:
+        case AuthType.APPLE:
+        case AuthType.PHONE:
+        case AuthType.ANONYMOUS:
+          response = await this.firebaseAuthService.login(
+            credentials as LoginCredentials
+          );
+          break;
+        case AuthType.WEB3:
+          response = await this.web3AuthService.login(
+            credentials as Web3Credentials
+          );
+          break;
+        default:
+          return {
+            success: false,
+            error: new Error(
+              `Type d'authentification non supporté: ${authType}`
+            ),
+          };
       }
-      
-      const userCredential = await signInWithEmailAndPassword(
-        this.auth,
-        credentials.email,
-        credentials.password
-      );
 
-      // Configurer le rafraîchissement du token après la connexion
-      await this.setupTokenRefresh(userCredential.user);
+      if (response.success) {
+        this.currentAuthType = authType;
+      }
 
-      logger.info('Auth', 'Utilisateur connecté avec succès', {
-        uid: userCredential.user.uid,
-        email: userCredential.user.email
+      return response;
+    } catch (error) {
+      logger.error({
+        category: "Auth",
+        message: "Erreur lors de la connexion",
+        error: error instanceof Error ? error : new Error(String(error)),
+        data: { authType },
       });
 
       return {
-        success: true,
-        user: userCredential.user
-      };
-    } catch (error) {
-      const authError = error as AuthError;
-      logger.error('Auth', 'Échec de connexion', error);
-      
-      // Fournir des messages d'erreur plus spécifiques
-      let errorMessage = 'Échec de connexion';
-      
-      if (authError.code) {
-        switch (authError.code) {
-          case 'auth/invalid-email':
-            errorMessage = 'Adresse email invalide';
-            break;
-          case 'auth/user-disabled':
-            errorMessage = 'Ce compte a été désactivé';
-            break;
-          case 'auth/user-not-found':
-            errorMessage = 'Aucun compte trouvé avec cette adresse email';
-            break;
-          case 'auth/wrong-password':
-            errorMessage = 'Mot de passe incorrect';
-            break;
-          case 'auth/too-many-requests':
-            errorMessage = 'Trop de tentatives de connexion. Veuillez réessayer plus tard';
-            break;
-          case 'auth/network-request-failed':
-            errorMessage = 'Problème de connexion réseau. Vérifiez votre connexion internet';
-            break;
-          default:
-            errorMessage = `Erreur de connexion: ${authError.code}`;
-        }
-      }
-      
-      return {
         success: false,
-        error: {
-          ...authError,
-          message: errorMessage
-        }
+        error: error instanceof Error ? error : new Error(String(error)),
       };
     }
   }
 
-  async logout(): Promise<void> {
+  /**
+   * Inscrit un nouvel utilisateur
+   */
+  public async signup(
+    credentials: SignupCredentials,
+    authType: AuthType = AuthType.EMAIL_PASSWORD
+  ): Promise<AuthResponse> {
     try {
-      // Nettoyer les intervalles avant la déconnexion
-      this.clearAllTokenRefreshIntervals();
-      
-      // Vérifier si l'utilisateur est connecté avant de tenter la déconnexion
-      if (this.auth.currentUser) {
-        await signOut(this.auth);
-        logger.info('Auth', 'Déconnexion réussie');
-      } else {
-        logger.info('Auth', 'Déconnexion ignorée - aucun utilisateur connecté');
+      let response: AuthResponse;
+
+      switch (authType) {
+        case AuthType.EMAIL_PASSWORD:
+          response = await this.firebaseAuthService.signup(credentials);
+          break;
+        case AuthType.WEB3:
+          response = await this.web3AuthService.signup();
+          break;
+        default:
+          return {
+            success: false,
+            error: new Error(
+              `Type d'authentification non supporté pour l'inscription: ${authType}`
+            ),
+          };
       }
+
+      if (response.success) {
+        this.currentAuthType = authType;
+      }
+
+      return response;
     } catch (error) {
-      logger.error('Auth', 'Échec de déconnexion', error);
+      logger.error({
+        category: "Auth",
+        message: "Erreur lors de l'inscription",
+        error: error instanceof Error ? error : new Error(String(error)),
+        data: { authType },
+      });
+
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+    }
+  }
+
+  /**
+   * Déconnecte l'utilisateur actuel
+   */
+  public async logout(): Promise<void> {
+    try {
+      if (this.currentAuthType === AuthType.WEB3) {
+        await this.web3AuthService.logout();
+      } else {
+        await this.firebaseAuthService.logout();
+      }
+
+      this.currentAuthType = null;
+    } catch (error) {
+      logger.error({
+        category: "Auth",
+        message: "Erreur lors de la déconnexion",
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
       throw error;
     }
   }
 
-  onAuthStateChanged(callback: (user: User | null) => void): () => void {
-    return this.auth.onAuthStateChanged(callback);
+  /**
+   * Récupère l'utilisateur actuellement connecté
+   */
+  public async getCurrentUser(): Promise<User | any | null> {
+    try {
+      if (this.currentAuthType === AuthType.WEB3) {
+        return await this.web3AuthService.getCurrentUser();
+      } else {
+        return await this.firebaseAuthService.getCurrentUser();
+      }
+    } catch (error) {
+      logger.error({
+        category: "Auth",
+        message: "Erreur lors de la récupération de l'utilisateur actuel",
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Envoie un email de réinitialisation de mot de passe
+   */
+  public async resetPassword(email: string): Promise<boolean> {
+    try {
+      return await this.firebaseAuthService.resetPassword(email);
+    } catch (error) {
+      logger.error({
+        category: "Auth",
+        message: "Erreur lors de la réinitialisation du mot de passe",
+        error: error instanceof Error ? error : new Error(String(error)),
+        data: { email },
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Met à jour le profil de l'utilisateur
+   */
+  public async updateUserProfile(
+    user: User,
+    profile: Partial<SignupCredentials>
+  ): Promise<User> {
+    try {
+      if (this.currentAuthType === AuthType.WEB3) {
+        throw new Error(
+          "La mise à jour du profil n'est pas supportée pour l'authentification Web3"
+        );
+      }
+
+      return await this.firebaseAuthService.updateUserProfile(user, profile);
+    } catch (error) {
+      logger.error({
+        category: "Auth",
+        message: "Erreur lors de la mise à jour du profil utilisateur",
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Vérifie si l'utilisateur est authentifié
+   */
+  public async isAuthenticated(): Promise<boolean> {
+    try {
+      if (this.currentAuthType === AuthType.WEB3) {
+        return await this.web3AuthService.isAuthenticated();
+      } else {
+        return await this.firebaseAuthService.isAuthenticated();
+      }
+    } catch (error) {
+      logger.error({
+        category: "Auth",
+        message: "Erreur lors de la vérification de l'authentification",
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Obtient un token d'authentification
+   */
+  public async getToken(forceRefresh: boolean = false): Promise<string | null> {
+    try {
+      if (this.currentAuthType === AuthType.WEB3) {
+        return await this.web3AuthService.getToken(forceRefresh);
+      } else {
+        return await this.firebaseAuthService.getToken(forceRefresh);
+      }
+    } catch (error) {
+      logger.error({
+        category: "Auth",
+        message: "Erreur lors de l'obtention du token",
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * S'abonne aux changements d'état d'authentification Firebase
+   */
+  public onAuthStateChanged(callback: (user: User | null) => void): () => void {
+    return this.firebaseAuthService.onAuthStateChanged(callback);
+  }
+
+  /**
+   * Obtient le type d'authentification actuel
+   */
+  public getCurrentAuthType(): AuthType | null {
+    return this.currentAuthType;
   }
 }
 
+// Exporter l'instance singleton
 export const authService = AuthService.getInstance();

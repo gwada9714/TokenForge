@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SEOHead } from '@/components';
-import { useTokenForgeAuth } from '../providers/TokenForgeAuthProvider';
+import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
 import { AuthError, AuthErrorCode, createAuthError } from '../errors/AuthError';
 import { LoginForm } from '../components/LoginForm';
-import { logger } from '../../../utils/firebase-logger';
+import { logger } from '../../../core/logger';
 
 export const LoginPage: React.FC = () => {
   // États pour le formulaire
@@ -62,10 +62,9 @@ export const LoginPage: React.FC = () => {
         message: 'Tentative de connexion par wallet'
       });
       
-      // Pour l'exemple, nous utilisons des valeurs fictives mais dans un cas réel
-      // vous utiliseriez une bibliothèque comme viem, ethers.js ou web3.js
-      // pour obtenir l'adresse du wallet et le chainId
-      await connectWallet('0x0000000000000000000000000000000000000000', 1);
+      // Utiliser la méthode connectWallet du contexte d'authentification
+      // sans passer d'arguments, conformément à sa définition
+      await connectWallet();
       
       // La redirection sera gérée par l'effect quand isAuthenticated changera
     } catch (err) {

@@ -1,4 +1,4 @@
-import { logger } from '../utils/firebase-logger';
+import { logger } from '../core/logger';
 import * as Sentry from '@sentry/react';
 
 const LOG_CATEGORY = 'CSP Report';

@@ -27,7 +27,7 @@ import { AdminDashboard } from '@/features/admin/pages/AdminDashboardPage';
 import { NotFound } from '@/features/common/pages/NotFoundPage';
 
 // Mock du hook d'authentification
-vi.mock('@/features/auth/hooks/useTokenForgeAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useTokenForgeAuth: () => ({
     isAuthenticated: false,
     isAdmin: false,

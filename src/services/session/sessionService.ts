@@ -1,5 +1,5 @@
 import { Auth, User } from 'firebase/auth';
-import { firebaseService } from '@/config/firebase';
+import { firebaseService } from '@/config/firebase/index';
 import { getFirebaseAuth, initializeAuth } from '@/lib/firebase/auth';
 import { logger } from '@/core/logger';
 import { AUTH_CONFIG } from '@/config/constants';

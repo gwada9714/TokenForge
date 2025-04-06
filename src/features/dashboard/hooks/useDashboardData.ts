@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 
 interface DashboardStats {
   totalTokens: number;

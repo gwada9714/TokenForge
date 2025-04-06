@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { EventMonitorService, TokenEvent } from '../services/eventMonitorService';
 import { BlockchainNetwork } from '../components/DeploymentOptions';
 import { useToast } from '@/components/ui/toast';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 import { ErrorService } from '../services/errorService';
 import { formatEther } from '../utils/ether';
 

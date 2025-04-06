@@ -5,10 +5,10 @@ import { Box } from '@mui/material';
 import { Navbar, NAVBAR_HEIGHT } from '../components/layouts/main/Navbar';
 import { Footer } from '@/components/Footer';
 import { Sidebar } from '@/components/Sidebar';
-import { useAuth } from '@/auth/hooks/useAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 
 export const Layout = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useTokenForgeAuth();
 
   return (
     <Box 

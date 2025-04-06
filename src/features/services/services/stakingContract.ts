@@ -6,7 +6,7 @@ import {
   type Chain,
   getContract
 } from 'viem';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 
 const STAKING_ABI = [
   // View functions

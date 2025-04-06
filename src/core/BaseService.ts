@@ -1,4 +1,4 @@
-import { logger } from '../utils/firebase-logger';
+import { logger } from '../core/logger';
 
 export abstract class BaseService {
   protected readonly category: string;

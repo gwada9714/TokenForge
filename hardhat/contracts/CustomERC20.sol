@@ -10,23 +10,35 @@ contract CustomERC20 is ERC20, ERC20Burnable, Ownable {
     bool private _isMintable;
     uint8 private _decimals;
 
+    /**
+     * @dev Constructeur du token personnalisé
+     * @param _name Nom du token
+     * @param _symbol Symbole du token
+     * @param _decimalsValue Nombre de décimales
+     * @param _initialSupply Offre initiale de tokens
+     * @param _maxTokenSupply Offre maximale de tokens
+     * @param _isTokenMintable Si le token peut être minté
+     * @param _initialOwner Propriétaire initial du token
+     */
     constructor(
         string memory _name,
         string memory _symbol,
         uint8 _decimalsValue,
         uint256 _initialSupply,
         uint256 _maxTokenSupply,
-        bool /* _isBurnable */,  // Non utilisé car ERC20Burnable est toujours activé
         bool _isTokenMintable,
         address _initialOwner
     ) ERC20(_name, _symbol) Ownable() {
         require(_initialSupply > 0, "Initial supply must be greater than 0");
-        require(_maxTokenSupply >= _initialSupply, "Max supply must be greater than or equal to initial supply");
-        
+        require(
+            _maxTokenSupply >= _initialSupply,
+            "Max supply must be greater than or equal to initial supply"
+        );
+
         _maxSupply = _maxTokenSupply;
         _isMintable = _isTokenMintable;
         _decimals = _decimalsValue;
-        
+
         _transferOwnership(_initialOwner);
         _mint(_initialOwner, _initialSupply);
     }
@@ -37,7 +49,10 @@ contract CustomERC20 is ERC20, ERC20Burnable, Ownable {
 
     function mint(address to, uint256 amount) public onlyOwner {
         require(_isMintable, "Minting is disabled for this token");
-        require(totalSupply() + amount <= _maxSupply, "Cannot exceed max supply");
+        require(
+            totalSupply() + amount <= _maxSupply,
+            "Cannot exceed max supply"
+        );
         _mint(to, amount);
     }
 

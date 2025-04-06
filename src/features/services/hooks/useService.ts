@@ -5,7 +5,7 @@ import { ServiceType, ServiceRequest, ServiceQuote } from '../types/services';
 import { NetworkConfig } from '@/features/auth/types/wallet';
 import { getNetwork } from '@/config/networks';
 import { serviceManager } from '../services/serviceManager';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 
 export interface UseServiceReturn {
   configureService: (type: ServiceType, config: any) => Promise<void>;

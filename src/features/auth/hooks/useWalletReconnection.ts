@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useAccount, useChainId, useDisconnect } from 'wagmi';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { SUPPORTED_CHAINS, DEFAULT_CHAIN, isChainSupported } from '@/config/constants/chains';
 import { EthereumError } from '../types/ethereum';
 

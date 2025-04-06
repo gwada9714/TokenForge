@@ -3,7 +3,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 import { navigationRoutes } from '@/router/routes';
-import { useAuth } from '@/auth/hooks/useAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 
 const SidebarContainer = styled.aside`
   width: 280px;
@@ -46,7 +46,7 @@ const NavSection = styled.div`
 `;
 
 export function Sidebar() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useTokenForgeAuth();
 
   const filteredRoutes = navigationRoutes.filter(route => {
     if (route.isProtected && !isAuthenticated) return false;

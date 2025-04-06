@@ -10,7 +10,7 @@ vi.mock('@/components/ui/toast', () => ({
   })
 }));
 
-vi.mock('@/features/auth/hooks/useTokenForgeAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useTokenForgeAuth: () => ({
     isAuthenticated: true
   })

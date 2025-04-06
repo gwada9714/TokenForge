@@ -1,7 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Typography, Paper, CircularProgress } from '@mui/material';
-import { logger } from './core/logger';
 import { Router } from './router';
+import { logger } from './core/logger';
+import TokenForgeAuthProvider from './features/auth/providers/TokenForgeAuthProvider';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { theme } from './theme/theme';
+// Import des éléments nécessaires pour Wagmi
+import { WagmiProvider } from 'wagmi';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import '@rainbow-me/rainbowkit/styles.css';
+// Import nécessaire pour React Query
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+// Utiliser notre configuration de Wagmi unifiée
+import { getWagmiConfig } from './hooks/useWagmiConfig';
 
 // Déclaration pour TypeScript
 declare global {
@@ -10,29 +22,33 @@ declare global {
   }
 }
 
-/**
- * Version diagnostique du composant App
- * Sans initialisation Firebase ni Auth pour l'instant
- */
+// Créer une instance de QueryClient pour React Query
+const queryClient = new QueryClient();
+
+// Récupérer la configuration Wagmi
+const wagmiConfig = getWagmiConfig();
+
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isRouterReady, setIsRouterReady] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Simuler un chargement court puis initialiser l'application
     const timer = setTimeout(() => {
       try {
         logger.info({
-          category: 'AppDiagnostic',
-          message: 'Application prête à afficher le routeur'
+          category: 'Application',
+          message: 'Application initialisée avec succès'
         });
-        setIsRouterReady(true);
+        setIsInitialized(true);
       } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
         logger.error({
-          category: 'AppDiagnostic',
-          message: `Erreur d'initialisation: ${err instanceof Error ? err.message : String(err)}`,
-          error: err instanceof Error ? err : new Error(String(err))
+          category: 'Application',
+          message: `Erreur d'initialisation: ${error.message}`,
+          error
         });
+        setError(error);
       } finally {
         setIsLoading(false);
       }
@@ -61,7 +77,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (!isRouterReady) {
+  if (error || !isInitialized) {
     return (
       <Box
         sx={{
@@ -87,15 +103,28 @@ const App: React.FC = () => {
             Erreur d'initialisation de l'application
           </Typography>
           <Typography variant="body1">
-            TokenForge n'a pas pu initialiser le système de navigation correctement.
+            {error ? error.message : "TokenForge n'a pas pu initialiser correctement."}
           </Typography>
         </Paper>
       </Box>
     );
   }
 
-  // Si tout est prêt, afficher le routeur
-  return <Router />;
+  // Si tout est prêt, afficher l'application avec les providers nécessaires
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={wagmiConfig}>
+          <RainbowKitProvider>
+            <TokenForgeAuthProvider>
+              <Router />
+            </TokenForgeAuthProvider>
+          </RainbowKitProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
 };
 
 export default App;

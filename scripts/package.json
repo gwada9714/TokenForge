@@ -1,0 +1,16 @@
+{
+  "name": "tokenforge-migration-scripts",
+  "version": "1.0.0",
+  "description": "Scripts de migration pour le projet TokenForge",
+  "type": "module",
+  "scripts": {
+    "update-logger": "node update-logger-imports.js",
+    "update-config": "node update-config-imports.js",
+    "update-auth": "node update-auth-imports.js",
+    "update-all": "npm run update-logger && npm run update-config && npm run update-auth",
+    "update-test-mocks": "node update-test-mocks.js",
+    "update-test-imports": "node update-test-imports.js",
+    "update-test-classes": "node update-test-classes.js",
+    "update-tests": "npm run update-test-mocks && npm run update-test-imports && npm run update-test-classes"
+  }
+}

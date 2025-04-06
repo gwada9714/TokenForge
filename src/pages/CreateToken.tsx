@@ -23,7 +23,7 @@ import {
 import { CostEstimator } from '../components/features/token/estimation/CostEstimator';
 import { TokenSimulator } from '../components/features/token/simulation/TokenSimulator';
 import { useWalletStatus } from '@/features/auth/hooks/useWalletStatus';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 
 const steps = ['Configuration', 'Simulation', 'Déploiement'];
 

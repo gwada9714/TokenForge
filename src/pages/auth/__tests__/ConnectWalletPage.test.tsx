@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ConnectWalletPage from '../ConnectWalletPage';
-import { useTokenForgeAuth } from '../../../features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '../../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 vi.mock('react-router-dom', () => ({

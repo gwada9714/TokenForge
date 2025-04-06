@@ -1,9 +1,11 @@
 import { lazy } from 'react';
 import { RouteObject } from 'react-router-dom';
-// Utiliser nos guards de diagnostic au lieu des guards d'authentification réels
-import { AuthGuard, AdminGuard, PublicGuard } from '../guards/DiagnosticGuard';
-// Utiliser notre layout de diagnostic
-import { Layout } from '../layouts/DiagnosticLayout';
+// Utiliser les vrais guards d'authentification
+import { AuthGuard } from '../guards/AuthGuard';
+import { AdminGuard } from '../guards/AdminGuard';
+import { PublicGuard } from '../guards/PublicGuard';
+// Utiliser le vrai layout
+import { Layout } from '../layouts/Layout';
 
 // 1. Pages Générales
 const Home = lazy(() => import('../features/home/pages/HomePage').then(module => ({ default: module.HomePage })));

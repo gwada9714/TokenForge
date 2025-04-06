@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AuthError } from '../features/auth/errors/AuthError';
-import { logger, LogLevel } from '../utils/firebase-logger';
+import { logger, LogLevel } from '../core/logger';
 
 interface Props {
   children: ReactNode;

@@ -4,7 +4,7 @@ import { firebaseService } from './firebaseService';
 import { walletReconnectionService } from './walletReconnectionService';
 import { errorService } from './errorService';
 import { AuthErrorCode } from '../errors/AuthError';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 import { SUPPORTED_CHAINS } from '@/types/common';
 
 const LOG_CATEGORY = 'AuthSyncService';

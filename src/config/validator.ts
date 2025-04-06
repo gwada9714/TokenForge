@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { FirebaseError } from '../utils/error-handler';
-import { logger } from '../utils/logger';
+import { logger } from '../core/logger';
 
 const LOG_CATEGORY = 'Config Validator';
 

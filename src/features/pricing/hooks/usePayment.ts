@@ -3,7 +3,7 @@ import { useAccount, useNetwork, useWalletClient } from 'wagmi';
 import { parseEther } from 'viem';
 import { PaymentDetails, PlanType, PaymentCurrency } from '../types/plans';
 import { paymentService } from '../services/paymentService';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { SUPPORTED_CHAINS } from '@/config/constants/chains';
 
 interface UsePaymentReturn {

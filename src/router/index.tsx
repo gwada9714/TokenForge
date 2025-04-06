@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { routes } from './routes.tsx';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -22,9 +22,11 @@ logger.info({
 
 export const Router: React.FC = () => {
   return (
-    <RouterProvider
-      router={router}
-      fallbackElement={<LoadingSpinner fullScreen={false} />}
-    />
+    <Suspense fallback={<LoadingSpinner fullScreen={true} />}>
+      <RouterProvider
+        router={router}
+        fallbackElement={<LoadingSpinner fullScreen={false} />}
+      />
+    </Suspense>
   );
 };

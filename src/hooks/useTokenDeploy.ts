@@ -3,7 +3,7 @@ import { usePublicClient, useWalletClient } from 'wagmi';
 import { parseEther } from 'viem';
 import { CUSTOM_ERC20_ABI } from '../contracts/CustomERC20';
 import { bytecode } from '../contracts/bytecode';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 import { logger } from '@/core/logger';
 
 interface TokenDeployParams {

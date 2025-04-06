@@ -1,4 +1,4 @@
-import { app } from '@/config/firebase';
+import { app } from '@/config/firebase/index';
 import { getFirebaseAuth } from '@/lib/firebase/auth';
 import { firebaseManager } from './services';
 import { getFirestore } from 'firebase/firestore';

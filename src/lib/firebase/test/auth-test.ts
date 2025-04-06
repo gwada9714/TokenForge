@@ -8,7 +8,7 @@
 
 import { getFirebaseManager } from '../services';
 import { firebaseAuth } from '../auth';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 
 const LOG_CATEGORY = 'AuthTest';
 

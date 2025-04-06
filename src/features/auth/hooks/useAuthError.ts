@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { setAuthError, clearAuthError } from '../store/authSlice';
 import { AuthError } from '../errors/AuthError';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 import { monitoringService } from '@/utils/monitoring';
 
 export const useAuthError = () => {

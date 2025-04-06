@@ -1,69 +1,25 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import { resolve } from 'path';
+import { defineConfig } from "vitest/config";
+import { baseConfig } from "./vitest.base.config";
+import { resolve } from "path";
 
+// Étend la configuration de base avec des options spécifiques pour les tests d'authentification
 export default defineConfig({
-  plugins: [react(), tsconfigPaths({
-    projects: ['./tsconfig.test.json']
-  })],
+  ...baseConfig,
   resolve: {
+    ...baseConfig.resolve,
     alias: {
-      '@': resolve(__dirname, './src'),
-      'next/router': resolve(__dirname, './src/__mocks__/next/router.ts')
-    }
-  },
-  define: {
-    'process.env': {},
-    global: 'globalThis',
+      ...baseConfig.resolve?.alias,
+      "next/router": resolve(__dirname, "./src/__mocks__/next/router.ts"),
+    },
   },
   test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/__tests__/setup.ts'],
+    ...baseConfig.test,
     include: [
-      'src/hooks/__tests__/useAuth.test.tsx',
-      'src/contexts/__tests__/AuthContext.test.tsx',
-      'src/components/__tests__/AuthGuard.test.tsx'
+      "src/hooks/__tests__/useAuth.test.tsx",
+      "src/contexts/__tests__/AuthContext.test.tsx",
+      "src/components/__tests__/AuthGuard.test.tsx",
     ],
     exclude: [],
-    coverage: {
-      reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.{test,spec}.{ts,tsx}', 'src/types/**/*.ts']
-    },
-    deps: {
-      optimizer: {
-        web: {
-          include: [
-            'viem',
-            'firebase/app',
-            'firebase/auth',
-            '@testing-library/jest-dom',
-            '@rainbow-me/rainbowkit',
-            'wagmi',
-            '@mui/material',
-            '@mui/system'
-          ]
-        }
-      }
-    },
-    typecheck: {
-      tsconfig: './tsconfig.json',
-      include: ['src/**/*.{test,spec}.{ts,tsx}'],
-      ignoreSourceErrors: true
-    },
-    environmentOptions: {
-      jsdom: {
-        resources: 'usable'
-      }
-    },
-    pool: 'threads',
-    isolate: false,
-    mockReset: false,
-    sequence: {
-      hooks: 'list'
-    }
-  }
+  },
 });

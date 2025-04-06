@@ -1,4 +1,4 @@
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { BlockchainNetwork } from '@/types/blockchain';
 import { stakingFirestore } from './stakingFirestore';
 import { StakingContractService } from './stakingContract';

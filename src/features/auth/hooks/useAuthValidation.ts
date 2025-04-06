@@ -13,7 +13,7 @@ import {
   type AuthState
 } from '../schemas/auth.schema';
 import { createAuthError, AUTH_ERROR_CODES } from '../errors/AuthError';
-import { logger, LogLevel } from '@/utils/firebase-logger';
+import { logger, LogLevel } from '@/core/logger';
 
 export const useAuthValidation = () => {
   const validateData = useCallback(<T>(

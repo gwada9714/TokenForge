@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 
 interface Props {
   children: React.ReactNode;

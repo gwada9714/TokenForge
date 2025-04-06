@@ -1,7 +1,7 @@
 import { FirebaseError } from 'firebase/app';
 import { AuthError, AuthErrorCode } from '../errors/AuthError';
 import { captureException } from '../../../config/sentry';
-import { logger } from '../../../utils/firebase-logger';
+import { logger } from '../../../core/logger';
 
 const LOG_CATEGORY = 'ErrorService';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Box, Alert } from '@mui/material';
-import { useTokenForgeAuth } from '../providers/TokenForgeAuthProvider';
+import { useTokenForgeAuth } from '../hooks/useTokenForgeAuth';
 import { AuthError, AuthErrorCode, createAuthError } from '../errors/AuthError';
 import { logger } from '../../../core/logger';
 

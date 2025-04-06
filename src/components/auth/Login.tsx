@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/auth/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Login = () => {
   const { login, authError, isLoading } = useAuth();

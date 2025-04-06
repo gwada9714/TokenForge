@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useReducer, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useReducer, useEffect, useState, useContext } from 'react';
 import { User } from 'firebase/auth';
 import { useWalletStatus } from '../hooks/useWalletStatus';
 import { useAuthState } from '../hooks/useAuthState';
@@ -11,6 +11,26 @@ import { firebaseAuth } from '@/lib/firebase/auth';
 import { TokenForgeAuthContextValue } from '../types/auth';
 
 export const TokenForgeAuthContext = createContext<TokenForgeAuthContextValue | undefined>(undefined);
+
+// Créer et exporter le hook d'utilisation du contexte d'authentification
+export const useTokenForgeAuth = () => {
+  const context = useContext(TokenForgeAuthContext);
+  
+  if (!context) {
+    const errorMessage = 'useTokenForgeAuth doit être utilisé à l\'intérieur d\'un TokenForgeAuthProvider';
+    logger.error({
+      category: 'Auth',
+      message: errorMessage,
+      error: new Error(errorMessage)
+    });
+    throw new Error(errorMessage);
+  }
+  
+  return context;
+};
+
+// Alias pour compatibilité avec le code existant
+export const useTokenForgeAuthContext = useTokenForgeAuth;
 
 export const TokenForgeAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);

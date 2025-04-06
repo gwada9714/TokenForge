@@ -1,6 +1,6 @@
 import { ServiceType, ServiceRequest, ServiceQuote, Service } from '../types/services';
 import { NetworkConfig } from '@/features/auth/types/wallet';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { SERVICES } from '../config/services';
 import { paymentService } from '@/features/pricing/services/paymentService';
 

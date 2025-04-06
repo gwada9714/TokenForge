@@ -19,7 +19,7 @@ import { DeploymentOptions, BlockchainNetwork } from './DeploymentOptions';
 import { TokenConfig, DeploymentResult } from '../../../types/deployment';
 import { TokenDeploymentService } from '../services/tokenDeploymentService';
 import { useWalletStatus } from '@/features/auth/hooks/useWalletStatus';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 import { logger } from '@/core/logger';
 import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';

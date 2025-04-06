@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import { handleAuthError } from '../../features/auth/middleware/errorMiddleware';
 import { AuthError, AuthErrorCode } from '../../features/auth/errors/AuthError';
-import { logger } from '../../utils/firebase-logger';
+import { logger } from '../../core/logger';
 import type { Mock } from 'vitest';
 
 describe('Error Middleware', () => {
@@ -18,7 +18,7 @@ describe('Error Middleware', () => {
   let nextFunction: Mock;
 
   beforeEach(() => {
-    vi.mock('../../utils/firebase-logger', () => ({
+    vi.mock('../../core/logger', () => ({
       logger: {
         error: vi.fn()
       }

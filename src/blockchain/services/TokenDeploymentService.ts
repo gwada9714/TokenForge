@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { IBlockchainService } from '../interfaces/IBlockchainService';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 
 /**
  * Interface pour les options de déploiement de token

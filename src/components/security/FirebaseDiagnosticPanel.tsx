@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getDiagnostics, getFirebaseStatus } from '@/config/firebase';
+import { getDiagnostics, getFirebaseStatus } from '@/config/firebase/index';
 
 interface DiagnosticPanelProps {
   onClose?: () => void;

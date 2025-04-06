@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/auth/hooks/useAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface PublicGuardProps {
@@ -8,7 +8,7 @@ interface PublicGuardProps {
 }
 
 export function PublicGuard({ children }: PublicGuardProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading: isLoading } = useTokenForgeAuth();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -17,6 +17,7 @@ export function PublicGuard({ children }: PublicGuardProps) {
   }
 
   if (isAuthenticated) {
+    // Rediriger vers la page précédente ou le tableau de bord s'ils sont déjà authentifiés
     return <Navigate to={from} replace />;
   }
 

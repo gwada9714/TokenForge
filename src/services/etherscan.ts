@@ -1,4 +1,4 @@
-import { config } from '../utils/config';
+import { config } from '../core/config';
 
 const ETHERSCAN_API_BASE_URL = 'https://api.etherscan.io/api';
 

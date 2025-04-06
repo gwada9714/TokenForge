@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getFirebaseAuthService } from '../services/firebaseAuth';
 import { TokenForgeUser } from '../../../types/authTypes';
-import { logger, LogLevel } from '../../../utils/firebase-logger';
+import { logger, LogLevel } from '../../../core/logger';
 
 interface AuthState {
   user: TokenForgeUser | null;

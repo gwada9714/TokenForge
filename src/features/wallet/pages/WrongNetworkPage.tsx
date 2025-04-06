@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Paper, Typography, Button, Container } from '@mui/material';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 
 export const WrongNetworkPage: React.FC = () => {
   const { switchNetwork } = useTokenForgeAuth();

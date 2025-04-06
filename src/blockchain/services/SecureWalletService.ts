@@ -1,4 +1,4 @@
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 import { createBlockchainService } from '../factory';
 import { IBlockchainService } from '../interfaces/IBlockchainService';
 import { BlockchainServiceAdapter } from '../adapters/BlockchainServiceAdapter';

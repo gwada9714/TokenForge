@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
-import { logger } from '../../../utils/logger';
+import { logger } from '../../../core/logger';
 
 export interface SystemSettings {
   maintenance: {

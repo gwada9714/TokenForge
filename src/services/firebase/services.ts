@@ -2,8 +2,8 @@ import { FirebaseApp, getApps, initializeApp, FirebaseError } from 'firebase/app
 import { Auth, getAuth, connectAuthEmulator } from 'firebase/auth';
 import { Firestore, getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { Functions, getFunctions, connectFunctionsEmulator } from 'firebase/functions';
-import { logger } from '@/utils/logger';
-import { firebaseConfig, firebaseSettings } from '@/config/firebase/config';
+import { logger } from '@/core/logger';
+import { firebaseConfig, firebaseSettings } from '@/config/firebase/index';
 
 export enum FirebaseServiceStatus {
   INITIALIZING = 'INITIALIZING',

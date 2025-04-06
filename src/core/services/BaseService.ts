@@ -1,4 +1,4 @@
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 
 export enum ServiceStatus {
   INITIALIZING = 'INITIALIZING',

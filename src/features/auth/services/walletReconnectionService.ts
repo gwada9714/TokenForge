@@ -3,7 +3,7 @@ import { SUPPORTED_CHAINS } from '../../../types/common';
 import { notificationService } from '../../../services/notification/notificationService';
 import { tabSyncService } from '../../../services/sync/tabSyncService';
 import { AUTH_ACTIONS } from '../constants';
-import { logger } from '../../../utils/logger';
+import { logger } from '../../../core/logger';
 import { TabSyncMessage } from '../../../types/tabSync';
 import { BaseWalletState } from '../../../types/baseWalletState';
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
-import { useTokenForgeAuth } from '../../../features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '../../../hooks/useAuth';
 import { useWalletStatus } from '../../../features/auth/hooks/useWalletStatus';
 import { TokenForgeLogo } from '../../Icons/TokenForgeLogo';
 import {

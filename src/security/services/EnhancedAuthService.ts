@@ -1,6 +1,6 @@
 import { Auth, getAuth, User, signInWithEmailAndPassword, signOut, AuthErrorCodes } from 'firebase/auth';
-import { app, firebaseService } from '@/config/firebase';
-import { logger } from '@/utils/logger';
+import { app, firebaseService } from '@/config/firebase/index';
+import { logger } from '@/core/logger';
 import type { LoginCredentials, AuthResponse, AuthError } from '@/auth/types/auth.types';
 import { SessionService } from '@/services/session/sessionService';
 

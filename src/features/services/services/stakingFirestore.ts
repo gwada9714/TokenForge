@@ -10,7 +10,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { getFirebaseFirestoreSync } from '@/lib/firebase/firestore';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { StakingPool, StakingReward } from './stakingRewards';
 
 const POOLS_COLLECTION = 'stakingPools';

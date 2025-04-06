@@ -2,7 +2,7 @@ import { FirebaseError } from 'firebase/app';
 import { Request, Response, NextFunction } from 'express';
 import { Middleware } from '@reduxjs/toolkit';
 import { AuthError, AuthErrorCode, handleUnknownError } from '../errors/AuthError';
-import { logger, LogLevel } from '../../../utils/firebase-logger';
+import { logger, LogLevel } from '../../../core/logger';
 
 const LOG_CATEGORY = 'ErrorMiddleware';
 

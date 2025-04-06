@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
 import { RewriteFrames } from '@sentry/integrations';
 import { Integrations } from '@sentry/tracing';
-import { logger } from '../utils/firebase-logger';
+import { logger } from '../core/logger';
 
 const LOG_CATEGORY = 'Sentry';
 

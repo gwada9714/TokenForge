@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { LoginCredentials, AuthError } from '../types/auth.types';
-import { logger } from '@/utils/logger';
+import { logger } from '@/core/logger';
 
 export const Login = () => {
   const { login, isLoading, isAuthenticated } = useAuth();

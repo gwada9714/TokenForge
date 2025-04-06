@@ -11,11 +11,7 @@ contract TokenFactory is Ownable, Pausable {
     mapping(address => bool) public isTokenCreated;
 
     // Événement émis lors de la création d'un nouveau token
-    event TokenCreated(
-        address indexed creator,
-        string name,
-        string symbol
-    );
+    event TokenCreated(address indexed creator, string name, string symbol);
 
     constructor() {
         _transferOwnership(msg.sender);
@@ -27,7 +23,6 @@ contract TokenFactory is Ownable, Pausable {
      * @param symbol Symbole du token
      * @param initialSupply Supply initial du token
      * @param maxSupply Supply maximum du token
-     * @param isBurnable Si le token peut être brûlé
      * @param isMintable Si le token peut être minté
      * @return address L'adresse du nouveau token créé
      */
@@ -37,7 +32,6 @@ contract TokenFactory is Ownable, Pausable {
         uint8 decimals,
         uint256 initialSupply,
         uint256 maxSupply,
-        bool isBurnable,
         bool isMintable
     ) public whenNotPaused returns (address) {
         require(initialSupply > 0, "InvalidInitialSupply");
@@ -50,19 +44,18 @@ contract TokenFactory is Ownable, Pausable {
             decimals,
             initialSupply,
             maxSupply,
-            isBurnable,
             isMintable,
             msg.sender
         );
 
         address tokenAddress = _deploy(bytecode, constructorArgs);
-        
+
         // Marquer le token comme créé
         isTokenCreated[tokenAddress] = true;
-        
+
         // Émettre l'événement de création
         emit TokenCreated(msg.sender, name, symbol);
-        
+
         return tokenAddress;
     }
 
@@ -75,7 +68,6 @@ contract TokenFactory is Ownable, Pausable {
         uint8 decimals,
         uint256 initialSupply,
         uint256 maxSupply,
-        bool isBurnable,
         bool isMintable
     ) public whenNotPaused returns (address) {
         require(initialSupply > 0, "InvalidInitialSupply");
@@ -88,7 +80,6 @@ contract TokenFactory is Ownable, Pausable {
             decimals,
             initialSupply,
             maxSupply,
-            isBurnable,
             isMintable,
             msg.sender
         );

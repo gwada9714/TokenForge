@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Paper, Typography, Box, Link, CircularProgress } from '@mui/material';
 import { Link as RouterLink, Navigate, useLocation } from 'react-router-dom';
 import { LoginForm } from '../../features/auth';
-import { useTokenForgeAuth } from '../../features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '../../hooks/useAuth';
 import { AuthError } from '../../features/auth/errors/AuthError';
 
 const LoginPage: React.FC = () => {

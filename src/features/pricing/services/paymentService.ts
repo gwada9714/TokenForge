@@ -1,6 +1,6 @@
 import { PaymentDetails, PlanType, PaymentCurrency } from '../types/plans';
 import { NetworkConfig } from '@/features/auth/types/wallet';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { PLANS } from '../config/plans';
 
 class PaymentService {

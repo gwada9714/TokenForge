@@ -1,5 +1,5 @@
 import { customERC20ABI } from "../contracts/compiled";
-import { config } from "../utils/config";
+import { config } from "../core/config";
 
 export const CONTRACT_ABI = [
   {

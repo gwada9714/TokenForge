@@ -1,4 +1,4 @@
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { ServiceType } from '../types/services';
 
 export interface ListingEvent {

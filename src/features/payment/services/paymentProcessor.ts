@@ -1,6 +1,6 @@
 import { BlockchainNetwork } from '@/types/blockchain';
 import { ServiceType } from '@/features/services/types/services';
-import { logger } from '@/utils/firebase-logger';
+import { logger } from '@/core/logger';
 import { CurrencyConverter } from './currencyConverter';
 
 export class PaymentProcessor {

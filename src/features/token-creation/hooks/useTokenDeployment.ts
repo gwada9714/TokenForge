@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { TokenDeploymentService } from '../services/tokenDeploymentService';
 import { BlockchainNetwork } from '../components/DeploymentOptions';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
 import { useWalletState } from '@/features/auth/hooks/useWalletState';
 
 interface TokenConfig {

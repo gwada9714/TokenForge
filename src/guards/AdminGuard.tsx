@@ -1,26 +1,23 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useTokenForgeAuth } from '@/features/auth/hooks/useTokenForgeAuth';
+import { Navigate } from 'react-router-dom';
+import { useTokenForgeAuth } from '@/hooks/useAuth';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface AdminGuardProps {
   children: React.ReactNode;
 }
 
-export const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
-  const { isAuthenticated, isAdmin, isLoading } = useTokenForgeAuth();
-  const location = useLocation();
+export function AdminGuard({ children }: AdminGuardProps) {
+  const { isAuthenticated, user, loading: isLoading } = useTokenForgeAuth();
 
   if (isLoading) {
-    return <div>Chargement...</div>;
+    return <LoadingSpinner />;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-
-  if (!isAdmin) {
+  // Vérifier si l'utilisateur est authentifié et s'il a le rôle d'administrateur
+  if (!isAuthenticated || !user?.isAdmin) {
     return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
-}; 
+}
