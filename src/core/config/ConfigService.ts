@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { logger } from '../logger';
+import { z } from "zod";
+import { logger } from "../logger";
 import {
   EnvSchema,
   FirebaseEnvSchema,
@@ -18,8 +18,8 @@ import {
   LoggingConfig,
   CacheConfig,
   FeaturesConfig,
-  IpfsConfig
-} from './types';
+  IpfsConfig,
+} from "./types";
 
 /**
  * Service de configuration centralisé pour l'application
@@ -61,36 +61,36 @@ export class ConfigService {
         logging: this.buildLoggingConfig(validatedEnv),
         cache: this.buildCacheConfig(validatedEnv),
         features: this.buildFeaturesConfig(validatedEnv),
-        ipfs: this.buildIpfsConfig(validatedEnv)
+        ipfs: this.buildIpfsConfig(validatedEnv),
       };
 
       // Journaliser la configuration (sans les secrets)
       logger.info({
-        category: 'Config',
-        message: 'Configuration chargée avec succès',
+        category: "Config",
+        message: "Configuration chargée avec succès",
         data: {
           environment: config.features.environment,
           firebase: {
             projectId: config.firebase.projectId,
-            useEmulator: config.firebase.useEmulator
+            useEmulator: config.firebase.useEmulator,
           },
           web3: {
             supportedChains: config.web3.supportedChains,
-            defaultNetwork: config.web3.networks.default
+            defaultNetwork: config.web3.networks.default,
           },
           features: {
             enableFaucet: config.features.enableFaucet,
-            enableAnalytics: config.features.enableAnalytics
-          }
-        }
+            enableAnalytics: config.features.enableAnalytics,
+          },
+        },
       });
 
       return config;
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message: "Erreur lors de la construction de la configuration",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -104,15 +104,15 @@ export class ConfigService {
       return EnvSchema.parse(import.meta.env);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const issues = error.issues.map(issue => ({
-          path: issue.path.join('.'),
-          message: issue.message
+        const issues = error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
         }));
 
         logger.error({
-          category: 'Config',
-          message: 'Validation des variables d\'environnement échouée',
-          data: { issues }
+          category: "Config",
+          message: "Validation des variables d'environnement échouée",
+          data: { issues },
         });
       }
       throw error;
@@ -133,13 +133,13 @@ export class ConfigService {
         messagingSenderId: firebaseEnv.VITE_FIREBASE_MESSAGING_SENDER_ID,
         appId: firebaseEnv.VITE_FIREBASE_APP_ID,
         measurementId: firebaseEnv.VITE_FIREBASE_MEASUREMENT_ID,
-        useEmulator: firebaseEnv.VITE_USE_FIREBASE_EMULATOR === 'true'
+        useEmulator: firebaseEnv.VITE_USE_FIREBASE_EMULATOR === "true",
       };
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration Firebase',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message: "Erreur lors de la construction de la configuration Firebase",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -153,42 +153,48 @@ export class ConfigService {
       const web3Env = Web3EnvSchema.parse(env);
       return {
         walletConnect: {
-          projectId: web3Env.VITE_WALLET_CONNECT_PROJECT_ID
+          projectId: web3Env.VITE_WALLET_CONNECT_PROJECT_ID,
         },
         contracts: {
           tokenFactory: {
             mainnet: web3Env.VITE_TOKEN_FACTORY_MAINNET,
             sepolia: web3Env.VITE_TOKEN_FACTORY_SEPOLIA,
-            default: web3Env.VITE_TOKEN_FACTORY_ADDRESS
-          }
+            default: web3Env.VITE_TOKEN_FACTORY_ADDRESS,
+          },
         },
         providers: {
           etherscan: {
-            apiKey: web3Env.VITE_ETHERSCAN_API_KEY
+            apiKey: web3Env.VITE_ETHERSCAN_API_KEY,
           },
           alchemy: {
-            apiKey: web3Env.VITE_ALCHEMY_API_KEY
+            apiKey: web3Env.VITE_ALCHEMY_API_KEY,
           },
-          moonpay: web3Env.VITE_MOONPAY_API_KEY ? {
-            apiKey: web3Env.VITE_MOONPAY_API_KEY
-          } : undefined
+          moonpay: web3Env.VITE_MOONPAY_API_KEY
+            ? {
+                apiKey: web3Env.VITE_MOONPAY_API_KEY,
+              }
+            : undefined,
         },
         networks: {
-          mainnet: web3Env.VITE_MAINNET_RPC_URL ? {
-            rpcUrl: web3Env.VITE_MAINNET_RPC_URL
-          } : undefined,
-          sepolia: web3Env.VITE_SEPOLIA_RPC_URL ? {
-            rpcUrl: web3Env.VITE_SEPOLIA_RPC_URL
-          } : undefined,
-          default: web3Env.VITE_DEFAULT_NETWORK || 'sepolia'
+          mainnet: web3Env.VITE_MAINNET_RPC_URL
+            ? {
+                rpcUrl: web3Env.VITE_MAINNET_RPC_URL,
+              }
+            : undefined,
+          sepolia: web3Env.VITE_SEPOLIA_RPC_URL
+            ? {
+                rpcUrl: web3Env.VITE_SEPOLIA_RPC_URL,
+              }
+            : undefined,
+          default: web3Env.VITE_DEFAULT_NETWORK || "sepolia",
         },
-        supportedChains: web3Env.VITE_SUPPORTED_CHAINS || [1, 11155111] // Mainnet, Sepolia
+        supportedChains: web3Env.VITE_SUPPORTED_CHAINS || [1, 11155111], // Mainnet, Sepolia
       };
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration Web3',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message: "Erreur lors de la construction de la configuration Web3",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -203,13 +209,13 @@ export class ConfigService {
       return {
         url: apiEnv.VITE_API_URL,
         timeout: apiEnv.VITE_API_TIMEOUT || 30000,
-        baseUrl: apiEnv.VITE_API_BASE_URL
+        baseUrl: apiEnv.VITE_API_BASE_URL,
       };
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration API',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message: "Erreur lors de la construction de la configuration API",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -222,23 +228,26 @@ export class ConfigService {
     try {
       const securityEnv = SecurityEnvSchema.parse(env);
       return {
-        recaptcha: securityEnv.VITE_RECAPTCHA_SITE_KEY ? {
-          siteKey: securityEnv.VITE_RECAPTCHA_SITE_KEY
-        } : undefined,
+        recaptcha: securityEnv.VITE_RECAPTCHA_SITE_KEY
+          ? {
+              siteKey: securityEnv.VITE_RECAPTCHA_SITE_KEY,
+            }
+          : undefined,
         csp: {
           nonceLength: securityEnv.VITE_CSP_NONCE_LENGTH || 32,
           strict: securityEnv.VITE_STRICT_CSP || false,
-          reportUri: securityEnv.VITE_CSP_REPORT_URI
+          reportUri: securityEnv.VITE_CSP_REPORT_URI,
         },
         session: {
-          timeout: securityEnv.VITE_SESSION_TIMEOUT || 3600
-        }
+          timeout: securityEnv.VITE_SESSION_TIMEOUT || 3600,
+        },
       };
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration de sécurité',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message:
+          "Erreur lors de la construction de la configuration de sécurité",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -252,21 +261,22 @@ export class ConfigService {
       const loggingEnv = LoggingEnvSchema.parse(env);
       return {
         enableDebugLogs: loggingEnv.VITE_ENABLE_DEBUG_LOGS || false,
-        logLevel: loggingEnv.VITE_LOG_LEVEL || 'info',
+        logLevel: loggingEnv.VITE_LOG_LEVEL || "info",
         errorReporting: {
           enabled: loggingEnv.VITE_ERROR_REPORTING_ENABLED || false,
-          sampleRate: loggingEnv.VITE_SENTRY_SAMPLE_RATE || 0.1
+          sampleRate: loggingEnv.VITE_SENTRY_SAMPLE_RATE || 0.1,
         },
         rateLimit: {
           window: loggingEnv.VITE_RATE_LIMIT_WINDOW || 60000,
-          maxRequests: loggingEnv.VITE_RATE_LIMIT_MAX_REQUESTS || 100
-        }
+          maxRequests: loggingEnv.VITE_RATE_LIMIT_MAX_REQUESTS || 100,
+        },
       };
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration de logging',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message:
+          "Erreur lors de la construction de la configuration de logging",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -281,13 +291,13 @@ export class ConfigService {
       return {
         enableQueryCache: cacheEnv.VITE_ENABLE_QUERY_CACHE || true,
         cacheTime: cacheEnv.VITE_CACHE_TIME || 300000,
-        maxBatchSize: cacheEnv.VITE_MAX_BATCH_SIZE || 100
+        maxBatchSize: cacheEnv.VITE_MAX_BATCH_SIZE || 100,
       };
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration de cache',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message: "Erreur lors de la construction de la configuration de cache",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -303,13 +313,14 @@ export class ConfigService {
         enableFaucet: featuresEnv.VITE_ENABLE_FAUCET || false,
         enableAnalytics: featuresEnv.VITE_ENABLE_ANALYTICS || false,
         swVersion: featuresEnv.VITE_SW_VERSION,
-        environment: featuresEnv.VITE_ENV || 'development'
+        environment: featuresEnv.VITE_ENV || "development",
       };
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration de features',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message:
+          "Erreur lors de la construction de la configuration de features",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -322,13 +333,13 @@ export class ConfigService {
     try {
       const ipfsEnv = IpfsEnvSchema.parse(env);
       return {
-        gateway: ipfsEnv.VITE_IPFS_GATEWAY
+        gateway: ipfsEnv.VITE_IPFS_GATEWAY,
       };
     } catch (error) {
       logger.error({
-        category: 'Config',
-        message: 'Erreur lors de la construction de la configuration IPFS',
-        error: error instanceof Error ? error : new Error(String(error))
+        category: "Config",
+        message: "Erreur lors de la construction de la configuration IPFS",
+        error: error instanceof Error ? error : new Error(String(error)),
       });
       throw error;
     }
@@ -408,13 +419,13 @@ export class ConfigService {
    * Vérifie si l'application est en mode développement
    */
   public isDevelopment(): boolean {
-    return this.config.features.environment === 'development';
+    return this.config.features.environment === "development";
   }
 
   /**
    * Vérifie si l'application est en mode production
    */
   public isProduction(): boolean {
-    return this.config.features.environment === 'production';
+    return this.config.features.environment === "production";
   }
 }
